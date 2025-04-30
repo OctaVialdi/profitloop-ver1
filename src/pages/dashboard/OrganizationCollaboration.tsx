@@ -72,35 +72,38 @@ const OrganizationCollaboration = () => {
   }, []);
   
   const fetchCollaborations = async (orgId: string) => {
-    // Fetch sent invitations
+    // Fetch sent invitations - specifying the exact columns for invited_org
     const { data: sentData } = await supabase
       .from('collaborations')
       .select(`
         id, status, created_at, invited_org_id, inviting_org_id,
-        invited_org:invited_org_id(name)
+        invited_org:organizations!invited_org_id(name)
       `)
       .eq('inviting_org_id', orgId);
+    
+    // Fetch received invitations - specifying the exact columns for inviting_org
+    const { data: receivedData } = await supabase
+      .from('collaborations')
+      .select(`
+        id, status, created_at, invited_org_id, inviting_org_id,
+        inviting_org:organizations!inviting_org_id(name)
+      `)
+      .eq('invited_org_id', orgId);
     
     if (sentData) {
       setSentInvitations(sentData as Collaboration[]);
     }
     
-    // Fetch received invitations
-    const { data: receivedData } = await supabase
-      .from('collaborations')
-      .select(`
-        id, status, created_at, invited_org_id, inviting_org_id,
-        inviting_org:inviting_org_id(name)
-      `)
-      .eq('invited_org_id', orgId);
-    
     if (receivedData) {
       // Separate active collaborations from pending/rejected invitations
-      const active = receivedData.filter(collab => collab.status === 'accepted');
-      const pending = receivedData.filter(collab => collab.status !== 'accepted');
+      const active = receivedData.filter(collab => collab.status === 'accepted') as Collaboration[];
+      const pending = receivedData.filter(collab => collab.status !== 'accepted') as Collaboration[];
       
-      setActiveCollaborations([...active, ...(sentData?.filter(collab => collab.status === 'accepted') || [])]);
-      setReceivedInvitations(pending as Collaboration[]);
+      setActiveCollaborations([
+        ...active, 
+        ...(sentData?.filter(collab => collab.status === 'accepted') || []) as Collaboration[]
+      ]);
+      setReceivedInvitations(pending);
     }
   };
 
@@ -152,17 +155,17 @@ const OrganizationCollaboration = () => {
         return;
       }
       
-      // Create collaboration invitation
+      // Create collaboration invitation - specifying the exact column for invited_org
       const { data: collaboration, error } = await supabase
         .from('collaborations')
         .insert({
           inviting_org_id: currentOrgId,
           invited_org_id: invitedOrgId,
-          status: 'pending'
+          status: 'pending' as const
         })
         .select(`
           id, status, created_at, invited_org_id, inviting_org_id,
-          invited_org:invited_org_id(name)
+          invited_org:organizations!invited_org_id(name)
         `)
         .single();
       
@@ -186,7 +189,7 @@ const OrganizationCollaboration = () => {
       const { error } = await supabase
         .from('collaborations')
         .update({ 
-          status: accept ? 'accepted' : 'rejected'
+          status: accept ? 'accepted' as const : 'rejected' as const
         })
         .eq('id', collabId);
       
