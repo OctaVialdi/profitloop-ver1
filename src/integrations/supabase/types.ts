@@ -15,6 +15,7 @@ export type Database = {
           id: string
           invited_org_id: string
           inviting_org_id: string
+          message: string | null
           status: string | null
         }
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           id?: string
           invited_org_id: string
           inviting_org_id: string
+          message?: string | null
           status?: string | null
         }
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           id?: string
           invited_org_id?: string
           inviting_org_id?: string
+          message?: string | null
           status?: string | null
         }
         Relationships: [

@@ -110,19 +110,19 @@ const OrganizationCollaboration = () => {
       .eq('invited_org_id', orgId);
     
     if (sentData && !sentError) {
-      setSentInvitations(sentData as Collaboration[]);
+      setSentInvitations(sentData as unknown as Collaboration[]);
     } else if (sentError) {
       console.error("Error fetching sent collaborations:", sentError);
     }
     
     if (receivedData && !receivedError) {
       // Separate active collaborations from pending/rejected invitations
-      const active = receivedData.filter(collab => collab.status === 'accepted') as Collaboration[];
-      const pending = receivedData.filter(collab => collab.status !== 'accepted') as Collaboration[];
+      const active = receivedData.filter(collab => collab.status === 'accepted') as unknown as Collaboration[];
+      const pending = receivedData.filter(collab => collab.status !== 'accepted') as unknown as Collaboration[];
       
       setActiveCollaborations([
         ...active, 
-        ...(sentData && !sentError ? sentData.filter(collab => collab.status === 'accepted') || [] : []) as Collaboration[]
+        ...(sentData && !sentError ? sentData.filter(collab => collab.status === 'accepted') || [] : []) as unknown as Collaboration[]
       ]);
       setReceivedInvitations(pending);
     } else if (receivedError) {
