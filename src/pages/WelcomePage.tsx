@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User, Settings, Calendar, Home, UserPlus } from "lucide-react";
+import { useOrganization } from "@/hooks/useOrganization";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const WelcomePage = () => {
-  // This would be replaced with actual user and organization data from Supabase after integration
-  const organizationName = "Nama Organisasi";
+  const { organization, isLoading, daysLeftInTrial } = useOrganization();
   
   const features = [
     {
@@ -31,12 +32,39 @@ const WelcomePage = () => {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
+        <Card className="w-full max-w-4xl">
+          <CardHeader className="space-y-1">
+            <Skeleton className="h-8 w-3/4 mx-auto mb-2" />
+            <Skeleton className="h-4 w-2/3 mx-auto" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-6 mt-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-28" />
+              ))}
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="flex gap-4 w-full justify-center">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
       <Card className="w-full max-w-4xl">
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-bold text-center">
-            Selamat datang di Multi-Tenant App, {organizationName}!
+            Selamat datang di Multi-Tenant App, {organization?.name || ""}!
           </CardTitle>
           <CardDescription className="text-center text-lg">
             Anda telah berhasil membuat organisasi. Berikut adalah fitur-fitur yang bisa Anda gunakan:
@@ -79,7 +107,7 @@ const WelcomePage = () => {
             </Button>
           </div>
           <p className="text-center text-sm text-gray-500 mt-4">
-            Anda memiliki masa trial 30 hari. Berlangganan untuk menikmati semua fitur premium.
+            Anda memiliki masa trial {daysLeftInTrial} hari lagi. Berlangganan untuk menikmati semua fitur premium.
           </p>
         </CardFooter>
       </Card>

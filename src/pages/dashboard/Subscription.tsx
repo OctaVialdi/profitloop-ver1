@@ -78,7 +78,14 @@ const Subscription = () => {
       // Update organization subscription plan
       const { error } = await supabase
         .from('organizations')
-        .update({ subscription_plan_id: planId })
+        .update({ 
+          subscription_plan_id: planId,
+          // If moving to a paid plan, clear trial expiration data
+          ...(planId !== plans.find(p => p.name === "Basic")?.id ? {
+            trial_expired: false,
+            trial_end_date: null
+          } : {})
+        })
         .eq('id', organization.id);
       
       if (error) throw error;

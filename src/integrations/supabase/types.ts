@@ -97,6 +97,7 @@ export type Database = {
           phone: string | null
           subscription_plan_id: string | null
           trial_end_date: string | null
+          trial_expired: boolean | null
         }
         Insert: {
           address?: string | null
@@ -108,6 +109,7 @@ export type Database = {
           phone?: string | null
           subscription_plan_id?: string | null
           trial_end_date?: string | null
+          trial_expired?: boolean | null
         }
         Update: {
           address?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           phone?: string | null
           subscription_plan_id?: string | null
           trial_end_date?: string | null
+          trial_expired?: boolean | null
         }
         Relationships: [
           {

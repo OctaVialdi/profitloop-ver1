@@ -114,14 +114,10 @@ export function useOrganization(): OrganizationData {
         throw orgError;
       }
       
-      // Cast and fix the missing trial_expired field
-      // TypeScript doesn't know that orgData might not have trial_expired
-      const orgDataAny = orgData as any;
-      
-      // Create a properly typed Organization object with trial_expired defaulting to false if not present
+      // Ensure trial_expired exists (default to false if not present)
       const orgWithTrialStatus: Organization = {
         ...orgData,
-        trial_expired: orgDataAny.trial_expired !== undefined ? orgDataAny.trial_expired : false
+        trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false
       };
       
       setOrganization(orgWithTrialStatus);
@@ -142,7 +138,7 @@ export function useOrganization(): OrganizationData {
       // Check if trial has expired but not marked as expired
       if (orgData.trial_end_date && 
           new Date(orgData.trial_end_date) < new Date() && 
-          !orgDataAny.trial_expired) {
+          !orgData.trial_expired) {
         // Trigger the edge function to check trial expiration
         try {
           await supabase.functions.invoke('check-trial-expiration');
