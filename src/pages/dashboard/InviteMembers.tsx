@@ -17,6 +17,7 @@ interface Invitation {
   expires_at?: string;
   token?: string;
   organization_id?: string;
+  role?: string;
 }
 
 const InviteMembers = () => {
@@ -141,7 +142,8 @@ const InviteMembers = () => {
       if (invitation) {
         const typedInvitation: Invitation = {
           ...invitation,
-          status: (invitation.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending'
+          status: (invitation.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending',
+          role: invitation.role || 'employee'
         };
         
         setInvitations([typedInvitation, ...invitations]);

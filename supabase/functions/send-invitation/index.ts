@@ -27,7 +27,7 @@ serve(async (req) => {
     const { data: invitation, error: invitationError } = await supabase
       .from("invitations")
       .select(`
-        id, email, token, 
+        id, email, token, role,
         organizations!inner(name)
       `)
       .eq("id", invitationId)
@@ -51,6 +51,7 @@ serve(async (req) => {
 
     const senderName = profiles && profiles.length > 0 ? profiles[0].full_name : "Tim";
     const organizationName = invitation.organizations.name;
+    const userRole = invitation.role || "employee"; // Use the role from the invitation or default to "employee"
 
     // In a real app, you would send an email using a service like SendGrid, Postmark, or Resend
     // For demo purposes, we'll just log the email details
@@ -60,7 +61,7 @@ serve(async (req) => {
     console.log(`
       <h1>Anda diundang untuk bergabung dengan ${organizationName}</h1>
       <p>Halo,</p>
-      <p>${senderName} mengundang Anda untuk bergabung dengan organisasi mereka di Multi-Tenant App.</p>
+      <p>${senderName} mengundang Anda untuk bergabung dengan organisasi mereka di Multi-Tenant App sebagai ${userRole}.</p>
       <p>Klik tautan di bawah ini untuk menerima undangan:</p>
       <a href="${supabaseUrl}/accept-invitation?token=${invitation.token}">Terima Undangan</a>
       <p>Tautan ini akan kedaluwarsa dalam 7 hari.</p>

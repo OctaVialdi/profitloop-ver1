@@ -58,6 +58,7 @@ export type Database = {
           expires_at: string | null
           id: string
           organization_id: string
+          role: string | null
           status: string | null
           token: string
         }
@@ -67,6 +68,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           organization_id: string
+          role?: string | null
           status?: string | null
           token: string
         }
@@ -76,6 +78,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           organization_id?: string
+          role?: string | null
           status?: string | null
           token?: string
         }
