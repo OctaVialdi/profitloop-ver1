@@ -1,35 +1,153 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Mail } from "lucide-react";
+import { UserPlus, Mail, Check, X, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Invitation {
+  id: string;
+  email: string;
+  status: 'pending' | 'accepted';
+  created_at: string;
+}
 
 const InviteMembers = () => {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("employee");
   const [isLoading, setIsLoading] = useState(false);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+
+  // Fetch user's organization id and existing invitations
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Get user's organization
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileData && profileData.organization_id) {
+          setOrganizationId(profileData.organization_id);
+          
+          // Fetch existing invitations
+          const { data: invitationsData, error } = await supabase
+            .from('invitations')
+            .select('id, email, status, created_at')
+            .eq('organization_id', profileData.organization_id)
+            .order('created_at', { ascending: false });
+            
+          if (error) {
+            console.error("Error fetching invitations:", error);
+            toast.error("Gagal memuat undangan yang ada.");
+          } else {
+            setInvitations(invitationsData || []);
+          }
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+
+  const generateToken = () => {
+    // Generate a random token for the invitation
+    return Math.random().toString(36).substring(2, 15) + 
+           Math.random().toString(36).substring(2, 15);
+  };
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!organizationId) {
+      toast.error("Tidak dapat menemukan organisasi Anda.");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      // This will be implemented after Supabase integration
-      console.log("Inviting member:", { email, role });
+      // Check if user is already invited
+      const { data: existingInvite } = await supabase
+        .from('invitations')
+        .select('id')
+        .eq('email', email)
+        .eq('organization_id', organizationId)
+        .eq('status', 'pending')
+        .single();
       
-      // Mock successful invitation for demonstration
+      if (existingInvite) {
+        toast.error("Email ini sudah memiliki undangan yang tertunda.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Check if user already exists in same organization
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .eq('organization_id', organizationId)
+        .single();
+        
+      if (existingUser) {
+        toast.error("Pengguna dengan email ini sudah ada di organisasi Anda.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Create invitation
+      const token = generateToken();
+      
+      const { data: invitation, error } = await supabase
+        .from('invitations')
+        .insert({
+          organization_id: organizationId,
+          email: email,
+          token: token,
+          // On a real application, we would set expire_at, but using default now
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // In a real app, we would send an email to the user with a link containing the token
+      // For now, we'll just log it and show a success message
+      console.log("Invitation token:", token);
+      
       toast.success(`Undangan telah dikirim ke ${email}`);
       setEmail("");
-    } catch (error) {
+      
+      // Add the new invitation to the list
+      if (invitation) {
+        setInvitations([invitation, ...invitations]);
+      }
+    } catch (error: any) {
       console.error("Invitation error:", error);
-      toast.error("Gagal mengirim undangan. Silakan coba lagi.");
+      toast.error(error.message || "Gagal mengirim undangan. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   };
 
   return (
@@ -37,7 +155,7 @@ const InviteMembers = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Undang Anggota</h1>
         
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
               <UserPlus className="h-5 w-5 text-blue-600" />
@@ -72,7 +190,7 @@ const InviteMembers = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || !organizationId}>
                 {isLoading ? "Mengirim..." : "Kirim Undangan"}
               </Button>
             </form>
@@ -81,11 +199,47 @@ const InviteMembers = () => {
         
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-4">Undangan Terkirim</h2>
-          <div className="bg-white rounded-lg border p-4">
-            <div className="text-center py-8 text-gray-500">
-              <Mail className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-              <p>Belum ada undangan yang dikirim</p>
-            </div>
+          <div className="bg-white rounded-lg border">
+            {invitations.length > 0 ? (
+              <div className="divide-y">
+                {invitations.map((invitation) => (
+                  <div key={invitation.id} className="p-4 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <span className="font-medium">{invitation.email}</span>
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        Dikirim pada {formatDate(invitation.created_at)}
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      {invitation.status === 'pending' ? (
+                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Menunggu
+                        </div>
+                      ) : invitation.status === 'accepted' ? (
+                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <Check className="h-3 w-3 mr-1" />
+                          Diterima
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          <X className="h-3 w-3 mr-1" />
+                          Ditolak
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Mail className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                <p>Belum ada undangan yang dikirim</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
