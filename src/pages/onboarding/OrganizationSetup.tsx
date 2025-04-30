@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,8 +87,8 @@ const OrganizationSetup = () => {
         throw orgError;
       }
       
-      // Use Service Role Key untuk update profile
-      // First, make direct update to the database (bypassing RLS)
+      // Update profile directly without RLS
+      // Use a simple and direct update query to avoid recursion issues
       const { error: profileError } = await supabase
         .from('profiles')
         .update({

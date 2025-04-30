@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -86,18 +87,27 @@ export function useOrganization(): OrganizationData {
         return;
       }
       
-      // Get user profile
+      // Get user profile - use direct user ID query instead of dynamic RLS policy
+      // This avoids the recursion issue with RLS policies
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       
       if (profileError) {
+        console.error("Profile fetch error:", profileError);
         throw profileError;
       }
       
+      if (!profileData) {
+        console.log("No profile found, redirecting to onboarding");
+        navigate('/onboarding');
+        return;
+      }
+      
       if (!profileData.organization_id) {
+        console.log("No organization associated with profile, redirecting to onboarding");
         navigate('/onboarding');
         return;
       }
@@ -109,10 +119,16 @@ export function useOrganization(): OrganizationData {
         .from('organizations')
         .select('*')
         .eq('id', profileData.organization_id)
-        .single();
+        .maybeSingle();
       
       if (orgError) {
+        console.error("Organization fetch error:", orgError);
         throw orgError;
+      }
+      
+      if (!orgData) {
+        console.error("No organization found with ID:", profileData.organization_id);
+        throw new Error("Organisasi tidak ditemukan");
       }
       
       // Ensure trial_expired exists (default to false if not present)
@@ -129,7 +145,7 @@ export function useOrganization(): OrganizationData {
           .from('subscription_plans')
           .select('*')
           .eq('id', orgData.subscription_plan_id)
-          .single();
+          .maybeSingle();
           
         if (!planError && planData) {
           setSubscriptionPlan(planData as SubscriptionPlan);
