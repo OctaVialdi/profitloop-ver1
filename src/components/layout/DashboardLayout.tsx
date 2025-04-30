@@ -3,10 +3,11 @@ import { ReactNode } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Building, Home, LogOut, Menu, Settings, UserPlus, Users, CreditCard } from "lucide-react";
+import { Building, Home, LogOut, Settings, UserPlus, Users, CreditCard, Bell } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
+import { NotificationSystem } from "@/components/NotificationSystem";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -24,6 +25,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { name: "Anggota Tim", href: "/members", icon: Users },
     { name: "Kolaborasi", href: "/collaborations", icon: Building, requiredRole: "admin" },
     { name: "Subscription", href: "/subscription", icon: CreditCard, requiredRole: "admin" },
+    { name: "Notifikasi", href: "/notifications", icon: Bell },
   ];
 
   // Filter navigation items based on user role
@@ -102,6 +104,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
           
           <div className="flex items-center gap-2">
+            <NotificationSystem />
+            
             <span className="text-sm text-gray-500 hidden md:inline-block">
               {userProfile?.full_name || userProfile?.email || "User"} 
               {isSuperAdmin && <span className="ml-1 text-xs text-purple-600">(Super Admin)</span>}

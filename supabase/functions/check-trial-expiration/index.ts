@@ -66,13 +66,26 @@ serve(async (req) => {
         } else {
           console.log(`Marked organization ${org.id} as trial expired`);
           
-          // Set custom claims for all organization users to reflect trial expiration
+          // Create notifications for all organization admins
           if (admins && admins.length > 0) {
             for (const admin of admins) {
-              // Add a notification in the future via a notifications table
-              console.log(`Would notify admin ${admin.email} about trial expiration`);
-              
-              // You could send emails or store notifications here
+              // Add a notification in the notifications table
+              const { error: notificationError } = await supabase
+                .from('notifications')
+                .insert({
+                  user_id: admin.id,
+                  organization_id: org.id,
+                  title: 'Masa Trial Berakhir',
+                  message: `Masa trial untuk organisasi ${org.name} telah berakhir. Silakan berlangganan untuk terus menggunakan semua fitur premium.`,
+                  type: 'warning',
+                  action_url: '/subscription'
+                });
+                
+              if (notificationError) {
+                console.error(`Error creating notification for admin ${admin.email}:`, notificationError);
+              } else {
+                console.log(`Created notification for admin ${admin.email}`);
+              }
             }
           }
         }

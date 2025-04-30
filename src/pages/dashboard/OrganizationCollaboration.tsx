@@ -4,13 +4,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
-import { Building, Check, X, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Building, Check, X, Clock, UserPlus, Mail, Share } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from 'react-router-dom';
 
 interface Organization {
   id: string;
   name: string;
+  business_field?: string;
+  employee_count?: number;
 }
 
 interface Collaboration {
@@ -21,24 +29,35 @@ interface Collaboration {
   inviting_org_id: string;
   invited_org?: {
     name: string;
+    business_field?: string;
+    employee_count?: number;
   };
   inviting_org?: {
     name: string;
+    business_field?: string;
+    employee_count?: number;
   };
+  message?: string;
 }
 
 const OrganizationCollaboration = () => {
   const [organizationEmail, setOrganizationEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCollaborations, setIsLoadingCollaborations] = useState(true);
   const [currentOrgId, setCurrentOrgId] = useState<string | null>(null);
   const [currentOrgName, setCurrentOrgName] = useState<string>("");
   const [sentInvitations, setSentInvitations] = useState<Collaboration[]>([]);
   const [receivedInvitations, setReceivedInvitations] = useState<Collaboration[]>([]);
   const [activeCollaborations, setActiveCollaborations] = useState<Collaboration[]>([]);
+  const [selectedCollab, setSelectedCollab] = useState<Collaboration | null>(null);
+  const [activeTab, setActiveTab] = useState("active");
+  const navigate = useNavigate();
 
   // Fetch user's organization id and name
   useEffect(() => {
     const fetchOrganizationData = async () => {
+      setIsLoadingCollaborations(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
@@ -63,9 +82,10 @@ const OrganizationCollaboration = () => {
           }
           
           // Fetch collaborations
-          fetchCollaborations(profile.organization_id);
+          await fetchCollaborations(profile.organization_id);
         }
       }
+      setIsLoadingCollaborations(false);
     };
     
     fetchOrganizationData();
@@ -76,8 +96,8 @@ const OrganizationCollaboration = () => {
     const { data: sentData } = await supabase
       .from('collaborations')
       .select(`
-        id, status, created_at, invited_org_id, inviting_org_id,
-        invited_org:organizations!invited_org_id(name)
+        id, status, created_at, invited_org_id, inviting_org_id, message,
+        invited_org:organizations!invited_org_id(name, business_field, employee_count)
       `)
       .eq('inviting_org_id', orgId);
     
@@ -85,8 +105,8 @@ const OrganizationCollaboration = () => {
     const { data: receivedData } = await supabase
       .from('collaborations')
       .select(`
-        id, status, created_at, invited_org_id, inviting_org_id,
-        inviting_org:organizations!inviting_org_id(name)
+        id, status, created_at, invited_org_id, inviting_org_id, message,
+        inviting_org:organizations!inviting_org_id(name, business_field, employee_count)
       `)
       .eq('invited_org_id', orgId);
     
@@ -161,11 +181,12 @@ const OrganizationCollaboration = () => {
         .insert({
           inviting_org_id: currentOrgId,
           invited_org_id: invitedOrgId,
-          status: 'pending' as const
+          status: 'pending',
+          message: message || null
         })
         .select(`
-          id, status, created_at, invited_org_id, inviting_org_id,
-          invited_org:organizations!invited_org_id(name)
+          id, status, created_at, invited_org_id, inviting_org_id, message,
+          invited_org:organizations!invited_org_id(name, business_field, employee_count)
         `)
         .single();
       
@@ -173,8 +194,35 @@ const OrganizationCollaboration = () => {
       
       if (collaboration) {
         setSentInvitations([collaboration as Collaboration, ...sentInvitations]);
+        
+        // Create notification for the invited organization admins
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('organization_id', invitedOrgId)
+          .in('role', ['super_admin', 'admin']);
+          
+        if (admins && admins.length > 0) {
+          for (const admin of admins) {
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: admin.id,
+                organization_id: invitedOrgId,
+                title: 'Undangan Kolaborasi Baru',
+                message: `${currentOrgName} mengundang organisasi Anda untuk berkolaborasi.`,
+                type: 'info',
+                action_url: '/collaborations'
+              });
+          }
+        }
+        
         toast.success("Undangan kolaborasi berhasil dikirim.");
         setOrganizationEmail("");
+        setMessage("");
+        
+        // Switch to sent tab
+        setActiveTab("sent");
       }
     } catch (error: any) {
       console.error("Error sending collaboration invitation:", error);
@@ -189,21 +237,135 @@ const OrganizationCollaboration = () => {
       const { error } = await supabase
         .from('collaborations')
         .update({ 
-          status: accept ? 'accepted' as const : 'rejected' as const
+          status: accept ? 'accepted' : 'rejected'
         })
         .eq('id', collabId);
       
       if (error) throw error;
+      
+      // Get the collaboration details to send notification
+      const { data: collab } = await supabase
+        .from('collaborations')
+        .select(`
+          inviting_org_id,
+          inviting_org:organizations!inviting_org_id(name),
+          invited_org:organizations!invited_org_id(name)
+        `)
+        .eq('id', collabId)
+        .single();
+        
+      if (collab) {
+        // Create notification for the inviting organization admins
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('organization_id', collab.inviting_org_id)
+          .in('role', ['super_admin', 'admin']);
+          
+        if (admins && admins.length > 0) {
+          for (const admin of admins) {
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: admin.id,
+                organization_id: collab.inviting_org_id,
+                title: accept ? 'Undangan Kolaborasi Diterima' : 'Undangan Kolaborasi Ditolak',
+                message: accept 
+                  ? `${collab.invited_org.name} telah menerima undangan kolaborasi Anda.`
+                  : `${collab.invited_org.name} telah menolak undangan kolaborasi Anda.`,
+                type: accept ? 'success' : 'info',
+                action_url: '/collaborations'
+              });
+          }
+        }
+      }
       
       toast.success(`Undangan kolaborasi berhasil ${accept ? 'diterima' : 'ditolak'}.`);
       
       // Update local state
       if (currentOrgId) {
         fetchCollaborations(currentOrgId);
+        
+        // Switch to active tab if accepted
+        if (accept) {
+          setActiveTab("active");
+        }
       }
     } catch (error: any) {
       console.error("Error responding to collaboration:", error);
       toast.error(error.message || "Gagal memproses undangan.");
+    }
+  };
+  
+  const handleEndCollaboration = async (collabId: string) => {
+    try {
+      // Get the collaboration details to send notification
+      const { data: collab } = await supabase
+        .from('collaborations')
+        .select(`
+          invited_org_id, inviting_org_id,
+          inviting_org:organizations!inviting_org_id(name),
+          invited_org:organizations!invited_org_id(name)
+        `)
+        .eq('id', collabId)
+        .single();
+      
+      // Delete the collaboration
+      const { error } = await supabase
+        .from('collaborations')
+        .delete()
+        .eq('id', collabId);
+      
+      if (error) throw error;
+      
+      // Find out which organization is the other one
+      let otherOrgId = '';
+      let otherOrgName = '';
+      let currentOrgName = '';
+      
+      if (collab) {
+        if (collab.inviting_org_id === currentOrgId) {
+          otherOrgId = collab.invited_org_id;
+          otherOrgName = collab.invited_org.name;
+          currentOrgName = collab.inviting_org.name;
+        } else {
+          otherOrgId = collab.inviting_org_id;
+          otherOrgName = collab.inviting_org.name;
+          currentOrgName = collab.invited_org.name;
+        }
+        
+        // Create notification for the other organization admins
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('organization_id', otherOrgId)
+          .in('role', ['super_admin', 'admin']);
+          
+        if (admins && admins.length > 0) {
+          for (const admin of admins) {
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: admin.id,
+                organization_id: otherOrgId,
+                title: 'Kolaborasi Diakhiri',
+                message: `${currentOrgName} telah mengakhiri kolaborasi dengan organisasi Anda.`,
+                type: 'warning',
+                action_url: '/collaborations'
+              });
+          }
+        }
+      }
+      
+      toast.success("Kolaborasi berhasil diakhiri.");
+      
+      // Update local state
+      if (currentOrgId) {
+        fetchCollaborations(currentOrgId);
+      }
+    } catch (error: any) {
+      console.error("Error ending collaboration:", error);
+      toast.error(error.message || "Gagal mengakhiri kolaborasi.");
     }
   };
   
@@ -214,92 +376,168 @@ const OrganizationCollaboration = () => {
       year: 'numeric',
     });
   };
+  
+  const getOrganizationDetails = (collab: Collaboration) => {
+    const isInvited = collab.invited_org_id === currentOrgId;
+    const org = isInvited ? collab.inviting_org : collab.invited_org;
+    
+    return (
+      <div>
+        <div className="font-medium">{org?.name || "Organisasi"}</div>
+        {org?.business_field && (
+          <div className="text-sm text-gray-500">{org.business_field}</div>
+        )}
+        {org?.employee_count && (
+          <div className="text-xs text-gray-500">{org.employee_count} anggota</div>
+        )}
+      </div>
+    );
+  };
+  
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Menunggu</Badge>;
+      case 'accepted':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Aktif</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Ditolak</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  if (isLoadingCollaborations) {
+    return (
+      <div className="min-h-screen p-4 md:p-8 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-4 w-96 mb-8" />
+          <Tabs defaultValue="active">
+            <TabsList className="mb-8">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-24 ml-1" />
+              <Skeleton className="h-10 w-24 ml-1" />
+            </TabsList>
+            <div>
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-7 w-72 mb-2" />
+                  <Skeleton className="h-4 w-96" />
+                </CardHeader>
+                <CardContent>
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-20 mb-4" />
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </Tabs>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Kolaborasi Organisasi</h1>
+        <header className="mb-6">
+          <h1 className="text-2xl font-bold mb-2">Kolaborasi Organisasi</h1>
+          <p className="text-gray-600">
+            Kelola kolaborasi dengan organisasi lain dan tingkatkan jaringan bisnis Anda
+          </p>
+        </header>
         
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <Building className="h-5 w-5 text-blue-600" />
-                <CardTitle>Undang Organisasi untuk Kolaborasi</CardTitle>
-              </div>
-              <CardDescription>
-                Undang organisasi lain untuk berkolaborasi dengan {currentOrgName}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleInvite} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="organizationEmail">Email Admin Organisasi</Label>
-                  <Input
-                    id="organizationEmail"
-                    type="email"
-                    placeholder="admin@organization.com"
-                    value={organizationEmail}
-                    onChange={(e) => setOrganizationEmail(e.target.value)}
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    Masukkan email admin dari organisasi yang ingin Anda ajak berkolaborasi
-                  </p>
-                </div>
-                <Button type="submit" disabled={isLoading || !currentOrgId}>
-                  {isLoading ? "Mengirim..." : "Kirim Undangan Kolaborasi"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-8">
+            <TabsTrigger value="active">
+              <Building className="h-4 w-4 mr-2" />
+              Aktif ({activeCollaborations.length})
+            </TabsTrigger>
+            <TabsTrigger value="received">
+              <Mail className="h-4 w-4 mr-2" />
+              Diterima ({receivedInvitations.length})
+            </TabsTrigger>
+            <TabsTrigger value="sent">
+              <Share className="h-4 w-4 mr-2" />
+              Terkirim ({sentInvitations.filter(collab => collab.status !== 'accepted').length})
+            </TabsTrigger>
+            <TabsTrigger value="invite">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Undang
+            </TabsTrigger>
+          </TabsList>
           
-          {/* Active Collaborations */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Kolaborasi Aktif</CardTitle>
-              <CardDescription>
-                Organisasi yang sedang berkolaborasi dengan Anda
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {activeCollaborations.length > 0 ? (
-                <div className="divide-y border rounded-lg">
-                  {activeCollaborations.map((collab) => (
-                    <div key={collab.id} className="p-4 flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium">
-                            {collab.invited_org_id === currentOrgId ? 
-                              collab.inviting_org?.name : 
-                              collab.invited_org?.name}
-                          </span>
+          <TabsContent value="active">
+            <Card>
+              <CardHeader>
+                <CardTitle>Kolaborasi Aktif</CardTitle>
+                <CardDescription>
+                  Daftar organisasi yang sedang berkolaborasi dengan Anda
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {activeCollaborations.length > 0 ? (
+                  <div className="divide-y border rounded-lg">
+                    {activeCollaborations.map((collab) => (
+                      <div key={collab.id} className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Building className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div>
+                            {getOrganizationDetails(collab)}
+                            <div className="text-sm text-gray-500 mt-1">
+                              <span>Kolaborasi aktif sejak {formatDate(collab.created_at)}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500 mt-1">
-                          Kolaborasi dimulai pada {formatDate(collab.created_at)}
-                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">Akhiri Kolaborasi</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Konfirmasi Pengakhiran Kolaborasi</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Apakah Anda yakin ingin mengakhiri kolaborasi dengan organisasi ini? 
+                                Tindakan ini tidak dapat dibatalkan, tapi Anda bisa mengundang mereka lagi nanti.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Batal</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleEndCollaboration(collab.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Ya, Akhiri Kolaborasi
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
-                      <div className="flex items-center">
-                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <Check className="h-3 w-3 mr-1" />
-                          Aktif
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500 border rounded-lg">
-                  <Building className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                  <p>Belum ada kolaborasi aktif</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 border rounded-lg">
+                    <Building className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p>Belum ada kolaborasi aktif</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => setActiveTab("invite")}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Undang Organisasi
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
           
-          {/* Received Invitations */}
-          {receivedInvitations.length > 0 && (
+          <TabsContent value="received">
             <Card>
               <CardHeader>
                 <CardTitle>Undangan Kolaborasi Masuk</CardTitle>
@@ -308,27 +546,43 @@ const OrganizationCollaboration = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="divide-y border rounded-lg">
-                  {receivedInvitations.map((collab) => (
-                    <div key={collab.id} className="p-4 flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium">{collab.inviting_org?.name}</span>
+                {receivedInvitations.length > 0 ? (
+                  <div className="divide-y border rounded-lg">
+                    {receivedInvitations.map((collab) => (
+                      <div key={collab.id} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                              <Building className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                              {getOrganizationDetails(collab)}
+                              <div className="text-sm text-gray-500 mt-1">
+                                <span>Diterima pada {formatDate(collab.created_at)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="ml-2">
+                            {getStatusBadge(collab.status)}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500 mt-1">
-                          Diterima pada {formatDate(collab.created_at)}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {collab.status === 'pending' ? (
-                          <>
+                        
+                        {collab.message && (
+                          <div className="mt-3 pl-14">
+                            <div className="text-sm italic bg-gray-50 p-3 rounded-lg border">
+                              "{collab.message}"
+                            </div>
+                          </div>
+                        )}
+                        
+                        {collab.status === 'pending' && (
+                          <div className="mt-4 pl-14 flex items-center space-x-2">
                             <Button 
                               size="sm" 
                               variant="default"
                               onClick={() => handleRespondToInvitation(collab.id, true)}
                             >
-                              <Check className="h-3 w-3 mr-1" />
+                              <Check className="h-4 w-4 mr-1" />
                               Terima
                             </Button>
                             <Button 
@@ -336,31 +590,25 @@ const OrganizationCollaboration = () => {
                               variant="outline"
                               onClick={() => handleRespondToInvitation(collab.id, false)}
                             >
-                              <X className="h-3 w-3 mr-1" />
+                              <X className="h-4 w-4 mr-1" />
                               Tolak
                             </Button>
-                          </>
-                        ) : collab.status === 'rejected' ? (
-                          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <X className="h-3 w-3 mr-1" />
-                            Ditolak
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {collab.status}
                           </div>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 border rounded-lg">
+                    <Mail className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p>Tidak ada undangan kolaborasi masuk</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          )}
+          </TabsContent>
           
-          {/* Sent Invitations */}
-          {sentInvitations.length > 0 && (
+          <TabsContent value="sent">
             <Card>
               <CardHeader>
                 <CardTitle>Undangan Kolaborasi Terkirim</CardTitle>
@@ -369,44 +617,141 @@ const OrganizationCollaboration = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="divide-y border rounded-lg">
-                  {sentInvitations
-                    .filter(collab => collab.status !== 'accepted')
-                    .map((collab) => (
-                    <div key={collab.id} className="p-4 flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium">{collab.invited_org?.name}</span>
-                        </div>
-                        <div className="text-sm text-gray-500 mt-1">
-                          Dikirim pada {formatDate(collab.created_at)}
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        {collab.status === 'pending' ? (
-                          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Menunggu
+                {sentInvitations.filter(collab => collab.status !== 'accepted').length > 0 ? (
+                  <div className="divide-y border rounded-lg">
+                    {sentInvitations
+                      .filter(collab => collab.status !== 'accepted')
+                      .map((collab) => (
+                      <div key={collab.id} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                              <Building className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                              {getOrganizationDetails(collab)}
+                              <div className="text-sm text-gray-500 mt-1">
+                                <span>Dikirim pada {formatDate(collab.created_at)}</span>
+                              </div>
+                            </div>
                           </div>
-                        ) : collab.status === 'rejected' ? (
-                          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <X className="h-3 w-3 mr-1" />
-                            Ditolak
+                          <div className="flex items-center">
+                            {collab.status === 'pending' ? (
+                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Menunggu
+                              </Badge>
+                            ) : collab.status === 'rejected' ? (
+                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                <X className="h-3 w-3 mr-1" />
+                                Ditolak
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">
+                                {collab.status}
+                              </Badge>
+                            )}
                           </div>
-                        ) : (
-                          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            {collab.status}
+                        </div>
+                        
+                        {collab.message && (
+                          <div className="mt-3 pl-14">
+                            <div className="text-sm italic bg-gray-50 p-3 rounded-lg border">
+                              "{collab.message}"
+                            </div>
                           </div>
                         )}
+                        
+                        <div className="mt-4 pl-14">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm">Batalkan Undangan</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Konfirmasi Pembatalan Undangan</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Apakah Anda yakin ingin membatalkan undangan kolaborasi ini? 
+                                  Tindakan ini tidak dapat dibatalkan, tapi Anda bisa mengundang mereka lagi nanti.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleEndCollaboration(collab.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Ya, Batalkan Undangan
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 border rounded-lg">
+                    <Share className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p>Tidak ada undangan kolaborasi terkirim</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          )}
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="invite">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                  <Building className="h-5 w-5 text-blue-600" />
+                  <CardTitle>Undang Organisasi untuk Kolaborasi</CardTitle>
+                </div>
+                <CardDescription>
+                  Undang organisasi lain untuk berkolaborasi dengan {currentOrgName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleInvite} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="organizationEmail">Email Admin Organisasi</Label>
+                    <Input
+                      id="organizationEmail"
+                      type="email"
+                      placeholder="admin@organization.com"
+                      value={organizationEmail}
+                      onChange={(e) => setOrganizationEmail(e.target.value)}
+                      required
+                    />
+                    <p className="text-xs text-gray-500">
+                      Masukkan email admin dari organisasi yang ingin Anda ajak berkolaborasi
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Pesan (Opsional)</Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Tulis pesan singkat tentang tujuan kolaborasi ini..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+                  
+                  <Button type="submit" disabled={isLoading || !currentOrgId} className="w-full">
+                    {isLoading ? "Mengirim..." : "Kirim Undangan Kolaborasi"}
+                  </Button>
+                </form>
+              </CardContent>
+              <CardFooter className="flex justify-between border-t pt-4 pb-0">
+                <p className="text-sm text-gray-500">
+                  Organisasi akan menerima notifikasi undangan
+                </p>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
