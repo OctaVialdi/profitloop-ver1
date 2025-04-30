@@ -12,8 +12,11 @@ import { supabase } from "@/integrations/supabase/client";
 interface Invitation {
   id: string;
   email: string;
-  status: 'pending' | 'accepted';
+  status: 'pending' | 'accepted' | 'rejected'; // Updated to include 'rejected'
   created_at: string;
+  expires_at?: string;
+  token?: string;
+  organization_id?: string;
 }
 
 const InviteMembers = () => {
@@ -50,7 +53,13 @@ const InviteMembers = () => {
             console.error("Error fetching invitations:", error);
             toast.error("Gagal memuat undangan yang ada.");
           } else {
-            setInvitations(invitationsData || []);
+            // Cast the status to the correct type
+            const typedInvitations: Invitation[] = invitationsData?.map(inv => ({
+              ...inv,
+              status: (inv.status as 'pending' | 'accepted' | 'rejected') || 'pending'
+            })) || [];
+            
+            setInvitations(typedInvitations);
           }
         }
       }
@@ -130,9 +139,14 @@ const InviteMembers = () => {
       toast.success(`Undangan telah dikirim ke ${email}`);
       setEmail("");
       
-      // Add the new invitation to the list
+      // Add the new invitation to the list with proper type casting
       if (invitation) {
-        setInvitations([invitation, ...invitations]);
+        const typedInvitation: Invitation = {
+          ...invitation,
+          status: (invitation.status as 'pending' | 'accepted' | 'rejected') || 'pending'
+        };
+        
+        setInvitations([typedInvitation, ...invitations]);
       }
     } catch (error: any) {
       console.error("Invitation error:", error);
