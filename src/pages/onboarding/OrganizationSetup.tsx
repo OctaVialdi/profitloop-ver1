@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 const businessFields = [
   { value: "it", label: "IT" },
@@ -25,23 +27,72 @@ const OrganizationSetup = () => {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      // This will be implemented after Supabase integration
-      console.log("Organization setup with:", { name, businessField, employeeCount, address, phone });
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
       
-      // Mock successful setup for demonstration
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Get default subscription plan (Basic)
+      const { data: planData, error: planError } = await supabase
+        .from('subscription_plans')
+        .select('id')
+        .eq('name', 'Basic')
+        .single();
+      
+      if (planError) {
+        throw planError;
+      }
+      
+      // Set trial_end_date to 30 days from now
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 30);
+      
+      // Create new organization
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .insert({
+          name,
+          business_field: businessField,
+          employee_count: employeeCount ? parseInt(employeeCount) : null,
+          address,
+          phone,
+          subscription_plan_id: planData.id,
+          trial_end_date: trialEndDate.toISOString(),
+        })
+        .select()
+        .single();
+      
+      if (orgError) {
+        throw orgError;
+      }
+      
+      // Update user profile to link with organization as super_admin
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          organization_id: orgData.id,
+          role: 'super_admin'
+        })
+        .eq('id', user.id);
+      
+      if (profileError) {
+        throw profileError;
+      }
+      
       toast.success("Organisasi berhasil dibuat!");
-      setTimeout(() => {
-        window.location.href = "/welcome";
-      }, 1000);
-    } catch (error) {
+      navigate("/welcome");
+    } catch (error: any) {
       console.error("Organization setup error:", error);
-      toast.error("Gagal membuat organisasi. Silakan coba lagi.");
+      toast.error(error.message || "Gagal membuat organisasi. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }

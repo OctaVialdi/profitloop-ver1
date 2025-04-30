@@ -9,7 +9,199 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      collaborations: {
+        Row: {
+          created_at: string | null
+          id: string
+          invited_org_id: string
+          inviting_org_id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invited_org_id: string
+          inviting_org_id: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invited_org_id?: string
+          inviting_org_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborations_invited_org_id_fkey"
+            columns: ["invited_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborations_inviting_org_id_fkey"
+            columns: ["inviting_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          organization_id: string
+          status: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          organization_id: string
+          status?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          organization_id?: string
+          status?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          address: string | null
+          business_field: string | null
+          created_at: string | null
+          employee_count: number | null
+          id: string
+          name: string
+          phone: string | null
+          subscription_plan_id: string | null
+          trial_end_date: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_field?: string | null
+          created_at?: string | null
+          employee_count?: number | null
+          id?: string
+          name: string
+          phone?: string | null
+          subscription_plan_id?: string | null
+          trial_end_date?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_field?: string | null
+          created_at?: string | null
+          employee_count?: number | null
+          id?: string
+          name?: string
+          phone?: string | null
+          subscription_plan_id?: string | null
+          trial_end_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_subscription_plan_id_fkey"
+            columns: ["subscription_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          invited_by: string | null
+          organization_id: string | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          invited_by?: string | null
+          organization_id?: string | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          organization_id?: string | null
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          features: Json | null
+          id: string
+          max_members: number | null
+          name: string
+          price: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          features?: Json | null
+          id?: string
+          max_members?: number | null
+          name: string
+          price?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          features?: Json | null
+          id?: string
+          max_members?: number | null
+          name?: string
+          price?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

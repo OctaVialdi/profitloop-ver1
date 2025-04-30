@@ -1,11 +1,12 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,17 +27,36 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // This will be implemented after Supabase integration
-      console.log("Register attempt with:", { email, password, fullName });
-      
-      // Mock successful registration for demonstration
-      toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
-      setTimeout(() => {
-        window.location.href = "/auth/verification-sent";
-      }, 1500);
-    } catch (error) {
+      // Daftar dengan Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data && data.user) {
+        // Update profile dengan data tambahan
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ full_name: fullName })
+          .eq('id', data.user.id);
+
+        if (profileError) {
+          console.error("Error updating profile:", profileError);
+        }
+
+        toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
+        navigate("/auth/verification-sent");
+      }
+    } catch (error: any) {
       console.error("Registration error:", error);
-      toast.error("Gagal mendaftar. Silakan coba lagi.");
+      toast.error(error.message || "Gagal mendaftar. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }

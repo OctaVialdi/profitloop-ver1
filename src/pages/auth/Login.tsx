@@ -1,33 +1,62 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/dashboard");
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      // This will be implemented after Supabase integration
-      console.log("Login attempt with:", { email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
       
-      // Mock successful login for demonstration
-      toast.success("Login berhasil! Anda akan dialihkan ke dashboard.");
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1000);
-    } catch (error) {
+      if (data.user) {
+        // Check if user has organization
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', data.user.id)
+          .single();
+        
+        toast.success("Login berhasil!");
+        
+        if (profileData && profileData.organization_id) {
+          navigate("/dashboard");
+        } else {
+          navigate("/onboarding");
+        }
+      }
+    } catch (error: any) {
       console.error("Login error:", error);
-      toast.error("Gagal login. Periksa email dan password Anda.");
+      toast.error(error.message || "Gagal login. Periksa email dan password Anda.");
     } finally {
       setIsLoading(false);
     }
