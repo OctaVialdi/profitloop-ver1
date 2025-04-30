@@ -15,11 +15,13 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import VerificationSent from "./pages/auth/VerificationSent";
+import AcceptInvitation from "./pages/auth/AcceptInvitation";
 import OrganizationSetup from "./pages/onboarding/OrganizationSetup";
 import WelcomePage from "./pages/WelcomePage";
 import Dashboard from "./pages/dashboard/Dashboard";
 import InviteMembers from "./pages/dashboard/InviteMembers";
 import Subscription from "./pages/dashboard/Subscription";
+import OrganizationCollaboration from "./pages/dashboard/OrganizationCollaboration";
 
 // Layouts
 import AuthLayout from "./components/layout/AuthLayout";
@@ -98,6 +100,14 @@ const App = () => (
               </AuthLayout>
             } 
           />
+          <Route
+            path="/accept-invitation"
+            element={
+              <AuthLayout>
+                <AcceptInvitation />
+              </AuthLayout>
+            }
+          />
           
           {/* Onboarding routes - protected */}
           <Route path="/onboarding" element={
@@ -138,6 +148,16 @@ const App = () => (
               <PrivateRoute>
                 <DashboardLayout>
                   <Subscription />
+                </DashboardLayout>
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/collaborations" 
+            element={
+              <PrivateRoute>
+                <DashboardLayout>
+                  <OrganizationCollaboration />
                 </DashboardLayout>
               </PrivateRoute>
             } 

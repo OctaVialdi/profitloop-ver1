@@ -1,10 +1,11 @@
 
 import { ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Building, Home, LogOut, Menu, Settings, UserPlus, Users } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -12,6 +13,8 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   // This would be fetched from Supabase after integration
   const user = {
@@ -28,13 +31,21 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Undang Anggota", href: "/invite", icon: UserPlus },
     { name: "Anggota Tim", href: "/members", icon: Users },
+    { name: "Kolaborasi", href: "/collaborations", icon: Building },
     { name: "Subscription", href: "/subscription", icon: Settings },
   ];
 
-  const handleLogout = () => {
-    // This will be implemented with Supabase auth
-    toast.success("Berhasil logout");
-    navigate("/auth/login");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast.success("Berhasil logout");
+      navigate("/auth/login");
+    } catch (error: any) {
+      console.error("Error signing out:", error);
+      toast.error(error.message || "Gagal logout");
+    }
   };
 
   return (
@@ -62,7 +73,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                         <Link
                           key={item.name}
                           to={item.href}
-                          className="flex items-center gap-2 px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100"
+                          className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 ${
+                            currentPath === item.href ? "bg-gray-100 text-blue-600 font-medium" : "text-gray-700"
+                          }`}
                         >
                           <item.icon className="h-5 w-5" />
                           {item.name}
@@ -104,7 +117,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Link
                 key={item.name}
                 to={item.href}
-                className="flex items-center gap-2 px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100"
+                className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 ${
+                  currentPath === item.href ? "bg-gray-100 text-blue-600 font-medium" : "text-gray-700"
+                }`}
               >
                 <item.icon className="h-5 w-5" />
                 {item.name}

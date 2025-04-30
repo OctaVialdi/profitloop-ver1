@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Mail, Check, X, Clock } from "lucide-react";
+import { UserPlus, Mail, Check, X, Clock, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Invitation {
   id: string;
   email: string;
-  status: 'pending' | 'accepted' | 'rejected'; // Updated to include 'rejected'
+  status: 'pending' | 'accepted' | 'rejected' | 'sent';
   created_at: string;
   expires_at?: string;
   token?: string;
@@ -23,6 +23,7 @@ const InviteMembers = () => {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("employee");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState<{[key: string]: boolean}>({});
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
 
@@ -56,7 +57,7 @@ const InviteMembers = () => {
             // Cast the status to the correct type
             const typedInvitations: Invitation[] = invitationsData?.map(inv => ({
               ...inv,
-              status: (inv.status as 'pending' | 'accepted' | 'rejected') || 'pending'
+              status: (inv.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending'
             })) || [];
             
             setInvitations(typedInvitations);
@@ -123,6 +124,7 @@ const InviteMembers = () => {
           organization_id: organizationId,
           email: email,
           token: token,
+          role: role, // Store the role in the invitation
           // On a real application, we would set expire_at, but using default now
         })
         .select()
@@ -132,21 +134,20 @@ const InviteMembers = () => {
         throw error;
       }
       
-      // In a real app, we would send an email to the user with a link containing the token
-      // For now, we'll just log it and show a success message
-      console.log("Invitation token:", token);
-      
-      toast.success(`Undangan telah dikirim ke ${email}`);
+      toast.success(`Undangan telah dibuat untuk ${email}`);
       setEmail("");
       
       // Add the new invitation to the list with proper type casting
       if (invitation) {
         const typedInvitation: Invitation = {
           ...invitation,
-          status: (invitation.status as 'pending' | 'accepted' | 'rejected') || 'pending'
+          status: (invitation.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending'
         };
         
         setInvitations([typedInvitation, ...invitations]);
+        
+        // Automatically send the invitation email
+        await sendInvitationEmail(typedInvitation.id);
       }
     } catch (error: any) {
       console.error("Invitation error:", error);
@@ -156,12 +157,75 @@ const InviteMembers = () => {
     }
   };
 
+  const sendInvitationEmail = async (invitationId: string) => {
+    // Set loading state for this specific invitation
+    setIsSending(prev => ({ ...prev, [invitationId]: true }));
+    
+    try {
+      // Call the edge function to send the invitation email
+      const response = await supabase.functions.invoke('send-invitation', {
+        body: { invitationId }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || "Gagal mengirim email undangan");
+      }
+      
+      // Update the local state to reflect that the invitation was sent
+      setInvitations(invitations.map(inv => 
+        inv.id === invitationId ? { ...inv, status: 'sent' as const } : inv
+      ));
+      
+      toast.success("Email undangan telah dikirim");
+    } catch (error: any) {
+      console.error("Error sending invitation email:", error);
+      toast.error(error.message || "Gagal mengirim email undangan. Silakan coba lagi.");
+    } finally {
+      setIsSending(prev => ({ ...prev, [invitationId]: false }));
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
     });
+  };
+
+  const getStatusDisplay = (status: Invitation['status']) => {
+    switch(status) {
+      case 'pending':
+        return (
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            <Clock className="h-3 w-3 mr-1" />
+            Dibuat
+          </div>
+        );
+      case 'sent':
+        return (
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Send className="h-3 w-3 mr-1" />
+            Terkirim
+          </div>
+        );
+      case 'accepted':
+        return (
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <Check className="h-3 w-3 mr-1" />
+            Diterima
+          </div>
+        );
+      case 'rejected':
+        return (
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <X className="h-3 w-3 mr-1" />
+            Ditolak
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -227,22 +291,25 @@ const InviteMembers = () => {
                         Dikirim pada {formatDate(invitation.created_at)}
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      {invitation.status === 'pending' ? (
-                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          <Clock className="h-3 w-3 mr-1" />
-                          Menunggu
-                        </div>
-                      ) : invitation.status === 'accepted' ? (
-                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <Check className="h-3 w-3 mr-1" />
-                          Diterima
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          <X className="h-3 w-3 mr-1" />
-                          Ditolak
-                        </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusDisplay(invitation.status)}
+                      
+                      {invitation.status === 'pending' && (
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => sendInvitationEmail(invitation.id)}
+                          disabled={isSending[invitation.id]}
+                        >
+                          {isSending[invitation.id] ? (
+                            <>Mengirim...</>
+                          ) : (
+                            <>
+                              <Send className="h-3 w-3 mr-1" />
+                              Kirim Email
+                            </>
+                          )}
+                        </Button>
                       )}
                     </div>
                   </div>
