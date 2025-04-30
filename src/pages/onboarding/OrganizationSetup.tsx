@@ -30,32 +30,34 @@ const OrganizationSetup = () => {
           setIsAuthenticated(false);
           toast.error("Anda belum login. Silakan login terlebih dahulu.");
           navigate("/auth/login");
-        } else {
-          console.log("User is authenticated:", session.user.id);
-          setIsAuthenticated(true);
-          
-          // Check if user already has an organization
-          try {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('organization_id')
-              .eq('id', session.user.id)
-              .maybeSingle();
-              
-            if (profileData?.organization_id) {
-              console.log("User already has an organization:", profileData.organization_id);
-              toast.info("Anda sudah memiliki organisasi.");
-              navigate("/welcome");
-            }
-          } catch (error) {
-            console.error("Error checking profile:", error);
-            // Continue with organization setup even if profile check fails
+          return;
+        } 
+        
+        console.log("User is authenticated:", session.user.id);
+        setIsAuthenticated(true);
+        
+        // Check if user already has an organization
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+          if (profileData?.organization_id) {
+            console.log("User already has an organization:", profileData.organization_id);
+            toast.info("Anda sudah memiliki organisasi.");
+            navigate("/welcome");
           }
+        } catch (error) {
+          console.error("Error checking profile:", error);
+          // Continue with organization setup even if profile check fails
         }
       } catch (error) {
         console.error("Error checking auth:", error);
         toast.error("Terjadi kesalahan saat memeriksa autentikasi.");
         setIsAuthenticated(false);
+        navigate("/auth/login");
       }
     };
     
