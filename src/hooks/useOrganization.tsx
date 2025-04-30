@@ -87,12 +87,12 @@ export function useOrganization(): OrganizationData {
         return;
       }
       
-      // Get user profile - use direct user ID query instead of dynamic RLS policy
-      // This avoids the recursion issue with RLS policies
+      // Get user profile using direct query by ID
+      // This avoids using complex RLS policies that might cause recursion
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
+        .rpc('get_user_profile_by_id', {
+          user_id: session.user.id
+        })
         .maybeSingle();
       
       if (profileError) {
@@ -106,19 +106,37 @@ export function useOrganization(): OrganizationData {
         return;
       }
       
-      if (!profileData.organization_id) {
+      // Get full profile data to have complete information
+      const { data: fullProfileData, error: fullProfileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+        
+      if (fullProfileError) {
+        console.error("Full profile fetch error:", fullProfileError);
+        // Don't throw, continue with limited profile data
+      }
+      
+      // Use full profile if available, otherwise use limited data
+      const completeProfile = {
+        ...profileData,
+        ...(fullProfileData || {})
+      } as UserProfile;
+      
+      if (!completeProfile.organization_id) {
         console.log("No organization associated with profile, redirecting to onboarding");
         navigate('/onboarding');
         return;
       }
       
-      setUserProfile(profileData as UserProfile);
+      setUserProfile(completeProfile);
       
       // Get organization data
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('*')
-        .eq('id', profileData.organization_id)
+        .eq('id', completeProfile.organization_id)
         .maybeSingle();
       
       if (orgError) {
@@ -127,7 +145,7 @@ export function useOrganization(): OrganizationData {
       }
       
       if (!orgData) {
-        console.error("No organization found with ID:", profileData.organization_id);
+        console.error("No organization found with ID:", completeProfile.organization_id);
         throw new Error("Organisasi tidak ditemukan");
       }
       

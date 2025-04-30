@@ -263,9 +263,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
+      get_user_profile_by_id: {
+        Args: { user_id: string }
+        Returns: {
+          id: string
+          role: string
+          organization_id: string
+        }[]
       }
     }
     Enums: {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,19 +87,30 @@ const OrganizationSetup = () => {
       if (orgError) {
         throw orgError;
       }
-      
-      // Update profile directly without RLS
-      // Use a simple and direct update query to avoid recursion issues
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          organization_id: orgData.id,
-          role: 'super_admin'
-        })
-        .eq('id', user.id);
+
+      // Update profile directly - metode yang aman tanpa menggunakan RLS kompleks
+      // Hanya update organization_id dan role untuk menghindari recursive policy
+      const { error: profileError } = await supabase.rpc('update_user_organization', {
+        user_id: user.id,
+        org_id: orgData.id,
+        user_role: 'super_admin'
+      });
       
       if (profileError) {
-        throw profileError;
+        console.error("Error updating profile:", profileError);
+        
+        // Fallback method jika RPC gagal
+        const { error: directUpdateError } = await supabase
+          .from('profiles')
+          .update({
+            organization_id: orgData.id,
+            role: 'super_admin'
+          })
+          .eq('id', user.id);
+        
+        if (directUpdateError) {
+          throw directUpdateError;
+        }
       }
       
       toast.success("Organisasi berhasil dibuat!");
