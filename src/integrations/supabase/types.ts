@@ -263,6 +263,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_organization_with_profile: {
+        Args: {
+          user_id: string
+          org_name: string
+          org_business_field: string
+          org_employee_count: number
+          org_address: string
+          org_phone: string
+          user_role: string
+        }
+        Returns: Json
+      }
       get_user_profile_by_id: {
         Args: { user_id: string }
         Returns: {
