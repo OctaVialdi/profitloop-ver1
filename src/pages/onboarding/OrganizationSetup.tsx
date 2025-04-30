@@ -5,6 +5,7 @@ import { toast } from "@/components/ui/sonner";
 import OrganizationForm from "@/components/onboarding/OrganizationForm";
 import { OrganizationFormData } from "@/types/onboarding";
 import { createOrganization } from "@/services/onboardingService";
+import { supabase } from "@/integrations/supabase/client";
 
 const OrganizationSetup = () => {
   const [formData, setFormData] = useState<OrganizationFormData>({
@@ -24,9 +25,23 @@ const OrganizationSetup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast.error("Nama organisasi wajib diisi");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
+      // Check if user is authenticated first
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        toast.error("Anda belum login. Silakan login terlebih dahulu.");
+        navigate("/auth/login");
+        return;
+      }
+      
       await createOrganization(formData);
       toast.success("Organisasi berhasil dibuat!");
       navigate("/welcome");
