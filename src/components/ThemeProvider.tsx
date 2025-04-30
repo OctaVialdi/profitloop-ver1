@@ -1,5 +1,5 @@
 
-import { ReactNode, createContext, useContext, useEffect } from "react";
+import { ReactNode, createContext, useContext, useEffect, useState } from "react";
 import { useTheme } from "@/hooks/useTheme";
 
 interface ThemeContextType {
@@ -11,17 +11,31 @@ const ThemeContext = createContext<ThemeContextType>({ logoUrl: null });
 export const useAppTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const { themeSettings, logoUrl } = useTheme();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [themeSettings, setThemeSettings] = useState<any>(null);
 
-  // Terapkan variabel CSS kustom untuk tema
+  // We'll access the theme hook only in a try/catch to avoid errors when outside router context
+  useEffect(() => {
+    try {
+      // Only try to use the theme hook in authenticated routes
+      const { themeSettings: settings, logoUrl: logo } = useTheme();
+      setThemeSettings(settings);
+      setLogoUrl(logo);
+    } catch (error) {
+      console.log("Theme not available in this context");
+      // Silent fail - this will happen on unauthenticated routes, which is expected
+    }
+  }, []);
+
+  // Apply custom CSS variables for theme
   useEffect(() => {
     if (!themeSettings) return;
 
     const root = document.documentElement;
     
-    // Konversi HEX ke HSL
+    // Convert HEX to HSL
     const hexToHSL = (hex: string): string => {
-      // Konversi hex ke rgb
+      // Convert hex to rgb
       let r = 0, g = 0, b = 0;
       if (hex.length === 4) {
         r = parseInt(hex[1] + hex[1], 16);
@@ -33,7 +47,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         b = parseInt(hex.slice(5, 7), 16);
       }
 
-      // Konversi rgb ke hsl
+      // Convert rgb to hsl
       r /= 255;
       g /= 255;
       b /= 255;
@@ -60,7 +74,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       return `${h} ${s}% ${l}%`;
     };
 
-    // Terapkan variabel CSS
+    // Apply CSS variables
     root.style.setProperty('--primary', hexToHSL(themeSettings.primary_color));
     root.style.setProperty('--primary-foreground', '0 0% 100%');
     

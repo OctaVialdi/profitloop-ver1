@@ -30,10 +30,10 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <Toaster />
-        <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider>
+          <Toaster />
           <Routes>
             <Route path="/" element={<Index />} />
             
@@ -63,9 +63,9 @@ function App() {
             
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ThemeProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
