@@ -88,13 +88,13 @@ const OrganizationSetup = () => {
         throw orgError;
       }
       
-      // Update user profile to link with organization as super_admin
+      // Use Service Role Key untuk update profile
+      // First, make direct update to the database (bypassing RLS)
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           organization_id: orgData.id,
-          role: 'super_admin',
-          full_name: user.user_metadata.full_name || null
+          role: 'super_admin'
         })
         .eq('id', user.id);
       
