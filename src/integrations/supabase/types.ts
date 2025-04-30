@@ -271,6 +271,10 @@ export type Database = {
           organization_id: string
         }[]
       }
+      is_in_same_organization: {
+        Args: { profile_id: string }
+        Returns: boolean
+      }
       update_user_organization: {
         Args: { user_id: string; org_id: string; user_role: string }
         Returns: undefined

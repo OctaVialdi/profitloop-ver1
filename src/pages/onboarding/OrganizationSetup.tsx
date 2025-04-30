@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import OrganizationForm from "@/components/onboarding/OrganizationForm";
@@ -17,31 +17,52 @@ const OrganizationSetup = () => {
   });
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const navigate = useNavigate();
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setIsAuthenticated(false);
+        toast.error("Anda belum login. Silakan login terlebih dahulu.");
+        navigate("/auth/login");
+      } else {
+        setIsAuthenticated(true);
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   const handleChange = (field: keyof OrganizationFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      toast.error("Nama organisasi wajib diisi");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
-      toast.error("Nama organisasi wajib diisi");
+    if (!isAuthenticated) {
+      toast.error("Anda belum login. Silakan login terlebih dahulu.");
+      navigate("/auth/login");
       return;
     }
+    
+    if (!validateForm()) return;
     
     setIsLoading(true);
     
     try {
-      // Check if user is authenticated first
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session) {
-        toast.error("Anda belum login. Silakan login terlebih dahulu.");
-        navigate("/auth/login");
-        return;
-      }
-      
       await createOrganization(formData);
       toast.success("Organisasi berhasil dibuat!");
       navigate("/welcome");
@@ -52,6 +73,17 @@ const OrganizationSetup = () => {
       setIsLoading(false);
     }
   };
+
+  if (isAuthenticated === null) {
+    // Still checking authentication
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
+        <div className="text-center">
+          <p>Memuat...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
