@@ -29,19 +29,19 @@ export const createOrganization = async (formData: OrganizationFormData) => {
 
     if (error) {
       console.error("Error creating organization with RPC:", error);
-      // Fallback to direct method if RPC fails
-      return await createOrganizationFallback(userId, formData);
+      // Try direct method if RPC fails
+      return await createOrganizationDirectly(userId, formData);
     }
 
     console.log("Organization created successfully via RPC:", data);
     return data;
   } catch (error) {
     console.error("Error in create organization process:", error);
-    // Try fallback method if the primary method fails
+    // Try direct method if the primary method fails
     try {
-      return await createOrganizationFallback(userId, formData);
+      return await createOrganizationDirectly(userId, formData);
     } catch (fallbackError) {
-      console.error("Fallback also failed:", fallbackError);
+      console.error("Direct method also failed:", fallbackError);
       if (error instanceof Error) {
         throw error;
       }
@@ -50,9 +50,9 @@ export const createOrganization = async (formData: OrganizationFormData) => {
   }
 };
 
-// Fallback method using direct queries instead of RPC
-async function createOrganizationFallback(userId: string, formData: OrganizationFormData) {
-  console.log("Using fallback method to create organization");
+// Direct method using separate queries instead of RPC
+async function createOrganizationDirectly(userId: string, formData: OrganizationFormData) {
+  console.log("Using direct method to create organization");
   
   // Get default subscription plan (Basic)
   let { data: planData, error: planError } = await supabase
@@ -97,10 +97,10 @@ async function createOrganizationFallback(userId: string, formData: Organization
     .from('organizations')
     .insert({
       name: formData.name,
-      business_field: formData.businessField,
+      business_field: formData.businessField || null,
       employee_count: formData.employeeCount ? parseInt(formData.employeeCount) : 1,
-      address: formData.address,
-      phone: formData.phone,
+      address: formData.address || null,
+      phone: formData.phone || null,
       subscription_plan_id: planData.id,
       trial_end_date: trialEndDate.toISOString(),
     })
@@ -112,12 +112,12 @@ async function createOrganizationFallback(userId: string, formData: Organization
     throw new Error("Gagal membuat organisasi. Silakan coba lagi nanti.");
   }
 
-  // Create or update profile directly with service role (bypassing RLS policies)
+  // Directly update profile with service role (bypassing RLS policies)
   try {
     // First check if profile exists
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id, email')
+      .select('id')
       .eq('id', userId)
       .maybeSingle();
 
@@ -134,6 +134,7 @@ async function createOrganizationFallback(userId: string, formData: Organization
       if (updateError) {
         console.error("Error updating profile:", updateError);
         console.log("Profile update failed, but organization was created");
+        // Continue anyway since organization was created
       }
     } else {
       // Get user email for profile creation
@@ -153,6 +154,7 @@ async function createOrganizationFallback(userId: string, formData: Organization
         if (insertError) {
           console.error("Error inserting profile:", insertError);
           console.log("Profile insertion failed, but organization was created");
+          // Continue anyway since organization was created
         }
       }
     }
@@ -161,7 +163,6 @@ async function createOrganizationFallback(userId: string, formData: Organization
   } catch (profileError) {
     console.error("Error updating profile:", profileError);
     // Return organization data even if profile update fails
-    // This is important because the organization was created successfully
     return orgData;
   }
 }

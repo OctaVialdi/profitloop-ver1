@@ -38,13 +38,16 @@ const OrganizationSetup = () => {
         
         // Check if user already has an organization
         try {
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('organization_id')
             .eq('id', session.user.id)
             .maybeSingle();
-            
-          if (profileData?.organization_id) {
+          
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            // Continue with organization setup even if profile check fails
+          } else if (profileData?.organization_id) {
             console.log("User already has an organization:", profileData.organization_id);
             toast.info("Anda sudah memiliki organisasi.");
             navigate("/welcome");
@@ -88,18 +91,35 @@ const OrganizationSetup = () => {
     if (!validateForm()) return;
     
     setIsLoading(true);
-    toast.loading("Sedang membuat organisasi...");
     
     try {
+      // Show loading toast
+      toast.loading("Sedang membuat organisasi...");
+      
       console.log("Submitting organization data:", formData);
-      await createOrganization(formData);
+      const result = await createOrganization(formData);
+      
+      // Dismiss the loading toast
       toast.dismiss();
-      toast.success("Organisasi berhasil dibuat!");
-      navigate("/welcome");
+      
+      if (result) {
+        toast.success("Organisasi berhasil dibuat!");
+        navigate("/welcome");
+      } else {
+        toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");
+      }
     } catch (error: any) {
       console.error("Organization setup error:", error);
       toast.dismiss();
-      toast.error(error.message || "Gagal membuat organisasi. Silakan coba lagi.");
+      
+      // Provide more specific error messages
+      if (error.message?.includes("violates row-level security policy")) {
+        toast.error("Akses ditolak. Coba logout dan login kembali.");
+      } else if (error.message?.includes("infinite recursion")) {
+        toast.error("Terjadi kesalahan internal. Tim kami sedang memperbaikinya.");
+      } else {
+        toast.error(error.message || "Gagal membuat organisasi. Silakan coba lagi.");
+      }
     } finally {
       setIsLoading(false);
     }
