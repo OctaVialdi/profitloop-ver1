@@ -1,64 +1,70 @@
-
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 
-// Pages
-import NotFound from '@/pages/NotFound';
-import WelcomePage from '@/pages/WelcomePage';
-import Dashboard from '@/pages/dashboard/Dashboard';
-import OrganizationSetup from '@/pages/onboarding/OrganizationSetup';
-import Subscription from '@/pages/dashboard/Subscription';
-import MemberManagement from '@/pages/dashboard/MemberManagement';
-import InviteMembers from '@/pages/dashboard/InviteMembers';
-import OrganizationCollaboration from '@/pages/dashboard/OrganizationCollaboration';
-import NotificationPage from '@/pages/dashboard/Notifications';
-
-// Auth pages
-import Login from '@/pages/auth/Login';
-import Register from '@/pages/auth/Register';
-import VerificationSent from '@/pages/auth/VerificationSent';
-import AcceptInvitation from '@/pages/auth/AcceptInvitation';
-
 // Layouts
-import AuthLayout from '@/components/layout/AuthLayout';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import AuthLayout from "@/components/layout/AuthLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+
+// Pages
+import Index from "@/pages/Index";
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import VerificationSent from "@/pages/auth/VerificationSent";
+import AcceptInvitation from "@/pages/auth/AcceptInvitation";
+import OrganizationSetup from "@/pages/onboarding/OrganizationSetup";
+import WelcomePage from "@/pages/WelcomePage";
+import Dashboard from "@/pages/dashboard/Dashboard";
+import InviteMembers from "@/pages/dashboard/InviteMembers";
+import MemberManagement from "@/pages/dashboard/MemberManagement";
+import OrganizationCollaboration from "@/pages/dashboard/OrganizationCollaboration";
+import Subscription from "@/pages/dashboard/Subscription";
+import Notifications from "@/pages/dashboard/Notifications";
+import NotFound from "@/pages/NotFound";
+import OrganizationSettings from "./pages/dashboard/OrganizationSettings";
+import { ThemeProvider } from "./components/ThemeProvider";
+
+// Create a client
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Redirect root to dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-        {/* Auth routes */}
-        <Route element={<AuthLayout><Outlet /></AuthLayout>}>
-          <Route path="/auth/login" element={<Login />} />
-          <Route path="/auth/register" element={<Register />} />
-          <Route path="/auth/verification-sent" element={<VerificationSent />} />
-          <Route path="/auth/accept-invitation" element={<AcceptInvitation />} />
-        </Route>
-        
-        {/* Onboarding */}
-        <Route path="/onboarding" element={<OrganizationSetup />} />
-        
-        {/* Welcome page */}
-        <Route path="/welcome" element={<WelcomePage />} />
-        
-        {/* Dashboard routes */}
-        <Route element={<DashboardLayout><Outlet /></DashboardLayout>}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/subscription" element={<Subscription />} />
-          <Route path="/members" element={<MemberManagement />} />
-          <Route path="/invite" element={<InviteMembers />} />
-          <Route path="/collaborations" element={<OrganizationCollaboration />} />
-          <Route path="/notifications" element={<NotificationPage />} />
-        </Route>
-        
-        {/* 404 page */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
-    </Router>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <Toaster />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            
+            {/* Auth Routes */}
+            <Route path="/auth" element={<AuthLayout />}>
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route path="verification-sent" element={<VerificationSent />} />
+              <Route path="accept-invitation" element={<AcceptInvitation />} />
+            </Route>
+            
+            {/* Onboarding */}
+            <Route path="/onboarding" element={<OrganizationSetup />} />
+            <Route path="/welcome" element={<WelcomePage />} />
+            
+            {/* Dashboard Routes */}
+            <Route path="/" element={<DashboardLayout />}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="invite" element={<InviteMembers />} />
+              <Route path="members" element={<MemberManagement />} />
+              <Route path="collaborations" element={<OrganizationCollaboration />} />
+              <Route path="subscription" element={<Subscription />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="organization/settings" element={<OrganizationSettings />} />
+              {/* Other dashboard routes */}
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

@@ -140,9 +140,11 @@ export type Database = {
           created_at: string | null
           employee_count: number | null
           id: string
+          logo_path: string | null
           name: string
           phone: string | null
           subscription_plan_id: string | null
+          theme_settings: Json | null
           trial_end_date: string | null
           trial_expired: boolean | null
         }
@@ -152,9 +154,11 @@ export type Database = {
           created_at?: string | null
           employee_count?: number | null
           id?: string
+          logo_path?: string | null
           name: string
           phone?: string | null
           subscription_plan_id?: string | null
+          theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
         }
@@ -164,9 +168,11 @@ export type Database = {
           created_at?: string | null
           employee_count?: number | null
           id?: string
+          logo_path?: string | null
           name?: string
           phone?: string | null
           subscription_plan_id?: string | null
+          theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
         }
