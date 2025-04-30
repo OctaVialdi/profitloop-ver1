@@ -114,8 +114,14 @@ export function useOrganization(): OrganizationData {
         throw orgError;
       }
       
-      // Convert the data to Organization type with appropriate casting
-      setOrganization(orgData as Organization);
+      // Properly handle the trial_expired field by ensuring it's included
+      // If it's not in the response (old data), set a default value
+      const orgWithTrialStatus: Organization = {
+        ...orgData,
+        trial_expired: orgData.trial_expired !== undefined ? orgData.trial_expired : false
+      };
+      
+      setOrganization(orgWithTrialStatus);
       
       // Get subscription plan data if available
       if (orgData.subscription_plan_id) {
