@@ -23,14 +23,39 @@ const OrganizationSetup = () => {
   // Check authentication status on component mount
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          setIsAuthenticated(false);
+          toast.error("Anda belum login. Silakan login terlebih dahulu.");
+          navigate("/auth/login");
+        } else {
+          console.log("User is authenticated:", session.user.id);
+          setIsAuthenticated(true);
+          
+          // Check if user already has an organization
+          try {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('organization_id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (profileData?.organization_id) {
+              console.log("User already has an organization:", profileData.organization_id);
+              toast.info("Anda sudah memiliki organisasi.");
+              navigate("/welcome");
+            }
+          } catch (error) {
+            console.error("Error checking profile:", error);
+            // Continue with organization setup even if profile check fails
+          }
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        toast.error("Terjadi kesalahan saat memeriksa autentikasi.");
         setIsAuthenticated(false);
-        toast.error("Anda belum login. Silakan login terlebih dahulu.");
-        navigate("/auth/login");
-      } else {
-        setIsAuthenticated(true);
       }
     };
     
@@ -61,13 +86,17 @@ const OrganizationSetup = () => {
     if (!validateForm()) return;
     
     setIsLoading(true);
+    toast.loading("Sedang membuat organisasi...");
     
     try {
+      console.log("Submitting organization data:", formData);
       await createOrganization(formData);
+      toast.dismiss();
       toast.success("Organisasi berhasil dibuat!");
       navigate("/welcome");
     } catch (error: any) {
       console.error("Organization setup error:", error);
+      toast.dismiss();
       toast.error(error.message || "Gagal membuat organisasi. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
