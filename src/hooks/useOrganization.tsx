@@ -3,80 +3,29 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-
-interface Organization {
-  id: string;
-  name: string;
-  business_field: string | null;
-  employee_count: number | null;
-  address: string | null;
-  phone: string | null;
-  subscription_plan_id: string | null;
-  trial_end_date: string | null;
-  trial_expired: boolean | null;
-  theme_settings: Record<string, any> | null;
-  logo_path: string | null;
-}
-
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  max_members: number | null;
-  price: number | null;
-  features: Record<string, any> | null;
-}
-
-interface UserProfile {
-  id: string;
-  email: string;
-  full_name: string | null;
-  organization_id: string | null;
-  role: 'super_admin' | 'admin' | 'employee' | null;
-  invited_by: string | null;
-}
-
-interface OrganizationData {
-  organization: Organization | null;
-  subscriptionPlan: SubscriptionPlan | null;
-  userProfile: UserProfile | null;
-  isLoading: boolean;
-  error: Error | null;
-  isSuperAdmin: boolean;
-  isAdmin: boolean;
-  isEmployee: boolean;
-  isTrialActive: boolean;
-  daysLeftInTrial: number;
-  hasPaidSubscription: boolean;
-  refreshData: () => Promise<void>;
-}
+import { OrganizationData } from "@/types/organization";
+import { getUserProfile, getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
+import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
 
 export function useOrganization(): OrganizationData {
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [subscriptionPlan, setSubscriptionPlan] = useState<SubscriptionPlan | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [organizationData, setOrganizationData] = useState<OrganizationData>({
+    organization: null,
+    subscriptionPlan: null,
+    userProfile: null,
+    isLoading: true,
+    error: null,
+    isSuperAdmin: false,
+    isAdmin: false,
+    isEmployee: false,
+    isTrialActive: false,
+    daysLeftInTrial: 0,
+    hasPaidSubscription: false,
+    refreshData: fetchOrganizationData
+  });
   const navigate = useNavigate();
 
-  const isSuperAdmin = userProfile?.role === 'super_admin';
-  const isAdmin = userProfile?.role === 'admin' || isSuperAdmin;
-  const isEmployee = !!userProfile?.role;
-  
-  const isTrialActive = !!organization?.trial_end_date && 
-                        new Date(organization.trial_end_date) > new Date() && 
-                        !organization.trial_expired;
-                        
-  const daysLeftInTrial = organization?.trial_end_date 
-    ? Math.max(0, Math.ceil((new Date(organization.trial_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 0;
-    
-  const hasPaidSubscription = !!subscriptionPlan && 
-                              subscriptionPlan.name !== 'Basic' && 
-                              !!organization?.subscription_plan_id;
-
-  const fetchOrganizationData = async () => {
-    setIsLoading(true);
-    setError(null);
+  async function fetchOrganizationData() {
+    setOrganizationData(current => ({ ...current, isLoading: true, error: null }));
     
     try {
       // Get current session
@@ -87,108 +36,71 @@ export function useOrganization(): OrganizationData {
         return;
       }
       
-      // Get user profile using direct query by ID
-      // This avoids using complex RLS policies that might cause recursion
-      const { data: profileData, error: profileError } = await supabase
-        .rpc('get_user_profile_by_id', {
-          user_id: session.user.id
-        })
-        .maybeSingle();
+      // Get user profile
+      const profile = await getUserProfile(session.user.id);
       
-      if (profileError) {
-        console.error("Profile fetch error:", profileError);
-        throw profileError;
-      }
-      
-      if (!profileData) {
+      if (!profile) {
         console.log("No profile found, redirecting to onboarding");
         navigate('/onboarding');
         return;
       }
       
-      // Get full profile data to have complete information
-      const { data: fullProfileData, error: fullProfileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-        
-      if (fullProfileError) {
-        console.error("Full profile fetch error:", fullProfileError);
-        // Don't throw, continue with limited profile data
-      }
-      
-      // Use full profile if available, otherwise use limited data
-      const completeProfile = {
-        ...profileData,
-        ...(fullProfileData || {})
-      } as UserProfile;
-      
-      if (!completeProfile.organization_id) {
+      if (!profile.organization_id) {
         console.log("No organization associated with profile, redirecting to onboarding");
         navigate('/onboarding');
         return;
       }
       
-      setUserProfile(completeProfile);
-      
       // Get organization data
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', completeProfile.organization_id)
-        .maybeSingle();
+      const organization = await getOrganization(profile.organization_id);
       
-      if (orgError) {
-        console.error("Organization fetch error:", orgError);
-        throw orgError;
-      }
-      
-      if (!orgData) {
-        console.error("No organization found with ID:", completeProfile.organization_id);
+      if (!organization) {
         throw new Error("Organisasi tidak ditemukan");
       }
       
-      // Ensure trial_expired exists (default to false if not present)
-      const orgWithTrialStatus: Organization = {
-        ...orgData as Organization,
-        trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false
-      };
-      
-      setOrganization(orgWithTrialStatus);
-      
       // Get subscription plan data if available
-      if (orgData.subscription_plan_id) {
-        const { data: planData, error: planError } = await supabase
-          .from('subscription_plans')
-          .select('*')
-          .eq('id', orgData.subscription_plan_id)
-          .maybeSingle();
-          
-        if (!planError && planData) {
-          setSubscriptionPlan(planData as SubscriptionPlan);
-        }
+      let subscriptionPlan = null;
+      if (organization.subscription_plan_id) {
+        subscriptionPlan = await getSubscriptionPlan(organization.subscription_plan_id);
       }
+      
+      // Calculate derived state
+      const { isTrialActive, daysLeftInTrial } = calculateTrialStatus(organization);
+      const hasPaidSubscription = calculateSubscriptionStatus(organization, subscriptionPlan);
+      const { isSuperAdmin, isAdmin, isEmployee } = calculateUserRoles(profile);
       
       // Check if trial has expired but not marked as expired
-      if (orgData.trial_end_date && 
-          new Date(orgData.trial_end_date) < new Date() && 
-          !orgData.trial_expired) {
+      if (organization.trial_end_date && 
+          new Date(organization.trial_end_date) < new Date() && 
+          !organization.trial_expired) {
         // Trigger the edge function to check trial expiration
-        try {
-          await supabase.functions.invoke('check-trial-expiration');
-        } catch (err) {
-          console.error("Failed to invoke check-trial-expiration:", err);
-        }
+        checkTrialExpiration();
       }
+      
+      setOrganizationData({
+        organization,
+        subscriptionPlan,
+        userProfile: profile,
+        isLoading: false,
+        error: null,
+        isSuperAdmin,
+        isAdmin,
+        isEmployee,
+        isTrialActive,
+        daysLeftInTrial,
+        hasPaidSubscription,
+        refreshData: fetchOrganizationData
+      });
     } catch (err: any) {
       console.error("Error fetching organization data:", err);
-      setError(err);
+      setOrganizationData(current => ({
+        ...current,
+        isLoading: false,
+        error: err as Error
+      }));
       toast.error("Gagal memuat data organisasi");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
     fetchOrganizationData();
@@ -201,7 +113,7 @@ export function useOrganization(): OrganizationData {
           event: 'UPDATE', 
           schema: 'public', 
           table: 'organizations',
-          filter: userProfile?.organization_id ? `id=eq.${userProfile.organization_id}` : undefined
+          filter: organizationData.userProfile?.organization_id ? `id=eq.${organizationData.userProfile.organization_id}` : undefined
         }, 
         () => {
           fetchOrganizationData();
@@ -212,20 +124,7 @@ export function useOrganization(): OrganizationData {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userProfile?.organization_id]);
+  }, [organizationData.userProfile?.organization_id]);
 
-  return {
-    organization,
-    subscriptionPlan,
-    userProfile,
-    isLoading,
-    error,
-    isSuperAdmin,
-    isAdmin,
-    isEmployee,
-    isTrialActive,
-    daysLeftInTrial,
-    hasPaidSubscription,
-    refreshData: fetchOrganizationData
-  };
+  return organizationData;
 }
