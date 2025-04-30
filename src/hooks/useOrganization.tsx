@@ -114,6 +114,7 @@ export function useOrganization(): OrganizationData {
         throw orgError;
       }
       
+      // Convert the data to Organization type with appropriate casting
       setOrganization(orgData as Organization);
       
       // Get subscription plan data if available

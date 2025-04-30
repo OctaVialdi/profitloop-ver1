@@ -12,9 +12,10 @@ interface Plan {
   id: string;
   name: string;
   price: number;
-  max_members: number;
-  features: Record<string, any>;
+  max_members: number | null;
+  features: Record<string, any> | null;
   current: boolean;
+  popular?: boolean; // Added popular as optional
 }
 
 const Subscription = () => {
@@ -39,10 +40,12 @@ const Subscription = () => {
 
       // Format plans with proper pricing and mark current plan
       if (plansData) {
-        const formattedPlans = plansData.map(plan => ({
+        const formattedPlans: Plan[] = plansData.map(plan => ({
           ...plan,
           price: plan.price || 0,
           current: organization?.subscription_plan_id === plan.id,
+          features: plan.features as Record<string, any> | null,
+          popular: false // Initialize as false, will set true for middle plan below
         }));
 
         // Sort by price
