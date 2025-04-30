@@ -2,33 +2,43 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Calendar, Home, UserPlus } from "lucide-react";
+import { User, Settings, Calendar, Home, UserPlus, Building, Shield, CreditCard } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 
 const WelcomePage = () => {
-  const { organization, isLoading, daysLeftInTrial } = useOrganization();
+  const { organization, isLoading, daysLeftInTrial, isTrialActive, hasPaidSubscription, subscriptionPlan } = useOrganization();
+  const navigate = useNavigate();
   
   const features = [
     {
       name: "Manajemen Anggota",
       description: "Kelola anggota organisasi dengan mudah",
       icon: User,
+      path: "/invite",
     },
     {
       name: "Kolaborasi Antar Organisasi",
       description: "Bekerja sama dengan organisasi lain",
-      icon: UserPlus,
+      icon: Building,
+      path: "/collaborations",
     },
     {
-      name: "Masa Trial 30 Hari",
-      description: "Akses semua fitur premium selama 30 hari",
-      icon: Calendar,
+      name: hasPaidSubscription ? "Paket Premium Aktif" : "Masa Trial 30 Hari",
+      description: hasPaidSubscription 
+        ? `Paket ${subscriptionPlan?.name} aktif`
+        : `Akses semua fitur premium selama ${daysLeftInTrial} hari lagi`,
+      icon: hasPaidSubscription ? CreditCard : Calendar,
+      path: "/subscription",
     },
     {
       name: "Dashboard Terpadu",
       description: "Pantau semua aktivitas dalam satu tampilan",
       icon: Home,
+      path: "/dashboard",
     },
   ];
 
@@ -70,10 +80,30 @@ const WelcomePage = () => {
             Anda telah berhasil membuat organisasi. Berikut adalah fitur-fitur yang bisa Anda gunakan:
           </CardDescription>
         </CardHeader>
+        
+        {isTrialActive && !hasPaidSubscription && (
+          <div className="px-6 pb-2">
+            <Alert className="bg-blue-50 border-blue-200">
+              <Calendar className="h-4 w-4 text-blue-600" />
+              <AlertTitle>Masa Trial Aktif</AlertTitle>
+              <AlertDescription>
+                <div className="mt-2 space-y-2">
+                  <Progress value={(daysLeftInTrial / 30) * 100} className="h-2" />
+                  <p className="text-sm text-blue-700">Anda memiliki {daysLeftInTrial} hari lagi untuk menikmati semua fitur premium.</p>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+        
         <CardContent>
           <div className="grid md:grid-cols-2 gap-6 mt-4">
             {features.map((feature) => (
-              <div key={feature.name} className="flex items-start space-x-4 p-4 border rounded-lg bg-white">
+              <div 
+                key={feature.name} 
+                className="flex items-start space-x-4 p-4 border rounded-lg bg-white hover:shadow-md transition-all cursor-pointer"
+                onClick={() => navigate(feature.path)}
+              >
                 <div className="bg-blue-100 p-2 rounded-full">
                   <feature.icon className="h-6 w-6 text-blue-600" />
                 </div>
@@ -107,7 +137,9 @@ const WelcomePage = () => {
             </Button>
           </div>
           <p className="text-center text-sm text-gray-500 mt-4">
-            Anda memiliki masa trial {daysLeftInTrial} hari lagi. Berlangganan untuk menikmati semua fitur premium.
+            {hasPaidSubscription 
+              ? `Anda menggunakan paket ${subscriptionPlan?.name || "Premium"}. Nikmati semua fitur tanpa batasan.`
+              : `Anda memiliki masa trial ${daysLeftInTrial} hari lagi. Berlangganan untuk menikmati semua fitur premium.`}
           </p>
         </CardFooter>
       </Card>

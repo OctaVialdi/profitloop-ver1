@@ -3,9 +3,10 @@ import { ReactNode } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Building, Home, LogOut, Menu, Settings, UserPlus, Users } from "lucide-react";
+import { Building, Home, LogOut, Menu, Settings, UserPlus, Users, CreditCard } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/hooks/useOrganization";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -15,25 +16,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
-
-  // This would be fetched from Supabase after integration
-  const user = {
-    name: "John Doe",
-    role: "super_admin"
-  };
-
-  const organization = {
-    name: "PT Example Corp",
-    subscription: "trial"
-  };
+  const { organization, userProfile, isLoading, isAdmin, isSuperAdmin } = useOrganization();
 
   const navigationItems = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Undang Anggota", href: "/invite", icon: UserPlus },
+    { name: "Undang Anggota", href: "/invite", icon: UserPlus, requiredRole: "admin" },
     { name: "Anggota Tim", href: "/members", icon: Users },
-    { name: "Kolaborasi", href: "/collaborations", icon: Building },
-    { name: "Subscription", href: "/subscription", icon: Settings },
+    { name: "Kolaborasi", href: "/collaborations", icon: Building, requiredRole: "admin" },
+    { name: "Subscription", href: "/subscription", icon: CreditCard, requiredRole: "admin" },
   ];
+
+  // Filter navigation items based on user role
+  const filteredNavItems = navigationItems.filter(item => {
+    if (!item.requiredRole) return true;
+    if (item.requiredRole === "admin" && (isAdmin || isSuperAdmin)) return true;
+    if (item.requiredRole === "super_admin" && isSuperAdmin) return true;
+    return false;
+  });
 
   const handleLogout = async () => {
     try {
@@ -47,6 +46,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       toast.error(error.message || "Gagal logout");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="flex-1 flex justify-center items-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -66,10 +75,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <div className="px-3 py-2">
                     <div className="flex items-center gap-2 mb-6">
                       <Building className="h-5 w-5 text-blue-600" />
-                      <span className="font-semibold">{organization.name}</span>
+                      <span className="font-semibold">{organization?.name || "Organisasi"}</span>
                     </div>
                     <nav className="space-y-1">
-                      {navigationItems.map((item) => (
+                      {filteredNavItems.map((item) => (
                         <Link
                           key={item.name}
                           to={item.href}
@@ -94,7 +103,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500 hidden md:inline-block">
-              {user.name} ({user.role === "super_admin" ? "Super Admin" : user.role === "admin" ? "Admin" : "Karyawan"})
+              {userProfile?.full_name || userProfile?.email || "User"} 
+              {isSuperAdmin && <span className="ml-1 text-xs text-purple-600">(Super Admin)</span>}
+              {isAdmin && !isSuperAdmin && <span className="ml-1 text-xs text-blue-600">(Admin)</span>}
             </span>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-1" />
@@ -110,10 +121,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <aside className="hidden md:block w-64 bg-white border-r p-4 shrink-0">
           <div className="flex items-center gap-2 mb-6">
             <Building className="h-5 w-5 text-blue-600" />
-            <span className="font-semibold">{organization.name}</span>
+            <span className="font-semibold">{organization?.name || "Organisasi"}</span>
           </div>
           <nav className="space-y-1">
-            {navigationItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}

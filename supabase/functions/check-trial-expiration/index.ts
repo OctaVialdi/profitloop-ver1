@@ -26,7 +26,7 @@ serve(async (req) => {
       .from('organizations')
       .select('id, name, subscription_plan_id')
       .lt('trial_end_date', now.toISOString())
-      .is('trial_expired', false);
+      .eq('trial_expired', false);
     
     if (error) {
       throw error;
@@ -48,13 +48,16 @@ serve(async (req) => {
           
         console.log(`Found ${admins?.length || 0} admins to notify for organization ${org.id}`);
         
+        // Get basic plan ID for default plan after trial
+        const basicPlanId = await getBasicPlanId(supabase);
+        
         // Mark the organization as expired
         const { error: updateError } = await supabase
           .from('organizations')
           .update({ 
             trial_expired: true,
             // If they don't have a subscription plan, set to the basic free plan
-            subscription_plan_id: org.subscription_plan_id || await getBasicPlanId(supabase)
+            subscription_plan_id: org.subscription_plan_id || basicPlanId
           })
           .eq('id', org.id);
           
@@ -68,6 +71,8 @@ serve(async (req) => {
             for (const admin of admins) {
               // Add a notification in the future via a notifications table
               console.log(`Would notify admin ${admin.email} about trial expiration`);
+              
+              // You could send emails or store notifications here
             }
           }
         }
