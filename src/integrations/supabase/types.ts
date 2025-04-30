@@ -271,6 +271,10 @@ export type Database = {
           organization_id: string
         }[]
       }
+      update_user_organization: {
+        Args: { user_id: string; org_id: string; user_role: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

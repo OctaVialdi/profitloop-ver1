@@ -89,12 +89,15 @@ const OrganizationSetup = () => {
       }
 
       // Update profile directly - metode yang aman tanpa menggunakan RLS kompleks
-      // Hanya update organization_id dan role untuk menghindari recursive policy
-      const { error: profileError } = await supabase.rpc('update_user_organization', {
-        user_id: user.id,
-        org_id: orgData.id,
-        user_role: 'super_admin'
-      });
+      // Karena fungsi RPC kita belum terdaftar di tipe TypeScript, kita akan menggunakan pendekatan raw query
+      const { error: profileError } = await supabase.rpc(
+        'update_user_organization',
+        {
+          user_id: user.id,
+          org_id: orgData.id,
+          user_role: 'super_admin'
+        } as any
+      );
       
       if (profileError) {
         console.error("Error updating profile:", profileError);
