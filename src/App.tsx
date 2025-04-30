@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Toaster } from "@/components/ui/sonner";
 
 // Pages
@@ -31,7 +31,7 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         
         {/* Auth routes */}
-        <Route element={<AuthLayout />}>
+        <Route element={<AuthLayout><Outlet /></AuthLayout>}>
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/verification-sent" element={<VerificationSent />} />
@@ -45,7 +45,7 @@ function App() {
         <Route path="/welcome" element={<WelcomePage />} />
         
         {/* Dashboard routes */}
-        <Route element={<DashboardLayout />}>
+        <Route element={<DashboardLayout><Outlet /></DashboardLayout>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/members" element={<MemberManagement />} />
