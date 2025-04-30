@@ -52,7 +52,7 @@ const Register = () => {
         }
 
         toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
-        navigate("/auth/verification-sent");
+        navigate("/auth/verification-sent", { state: { email } });
       }
     } catch (error: any) {
       console.error("Registration error:", error);
