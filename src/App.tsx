@@ -37,11 +37,11 @@ function App() {
             <Route path="/" element={<Index />} />
             
             {/* Auth Routes */}
-            <Route path="/auth" element={<AuthLayout />}>
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-              <Route path="verification-sent" element={<VerificationSent />} />
-              <Route path="accept-invitation" element={<AcceptInvitation />} />
+            <Route element={<AuthLayout />}>
+              <Route path="/auth/login" element={<Login />} />
+              <Route path="/auth/register" element={<Register />} />
+              <Route path="/auth/verification-sent" element={<VerificationSent />} />
+              <Route path="/auth/accept-invitation" element={<AcceptInvitation />} />
             </Route>
             
             {/* Onboarding */}
@@ -49,14 +49,14 @@ function App() {
             <Route path="/welcome" element={<WelcomePage />} />
             
             {/* Dashboard Routes */}
-            <Route path="/" element={<DashboardLayout />}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="invite" element={<InviteMembers />} />
-              <Route path="members" element={<MemberManagement />} />
-              <Route path="collaborations" element={<OrganizationCollaboration />} />
-              <Route path="subscription" element={<Subscription />} />
-              <Route path="notifications" element={<Notifications />} />
-              <Route path="organization/settings" element={<OrganizationSettings />} />
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/invite" element={<InviteMembers />} />
+              <Route path="/members" element={<MemberManagement />} />
+              <Route path="/collaborations" element={<OrganizationCollaboration />} />
+              <Route path="/subscription" element={<Subscription />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/organization/settings" element={<OrganizationSettings />} />
               {/* Other dashboard routes */}
             </Route>
             

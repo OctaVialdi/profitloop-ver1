@@ -40,11 +40,11 @@ export const useTheme = () => {
   // Ambil URL logo dari storage
   const fetchLogoUrl = async (path: string) => {
     try {
-      const { data, error } = await supabase.storage
+      const { data, error: storageError } = await supabase.storage
         .from('org_logos')
         .getPublicUrl(path);
       
-      if (error) throw error;
+      if (storageError) throw storageError;
       
       if (data?.publicUrl) {
         setLogoUrl(data.publicUrl);

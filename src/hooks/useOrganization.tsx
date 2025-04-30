@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +12,9 @@ interface Organization {
   phone: string | null;
   subscription_plan_id: string | null;
   trial_end_date: string | null;
-  trial_expired: boolean | null;  // Make sure this property is defined
+  trial_expired: boolean | null;
+  theme_settings: Record<string, string> | null;
+  logo_path: string | null;
 }
 
 interface SubscriptionPlan {
