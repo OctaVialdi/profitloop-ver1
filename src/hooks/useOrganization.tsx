@@ -13,7 +13,7 @@ interface Organization {
   phone: string | null;
   subscription_plan_id: string | null;
   trial_end_date: string | null;
-  trial_expired: boolean | null;
+  trial_expired: boolean | null;  // Make sure this property is defined
 }
 
 interface SubscriptionPlan {

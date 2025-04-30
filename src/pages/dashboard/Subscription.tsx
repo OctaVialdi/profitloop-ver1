@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ interface Plan {
   max_members: number | null;
   features: Record<string, any> | null;
   current: boolean;
-  popular?: boolean; // Added popular as optional
+  popular?: boolean; // Make sure this property is defined
 }
 
 const Subscription = () => {
