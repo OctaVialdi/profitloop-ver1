@@ -13,7 +13,7 @@ interface Organization {
   subscription_plan_id: string | null;
   trial_end_date: string | null;
   trial_expired: boolean | null;
-  theme_settings: Record<string, string> | null;
+  theme_settings: Record<string, any> | null;
   logo_path: string | null;
 }
 
@@ -117,7 +117,7 @@ export function useOrganization(): OrganizationData {
       
       // Ensure trial_expired exists (default to false if not present)
       const orgWithTrialStatus: Organization = {
-        ...orgData,
+        ...orgData as Organization,
         trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false
       };
       

@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -37,7 +38,7 @@ function App() {
             <Route path="/" element={<Index />} />
             
             {/* Auth Routes */}
-            <Route element={<AuthLayout />}>
+            <Route element={<AuthLayout><Outlet /></AuthLayout>}>
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/register" element={<Register />} />
               <Route path="/auth/verification-sent" element={<VerificationSent />} />
@@ -49,7 +50,7 @@ function App() {
             <Route path="/welcome" element={<WelcomePage />} />
             
             {/* Dashboard Routes */}
-            <Route element={<DashboardLayout />}>
+            <Route element={<DashboardLayout><Outlet /></DashboardLayout>}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/invite" element={<InviteMembers />} />
               <Route path="/members" element={<MemberManagement />} />

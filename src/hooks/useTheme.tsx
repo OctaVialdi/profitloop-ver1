@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "./useOrganization";
@@ -40,11 +39,9 @@ export const useTheme = () => {
   // Ambil URL logo dari storage
   const fetchLogoUrl = async (path: string) => {
     try {
-      const { data, error: storageError } = await supabase.storage
+      const { data } = await supabase.storage
         .from('org_logos')
         .getPublicUrl(path);
-      
-      if (storageError) throw storageError;
       
       if (data?.publicUrl) {
         setLogoUrl(data.publicUrl);
