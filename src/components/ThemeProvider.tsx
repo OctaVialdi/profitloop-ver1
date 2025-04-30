@@ -1,35 +1,25 @@
 
 import { ReactNode, createContext, useContext, useEffect, useState } from "react";
-import { useTheme } from "@/hooks/useTheme";
 
 interface ThemeContextType {
   logoUrl: string | null;
+  themeSettings: Record<string, any> | null;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ logoUrl: null });
+const ThemeContext = createContext<ThemeContextType>({ 
+  logoUrl: null,
+  themeSettings: null
+});
 
 export const useAppTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [themeSettings, setThemeSettings] = useState<any>(null);
+  const [themeSettings, setThemeSettings] = useState<Record<string, any> | null>(null);
 
-  // We'll access the theme hook only in a try/catch to avoid errors when outside router context
-  useEffect(() => {
-    try {
-      // Only try to use the theme hook in authenticated routes
-      const { themeSettings: settings, logoUrl: logo } = useTheme();
-      setThemeSettings(settings);
-      setLogoUrl(logo);
-    } catch (error) {
-      console.log("Theme not available in this context");
-      // Silent fail - this will happen on unauthenticated routes, which is expected
-    }
-  }, []);
-
-  // Apply custom CSS variables for theme
-  useEffect(() => {
-    if (!themeSettings) return;
+  // Function to apply theme settings to document
+  const applyThemeSettings = (settings: Record<string, any>) => {
+    if (!settings) return;
 
     const root = document.documentElement;
     
@@ -75,22 +65,63 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // Apply CSS variables
-    root.style.setProperty('--primary', hexToHSL(themeSettings.primary_color));
+    root.style.setProperty('--primary', hexToHSL(settings.primary_color));
     root.style.setProperty('--primary-foreground', '0 0% 100%');
     
-    root.style.setProperty('--secondary', hexToHSL(themeSettings.secondary_color));
+    root.style.setProperty('--secondary', hexToHSL(settings.secondary_color));
     root.style.setProperty('--secondary-foreground', '0 0% 100%');
     
-    root.style.setProperty('--accent', hexToHSL(themeSettings.accent_color));
+    root.style.setProperty('--accent', hexToHSL(settings.accent_color));
     root.style.setProperty('--accent-foreground', '0 0% 100%');
     
-    root.style.setProperty('--sidebar-background', hexToHSL(themeSettings.sidebar_color));
+    root.style.setProperty('--sidebar-background', hexToHSL(settings.sidebar_color));
+  };
 
-  }, [themeSettings]);
+  // Store theme data into context
+  const setThemeData = (settings: Record<string, any> | null, logo: string | null) => {
+    setThemeSettings(settings);
+    setLogoUrl(logo);
+    
+    if (settings) {
+      applyThemeSettings(settings);
+    }
+  };
+
+  // Initialize theme from localStorage if available
+  useEffect(() => {
+    try {
+      const storedTheme = localStorage.getItem('app_theme_settings');
+      const storedLogo = localStorage.getItem('app_logo_url');
+      
+      if (storedTheme) {
+        const parsedTheme = JSON.parse(storedTheme);
+        setThemeSettings(parsedTheme);
+        applyThemeSettings(parsedTheme);
+      }
+      
+      if (storedLogo) {
+        setLogoUrl(storedLogo);
+      }
+    } catch (error) {
+      console.log("Could not initialize theme from localStorage");
+    }
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ logoUrl }}>
+    <ThemeContext.Provider value={{ logoUrl, themeSettings }}>
       {children}
     </ThemeContext.Provider>
   );
+};
+
+// Utility function to save theme data to localStorage
+export const saveThemeToStorage = (settings: Record<string, any>, logoUrl: string | null) => {
+  try {
+    localStorage.setItem('app_theme_settings', JSON.stringify(settings));
+    if (logoUrl) {
+      localStorage.setItem('app_logo_url', logoUrl);
+    }
+  } catch (error) {
+    console.error("Failed to save theme to localStorage", error);
+  }
 };
