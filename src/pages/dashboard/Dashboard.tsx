@@ -1,10 +1,10 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Users, Building, Calendar, Settings, Shield, CreditCard } from "lucide-react";
+import { Home, Users, Building, Calendar, AlertTriangle, CreditCard, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 
 const Dashboard = () => {
   const { 
@@ -14,7 +14,7 @@ const Dashboard = () => {
     error, 
     isSuperAdmin, 
     isAdmin, 
-    isTrialActive, 
+    isTrialActive,
     daysLeftInTrial 
   } = useOrganization();
 
@@ -54,6 +54,14 @@ const Dashboard = () => {
     );
   }
 
+  // Calculate trial percentage remaining
+  const trialTotalDays = 30; // Assuming 30-day trial
+  const trialProgressPercentage = isTrialActive 
+    ? Math.max(0, Math.min(100, (daysLeftInTrial / trialTotalDays) * 100))
+    : 0;
+
+  const isTrialExpired = organization?.trial_expired && !organization?.subscription_plan_id;
+
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
@@ -71,22 +79,52 @@ const Dashboard = () => {
         </header>
         
         {isTrialActive && (
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-8 flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-blue-600 shrink-0" />
-            <div>
-              <p className="text-blue-800 font-medium">
-                Anda sedang dalam periode trial
-              </p>
-              <p className="text-blue-700 text-sm">
-                {daysLeftInTrial} hari lagi sebelum trial berakhir.
-              </p>
-            </div>
-            {isAdmin && (
-              <Button asChild variant="outline" className="ml-auto bg-white">
-                <Link to="/subscription">Berlangganan Sekarang</Link>
-              </Button>
-            )}
-          </div>
+          <Card className="mb-8 border-blue-200 bg-blue-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg text-blue-800 flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                Periode Trial Aktif
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <Progress value={trialProgressPercentage} className="h-2" />
+                <div className="flex justify-between items-center">
+                  <p className="text-blue-700 text-sm">
+                    {daysLeftInTrial} hari lagi sebelum trial berakhir
+                  </p>
+                  {isAdmin && (
+                    <Button asChild variant="secondary" className="bg-white border-blue-200">
+                      <Link to="/subscription">Berlangganan Sekarang</Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {isTrialExpired && (
+          <Card className="mb-8 border-amber-200 bg-amber-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg text-amber-800 flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                Periode Trial Telah Berakhir
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <p className="text-amber-700">
+                  Pilih paket berlangganan untuk melanjutkan menggunakan semua fitur
+                </p>
+                {isAdmin && (
+                  <Button asChild variant="default" className="bg-amber-600 hover:bg-amber-700">
+                    <Link to="/subscription">Pilih Paket Sekarang</Link>
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         )}
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">

@@ -30,4 +30,4 @@ enabled = true
 verify_jwt = true
 
 [functions.check-trial-expiration]
-verify_jwt = true
+verify_jwt = false

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
 
 interface Organization {
   id: string;
@@ -12,6 +13,15 @@ interface Organization {
   phone: string | null;
   subscription_plan_id: string | null;
   trial_end_date: string | null;
+  trial_expired: boolean | null;
+}
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  max_members: number | null;
+  price: number | null;
+  features: Record<string, any> | null;
 }
 
 interface UserProfile {
@@ -25,6 +35,7 @@ interface UserProfile {
 
 interface OrganizationData {
   organization: Organization | null;
+  subscriptionPlan: SubscriptionPlan | null;
   userProfile: UserProfile | null;
   isLoading: boolean;
   error: Error | null;
@@ -33,11 +44,13 @@ interface OrganizationData {
   isEmployee: boolean;
   isTrialActive: boolean;
   daysLeftInTrial: number;
+  hasPaidSubscription: boolean;
   refreshData: () => Promise<void>;
 }
 
 export function useOrganization(): OrganizationData {
   const [organization, setOrganization] = useState<Organization | null>(null);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<SubscriptionPlan | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
@@ -47,10 +60,17 @@ export function useOrganization(): OrganizationData {
   const isAdmin = userProfile?.role === 'admin' || isSuperAdmin;
   const isEmployee = !!userProfile?.role;
   
-  const isTrialActive = !!organization?.trial_end_date && new Date(organization.trial_end_date) > new Date();
+  const isTrialActive = !!organization?.trial_end_date && 
+                        new Date(organization.trial_end_date) > new Date() && 
+                        !organization.trial_expired;
+                        
   const daysLeftInTrial = organization?.trial_end_date 
     ? Math.max(0, Math.ceil((new Date(organization.trial_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
+    
+  const hasPaidSubscription = !!subscriptionPlan && 
+                              subscriptionPlan.name !== 'Basic' && 
+                              !!organization?.subscription_plan_id;
 
   const fetchOrganizationData = async () => {
     setIsLoading(true);
@@ -95,9 +115,35 @@ export function useOrganization(): OrganizationData {
       }
       
       setOrganization(orgData as Organization);
+      
+      // Get subscription plan data if available
+      if (orgData.subscription_plan_id) {
+        const { data: planData, error: planError } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('id', orgData.subscription_plan_id)
+          .single();
+          
+        if (!planError && planData) {
+          setSubscriptionPlan(planData as SubscriptionPlan);
+        }
+      }
+      
+      // Check if trial has expired but not marked as expired
+      if (orgData.trial_end_date && 
+          new Date(orgData.trial_end_date) < new Date() && 
+          !orgData.trial_expired) {
+        // Trigger the edge function to check trial expiration
+        try {
+          await supabase.functions.invoke('check-trial-expiration');
+        } catch (err) {
+          console.error("Failed to invoke check-trial-expiration:", err);
+        }
+      }
     } catch (err: any) {
       console.error("Error fetching organization data:", err);
       setError(err);
+      toast.error("Gagal memuat data organisasi");
     } finally {
       setIsLoading(false);
     }
@@ -105,10 +151,31 @@ export function useOrganization(): OrganizationData {
 
   useEffect(() => {
     fetchOrganizationData();
-  }, []);
+    
+    // Set up listener for subscription changes
+    const channel = supabase
+      .channel('org-changes')
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'organizations',
+          filter: userProfile?.organization_id ? `id=eq.${userProfile.organization_id}` : undefined
+        }, 
+        () => {
+          fetchOrganizationData();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userProfile?.organization_id]);
 
   return {
     organization,
+    subscriptionPlan,
     userProfile,
     isLoading,
     error,
@@ -117,6 +184,7 @@ export function useOrganization(): OrganizationData {
     isEmployee,
     isTrialActive,
     daysLeftInTrial,
+    hasPaidSubscription,
     refreshData: fetchOrganizationData
   };
 }
