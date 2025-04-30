@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +42,7 @@ const OrganizationSetup = () => {
       }
       
       // Get default subscription plan (Basic)
-      const { data: planData, error: planError } = await supabase
+      let { data: planData, error: planError } = await supabase
         .from('subscription_plans')
         .select('id')
         .eq('name', 'Basic')
