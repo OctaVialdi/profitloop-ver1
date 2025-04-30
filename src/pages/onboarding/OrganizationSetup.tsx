@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +48,20 @@ const OrganizationSetup = () => {
         .single();
       
       if (planError) {
-        throw planError;
+        // If no plan exists, create a basic plan
+        const { data: newPlanData, error: newPlanError } = await supabase
+          .from('subscription_plans')
+          .insert({
+            name: 'Basic',
+            max_members: 5,
+            price: 0,
+            features: { storage: '1GB', api_calls: 1000 }
+          })
+          .select()
+          .single();
+          
+        if (newPlanError) throw newPlanError;
+        planData = newPlanData;
       }
       
       // Set trial_end_date to 30 days from now
@@ -62,7 +74,7 @@ const OrganizationSetup = () => {
         .insert({
           name,
           business_field: businessField,
-          employee_count: employeeCount ? parseInt(employeeCount) : null,
+          employee_count: employeeCount ? parseInt(employeeCount) : 1,
           address,
           phone,
           subscription_plan_id: planData.id,
@@ -80,7 +92,8 @@ const OrganizationSetup = () => {
         .from('profiles')
         .update({
           organization_id: orgData.id,
-          role: 'super_admin'
+          role: 'super_admin',
+          full_name: user.user_metadata.full_name || null
         })
         .eq('id', user.id);
       

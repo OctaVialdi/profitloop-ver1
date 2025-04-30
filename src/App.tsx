@@ -22,6 +22,7 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import InviteMembers from "./pages/dashboard/InviteMembers";
 import Subscription from "./pages/dashboard/Subscription";
 import OrganizationCollaboration from "./pages/dashboard/OrganizationCollaboration";
+import MemberManagement from "./pages/dashboard/MemberManagement";
 
 // Layouts
 import AuthLayout from "./components/layout/AuthLayout";
@@ -138,6 +139,16 @@ const App = () => (
               <PrivateRoute>
                 <DashboardLayout>
                   <InviteMembers />
+                </DashboardLayout>
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/members" 
+            element={
+              <PrivateRoute>
+                <DashboardLayout>
+                  <MemberManagement />
                 </DashboardLayout>
               </PrivateRoute>
             } 

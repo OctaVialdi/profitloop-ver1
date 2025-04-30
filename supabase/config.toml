@@ -28,3 +28,6 @@ enabled = true
 
 [functions.send-invitation]
 verify_jwt = true
+
+[functions.check-trial-expiration]
+verify_jwt = true

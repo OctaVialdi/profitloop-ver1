@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +33,7 @@ const Register = () => {
         options: {
           data: {
             full_name: fullName,
+            email: email, // Ensure email is included in user metadata
           },
         },
       });
@@ -41,16 +41,7 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
-        // Update profile dengan data tambahan
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ full_name: fullName })
-          .eq('id', data.user.id);
-
-        if (profileError) {
-          console.error("Error updating profile:", profileError);
-        }
-
+        // Our trigger function will create the profile automatically
         toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
         navigate("/auth/verification-sent", { state: { email } });
       }
