@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from "@/components/ui/sonner";
 
 // Pages
-import { NotFound } from '@/pages/NotFound';
+import NotFound from '@/pages/NotFound';
 import WelcomePage from '@/pages/WelcomePage';
 import Dashboard from '@/pages/dashboard/Dashboard';
 import OrganizationSetup from '@/pages/onboarding/OrganizationSetup';

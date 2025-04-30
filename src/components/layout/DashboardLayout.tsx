@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Building, Home, LogOut, Settings, UserPlus, Users, CreditCard, Bell } from "lucide-react";
+import { Building, Home, LogOut, Menu, Users, UserPlus, CreditCard, Bell } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";

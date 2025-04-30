@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Calendar, AlertTriangle, CreditCard, Sparkles, Shield, Clock, Building } from "lucide-react";
+import { Check, Calendar, AlertTriangle, CreditCard, Sparkles, Shield, Clock, Building, X } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";

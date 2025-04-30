@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -93,7 +92,7 @@ const OrganizationCollaboration = () => {
   
   const fetchCollaborations = async (orgId: string) => {
     // Fetch sent invitations - specifying the exact columns for invited_org
-    const { data: sentData } = await supabase
+    const { data: sentData, error: sentError } = await supabase
       .from('collaborations')
       .select(`
         id, status, created_at, invited_org_id, inviting_org_id, message,
@@ -102,7 +101,7 @@ const OrganizationCollaboration = () => {
       .eq('inviting_org_id', orgId);
     
     // Fetch received invitations - specifying the exact columns for inviting_org
-    const { data: receivedData } = await supabase
+    const { data: receivedData, error: receivedError } = await supabase
       .from('collaborations')
       .select(`
         id, status, created_at, invited_org_id, inviting_org_id, message,
@@ -110,20 +109,24 @@ const OrganizationCollaboration = () => {
       `)
       .eq('invited_org_id', orgId);
     
-    if (sentData) {
+    if (sentData && !sentError) {
       setSentInvitations(sentData as Collaboration[]);
+    } else if (sentError) {
+      console.error("Error fetching sent collaborations:", sentError);
     }
     
-    if (receivedData) {
+    if (receivedData && !receivedError) {
       // Separate active collaborations from pending/rejected invitations
       const active = receivedData.filter(collab => collab.status === 'accepted') as Collaboration[];
       const pending = receivedData.filter(collab => collab.status !== 'accepted') as Collaboration[];
       
       setActiveCollaborations([
         ...active, 
-        ...(sentData?.filter(collab => collab.status === 'accepted') || []) as Collaboration[]
+        ...(sentData && !sentError ? sentData.filter(collab => collab.status === 'accepted') || [] : []) as Collaboration[]
       ]);
       setReceivedInvitations(pending);
+    } else if (receivedError) {
+      console.error("Error fetching received collaborations:", receivedError);
     }
   };
 
