@@ -14,6 +14,7 @@ import {
   SidebarInset
 } from "@/components/ui/sidebar";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Import your sidebar navigation component
@@ -79,25 +80,27 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           </header>
           
-          {/* Page content without scroll area */}
-          <div className="h-[calc(100vh-4rem)]">
-            <div className="p-4 md:p-6">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={location.pathname}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ 
-                    duration: 0.15,
-                    ease: "easeInOut"
-                  }}
-                  className="will-change-transform"
-                >
-                  {children || <Outlet />}
-                </motion.div>
-              </AnimatePresence>
-            </div>
+          {/* Page content with scroll area */}
+          <div className="h-[calc(100vh-4rem)] overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-4 md:p-6">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ 
+                      duration: 0.15,
+                      ease: "easeInOut"
+                    }}
+                    className="will-change-transform"
+                  >
+                    {children || <Outlet />}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </ScrollArea>
           </div>
         </SidebarInset>
       </div>
