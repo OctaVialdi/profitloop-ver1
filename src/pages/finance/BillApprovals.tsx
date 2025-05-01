@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -171,7 +170,7 @@ export default function BillApprovals() {
         </div>
       </div>
 
-      {/* Top Navigation Tabs - Same as in ReminderBills.tsx */}
+      {/* Top Navigation Tabs - Updated to remove specified tabs */}
       <Card className="p-1">
         <ScrollArea className="w-full">
           <Tabs value="approvals" onValueChange={handleTabChange} className="w-full">
@@ -183,40 +182,16 @@ export default function BillApprovals() {
                 Overview
               </TabsTrigger>
               <TabsTrigger 
-                value="upcoming-bills" 
-                className="data-[state=active]:bg-white text-gray-500"
-              >
-                Upcoming Bills
-              </TabsTrigger>
-              <TabsTrigger 
-                value="overdue-bills" 
-                className="data-[state=active]:bg-white text-gray-500"
-              >
-                Overdue Bills
-              </TabsTrigger>
-              <TabsTrigger 
                 value="recurring-setup" 
                 className="data-[state=active]:bg-white text-gray-500"
               >
                 Recurring Setup
               </TabsTrigger>
               <TabsTrigger 
-                value="auto-payment" 
-                className="data-[state=active]:bg-white text-gray-500"
-              >
-                Auto-Payment
-              </TabsTrigger>
-              <TabsTrigger 
                 value="reminders" 
                 className="data-[state=active]:bg-white text-gray-500"
               >
                 Reminders
-              </TabsTrigger>
-              <TabsTrigger 
-                value="add-bill" 
-                className="data-[state=active]:bg-white text-gray-500"
-              >
-                Add Bill
               </TabsTrigger>
               <TabsTrigger 
                 value="approvals" 
