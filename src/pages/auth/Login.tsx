@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -42,35 +44,77 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError(null);
+    
+    // Improved retry mechanism with more granular control
+    let retryCount = 0;
+    const maxRetries = 3;
+    const retryDelay = 1500; // 1.5 seconds between retries
+    
+    const attemptLogin = async (): Promise<any> => {
+      try {
+        // Clean direct login approach to avoid internal issues
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+        return data;
+      } catch (error: any) {
+        console.error("Login attempt error:", error);
+        
+        // Only retry on database errors with a cleaner approach
+        if ((error.message === "Database error granting user" || 
+             error.message.includes("database") || 
+             error.status === 500) && 
+            retryCount < maxRetries) {
+          
+          retryCount++;
+          console.log(`Retrying login attempt ${retryCount} of ${maxRetries}...`);
+          
+          // Use increasing delay between retries
+          await new Promise(resolve => setTimeout(resolve, retryDelay * retryCount));
+          return attemptLogin();
+        } else {
+          throw error;
+        }
+      }
+    };
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
+      const data = await attemptLogin();
       
       if (data.user) {
         // If we have invitation token, join organization after login
         if (invitationToken) {
-          const { data: joinResult, error: joinError } = await supabase
-            .rpc('join_organization', { 
-              user_id: data.user.id, 
-              invitation_token: invitationToken 
-            });
-          
-          if (joinError) {
-            throw joinError;
+          try {
+            const { data: joinResult, error: joinError } = await supabase
+              .rpc('join_organization', { 
+                user_id: data.user.id, 
+                invitation_token: invitationToken 
+              });
+            
+            if (joinError) {
+              throw joinError;
+            }
+            
+            if (!joinResult || !Array.isArray(joinResult) || joinResult.length === 0) {
+              throw new Error("Format respons tidak valid");
+            }
+            
+            if (!joinResult[0].success) {
+              throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
+            }
+            
+            toast.success("Berhasil bergabung dengan organisasi!");
+            navigate("/employee-welcome");
+            return;
+          } catch (joinErr: any) {
+            console.error("Error joining organization:", joinErr);
+            toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
+            // Still allow login but without joining organization
           }
-          
-          if (!joinResult || !joinResult[0].success) {
-            throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
-          }
-          
-          toast.success("Berhasil bergabung dengan organisasi!");
-          navigate("/employee-welcome");
-          return;
         }
         
         // Normal login flow - check if user has organization
@@ -90,7 +134,17 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(error.message || "Gagal login. Periksa email dan password Anda.");
+      
+      // Improved error handling with more specific error messages
+      if (error.message === "Database error granting user" || error.status === 500) {
+        setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat atau hubungi dukungan teknis.");
+      } else if (error.message.includes("Invalid login credentials")) {
+        setLoginError("Email atau password salah. Mohon periksa kembali.");
+      } else if (error.message.includes("Email not confirmed")) {
+        setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda.");
+      } else {
+        setLoginError(error.message || "Gagal login. Periksa email dan password Anda.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -111,6 +165,12 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loginError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
