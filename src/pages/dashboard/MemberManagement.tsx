@@ -20,6 +20,12 @@ interface Member {
   last_active: string | null;
 }
 
+interface RemoveMemberResponse {
+  success: boolean;
+  message: string;
+  email?: string;
+}
+
 const MemberManagement = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,11 +111,14 @@ const MemberManagement = () => {
       
       if (error) throw error;
       
-      if (data.success) {
+      // Cast the data to the expected response type
+      const response = data as RemoveMemberResponse;
+      
+      if (response.success) {
         setMembers(members.filter(member => member.id !== memberId));
         toast.success(`Anggota berhasil dihapus dari organisasi`);
       } else {
-        toast.error(data.message || "Tidak dapat menghapus anggota");
+        toast.error(response.message || "Tidak dapat menghapus anggota");
       }
     } catch (error: any) {
       toast.error("Gagal menghapus anggota dari organisasi");
