@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle, Filter, Download, ChevronDown } from "lucide-react";
 import { 
   BarChart, 
   Bar, 
@@ -17,6 +17,8 @@ import {
   Legend 
 } from "recharts";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 // Department payroll data
@@ -40,11 +42,11 @@ const monthlyTrendData = [
 
 // Payroll records data
 const payrollRecords = [
-  { id: "PAY-2025-04-001", department: "IT", employees: 35, amount: "Rp 20.000.000", status: "Pending Approval", date: "Apr 15, 2025" },
-  { id: "PAY-2025-04-002", department: "Marketing", employees: 28, amount: "Rp 15.000.000", status: "Pending Approval", date: "Apr 16, 2025" },
-  { id: "PAY-2025-04-003", department: "Finance", employees: 18, amount: "Rp 10.000.000", status: "Pending Approval", date: "Apr 16, 2025" },
-  { id: "PAY-2025-04-004", department: "HR", employees: 12, amount: "Rp 7.500.000", status: "Approved", date: "Apr 17, 2025" },
-  { id: "PAY-2025-04-005", department: "Operations", employees: 27, amount: "Rp 7.500.000", status: "Rejected", date: "Apr 17, 2025" },
+  { id: "PAY-2025-04-001", department: "IT", employees: 35, amount: "Rp 20.000.000", status: "Pending Approval", date: "Apr 15, 2025", paymentMethod: "Bank Transfer", payeeName: "IT Department Staff", deductions: "Rp 2.500.000", netAmount: "Rp 17.500.000" },
+  { id: "PAY-2025-04-002", department: "Marketing", employees: 28, amount: "Rp 15.000.000", status: "Pending Approval", date: "Apr 16, 2025", paymentMethod: "Bank Transfer", payeeName: "Marketing Department Staff", deductions: "Rp 1.875.000", netAmount: "Rp 13.125.000" },
+  { id: "PAY-2025-04-003", department: "Finance", employees: 18, amount: "Rp 10.000.000", status: "Pending Approval", date: "Apr 16, 2025", paymentMethod: "Bank Transfer", payeeName: "Finance Department Staff", deductions: "Rp 1.250.000", netAmount: "Rp 8.750.000" },
+  { id: "PAY-2025-04-004", department: "HR", employees: 12, amount: "Rp 7.500.000", status: "Approved", date: "Apr 17, 2025", paymentMethod: "Direct Deposit", payeeName: "HR Department Staff", deductions: "Rp 937.500", netAmount: "Rp 6.562.500" },
+  { id: "PAY-2025-04-005", department: "Operations", employees: 27, amount: "Rp 7.500.000", status: "Rejected", date: "Apr 17, 2025", paymentMethod: "Bank Transfer", payeeName: "Operations Department Staff", deductions: "Rp 937.500", netAmount: "Rp 6.562.500" },
 ];
 
 // Format currency for tooltips and labels
@@ -53,13 +55,70 @@ const formatCurrency = (value) => {
 };
 
 function PayrollTable() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("All");
+  
+  const statusOptions = ["All", "Pending Approval", "Approved", "Rejected"];
+  
+  const filteredRecords = payrollRecords.filter(record => {
+    const matchesSearch = record.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         record.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         record.payeeName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = selectedStatus === "All" || record.status === selectedStatus;
+    
+    return matchesSearch && matchesStatus;
+  });
+  
   return (
     <Card className="mt-8">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h3 className="font-semibold text-lg">Payroll Records</h3>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">Export</Button>
-          <Button variant="outline" size="sm">Filter</Button>
+      <div className="p-4 border-b">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+          <div>
+            <h3 className="font-semibold text-lg">Payroll Records</h3>
+            <p className="text-sm text-gray-500">View and manage all payroll transactions</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Filter size={14} />
+              <span>Filter</span>
+              <ChevronDown size={14} />
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Download size={14} />
+              <span>Export</span>
+            </Button>
+          </div>
+        </div>
+        
+        {/* Search and Filter Row */}
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:w-[280px]">
+            <Input
+              placeholder="Search records..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <svg className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" 
+                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Label htmlFor="status-filter" className="text-sm">Status:</Label>
+            <select 
+              id="status-filter"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-white border border-gray-300 rounded px-3 py-1 text-sm"
+            >
+              {statusOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
       <div className="p-0 overflow-auto">
@@ -68,20 +127,28 @@ function PayrollTable() {
             <TableRow>
               <TableHead>Reference ID</TableHead>
               <TableHead>Department</TableHead>
+              <TableHead>Payee Name</TableHead>
               <TableHead className="text-center">Employees</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Gross Amount</TableHead>
+              <TableHead className="text-right">Deductions</TableHead>
+              <TableHead className="text-right">Net Amount</TableHead>
+              <TableHead>Payment Method</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="w-[100px]">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payrollRecords.map((record) => (
+            {filteredRecords.map((record) => (
               <TableRow key={record.id}>
                 <TableCell className="font-medium">{record.id}</TableCell>
                 <TableCell>{record.department}</TableCell>
+                <TableCell>{record.payeeName}</TableCell>
                 <TableCell className="text-center">{record.employees}</TableCell>
                 <TableCell className="text-right">{record.amount}</TableCell>
+                <TableCell className="text-right">{record.deductions}</TableCell>
+                <TableCell className="text-right">{record.netAmount}</TableCell>
+                <TableCell>{record.paymentMethod}</TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     record.status === "Approved" ? "bg-green-100 text-green-700" : 
@@ -93,15 +160,18 @@ function PayrollTable() {
                 </TableCell>
                 <TableCell>{record.date}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm">View</Button>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">View</Button>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">Edit</Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-      <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
-        <div className="text-sm text-gray-500">Showing 5 of 5 records</div>
+      <div className="p-4 border-t bg-gray-50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <div className="text-sm text-gray-500">Showing {filteredRecords.length} of {payrollRecords.length} records</div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" disabled>Previous</Button>
           <Button variant="outline" size="sm" disabled>Next</Button>
