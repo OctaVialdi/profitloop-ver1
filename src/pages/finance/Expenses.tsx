@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +10,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
@@ -27,8 +26,14 @@ export default function Expenses() {
     { name: "Advertising", value: 22.2, color: "#4192F7", amount: "Rp 5.000.000" },
   ];
 
+  // Updated monthly comparison data with more months
   const monthlyComparisonData = [
-    { name: "Apr", value: 18 },
+    { name: "Jan", expense: 10, income: 15 },
+    { name: "Feb", expense: 12, income: 14 },
+    { name: "Mar", expense: 16, income: 18 },
+    { name: "Apr", expense: 18, income: 22 },
+    { name: "May", expense: 14, income: 19 },
+    { name: "Jun", expense: 20, income: 23 },
   ];
 
   const recurringExpenses = [
@@ -447,35 +452,80 @@ export default function Expenses() {
           </div>
         </Card>
 
-        {/* Month-over-Month Comparison */}
-        <Card>
+        {/* Month-over-Month Comparison - UPDATED UI */}
+        <Card className="overflow-hidden">
           <CardContent className="p-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Month-over-Month Comparison</h3>
-              <div className="h-72">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-semibold">Month-over-Month Comparison</h3>
+                <Select defaultValue="6months">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Time Period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3months">Last 3 Months</SelectItem>
+                    <SelectItem value="6months">Last 6 Months</SelectItem>
+                    <SelectItem value="12months">Last 12 Months</SelectItem>
+                    <SelectItem value="ytd">Year to Date</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyComparisonData} barSize={60}>
+                  <BarChart
+                    data={monthlyComparisonData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                     <XAxis dataKey="name" tickLine={false} axisLine={false} />
                     <YAxis 
+                      tickFormatter={(value) => `${value}k`}
                       tickLine={false} 
                       axisLine={false}
-                      ticks={[0, 6, 12, 18, 24]}
-                      tickFormatter={(value) => `${value} k`}
+                    />
+                    <Tooltip
+                      contentStyle={{ 
+                        backgroundColor: "white",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "0.5rem", 
+                        padding: "0.5rem" 
+                      }}
+                      formatter={(value) => [`${value}k`, ""]}
+                    />
+                    <Legend 
+                      verticalAlign="top" 
+                      height={36}
+                      align="right"
+                      iconSize={10}
+                      iconType="circle"
                     />
                     <Bar 
-                      dataKey="value" 
-                      fill="#64748B" 
-                      radius={[4, 4, 0, 0]}
+                      name="Income" 
+                      dataKey="income" 
+                      fill="#4192F7" 
+                      radius={[4, 4, 0, 0]} 
+                      barSize={16}
                     />
-                    <ChartTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} />
+                    <Bar 
+                      name="Expenses" 
+                      dataKey="expense" 
+                      fill="#FFBA2C" 
+                      radius={[4, 4, 0, 0]} 
+                      barSize={16}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
-                <div className="flex items-center justify-center mt-4 text-xs">
-                  <div className="flex items-center gap-1.5 text-blue-600">
-                    <div className="w-3 h-3 rounded-sm bg-blue-600"></div>
-                    <span>Expenses</span>
-                  </div>
+              </div>
+              
+              <div className="flex items-center justify-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-[#4192F7]"></div>
+                  <span className="text-sm">Income</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-[#FFBA2C]"></div>
+                  <span className="text-sm">Expenses</span>
                 </div>
               </div>
             </div>
