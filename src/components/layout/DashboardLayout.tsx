@@ -14,6 +14,7 @@ import {
   SidebarInset
 } from "@/components/ui/sidebar";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Import your sidebar navigation component
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
@@ -78,11 +79,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           </header>
           
-          {/* Page content without scroll area */}
-          <div className="h-[calc(100vh-4rem)] overflow-auto">
-            <div className="p-4 md:p-6">
-              {children || <Outlet />}
-            </div>
+          {/* Page content with scroll area */}
+          <div className="h-[calc(100vh-4rem)] overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-4 md:p-6">
+                {children || <Outlet />}
+              </div>
+            </ScrollArea>
           </div>
         </SidebarInset>
       </div>
