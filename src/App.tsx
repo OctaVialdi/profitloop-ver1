@@ -1,89 +1,80 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Toaster } from '@/components/ui/sonner'
+import { ThemeProvider } from '@/components/ThemeProvider'
+import { NotificationProvider } from '@/hooks/useNotifications'
 
-import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { Toaster } from "@/components/ui/sonner";
-import NotFound from "@/pages/NotFound";
-import Index from "@/pages/Index";
-import AuthLayout from "@/components/layout/AuthLayout";
-import Login from "@/pages/auth/Login";
-import Register from "@/pages/auth/Register";
-import VerificationSent from "@/pages/auth/VerificationSent";
-import OrganizationSetup from "@/pages/onboarding/OrganizationSetup";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import Dashboard from "@/pages/dashboard/Dashboard";
-import InviteMembers from "@/pages/dashboard/InviteMembers";
-import OrganizationSettings from "@/pages/dashboard/OrganizationSettings";
-import MemberManagement from "@/pages/dashboard/MemberManagement";
-import Subscription from "@/pages/dashboard/Subscription";
-import OrganizationCollaboration from "@/pages/dashboard/OrganizationCollaboration";
-import Notifications from "@/pages/dashboard/Notifications";
-import WelcomePage from "@/pages/WelcomePage";
-// New imports
-import AcceptInvitation from "@/pages/auth/AcceptInvitation";
-import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
-import SettingsLayout from "@/components/layout/SettingsLayout";
-// Import the new profile settings page
-import ProfileSettings from "@/pages/settings/ProfileSettings";
+// Layouts
+import AuthLayout from '@/components/layout/AuthLayout'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import SettingsLayout from '@/components/layout/SettingsLayout'
+
+// Pages
+import Index from '@/pages/Index'
+import Dashboard from '@/pages/dashboard/Dashboard'
+import Login from '@/pages/auth/Login'
+import Register from '@/pages/auth/Register'
+import VerificationSent from '@/pages/auth/VerificationSent'
+import NotFound from '@/pages/NotFound'
+import WelcomePage from '@/pages/WelcomePage'
+import Notifications from '@/pages/dashboard/Notifications'
+import OrganizationSettings from '@/pages/dashboard/OrganizationSettings'
+import OrganizationCollaboration from '@/pages/dashboard/OrganizationCollaboration'
+import Subscription from '@/pages/dashboard/Subscription'
+import ProfileSettings from '@/pages/settings/ProfileSettings'
+import OrganizationSetup from '@/pages/onboarding/OrganizationSetup'
+import EmployeeWelcome from '@/pages/employee/EmployeeWelcome'
+import InviteMembers from '@/pages/dashboard/InviteMembers'
+import MemberManagement from '@/pages/dashboard/MemberManagement'
+import MagicInvite from '@/pages/dashboard/MagicInvite'
+import AcceptInvitation from '@/pages/auth/AcceptInvitation'
+import AcceptMagicInvitation from '@/pages/auth/AcceptMagicInvitation'
+
+import './App.css'
 
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          
-          {/* Auth Routes */}
-          <Route element={<AuthLayout />}>
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/register" element={<Register />} />
-            <Route path="/auth/verification-sent" element={<VerificationSent />} />
+      <NotificationProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/welcome" element={<WelcomePage />} />
+            <Route path="/employee-welcome" element={<EmployeeWelcome />} />
+            <Route path="/onboarding" element={<OrganizationSetup />} />
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
-          </Route>
-          
-          {/* Onboarding Routes */}
-          <Route path="/onboarding" element={<OrganizationSetup />} />
-          <Route path="/welcome" element={<WelcomePage />} />
-          <Route path="/employee-welcome" element={<EmployeeWelcome />} />
-          
-          {/* Dashboard Routes */}
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/members" element={<MemberManagement />} />
-            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/accept-magic-invitation" element={<AcceptMagicInvitation />} />
             
-            {/* Settings Routes - All reorganized under /settings */}
-            <Route path="/settings" element={
-              <SettingsLayout>
-                <Outlet />
-              </SettingsLayout>
-            }>
-              <Route path="" element={<Navigate to="/settings/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="invite" element={<InviteMembers />} />
-              <Route path="members" element={<MemberManagement />} />
-              <Route path="collaborations" element={<OrganizationCollaboration />} />
-              <Route path="subscription" element={<Subscription />} />
-              <Route path="organization" element={<OrganizationSettings />} />
-              {/* Add the profile route */}
-              <Route path="profile" element={<ProfileSettings />} />
+            {/* Auth routes */}
+            <Route element={<AuthLayout />}>
+              <Route path="/auth/login" element={<Login />} />
+              <Route path="/auth/register" element={<Register />} />
+              <Route path="/auth/verification-sent" element={<VerificationSent />} />
             </Route>
             
-            {/* Legacy routes redirects */}
-            <Route path="/invite" element={<Navigate to="/settings/invite" replace />} />
-            <Route path="/organization/settings" element={<Navigate to="/settings/organization" replace />} />
-            <Route path="/subscription" element={<Navigate to="/settings/subscription" replace />} />
-            <Route path="/collaborations" element={<Navigate to="/settings/collaborations" replace />} />
-            {/* Add a redirect for direct profile access */}
-            <Route path="/profile" element={<Navigate to="/settings/profile" replace />} />
-          </Route>
-          
-          {/* 404 Page */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-      <Toaster />
+            {/* Dashboard routes */}
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/invite" element={<InviteMembers />} />
+              <Route path="/magic-invite" element={<MagicInvite />} />
+              <Route path="/members" element={<MemberManagement />} />
+              <Route path="/organization-settings" element={<OrganizationSettings />} />
+              <Route path="/collaborations" element={<OrganizationCollaboration />} />
+              <Route path="/subscription" element={<Subscription />} />
+              
+              {/* Settings routes */}
+              <Route element={<SettingsLayout />}>
+                <Route path="/settings/profile" element={<ProfileSettings />} />
+              </Route>
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster />
+      </NotificationProvider>
     </ThemeProvider>
-  );
+  )
 }
 
-export default App;
+export default App
