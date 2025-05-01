@@ -3,8 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Edit } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 
 export default function ExpenseBudget() {
+  const navigate = useNavigate();
+  
   // Budget data
   const budgetCategories = [
     {
@@ -37,8 +41,83 @@ export default function ExpenseBudget() {
     }
   ];
 
+  // Handle tab navigation
+  const handleTabChange = (value: string) => {
+    switch (value) {
+      case "overview":
+        navigate("/finance/expenses");
+        break;
+      case "add-expense":
+        navigate("/finance/expenses");
+        break;
+      case "budget":
+        // Already on budget page
+        break;
+      case "payroll":
+        navigate("/finance/expenses");
+        break;
+      case "compliance":
+        navigate("/finance/expenses");
+        break;
+      case "approvals":
+        navigate("/finance/expenses");
+        break;
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Expenses</h2>
+        <p className="text-muted-foreground">
+          Manage and track your organization's expenses
+        </p>
+      </div>
+
+      {/* Top Navigation Tabs */}
+      <div className="flex overflow-auto pb-2">
+        <Tabs defaultValue="budget" className="w-full" onValueChange={handleTabChange}>
+          <TabsList className="bg-muted h-11">
+            <TabsTrigger 
+              value="overview" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="add-expense" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Add Expense
+            </TabsTrigger>
+            <TabsTrigger 
+              value="budget" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Budget
+            </TabsTrigger>
+            <TabsTrigger 
+              value="payroll" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Payroll
+            </TabsTrigger>
+            <TabsTrigger 
+              value="compliance" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Compliance
+            </TabsTrigger>
+            <TabsTrigger 
+              value="approvals" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Approvals
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       {/* Top Navigation */}
       <div className="flex items-center space-x-4 mb-6">
         <Button variant="outline" className="bg-white font-medium px-6 py-6 h-auto">
