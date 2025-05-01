@@ -27,6 +27,13 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { MeetingDialog } from "@/components/meetings/MeetingDialog";
 import { HistoryDialog } from "@/components/meetings/HistoryDialog";
 import { UpdatesDialog } from "@/components/meetings/UpdatesDialog";
+import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   getMeetingPoints, 
   getMeetingUpdates, 
@@ -103,8 +110,9 @@ const CatatanMeetings = () => {
     setLoading(false);
   };
   
-  const handleAddPoint = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && newPoint.trim() !== "") {
+  const handleAddPoint = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (newPoint.trim() !== "") {
       // Date will be empty at first and added during create by the backend
       const newMeetingPoint = {
         date: "", // Empty date that will be filled on server
@@ -228,6 +236,24 @@ const CatatanMeetings = () => {
           </Button>
         </div>
         
+        {/* New Discussion Point Input */}
+        <form onSubmit={handleAddPoint} className="flex items-center px-6 py-3 bg-gray-50">
+          <Input
+            type="text"
+            placeholder="Type a new discussion point and press Enter..."
+            className="w-full"
+            value={newPoint}
+            onChange={(e) => setNewPoint(e.target.value)}
+          />
+          <Button 
+            type="submit" 
+            className="ml-2 bg-blue-500 hover:bg-blue-600"
+            disabled={!newPoint.trim()}
+          >
+            Add
+          </Button>
+        </form>
+        
         <div className="flex flex-1">
           {/* Main content area - 75% */}
           <div className="w-3/4 p-6">
@@ -308,7 +334,7 @@ const CatatanMeetings = () => {
                       ) : meetingPoints.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                            No meeting points found. Add one below.
+                            No meeting points found. Add one above.
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -316,11 +342,20 @@ const CatatanMeetings = () => {
                           <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
                             <TableCell className="py-4 whitespace-nowrap h-14">{point.date}</TableCell>
                             <TableCell className="py-4 w-[300px] h-14">
-                              <div className="break-words line-clamp-2 max-h-12" style={{ 
-                                maxWidth: '300px'
-                              }}>
-                                {point.discussion_point}
-                              </div>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="break-words line-clamp-2 max-h-12 cursor-pointer" style={{ 
+                                      maxWidth: '300px'
+                                    }}>
+                                      {point.discussion_point}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-md p-2 bg-white">
+                                    <p className="text-sm">{point.discussion_point}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </TableCell>
                             <TableCell className="py-4 whitespace-nowrap h-14">
                               <Select 
@@ -381,19 +416,6 @@ const CatatanMeetings = () => {
                           </TableRow>
                         ))
                       )}
-                      <TableRow>
-                        <TableCell className="py-4 whitespace-nowrap">{""}</TableCell>
-                        <TableCell colSpan={5} className="py-4">
-                          <input
-                            type="text"
-                            placeholder="Type a new discussion point and press Enter..."
-                            className="w-full py-2 focus:outline-none text-gray-500 italic"
-                            value={newPoint}
-                            onChange={(e) => setNewPoint(e.target.value)}
-                            onKeyDown={handleAddPoint}
-                          />
-                        </TableCell>
-                      </TableRow>
                     </TableBody>
                   </Table>
                 </div>
