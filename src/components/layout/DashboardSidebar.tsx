@@ -1,5 +1,5 @@
 
-import { Home, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { 
   Sidebar, 
@@ -41,9 +41,8 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
-  // Simplified navigation items - only Dashboard and Settings
+  // Only Settings navigation item
   const navigationItems: NavigationItem[] = [
-    { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Settings", href: "/settings/dashboard", icon: Settings, requiredRole: "admin" },
   ];
 
