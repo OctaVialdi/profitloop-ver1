@@ -16,9 +16,9 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 export default function Expenses() {
   // Sample data for the charts and tables
   const expenseBreakdownData = [
-    { name: "Equipment", value: 68.7, color: "#FFBA2C" },
-    { name: "Office Supplies", value: 11.1, color: "#42B96A" },
-    { name: "Advertising", value: 22.2, color: "#4192F7" },
+    { name: "Equipment", value: 68.7, color: "#94A3B8" },
+    { name: "Office Supplies", value: 11.1, color: "#64748B" },
+    { name: "Advertising", value: 22.2, color: "#475569" },
   ];
 
   const monthlyComparisonData = [
@@ -75,37 +75,37 @@ export default function Expenses() {
           <TabsList className="bg-muted h-11">
             <TabsTrigger 
               value="overview" 
-              className="h-9 rounded-full data-[state=active]:bg-purple-500 data-[state=active]:text-white px-6"
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="add-expense" 
-              className="h-9 rounded-full data-[state=active]:bg-purple-500 data-[state=active]:text-white px-6"
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
             >
               Add Expense
             </TabsTrigger>
             <TabsTrigger 
               value="budget" 
-              className="h-9 rounded-full data-[state=active]:bg-purple-500 data-[state=active]:text-white px-6"
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
             >
               Budget
             </TabsTrigger>
             <TabsTrigger 
               value="payroll" 
-              className="h-9 rounded-full data-[state=active]:bg-purple-500 data-[state=active]:text-white px-6"
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
             >
               Payroll
             </TabsTrigger>
             <TabsTrigger 
               value="compliance" 
-              className="h-9 rounded-full data-[state=active]:bg-purple-500 data-[state=active]:text-white px-6"
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
             >
               Compliance
             </TabsTrigger>
             <TabsTrigger 
               value="approvals" 
-              className="h-9 rounded-full data-[state=active]:bg-purple-500 data-[state=active]:text-white px-6"
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
             >
               Approvals
             </TabsTrigger>
@@ -137,7 +137,7 @@ export default function Expenses() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">Total Expenses YTD</p>
-                <span className="bg-blue-100 text-blue-600 text-xs py-1 px-1.5 rounded">$</span>
+                <span className="bg-blue-50 text-blue-600 text-xs py-1 px-1.5 rounded">$</span>
               </div>
               <h3 className="text-2xl font-bold">Rp 22.500.000</h3>
               <p className="text-xs text-muted-foreground">3 transactions</p>
@@ -204,7 +204,7 @@ export default function Expenses() {
       </div>
 
       {/* Total Expenses Summary */}
-      <div className="bg-purple-500 text-white p-6 rounded-lg">
+      <div className="bg-blue-600 text-white p-6 rounded-lg">
         <div className="space-y-2">
           <p className="text-lg font-medium">Total Expenses</p>
           <p className="text-sm opacity-80">3 total transactions</p>
@@ -291,15 +291,15 @@ export default function Expenses() {
                     />
                     <Bar 
                       dataKey="value" 
-                      fill="#9b87f5" 
+                      fill="#64748B" 
                       radius={[4, 4, 0, 0]}
                     />
                     <ChartTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} />
                   </BarChart>
                 </ResponsiveContainer>
                 <div className="flex items-center justify-center mt-4 text-xs">
-                  <div className="flex items-center gap-1.5 text-purple-500">
-                    <div className="w-3 h-3 rounded-sm bg-purple-500"></div>
+                  <div className="flex items-center gap-1.5 text-blue-600">
+                    <div className="w-3 h-3 rounded-sm bg-blue-600"></div>
                     <span>Expenses</span>
                   </div>
                 </div>
