@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Mail, Check, X, Clock, Send, Copy, RefreshCw, LinkIcon, Sparkles, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Check, X, Clock, Send, Copy, RefreshCw, LinkIcon, Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmailTips } from "@/components/auth/EmailTips";
 
 interface Invitation {
   id: string;
@@ -46,6 +47,8 @@ const InviteMembers = () => {
   const [magicLinkUrl, setMagicLinkUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState("email");
+  const [showEmailTips, setShowEmailTips] = useState(false);
+  const [magicLinkError, setMagicLinkError] = useState<string | null>(null);
 
   // Fetch user's organization id and existing invitations
   useEffect(() => {
@@ -324,6 +327,7 @@ const InviteMembers = () => {
     }
     
     setIsSendingMagicLink(true);
+    setMagicLinkError(null);
     
     try {
       // Check if user already exists in same organization
@@ -359,6 +363,15 @@ const InviteMembers = () => {
       if (data.invitation_url) {
         setMagicLinkUrl(data.invitation_url);
       }
+
+      // Tampilkan pesan yang sesuai berdasarkan hasil pengiriman email
+      if (data.email_sent) {
+        toast.success(`Magic Link telah dikirim ke ${email}`);
+      } else {
+        setShowEmailTips(true);
+        setMagicLinkError(data.email_error || "Gagal mengirim email, tetapi tautan Magic Link telah dibuat");
+        toast.warning("Email tidak dapat dikirim, tapi Anda dapat menyalin Magic Link secara manual");
+      }
       
       // Refresh the list of magic link invitations
       const { data: magicLinkData } = await supabase
@@ -376,7 +389,6 @@ const InviteMembers = () => {
         setMagicLinkInvitations(typedMagicLinks);
       }
       
-      toast.success(`Magic Link telah dikirim ke ${email}`);
       setEmail("");
       
     } catch (error: any) {
@@ -690,6 +702,20 @@ const InviteMembers = () => {
                   </Button>
                 </form>
                 
+                {magicLinkError && (
+                  <div className="mt-4">
+                    <Alert variant="destructive" className="mb-3">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Gagal mengirim email</AlertTitle>
+                      <AlertDescription>
+                        {magicLinkError}. Anda masih dapat menggunakan tautan di bawah ini.
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <EmailTips showTip={showEmailTips} />
+                  </div>
+                )}
+                
                 {magicLinkUrl && (
                   <div className="mt-6">
                     <Alert className="bg-indigo-50 border-indigo-100">
@@ -710,7 +736,9 @@ const InviteMembers = () => {
                             </Button>
                           </div>
                           <p className="text-sm text-indigo-700">
-                            Magic Link telah dikirim ke {email}. Mereka dapat bergabung dengan organisasi tanpa perlu membuat password.
+                            {magicLinkError 
+                              ? "Salin tautan di atas dan kirim secara manual ke " + email
+                              : "Magic Link telah dikirim ke " + email + ". Mereka dapat bergabung dengan organisasi tanpa perlu membuat password."}
                           </p>
                         </div>
                       </AlertDescription>

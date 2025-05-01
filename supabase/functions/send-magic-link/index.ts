@@ -60,23 +60,74 @@ serve(async (req) => {
     console.log("Generated Magic Link URL:", magicLinkUrl);
     console.log("Organization Name:", orgData?.name);
     
-    // Kirim email menggunakan fitur bawaan Supabase
-    const { error: emailError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: magicLinkUrl,
-      data: {
-        organization_id: organizationId,
-        organization_name: orgData?.name || 'organization',
-        role: role || 'employee',
-        invitation_token: result.token
-      }
-    });
+    let emailSent = false;
+    let emailError = null;
     
-    if (emailError) {
-      console.error("Error sending email:", emailError);
-      throw emailError;
+    try {
+      // Coba kirim email menggunakan fitur bawaan Supabase
+      const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
+        redirectTo: magicLinkUrl,
+        data: {
+          organization_id: organizationId,
+          organization_name: orgData?.name || 'organization',
+          role: role || 'employee',
+          invitation_token: result.token
+        }
+      });
+      
+      if (!error) {
+        emailSent = true;
+      } else {
+        emailError = error;
+        console.error("Error sending email with Supabase auth:", error);
+      }
+    } catch (err) {
+      emailError = err;
+      console.error("Exception sending email with Supabase auth:", err);
     }
     
-    console.log("Email invitation sent successfully to:", email);
+    // Jika email sudah terdaftar atau ada error lain, coba alternatif kedua: mengirim email langsung
+    if (!emailSent && emailError?.message?.includes("already been registered")) {
+      try {
+        // Cari pengguna yang sudah ada
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('email', email)
+          .maybeSingle();
+          
+        if (userError) {
+          console.error("Error finding existing user:", userError);
+        }
+        
+        if (userData) {
+          console.log("Found existing user:", userData);
+          
+          // Kirim notifikasi ke pengguna yang sudah ada
+          const { error: notifError } = await supabase
+            .from('notifications')
+            .insert({
+              user_id: userData.id,
+              organization_id: organizationId,
+              title: `Undangan Bergabung ke ${orgData?.name || 'Organisasi'}`,
+              message: `Anda diundang untuk bergabung dengan ${orgData?.name || 'organisasi'}. Klik tautan ini untuk bergabung: ${magicLinkUrl}`,
+              type: 'invitation',
+              action_url: magicLinkUrl
+            });
+            
+          if (notifError) {
+            console.error("Error sending notification:", notifError);
+          } else {
+            console.log("Notification sent to existing user");
+            emailSent = true;
+          }
+        }
+      } catch (alternateErr) {
+        console.error("Error in alternate notification method:", alternateErr);
+      }
+    }
+    
+    console.log("Email invitation sent status:", emailSent ? "Success" : "Failed");
 
     // Log the email details for debugging
     console.log("=== EMAIL MAGIC LINK DETAILS ===");
@@ -87,8 +138,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Magic Link berhasil dikirim",
-        invitation_url: magicLinkUrl
+        message: emailSent ? "Magic Link berhasil dikirim" : "Magic Link dibuat tetapi email gagal dikirim",
+        invitation_url: magicLinkUrl,
+        email_sent: emailSent,
+        email_error: emailError ? emailError.message : null
       }),
       { 
         status: 200, 
