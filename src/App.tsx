@@ -42,8 +42,8 @@ function App() {
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
         <Routes>
-          {/* Public Route */}
-          <Route path="/" element={<Index />} />
+          {/* Root redirects to login */}
+          <Route path="/" element={<Navigate to="/auth/login" replace />} />
 
           {/* Auth Routes */}
           <Route path="/auth" element={<AuthLayout />}>
