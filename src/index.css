@@ -96,13 +96,12 @@
 
 /* Custom sidebar overrides */
 @layer components {
-  /* Improved sidebar styling */
   [data-sidebar="menu-button"] {
-    @apply text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200;
+    @apply text-gray-600 hover:bg-blue-50 hover:text-blue-700;
   }
 
   [data-sidebar="menu-button"][data-active="true"] {
-    @apply bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-600;
+    @apply bg-blue-50 text-blue-700 font-medium;
   }
 
   [data-sidebar="rail"] {
@@ -110,17 +109,7 @@
   }
   
   [data-sidebar="trigger"] {
-    @apply text-blue-600 opacity-100 visible z-20 hover:bg-blue-50 p-1 rounded-md transition-colors;
-  }
-  
-  /* Menu group label styling */
-  [data-sidebar="group-label"] {
-    @apply text-blue-600 font-medium;
-  }
-  
-  /* Ensure menu groups are at the top */
-  [data-sidebar="group"] {
-    @apply flex-none order-first;
+    @apply text-blue-600 opacity-100 visible z-20;
   }
   
   /* Add specific styling for collapsed state to center the icons */
@@ -160,14 +149,5 @@
   
   [data-radix-tabs-trigger] {
     @apply whitespace-nowrap;
-  }
-  
-  /* Add styling for the floating add button */
-  .floating-add-button {
-    @apply fixed bottom-8 right-8 z-30 shadow-lg transition-transform duration-200;
-  }
-  
-  .floating-add-button:hover {
-    @apply transform -translate-y-1;
   }
 }
