@@ -38,6 +38,30 @@ function App() {
     if (window.location.hostname === 'app.profitloop.id' && isDevelopment) {
       window.location.href = `http://localhost:5173${window.location.pathname}${window.location.search}`;
     }
+
+    // Improve scrolling performance
+    document.documentElement.classList.add('antialiased');
+    document.documentElement.classList.add('smooth-scrolling');
+
+    // Add CSS to improve transitions
+    const style = document.createElement('style');
+    style.textContent = `
+      .smooth-scrolling {
+        scroll-behavior: smooth;
+      }
+      .antialiased * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      a, button {
+        transition: all 0.2s ease;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
   }, [isDevelopment]);
 
   return (

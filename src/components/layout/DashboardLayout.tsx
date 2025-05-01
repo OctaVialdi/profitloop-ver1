@@ -84,13 +84,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="h-[calc(100vh-4rem)] overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-4 md:p-6">
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={location.pathname}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ 
+                      duration: 0.15,
+                      ease: "easeInOut"
+                    }}
+                    className="will-change-transform"
                   >
                     {children || <Outlet />}
                   </motion.div>

@@ -57,7 +57,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
               <TabsTrigger 
                 key={tab.href} 
                 value={tab.href} 
-                className="min-w-[100px]" 
+                className="min-w-[100px] transition-all duration-200 ease-in-out" 
                 asChild
               >
                 <Link to={tab.href}>{tab.name}</Link>
@@ -67,14 +67,17 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
         </Tabs>
       </Card>
       
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location.pathname}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="pb-4"
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ 
+            duration: 0.15,
+            ease: "easeInOut"
+          }}
+          className="pb-4 will-change-transform"
         >
           {children}
         </motion.div>
