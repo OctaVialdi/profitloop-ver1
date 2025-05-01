@@ -1,0 +1,152 @@
+
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+export function useLoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isEmailUnverified, setIsEmailUnverified] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error("Email tidak boleh kosong");
+      return;
+    }
+    
+    setResendingVerification(true);
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Email verifikasi berhasil dikirim ulang. Silakan cek kotak masuk email Anda.");
+      navigate("/auth/verification-sent", { 
+        state: { 
+          email,
+          password,
+          ...(location.state?.invitationToken && { 
+            isInvitation: true, 
+            invitationToken: location.state.invitationToken 
+          })
+        }
+      });
+    } catch (error: any) {
+      console.error("Resend verification error:", error);
+      toast.error(error.message || "Gagal mengirim ulang email verifikasi.");
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
+  // Handle login function
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setLoginError(null);
+    setIsEmailUnverified(false);
+    
+    try {
+      // Simple login approach
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        if (error.message.includes("Email not confirmed")) {
+          setIsEmailUnverified(true);
+          throw new Error("Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.");
+        }
+        throw error;
+      }
+      
+      if (data?.user) {
+        toast.success("Login berhasil!");
+        
+        // Handle invitation token if present
+        if (location.state?.invitationToken) {
+          try {
+            const { data: joinResult, error: joinError } = await supabase
+              .rpc('join_organization', { 
+                user_id: data.user.id, 
+                invitation_token: location.state.invitationToken 
+              });
+            
+            if (joinError) {
+              throw joinError;
+            }
+            
+            if (joinResult && Array.isArray(joinResult) && joinResult[0] && joinResult[0].success) {
+              toast.success("Berhasil bergabung dengan organisasi!");
+              navigate("/employee-welcome");
+              return;
+            } else {
+              throw new Error("Gagal bergabung dengan organisasi");
+            }
+          } catch (joinErr: any) {
+            console.error("Error joining organization:", joinErr);
+            toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
+          }
+        }
+        
+        // Check if user has organization
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', data.user.id)
+            .maybeSingle();
+          
+          if (profileData && profileData.organization_id) {
+            navigate("/dashboard");
+          } else {
+            navigate("/onboarding");
+          }
+        } catch (err) {
+          console.error("Error fetching profile:", err);
+          navigate("/dashboard");
+        }
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      
+      if (error.message.includes("Invalid login credentials")) {
+        setLoginError("Email atau password salah. Mohon periksa kembali.");
+      } else if (error.message.includes("Email not confirmed") || error.message.includes("Email belum dikonfirmasi")) {
+        setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda atau kirim ulang email verifikasi.");
+        setIsEmailUnverified(true);
+      } else if (error.message.includes("Database error")) {
+        setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat.");
+      } else {
+        setLoginError(error.message || "Gagal login. Periksa email dan password Anda.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    isLoading,
+    loginError,
+    isEmailUnverified,
+    resendingVerification,
+    handleResendVerification,
+    handleLogin
+  };
+}
