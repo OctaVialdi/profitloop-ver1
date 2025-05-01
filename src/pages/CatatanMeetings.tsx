@@ -254,7 +254,7 @@ const CatatanMeetings = () => {
                     <TableHeader>
                       <TableRow className="bg-white border-b">
                         <TableHead className="w-[120px]">DATE</TableHead>
-                        <TableHead className="w-[300px] text-left">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[300px] text-left px-[20px]">DISCUSSION POINT</TableHead>
                         <TableHead className="w-[140px]">REQUEST BY</TableHead>
                         <TableHead className="w-[140px]">STATUS</TableHead>
                         <TableHead className="w-[100px]">UPDATES</TableHead>
@@ -278,7 +278,7 @@ const CatatanMeetings = () => {
                               </TableCell>
                             </TableRow> : meetingPoints.map((point, index) => <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
                               <TableCell className="w-[120px] text-center">{point.date}</TableCell>
-                              <TableCell className="w-[300px] text-left">
+                              <TableCell className="w-[300px] text-left px-[25px]">
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -296,7 +296,7 @@ const CatatanMeetings = () => {
                                   </Tooltip>
                                 </TooltipProvider>
                               </TableCell>
-                              <TableCell className="w-[140px] text-center">
+                              <TableCell className="w-[140px] text-center px-0">
                                 <Select defaultValue={point.request_by || "unassigned"} onValueChange={value => handleRequestByChange(point.id, value)}>
                                   <SelectTrigger className="w-[120px] mx-auto bg-[#f5f5fa]">
                                     <SelectValue placeholder="Select person" />
@@ -310,7 +310,7 @@ const CatatanMeetings = () => {
                                   </SelectContent>
                                 </Select>
                               </TableCell>
-                              <TableCell className="w-[140px] text-center">
+                              <TableCell className="w-[140px] text-center px-0">
                                 <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
                               </TableCell>
                               <TableCell className="w-[100px] text-center">
