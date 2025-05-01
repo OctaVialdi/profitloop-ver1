@@ -14,7 +14,6 @@ import {
   SidebarInset
 } from "@/components/ui/sidebar";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Import your sidebar navigation component
@@ -52,9 +51,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         />
         
         {/* Main content */}
-        <SidebarInset>
-          {/* Top navigation */}
-          <header className="bg-white border-b sticky top-0 z-10">
+        <SidebarInset className="flex flex-col">
+          {/* Top navigation - Modified to be full width without scroll constraints */}
+          <header className="bg-white border-b sticky top-0 z-10 w-full">
             <div className="px-4 h-16 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Link to="/dashboard" className="flex items-center gap-2">
@@ -80,27 +79,25 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           </header>
           
-          {/* Page content with scroll area */}
-          <div className="h-[calc(100vh-4rem)] overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="p-4 md:p-6">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={location.pathname}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    transition={{ 
-                      duration: 0.15,
-                      ease: "easeInOut"
-                    }}
-                    className="will-change-transform"
-                  >
-                    {children || <Outlet />}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </ScrollArea>
+          {/* Page content with direct overflow handling */}
+          <div className="flex-1 overflow-auto">
+            <div className="p-4 md:p-6">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={location.pathname}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ 
+                    duration: 0.15,
+                    ease: "easeInOut"
+                  }}
+                  className="will-change-transform"
+                >
+                  {children || <Outlet />}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </SidebarInset>
       </div>
