@@ -253,12 +253,12 @@ const CatatanMeetings = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-white border-b">
-                        <TableHead className="w-[120px] py-4">DATE</TableHead>
-                        <TableHead className="w-[300px] py-4 text-left">DISCUSSION POINT</TableHead>
-                        <TableHead className="w-[140px] py-4 mx-0 px-0">REQUEST BY</TableHead>
-                        <TableHead className="w-[140px] py-4">STATUS</TableHead>
-                        <TableHead className="w-[10px] py-4 px-110 mx-0">UPDATES</TableHead>
-                        <TableHead className="w-[140px] py-4 text-right">ACTIONS</TableHead>
+                        <TableHead className="w-[120px]">DATE</TableHead>
+                        <TableHead className="w-[300px] text-left">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[140px]">REQUEST BY</TableHead>
+                        <TableHead className="w-[140px]">STATUS</TableHead>
+                        <TableHead className="w-[100px]">UPDATES</TableHead>
+                        <TableHead className="w-[140px] text-right">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
                   </Table>
@@ -277,7 +277,7 @@ const CatatanMeetings = () => {
                                 No meeting points found. Add one above.
                               </TableCell>
                             </TableRow> : meetingPoints.map((point, index) => <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                              <TableCell className="w-[120px] text-center">{point.date}</TableCell>
+                              <TableCell className="w-[120px]">{point.date}</TableCell>
                               <TableCell className="w-[300px] text-left">
                                 <TooltipProvider>
                                   <Tooltip>
@@ -296,7 +296,7 @@ const CatatanMeetings = () => {
                                   </Tooltip>
                                 </TooltipProvider>
                               </TableCell>
-                              <TableCell className="w-[140px] text-center">
+                              <TableCell className="w-[140px]">
                                 <Select defaultValue={point.request_by || "unassigned"} onValueChange={value => handleRequestByChange(point.id, value)}>
                                   <SelectTrigger className="w-[120px] mx-auto bg-[#f5f5fa]">
                                     <SelectValue placeholder="Select person" />
@@ -310,10 +310,10 @@ const CatatanMeetings = () => {
                                   </SelectContent>
                                 </Select>
                               </TableCell>
-                              <TableCell className="w-[140px] text-center mx-0 px-0">
+                              <TableCell className="w-[140px]">
                                 <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
                               </TableCell>
-                              <TableCell className="w-[100px] text-center">
+                              <TableCell className="w-[100px]">
                                 <div className="flex justify-center">
                                   <Button variant="ghost" size="sm" onClick={() => handleAddUpdates(point)} className="text-blue-500 hover:text-blue-700" title="View and Add Updates">
                                     <History size={16} />
