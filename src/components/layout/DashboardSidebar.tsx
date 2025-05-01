@@ -1,5 +1,5 @@
 
-import { Settings, LayoutDashboard } from "lucide-react";
+import { Settings, LayoutDashboard, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { 
   Sidebar, 
@@ -41,9 +41,10 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
-  // Navigation items - updated Dashboard href to point to /dashboard instead of /settings/dashboard
+  // Navigation items - added Catatan Meetings above Settings
   const navigationItems: NavigationItem[] = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Catatan Meetings", href: "/catatan-meetings", icon: MessageSquare },
     { name: "Settings", href: "/settings/dashboard", icon: Settings, requiredRole: "admin" },
   ];
 

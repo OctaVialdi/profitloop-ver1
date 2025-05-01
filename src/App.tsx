@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "@/pages/Index";
@@ -22,6 +21,7 @@ import SettingsLayout from "@/components/layout/SettingsLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AuthLayout from "@/components/layout/AuthLayout";
 import MagicLinkJoin from "./pages/auth/MagicLinkJoin";
+import CatatanMeetings from "@/pages/CatatanMeetings";
 import { useEffect } from "react";
 
 function App() {
@@ -73,6 +73,18 @@ function App() {
             <Route path="notifications" element={<Notifications />} />
             {/* Redirect any unknown dashboard routes to main dashboard */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+
+          {/* New Catatan Meetings Route */}
+          <Route
+            path="/catatan-meetings"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<CatatanMeetings />} />
           </Route>
 
           {/* Settings Layout */}
