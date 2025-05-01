@@ -332,8 +332,8 @@ const CatatanMeetings = () => {
                     </TableHeader>
                   </Table>
                   
-                  {/* Scrollable table body */}
-                  <div className="overflow-hidden" style={{ height: "700px" }}>
+                  {/* Scrollable table body - Updated height to 900px */}
+                  <div className="overflow-hidden" style={{ height: "900px" }}>
                     <ScrollArea className="h-full">
                       <Table>
                         <TableBody>
