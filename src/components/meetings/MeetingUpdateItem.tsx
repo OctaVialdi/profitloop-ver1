@@ -1,6 +1,6 @@
 
 import React from "react";
-import { AlertTriangle, Clock } from "lucide-react";
+import { AlertTriangle, Clock, CheckCircle, XCircle, Presentation } from "lucide-react";
 
 interface MeetingUpdateItemProps {
   title: string;
@@ -21,7 +21,12 @@ export const MeetingUpdateItem: React.FC<MeetingUpdateItemProps> = ({
         return <AlertTriangle className="w-4 h-4 text-gray-600" />;
       case "on-going":
         return <Clock className="w-4 h-4 text-blue-600" />;
-      // Add other status icons as needed
+      case "completed":
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case "rejected":
+        return <XCircle className="w-4 h-4 text-red-600" />;
+      case "presented":
+        return <Presentation className="w-4 h-4 text-purple-600" />;
       default:
         return <AlertTriangle className="w-4 h-4 text-gray-600" />;
     }

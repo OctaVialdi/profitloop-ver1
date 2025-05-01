@@ -6,9 +6,10 @@ import { MeetingStatus } from "./MeetingSummaryCard";
 
 interface MeetingStatusBadgeProps {
   status: MeetingStatus;
+  onChange?: (value: string) => void;
 }
 
-export const MeetingStatusBadge: React.FC<MeetingStatusBadgeProps> = ({ status }) => {
+export const MeetingStatusBadge: React.FC<MeetingStatusBadgeProps> = ({ status, onChange }) => {
   const getStatusConfig = () => {
     switch (status) {
       case "not-started":
@@ -60,7 +61,7 @@ export const MeetingStatusBadge: React.FC<MeetingStatusBadgeProps> = ({ status }
   const StatusIcon = statusConfig.icon;
 
   return (
-    <Select defaultValue={status}>
+    <Select defaultValue={status} onValueChange={onChange}>
       <SelectTrigger className={`w-[150px] ${statusConfig.bg} ${statusConfig.color}`}>
         <div className="flex items-center">
           <StatusIcon className="w-5 h-5 mr-2" />

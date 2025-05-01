@@ -136,6 +136,85 @@ export type Database = {
           },
         ]
       }
+      meeting_points: {
+        Row: {
+          created_at: string
+          date: string
+          discussion_point: string
+          id: string
+          organization_id: string | null
+          request_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          discussion_point: string
+          id?: string
+          organization_id?: string | null
+          request_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          discussion_point?: string
+          id?: string
+          organization_id?: string | null
+          request_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_points_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_updates: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          meeting_point_id: string
+          person: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          meeting_point_id: string
+          person: string
+          status: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          meeting_point_id?: string
+          person?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_updates_meeting_point_id_fkey"
+            columns: ["meeting_point_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_points"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
