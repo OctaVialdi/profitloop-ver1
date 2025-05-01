@@ -1,9 +1,10 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ArrowUpRight, ArrowDownRight, FileText, Plus } from "lucide-react";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Link } from "react-router-dom";
 
 export default function CashManagement() {
   return (
@@ -37,20 +38,16 @@ export default function CashManagement() {
             <TabsTrigger 
               value="ringkasan" 
               className="px-6 py-2 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none"
+              asChild
             >
-              Ringkasan
-            </TabsTrigger>
-            <TabsTrigger 
-              value="tambah-transaksi"
-              className="px-6 py-2 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none"
-            >
-              Tambah Transaksi
+              <Link to="/finance/cash-management">Ringkasan</Link>
             </TabsTrigger>
             <TabsTrigger 
               value="daftar-transaksi"
               className="px-6 py-2 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none"
+              asChild
             >
-              Daftar Transaksi
+              <Link to="/finance/cash-management/daftar-transaksi">Daftar Transaksi</Link>
             </TabsTrigger>
           </TabsList>
         </Tabs>

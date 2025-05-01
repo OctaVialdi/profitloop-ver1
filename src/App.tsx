@@ -31,6 +31,7 @@ import IncomeTarget from "@/pages/finance/IncomeTarget";
 import ReminderBills from "@/pages/finance/ReminderBills";
 import PayrollSummary from "@/pages/finance/PayrollSummary";
 import CashManagement from "@/pages/finance/CashManagement";
+import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
 import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 
@@ -140,6 +141,7 @@ function App() {
             <Route path="reminder-bills" element={<ReminderBills />} />
             <Route path="payroll-summary" element={<PayrollSummary />} />
             <Route path="cash-management" element={<CashManagement />} />
+            <Route path="cash-management/daftar-transaksi" element={<DaftarTransaksi />} />
             {/* Redirect to dashboard if no path matches */}
             <Route path="" element={<Navigate to="/finance/dashboard" replace />} />
           </Route>
