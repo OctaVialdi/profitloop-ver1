@@ -5,12 +5,14 @@ import { Building, CreditCard, Bell, Activity, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOrganization } from "@/hooks/useOrganization";
 
+type RoleType = "admin" | "super_admin";
+
 interface SettingsTabProps {
   href: string;
   icon: LucideIcon;
   label: string;
   isActive: boolean;
-  requiredRole?: "admin" | "super_admin";
+  requiredRole?: RoleType;
 }
 
 function SettingsTab({ href, icon: Icon, label, isActive, requiredRole }: SettingsTabProps) {
@@ -45,13 +47,13 @@ export default function SettingsLayout() {
       href: "/settings/organisation",
       icon: Building,
       label: "Organisasi",
-      requiredRole: "admin" as const
+      requiredRole: "admin" as RoleType
     },
     { 
       href: "/settings/subscription",
       icon: CreditCard,
       label: "Langganan",
-      requiredRole: "admin" as const
+      requiredRole: "admin" as RoleType
     },
     { 
       href: "/settings/notifications",
@@ -63,7 +65,7 @@ export default function SettingsLayout() {
       href: "/settings/activity",
       icon: Activity,
       label: "Audit Log",
-      requiredRole: "admin" as const
+      requiredRole: "admin" as RoleType
     },
   ];
   
