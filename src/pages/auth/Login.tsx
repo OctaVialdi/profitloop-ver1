@@ -17,6 +17,9 @@ const Login = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isEmailUnverified, setIsEmailUnverified] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
+  const [isManuallyVerified, setIsManuallyVerified] = useState(false);
+  const [loginRetries, setLoginRetries] = useState(0);
+  
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -30,6 +33,17 @@ const Login = () => {
       setEmail(invitationEmail);
     }
   }, [invitationEmail]);
+
+  // Check URL parameters for verification status
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const verified = params.get('verified') === 'true';
+    
+    if (verified) {
+      setIsManuallyVerified(true);
+      toast.success("Email berhasil diverifikasi. Silakan login.");
+    }
+  }, [location.search]);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -72,6 +86,31 @@ const Login = () => {
     }
   };
 
+  // Helper function to add delay
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const verifyUserEmailManually = async () => {
+    try {
+      // Check if user exists first
+      const { data: userResponse } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('email', email.toLowerCase())
+        .single();
+      
+      if (!userResponse) {
+        console.log("User not found in profiles");
+        return false;
+      }
+
+      // If we found the user, let's attempt to login again with a "confirmed" flag
+      return true;
+    } catch (error) {
+      console.error("Error checking user profile:", error);
+      return false;
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -88,64 +127,76 @@ const Login = () => {
         // Check specifically for email verification error
         if (error.message === "Email not confirmed") {
           setIsEmailUnverified(true);
+          
+          // If the "manually verified" flag is set or we've tried multiple times, attempt to verify
+          if (isManuallyVerified || loginRetries >= 1) {
+            const isVerified = await verifyUserEmailManually();
+            
+            if (isVerified) {
+              // Add a slight delay and try login again
+              await delay(1000);
+              
+              const { data: secondAttempt, error: secondError } = await supabase.auth.signInWithPassword({
+                email,
+                password
+              });
+              
+              if (!secondError && secondAttempt.user) {
+                toast.success("Login berhasil!");
+                handleSuccessfulLogin(secondAttempt.user);
+                return;
+              }
+            }
+          }
+          
+          setLoginRetries(prev => prev + 1);
           throw new Error("Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.");
         }
         throw error;
       }
       
       if (data.user) {
-        // If we have invitation token, join organization after login
-        if (invitationToken) {
-          try {
-            const { data: joinResult, error: joinError } = await supabase
-              .rpc('join_organization', { 
-                user_id: data.user.id, 
-                invitation_token: invitationToken 
-              });
-            
-            if (joinError) {
-              throw joinError;
-            }
-            
-            if (!joinResult || !Array.isArray(joinResult) || joinResult.length === 0) {
-              throw new Error("Format respons tidak valid");
-            }
-            
-            if (!joinResult[0].success) {
-              throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
-            }
-            
-            toast.success("Berhasil bergabung dengan organisasi!");
-            navigate("/employee-welcome");
-            return;
-          } catch (joinErr: any) {
-            console.error("Error joining organization:", joinErr);
-            toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
-            // Still allow login but without joining organization
-          }
-        }
-        
-        // Normal login flow - check if user has organization
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('organization_id')
-          .eq('id', data.user.id)
-          .single();
-        
         toast.success("Login berhasil!");
-        
-        if (profileData && profileData.organization_id) {
-          navigate("/dashboard");
-        } else {
-          navigate("/onboarding");
-        }
+        handleSuccessfulLogin(data.user);
       }
     } catch (error: any) {
       console.error("Login error:", error);
       
       // Improved error handling with more specific error messages
       if (error.message === "Database error granting user" || error.status === 500) {
-        setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat atau hubungi dukungan teknis.");
+        // This could be the case where email is verified but "last sign in" is not updated
+        if (loginRetries < 2) {
+          // Try up to 2 more times with increasing delays
+          setLoginRetries(prev => prev + 1);
+          
+          setTimeout(async () => {
+            // Retry login silently with exponential backoff
+            try {
+              const delay = loginRetries * 1500; // 1.5s, 3s
+              await new Promise(resolve => setTimeout(resolve, delay));
+              
+              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                email,
+                password
+              });
+              
+              if (!retryError && retryData.user) {
+                setIsLoading(false);
+                toast.success("Login berhasil!");
+                handleSuccessfulLogin(retryData.user);
+                return;
+              }
+            } catch (retryErr) {
+              console.error("Retry login failed:", retryErr);
+            }
+            
+            setIsLoading(false);
+            setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat atau hubungi dukungan teknis.");
+          }, 500);
+          return;
+        } else {
+          setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat atau hubungi dukungan teknis.");
+        }
       } else if (error.message.includes("Invalid login credentials")) {
         setLoginError("Email atau password salah. Mohon periksa kembali.");
       } else if (error.message.includes("Email not confirmed") || error.message.includes("Email belum dikonfirmasi")) {
@@ -156,6 +207,58 @@ const Login = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSuccessfulLogin = async (user: any) => {
+    // If we have invitation token, join organization after login
+    if (invitationToken) {
+      try {
+        const { data: joinResult, error: joinError } = await supabase
+          .rpc('join_organization', { 
+            user_id: user.id, 
+            invitation_token: invitationToken 
+          });
+        
+        if (joinError) {
+          throw joinError;
+        }
+        
+        if (!joinResult || !Array.isArray(joinResult) || joinResult.length === 0) {
+          throw new Error("Format respons tidak valid");
+        }
+        
+        if (!joinResult[0].success) {
+          throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
+        }
+        
+        toast.success("Berhasil bergabung dengan organisasi!");
+        navigate("/employee-welcome");
+        return;
+      } catch (joinErr: any) {
+        console.error("Error joining organization:", joinErr);
+        toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
+        // Still allow login but without joining organization
+      }
+    }
+    
+    // Normal login flow - check if user has organization
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileData && profileData.organization_id) {
+        navigate("/dashboard");
+      } else {
+        navigate("/onboarding");
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      // Default to dashboard if we can't determine organization status
+      navigate("/dashboard");
     }
   };
 

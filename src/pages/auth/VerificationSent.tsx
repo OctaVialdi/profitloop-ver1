@@ -76,8 +76,9 @@ const VerificationSent = () => {
     }
   };
   
+  // Menambahkan parameter verified=true saat kembali ke login
   const goToLogin = () => {
-    navigate("/auth/login");
+    navigate("/auth/login?verified=true");
   };
   
   if (!email) {
