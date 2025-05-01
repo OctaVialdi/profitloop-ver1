@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Link } from "react-router-dom";
 import { 
   Calendar,
@@ -24,60 +25,62 @@ export default function ReminderBills() {
         </button>
       </div>
 
-      {/* Bills Navigation */}
+      {/* Bills Navigation - Updated to horizontal with scroll */}
       <Card className="p-1">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-7 bg-transparent h-auto">
-            <TabsTrigger 
-              value="overview" 
-              className={`data-[state=active]:bg-white ${activeTab === "overview" ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="upcoming-bills" 
-              className={`data-[state=active]:bg-white ${activeTab === "upcoming-bills" ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Upcoming Bills
-            </TabsTrigger>
-            <TabsTrigger 
-              value="overdue-bills" 
-              className={`data-[state=active]:bg-white ${activeTab === "overdue-bills" ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Overdue Bills
-            </TabsTrigger>
-            <TabsTrigger 
-              value="recurring-setup" 
-              className={`data-[state=active]:bg-white ${activeTab === "recurring-setup" ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Recurring Setup
-            </TabsTrigger>
-            <TabsTrigger 
-              value="auto-payment" 
-              className={`data-[state=active]:bg-white ${activeTab === "auto-payment" ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Auto-Payment
-            </TabsTrigger>
-            <TabsTrigger 
-              value="reminders" 
-              className={`data-[state=active]:bg-white ${activeTab === "reminders" ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Reminders
-            </TabsTrigger>
-            <TabsTrigger 
-              value="add-bill" 
-              className={`data-[state=active]:bg-white ${activeTab === "add-bill" ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Add Bill
-            </TabsTrigger>
-            <TabsTrigger 
-              value="approvals" 
-              className={`data-[state=active]:bg-white ${activeTab === "approvals" ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Approvals
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <ScrollArea className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="flex min-w-max bg-transparent h-auto px-1">
+              <TabsTrigger 
+                value="overview" 
+                className={`data-[state=active]:bg-white ${activeTab === "overview" ? "text-gray-900" : "text-gray-500"}`}
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="upcoming-bills" 
+                className={`data-[state=active]:bg-white ${activeTab === "upcoming-bills" ? "text-gray-900" : "text-gray-500"}`}
+              >
+                Upcoming Bills
+              </TabsTrigger>
+              <TabsTrigger 
+                value="overdue-bills" 
+                className={`data-[state=active]:bg-white ${activeTab === "overdue-bills" ? "text-gray-900" : "text-gray-500"}`}
+              >
+                Overdue Bills
+              </TabsTrigger>
+              <TabsTrigger 
+                value="recurring-setup" 
+                className={`data-[state=active]:bg-white ${activeTab === "recurring-setup" ? "text-gray-900" : "text-gray-500"}`}
+              >
+                Recurring Setup
+              </TabsTrigger>
+              <TabsTrigger 
+                value="auto-payment" 
+                className={`data-[state=active]:bg-white ${activeTab === "auto-payment" ? "text-gray-900" : "text-gray-500"}`}
+              >
+                Auto-Payment
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reminders" 
+                className={`data-[state=active]:bg-white ${activeTab === "reminders" ? "text-gray-900" : "text-gray-500"}`}
+              >
+                Reminders
+              </TabsTrigger>
+              <TabsTrigger 
+                value="add-bill" 
+                className={`data-[state=active]:bg-white ${activeTab === "add-bill" ? "text-gray-900" : "text-gray-500"}`}
+              >
+                Add Bill
+              </TabsTrigger>
+              <TabsTrigger 
+                value="approvals" 
+                className={`data-[state=active]:bg-white ${activeTab === "approvals" ? "text-gray-900" : "text-gray-500"}`}
+              >
+                Approvals
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </ScrollArea>
       </Card>
 
       {/* Stats Cards */}
