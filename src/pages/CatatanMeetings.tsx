@@ -298,14 +298,14 @@ const CatatanMeetings = () => {
                           <TableCell className="py-4">{point.discussion_point}</TableCell>
                           <TableCell className="py-4">
                             <Select 
-                              defaultValue={point.request_by || ""} 
+                              defaultValue={point.request_by || "unassigned"} 
                               onValueChange={(value) => handleRequestByChange(point.id, value)}
                             >
                               <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
-                                <SelectValue placeholder="" />
+                                <SelectValue placeholder="Select person" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">Select person</SelectItem>
+                                <SelectItem value="unassigned">Select person</SelectItem>
                                 {/* Dynamically generate list from unique requestBy values */}
                                 {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
                                   <SelectItem key={person} value={person as string}>
