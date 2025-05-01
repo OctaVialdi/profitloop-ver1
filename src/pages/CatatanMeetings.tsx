@@ -217,9 +217,9 @@ const CatatanMeetings = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="w-full">
       <div className="max-w-full mx-auto">
-        <div className="flex justify-between items-center p-6 bg-white border-b">
+        <div className="flex justify-between items-center p-6 bg-white border-b w-full sticky top-0 z-10">
           <h1 className="text-2xl font-semibold">{currentDate}</h1>
           <Button 
             variant="outline" 
@@ -290,7 +290,7 @@ const CatatanMeetings = () => {
                 </div>
               </div>
               
-              <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="bg-white rounded-lg shadow overflow-hidden overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-white border-b">
