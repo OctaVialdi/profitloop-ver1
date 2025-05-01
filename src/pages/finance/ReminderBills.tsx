@@ -179,7 +179,7 @@ export default function ReminderBills() {
             </CardContent>
           </Card>
 
-          {/* Overdue Bills Table - NEW SECTION */}
+          {/* Overdue Bills Table */}
           <Card className="mt-6">
             <CardContent className="p-6">
               <h3 className="text-xl font-bold mb-1 text-red-500">Overdue Bills</h3>
@@ -249,6 +249,124 @@ export default function ReminderBills() {
                     <TableCell>
                       <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs">
                         Overdue
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <button className="text-gray-500 hover:text-gray-800">
+                        <MoreHorizontal className="h-5 w-5" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Bills Table - NEW SECTION */}
+          <Card className="mt-6">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-bold mb-1 text-yellow-500">Upcoming Bills</h3>
+              <p className="text-gray-500 text-sm mb-4">Bills that need to be paid soon</p>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bill Name</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Office Rent */}
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <div className="w-1 h-12 bg-red-400 rounded-full mr-4"></div>
+                        <div>
+                          <div>Office Rent</div>
+                          <div className="inline-flex items-center mt-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Recurring
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>16 May 2025</div>
+                      <div className="text-gray-500 text-xs">15 days left</div>
+                    </TableCell>
+                    <TableCell>Rp 5.000.000</TableCell>
+                    <TableCell>Rent</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-600 rounded-full text-xs">
+                        Pending
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <button className="text-gray-500 hover:text-gray-800">
+                        <MoreHorizontal className="h-5 w-5" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Web Hosting */}
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <div className="w-1 h-12 bg-yellow-400 rounded-full mr-4"></div>
+                        <div>
+                          <div>Web Hosting</div>
+                          <div className="inline-flex items-center mt-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Recurring
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>30 Jun 2025</div>
+                      <div className="text-gray-500 text-xs">60 days left</div>
+                    </TableCell>
+                    <TableCell>Rp 3.000.000</TableCell>
+                    <TableCell>Hosting</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-600 rounded-full text-xs">
+                        Pending
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <button className="text-gray-500 hover:text-gray-800">
+                        <MoreHorizontal className="h-5 w-5" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Insurance Premium */}
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <div className="w-1 h-12 bg-green-400 rounded-full mr-4"></div>
+                        <div>
+                          <div>Insurance Premium</div>
+                          <div className="inline-flex items-center mt-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Recurring
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>04 May 2025</div>
+                      <div className="text-gray-500 text-xs">3 days left</div>
+                    </TableCell>
+                    <TableCell>Rp 8.500.000</TableCell>
+                    <TableCell>Insurance</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-600 rounded-full text-xs">
+                        Pending
                       </span>
                     </TableCell>
                     <TableCell>
