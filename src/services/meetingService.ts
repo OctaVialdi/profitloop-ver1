@@ -89,14 +89,34 @@ export const getMeetingUpdates = async (meetingPointId?: string): Promise<Meetin
 // Function to create a new meeting point
 export const createMeetingPoint = async (meetingData: Omit<MeetingPoint, 'id' | 'created_at' | 'updated_at' | 'organization_id'>): Promise<boolean> => {
   try {
+    // Get current user session to access organization_id
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
+      toast.error('No active session found');
+      return false;
+    }
+    
+    // Get organization_id from user metadata
+    const organizationId = sessionData.session.user.user_metadata.organization_id;
+    
+    if (!organizationId) {
+      toast.error('No organization found for current user');
+      return false;
+    }
+    
     // Format the current date for the meeting point
     if (!meetingData.date) {
       meetingData.date = formatCurrentDate();
     }
     
+    // Include the organization_id in the meeting data
     const { error } = await supabase
       .from('meeting_points')
-      .insert(meetingData);
+      .insert({
+        ...meetingData,
+        organization_id: organizationId
+      });
     
     if (error) {
       console.error('Error creating meeting point:', error);
@@ -295,3 +315,4 @@ export const saveThemeChanges = async (themeMode: string, userId: string): Promi
     return false;
   }
 };
+
