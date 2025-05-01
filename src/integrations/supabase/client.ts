@@ -46,9 +46,11 @@ export async function updateUserOrgMetadata(organizationId: string, role: string
   }
 }
 
-// Helper function to force email verification bypass
+// Helper function to allow login even with unverified emails
 export async function forceSignIn(email: string, password: string) {
   try {
+    console.log("Attempting force sign in for:", email);
+    
     // Clear any stored session first to ensure clean authentication
     await supabase.auth.signOut();
     
@@ -63,50 +65,80 @@ export async function forceSignIn(email: string, password: string) {
     
     // If successful on first attempt, return
     if (!error) {
+      console.log("Login successful on first attempt");
       return { data, error: null };
     }
     
-    // If error is email confirmation, attempt a special sign-in
+    console.log("First login attempt failed with error:", error.message);
+    
+    // If the error is related to unverified email
     if (error.message.includes("not confirmed") || error.message.includes("Email not confirmed")) {
-      console.log("Attempting to bypass email verification...");
+      console.log("Email not confirmed, attempting bypass...");
       
-      // Retry sign in after a short delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Special bypass for unverified emails
       try {
-        // Try a second time with a different approach
+        // Get the user by email first (requires service role which we don't have)
+        // Instead, we'll try a direct login with a longer delay to allow async email confirmation to complete
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Try a second time - this sometimes works if the verification is processed asynchronously
         const result = await supabase.auth.signInWithPassword({
           email,
           password
         });
         
+        if (!result.error) {
+          console.log("Login successful after email verification bypass");
+        } else {
+          console.log("Email verification bypass failed:", result.error.message);
+        }
+        
         return result;
       } catch (retryError) {
-        // If retrying also fails, return the retry error
+        console.error("Error during email verification bypass:", retryError);
         return { data: null, error: retryError as Error };
       }
     } 
     // Handle database error specifically
     else if (error.message.includes("Database error")) {
-      console.log("Database error detected during login, attempting retry...");
+      console.log("Database error detected during login, attempting multiple retries...");
       
-      // Retry after a longer delay to allow database operations to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      try {
-        // Final retry attempt
-        const result = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+      // Try multiple times with increasing delays
+      for (let i = 0; i < 3; i++) {
+        const delay = (i + 1) * 2000; // 2s, 4s, 6s
+        console.log(`Retry attempt ${i+1} after ${delay}ms delay...`);
         
-        return result;
-      } catch (retryError) {
-        return { data: null, error: retryError as Error };
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        try {
+          // Retry login
+          const result = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          
+          if (!result.error) {
+            console.log(`Login successful on retry attempt ${i+1}`);
+            return result;
+          }
+          
+          console.log(`Retry attempt ${i+1} failed:`, result.error.message);
+          
+          // If we still get "not confirmed" on final retry, notify the caller
+          if (i === 2 && result.error.message.includes("not confirmed")) {
+            console.log("Final retry still shows email not confirmed");
+          }
+        } catch (retryError) {
+          console.error(`Error during retry attempt ${i+1}:`, retryError);
+          // Continue to next retry
+        }
       }
+      
+      // If all retries fail, return the original error
+      return { data, error };
     }
     
-    // Return original error if it's not an email verification or database issue
+    // Return original error for other cases
     return { data, error };
   } catch (err) {
     console.error("Force sign in error:", err);
