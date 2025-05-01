@@ -77,7 +77,7 @@ export async function forceSignIn(email: string, password: string) {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin
+          redirectTo: window.location.origin  // Using 'redirectTo' instead of 'emailRedirectTo'
         }
       });
     }
