@@ -1,7 +1,6 @@
 
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { NotificationSystem } from "@/components/NotificationSystem";
 import Index from "@/pages/Index";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -37,7 +36,7 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        <NotificationSystem />
+        {/* Removed NotificationSystem from here to avoid duplication */}
         <Routes>
           {/* Public Route */}
           <Route path="/" element={<Index />} />
