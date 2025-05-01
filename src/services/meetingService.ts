@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MeetingPoint, MeetingUpdate, MeetingStatus } from "@/types/meetings";
@@ -242,7 +241,6 @@ export async function deleteMeetingUpdate(id: string) {
 export async function createMeetingUpdate(update: Omit<MeetingUpdate, 'id' | 'created_at'>) {
   try {
     // Fix: Ensure we have all required fields before inserting
-    // If update is somehow falsy or missing required fields, we need to handle that
     if (!update || 
         !update.meeting_point_id || 
         !update.status || 
