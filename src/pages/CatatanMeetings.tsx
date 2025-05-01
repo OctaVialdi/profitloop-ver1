@@ -322,11 +322,11 @@ const CatatanMeetings = () => {
                     <TableHeader>
                       <TableRow className="bg-white border-b">
                         <TableHead className="w-[120px] py-4 whitespace-nowrap">DATE</TableHead>
-                        <TableHead className="w-[300px] py-4">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[300px] py-4 text-right">DISCUSSION POINT</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap">REQUEST BY</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap">STATUS</TableHead>
-                        <TableHead className="w-[100px] py-4 whitespace-nowrap text-center">UPDATES</TableHead>
-                        <TableHead className="w-[140px] py-4 whitespace-nowrap">ACTIONS</TableHead>
+                        <TableHead className="w-[100px] py-4 whitespace-nowrap text-right">UPDATES</TableHead>
+                        <TableHead className="w-[140px] py-4 whitespace-nowrap text-right">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
                   </Table>
@@ -350,13 +350,13 @@ const CatatanMeetings = () => {
                             meetingPoints.map((point, index) => (
                               <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
                                 <TableCell className="w-[120px] py-4 whitespace-nowrap">{point.date}</TableCell>
-                                <TableCell className="w-[300px] py-4">
+                                <TableCell className="w-[300px] py-4 text-right">
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <div className="relative h-10 overflow-hidden">
                                           <ScrollArea className="h-10 w-full">
-                                            <div className="pr-3">
+                                            <div className="pr-3 text-right">
                                               {point.discussion_point}
                                             </div>
                                           </ScrollArea>
@@ -394,7 +394,7 @@ const CatatanMeetings = () => {
                                   />
                                 </TableCell>
                                 <TableCell className="w-[100px] py-4 whitespace-nowrap text-center">
-                                  <div className="flex justify-center">
+                                  <div className="flex justify-end">
                                     <Button 
                                       variant="ghost" 
                                       size="sm" 
@@ -410,7 +410,7 @@ const CatatanMeetings = () => {
                                   </div>
                                 </TableCell>
                                 <TableCell className="w-[140px] py-4 whitespace-nowrap">
-                                  <div className="flex space-x-2">
+                                  <div className="flex justify-end space-x-2">
                                     <MeetingActionButton 
                                       icon={Edit} 
                                       label="Edit" 
