@@ -20,13 +20,13 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const { isAdmin, isSuperAdmin } = useOrganization();
   
   const tabs: Tab[] = [
-    { name: "Dashboard", href: "/settings/dashboard" },
+    // Removed dashboard tab that doesn't exist
     { name: "Invite Members", href: "/settings/invite", requiredRole: "admin" },
     { name: "Team Members", href: "/settings/members" },
     { name: "Collaborations", href: "/settings/collaborations", requiredRole: "admin" },
     { name: "Subscription", href: "/settings/subscription", requiredRole: "admin" },
     { name: "Organization", href: "/settings/organization", requiredRole: "admin" },
-    { name: "Profile", href: "/settings/profile" }, // Added new tab for profile settings
+    { name: "Profile", href: "/settings/profile" }, // This is the path we'll use
   ];
   
   const filteredTabs = tabs.filter(tab => {
