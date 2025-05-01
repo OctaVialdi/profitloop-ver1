@@ -196,9 +196,14 @@ export async function deleteMeetingPoint(id: string) {
 
 export async function updateMeetingUpdate(id: string, updates: Partial<MeetingUpdate>) {
   try {
+    // Fix: Make sure updates is a valid object before proceeding
+    if (!updates || typeof updates !== 'object') {
+      throw new Error('Invalid update data');
+    }
+    
     const { data, error } = await supabase
       .from('meeting_updates')
-      .update(updates)
+      .update(updates) // Use directly without spreading
       .eq('id', id)
       .select()
       .single();
@@ -249,7 +254,7 @@ export async function createMeetingUpdate(update: Omit<MeetingUpdate, 'id' | 'cr
     
     const { data, error } = await supabase
       .from('meeting_updates')
-      .insert(update)
+      .insert(update) // Insert directly without spreading
       .select()
       .single();
       
