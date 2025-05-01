@@ -89,24 +89,23 @@ const Login = () => {
   // Helper function to add delay
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const verifyUserEmailManually = async () => {
+  const manualVerifyEmailAndLogin = async () => {
     try {
-      // Check if user exists first
-      const { data: userResponse } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('email', email.toLowerCase())
-        .single();
+      // Langsung mencoba login tanpa perlu memeriksa profil
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      if (!userResponse) {
-        console.log("User not found in profiles");
-        return false;
+      if (!error && data.user) {
+        toast.success("Login berhasil!");
+        handleSuccessfulLogin(data.user);
+        return true;
       }
 
-      // If we found the user, let's attempt to login again with a "confirmed" flag
-      return true;
+      return false;
     } catch (error) {
-      console.error("Error checking user profile:", error);
+      console.error("Manual verification failed:", error);
       return false;
     }
   };
@@ -118,6 +117,10 @@ const Login = () => {
     setIsEmailUnverified(false);
     
     try {
+      // Menambahkan simulasi delay untuk memastikan sistem memiliki 
+      // cukup waktu untuk memproses status verifikasi email
+      await delay(500);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -125,27 +128,16 @@ const Login = () => {
 
       if (error) {
         // Check specifically for email verification error
-        if (error.message === "Email not confirmed") {
+        if (error.message === "Email not confirmed" || error.message.includes("not confirmed")) {
           setIsEmailUnverified(true);
           
-          // If the "manually verified" flag is set or we've tried multiple times, attempt to verify
+          // Jika flag manual verified aktif, coba login setelah delay pendek
           if (isManuallyVerified || loginRetries >= 1) {
-            const isVerified = await verifyUserEmailManually();
+            await delay(1000);
+            const success = await manualVerifyEmailAndLogin();
             
-            if (isVerified) {
-              // Add a slight delay and try login again
-              await delay(1000);
-              
-              const { data: secondAttempt, error: secondError } = await supabase.auth.signInWithPassword({
-                email,
-                password
-              });
-              
-              if (!secondError && secondAttempt.user) {
-                toast.success("Login berhasil!");
-                handleSuccessfulLogin(secondAttempt.user);
-                return;
-              }
+            if (success) {
+              return;
             }
           }
           
@@ -164,15 +156,15 @@ const Login = () => {
       
       // Improved error handling with more specific error messages
       if (error.message === "Database error granting user" || error.status === 500) {
-        // This could be the case where email is verified but "last sign in" is not updated
-        if (loginRetries < 2) {
-          // Try up to 2 more times with increasing delays
+        // Kasus di mana email terverifikasi tetapi "last sign in" tidak diperbarui
+        if (loginRetries < 3) {
+          // Coba hingga 3 kali dengan penundaan yang semakin lama
           setLoginRetries(prev => prev + 1);
           
           setTimeout(async () => {
-            // Retry login silently with exponential backoff
+            // Ulangi login diam-diam dengan penundaan bertingkat
             try {
-              const delay = loginRetries * 1500; // 1.5s, 3s
+              const delay = loginRetries * 1500; // 1.5s, 3s, 4.5s
               await new Promise(resolve => setTimeout(resolve, delay));
               
               const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
@@ -248,7 +240,7 @@ const Login = () => {
         .from('profiles')
         .select('organization_id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
       if (profileData && profileData.organization_id) {
         navigate("/dashboard");

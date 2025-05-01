@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { CheckCircle, ArrowRight, AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 const VerificationSent = () => {
   const location = useLocation();
@@ -54,6 +55,7 @@ const VerificationSent = () => {
         throw error;
       }
       
+      toast.success("Email verifikasi berhasil dikirim ulang!");
       setAllowResend(false);
       setSecondsLeft(60);
       
@@ -73,6 +75,7 @@ const VerificationSent = () => {
       setShowTip(true);
     } catch (error: any) {
       console.error("Error resending verification:", error);
+      toast.error("Gagal mengirim ulang email verifikasi");
     }
   };
   
