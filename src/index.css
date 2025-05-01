@@ -113,6 +113,11 @@
     @apply text-blue-600 opacity-100 visible z-20 hover:bg-blue-50 p-1 rounded-md transition-colors;
   }
   
+  /* Menu group label styling */
+  [data-sidebar="group-label"] {
+    @apply text-blue-600 font-medium;
+  }
+  
   /* Add specific styling for collapsed state to center the icons */
   [data-state="collapsed"] [data-sidebar="menu-button"] {
     @apply justify-center p-2;

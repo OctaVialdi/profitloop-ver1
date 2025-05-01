@@ -64,18 +64,9 @@ export function DashboardSidebar({
     >
       <SidebarRail />
       <SidebarContent className="flex flex-col">
-        <div className="flex items-center p-4 justify-between">
-          {!isCollapsed && (
-            <div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">
-              {organization?.name || "Organisasi"}
-            </div>
-          )}
-          <SidebarTrigger className="ml-auto text-blue-600" />
-        </div>
-        
-        {/* Menu group - moved to top position */}
-        <SidebarGroup className="order-first">
-          <SidebarGroupLabel className={isCollapsed ? "opacity-0" : ""}>
+        {/* Menu group - positioned at the top */}
+        <SidebarGroup className="order-first mt-1">
+          <SidebarGroupLabel className={isCollapsed ? "opacity-0" : "font-medium text-blue-600"}>
             Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -97,6 +88,16 @@ export function DashboardSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        {/* Organization name section moved below menu */}
+        <div className="flex items-center p-4 justify-between mt-auto">
+          {!isCollapsed && (
+            <div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">
+              {organization?.name || "Organisasi"}
+            </div>
+          )}
+          <SidebarTrigger className="ml-auto text-blue-600" />
+        </div>
       </SidebarContent>
     </Sidebar>
   );
