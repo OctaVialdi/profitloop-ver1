@@ -88,7 +88,7 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
           title: newUpdate
         };
         
-        await createMeetingUpdate(updateData);
+        await createMeetingUpdate(meetingPoint.id, updateData);
         toast.success("Update added successfully");
       }
       

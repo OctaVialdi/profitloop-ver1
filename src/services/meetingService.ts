@@ -6,13 +6,18 @@ import { MeetingPoint, MeetingStatus, MeetingPointFilters, MeetingUpdate } from 
 // Create a new meeting update
 export const createMeetingUpdate = async (meetingPointId: string, updateData: Partial<MeetingUpdate>): Promise<boolean> => {
   try {
+    // Ensure all required properties are present
+    const completeUpdateData = {
+      meeting_point_id: meetingPointId,
+      person: updateData.person || 'Unknown',
+      status: updateData.status || 'not-started',
+      title: updateData.title || '',
+      date: updateData.date || new Date().toISOString().split('T')[0]
+    };
+    
     const { error } = await supabase
       .from('meeting_updates')
-      .insert({
-        meeting_point_id: meetingPointId,
-        ...updateData,
-        date: new Date().toISOString().split('T')[0]
-      });
+      .insert(completeUpdateData);
     
     if (error) {
       toast.error('Failed to create update: ' + error.message);
