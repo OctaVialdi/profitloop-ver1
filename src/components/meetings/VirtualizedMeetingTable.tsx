@@ -8,6 +8,7 @@ import { Edit, Trash2, History } from "lucide-react";
 import { MeetingStatus, MeetingPoint } from "@/types/meetings";
 import Spinner from "../Spinner";
 import { Input } from "@/components/ui/input"; 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface VirtualizedMeetingTableProps {
   meetingPoints: MeetingPoint[];
@@ -100,65 +101,76 @@ export const VirtualizedMeetingTable = ({
 
     const point = meetingPoints[index];
     return (
-      <div 
-        style={style} 
-        className={`grid grid-cols-12 gap-4 items-center py-2 px-4 border-b ${
-          index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'
-        }`}
-      >
-        <div className="col-span-2">{point.date}</div>
-        <div className="col-span-4 line-clamp-2 break-words" title={point.discussion_point}>
-          {point.discussion_point}
-        </div>
-        <div className="col-span-2">
-          <Select 
-            defaultValue={point.request_by || "unassigned"} 
-            onValueChange={(value) => onRequestByChange(point.id, value)}
-          >
-            <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
-              <SelectValue placeholder="Select person" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="unassigned">Select person</SelectItem>
-              {requestByOptions.map((person) => (
-                <SelectItem key={person} value={person}>
-                  {person}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="col-span-2">
-          <MeetingStatusBadge 
-            status={point.status} 
-            onChange={(value) => onStatusChange(point.id, value as MeetingStatus)} 
-          />
-        </div>
-        <div className="col-span-1">
-          <div 
-            className="flex items-center gap-1 text-blue-500 hover:text-blue-700 cursor-pointer"
-            onClick={() => onAddUpdates(point)}
-          >
-            <History size={16} />
-            <span>{updateCounts[point.id] || 0}</span>
+      <TooltipProvider>
+        <div 
+          style={style} 
+          className={`grid grid-cols-12 gap-4 items-center py-2 px-4 border-b ${
+            index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'
+          }`}
+        >
+          <div className="col-span-2 truncate" title={point.date}>
+            {point.date}
           </div>
-        </div>
-        <div className="col-span-1">
-          <div className="flex space-x-2">
-            <MeetingActionButton 
-              icon={Edit} 
-              label="Edit" 
-              onClick={() => onEditMeeting(point)} 
-            />
-            <MeetingActionButton 
-              icon={Trash2} 
-              label="Delete" 
-              variant="destructive" 
-              onClick={() => onDeletePrompt(point)} 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="col-span-4 line-clamp-2 break-words hover:cursor-help">
+                {point.discussion_point}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-md p-2">
+              <p className="break-words">{point.discussion_point}</p>
+            </TooltipContent>
+          </Tooltip>
+          <div className="col-span-2">
+            <Select 
+              defaultValue={point.request_by || "unassigned"} 
+              onValueChange={(value) => onRequestByChange(point.id, value)}
+            >
+              <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
+                <SelectValue placeholder="Select person" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Select person</SelectItem>
+                {requestByOptions.map((person) => (
+                  <SelectItem key={person} value={person}>
+                    {person}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <MeetingStatusBadge 
+              status={point.status} 
+              onChange={(value) => onStatusChange(point.id, value as MeetingStatus)} 
             />
           </div>
+          <div className="col-span-1">
+            <div 
+              className="flex items-center gap-1 text-blue-500 hover:text-blue-700 cursor-pointer"
+              onClick={() => onAddUpdates(point)}
+            >
+              <History size={16} />
+              <span>{updateCounts[point.id] || 0}</span>
+            </div>
+          </div>
+          <div className="col-span-1">
+            <div className="flex space-x-2">
+              <MeetingActionButton 
+                icon={Edit} 
+                label="Edit" 
+                onClick={() => onEditMeeting(point)} 
+              />
+              <MeetingActionButton 
+                icon={Trash2} 
+                label="Delete" 
+                variant="destructive" 
+                onClick={() => onDeletePrompt(point)} 
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
     );
   };
 

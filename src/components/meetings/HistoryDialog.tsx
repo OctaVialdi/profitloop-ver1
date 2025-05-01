@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { MeetingPoint, MeetingUpdate, MeetingStatus } from "@/types/meetings";
 import { AlertTriangle, CheckCircle, Clock, Presentation, XCircle } from "lucide-react";
 import { getMeetingUpdates } from "@/services/meetingService";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface HistoryDialogProps {
   open: boolean;
@@ -82,39 +83,53 @@ export const HistoryDialog: React.FC<HistoryDialogProps> = ({
         return "text-gray-600";
     }
   };
+
+  // Function to truncate text for display
+  const truncateText = (text: string, maxLength: number = 50) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Update History</DialogTitle>
-          <DialogDescription>
-            History of updates for: {meetingPoint?.discussion_point}
+          <DialogTitle className="line-clamp-1 break-all mr-8">
+            Update History
+          </DialogTitle>
+          <DialogDescription className="line-clamp-2 break-all">
+            {meetingPoint?.discussion_point}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 max-h-[400px] overflow-y-auto py-2">
+        
+        <ScrollArea className="flex-1 max-h-[400px] overflow-y-auto py-2">
           {loading ? (
             <div className="text-center py-4">Loading updates...</div>
           ) : updates.length === 0 ? (
             <div className="text-center py-4 text-gray-500">No update history found.</div>
           ) : (
-            updates.map((update) => (
-              <div key={update.id} className="border-b pb-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(update.status)}
-                    <span className={`font-medium ${getStatusColor(update.status)}`}>
-                      Status changed to: {update.status.charAt(0).toUpperCase() + update.status.slice(1)}
-                    </span>
+            <div className="space-y-4">
+              {updates.map((update) => (
+                <div key={update.id} className="border-b pb-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(update.status)}
+                      <span className={`font-medium ${getStatusColor(update.status)}`}>
+                        Status changed to: {update.status.charAt(0).toUpperCase() + update.status.slice(1)}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500 truncate max-w-[120px]" title={update.date}>
+                      {update.date}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">{update.date}</div>
+                  <div className="text-sm text-gray-600 mt-1">By: {update.person}</div>
                 </div>
-                <div className="text-sm text-gray-600 mt-1">By: {update.person}</div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
-        </div>
-        <DialogFooter>
+        </ScrollArea>
+        
+        <DialogFooter className="mt-4">
           <Button onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
