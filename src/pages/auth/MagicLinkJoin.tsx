@@ -55,18 +55,26 @@ const MagicLinkJoin = () => {
   const processInvitation = async (userId: string) => {
     try {
       // Process the invitation
-      const { data: result, error: processError } = await supabase
+      const { data, error: processError } = await supabase
         .rpc('process_magic_link_invitation', {
           invitation_token: token,
           user_id: userId
         });
       
-      console.log("Process invitation result:", result);
+      console.log("Process invitation result:", data);
       console.log("Process invitation error:", processError);
       
       if (processError) {
         throw processError;
       }
+      
+      // Type assertion to handle the response from the RPC function
+      const result = data as {
+        success: boolean;
+        message: string;
+        organization_id?: string;
+        role?: string;
+      };
       
       if (!result || !result.success) {
         throw new Error(result?.message || "Gagal memproses undangan");

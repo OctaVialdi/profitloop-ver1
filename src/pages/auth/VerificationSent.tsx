@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Mail, Loader2, RefreshCw } from "lucide-react";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
-import EmailTips from "@/components/auth/EmailTips";
-import VerificationStatus from "@/components/auth/VerificationStatus";
+import { EmailTips } from "@/components/auth/EmailTips";
+import { VerificationStatus } from "@/components/auth/VerificationStatus";
 
 const VerificationSent = () => {
   const location = useLocation();

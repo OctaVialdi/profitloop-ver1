@@ -1,27 +1,29 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/ui/theme-provider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { NotificationSystem } from "@/components/NotificationSystem";
-import { Index } from "@/pages/Index";
-import { Login } from "@/pages/auth/Login";
-import { Register } from "@/pages/auth/Register";
-import { VerificationSent } from "@/pages/auth/VerificationSent";
-import { AcceptInvitation } from "@/pages/auth/AcceptInvitation";
-import { OrganizationSetup } from "@/pages/OrganizationSetup";
-import { EmployeeWelcome } from "@/pages/EmployeeWelcome";
-import { Dashboard } from "@/pages/dashboard/Dashboard";
-import { Notifications } from "@/pages/dashboard/Notifications";
-import { MemberManagement } from "@/pages/dashboard/MemberManagement";
-import { InviteMembers } from "@/pages/dashboard/InviteMembers";
-import { OrganizationCollaboration } from "@/pages/dashboard/OrganizationCollaboration";
-import { Subscription } from "@/pages/dashboard/Subscription";
-import { OrganizationSettings } from "@/pages/dashboard/OrganizationSettings";
-import { ProfileSettings } from "@/pages/dashboard/ProfileSettings";
-import { NotFound } from "@/pages/NotFound";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { SettingsLayout } from "@/components/layout/SettingsLayout";
+import Index from "@/pages/Index";
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import VerificationSent from "@/pages/auth/VerificationSent";
+import AcceptInvitation from "@/pages/auth/AcceptInvitation";
+import { OrganizationSetup } from "@/pages/onboarding/OrganizationSetup";
+import { EmployeeWelcome } from "@/pages/employee/EmployeeWelcome";
+import Dashboard from "@/pages/dashboard/Dashboard";
+import Notifications from "@/pages/dashboard/Notifications";
+import MemberManagement from "@/pages/dashboard/MemberManagement";
+import InviteMembers from "@/pages/dashboard/InviteMembers";
+import OrganizationCollaboration from "@/pages/dashboard/OrganizationCollaboration";
+import Subscription from "@/pages/dashboard/Subscription";
+import OrganizationSettings from "@/pages/dashboard/OrganizationSettings";
+import ProfileSettings from "@/pages/settings/ProfileSettings";
+import NotFound from "@/pages/NotFound";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import SettingsLayout from "@/components/layout/SettingsLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AuthLayout } from "@/components/layout/AuthLayout";
+import AuthLayout from "@/components/layout/AuthLayout";
 import MagicLinkJoin from "./pages/auth/MagicLinkJoin";
+import { useEffect } from "react";
 
 function App() {
   // Check if the app is running in a development environment
