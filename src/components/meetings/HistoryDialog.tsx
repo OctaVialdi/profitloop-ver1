@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MeetingPoint, MeetingUpdate, MeetingStatus } from "@/types/meetings";
 import { AlertTriangle, CheckCircle, Clock, Presentation, XCircle } from "lucide-react";
-import { getMeetingUpdates } from "@/services/meetingService";
+import { getMeetingPointUpdates } from "@/services/meetingService";
 
 interface HistoryDialogProps {
   open: boolean;
@@ -36,7 +36,7 @@ export const HistoryDialog: React.FC<HistoryDialogProps> = ({
   const loadUpdates = async () => {
     setLoading(true);
     try {
-      const data = await getMeetingUpdates(meetingPoint.id);
+      const data = await getMeetingPointUpdates(meetingPoint.id);
       // Cast the response data to the MeetingUpdate type
       setUpdates(data.map(update => ({
         ...update,

@@ -1,17 +1,20 @@
 
 import React from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MeetingPointPopoverProps {
   text: string;
   maxLength?: number;
   children: React.ReactNode;
+  showTooltip?: boolean;
 }
 
 export const MeetingPointPopover: React.FC<MeetingPointPopoverProps> = ({ 
   text, 
   maxLength = 100,
-  children 
+  children,
+  showTooltip = true
 }) => {
   const isTextTooLong = text.length > maxLength;
   const truncatedText = isTextTooLong
@@ -19,7 +22,20 @@ export const MeetingPointPopover: React.FC<MeetingPointPopoverProps> = ({
     : text;
   
   if (!isTextTooLong) {
-    return <>{children}</>;
+    return showTooltip ? (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {children}
+          </TooltipTrigger>
+          <TooltipContent>
+            {text}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ) : (
+      <>{children}</>
+    );
   }
   
   return (

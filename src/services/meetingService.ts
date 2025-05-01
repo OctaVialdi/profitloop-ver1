@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { MeetingPoint, MeetingPointFilters, MeetingUpdate } from "@/types/meetings";
 
@@ -188,7 +189,7 @@ export const saveThemeChanges = async (theme: string, userId: string): Promise<b
     
     const { data, error } = await supabase
       .from('profiles')
-      .update({ theme_preference: theme })
+      .update({ preferences: { theme } })
       .eq('id', userId);
       
     if (error) {
