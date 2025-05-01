@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,14 +23,22 @@ export const InputRow: React.FC<InputRowProps> = ({
     // Only submit on Enter if not pressing Shift (to allow multi-line input)
     if (e.key === 'Enter' && !e.shiftKey) {
       onNewPointKeyDown(e);
-      setIsExpanded(false);
+      // Keep expanded after submitting to allow quick entry of multiple points
+      // Reset the text field but keep the expanded state
+      if (newPoint.trim() === '') {
+        setIsExpanded(false);
+      }
     }
   };
 
   return (
     <div className="grid grid-cols-12 gap-4 items-center py-3 px-4 border-t bg-white">
-      <div className="col-span-2 pr-2">{currentDate}</div>
-      <div className="col-span-10">
+      {isExpanded && (
+        <div className="col-span-2 pr-2 text-muted-foreground text-sm">
+          {currentDate}
+        </div>
+      )}
+      <div className={isExpanded ? "col-span-10" : "col-span-12"}>
         {isExpanded ? (
           <div className="space-y-2">
             <Textarea
@@ -55,7 +62,9 @@ export const InputRow: React.FC<InputRowProps> = ({
                 size="sm"
                 onClick={(e) => {
                   onNewPointKeyDown({ key: 'Enter', shiftKey: false } as any);
-                  setIsExpanded(false);
+                  if (newPoint.trim() === '') {
+                    setIsExpanded(false);
+                  }
                 }}
               >
                 Add Point
