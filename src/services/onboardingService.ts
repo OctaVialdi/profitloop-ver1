@@ -27,6 +27,21 @@ export const createOrganization = async (formData: OrganizationFormData) => {
   try {
     console.log("Creating organization with user ID:", userId);
     
+    // Double check if user already has an organization
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', userId)
+      .maybeSingle();
+      
+    if (profileError) {
+      console.error("Error checking existing organization:", profileError);
+      // Continue with organization creation
+    } else if (profileData?.organization_id) {
+      console.error("User already has an organization:", profileData.organization_id);
+      throw new Error("Anda sudah memiliki organisasi. Tidak dapat membuat organisasi baru.");
+    }
+    
     // Using a transaction to ensure all operations succeed or fail together
     const { data, error } = await supabase.rpc('create_organization_with_profile', {
       user_id: userId,

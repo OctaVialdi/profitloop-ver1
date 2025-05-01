@@ -20,7 +20,7 @@ const OrganizationSetup = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const navigate = useNavigate();
 
-  // Check authentication status on component mount
+  // Check authentication status and existing organization on component mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -37,24 +37,20 @@ const OrganizationSetup = () => {
         setIsAuthenticated(true);
         
         // Check if user already has an organization
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('organization_id')
-            .eq('id', session.user.id)
-            .maybeSingle();
-          
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            // Continue with organization setup even if profile check fails
-          } else if (profileData?.organization_id) {
-            console.log("User already has an organization:", profileData.organization_id);
-            toast.info("Anda sudah memiliki organisasi.");
-            navigate("/welcome");
-          }
-        } catch (error) {
-          console.error("Error checking profile:", error);
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
           // Continue with organization setup even if profile check fails
+        } else if (profileData?.organization_id) {
+          console.log("User already has an organization:", profileData.organization_id);
+          toast.info("Anda sudah memiliki organisasi.");
+          navigate("/dashboard");
+          return;
         }
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -104,6 +100,7 @@ const OrganizationSetup = () => {
       
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
+        // Explicitly redirect to welcome page after success
         navigate("/welcome");
       } else {
         toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");

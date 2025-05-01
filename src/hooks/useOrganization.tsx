@@ -32,6 +32,7 @@ export function useOrganization(): OrganizationData {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        console.log("No session found, redirecting to login");
         navigate('/auth/login');
         return;
       }
@@ -55,6 +56,7 @@ export function useOrganization(): OrganizationData {
       if (profile.organization_id && 
           (!session.user.user_metadata?.organization_id || 
            session.user.user_metadata.organization_id !== profile.organization_id)) {
+        console.log("Updating user metadata with organization ID:", profile.organization_id);
         await updateUserOrgMetadata(
           profile.organization_id, 
           profile.role || 'employee'
@@ -65,6 +67,7 @@ export function useOrganization(): OrganizationData {
       const organization = await getOrganization(profile.organization_id);
       
       if (!organization) {
+        console.error("Organization not found even though profile has organization_id");
         throw new Error("Organisasi tidak ditemukan");
       }
       
