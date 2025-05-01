@@ -73,7 +73,8 @@ export function DashboardSidebar({
           <SidebarTrigger className="ml-auto text-blue-600" />
         </div>
         
-        <SidebarGroup>
+        {/* Menu group - moved to top position */}
+        <SidebarGroup className="order-first">
           <SidebarGroupLabel className={isCollapsed ? "opacity-0" : ""}>
             Menu
           </SidebarGroupLabel>
