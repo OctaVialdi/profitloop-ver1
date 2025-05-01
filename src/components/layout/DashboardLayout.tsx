@@ -10,6 +10,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { NotificationSystem } from "@/components/NotificationSystem";
 import { useAppTheme } from "@/components/ThemeProvider";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -127,6 +128,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
           
           <div className="flex items-center gap-2">
+            <OrganizationSwitcher />
             <NotificationSystem />
             
             <span className="text-sm text-gray-500 hidden md:inline-block">

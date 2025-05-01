@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase, updateUserOrgMetadata } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { OrganizationData } from "@/types/organization";
 import { getUserProfile, getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
@@ -118,6 +118,20 @@ export function useOrganization(): OrganizationData {
   useEffect(() => {
     fetchOrganizationData();
     
+    // Set up listener for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        // If the user's token was refreshed or user was updated, 
+        // check if organization_id in metadata has changed
+        if (session && 
+            session.user.user_metadata?.organization_id !== 
+            organizationData.organization?.id) {
+          console.log("Organization changed in user metadata, refreshing data");
+          fetchOrganizationData();
+        }
+      }
+    });
+    
     // Set up listener for subscription changes
     const channel = supabase
       .channel('org-changes')
@@ -135,6 +149,7 @@ export function useOrganization(): OrganizationData {
       .subscribe();
       
     return () => {
+      subscription.unsubscribe();
       supabase.removeChannel(channel);
     };
   }, [organizationData.userProfile?.organization_id]);
