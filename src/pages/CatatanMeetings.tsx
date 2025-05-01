@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { getMeetingPoints, getMeetingUpdates, createMeetingPoint, updateMeetingPoint, deleteMeetingPoint, generateMeetingMinutes, formatCurrentDate } from "@/services/meetingService";
 import { MeetingPoint, MeetingUpdate, MeetingPointFilters, MeetingStatus, MeetingSummaryStatus } from "@/types/meetings";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 const CatatanMeetings = () => {
   const {
     organization
@@ -253,11 +254,11 @@ const CatatanMeetings = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-white border-b">
-                        <TableHead className="w-[120px]">DATE</TableHead>
+                        <TableHead className="w-[120px] text-left">DATE</TableHead>
                         <TableHead className="w-[300px] text-left px-[20px]">DISCUSSION POINT</TableHead>
-                        <TableHead className="w-[140px]">REQUEST BY</TableHead>
-                        <TableHead className="w-[140px]">STATUS</TableHead>
-                        <TableHead className="w-[100px]">UPDATES</TableHead>
+                        <TableHead className="w-[140px] text-center">REQUEST BY</TableHead>
+                        <TableHead className="w-[140px] text-center">STATUS</TableHead>
+                        <TableHead className="w-[100px] text-center">UPDATES</TableHead>
                         <TableHead className="w-[140px] text-right">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -277,7 +278,7 @@ const CatatanMeetings = () => {
                                 No meeting points found. Add one above.
                               </TableCell>
                             </TableRow> : meetingPoints.map((point, index) => <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                              <TableCell className="w-[120px] text-center">{point.date}</TableCell>
+                              <TableCell className="w-[120px] text-left">{point.date}</TableCell>
                               <TableCell className="w-[300px] text-left px-[25px]">
                                 <TooltipProvider>
                                   <Tooltip>
