@@ -32,6 +32,7 @@ import ReminderBills from "@/pages/finance/ReminderBills";
 import PayrollSummary from "@/pages/finance/PayrollSummary";
 import CashManagement from "@/pages/finance/CashManagement";
 import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
+import BillApprovals from "@/pages/finance/BillApprovals"; // New import for bill approvals
 import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 
@@ -139,6 +140,7 @@ function App() {
             <Route path="expenses" element={<Expenses />} />
             <Route path="income-target" element={<IncomeTarget />} />
             <Route path="reminder-bills" element={<ReminderBills />} />
+            <Route path="reminder-bills/approvals" element={<BillApprovals />} /> {/* New route for bill approvals */}
             <Route path="payroll-summary" element={<PayrollSummary />} />
             <Route path="cash-management" element={<CashManagement />} />
             <Route path="cash-management/daftar-transaksi" element={<DaftarTransaksi />} />
