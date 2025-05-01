@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MeetingPoint, MeetingUpdate } from "@/types/meetings";
+import { MeetingPoint, MeetingUpdate, MeetingStatus } from "@/types/meetings";
 
 export async function getMeetingPoints(filters: {
   status?: string;
@@ -31,7 +31,11 @@ export async function getMeetingPoints(filters: {
       throw error;
     }
     
-    return data || [];
+    // Cast the response data to ensure the status is of type MeetingStatus
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as MeetingStatus
+    })) as MeetingPoint[];
   } catch (error: any) {
     console.error('Error fetching meeting points:', error.message);
     toast.error('Failed to load meeting points');
@@ -57,7 +61,11 @@ export async function getMeetingUpdates(meetingPointId?: string) {
       throw error;
     }
     
-    return data || [];
+    // Cast the response data to ensure the status is of type MeetingStatus
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as MeetingStatus
+    })) as MeetingUpdate[];
   } catch (error: any) {
     console.error('Error fetching meeting updates:', error.message);
     toast.error('Failed to load meeting updates');

@@ -1,10 +1,11 @@
 
 import React from "react";
 import { AlertTriangle, Clock, CheckCircle, XCircle, Presentation } from "lucide-react";
+import { MeetingStatus } from "@/types/meetings";
 
 interface MeetingUpdateItemProps {
   title: string;
-  status: "not-started" | "on-going" | "completed" | "rejected" | "presented";
+  status: MeetingStatus;
   person: string;
   date: string;
 }

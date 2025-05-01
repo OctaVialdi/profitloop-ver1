@@ -1,12 +1,10 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
-
-export type MeetingStatus = "not-started" | "on-going" | "completed" | "rejected" | "presented" | "updates";
+import { MeetingSummaryStatus } from "@/types/meetings";
 
 interface MeetingSummaryCardProps {
-  status: MeetingStatus;
+  status: MeetingSummaryStatus;
   count: number;
   icon: LucideIcon;
   label: string;

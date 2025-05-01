@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { 
   Dialog, 
@@ -9,7 +8,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { MeetingPoint, MeetingUpdate } from "@/types/meetings";
+import { MeetingPoint, MeetingUpdate, MeetingStatus } from "@/types/meetings";
 import { AlertTriangle, CheckCircle, Clock, Presentation, XCircle } from "lucide-react";
 import { getMeetingUpdates } from "@/services/meetingService";
 
@@ -35,9 +34,18 @@ export const HistoryDialog: React.FC<HistoryDialogProps> = ({
   
   const loadUpdates = async () => {
     setLoading(true);
-    const data = await getMeetingUpdates(meetingPoint.id);
-    setUpdates(data);
-    setLoading(false);
+    try {
+      const data = await getMeetingUpdates(meetingPoint.id);
+      // Cast the response data to the MeetingUpdate type
+      setUpdates(data.map(update => ({
+        ...update,
+        status: update.status as MeetingStatus
+      })));
+    } catch (error) {
+      console.error('Error loading updates:', error);
+    } finally {
+      setLoading(false);
+    }
   };
   
   const getStatusIcon = (status: string) => {

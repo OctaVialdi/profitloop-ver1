@@ -2,7 +2,7 @@
 import React from "react";
 import { AlertTriangle, Clock, CheckCircle, XCircle, Presentation } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MeetingStatus } from "./MeetingSummaryCard";
+import { MeetingStatus } from "@/types/meetings";
 
 interface MeetingStatusBadgeProps {
   status: MeetingStatus;

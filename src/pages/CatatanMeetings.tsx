@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -19,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Toaster } from "@/components/ui/toaster";
 import { AlertTriangle, Clock, CheckCircle, XCircle, Presentation, History, Download, Edit, Trash2, Plus } from "lucide-react";
-import { MeetingSummaryCard, MeetingStatus } from "@/components/meetings/MeetingSummaryCard";
+import { MeetingSummaryCard } from "@/components/meetings/MeetingSummaryCard";
 import { MeetingUpdateItem } from "@/components/meetings/MeetingUpdateItem";
 import { MeetingStatusBadge } from "@/components/meetings/MeetingStatusBadge";
 import { MeetingActionButton } from "@/components/meetings/MeetingActionButton";
@@ -35,7 +34,13 @@ import {
   deleteMeetingPoint,
   generateMeetingMinutes
 } from "@/services/meetingService";
-import { MeetingPoint, MeetingUpdate, MeetingPointFilters } from "@/types/meetings";
+import { 
+  MeetingPoint, 
+  MeetingUpdate, 
+  MeetingPointFilters, 
+  MeetingStatus,
+  MeetingSummaryStatus
+} from "@/types/meetings";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -405,7 +410,7 @@ const CatatanMeetings = () => {
                     label="Presented" 
                   />
                   <MeetingSummaryCard 
-                    status="updates" 
+                    status={"updates" as MeetingSummaryStatus} 
                     count={updatesCount} 
                     icon={History} 
                     label="Updates" 

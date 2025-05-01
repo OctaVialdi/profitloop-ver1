@@ -1,6 +1,9 @@
 
 export type MeetingStatus = "not-started" | "on-going" | "completed" | "rejected" | "presented";
 
+// This is a new type that includes "updates" specifically for the summary card
+export type MeetingSummaryStatus = MeetingStatus | "updates";
+
 export interface MeetingPoint {
   id: string;
   date: string;
