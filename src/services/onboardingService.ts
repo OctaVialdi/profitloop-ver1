@@ -2,6 +2,17 @@
 import { supabase, updateUserOrgMetadata } from "@/integrations/supabase/client";
 import { OrganizationFormData } from "@/types/onboarding";
 
+interface OrganizationResponse {
+  id: string;
+  name: string;
+  business_field: string | null;
+  employee_count: number | null;
+  address: string | null;
+  phone: string | null;
+  subscription_plan_id: string | null;
+  trial_end_date: string | null;
+}
+
 export const createOrganization = async (formData: OrganizationFormData) => {
   // Get current user
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -34,7 +45,8 @@ export const createOrganization = async (formData: OrganizationFormData) => {
 
     // Update JWT with organization_id
     if (data) {
-      await updateUserOrgMetadata(data.id, 'super_admin');
+      const organizationData = data as OrganizationResponse;
+      await updateUserOrgMetadata(organizationData.id, 'super_admin');
     }
 
     console.log("Organization created successfully via RPC:", data);
