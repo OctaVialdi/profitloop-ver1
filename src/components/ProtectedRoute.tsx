@@ -18,15 +18,20 @@ export const ProtectedRoute = ({
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      
-      if (data.session) {
-        setAuthenticated(true);
-      } else {
+      try {
+        const { data } = await supabase.auth.getSession();
+        
+        if (data.session) {
+          setAuthenticated(true);
+        } else {
+          setAuthenticated(false);
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
         setAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     checkAuth();
@@ -46,10 +51,21 @@ export const ProtectedRoute = ({
 
   if (loading) {
     // You could add a loading spinner here
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   if (!authenticated) {
+    // Check if we're in production and on the wrong domain
+    if (process.env.NODE_ENV === 'production' && window.location.hostname === 'app.profitloop.id') {
+      // If we detect that we're using app.profitloop.id in production but it's not working,
+      // we might need to redirect to the correct domain or handle it differently
+      console.error("Domain mismatch detected. Please check your configuration.");
+    }
+    
     return <Navigate to={redirectTo} />;
   }
 

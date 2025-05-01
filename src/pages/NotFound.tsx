@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmailTips } from "@/components/auth/EmailTips";
+import { supabase } from "@/integrations/supabase/client";
 
 const NotFound = () => {
   const location = useLocation();
@@ -33,10 +34,36 @@ const NotFound = () => {
       searchParams.get('error_code') || location.hash.split('error_code=')[1]?.split('&')[0]
     );
     
+    // Check if the user is attempting to access app.profitloop.id instead of the correct domain
+    if (window.location.hostname === 'app.profitloop.id') {
+      // If we're in development, redirect to localhost
+      if (process.env.NODE_ENV === 'development') {
+        window.location.href = `http://localhost:5173${location.pathname}${location.search}`;
+        return;
+      }
+    }
+    
     // If this is an invitation URL but not being properly routed
     if (isExpiredInvitation && token && !location.pathname.includes('/join-organization')) {
       // Redirect to the proper route
       navigate(`/join-organization?token=${token}&email=${encodeURIComponent(email || '')}`);
+    }
+
+    // Check auth session when hitting dashboard URLs
+    if (location.pathname.includes('/dashboard')) {
+      const checkAuth = async () => {
+        const { data } = await supabase.auth.getSession();
+        
+        if (data.session) {
+          // User is authenticated but hitting a 404 on dashboard - redirect to main dashboard
+          navigate("/dashboard", { replace: true });
+        } else {
+          // User is not authenticated and trying to access dashboard - redirect to login
+          navigate("/auth/login", { replace: true });
+        }
+      };
+      
+      checkAuth();
     }
   }, [location.pathname, searchParams, location.hash, isExpiredInvitation, navigate, email, token]);
 

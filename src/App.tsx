@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "@/pages/Index";
 import Login from "@/pages/auth/Login";
@@ -31,6 +31,11 @@ function App() {
   // Log the environment status to the console
   useEffect(() => {
     console.log(`App is running in ${isDevelopment ? 'development' : 'production'} mode.`);
+    
+    // Handle domain mismatch - redirect if on app.profitloop.id in development
+    if (window.location.hostname === 'app.profitloop.id' && isDevelopment) {
+      window.location.href = `http://localhost:5173${window.location.pathname}${window.location.search}`;
+    }
   }, [isDevelopment]);
 
   return (
@@ -66,6 +71,8 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
+            {/* Redirect any unknown dashboard routes to main dashboard */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
 
           {/* Settings Layout */}
