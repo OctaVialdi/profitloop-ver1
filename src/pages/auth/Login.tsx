@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { validateUserProfile } from "@/utils/authUtils";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -19,15 +19,7 @@ const Login = () => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        // Verifikasi profil untuk mencegah sesi yang bertahan tapi data hilang
-        const { valid, profile } = await validateUserProfile(data.session.user.id);
-        
-        if (valid && profile?.organization_id) {
-          navigate("/dashboard");
-        } else if (!valid) {
-          // User terautentikasi tapi tidak punya profil yang valid
-          navigate("/onboarding");
-        }
+        navigate("/dashboard");
       }
     };
     
@@ -48,11 +40,15 @@ const Login = () => {
       
       if (data.user) {
         // Check if user has organization
-        const { valid, profile } = await validateUserProfile(data.user.id);
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', data.user.id)
+          .single();
         
         toast.success("Login berhasil!");
         
-        if (valid && profile?.organization_id) {
+        if (profileData && profileData.organization_id) {
           navigate("/dashboard");
         } else {
           navigate("/onboarding");

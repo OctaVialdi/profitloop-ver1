@@ -6,7 +6,6 @@ import { toast } from "@/components/ui/sonner";
 import { OrganizationData } from "@/types/organization";
 import { getUserProfile, getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
-import { hardLogout } from "@/utils/authUtils";
 
 export function useOrganization(): OrganizationData {
   const [organizationData, setOrganizationData] = useState<OrganizationData>({
@@ -43,13 +42,6 @@ export function useOrganization(): OrganizationData {
       
       if (!profile) {
         console.log("No profile found, redirecting to onboarding");
-        // Cek apakah ini kasus data yang tidak konsisten
-        const { data: authUser } = await supabase.auth.getUser();
-        if (authUser && authUser.user) {
-          console.log("Auth user exists but profile is missing - data inconsistency");
-          toast.error("Terjadi ketidaksesuaian data. Mohon login kembali.");
-          await hardLogout();
-        }
         navigate('/onboarding');
         return;
       }
@@ -76,26 +68,7 @@ export function useOrganization(): OrganizationData {
       
       if (!organization) {
         console.error("Organization not found even though profile has organization_id");
-        
-        // Handle kasus di mana organization_id ada di profile tapi tidak ada di tabel organizations
-        toast.error("Organisasi tidak ditemukan. Mohon buat organisasi baru.");
-        
-        // Update profile untuk menghapus organization_id yang tidak valid
-        try {
-          await supabase
-            .from('profiles')
-            .update({ organization_id: null })
-            .eq('id', session.user.id);
-            
-          // Perbarui juga user metadata
-          await updateUserOrgMetadata(null, profile.role || 'employee');
-          
-        } catch (updateErr) {
-          console.error("Failed to clean up invalid organization_id:", updateErr);
-        }
-        
-        navigate('/onboarding');
-        return;
+        throw new Error("Organisasi tidak ditemukan");
       }
       
       // Get subscription plan data if available
