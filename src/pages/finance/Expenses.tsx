@@ -2,8 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { ArrowDown, ChartPie, Table as TableIcon, ChevronDown } from "lucide-react";
+import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from "@/components/ui/table";
+import { ArrowDown, ChartPie, Table as TableIcon, ChevronDown, Calendar, Users, Filter } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Expenses() {
   // Sample data for the charts and tables
@@ -58,6 +59,37 @@ export default function Expenses() {
       date: "30 May 2025",
       frequency: "Monthly",
       isPaid: true
+    },
+  ];
+
+  // Sample data for expenses table
+  const expenseTransactions = [
+    {
+      date: "15 Apr 2025",
+      description: "Monthly office supplies restock",
+      category: "Office Supplies",
+      amount: "Rp 2.500.000",
+      department: "General",
+      type: "Operational",
+      status: "operational"
+    },
+    {
+      date: "10 Apr 2025",
+      description: "New laptops for IT team",
+      category: "Equipment",
+      amount: "Rp 15.000.000",
+      department: "IT",
+      type: "Fixed",
+      status: "fixed"
+    },
+    {
+      date: "05 Apr 2025",
+      description: "Social media campaign",
+      category: "Advertising",
+      amount: "Rp 5.000.000",
+      department: "Marketing",
+      type: "Variable",
+      status: "variable"
     },
   ];
 
@@ -210,6 +242,103 @@ export default function Expenses() {
           <p className="text-lg font-medium">Total Expenses</p>
           <p className="text-sm opacity-80">3 total transactions</p>
           <h2 className="text-3xl font-bold">Rp 22.500.000</h2>
+        </div>
+      </div>
+
+      {/* Expenses Table */}
+      <div className="space-y-4">
+        <div className="bg-white rounded-lg border shadow-sm">
+          {/* Filters */}
+          <div className="p-4 flex flex-col sm:flex-row gap-2">
+            <div className="flex-1">
+              <Select>
+                <SelectTrigger className="w-full bg-white border rounded-md">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <SelectValue placeholder="All Time" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all-time">All Time</SelectItem>
+                  <SelectItem value="this-month">This Month</SelectItem>
+                  <SelectItem value="last-month">Last Month</SelectItem>
+                  <SelectItem value="this-year">This Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Select>
+                <SelectTrigger className="w-full bg-white border rounded-md">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <SelectValue placeholder="All Departments" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="it">IT</SelectItem>
+                  <SelectItem value="marketing">Marketing</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Select>
+                <SelectTrigger className="w-full bg-white border rounded-md">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-gray-500" />
+                    <SelectValue placeholder="All Types" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="operational">Operational</SelectItem>
+                  <SelectItem value="fixed">Fixed</SelectItem>
+                  <SelectItem value="variable">Variable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="w-full">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-100">
+                  <TableHead className="text-gray-600 font-medium">Date <ArrowDown className="inline h-4 w-4" /></TableHead>
+                  <TableHead className="text-gray-600 font-medium">Description</TableHead>
+                  <TableHead className="text-gray-600 font-medium">Category</TableHead>
+                  <TableHead className="text-gray-600 font-medium text-right">Amount</TableHead>
+                  <TableHead className="text-gray-600 font-medium">Department</TableHead>
+                  <TableHead className="text-gray-600 font-medium">Type</TableHead>
+                  <TableHead className="text-gray-600 font-medium">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {expenseTransactions.map((expense, index) => (
+                  <TableRow key={index} className="border-b">
+                    <TableCell className="font-medium">{expense.date}</TableCell>
+                    <TableCell>{expense.description}</TableCell>
+                    <TableCell>{expense.category}</TableCell>
+                    <TableCell className={`text-right ${expense.category === "Equipment" ? "text-red-500" : ""}`}>
+                      {expense.amount}
+                    </TableCell>
+                    <TableCell>{expense.department}</TableCell>
+                    <TableCell>{expense.type}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-md text-sm ${
+                        expense.status === "operational" ? "bg-green-50 text-green-600" :
+                        expense.status === "fixed" ? "bg-blue-50 text-blue-600" :
+                        "bg-amber-50 text-amber-600"
+                      }`}>
+                        {expense.type}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
 
