@@ -56,11 +56,12 @@ export async function forceSignIn(email: string, password: string) {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Try normal sign in
-    const { data, error } = await supabase.auth.signInWithPassword({
+    let { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     
+    // If successful on first attempt, return
     if (!error) {
       return { data, error: null };
     }
@@ -69,17 +70,43 @@ export async function forceSignIn(email: string, password: string) {
     if (error.message.includes("not confirmed") || error.message.includes("Email not confirmed")) {
       console.log("Attempting to bypass email verification...");
       
-      // Retry sign in after a short delay with a different approach
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Retry sign in after a short delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Try a second time with a different session approach - without the redirectTo option
-      // since it's not supported in the type definition
-      return await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      try {
+        // Try a second time with a different approach
+        const result = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        return result;
+      } catch (retryError) {
+        // If retrying also fails, return the retry error
+        return { data: null, error: retryError as Error };
+      }
+    } 
+    // Handle database error specifically
+    else if (error.message.includes("Database error")) {
+      console.log("Database error detected during login, attempting retry...");
+      
+      // Retry after a longer delay to allow database operations to complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      try {
+        // Final retry attempt
+        const result = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        return result;
+      } catch (retryError) {
+        return { data: null, error: retryError as Error };
+      }
     }
     
+    // Return original error if it's not an email verification or database issue
     return { data, error };
   } catch (err) {
     console.error("Force sign in error:", err);

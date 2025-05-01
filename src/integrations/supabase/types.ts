@@ -196,6 +196,7 @@ export type Database = {
           full_name: string | null
           id: string
           invited_by: string | null
+          last_active: string | null
           organization_id: string | null
           preferences: Json | null
           role: string | null
@@ -207,6 +208,7 @@ export type Database = {
           full_name?: string | null
           id: string
           invited_by?: string | null
+          last_active?: string | null
           organization_id?: string | null
           preferences?: Json | null
           role?: string | null
@@ -218,6 +220,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           invited_by?: string | null
+          last_active?: string | null
           organization_id?: string | null
           preferences?: Json | null
           role?: string | null
