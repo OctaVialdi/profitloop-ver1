@@ -89,7 +89,9 @@ export const HistoryDialog: React.FC<HistoryDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Update History</DialogTitle>
           <DialogDescription>
-            History of updates for: {meetingPoint?.discussion_point}
+            <div className="line-clamp-2">
+              History of updates for: {meetingPoint?.discussion_point}
+            </div>
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 max-h-[400px] overflow-y-auto py-2">

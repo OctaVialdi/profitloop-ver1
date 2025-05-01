@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -315,19 +314,15 @@ const CatatanMeetings = () => {
                       ) : (
                         meetingPoints.map((point, index) => (
                           <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                            <TableCell className="py-4 whitespace-nowrap">{point.date}</TableCell>
-                            <TableCell className="py-4 w-[300px]">
-                              {/* Fix the discussion point text to prevent overflow */}
-                              <div className="break-words" style={{ 
-                                maxWidth: '300px', 
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                wordWrap: 'break-word'
+                            <TableCell className="py-4 whitespace-nowrap h-14">{point.date}</TableCell>
+                            <TableCell className="py-4 w-[300px] h-14">
+                              <div className="break-words line-clamp-2 max-h-12" style={{ 
+                                maxWidth: '300px'
                               }}>
                                 {point.discussion_point}
                               </div>
                             </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap">
+                            <TableCell className="py-4 whitespace-nowrap h-14">
                               <Select 
                                 defaultValue={point.request_by || "unassigned"} 
                                 onValueChange={(value) => handleRequestByChange(point.id, value)}
@@ -346,13 +341,13 @@ const CatatanMeetings = () => {
                                 </SelectContent>
                               </Select>
                             </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap">
+                            <TableCell className="py-4 whitespace-nowrap h-14">
                               <MeetingStatusBadge 
                                 status={point.status} 
                                 onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
                               />
                             </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap">
+                            <TableCell className="py-4 whitespace-nowrap h-14">
                               <div className="flex space-x-2">
                                 <Button 
                                   variant="ghost" 
@@ -368,7 +363,7 @@ const CatatanMeetings = () => {
                                 </Button>
                               </div>
                             </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap">
+                            <TableCell className="py-4 whitespace-nowrap h-14">
                               <div className="flex space-x-2">
                                 <MeetingActionButton 
                                   icon={Edit} 
