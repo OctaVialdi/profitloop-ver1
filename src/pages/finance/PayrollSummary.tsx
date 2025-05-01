@@ -4,6 +4,112 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RefreshCw, AlertCircle } from "lucide-react";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  LineChart, 
+  Line, 
+  ResponsiveContainer,
+  Legend 
+} from "recharts";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+
+// Department payroll data
+const departmentData = [
+  { name: "Marketing", value: 15000000, color: "#FF6384" },
+  { name: "IT", value: 20000000, color: "#36A2EB" },
+  { name: "Finance", value: 10000000, color: "#4BC0C0" },
+  { name: "HR", value: 7500000, color: "#FFCE56" },
+  { name: "Operations", value: 7500000, color: "#9966FF" },
+];
+
+// Monthly trend data
+const monthlyTrendData = [
+  { name: "Nov 2024", value: 50000000 },
+  { name: "Dec 2024", value: 58000000 },
+  { name: "Jan 2025", value: 55000000 },
+  { name: "Feb 2025", value: 52000000 },
+  { name: "Mar 2025", value: 57000000 },
+  { name: "Apr 2025", value: 60000000 },
+];
+
+// Payroll records data
+const payrollRecords = [
+  { id: "PAY-2025-04-001", department: "IT", employees: 35, amount: "Rp 20.000.000", status: "Pending Approval", date: "Apr 15, 2025" },
+  { id: "PAY-2025-04-002", department: "Marketing", employees: 28, amount: "Rp 15.000.000", status: "Pending Approval", date: "Apr 16, 2025" },
+  { id: "PAY-2025-04-003", department: "Finance", employees: 18, amount: "Rp 10.000.000", status: "Pending Approval", date: "Apr 16, 2025" },
+  { id: "PAY-2025-04-004", department: "HR", employees: 12, amount: "Rp 7.500.000", status: "Approved", date: "Apr 17, 2025" },
+  { id: "PAY-2025-04-005", department: "Operations", employees: 27, amount: "Rp 7.500.000", status: "Rejected", date: "Apr 17, 2025" },
+];
+
+// Format currency for tooltips and labels
+const formatCurrency = (value) => {
+  return `Rp ${(value / 1000000).toFixed(0)}M`;
+};
+
+function PayrollTable() {
+  return (
+    <Card className="mt-8">
+      <div className="p-4 border-b flex justify-between items-center">
+        <h3 className="font-semibold text-lg">Payroll Records</h3>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">Export</Button>
+          <Button variant="outline" size="sm">Filter</Button>
+        </div>
+      </div>
+      <div className="p-0 overflow-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Reference ID</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead className="text-center">Employees</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="w-[100px]">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {payrollRecords.map((record) => (
+              <TableRow key={record.id}>
+                <TableCell className="font-medium">{record.id}</TableCell>
+                <TableCell>{record.department}</TableCell>
+                <TableCell className="text-center">{record.employees}</TableCell>
+                <TableCell className="text-right">{record.amount}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    record.status === "Approved" ? "bg-green-100 text-green-700" : 
+                    record.status === "Rejected" ? "bg-red-100 text-red-700" : 
+                    "bg-amber-100 text-amber-700"
+                  }`}>
+                    {record.status}
+                  </span>
+                </TableCell>
+                <TableCell>{record.date}</TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm">View</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
+        <div className="text-sm text-gray-500">Showing 5 of 5 records</div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" disabled>Previous</Button>
+          <Button variant="outline" size="sm" disabled>Next</Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export default function PayrollSummary() {
   const [month, setMonth] = useState("April");
@@ -99,6 +205,74 @@ export default function PayrollSummary() {
           </div>
         </Card>
       </div>
+      
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        {/* Department Chart */}
+        <Card className="p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold">Payroll by Department</h3>
+            <p className="text-sm text-gray-500">Total payroll expenses distribution across departments</p>
+          </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={departmentData}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                <XAxis type="number" tickFormatter={formatCurrency} />
+                <YAxis dataKey="name" type="category" width={80} />
+                <Tooltip 
+                  formatter={(value) => [`Rp ${(value).toLocaleString()}`, 'Amount']}
+                  labelFormatter={(label) => `Department: ${label}`}
+                />
+                <Bar dataKey="value" fill="#8884d8" radius={[0, 4, 4, 0]}>
+                  {departmentData.map((entry, index) => (
+                    <rect key={`rect-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+        
+        {/* Monthly Trend Chart */}
+        <Card className="p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold">Monthly Payroll Trend</h3>
+            <p className="text-sm text-gray-500">Payroll expenses over the last 6 months</p>
+          </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={monthlyTrendData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" />
+                <YAxis tickFormatter={formatCurrency} />
+                <Tooltip 
+                  formatter={(value) => [`Rp ${(value).toLocaleString()}`, 'Amount']}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#4BC0C0" 
+                  strokeWidth={2} 
+                  dot={{ r: 4, strokeWidth: 2, fill: "white" }} 
+                  activeDot={{ r: 6 }} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
+
+      {/* Payroll Table */}
+      <PayrollTable />
       
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -361,7 +535,7 @@ export default function PayrollSummary() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="text-sm font-medium text-red-500">High Increase</h4>
-                      <p className="text-sm mt-1">Salary increase {'>'}  50% detected for IT Department employee EMP001</p>
+                      <p className="text-sm mt-1">Salary increase {'>'} 50% detected for IT Department employee EMP001</p>
                       <p className="text-xs text-gray-500 mt-1">Detected on 5/1/2025</p>
                     </div>
                     <Button size="sm" className="bg-white text-red-500 border border-red-500 hover:bg-red-50">
