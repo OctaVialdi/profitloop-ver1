@@ -1,10 +1,8 @@
 
-import { FixedSizeList as List } from "react-window";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MemberTableRow } from "./MemberTableRow";
-import Spinner from "../Spinner";
-import { useEffect, useState } from "react";
 
 interface Member {
   id: string;
@@ -37,25 +35,12 @@ export const MembersTable = ({
   onRoleChange,
   onRemove
 }: MembersTableProps) => {
-  const [windowHeight, setWindowHeight] = useState(0);
-  const ROW_HEIGHT = 80; // Approximate height of each row in pixels
-
-  // Update window dimensions on resize
-  useEffect(() => {
-    const updateWindowHeight = () => {
-      setWindowHeight(window.innerHeight);
-    };
-    
-    updateWindowHeight();
-    window.addEventListener('resize', updateWindowHeight);
-    
-    return () => {
-      window.removeEventListener('resize', updateWindowHeight);
-    };
-  }, []);
-
   if (isLoading) {
-    return <Spinner centered size="lg" />;
+    return (
+      <div className="text-center py-8">
+        <p>Memuat data anggota...</p>
+      </div>
+    );
   }
 
   if (members.length === 0) {
@@ -67,56 +52,38 @@ export const MembersTable = ({
     );
   }
 
-  const TableHeader = () => (
-    <div className="grid grid-cols-12 gap-4 py-3 px-4 font-medium text-sm text-muted-foreground border-b">
-      <div className="col-span-5">Nama / Email</div>
-      <div className="col-span-3">Peran</div>
-      <div className="col-span-2">Bergabung</div>
-      {isAdmin && <div className="col-span-2 text-right">Aksi</div>}
-    </div>
-  );
-
-  const Row = ({ index, style }: { index: number, style: React.CSSProperties }) => {
-    const member = members[index];
-    return (
-      <div style={style} className={`${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
-        <MemberTableRow 
-          key={member.id}
-          member={member}
-          currentUserId={userProfile?.id}
-          isAdmin={isAdmin}
-          isSuperAdmin={isSuperAdmin}
-          isUpdating={isUpdating}
-          isRemoving={isRemoving}
-          onRoleChange={onRoleChange}
-          onRemove={onRemove}
-        />
-      </div>
-    );
-  };
-
-  const listHeight = Math.min(
-    windowHeight * 0.6, // 60% of window height
-    members.length * ROW_HEIGHT + 50 // Total height of all rows + some buffer
-  );
-
   return (
     <>
-      <div className="border rounded-md overflow-hidden">
-        <TableHeader />
-        <List
-          height={listHeight}
-          itemCount={members.length}
-          itemSize={ROW_HEIGHT}
-          width="100%"
-          className="custom-scrollbar"
-        >
-          {Row}
-        </List>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nama / Email</TableHead>
+              <TableHead>Peran</TableHead>
+              <TableHead>Bergabung</TableHead>
+              {isAdmin && <TableHead className="text-right">Aksi</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {members.map((member) => (
+              <MemberTableRow 
+                key={member.id}
+                member={member}
+                currentUserId={userProfile?.id}
+                isAdmin={isAdmin}
+                isSuperAdmin={isSuperAdmin}
+                isUpdating={isUpdating}
+                isRemoving={isRemoving}
+                onRoleChange={onRoleChange}
+                onRemove={onRemove}
+              />
+            ))}
+          </TableBody>
+        </Table>
       </div>
       <div className="mt-6">
         <Button asChild variant="outline" size="sm">
-          <a href="/settings/invite">Undang Anggota Baru</a>
+          <a href="/invite">Undang Anggota Baru</a>
         </Button>
       </div>
     </>

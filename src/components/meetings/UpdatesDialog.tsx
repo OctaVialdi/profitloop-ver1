@@ -15,7 +15,6 @@ import { Clock, History, Trash2, Edit } from "lucide-react";
 import { createMeetingUpdate, getMeetingUpdates, deleteMeetingUpdate, updateMeetingUpdate } from "@/services/meetingService";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface UpdatesDialogProps {
   open: boolean;
@@ -132,114 +131,93 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
       toast.error("Failed to delete update");
     }
   };
-
-  // Function to truncate text for display
-  const truncateText = (text: string, maxLength: number = 50) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
   
   return (
-    <TooltipProvider>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="space-y-2">
-            <div className="flex items-center gap-2">
-              <History size={20} className="text-blue-500 shrink-0" />
-              <DialogTitle className="line-clamp-1 break-all mr-8">
-                Updates for "{truncateText(meetingPoint?.discussion_point || '', 40)}"
-              </DialogTitle>
-            </div>
-            <DialogDescription className="line-clamp-2 break-all">
-              {meetingPoint?.discussion_point}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-2 flex-1 overflow-hidden flex flex-col">
-            <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-              <Textarea
-                placeholder={editingUpdate ? "Edit update..." : "Add new update..."}
-                className="min-h-[100px] border-blue-200 focus:border-blue-400"
-                value={newUpdate}
-                onChange={(e) => setNewUpdate(e.target.value)}
-              />
-              <div className="flex justify-between">
-                {editingUpdate && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => {
-                      setEditingUpdate(null);
-                      setNewUpdate("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                )}
-                <div className={editingUpdate ? "ml-auto" : ""}>
-                  <Button 
-                    onClick={handleAddUpdate} 
-                    disabled={loading || !newUpdate.trim()}
-                    className="bg-blue-500 hover:bg-blue-600"
-                  >
-                    <History size={20} className="mr-2" />
-                    {editingUpdate ? "Save Changes" : "Add Update"}
-                  </Button>
-                </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <History size={20} className="text-blue-500" />
+            <DialogTitle>Updates for "{meetingPoint?.discussion_point}"</DialogTitle>
+          </div>
+          <DialogDescription>
+            Add or edit updates for this discussion point
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6 py-4">
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+            <Textarea
+              placeholder={editingUpdate ? "Edit update..." : "Add new update..."}
+              className="min-h-[120px] border-blue-200 focus:border-blue-400"
+              value={newUpdate}
+              onChange={(e) => setNewUpdate(e.target.value)}
+            />
+            <div className="flex justify-between">
+              {editingUpdate && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setEditingUpdate(null);
+                    setNewUpdate("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+              <div className={editingUpdate ? "ml-auto" : ""}>
+                <Button 
+                  onClick={handleAddUpdate} 
+                  disabled={loading || !newUpdate.trim()}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  <History size={20} className="mr-2" />
+                  {editingUpdate ? "Save Changes" : "Add Update"}
+                </Button>
               </div>
             </div>
-            
-            {/* Wrap updates in ScrollArea component for vertical scrolling */}
-            <ScrollArea className="h-[280px] pr-4 flex-1">
-              {updates && updates.length > 0 ? (
-                <div className="space-y-4">
-                  {updates.map((update) => (
-                    <div key={update.id} className="p-4 bg-gray-50 rounded-md border border-gray-100">
-                      <p className="font-medium text-gray-800 break-words">{update.title}</p>
-                      <div className="flex justify-between items-center mt-3">
-                        <div className="flex items-center text-gray-500 text-sm">
-                          <Clock size={14} className="mr-1 shrink-0" />
-                          <span className="truncate max-w-[180px]">{update.date}</span>
-                        </div>
-                        <div className="flex space-x-2 shrink-0">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="sm" onClick={() => handleEditUpdate(update)} className="text-blue-500 hover:text-blue-700">
-                                <Edit size={16} />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
-                          
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeleteUpdate(update)} className="text-red-500 hover:text-red-700">
-                                <Trash2 size={16} />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-gray-500">No updates found.</div>
-              )}
-            </ScrollArea>
           </div>
           
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </TooltipProvider>
+          {/* Wrap updates in ScrollArea component for vertical scrolling */}
+          <ScrollArea className="h-[300px] pr-4">
+            {updates && updates.length > 0 ? (
+              <div className="space-y-4">
+                {updates.map((update) => (
+                  <div key={update.id} className="p-4 bg-gray-50 rounded-md border border-gray-100">
+                    <p className="font-medium text-gray-800">{update.title}</p>
+                    <div className="flex justify-between items-center mt-3">
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <Clock size={14} className="mr-1" />
+                        {update.date}
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditUpdate(update)} className="text-blue-500 hover:text-blue-700">
+                          <Edit size={16} />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteUpdate(update)} className="text-red-500 hover:text-red-700">
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">No updates found.</div>
+            )}
+          </ScrollArea>
+        </div>
+        
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+          >
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

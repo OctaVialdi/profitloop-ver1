@@ -1,48 +1,30 @@
 
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Suspense, lazy, useEffect } from "react";
 import Index from "@/pages/Index";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import VerificationSent from "@/pages/auth/VerificationSent";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
-import MagicLinkJoin from "./pages/auth/MagicLinkJoin";
+import OrganizationSetup from "@/pages/onboarding/OrganizationSetup";
+import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
+import Dashboard from "@/pages/dashboard/Dashboard";
+import Notifications from "@/pages/dashboard/Notifications";
+import MemberManagement from "@/pages/dashboard/MemberManagement";
+import InviteMembers from "@/pages/dashboard/InviteMembers";
+import OrganizationCollaboration from "@/pages/dashboard/OrganizationCollaboration";
+import Subscription from "@/pages/dashboard/Subscription";
+import OrganizationSettings from "@/pages/dashboard/OrganizationSettings";
+import ProfileSettings from "@/pages/settings/ProfileSettings";
 import NotFound from "@/pages/NotFound";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SettingsLayout from "@/components/layout/SettingsLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AuthLayout from "@/components/layout/AuthLayout";
+import MagicLinkJoin from "./pages/auth/MagicLinkJoin";
+import CatatanMeetings from "@/pages/CatatanMeetings";
+import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
-
-// Lazy-loaded components
-const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard"));
-const Notifications = lazy(() => import("@/pages/dashboard/Notifications"));
-const MemberManagement = lazy(() => import("@/pages/dashboard/MemberManagement"));
-const InviteMembers = lazy(() => import("@/pages/dashboard/InviteMembers"));
-const OrganizationCollaboration = lazy(() => import("@/pages/dashboard/OrganizationCollaboration"));
-const Subscription = lazy(() => import("@/pages/dashboard/Subscription"));
-const OrganizationSettings = lazy(() => import("@/pages/dashboard/OrganizationSettings"));
-const ProfileSettings = lazy(() => import("@/pages/settings/ProfileSettings"));
-const OrganizationSetup = lazy(() => import("@/pages/onboarding/OrganizationSetup"));
-const EmployeeWelcome = lazy(() => import("@/pages/employee/EmployeeWelcome"));
-const CatatanMeetings = lazy(() => import("@/pages/CatatanMeetings"));
-
-// Loading fallback component
-const LoadingFallback = () => (
-  <div className="flex flex-col items-center justify-center w-full min-h-[70vh] p-8">
-    <div className="space-y-4 w-full max-w-md">
-      <Skeleton className="h-8 w-[250px] mb-6" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-[90%]" />
-      <Skeleton className="h-4 w-[80%]" />
-      <div className="pt-4">
-        <Skeleton className="h-32 w-full rounded-lg" />
-      </div>
-    </div>
-  </div>
-);
 
 function App() {
   // Check if the app is running in a development environment
@@ -101,22 +83,8 @@ function App() {
           <Route path="/join-organization" element={<MagicLinkJoin />} />
 
           {/* Protected Routes */}
-          <Route 
-            path="/onboarding" 
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <OrganizationSetup />
-              </Suspense>
-            } 
-          />
-          <Route 
-            path="/employee-welcome" 
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <EmployeeWelcome />
-              </Suspense>
-            } 
-          />
+          <Route path="/onboarding" element={<OrganizationSetup />} />
+          <Route path="/employee-welcome" element={<EmployeeWelcome />} />
 
           {/* Dashboard Layout */}
           <Route
@@ -127,16 +95,8 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Dashboard />
-              </Suspense>
-            } />
-            <Route path="notifications" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Notifications />
-              </Suspense>
-            } />
+            <Route index element={<Dashboard />} />
+            <Route path="notifications" element={<Notifications />} />
             {/* Redirect any unknown dashboard routes to main dashboard */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
@@ -150,11 +110,7 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={
-              <Suspense fallback={<LoadingFallback />}>
-                <CatatanMeetings />
-              </Suspense>
-            } />
+            <Route index element={<CatatanMeetings />} />
           </Route>
 
           {/* Settings Layout */}
@@ -170,41 +126,13 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="dashboard" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Dashboard />
-              </Suspense>
-            } />
-            <Route path="members" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <MemberManagement />
-              </Suspense>
-            } />
-            <Route path="invite" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <InviteMembers />
-              </Suspense>
-            } />
-            <Route path="collaborations" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <OrganizationCollaboration />
-              </Suspense>
-            } />
-            <Route path="subscription" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Subscription />
-              </Suspense>
-            } />
-            <Route path="organization" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <OrganizationSettings />
-              </Suspense>
-            } />
-            <Route path="profile" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <ProfileSettings />
-              </Suspense>
-            } />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="members" element={<MemberManagement />} />
+            <Route path="invite" element={<InviteMembers />} />
+            <Route path="collaborations" element={<OrganizationCollaboration />} />
+            <Route path="subscription" element={<Subscription />} />
+            <Route path="organization" element={<OrganizationSettings />} />
+            <Route path="profile" element={<ProfileSettings />} />
           </Route>
 
           {/* Catch all */}

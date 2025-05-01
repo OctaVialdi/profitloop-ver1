@@ -41,7 +41,7 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
-  // Navigation items - ordered correctly
+  // Navigation items - added Catatan Meetings above Settings
   const navigationItems: NavigationItem[] = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Catatan Meetings", href: "/catatan-meetings", icon: MessageSquare },
@@ -59,8 +59,7 @@ export function DashboardSidebar({
   return (
     <Sidebar variant="sidebar" collapsible="icon" className="sticky top-0 h-screen z-20">
       <SidebarRail />
-      <SidebarContent className="flex flex-col h-full">
-        {/* Organization header */}
+      <SidebarContent className="flex flex-col">
         <div className="flex items-center p-4 justify-between">
           {!isCollapsed && (
             <div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">
@@ -70,7 +69,6 @@ export function DashboardSidebar({
           <SidebarTrigger className="ml-auto" />
         </div>
         
-        {/* Menu section - explicitly positioned at the top */}
         <SidebarGroup>
           <SidebarGroupLabel className={isCollapsed ? "opacity-0" : ""}>
             Menu
@@ -94,9 +92,6 @@ export function DashboardSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
-        {/* Empty flex-grow div at the bottom to push content to top */}
-        <div className="mt-auto"></div>
       </SidebarContent>
     </Sidebar>
   );

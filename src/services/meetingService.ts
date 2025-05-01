@@ -74,8 +74,6 @@ export async function getMeetingUpdates(meetingPointId?: string) {
 
 export async function createMeetingPoint(meetingPoint: Omit<MeetingPoint, 'id' | 'created_at' | 'updated_at' | 'organization_id'>) {
   try {
-    console.log("Creating meeting point:", meetingPoint);
-    
     // Get current user profile to get organization_id
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -103,7 +101,6 @@ export async function createMeetingPoint(meetingPoint: Omit<MeetingPoint, 'id' |
       .single();
       
     if (error) {
-      console.error("Supabase error:", error);
       throw error;
     }
     
