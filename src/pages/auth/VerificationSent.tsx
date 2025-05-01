@@ -2,7 +2,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Loader2, RefreshCw } from "lucide-react";
+import { Mail, RefreshCw } from "lucide-react";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { EmailTips } from "@/components/auth/EmailTips";
 import { VerificationStatus } from "@/components/auth/VerificationStatus";
@@ -94,7 +94,7 @@ const VerificationSent = () => {
           </Button>
         </div>
 
-        {showTip && <EmailTips />}
+        <EmailTips showTip={showTip} />
         
         <div className="border-t border-gray-200 pt-4 mt-4 text-center">
           <Button variant="link" onClick={() => navigate("/auth/login")}>
