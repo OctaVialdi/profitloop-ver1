@@ -17,15 +17,16 @@ export const InputRow: React.FC<InputRowProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-12 gap-4 items-center py-2 px-4 border-t bg-white">
-      <div className="col-span-2">{currentDate}</div>
+      <div className="col-span-2 pr-2">{currentDate}</div>
       <div className="col-span-10">
         <Input
           type="text"
           placeholder="Type a new discussion point and press Enter..."
-          className="w-full py-2 focus:outline-none text-gray-500 italic"
+          className="w-full py-2 focus:outline-none focus:ring-0 focus:border-gray-300 text-gray-500 italic"
           value={newPoint}
           onChange={(e) => onNewPointChange(e.target.value)}
           onKeyDown={onNewPointKeyDown}
+          autoComplete="off"
         />
       </div>
     </div>

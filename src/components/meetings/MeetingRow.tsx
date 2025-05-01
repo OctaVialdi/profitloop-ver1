@@ -37,12 +37,12 @@ export const MeetingRow: React.FC<MeetingRowProps> = ({
           isEven ? 'bg-white' : 'bg-[#f9fafb]'
         }`}
       >
-        <div className="col-span-2 truncate" title={point.date}>
+        <div className="col-span-2 pr-2 truncate" title={point.date}>
           {point.date}
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="col-span-4 line-clamp-2 break-words hover:cursor-help">
+            <div className="col-span-3 line-clamp-2 break-words hover:cursor-help">
               {point.discussion_point}
             </div>
           </TooltipTrigger>
@@ -83,7 +83,7 @@ export const MeetingRow: React.FC<MeetingRowProps> = ({
             <span>{updateCount || 0}</span>
           </div>
         </div>
-        <div className="col-span-1">
+        <div className="col-span-2">
           <div className="flex space-x-2">
             <MeetingActionButton 
               icon={Edit} 
