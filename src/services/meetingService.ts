@@ -45,7 +45,11 @@ export const getMeetingPoints = async (filters?: any): Promise<MeetingPoint[]> =
       return [];
     }
     
-    return data || [];
+    // Cast the status to MeetingStatus type to satisfy TypeScript
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as MeetingStatus
+    }));
   } catch (error) {
     console.error('Unexpected error fetching meeting points:', error);
     toast.error('An unexpected error occurred');
@@ -70,7 +74,11 @@ export const getMeetingUpdates = async (meetingPointId?: string): Promise<Meetin
       return [];
     }
     
-    return data || [];
+    // Cast the status to MeetingStatus type to satisfy TypeScript
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as MeetingStatus
+    }));
   } catch (error) {
     console.error('Unexpected error fetching meeting updates:', error);
     toast.error('An unexpected error occurred');
