@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -332,8 +331,8 @@ const CatatanMeetings = () => {
                     </TableHeader>
                   </Table>
                   
-                  {/* Scrollable table body - Updated height to 900px */}
-                  <div className="overflow-hidden" style={{ height: "900px" }}>
+                  {/* Scrollable table body - Updated height to 800px */}
+                  <div className="overflow-hidden" style={{ height: "800px" }}>
                     <ScrollArea className="h-full">
                       <Table>
                         <TableBody>
