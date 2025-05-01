@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,6 +108,7 @@ const Register = () => {
           navigate("/auth/verification-sent", { 
             state: { 
               email,
+              password, // Pass password for auto-login after verification
               isInvitation: true,
               invitationToken
             } 
@@ -118,7 +118,12 @@ const Register = () => {
         
         // Normal registration flow
         toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
-        navigate("/auth/verification-sent", { state: { email } });
+        navigate("/auth/verification-sent", { 
+          state: { 
+            email,
+            password // Pass password for auto-login after verification
+          } 
+        });
       }
     } catch (error: any) {
       console.error("Registration error:", error);

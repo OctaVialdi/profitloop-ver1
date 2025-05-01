@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +12,10 @@ const VerificationSent = () => {
   const [showTip, setShowTip] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [allowResend, setAllowResend] = useState(false);
+  const [checkingVerification, setCheckingVerification] = useState(false);
   
   const email = location.state?.email || "";
+  const password = location.state?.password || ""; // Store password for auto-login
   const isInvitation = location.state?.isInvitation || false;
   const invitationToken = location.state?.invitationToken || "";
   
@@ -35,12 +36,42 @@ const VerificationSent = () => {
         return prev - 1;
       });
     }, 1000);
+
+    // Check verification status every 10 seconds if we have both email and password
+    let verificationChecker: NodeJS.Timeout | null = null;
+    if (email && password) {
+      verificationChecker = setInterval(async () => {
+        try {
+          setCheckingVerification(true);
+          // Try to sign in - if it works, the email has been verified
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          
+          if (!error && data.user) {
+            // Email is verified, clear interval and redirect to login
+            clearInterval(verificationChecker!);
+            toast.success("Email berhasil diverifikasi! Mengalihkan ke halaman login...");
+            navigate("/auth/login?verified=true");
+          }
+        } catch (err) {
+          // Ignore errors, just keep checking
+          console.log("Verification check: email not yet verified");
+        } finally {
+          setCheckingVerification(false);
+        }
+      }, 10000); // Check every 10 seconds
+    }
     
     return () => {
       clearTimeout(tipTimer);
       clearInterval(countdownTimer);
+      if (verificationChecker) {
+        clearInterval(verificationChecker);
+      }
     };
-  }, []);
+  }, [email, password, navigate]);
   
   const handleResendVerification = async () => {
     if (!email || !allowResend) return;
@@ -80,8 +111,15 @@ const VerificationSent = () => {
   };
   
   // Menambahkan parameter verified=true saat kembali ke login
+  // dan juga menyimpan password untuk auto-login jika tersedia
   const goToLogin = () => {
-    navigate("/auth/login?verified=true");
+    navigate("/auth/login?verified=true", { 
+      state: { 
+        verifiedEmail: email,
+        password: password,
+        isAttemptingVerification: true 
+      } 
+    });
   };
   
   if (!email) {
@@ -139,6 +177,13 @@ const VerificationSent = () => {
                   <li>Verifikasi alamat email yang Anda masukkan</li>
                   <li>Tunggu beberapa menit</li>
                 </ul>
+              </div>
+            )}
+
+            {checkingVerification && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800 flex items-center">
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Memeriksa status verifikasi...
               </div>
             )}
           </div>

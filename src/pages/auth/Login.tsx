@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, AlertCircle, Mail } from "lucide-react";
+import { Loader2, AlertCircle, Mail, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
@@ -19,6 +19,7 @@ const Login = () => {
   const [resendingVerification, setResendingVerification] = useState(false);
   const [isManuallyVerified, setIsManuallyVerified] = useState(false);
   const [loginRetries, setLoginRetries] = useState(0);
+  const [justVerified, setJustVerified] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,13 +27,23 @@ const Login = () => {
   // Check if we have invitation data from redirect
   const invitationEmail = location.state?.invitationEmail || "";
   const invitationToken = location.state?.invitationToken || "";
+  
+  // Check if we're coming from verification page with auto-login
+  const verifiedEmail = location.state?.verifiedEmail || "";
+  const autoLoginPassword = location.state?.password || "";
+  const isAttemptingVerification = location.state?.isAttemptingVerification || false;
 
   // If we have invitation email, use it
   useEffect(() => {
     if (invitationEmail) {
       setEmail(invitationEmail);
+    } else if (verifiedEmail) {
+      setEmail(verifiedEmail);
+      if (autoLoginPassword) {
+        setPassword(autoLoginPassword);
+      }
     }
-  }, [invitationEmail]);
+  }, [invitationEmail, verifiedEmail, autoLoginPassword]);
 
   // Check URL parameters for verification status
   useEffect(() => {
@@ -41,9 +52,18 @@ const Login = () => {
     
     if (verified) {
       setIsManuallyVerified(true);
+      setJustVerified(true);
       toast.success("Email berhasil diverifikasi. Silakan login.");
+      
+      // If we have email and password from verification page, try to auto-login
+      if (verifiedEmail && autoLoginPassword && isAttemptingVerification) {
+        // Attempt auto-login with short delay to ensure verification has propagated
+        setTimeout(() => {
+          handleAutoLogin(verifiedEmail, autoLoginPassword);
+        }, 1500);
+      }
     }
-  }, [location.search]);
+  }, [location.search, verifiedEmail, autoLoginPassword, isAttemptingVerification]);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -56,6 +76,41 @@ const Login = () => {
     
     checkSession();
   }, [navigate]);
+
+  const handleAutoLogin = async (email: string, password: string) => {
+    if (!email || !password) return;
+    
+    setIsLoading(true);
+    setLoginError(null);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        if (error.message === "Email not confirmed" || error.message.includes("not confirmed")) {
+          // Still not verified in the system - show manual login option
+          setLoginError("Email masih dalam proses verifikasi. Coba login secara manual dalam beberapa menit.");
+          return;
+        }
+        throw error;
+      }
+      
+      if (data.user) {
+        toast.success("Login berhasil!");
+        handleSuccessfulLogin(data.user);
+      }
+    } catch (error: any) {
+      console.error("Auto-login error:", error);
+      // Silent fail for auto-login, just let the user log in manually
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleResendVerification = async () => {
     if (!email) {
@@ -74,10 +129,13 @@ const Login = () => {
       if (error) throw error;
       
       toast.success("Email verifikasi berhasil dikirim ulang. Silakan cek kotak masuk email Anda.");
-      navigate("/auth/verification-sent", { state: { 
-        email,
-        ...(invitationToken && { isInvitation: true, invitationToken })
-      }});
+      navigate("/auth/verification-sent", { 
+        state: { 
+          email,
+          password, // Pass password for auto-login after verification
+          ...(invitationToken && { isInvitation: true, invitationToken })
+        }
+      });
     } catch (error: any) {
       console.error("Resend verification error:", error);
       toast.error(error.message || "Gagal mengirim ulang email verifikasi.");
@@ -91,16 +149,25 @@ const Login = () => {
 
   const manualVerifyEmailAndLogin = async () => {
     try {
-      // Langsung mencoba login tanpa perlu memeriksa profil
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (!error && data.user) {
-        toast.success("Login berhasil!");
-        handleSuccessfulLogin(data.user);
-        return true;
+      // Try multiple sign-in attempts with increasing delays
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await delay((attempt + 1) * 1000); // 1s, 2s, 3s delays
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (!error && data.user) {
+          toast.success("Login berhasil!");
+          handleSuccessfulLogin(data.user);
+          return true;
+        }
+        
+        // If still getting "not confirmed" error on final attempt, break loop
+        if (attempt === 2 && error?.message?.includes("not confirmed")) {
+          break;
+        }
       }
 
       return false;
@@ -117,23 +184,21 @@ const Login = () => {
     setIsEmailUnverified(false);
     
     try {
-      // Menambahkan simulasi delay untuk memastikan sistem memiliki 
-      // cukup waktu untuk memproses status verifikasi email
-      await delay(500);
-      
+      // First sign-in attempt
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
-        // Check specifically for email verification error
+        // Handle email verification error
         if (error.message === "Email not confirmed" || error.message.includes("not confirmed")) {
           setIsEmailUnverified(true);
           
-          // Jika flag manual verified aktif, coba login setelah delay pendek
-          if (isManuallyVerified || loginRetries >= 1) {
-            await delay(1000);
+          // If flag manual verified active or we're retrying, try again with delay
+          if (isManuallyVerified || justVerified || loginRetries >= 1) {
+            toast.loading("Mencoba memverifikasi email...");
+            await delay(1500);
             const success = await manualVerifyEmailAndLogin();
             
             if (success) {
@@ -154,17 +219,17 @@ const Login = () => {
     } catch (error: any) {
       console.error("Login error:", error);
       
-      // Improved error handling with more specific error messages
+      // Improved error handling
       if (error.message === "Database error granting user" || error.status === 500) {
-        // Kasus di mana email terverifikasi tetapi "last sign in" tidak diperbarui
+        // Database error case - often happens when email is verified but last_sign_in not updated
         if (loginRetries < 3) {
-          // Coba hingga 3 kali dengan penundaan yang semakin lama
           setLoginRetries(prev => prev + 1);
           
+          toast.loading("Mencoba ulang login...");
+          
           setTimeout(async () => {
-            // Ulangi login diam-diam dengan penundaan bertingkat
             try {
-              const delay = loginRetries * 1500; // 1.5s, 3s, 4.5s
+              const delay = loginRetries * 2000; // 2s, 4s, 6s
               await new Promise(resolve => setTimeout(resolve, delay));
               
               const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
@@ -183,7 +248,7 @@ const Login = () => {
             }
             
             setIsLoading(false);
-            setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat atau hubungi dukungan teknis.");
+            setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat.");
           }, 500);
           return;
         } else {
@@ -267,6 +332,16 @@ const Login = () => {
               </div>
             )}
           </CardDescription>
+          
+          {justVerified && (
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md flex items-start">
+              <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-2" />
+              <div>
+                <p className="font-medium text-green-800">Email berhasil diverifikasi</p>
+                <p className="text-sm text-green-700">Silakan login untuk melanjutkan</p>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {loginError && (
