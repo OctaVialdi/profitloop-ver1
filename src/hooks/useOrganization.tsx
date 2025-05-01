@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, updateUserOrgMetadata } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { OrganizationData } from "@/types/organization";
@@ -49,6 +49,16 @@ export function useOrganization(): OrganizationData {
         console.log("No organization associated with profile, redirecting to onboarding");
         navigate('/onboarding');
         return;
+      }
+
+      // If organization_id exists but not in user metadata, update it
+      if (profile.organization_id && 
+          (!session.user.user_metadata?.organization_id || 
+           session.user.user_metadata.organization_id !== profile.organization_id)) {
+        await updateUserOrgMetadata(
+          profile.organization_id, 
+          profile.role || 'employee'
+        );
       }
       
       // Get organization data
