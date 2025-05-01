@@ -41,7 +41,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-gray-50 overflow-hidden">
+      <div className="min-h-screen flex w-full bg-gray-50">
         <DashboardSidebar
           organization={organization}
           isAdmin={isAdmin}
@@ -51,7 +51,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         />
         
         {/* Main content */}
-        <SidebarInset className="overflow-hidden flex flex-col">
+        <SidebarInset className="overflow-hidden">
           {/* Top navigation */}
           <header className="bg-white border-b sticky top-0 z-10">
             <div className="px-4 h-16 flex items-center justify-between">
@@ -80,7 +80,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </header>
           
           {/* Page content - with single scroll */}
-          <div className="flex-1 overflow-auto">
+          <div className="h-[calc(100vh-4rem)] overflow-auto">
             <div className="p-4 md:p-6">
               {children || <Outlet />}
             </div>
