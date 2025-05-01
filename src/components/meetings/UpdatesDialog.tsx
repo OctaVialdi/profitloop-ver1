@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MeetingPoint, MeetingUpdate } from "@/types/meetings";
 import { Clock, History, Trash2, Edit } from "lucide-react";
-import { addMeetingUpdate, getMeetingPointUpdates, deleteMeetingPoint } from "@/services/meetingService";
+import { createMeetingUpdate, getMeetingUpdates, deleteMeetingUpdate, updateMeetingUpdate } from "@/services/meetingService";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -47,7 +48,7 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
     if (!meetingPoint?.id) return;
     
     try {
-      const data = await getMeetingPointUpdates(meetingPoint.id);
+      const data = await getMeetingUpdates(meetingPoint.id);
       setUpdates(data);
     } catch (error) {
       console.error('Error loading updates:', error);
@@ -64,21 +65,17 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
     setLoading(true);
     
     try {
+      const currentDate = new Date();
+      const formattedDate = `${currentDate.getDate()} ${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getFullYear()} - ${currentDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+      
       if (editingUpdate) {
-        // Update existing update - since there's no direct update function for updates,
-        // We'll delete the old update and add a new one with the same properties but updated title
-        await deleteMeetingPoint(editingUpdate.id);
-        
-        // Create new update with updated title but same other properties
+        // Update existing update
         const updateData = {
-          meeting_point_id: editingUpdate.meeting_point_id,
-          status: editingUpdate.status,
-          person: editingUpdate.person,
-          date: editingUpdate.date,
+          ...editingUpdate,
           title: newUpdate
         };
         
-        await addMeetingUpdate(updateData);
+        await updateMeetingUpdate(editingUpdate.id, updateData);
         toast.success("Update modified successfully");
         setEditingUpdate(null);
       } else {
@@ -91,7 +88,7 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
           title: newUpdate
         };
         
-        await addMeetingUpdate(updateData);
+        await createMeetingUpdate(updateData);
         toast.success("Update added successfully");
       }
       
@@ -125,8 +122,7 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
 
   const handleDeleteUpdate = async (update: MeetingUpdate) => {
     try {
-      // Since there's no direct delete function for an update, we'll need a workaround
-      await deleteMeetingPoint(update.id);
+      await deleteMeetingUpdate(update.id);
       toast.success("Update deleted successfully");
       loadUpdates(); // Reload updates after deletion
       onUpdateAdded(); // Notify parent component
