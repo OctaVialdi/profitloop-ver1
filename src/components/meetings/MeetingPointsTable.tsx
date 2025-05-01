@@ -20,6 +20,7 @@ import {
   SelectTrigger, 
   SelectValue
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 interface MeetingPointsTableProps {
@@ -50,26 +51,25 @@ export const MeetingPointsTable: React.FC<MeetingPointsTableProps> = ({
   const [newPoint, setNewPoint] = useState<string>("");
   const [inputLoading, setInputLoading] = useState<boolean>(false);
   
-  const handleAddPoint = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && newPoint.trim() !== "") {
-      try {
-        setInputLoading(true);
-        // Prevent default to avoid form submission if this is inside a form
-        e.preventDefault();
-        
-        // Call the onAddPoint function passed from parent component
-        const success = await onAddPoint(newPoint);
-        
-        if (success) {
-          // Only clear input if save was successful
-          setNewPoint("");
-          toast.success("Meeting point added successfully");
+  const handleAddPoint = async (e: React.KeyboardEvent<HTMLInputElement> | React.FormEvent) => {
+    if ((e.type === 'keydown' && (e as React.KeyboardEvent).key === 'Enter') || e.type === 'submit') {
+      if (newPoint.trim() !== "") {
+        try {
+          e.preventDefault(); // Prevent form submission
+          setInputLoading(true);
+          
+          const success = await onAddPoint(newPoint);
+          
+          if (success) {
+            setNewPoint("");
+            toast.success("Meeting point added successfully");
+          }
+        } catch (error) {
+          console.error("Error adding meeting point:", error);
+          toast.error("Failed to add meeting point. Please try again.");
+        } finally {
+          setInputLoading(false);
         }
-      } catch (error) {
-        console.error("Error adding meeting point:", error);
-        toast.error("Failed to add meeting point. Please try again.");
-      } finally {
-        setInputLoading(false);
       }
     }
   };
@@ -178,16 +178,18 @@ export const MeetingPointsTable: React.FC<MeetingPointsTableProps> = ({
             <TableRow>
               <TableCell className="py-4 whitespace-nowrap h-16">{""}</TableCell>
               <TableCell colSpan={5} className="py-4 h-16">
-                <input
-                  type="text"
-                  placeholder="Type a new discussion point and press Enter..."
-                  className="w-full py-2 focus:outline-none text-gray-500 italic"
-                  value={newPoint}
-                  onChange={(e) => setNewPoint(e.target.value)}
-                  onKeyDown={handleAddPoint}
-                  disabled={inputLoading}
-                />
-                {inputLoading && <span className="text-xs text-gray-400 ml-2">Saving...</span>}
+                <form onSubmit={handleAddPoint}>
+                  <Input
+                    type="text"
+                    placeholder="Type a new discussion point and press Enter..."
+                    className="w-full py-2 focus:outline-none text-gray-500 italic"
+                    value={newPoint}
+                    onChange={(e) => setNewPoint(e.target.value)}
+                    onKeyDown={handleAddPoint}
+                    disabled={inputLoading}
+                  />
+                  {inputLoading && <span className="text-xs text-gray-400 ml-2">Saving...</span>}
+                </form>
               </TableCell>
             </TableRow>
           </TableBody>

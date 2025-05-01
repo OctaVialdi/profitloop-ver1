@@ -55,6 +55,10 @@ export const useMeetingPoints = () => {
 
   const handleAddPoint = async (discussionPoint: string): Promise<boolean> => {
     try {
+      if (!discussionPoint.trim()) {
+        return false;
+      }
+      
       // Date will be empty at first and added during create by the backend
       const newMeetingPoint = {
         date: "", // Empty date that will be filled on server
