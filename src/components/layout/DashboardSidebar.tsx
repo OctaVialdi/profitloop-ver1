@@ -1,5 +1,5 @@
 
-import { Building, Home, Users, UserPlus, CreditCard, Bell, Settings, PanelLeft, PanelRight } from "lucide-react";
+import { Building, Home, Users, UserPlus, CreditCard, Bell, Settings, PanelLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
@@ -61,44 +61,42 @@ export function DashboardSidebar({
   });
 
   return (
-    <>
-      <Sidebar className="sticky top-0 h-screen">
-        <SidebarRail />
-        <SidebarContent className="flex flex-col">
-          <div className="flex items-center p-4 justify-between">
-            {!isCollapsed && (
-              <div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">
-                {organization?.name || "Organisasi"}
-              </div>
-            )}
-            <SidebarTrigger className="ml-auto" />
-          </div>
-          
-          <SidebarGroup>
-            <SidebarGroupLabel className={isCollapsed ? "opacity-0" : ""}>
-              Menu
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {filteredNavItems.map((item) => (
-                  <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton 
-                      tooltip={item.name}
-                      isActive={currentPath === item.href}
-                      asChild
-                    >
-                      <Link to={item.href} className="flex items-center">
-                        <item.icon className="h-5 w-5 shrink-0" />
-                        <span className={isCollapsed ? "sr-only" : "ml-2"}>{item.name}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-    </>
+    <Sidebar variant="sidebar" collapsible="icon" className="sticky top-0 h-screen z-20">
+      <SidebarRail />
+      <SidebarContent className="flex flex-col">
+        <div className="flex items-center p-4 justify-between">
+          {!isCollapsed && (
+            <div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">
+              {organization?.name || "Organisasi"}
+            </div>
+          )}
+          <SidebarTrigger className="ml-auto" />
+        </div>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel className={isCollapsed ? "opacity-0" : ""}>
+            Menu
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {filteredNavItems.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton 
+                    tooltip={item.name}
+                    isActive={currentPath === item.href}
+                    asChild
+                  >
+                    <Link to={item.href} className="flex items-center">
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      <span className={isCollapsed ? "sr-only" : "ml-2"}>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 }
