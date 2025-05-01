@@ -12,8 +12,8 @@ const MagicLinkJoin = () => {
   const navigate = useNavigate();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
-  const errorCode = searchParams.get("error_code");
-  const errorDescription = searchParams.get("error_description");
+  const errorCode = searchParams.get("error_code") || new URLSearchParams(window.location.hash.substring(1)).get("error_code");
+  const errorDescription = searchParams.get("error_description") || new URLSearchParams(window.location.hash.substring(1)).get("error_description");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -38,9 +38,9 @@ const MagicLinkJoin = () => {
   useEffect(() => {
     const processInvitation = async () => {
       // Check if there's an error in the URL (from Supabase redirect)
-      if (errorCode) {
+      if (errorCode || errorDescription || window.location.hash.includes('error=access_denied')) {
         console.error("Error from Supabase auth:", errorCode, errorDescription);
-        setError(errorDescription || "Link undangan tidak valid atau sudah kadaluarsa");
+        setError(errorDescription?.replace(/\+/g, ' ') || "Link undangan tidak valid atau sudah kadaluarsa");
         setIsLoading(false);
         return;
       }

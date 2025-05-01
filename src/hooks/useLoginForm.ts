@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,11 +16,11 @@ export function useLoginForm() {
   const location = useLocation();
   
   // Pre-fill email from location state if available
-  useState(() => {
+  useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
     }
-  });
+  }, [location.state?.email]);
   
   const handleResendVerification = async () => {
     if (!email) {
@@ -88,6 +88,7 @@ export function useLoginForm() {
         // Handle magic link token if present
         const magicLinkToken = location.state?.magicLinkToken;
         if (magicLinkToken) {
+          console.log("Processing magic link token after login:", magicLinkToken);
           try {
             const { data: joinResult, error: joinError } = await supabase.rpc(
               'process_magic_link_invitation',
@@ -98,15 +99,35 @@ export function useLoginForm() {
             );
             
             if (joinError) {
+              console.error("Error joining with magic link token:", joinError);
               throw joinError;
             }
             
             // Handle result as an object
-            const result = joinResult as { success: boolean, message: string, organization_id?: string };
+            const result = joinResult as { success: boolean, message: string, organization_id?: string, role?: string };
             
             if (result.success) {
+              // Get organization name
+              let organizationName = "organization";
+              if (result.organization_id) {
+                const { data: orgData } = await supabase
+                  .from('organizations')
+                  .select('name')
+                  .eq('id', result.organization_id)
+                  .maybeSingle();
+                  
+                if (orgData && orgData.name) {
+                  organizationName = orgData.name;
+                }
+              }
+              
               toast.success("Berhasil bergabung dengan organisasi!");
-              navigate("/employee-welcome");
+              navigate("/employee-welcome", { 
+                state: { 
+                  organizationName,
+                  role: result.role || "employee"
+                }
+              });
               return;
             } else {
               throw new Error(result.message || "Gagal bergabung dengan organisasi");
@@ -114,6 +135,7 @@ export function useLoginForm() {
           } catch (joinErr: any) {
             console.error("Error joining organization:", joinErr);
             toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
+            // Continue with normal flow even if joining fails
           }
         }
         

@@ -13,7 +13,8 @@ const NotFound = () => {
   const isExpiredInvitation = 
     location.pathname.includes('join-organization') || 
     searchParams.has('token') || 
-    location.hash.includes('error=access_denied');
+    location.hash.includes('error=access_denied') ||
+    location.hash.includes('error_code=otp_expired');
   
   // Extract email from searchParams if available
   const email = searchParams.get('email');
@@ -26,11 +27,14 @@ const NotFound = () => {
       "Search params:",
       Object.fromEntries([...searchParams]),
       "Hash:",
-      location.hash
+      location.hash,
+      "Error code:",
+      searchParams.get('error_code') || location.hash.split('error_code=')[1]?.split('&')[0]
     );
     
-    // If this is an invitation URL with error, redirect to the MagicLinkJoin component
-    if (isExpiredInvitation && token) {
+    // If this is an invitation URL but not being properly routed
+    if (isExpiredInvitation && token && !location.pathname.includes('/join-organization')) {
+      // Redirect to the proper route
       navigate(`/join-organization?token=${token}&email=${encodeURIComponent(email || '')}`);
     }
   }, [location.pathname, searchParams, location.hash, isExpiredInvitation, navigate, email, token]);

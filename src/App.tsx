@@ -36,7 +36,6 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        {/* Removed NotificationSystem from here to avoid duplication */}
         <Routes>
           {/* Public Route */}
           <Route path="/" element={<Index />} />
@@ -48,7 +47,7 @@ function App() {
             <Route path="verification-sent" element={<VerificationSent />} />
           </Route>
           
-          {/* Accept Invitations */}
+          {/* Accept Invitations - IMPORTANT: Making these routes more explicit */}
           <Route path="/accept-invitation" element={<AcceptInvitation />} />
           <Route path="/join-organization" element={<MagicLinkJoin />} />
 
