@@ -74,8 +74,9 @@ export function RoleBasedMenu() {
     return false;
   });
 
+  // Menggunakan komponen sidebar yang benar sesuai dengan struktur yang ada
   return (
-    <Sidebar.Menu
+    <Sidebar
       items={filteredItems.map((item) => ({
         title: item.title,
         href: item.href,
