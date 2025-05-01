@@ -322,10 +322,10 @@ const CatatanMeetings = () => {
                     <TableHeader>
                       <TableRow className="bg-white border-b">
                         <TableHead className="w-[120px] py-4 whitespace-nowrap">DATE</TableHead>
-                        <TableHead className="w-[300px] py-4 text-right">DISCUSSION POINT</TableHead>
-                        <TableHead className="w-[140px] py-4 whitespace-nowrap">REQUEST BY</TableHead>
-                        <TableHead className="w-[140px] py-4 whitespace-nowrap">STATUS</TableHead>
-                        <TableHead className="w-[100px] py-4 whitespace-nowrap text-right">UPDATES</TableHead>
+                        <TableHead className="w-[300px] py-4 text-left">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[140px] py-4 whitespace-nowrap text-center">REQUEST BY</TableHead>
+                        <TableHead className="w-[140px] py-4 whitespace-nowrap text-center">STATUS</TableHead>
+                        <TableHead className="w-[100px] py-4 whitespace-nowrap text-center">UPDATES</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap text-right">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -350,13 +350,13 @@ const CatatanMeetings = () => {
                             meetingPoints.map((point, index) => (
                               <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
                                 <TableCell className="w-[120px] py-4 whitespace-nowrap">{point.date}</TableCell>
-                                <TableCell className="w-[300px] py-4 text-right">
+                                <TableCell className="w-[300px] py-4 text-left">
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <div className="relative h-10 overflow-hidden">
                                           <ScrollArea className="h-10 w-full">
-                                            <div className="pr-3 text-right">
+                                            <div className="pr-3 text-left">
                                               {point.discussion_point}
                                             </div>
                                           </ScrollArea>
@@ -368,7 +368,7 @@ const CatatanMeetings = () => {
                                     </Tooltip>
                                   </TooltipProvider>
                                 </TableCell>
-                                <TableCell className="w-[140px] py-4 whitespace-nowrap">
+                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-center">
                                   <Select 
                                     defaultValue={point.request_by || "unassigned"} 
                                     onValueChange={(value) => handleRequestByChange(point.id, value)}
@@ -387,14 +387,14 @@ const CatatanMeetings = () => {
                                     </SelectContent>
                                   </Select>
                                 </TableCell>
-                                <TableCell className="w-[140px] py-4 whitespace-nowrap">
+                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-center">
                                   <MeetingStatusBadge 
                                     status={point.status} 
                                     onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
                                   />
                                 </TableCell>
                                 <TableCell className="w-[100px] py-4 whitespace-nowrap text-center">
-                                  <div className="flex justify-end">
+                                  <div className="flex justify-center">
                                     <Button 
                                       variant="ghost" 
                                       size="sm" 
@@ -409,7 +409,7 @@ const CatatanMeetings = () => {
                                     </Button>
                                   </div>
                                 </TableCell>
-                                <TableCell className="w-[140px] py-4 whitespace-nowrap">
+                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-right">
                                   <div className="flex justify-end space-x-2">
                                     <MeetingActionButton 
                                       icon={Edit} 
