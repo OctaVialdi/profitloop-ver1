@@ -45,8 +45,14 @@ export const createOrganization = async (formData: OrganizationFormData) => {
 
     // Update JWT with organization_id
     if (data) {
-      const organizationData = data as OrganizationResponse;
-      await updateUserOrgMetadata(organizationData.id, 'super_admin');
+      // First check if data has the expected structure
+      if (typeof data === 'object' && data !== null && 'id' in data && typeof data.id === 'string') {
+        // Now it's safe to use data.id
+        await updateUserOrgMetadata(data.id, 'super_admin');
+      } else {
+        console.error("Unexpected response format from create_organization_with_profile:", data);
+        throw new Error("Format respons tidak valid dari server.");
+      }
     }
 
     console.log("Organization created successfully via RPC:", data);
