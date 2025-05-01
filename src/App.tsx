@@ -22,6 +22,8 @@ import WelcomePage from "@/pages/WelcomePage";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
 import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
 import SettingsLayout from "@/components/layout/SettingsLayout";
+// Import the new profile settings page
+import ProfileSettings from "@/pages/settings/ProfileSettings";
 
 function App() {
   return (
@@ -62,6 +64,8 @@ function App() {
               <Route path="collaborations" element={<OrganizationCollaboration />} />
               <Route path="subscription" element={<Subscription />} />
               <Route path="organization" element={<OrganizationSettings />} />
+              {/* Add the profile route */}
+              <Route path="profile" element={<ProfileSettings />} />
             </Route>
             
             {/* Legacy routes redirects */}
@@ -69,6 +73,8 @@ function App() {
             <Route path="/organization/settings" element={<Navigate to="/settings/organization" replace />} />
             <Route path="/subscription" element={<Navigate to="/settings/subscription" replace />} />
             <Route path="/collaborations" element={<Navigate to="/settings/collaborations" replace />} />
+            {/* Add a redirect for direct profile access */}
+            <Route path="/profile" element={<Navigate to="/settings/profile" replace />} />
           </Route>
           
           {/* 404 Page */}

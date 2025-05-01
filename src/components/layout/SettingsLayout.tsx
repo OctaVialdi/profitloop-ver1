@@ -26,6 +26,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
     { name: "Collaborations", href: "/settings/collaborations", requiredRole: "admin" },
     { name: "Subscription", href: "/settings/subscription", requiredRole: "admin" },
     { name: "Organization", href: "/settings/organization", requiredRole: "admin" },
+    { name: "Profile", href: "/settings/profile" }, // Added new tab for profile settings
   ];
   
   const filteredTabs = tabs.filter(tab => {

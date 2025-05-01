@@ -197,7 +197,9 @@ export type Database = {
           id: string
           invited_by: string | null
           organization_id: string | null
+          preferences: Json | null
           role: string | null
+          timezone: string | null
         }
         Insert: {
           created_at?: string | null
@@ -206,7 +208,9 @@ export type Database = {
           id: string
           invited_by?: string | null
           organization_id?: string | null
+          preferences?: Json | null
           role?: string | null
+          timezone?: string | null
         }
         Update: {
           created_at?: string | null
@@ -215,7 +219,9 @@ export type Database = {
           id?: string
           invited_by?: string | null
           organization_id?: string | null
+          preferences?: Json | null
           role?: string | null
+          timezone?: string | null
         }
         Relationships: [
           {
@@ -309,6 +315,17 @@ export type Database = {
       update_user_organization: {
         Args: { user_id: string; org_id: string; user_role: string }
         Returns: undefined
+      }
+      update_user_profile_with_password: {
+        Args: {
+          user_id: string
+          full_name: string
+          timezone: string
+          preferences: Json
+          current_password: string
+          new_password: string
+        }
+        Returns: Json
       }
       validate_invitation: {
         Args: { invitation_token: string; invitee_email: string }
