@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, Upload, Camera, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Define data for dropdown options
 const expenseCategories = [
@@ -67,6 +68,16 @@ const recurringFrequencies = [
   "Yearly"
 ];
 
+const orientationOptions = [
+  "Portrait",
+  "Landscape"
+];
+
+const imageQualityOptions = [
+  "Standard",
+  "High Quality"
+];
+
 const AddExpenseDialog: React.FC = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [amount, setAmount] = useState<string>("");
@@ -77,6 +88,14 @@ const AddExpenseDialog: React.FC = () => {
   const [isRecurring, setIsRecurring] = useState<boolean>(false);
   const [recurringFrequency, setRecurringFrequency] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>("upload"); // "upload" or "capture"
+  const [orientation, setOrientation] = useState<string>("Portrait");
+  const [imageQuality, setImageQuality] = useState<string>("Standard");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
 
@@ -84,6 +103,78 @@ const AddExpenseDialog: React.FC = () => {
     // Allow only numbers and format as needed
     const value = e.target.value.replace(/[^\d]/g, "");
     setAmount(value);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileSelection(file);
+    }
+  };
+
+  const handleFileSelection = (file: File) => {
+    // Check if file is an image
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file (JPEG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "File size should be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setReceiptFile(file);
+
+    // Create a preview URL
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleFileSelection(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleStartCamera = () => {
+    // In a real app, this would trigger device camera
+    toast({
+      title: "Camera Feature",
+      description: "Camera functionality would be implemented in a production environment",
+    });
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   const handleSubmit = () => {
@@ -116,7 +207,8 @@ const AddExpenseDialog: React.FC = () => {
       department,
       expenseType,
       isRecurring,
-      recurringFrequency: isRecurring ? recurringFrequency : null
+      recurringFrequency: isRecurring ? recurringFrequency : null,
+      receiptFile
     };
 
     // Submit expense (in a real app, this would be an API call)
@@ -142,6 +234,10 @@ const AddExpenseDialog: React.FC = () => {
     setExpenseType("");
     setIsRecurring(false);
     setRecurringFrequency("");
+    setReceiptFile(null);
+    setPreviewUrl(null);
+    setOrientation("Portrait");
+    setImageQuality("Standard");
   };
 
   return (
@@ -268,6 +364,196 @@ const AddExpenseDialog: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Receipt Upload Section */}
+          <div className="space-y-4 border rounded-lg p-6">
+            <div>
+              <h3 className="text-xl font-semibold">Receipt Upload</h3>
+              <p className="text-gray-500 mt-1">Upload receipt images for expense verification</p>
+            </div>
+
+            {/* Upload/Capture Tabs */}
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+              <TabsList className="grid grid-cols-2 mb-4">
+                <TabsTrigger value="upload" className="flex items-center gap-2 py-3">
+                  <Upload className="h-5 w-5" />
+                  Upload File
+                </TabsTrigger>
+                <TabsTrigger value="capture" className="flex items-center gap-2 py-3">
+                  <Camera className="h-5 w-5" />
+                  Mobile Capture
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Upload Tab Content */}
+              <TabsContent value="upload" className="space-y-4">
+                {/* Orientation and Image Quality options */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-base font-medium">Orientation</label>
+                    <Select value={orientation} onValueChange={setOrientation}>
+                      <SelectTrigger className="h-[50px]">
+                        <SelectValue placeholder="Select orientation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {orientationOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option === orientation && (
+                              <Check className="h-4 w-4 mr-2 inline" />
+                            )}
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-base font-medium">Image Quality</label>
+                    <Select value={imageQuality} onValueChange={setImageQuality}>
+                      <SelectTrigger className="h-[50px]">
+                        <SelectValue placeholder="Select image quality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {imageQualityOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option === imageQuality && (
+                              <Check className="h-4 w-4 mr-2 inline" />
+                            )}
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Drag and Drop Area */}
+                <div 
+                  className={cn(
+                    "border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer h-64",
+                    isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300",
+                    previewUrl ? "p-2" : "p-6"
+                  )}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={triggerFileInput}
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  
+                  {previewUrl ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <img 
+                        src={previewUrl} 
+                        alt="Receipt preview" 
+                        className="max-h-full max-w-full object-contain" 
+                      />
+                      <p className="mt-2 text-sm text-gray-500">Click to change image</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <Upload className="h-12 w-12 text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium">Upload Receipt</h3>
+                      <p className="text-gray-500 mt-1">Drag and drop or click to browse files</p>
+                      <Button 
+                        className="mt-4"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerFileInput();
+                        }}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Choose File
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Capture Tab Content */}
+              <TabsContent value="capture" className="space-y-4">
+                {/* Orientation and Image Quality options */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-base font-medium">Orientation</label>
+                    <Select value={orientation} onValueChange={setOrientation}>
+                      <SelectTrigger className="h-[50px]">
+                        <SelectValue placeholder="Select orientation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {orientationOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option === orientation && (
+                              <Check className="h-4 w-4 mr-2 inline" />
+                            )}
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-base font-medium">Image Quality</label>
+                    <Select value={imageQuality} onValueChange={setImageQuality}>
+                      <SelectTrigger className="h-[50px]">
+                        <SelectValue placeholder="Select image quality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {imageQualityOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option === imageQuality && (
+                              <Check className="h-4 w-4 mr-2 inline" />
+                            )}
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Camera Capture Area */}
+                <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center h-64">
+                  {previewUrl ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <img 
+                        src={previewUrl} 
+                        alt="Receipt preview" 
+                        className="max-h-full max-w-full object-contain" 
+                      />
+                      <Button 
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => setPreviewUrl(null)}
+                      >
+                        Retake Photo
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <Camera className="h-12 w-12 text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium">Capture Receipt</h3>
+                      <p className="text-gray-500 mt-1">Use your device's camera to take a photo of the receipt</p>
+                      <Button 
+                        className="mt-4 bg-purple-500 hover:bg-purple-600"
+                        onClick={handleStartCamera}
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Start Camera
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Recurring Expense */}
