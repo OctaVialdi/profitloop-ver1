@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -289,16 +290,16 @@ const CatatanMeetings = () => {
                 </div>
               </div>
               
-              <div className="bg-white rounded-lg shadow">
-                <Table className="border-collapse">
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <Table>
                   <TableHeader>
                     <TableRow className="bg-white border-b">
-                      <TableHead className="w-[150px] py-4">DATE</TableHead>
+                      <TableHead className="w-[120px] py-4">DATE</TableHead>
                       <TableHead className="py-4">DISCUSSION POINT</TableHead>
-                      <TableHead className="py-4">REQUEST BY</TableHead>
-                      <TableHead className="py-4">STATUS</TableHead>
-                      <TableHead className="py-4">UPDATES</TableHead>
-                      <TableHead className="py-4">ACTIONS</TableHead>
+                      <TableHead className="w-[140px] py-4">REQUEST BY</TableHead>
+                      <TableHead className="w-[140px] py-4">STATUS</TableHead>
+                      <TableHead className="w-[100px] py-4">UPDATES</TableHead>
+                      <TableHead className="w-[140px] py-4">ACTIONS</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -316,7 +317,10 @@ const CatatanMeetings = () => {
                       meetingPoints.map((point, index) => (
                         <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
                           <TableCell className="py-4">{point.date}</TableCell>
-                          <TableCell className="py-4">{point.discussion_point}</TableCell>
+                          <TableCell className="py-4">
+                            {/* Wrap discussion point text to prevent overflow */}
+                            <div className="whitespace-normal break-words">{point.discussion_point}</div>
+                          </TableCell>
                           <TableCell className="py-4">
                             <Select 
                               defaultValue={point.request_by || "unassigned"} 
@@ -444,7 +448,7 @@ const CatatanMeetings = () => {
             </Card>
             
             <h3 className="text-lg font-medium mb-4">Recent Updates</h3>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-72 overflow-y-auto pr-2">
               {recentUpdates.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">No recent updates.</p>
               ) : (
@@ -463,12 +467,12 @@ const CatatanMeetings = () => {
         </div>
       </div>
       
-      {/* Floating action button */}
-      <div className="fixed bottom-8 right-8">
+      {/* Floating action button - made sticky */}
+      <div className="fixed bottom-8 right-8 z-30">
         <Button 
           variant="default" 
           size="icon" 
-          className="h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700"
+          className="h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 transition-all"
           onClick={handleCreateMeeting}
         >
           <Plus className="h-6 w-6" />

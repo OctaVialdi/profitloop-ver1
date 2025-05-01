@@ -69,13 +69,15 @@ export const MeetingUpdateItem: React.FC<MeetingUpdateItemProps> = ({
 
   return (
     <div className="border-b pb-4">
-      <div className="font-medium mb-1">{title}</div>
-      <div className="flex justify-between text-sm">
-        <div className="flex items-center gap-1">
+      {/* Wrap the title text to prevent overflow */}
+      <div className="font-medium mb-1 break-words whitespace-normal">{title}</div>
+      <div className="flex justify-between text-sm items-center">
+        <div className="flex items-center gap-1 min-w-0">
           {getStatusIcon()}
-          <span className={`${getStatusColor()}`}>{getStatusLabel()}</span>
+          <span className={`${getStatusColor()} truncate`}>{getStatusLabel()}</span>
         </div>
-        <div className="text-gray-500">{person}</div>
+        {/* Prevent person name from getting too long */}
+        <div className="text-gray-500 truncate max-w-[100px]">{person}</div>
       </div>
       <div className="text-right text-sm text-gray-500">{date}</div>
     </div>
