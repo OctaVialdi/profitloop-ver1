@@ -6,6 +6,7 @@ import OrganizationForm from "@/components/onboarding/OrganizationForm";
 import { OrganizationFormData } from "@/types/onboarding";
 import { createOrganization } from "@/services/onboardingService";
 import { supabase } from "@/integrations/supabase/client";
+import { hardLogout, validateUserProfile } from "@/utils/authUtils";
 
 const OrganizationSetup = () => {
   const [formData, setFormData] = useState<OrganizationFormData>({
@@ -27,6 +28,7 @@ const OrganizationSetup = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
+          console.log("No session found, redirecting to login");
           setIsAuthenticated(false);
           toast.error("Anda belum login. Silakan login terlebih dahulu.");
           navigate("/auth/login");
@@ -36,18 +38,34 @@ const OrganizationSetup = () => {
         console.log("User is authenticated:", session.user.id);
         setIsAuthenticated(true);
         
-        // Check if user already has an organization
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('organization_id')
-          .eq('id', session.user.id)
-          .maybeSingle();
+        // Validate user profile
+        const { valid, profile } = await validateUserProfile(session.user.id);
         
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          // Continue with organization setup even if profile check fails
-        } else if (profileData?.organization_id) {
-          console.log("User already has an organization:", profileData.organization_id);
+        if (!valid) {
+          console.log("Invalid or incomplete profile, user can continue with organization setup");
+          
+          // Check if there's a race condition (auth session exists but profile doesn't)
+          // This could happen if auth.users exists but profiles doesn't
+          if (!profile) {
+            console.log("Profile not found, checking if it needs to be recreated");
+            
+            // Check if the profile exists at all
+            const { data: profileCheck, error: profileCheckError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (profileCheckError || !profileCheck) {
+              console.error("Profile doesn't exist, possible data inconsistency");
+              toast.error("Terjadi ketidaksesuaian data. Mohon login kembali.");
+              await hardLogout();
+              navigate("/auth/login");
+              return;
+            }
+          }
+        } else if (profile?.organization_id) {
+          console.log("User already has an organization:", profile.organization_id);
           toast.info("Anda sudah memiliki organisasi.");
           navigate("/dashboard");
           return;
