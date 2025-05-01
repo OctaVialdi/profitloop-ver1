@@ -134,22 +134,10 @@ export default function Expenses() {
               Overview
             </TabsTrigger>
             <TabsTrigger 
-              value="add-expense" 
-              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
-            >
-              Add Expense
-            </TabsTrigger>
-            <TabsTrigger 
               value="budget" 
               className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
             >
               Budget
-            </TabsTrigger>
-            <TabsTrigger 
-              value="payroll" 
-              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
-            >
-              Payroll
             </TabsTrigger>
             <TabsTrigger 
               value="compliance" 
