@@ -1,12 +1,10 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 
 // Replace with your Supabase URL and service role key
 const supabaseUrl = "https://nqbcxrujjxwgoyjxmmla.supabase.co";
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,38 +60,29 @@ serve(async (req) => {
     console.log("Generated Magic Link URL:", magicLinkUrl);
     console.log("Organization Name:", orgData?.name);
     
-    // Initialize Resend client for email sending
-    const resend = new Resend(resendApiKey);
+    // Kirim email menggunakan fitur bawaan Supabase
+    const { error: emailError } = await supabase.auth.admin.inviteUserByEmail(email, {
+      redirectTo: magicLinkUrl,
+      data: {
+        organization_id: organizationId,
+        organization_name: orgData?.name || 'organization',
+        role: role || 'employee',
+        invitation_token: result.token
+      }
+    });
     
-    // Send actual email with Magic Link using Resend
-    const emailContent = `
-      <h1>Anda diundang untuk bergabung dengan ${orgData?.name || 'organisasi'}</h1>
-      <p>Klik tautan di bawah ini untuk bergabung dengan organisasi:</p>
-      <a href="${magicLinkUrl}">Bergabung dengan Organisasi</a>
-      <p>Tautan ini akan kedaluwarsa dalam 7 hari.</p>
-      <p>Jika Anda tidak mengenali pengirim, silakan abaikan email ini.</p>
-    `;
-
-    // If we have a Resend API key, send the email
-    if (resendApiKey) {
-      const emailResponse = await resend.emails.send({
-        from: "ProfitLoop <noreply@profitloop.id>",
-        to: email,
-        subject: `Undangan untuk bergabung dengan ${orgData?.name || 'organisasi'}`,
-        html: emailContent,
-      });
-      
-      console.log("Email sending response:", emailResponse);
-    } else {
-      console.log("RESEND_API_KEY not configured. Email not sent. Please configure the API key.");
-      // We'll still return success with the invitation URL for testing purposes
+    if (emailError) {
+      console.error("Error sending email:", emailError);
+      throw emailError;
     }
+    
+    console.log("Email invitation sent successfully to:", email);
 
     // Log the email details for debugging
     console.log("=== EMAIL MAGIC LINK DETAILS ===");
     console.log(`To: ${email}`);
     console.log(`Subject: Undangan untuk bergabung dengan ${orgData?.name || 'organisasi'}`);
-    console.log(emailContent);
+    console.log(`Magic Link URL: ${magicLinkUrl}`);
 
     return new Response(
       JSON.stringify({ 
