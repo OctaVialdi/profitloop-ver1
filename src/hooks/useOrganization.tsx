@@ -63,7 +63,15 @@ export function useOrganization(): OrganizationData {
         if (profileWithOrgId) {
           // Use this profile instead
           profile.organization_id = profileWithOrgId.organization_id;
-          profile.role = profileWithOrgId.role;
+          
+          // Validate role type before assignment
+          const role = profileWithOrgId.role;
+          if (role === 'super_admin' || role === 'admin' || role === 'employee') {
+            profile.role = role;
+          } else {
+            // Default to 'employee' if role is not valid
+            profile.role = 'employee';
+          }
         } else {
           // Metadata points to an organization that doesn't exist in the profile
           // Update user metadata to match the profile's organization
