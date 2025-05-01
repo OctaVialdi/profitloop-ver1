@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MeetingPoint, MeetingUpdate } from "@/types/meetings";
 import { Clock, History, Trash2, Edit } from "lucide-react";
-import { addMeetingUpdate, getMeetingPointUpdates, updateMeetingPoint, deleteMeetingPoint } from "@/services/meetingService";
+import { addMeetingUpdate, getMeetingPointUpdates, deleteMeetingPoint } from "@/services/meetingService";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -70,15 +70,19 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
       
       if (editingUpdate) {
         // Update existing update - since there's no direct update function for updates,
-        // we're using the general updateMeetingPoint function which can update a meeting point
-        // and here we're updating the title field of the update
-        await updateMeetingPoint(editingUpdate.meeting_point_id, {
-          // We use a partial update with just the necessary info
-          // This isn't ideal but works as a workaround
-          updates: updates.map(u => 
-            u.id === editingUpdate.id ? {...u, title: newUpdate} : u
-          )
-        });
+        // We'll delete the old update and add a new one with the same properties but updated title
+        await deleteMeetingPoint(editingUpdate.id);
+        
+        // Create new update with updated title but same other properties
+        const updateData = {
+          meeting_point_id: editingUpdate.meeting_point_id,
+          status: editingUpdate.status,
+          person: editingUpdate.person,
+          date: editingUpdate.date,
+          title: newUpdate
+        };
+        
+        await addMeetingUpdate(updateData);
         toast.success("Update modified successfully");
         setEditingUpdate(null);
       } else {
