@@ -1,5 +1,5 @@
 
-import { Building, Home, Users, UserPlus, CreditCard, Bell, Settings } from "lucide-react";
+import { Building, Home, Users, UserPlus, CreditCard, Bell, Settings, PanelLeft, PanelRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
@@ -11,9 +11,10 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarRail
+  SidebarRail,
+  SidebarTrigger,
+  useSidebar
 } from "@/components/ui/sidebar";
-import { useSidebar } from "@/components/ui/sidebar";
 
 interface NavigationItem {
   name: string;
@@ -61,12 +62,21 @@ export function DashboardSidebar({
 
   return (
     <>
-      <Sidebar>
+      <Sidebar className="sticky top-0 h-screen">
         <SidebarRail />
-        <SidebarContent>
+        <SidebarContent className="flex flex-col">
+          <div className="flex items-center p-4 justify-between">
+            {!isCollapsed && (
+              <div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">
+                {organization?.name || "Organisasi"}
+              </div>
+            )}
+            <SidebarTrigger className="ml-auto" />
+          </div>
+          
           <SidebarGroup>
             <SidebarGroupLabel className={isCollapsed ? "opacity-0" : ""}>
-              {organization?.name || "Organisasi"}
+              Menu
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>

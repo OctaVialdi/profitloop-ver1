@@ -1,8 +1,8 @@
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -11,17 +11,8 @@ import { useAppTheme } from "@/components/ThemeProvider";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
 import { 
-  Sidebar, 
   SidebarProvider, 
-  SidebarContent, 
-  SidebarHeader,
-  SidebarFooter,
-  SidebarTrigger,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarRail
+  SidebarInset
 } from "@/components/ui/sidebar";
 
 // Import your sidebar navigation component
@@ -77,8 +68,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <header className="bg-white border-b sticky top-0 z-10">
             <div className="px-4 h-16 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <SidebarTrigger />
-                
                 <Link to="/dashboard" className="flex items-center gap-2">
                   {logoUrl ? (
                     <Avatar className="h-8 w-8 hidden md:flex">
