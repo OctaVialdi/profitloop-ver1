@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { useOrganization } from "@/hooks/useOrganization";
 import { MeetingDialog } from "@/components/meetings/MeetingDialog";
 import { HistoryDialog } from "@/components/meetings/HistoryDialog";
+import { UpdatesDialog } from "@/components/meetings/UpdatesDialog";
 import { 
   getMeetingPoints, 
   getMeetingUpdates, 
@@ -58,6 +59,7 @@ const CatatanMeetings = () => {
   const [newPoint, setNewPoint] = useState<string>("");
   const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState<boolean>(false);
+  const [updatesDialogOpen, setUpdatesDialogOpen] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingPoint | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -120,6 +122,11 @@ const CatatanMeetings = () => {
   const handleViewHistory = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setHistoryDialogOpen(true);
+  };
+
+  const handleAddUpdates = (meeting: MeetingPoint) => {
+    setSelectedMeeting(meeting);
+    setUpdatesDialogOpen(true);
   };
   
   const handleDeletePrompt = (meeting: MeetingPoint) => {
@@ -322,17 +329,32 @@ const CatatanMeetings = () => {
                             />
                           </TableCell>
                           <TableCell className="py-4">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleViewHistory(point)}
-                              className="flex items-center text-blue-500 hover:text-blue-700"
-                            >
-                              <History size={16} />
-                              <span className="ml-2">
-                                {recentUpdates.filter(u => u.meeting_point_id === point.id).length || 0}
-                              </span>
-                            </Button>
+                            <div className="flex space-x-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleViewHistory(point)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="View History"
+                              >
+                                <History size={16} />
+                                <span className="ml-2">
+                                  {recentUpdates.filter(u => u.meeting_point_id === point.id).length || 0}
+                                </span>
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleAddUpdates(point)}
+                                className="text-green-500 hover:text-green-700"
+                                title="Add Updates"
+                              >
+                                <Plus size={16} />
+                                <span className="ml-2">
+                                  Update
+                                </span>
+                              </Button>
+                            </div>
                           </TableCell>
                           <TableCell className="py-4">
                             <div className="flex space-x-2">
@@ -466,6 +488,16 @@ const CatatanMeetings = () => {
           open={historyDialogOpen}
           onOpenChange={setHistoryDialogOpen}
           meetingPoint={selectedMeeting}
+        />
+      )}
+
+      {/* Updates Dialog */}
+      {selectedMeeting && (
+        <UpdatesDialog
+          open={updatesDialogOpen}
+          onOpenChange={setUpdatesDialogOpen}
+          meetingPoint={selectedMeeting}
+          onUpdateAdded={handleUpdateAdded}
         />
       )}
       
