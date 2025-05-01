@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { ArrowDown, ChartPie, Table as TableIcon } from "lucide-react";
+import { ArrowDown, ChartPie, Table as TableIcon, ChevronDown } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -12,13 +12,14 @@ import {
   ChartLegendContent,
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function Expenses() {
   // Sample data for the charts and tables
   const expenseBreakdownData = [
-    { name: "Equipment", value: 68.7, color: "#94A3B8" },
-    { name: "Office Supplies", value: 11.1, color: "#64748B" },
-    { name: "Advertising", value: 22.2, color: "#475569" },
+    { name: "Equipment", value: 66.7, color: "#FFBA2C" },
+    { name: "Office Supplies", value: 11.1, color: "#42B96A" },
+    { name: "Advertising", value: 22.2, color: "#4192F7" },
   ];
 
   const monthlyComparisonData = [
@@ -214,63 +215,80 @@ export default function Expenses() {
 
       {/* Bottom Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expense Breakdown */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Expense Breakdown</h3>
-                <div className="flex border rounded-md overflow-hidden">
-                  <span className="px-4 py-1 border-r bg-white">Category</span>
-                  <Button variant="ghost" size="sm" className="h-8 px-2">
-                    <span className="sr-only">Open menu</span>
-                    <ArrowDown className="h-4 w-4" />
+        {/* Expense Breakdown - Updated to match the reference design */}
+        <Card className="p-6">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-semibold">Expense Breakdown</h3>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="px-4 py-2 border rounded-md flex items-center gap-2">
+                    <span>Category</span>
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>All Categories</DropdownMenuItem>
+                  <DropdownMenuItem>Equipment</DropdownMenuItem>
+                  <DropdownMenuItem>Office Supplies</DropdownMenuItem>
+                  <DropdownMenuItem>Advertising</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            <div className="grid grid-cols-2 bg-gray-50 rounded-md overflow-hidden">
+              <Button 
+                variant="ghost" 
+                className="flex-1 rounded-none flex items-center justify-center gap-2 h-12 bg-white"
+              >
+                <ChartPie className="h-5 w-5" /> Chart
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="flex-1 rounded-none flex items-center justify-center gap-2 h-12"
+              >
+                <TableIcon className="h-5 w-5" /> Table
+              </Button>
+            </div>
+            
+            <div className="h-[400px] relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={expenseBreakdownData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={150}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {expenseBreakdownData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              
+              {/* Category Labels With Percentages */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* Equipment Label (Left) */}
+                <div className="absolute left-6 text-xl font-semibold" style={{ color: "#FFBA2C" }}>
+                  Equipment: {expenseBreakdownData[0].value}%
                 </div>
-              </div>
-              <div className="flex border rounded">
-                <Button variant="ghost" className="flex-1 rounded-none flex items-center justify-center gap-2 h-10 border-r">
-                  <ChartPie className="h-4 w-4" /> Chart
-                </Button>
-                <Button variant="ghost" className="flex-1 rounded-none flex items-center justify-center gap-2 h-10 bg-gray-100">
-                  <TableIcon className="h-4 w-4" /> Table
-                </Button>
-              </div>
-              <div className="h-72">
-                <ChartContainer 
-                  config={Object.fromEntries(expenseBreakdownData.map(item => [
-                    item.name, { color: item.color }
-                  ]))}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={expenseBreakdownData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {expenseBreakdownData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-                <div className="flex flex-wrap justify-around mt-2">
-                  {expenseBreakdownData.map((entry, index) => (
-                    <div key={index} className="flex items-center gap-1.5 text-xs">
-                      <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: entry.color }}></div>
-                      <span>{entry.name}: {entry.value}%</span>
-                    </div>
-                  ))}
+                
+                {/* Office Supplies Label (Right Top) */}
+                <div className="absolute right-6 top-1/3 text-xl font-semibold" style={{ color: "#42B96A" }}>
+                  Office Supplies: {expenseBreakdownData[1].value}%
+                </div>
+                
+                {/* Advertising Label (Right Bottom) */}
+                <div className="absolute right-6 bottom-1/3 text-xl font-semibold" style={{ color: "#4192F7" }}>
+                  Advertising: {expenseBreakdownData[2].value}%
                 </div>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Month-over-Month Comparison */}
