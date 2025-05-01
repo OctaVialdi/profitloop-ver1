@@ -15,6 +15,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -29,6 +30,30 @@ const Register = () => {
     }
   }, [invitationEmail]);
 
+  // Check if email already exists in the profiles table
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    try {
+      setIsCheckingEmail(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error checking email:", error);
+        return false;
+      }
+      
+      return !!data; // Return true if data exists (email found)
+    } catch (error) {
+      console.error("Exception checking email:", error);
+      return false;
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -40,6 +65,17 @@ const Register = () => {
     setIsLoading(true);
     
     try {
+      // Skip email check if using invitation email
+      if (!invitationEmail) {
+        // Check if email already exists
+        const emailExists = await checkEmailExists(email);
+        if (emailExists) {
+          toast.error("Email sudah terdaftar. Silakan gunakan email lain atau login.");
+          setIsLoading(false);
+          return;
+        }
+      }
+
       // Daftar dengan Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -152,11 +188,11 @@ const Register = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" className="w-full" disabled={isLoading || isCheckingEmail}>
+              {isLoading || isCheckingEmail ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Memproses...
+                  {isCheckingEmail ? "Memeriksa..." : "Memproses..."}
                 </>
               ) : (
                 "Daftar"
