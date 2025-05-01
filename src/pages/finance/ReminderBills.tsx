@@ -1,9 +1,8 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { 
   Calendar,
   CircleAlert, 
@@ -22,9 +21,20 @@ import {
 } from "@/components/ui/table";
 
 export default function ReminderBills() {
+  // Get location state to set the initial active tab
+  const location = useLocation();
+  const initialTab = location.state?.activeTab || "overview";
+  
   // State for active tab
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(initialTab);
   const navigate = useNavigate();
+  
+  // Update activeTab when location state changes
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
   
   // Handle tab change with navigation for the "approvals" tab
   const handleTabChange = (value: string) => {

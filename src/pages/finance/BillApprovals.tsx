@@ -13,6 +13,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import { 
   Clock, 
   CheckCircle2, 
@@ -41,6 +42,19 @@ interface Bill {
 export default function BillApprovals() {
   const [activeTab, setActiveTab] = useState("pending");
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // Handle navigation tabs
+  const handleTabChange = (value: string) => {
+    if (value !== "approvals") {
+      // Navigate to the corresponding tab in the main Reminder Bills page
+      if (value === "overview") {
+        navigate("/finance/reminder-bills");
+      } else {
+        navigate("/finance/reminder-bills", { state: { activeTab: value } });
+      }
+    }
+  };
 
   // Sample data for bills
   const bills: Bill[] = [
@@ -144,7 +158,7 @@ export default function BillApprovals() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Bill Approvals</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Reminder Bills</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <Filter className="h-4 w-4 mr-2" />
@@ -156,6 +170,64 @@ export default function BillApprovals() {
           </Button>
         </div>
       </div>
+
+      {/* Top Navigation Tabs - Same as in ReminderBills.tsx */}
+      <Card className="p-1">
+        <ScrollArea className="w-full">
+          <Tabs value="approvals" onValueChange={handleTabChange} className="w-full">
+            <TabsList className="flex min-w-max bg-transparent h-auto px-1">
+              <TabsTrigger 
+                value="overview" 
+                className="data-[state=active]:bg-white text-gray-500"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="upcoming-bills" 
+                className="data-[state=active]:bg-white text-gray-500"
+              >
+                Upcoming Bills
+              </TabsTrigger>
+              <TabsTrigger 
+                value="overdue-bills" 
+                className="data-[state=active]:bg-white text-gray-500"
+              >
+                Overdue Bills
+              </TabsTrigger>
+              <TabsTrigger 
+                value="recurring-setup" 
+                className="data-[state=active]:bg-white text-gray-500"
+              >
+                Recurring Setup
+              </TabsTrigger>
+              <TabsTrigger 
+                value="auto-payment" 
+                className="data-[state=active]:bg-white text-gray-500"
+              >
+                Auto-Payment
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reminders" 
+                className="data-[state=active]:bg-white text-gray-500"
+              >
+                Reminders
+              </TabsTrigger>
+              <TabsTrigger 
+                value="add-bill" 
+                className="data-[state=active]:bg-white text-gray-500"
+              >
+                Add Bill
+              </TabsTrigger>
+              <TabsTrigger 
+                value="approvals" 
+                className="data-[state=active]:bg-white text-gray-900"
+              >
+                Approvals
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </ScrollArea>
+      </Card>
 
       {/* Bills Dashboard Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
