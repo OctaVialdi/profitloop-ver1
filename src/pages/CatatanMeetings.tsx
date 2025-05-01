@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -324,13 +323,13 @@ const CatatanMeetings = () => {
                         <TableHead className="py-4 w-[300px]">DISCUSSION POINT</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap">REQUEST BY</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap">STATUS</TableHead>
-                        <TableHead className="w-[100px] py-4 whitespace-nowrap">UPDATES</TableHead>
+                        <TableHead className="w-[100px] py-4 whitespace-nowrap text-center">UPDATES</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
-                    {/* Wrap TableBody in ScrollArea for vertical scrolling */}
-                    <ScrollArea className="h-[400px]">
-                      <TableBody>
+                    <TableBody>
+                      {/* Wrap the contents in ScrollArea for vertical scrolling */}
+                      <ScrollArea className="h-[400px]">
                         {loading ? (
                           <TableRow>
                             <TableCell colSpan={6} className="text-center py-8">Loading meeting points...</TableCell>
@@ -344,8 +343,8 @@ const CatatanMeetings = () => {
                         ) : (
                           meetingPoints.map((point, index) => (
                             <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                              <TableCell className="py-4 whitespace-nowrap h-14">{point.date}</TableCell>
-                              <TableCell className="py-4 w-[300px] h-14">
+                              <TableCell className="py-4 whitespace-nowrap w-[120px]">{point.date}</TableCell>
+                              <TableCell className="py-4 w-[300px]">
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -361,7 +360,7 @@ const CatatanMeetings = () => {
                                   </Tooltip>
                                 </TooltipProvider>
                               </TableCell>
-                              <TableCell className="py-4 whitespace-nowrap h-14">
+                              <TableCell className="py-4 whitespace-nowrap w-[140px]">
                                 <Select 
                                   defaultValue={point.request_by || "unassigned"} 
                                   onValueChange={(value) => handleRequestByChange(point.id, value)}
@@ -380,29 +379,27 @@ const CatatanMeetings = () => {
                                   </SelectContent>
                                 </Select>
                               </TableCell>
-                              <TableCell className="py-4 whitespace-nowrap h-14">
+                              <TableCell className="py-4 whitespace-nowrap w-[140px]">
                                 <MeetingStatusBadge 
                                   status={point.status} 
                                   onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
                                 />
                               </TableCell>
-                              <TableCell className="py-4 whitespace-nowrap h-14">
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => handleAddUpdates(point)}
-                                    className="text-blue-500 hover:text-blue-700"
-                                    title="View and Add Updates"
-                                  >
-                                    <History size={16} />
-                                    <span className="ml-2">
-                                      {updateCounts[point.id] || 0}
-                                    </span>
-                                  </Button>
-                                </div>
+                              <TableCell className="py-4 whitespace-nowrap w-[100px] text-center">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleAddUpdates(point)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="View and Add Updates"
+                                >
+                                  <History size={16} />
+                                  <span className="ml-2">
+                                    {updateCounts[point.id] || 0}
+                                  </span>
+                                </Button>
                               </TableCell>
-                              <TableCell className="py-4 whitespace-nowrap h-14">
+                              <TableCell className="py-4 whitespace-nowrap w-[140px]">
                                 <div className="flex space-x-2">
                                   <MeetingActionButton 
                                     icon={Edit} 
@@ -420,8 +417,8 @@ const CatatanMeetings = () => {
                             </TableRow>
                           ))
                         )}
-                      </TableBody>
-                    </ScrollArea>
+                      </ScrollArea>
+                    </TableBody>
                   </Table>
                 </div>
               </div>
