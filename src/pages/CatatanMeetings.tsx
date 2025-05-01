@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -23,6 +22,7 @@ import { MeetingSummaryCard } from "@/components/meetings/MeetingSummaryCard";
 import { MeetingUpdateItem } from "@/components/meetings/MeetingUpdateItem";
 import { MeetingStatusBadge } from "@/components/meetings/MeetingStatusBadge";
 import { MeetingActionButton } from "@/components/meetings/MeetingActionButton";
+import { MeetingPointPopover } from "@/components/meetings/MeetingPointPopover";
 import { toast } from "sonner";
 import { useOrganization } from "@/hooks/useOrganization";
 import { MeetingDialog } from "@/components/meetings/MeetingDialog";
@@ -315,19 +315,22 @@ const CatatanMeetings = () => {
                       ) : (
                         meetingPoints.map((point, index) => (
                           <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                            <TableCell className="py-4 whitespace-nowrap">{point.date}</TableCell>
-                            <TableCell className="py-4 w-[300px]">
-                              {/* Fix the discussion point text to prevent overflow */}
-                              <div className="break-words" style={{ 
-                                maxWidth: '300px', 
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                wordWrap: 'break-word'
-                              }}>
-                                {point.discussion_point}
+                            <TableCell className="py-4 whitespace-nowrap h-16">{point.date}</TableCell>
+                            <TableCell className="py-4 w-[300px] h-16">
+                              <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
+                                <MeetingPointPopover text={point.discussion_point} maxLength={50}>
+                                  <div className="truncate cursor-pointer hover:text-blue-600" style={{ 
+                                    maxWidth: '280px', 
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    {point.discussion_point}
+                                  </div>
+                                </MeetingPointPopover>
                               </div>
                             </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap">
+                            <TableCell className="py-4 whitespace-nowrap h-16">
                               <Select 
                                 defaultValue={point.request_by || "unassigned"} 
                                 onValueChange={(value) => handleRequestByChange(point.id, value)}
@@ -346,13 +349,13 @@ const CatatanMeetings = () => {
                                 </SelectContent>
                               </Select>
                             </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap">
+                            <TableCell className="py-4 whitespace-nowrap h-16">
                               <MeetingStatusBadge 
                                 status={point.status} 
                                 onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
                               />
                             </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap">
+                            <TableCell className="py-4 whitespace-nowrap h-16">
                               <div className="flex space-x-2">
                                 <Button 
                                   variant="ghost" 
@@ -368,7 +371,7 @@ const CatatanMeetings = () => {
                                 </Button>
                               </div>
                             </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap">
+                            <TableCell className="py-4 whitespace-nowrap h-16">
                               <div className="flex space-x-2">
                                 <MeetingActionButton 
                                   icon={Edit} 
@@ -387,8 +390,8 @@ const CatatanMeetings = () => {
                         ))
                       )}
                       <TableRow>
-                        <TableCell className="py-4 whitespace-nowrap">{""}</TableCell>
-                        <TableCell colSpan={5} className="py-4">
+                        <TableCell className="py-4 whitespace-nowrap h-16">{""}</TableCell>
+                        <TableCell colSpan={5} className="py-4 h-16">
                           <input
                             type="text"
                             placeholder="Type a new discussion point and press Enter..."
