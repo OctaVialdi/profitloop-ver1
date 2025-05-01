@@ -1,10 +1,10 @@
-
 import { useOrganization } from "@/hooks/useOrganization";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   CircleAlert, Clock, Check, Star, BarChart, 
   PieChart, Inbox, LayoutDashboard, Search, 
-  Calendar, Edit, X, Circle, Star as StarIcon
+  Calendar, Edit, X, Circle, Star as StarIcon,
+  Square, SquareKanban
 } from "lucide-react";
 import { 
   ChartContainer, 
@@ -32,7 +32,10 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { Badge } from "@/components/ui/badge";
 
+// Keep the existing chart data definitions
 const weekdayData = [
   { name: "Mon", value: 12 },
   { name: "Tue", value: 8 },
@@ -49,6 +52,7 @@ const issueTypeData = [
   { name: "Feature Requests", value: 20, color: "#4bc0c0" }
 ];
 
+// Modified ticket data to include unique IDs for drag-and-drop
 const ticketData = [
   { 
     id: "TK-724",
@@ -150,6 +154,8 @@ const ticketData = [
   }
 ];
 
+const TICKET_STATUSES = ["New", "Open", "In Progress", "Resolved", "Closed"];
+
 export default function CustomerServicePage() {
   const { organization } = useOrganization();
   const location = useLocation();
@@ -160,15 +166,22 @@ export default function CustomerServicePage() {
   const [showFollowupDatePicker, setShowFollowupDatePicker] = useState(false);
   const [selectedFilterCategory, setSelectedFilterCategory] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState(null);
+  const [tickets, setTickets] = useState(ticketData);
 
   // Determine which tab is active based on the current route
   const isTicketsRoute = location.pathname.includes("/tickets");
-  const activeTab = isTicketsRoute ? "tickets" : "dashboard";
+  const isKanbanRoute = location.pathname.includes("/kanban");
+  let activeTab = "dashboard";
+  
+  if (isTicketsRoute) activeTab = "tickets";
+  if (isKanbanRoute) activeTab = "kanban";
 
   // Handle tab change
   const handleTabChange = (value) => {
     if (value === "tickets") {
       navigate("/operations/customer-service/tickets");
+    } else if (value === "kanban") {
+      navigate("/operations/customer-service/kanban");
     } else {
       navigate("/operations/customer-service");
     }
@@ -214,6 +227,42 @@ export default function CustomerServicePage() {
     }
   };
 
+  // Handle drag and drop for kanban board
+  const handleDragEnd = (result) => {
+    const { source, destination, draggableId } = result;
+    
+    // Dropped outside a droppable area
+    if (!destination) return;
+    
+    // Dropped in the same place
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) return;
+    
+    // Find the ticket that was dragged
+    const ticketId = draggableId;
+    
+    // Update the ticket's status based on the destination column
+    const newStatus = destination.droppableId;
+    
+    // Update tickets with new status
+    const updatedTickets = tickets.map(ticket => {
+      if (ticket.id === ticketId) {
+        return { ...ticket, status: newStatus };
+      }
+      return ticket;
+    });
+    
+    setTickets(updatedTickets);
+  };
+
+  // Group tickets by status for the Kanban board
+  const ticketsByStatus = TICKET_STATUSES.reduce((acc, status) => {
+    acc[status] = tickets.filter(ticket => ticket.status === status);
+    return acc;
+  }, {});
+
   return (
     <div className="space-y-6">
       <div>
@@ -232,6 +281,10 @@ export default function CustomerServicePage() {
           <TabsTrigger value="tickets" className="flex items-center gap-2">
             <Inbox className="h-4 w-4" />
             Tickets
+          </TabsTrigger>
+          <TabsTrigger value="kanban" className="flex items-center gap-2">
+            <SquareKanban className="h-4 w-4" />
+            Kanban
           </TabsTrigger>
         </TabsList>
 
@@ -460,21 +513,11 @@ export default function CustomerServicePage() {
                               <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center">
                                 <Check className="h-4 w-4 mr-2" /> All Statuses
                               </button>
-                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded">
-                                New
-                              </button>
-                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded">
-                                Open
-                              </button>
-                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded">
-                                In Progress
-                              </button>
-                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded">
-                                Resolved
-                              </button>
-                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded">
-                                Closed
-                              </button>
+                              {TICKET_STATUSES.map(status => (
+                                <button key={status} className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded">
+                                  {status}
+                                </button>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -535,7 +578,7 @@ export default function CustomerServicePage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {ticketData.map((ticket) => (
+                        {tickets.map((ticket) => (
                           <TableRow key={ticket.id} className="hover:bg-slate-100/70 cursor-pointer" onClick={() => openTicketDetails(ticket)}>
                             <TableCell className="font-medium">{ticket.id}</TableCell>
                             <TableCell>
@@ -596,6 +639,78 @@ export default function CustomerServicePage() {
             </Card>
           </div>
         )}
+        
+        {activeTab === "kanban" && (
+          <div className="space-y-4">
+            <Card className="pb-6">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Ticket Kanban Board</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <div className="flex gap-4 overflow-x-auto pb-6">
+                    {TICKET_STATUSES.map(status => (
+                      <div key={status} className="flex-shrink-0 w-72">
+                        <div className="bg-gray-100 rounded-md p-3">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-medium text-sm">{status}</h3>
+                            <Badge variant="secondary" className="text-xs">
+                              {ticketsByStatus[status].length}
+                            </Badge>
+                          </div>
+                          <Droppable droppableId={status}>
+                            {(provided) => (
+                              <div 
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className="flex flex-col gap-2 min-h-[200px]"
+                              >
+                                {ticketsByStatus[status].map((ticket, index) => (
+                                  <Draggable 
+                                    key={ticket.id} 
+                                    draggableId={ticket.id} 
+                                    index={index}
+                                  >
+                                    {(provided) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className="bg-white p-3 rounded-md shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
+                                        onClick={() => openTicketDetails(ticket)}
+                                      >
+                                        <div className="flex items-start justify-between">
+                                          <span className="font-medium text-sm">{ticket.id}</span>
+                                          <div className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getPriorityStyle(ticket.priority)}`}>
+                                            {ticket.priority}
+                                          </div>
+                                        </div>
+                                        <p className="text-sm text-gray-700 mt-1 line-clamp-2">{ticket.issue}</p>
+                                        <div className="flex items-center justify-between mt-2">
+                                          <span className="text-xs text-gray-500">{ticket.company}</span>
+                                          {ticket.comments > 0 && (
+                                            <div className="bg-gray-200 text-gray-700 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs">
+                                              <Circle className="h-2 w-2" /> {ticket.comments}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </DragDropContext>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </Tabs>
 
       {/* Ticket Details Dialog */}
@@ -641,6 +756,29 @@ export default function CustomerServicePage() {
                   </div>
                   
                   <div>
+                    <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                    <div className="mt-2">
+                      <select 
+                        className="w-full p-2 border border-gray-300 rounded-md" 
+                        value={selectedTicket.status}
+                        onChange={(e) => {
+                          const newStatus = e.target.value;
+                          setTickets(
+                            tickets.map(t => 
+                              t.id === selectedTicket.id ? {...t, status: newStatus} : t
+                            )
+                          );
+                          setSelectedTicket({...selectedTicket, status: newStatus});
+                        }}
+                      >
+                        {TICKET_STATUSES.map(status => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
                     <Button 
                       variant="outline"
                       className="flex items-center gap-1" 
@@ -682,135 +820,3 @@ export default function CustomerServicePage() {
                             <p className="font-medium">Alex Johnson</p>
                             <span className="text-red-500 text-sm font-medium bg-red-50 px-2 py-0.5 rounded-full">Escalation</span>
                           </div>
-                          <p className="text-gray-600">Escalated to development team</p>
-                          <p className="text-sm text-gray-400">4/28/2025 02:23 AM</p>
-                        </div>
-                        <div className="border-l-4 border-red-400 pl-4 py-1">
-                          <div className="flex justify-between">
-                            <p className="font-medium">John Doe</p>
-                            <span className="text-red-500 text-sm font-medium bg-red-50 px-2 py-0.5 rounded-full">Escalation</span>
-                          </div>
-                          <p className="text-gray-600">Escalated to product manager</p>
-                          <p className="text-sm text-gray-400">4/30/2025 03:23 AM</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="pt-4 mt-4 border-t flex justify-between">
-                  <Button onClick={() => setIsEditMode(true)}>Add Update</Button>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={closeTicketDetails}>
-                      Close
-                    </Button>
-                    <Button>Email</Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  <h3 className="font-medium">Add Update</h3>
-                  <div>
-                    <div className="relative">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between text-left font-normal"
-                      >
-                        {updateType}
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-4 w-4 opacity-50"
-                        >
-                          <path d="m6 9 6 6 6-6"></path>
-                        </svg>
-                      </Button>
-                      <div className="absolute z-10 hidden w-full min-w-[8rem] overflow-hidden rounded-md border bg-white shadow-md animate-in p-1">
-                        <div>
-                          <div className="flex items-center gap-2 py-2 px-3 rounded bg-slate-100">
-                            <Check className="h-4 w-4" /> Progress Update
-                          </div>
-                          <button className="flex items-center gap-2 py-2 px-3 rounded hover:bg-slate-100 w-full text-left">
-                            Escalation
-                          </button>
-                          <button className="flex items-center gap-2 py-2 px-3 rounded hover:bg-slate-100 w-full text-left">
-                            Resolution
-                          </button>
-                          <button className="flex items-center gap-2 py-2 px-3 rounded hover:bg-slate-100 w-full text-left">
-                            Follow-up
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <textarea 
-                      className="min-h-[120px] w-full resize-none rounded-md border p-3"
-                      placeholder="Enter update details..."
-                    ></textarea>
-                  </div>
-                </div>
-                
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsEditMode(false)}>
-                    Close
-                  </Button>
-                  <Button onClick={() => setIsEditMode(false)}>
-                    Add Update
-                  </Button>
-                </DialogFooter>
-              </>
-            )}
-            
-            {showFollowupDatePicker && (
-              <div className="border rounded-md p-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="mb-2 font-medium">Date</p>
-                    <div className="relative">
-                      <Button variant="outline" className="w-full pl-3 text-left font-normal">
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Select date
-                      </Button>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-2 font-medium">Time</p>
-                    <Button variant="outline" className="w-full pl-3 text-left font-normal">
-                      09:00
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="ml-auto h-4 w-4 opacity-50"
-                      >
-                        <path d="m6 9 6 6 6-6"></path>
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
-                <Button className="w-full mt-4">Schedule Follow-Up</Button>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
-  );
-}
