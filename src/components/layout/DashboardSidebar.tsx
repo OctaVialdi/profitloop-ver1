@@ -57,7 +57,11 @@ export function DashboardSidebar({
   });
 
   return (
-    <Sidebar variant="sidebar" collapsible="icon" className="sticky top-0 h-screen z-20">
+    <Sidebar 
+      variant="sidebar" 
+      collapsible="icon" 
+      className="sticky top-0 h-screen z-20 border-r bg-white dark:bg-sidebar"
+    >
       <SidebarRail />
       <SidebarContent className="flex flex-col">
         <div className="flex items-center p-4 justify-between">
@@ -66,7 +70,7 @@ export function DashboardSidebar({
               {organization?.name || "Organisasi"}
             </div>
           )}
-          <SidebarTrigger className="ml-auto" />
+          <SidebarTrigger className="ml-auto text-blue-600" />
         </div>
         
         <SidebarGroup>
