@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "@/pages/Index";
@@ -172,6 +171,7 @@ function App() {
           >
             <Route path="dashboard" element={<OperationsDashboard />} />
             <Route path="customer-service" element={<CustomerServicePage />} />
+            <Route path="customer-service/tickets" element={<CustomerServicePage />} />
             <Route path="sales" element={<SalesPage />} />
             <Route path="logistics" element={<LogisticsPage />} />
             {/* Redirect to dashboard if no path matches */}
