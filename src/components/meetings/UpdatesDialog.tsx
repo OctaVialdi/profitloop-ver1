@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MeetingPoint, MeetingUpdate } from "@/types/meetings";
-import { Clock, Plus, Trash2, Edit } from "lucide-react";
+import { Clock, History, Trash2, Edit } from "lucide-react";
 import { createMeetingUpdate } from "@/services/meetingService";
 import { toast } from "sonner";
 
@@ -77,9 +77,12 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Updates for "{meetingPoint?.discussion_point}"</DialogTitle>
+          <div className="flex items-center gap-2">
+            <History size={20} className="text-blue-500" />
+            <DialogTitle>Updates for "{meetingPoint?.discussion_point}"</DialogTitle>
+          </div>
           <DialogDescription>
-            Add or edit updates for this discussion point
+            Add or view updates for this discussion point
           </DialogDescription>
         </DialogHeader>
         
@@ -97,7 +100,7 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
                 disabled={loading || !newUpdate.trim()}
                 className="bg-blue-500 hover:bg-blue-600"
               >
-                <Plus size={20} />
+                <History size={20} className="mr-2" />
                 Add Update
               </Button>
             </div>

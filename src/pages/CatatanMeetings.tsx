@@ -338,25 +338,13 @@ const CatatanMeetings = () => {
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                onClick={() => handleViewHistory(point)}
+                                onClick={() => handleAddUpdates(point)}
                                 className="text-blue-500 hover:text-blue-700"
-                                title="View History"
+                                title="View and Add Updates"
                               >
                                 <History size={16} />
                                 <span className="ml-2">
                                   {recentUpdates.filter(u => u.meeting_point_id === point.id).length || 0}
-                                </span>
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleAddUpdates(point)}
-                                className="text-green-500 hover:text-green-700"
-                                title="Add Updates"
-                              >
-                                <Plus size={16} />
-                                <span className="ml-2">
-                                  Update
                                 </span>
                               </Button>
                             </div>
