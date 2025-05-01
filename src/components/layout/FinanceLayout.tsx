@@ -25,7 +25,7 @@ export default function FinanceLayout({ children }: FinanceLayoutProps) {
     { name: "Expenses", href: "/finance/expenses" },
     { name: "Income Target", href: "/finance/income-target" },
     { name: "Reminder Bills", href: "/finance/reminder-bills" },
-    { name: "Bill Approvals", href: "/finance/reminder-bills/approvals" },
+    // Removed "Bill Approvals" tab since it exists in the sub-tabs
     { name: "Payroll Summary", href: "/finance/payroll-summary" },
     { name: "Cash Management", href: "/finance/cash-management" },
   ];
