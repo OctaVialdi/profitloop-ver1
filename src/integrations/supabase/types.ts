@@ -290,9 +290,25 @@ export type Database = {
         Args: { profile_id: string }
         Returns: boolean
       }
+      join_organization: {
+        Args: { user_id: string; invitation_token: string }
+        Returns: {
+          success: boolean
+          message: string
+        }[]
+      }
       update_user_organization: {
         Args: { user_id: string; org_id: string; user_role: string }
         Returns: undefined
+      }
+      validate_invitation: {
+        Args: { invitation_token: string; invitee_email: string }
+        Returns: {
+          organization_id: string
+          valid: boolean
+          message: string
+          role: string
+        }[]
       }
     }
     Enums: {

@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Mail, Check, X, Clock, Send } from "lucide-react";
+import { UserPlus, Mail, Check, X, Clock, Send, Copy, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Invitation {
   id: string;
@@ -27,6 +29,10 @@ const InviteMembers = () => {
   const [isSending, setIsSending] = useState<{[key: string]: boolean}>({});
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [orgName, setOrgName] = useState<string>("");
+  const [invitationLink, setInvitationLink] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState("email");
 
   // Fetch user's organization id and existing invitations
   useEffect(() => {
@@ -44,10 +50,21 @@ const InviteMembers = () => {
         if (profileData && profileData.organization_id) {
           setOrganizationId(profileData.organization_id);
           
+          // Get organization name
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('name')
+            .eq('id', profileData.organization_id)
+            .single();
+            
+          if (orgData) {
+            setOrgName(orgData.name);
+          }
+          
           // Fetch existing invitations
           const { data: invitationsData, error } = await supabase
             .from('invitations')
-            .select('id, email, status, created_at')
+            .select('id, email, status, created_at, expires_at, token, role')
             .eq('organization_id', profileData.organization_id)
             .order('created_at', { ascending: false });
             
@@ -74,6 +91,79 @@ const InviteMembers = () => {
     // Generate a random token for the invitation
     return Math.random().toString(36).substring(2, 15) + 
            Math.random().toString(36).substring(2, 15);
+  };
+
+  const handleGenerateLink = async () => {
+    if (!organizationId) {
+      toast.error("Tidak dapat menemukan organisasi Anda.");
+      return;
+    }
+
+    if (!email.trim()) {
+      toast.error("Masukkan email untuk menghasilkan tautan undangan");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Check if user is already invited
+      const { data: existingInvite } = await supabase
+        .from('invitations')
+        .select('id, token')
+        .eq('email', email)
+        .eq('organization_id', organizationId)
+        .eq('status', 'pending')
+        .maybeSingle();
+      
+      let token;
+      
+      if (existingInvite) {
+        // Use existing token
+        token = existingInvite.token;
+      } else {
+        // Check if user already exists in same organization
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .eq('organization_id', organizationId)
+          .single();
+          
+        if (existingUser) {
+          toast.error("Pengguna dengan email ini sudah ada di organisasi Anda.");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Create new invitation
+        token = generateToken();
+        
+        const { error } = await supabase
+          .from('invitations')
+          .insert({
+            organization_id: organizationId,
+            email: email,
+            token: token,
+            role: role,
+          });
+        
+        if (error) {
+          throw error;
+        }
+      }
+      
+      // Generate invitation link
+      const baseUrl = window.location.origin;
+      const inviteUrl = `${baseUrl}/accept-invitation?token=${token}&email=${encodeURIComponent(email)}`;
+      
+      setInvitationLink(inviteUrl);
+    } catch (error: any) {
+      console.error("Error generating invitation link:", error);
+      toast.error(error.message || "Gagal membuat tautan undangan.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -125,8 +215,7 @@ const InviteMembers = () => {
           organization_id: organizationId,
           email: email,
           token: token,
-          role: role, // Store the role in the invitation
-          // On a real application, we would set expire_at, but using default now
+          role: role,
         })
         .select()
         .single();
@@ -187,6 +276,24 @@ const InviteMembers = () => {
     }
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setCopied(true);
+        toast.success("Tautan disalin ke clipboard");
+        
+        // Reset the copied status after 3 seconds
+        setTimeout(() => {
+          setCopied(false);
+        }, 3000);
+      },
+      (err) => {
+        console.error("Tidak dapat menyalin teks: ", err);
+        toast.error("Gagal menyalin tautan");
+      }
+    );
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
@@ -230,55 +337,175 @@ const InviteMembers = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    if (!organizationId) return;
+    
+    try {
+      const { data: invitationsData, error } = await supabase
+        .from('invitations')
+        .select('id, email, status, created_at, expires_at, token, role')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Update invitations list
+      const typedInvitations: Invitation[] = invitationsData?.map(inv => ({
+        ...inv,
+        status: (inv.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending'
+      })) || [];
+      
+      setInvitations(typedInvitations);
+      toast.success("Daftar undangan diperbarui");
+    } catch (error) {
+      console.error("Error refreshing invitations:", error);
+      toast.error("Gagal memperbarui daftar undangan");
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Undang Anggota</h1>
         
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <UserPlus className="h-5 w-5 text-blue-600" />
-              <CardTitle>Undang Anggota Baru</CardTitle>
-            </div>
-            <CardDescription>
-              Kirim undangan kepada anggota baru untuk bergabung dengan organisasi Anda
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleInvite} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="nama@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Peran</Label>
-                <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih peran" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="employee">Karyawan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" disabled={isLoading || !organizationId}>
-                {isLoading ? "Mengirim..." : "Kirim Undangan"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="email" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="email">Kirim via Email</TabsTrigger>
+            <TabsTrigger value="link">Bagikan Tautan</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="email">
+            <Card className="mb-8">
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                  <Mail className="h-5 w-5 text-blue-600" />
+                  <CardTitle>Undang via Email</CardTitle>
+                </div>
+                <CardDescription>
+                  Kirim undangan melalui email kepada anggota baru untuk bergabung dengan organisasi Anda
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleInvite} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="nama@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Peran</Label>
+                    <Select value={role} onValueChange={setRole}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih peran" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="employee">Karyawan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" disabled={isLoading || !organizationId}>
+                    {isLoading ? "Mengirim..." : "Kirim Undangan"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="link">
+            <Card className="mb-8">
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                  <UserPlus className="h-5 w-5 text-blue-600" />
+                  <CardTitle>Undang via Tautan</CardTitle>
+                </div>
+                <CardDescription>
+                  Buat tautan undangan yang dapat Anda bagikan kepada calon anggota tim
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="linkEmail">Email</Label>
+                    <Input
+                      id="linkEmail"
+                      type="email"
+                      placeholder="nama@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                    <p className="text-sm text-gray-500">Email penerima undangan</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="linkRole">Peran</Label>
+                    <Select value={role} onValueChange={setRole}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih peran" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="employee">Karyawan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleGenerateLink} 
+                    disabled={isLoading || !email || !organizationId}
+                  >
+                    {isLoading ? "Menyiapkan..." : "Buat Tautan Undangan"}
+                  </Button>
+                  
+                  {invitationLink && (
+                    <div className="mt-4">
+                      <Alert className="bg-blue-50 border-blue-100">
+                        <AlertTitle className="text-blue-700">Tautan Undangan Siap</AlertTitle>
+                        <AlertDescription>
+                          <div className="mt-2 space-y-3">
+                            <div className="p-3 bg-white rounded border border-blue-100 flex items-start">
+                              <div className="flex-1 overflow-auto text-sm">
+                                {invitationLink}
+                              </div>
+                              <Button
+                                variant="ghost" 
+                                size="icon" 
+                                className="ml-2 flex-shrink-0" 
+                                onClick={() => copyToClipboard(invitationLink)}
+                              >
+                                <Copy className={`h-4 w-4 ${copied ? "text-green-500" : ""}`} />
+                              </Button>
+                            </div>
+                            <p className="text-sm text-blue-700">
+                              Salin dan bagikan tautan ini kepada {email}. Mereka akan bisa bergabung ke {orgName} setelah mendaftar.
+                            </p>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
         
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Undangan Terkirim</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Undangan Terkirim</h2>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
           <div className="bg-white rounded-lg border">
             {invitations.length > 0 ? (
               <div className="divide-y">
@@ -288,9 +515,17 @@ const InviteMembers = () => {
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-gray-400" />
                         <span className="font-medium">{invitation.email}</span>
+                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded capitalize">
+                          {invitation.role || 'karyawan'}
+                        </span>
                       </div>
                       <div className="text-sm text-gray-500 mt-1">
                         Dikirim pada {formatDate(invitation.created_at)}
+                        {invitation.expires_at && (
+                          <span className="ml-2">
+                            • Kedaluwarsa pada {formatDate(invitation.expires_at)}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

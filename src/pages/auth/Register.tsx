@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -14,6 +16,18 @@ const Register = () => {
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if we have invitation data from redirect
+  const invitationEmail = location.state?.invitationEmail || "";
+  const invitationToken = location.state?.invitationToken || "";
+
+  // If we have invitation email, use it
+  useEffect(() => {
+    if (invitationEmail) {
+      setEmail(invitationEmail);
+    }
+  }, [invitationEmail]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +55,32 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
-        // Our trigger function will create the profile automatically
+        // If we have invitation token, process it
+        if (invitationToken) {
+          // Attempt to join organization (although this might need email verification first)
+          const { data: joinResult, error: joinError } = await supabase
+            .rpc('join_organization', { 
+              user_id: data.user.id, 
+              invitation_token: invitationToken 
+            });
+          
+          if (joinError) {
+            console.error("Note: Organization join will happen after email verification", joinError);
+          }
+          
+          // Redirect to verification page with invitation context
+          toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
+          navigate("/auth/verification-sent", { 
+            state: { 
+              email,
+              isInvitation: true,
+              invitationToken
+            } 
+          });
+          return;
+        }
+        
+        // Normal registration flow
         toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
         navigate("/auth/verification-sent", { state: { email } });
       }
@@ -60,6 +99,11 @@ const Register = () => {
           <CardTitle className="text-2xl font-bold text-center">Daftar Akun Baru</CardTitle>
           <CardDescription className="text-center">
             Masukkan data Anda untuk membuat akun baru
+            {invitationEmail && (
+              <div className="mt-2 p-2 bg-blue-50 rounded text-blue-700 text-sm">
+                Anda akan bergabung dengan organisasi setelah verifikasi email
+              </div>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -83,6 +127,8 @@ const Register = () => {
                 placeholder="nama@perusahaan.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                readOnly={!!invitationEmail}
+                className={invitationEmail ? "bg-gray-100" : ""}
                 required
               />
             </div>
@@ -107,7 +153,14 @@ const Register = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Memproses..." : "Daftar"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                "Daftar"
+              )}
             </Button>
           </form>
         </CardContent>

@@ -1,105 +1,158 @@
 
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Loader2 } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { CheckCircle, ArrowRight, AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const VerificationSent = () => {
-  const [isResending, setIsResending] = useState(false);
-  const [resendCount, setResendCount] = useState(0);
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showTip, setShowTip] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(60);
+  const [allowResend, setAllowResend] = useState(false);
+  
   const email = location.state?.email || "";
-
+  const isInvitation = location.state?.isInvitation || false;
+  const invitationToken = location.state?.invitationToken || "";
+  
+  useEffect(() => {
+    // Show tip about checking spam folder after 5 seconds
+    const tipTimer = setTimeout(() => {
+      setShowTip(true);
+    }, 5000);
+    
+    // Start countdown timer for resend
+    const countdownTimer = setInterval(() => {
+      setSecondsLeft(prev => {
+        if (prev <= 1) {
+          setAllowResend(true);
+          clearInterval(countdownTimer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => {
+      clearTimeout(tipTimer);
+      clearInterval(countdownTimer);
+    };
+  }, []);
+  
   const handleResendVerification = async () => {
-    if (!email) {
-      toast.error("Tidak ada alamat email yang tersedia untuk mengirim ulang verifikasi");
-      return;
-    }
-
-    setIsResending(true);
+    if (!email || !allowResend) return;
     
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: email,
+        email,
       });
-
+      
       if (error) {
         throw error;
       }
-
-      setResendCount(count => count + 1);
-      toast.success("Email verifikasi telah dikirim ulang");
+      
+      setAllowResend(false);
+      setSecondsLeft(60);
+      
+      // Restart countdown
+      const countdownTimer = setInterval(() => {
+        setSecondsLeft(prev => {
+          if (prev <= 1) {
+            setAllowResend(true);
+            clearInterval(countdownTimer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      // Show tip about checking spam folder immediately
+      setShowTip(true);
     } catch (error: any) {
       console.error("Error resending verification:", error);
-      toast.error(error.message || "Gagal mengirim ulang email verifikasi");
-    } finally {
-      setIsResending(false);
     }
   };
-
+  
+  const goToLogin = () => {
+    navigate("/auth/login");
+  };
+  
+  if (!email) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex justify-center mb-2">
+              <AlertCircle className="h-12 w-12 text-yellow-500" />
+            </div>
+            <CardTitle className="text-center text-2xl">Tidak Ada Data Email</CardTitle>
+            <CardDescription className="text-center">
+              Tidak ada email yang ditemukan untuk mengirim verifikasi.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button onClick={() => navigate("/auth/register")} className="w-full">
+              Kembali ke Halaman Registrasi
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md text-center">
-        <CardHeader className="space-y-1">
+      <Card className="w-full max-w-md">
+        <CardHeader>
           <div className="flex justify-center mb-4">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <Mail className="h-6 w-6 text-blue-600" />
-            </div>
+            <CheckCircle className="h-12 w-12 text-green-500" />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Verifikasi Email</CardTitle>
+          <CardTitle className="text-center text-2xl">Verifikasi Email</CardTitle>
           <CardDescription className="text-center">
-            Kami telah mengirim email verifikasi ke
-            {email && <div className="font-medium mt-1">{email}</div>}
+            Kami telah mengirimkan email verifikasi ke:
+            <div className="font-medium text-lg mt-2">{email}</div>
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600 mb-4">
-            Silakan cek kotak masuk email Anda dan klik tautan verifikasi untuk melanjutkan.
-            Email verifikasi biasanya tiba dalam waktu 1-2 menit.
-          </p>
-          
-          {resendCount > 0 && (
-            <Alert className="mb-4 bg-green-50 border-green-200">
-              <AlertDescription>
-                Email verifikasi telah dikirim ulang ({resendCount}x). Mohon periksa kotak masuk Anda.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="mt-6 space-y-3">
-            <p className="text-sm text-gray-500 font-medium">Belum menerima email?</p>
-            <div className="space-y-2 text-sm text-gray-500">
-              <p>• Periksa folder spam atau junk mail Anda</p>
-              <p>• Verifikasi bahwa alamat email Anda benar</p>
-              <p>• Tunggu beberapa menit dan coba lagi</p>
-            </div>
+          <div className="space-y-4">
+            <p className="text-center">
+              Silakan periksa email Anda dan klik tautan verifikasi untuk menyelesaikan proses pendaftaran.
+              {isInvitation && (
+                <span className="block mt-2 font-medium text-blue-600">
+                  Setelah verifikasi, Anda akan otomatis bergabung dengan organisasi yang mengundang Anda.
+                </span>
+              )}
+            </p>
+            
+            {showTip && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
+                <p className="font-medium mb-1">Tidak menerima email?</p>
+                <ul className="list-disc list-inside">
+                  <li>Periksa folder spam/junk Anda</li>
+                  <li>Verifikasi alamat email yang Anda masukkan</li>
+                  <li>Tunggu beberapa menit</li>
+                </ul>
+              </div>
+            )}
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-3">
-          <Button 
-            onClick={handleResendVerification} 
-            disabled={isResending || resendCount >= 3} 
-            variant="outline" 
+        <CardFooter className="flex flex-col gap-3">
+          <Button
+            variant={allowResend ? "default" : "outline"} 
             className="w-full"
+            disabled={!allowResend}
+            onClick={handleResendVerification}
           >
-            {isResending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Mengirim...
-              </>
-            ) : resendCount >= 3 ? (
-              "Batas pengiriman ulang tercapai"
-            ) : (
-              "Kirim Ulang Email Verifikasi"
-            )}
+            <RefreshCw className={`mr-2 h-4 w-4 ${!allowResend && 'animate-spin'}`} />
+            {allowResend ? "Kirim Ulang Email" : `Tunggu ${secondsLeft} detik`}
           </Button>
-          <Button asChild variant="ghost" className="w-full">
-            <Link to="/auth/login">Kembali ke Login</Link>
+          
+          <Button variant="outline" onClick={goToLogin} className="w-full">
+            Kembali ke Login
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </CardFooter>
       </Card>
