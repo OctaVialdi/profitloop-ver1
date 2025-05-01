@@ -79,8 +79,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           </header>
           
-          {/* Page content with div instead of ScrollArea */}
-          <div className="h-[calc(100vh-4rem)] overflow-auto">
+          {/* Page content without scroll area */}
+          <div className="h-[calc(100vh-4rem)]">
             <div className="p-4 md:p-6">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
