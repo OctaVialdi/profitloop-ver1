@@ -1,5 +1,5 @@
 
-import { Home, Users, Bell, Settings } from "lucide-react";
+import { Home, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { 
   Sidebar, 
@@ -41,12 +41,10 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
-  // Simplified navigation items
+  // Simplified navigation items - only Dashboard and Settings
   const navigationItems: NavigationItem[] = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Members", href: "/members", icon: Users },
     { name: "Settings", href: "/settings/dashboard", icon: Settings, requiredRole: "admin" },
-    { name: "Notifications", href: "/notifications", icon: Bell },
   ];
 
   // Filter navigation items based on user role
