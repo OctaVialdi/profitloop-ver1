@@ -7,8 +7,8 @@ import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import VerificationSent from "@/pages/auth/VerificationSent";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
-import { OrganizationSetup } from "@/pages/onboarding/OrganizationSetup";
-import { EmployeeWelcome } from "@/pages/employee/EmployeeWelcome";
+import OrganizationSetup from "@/pages/onboarding/OrganizationSetup";
+import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import Notifications from "@/pages/dashboard/Notifications";
 import MemberManagement from "@/pages/dashboard/MemberManagement";
@@ -76,7 +76,9 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <SettingsLayout />
+                  <SettingsLayout>
+                    {/* Tambahkan children property untuk SettingsLayout */}
+                  </SettingsLayout>
                 </DashboardLayout>
               </ProtectedRoute>
             }

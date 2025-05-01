@@ -1,13 +1,7 @@
 
 import React from "react";
 
-interface EmailTipsProps {
-  showTip: boolean;
-}
-
-export const EmailTips: React.FC<EmailTipsProps> = ({ showTip }) => {
-  if (!showTip) return null;
-
+export const EmailTips: React.FC = () => {
   return (
     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
       <p className="font-medium mb-1">Tidak menerima email?</p>

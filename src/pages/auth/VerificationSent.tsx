@@ -49,7 +49,7 @@ const VerificationSent = () => {
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <VerificationStatus checkingVerification={checkingVerification} />
+        <VerificationStatus isChecking={checkingVerification} />
         
         {/* Show info about joining organization if coming from invitation */}
         {isInvitation && (
