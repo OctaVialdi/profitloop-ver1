@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,10 +8,13 @@ import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { EmailTips } from "@/components/auth/EmailTips";
 import { VerificationStatus } from "@/components/auth/VerificationStatus";
 import { EmailNotFound } from "@/components/auth/EmailNotFound";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const VerificationSent = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [resendingEmail, setResendingEmail] = useState(false);
   
   const email = location.state?.email || "";
   const password = location.state?.password || ""; // Store password for auto-login
@@ -28,6 +32,34 @@ const VerificationSent = () => {
     password, 
     invitationToken 
   });
+
+  // Function to manually resend verification email
+  const resendVerificationEmail = async () => {
+    if (!email) {
+      toast.error("Email tidak ditemukan");
+      return;
+    }
+    
+    setResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+      
+      if (error) {
+        console.error("Error sending verification email:", error);
+        toast.error("Gagal mengirim ulang email: " + error.message);
+      } else {
+        toast.success("Email verifikasi berhasil dikirim ulang");
+      }
+    } catch (err) {
+      console.error("Exception sending verification email:", err);
+      toast.error("Terjadi kesalahan saat mengirim email");
+    } finally {
+      setResendingEmail(false);
+    }
+  };
 
   useEffect(() => {
     // Auto-redirect when email is verified (handled in the hook)
@@ -88,11 +120,12 @@ const VerificationSent = () => {
           <Button
             variant={allowResend ? "default" : "outline"} 
             className="w-full"
-            disabled={!allowResend}
-            onClick={handleResendVerification}
+            disabled={!allowResend || resendingEmail}
+            onClick={resendVerificationEmail}
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${!allowResend && 'animate-spin'}`} />
-            {allowResend ? "Kirim Ulang Email" : `Tunggu ${secondsLeft} detik`}
+            <RefreshCw className={`mr-2 h-4 w-4 ${(resendingEmail || !allowResend) && 'animate-spin'}`} />
+            {resendingEmail ? "Mengirim..." : 
+              allowResend ? "Kirim Ulang Email" : `Tunggu ${secondsLeft} detik`}
           </Button>
           
           <Button variant="outline" onClick={goToLogin} className="w-full">
