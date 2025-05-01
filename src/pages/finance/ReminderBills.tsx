@@ -54,7 +54,7 @@ export default function ReminderBills() {
         </button>
       </div>
 
-      {/* Bills Navigation - Updated to horizontal with scroll and handle navigation */}
+      {/* Bills Navigation - Updated to remove specified tabs */}
       <Card className="p-1">
         <ScrollArea className="w-full">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -66,40 +66,16 @@ export default function ReminderBills() {
                 Overview
               </TabsTrigger>
               <TabsTrigger 
-                value="upcoming-bills" 
-                className={`data-[state=active]:bg-white ${activeTab === "upcoming-bills" ? "text-gray-900" : "text-gray-500"}`}
-              >
-                Upcoming Bills
-              </TabsTrigger>
-              <TabsTrigger 
-                value="overdue-bills" 
-                className={`data-[state=active]:bg-white ${activeTab === "overdue-bills" ? "text-gray-900" : "text-gray-500"}`}
-              >
-                Overdue Bills
-              </TabsTrigger>
-              <TabsTrigger 
                 value="recurring-setup" 
                 className={`data-[state=active]:bg-white ${activeTab === "recurring-setup" ? "text-gray-900" : "text-gray-500"}`}
               >
                 Recurring Setup
               </TabsTrigger>
               <TabsTrigger 
-                value="auto-payment" 
-                className={`data-[state=active]:bg-white ${activeTab === "auto-payment" ? "text-gray-900" : "text-gray-500"}`}
-              >
-                Auto-Payment
-              </TabsTrigger>
-              <TabsTrigger 
                 value="reminders" 
                 className={`data-[state=active]:bg-white ${activeTab === "reminders" ? "text-gray-900" : "text-gray-500"}`}
               >
                 Reminders
-              </TabsTrigger>
-              <TabsTrigger 
-                value="add-bill" 
-                className={`data-[state=active]:bg-white ${activeTab === "add-bill" ? "text-gray-900" : "text-gray-500"}`}
-              >
-                Add Bill
               </TabsTrigger>
               <TabsTrigger 
                 value="approvals" 
