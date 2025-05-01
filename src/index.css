@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -97,5 +91,24 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom sidebar overrides */
+@layer components {
+  [data-sidebar="menu-button"] {
+    @apply text-gray-600 hover:bg-blue-50 hover:text-blue-700;
+  }
+
+  [data-sidebar="menu-button"][data-active="true"] {
+    @apply bg-blue-50 text-blue-700 font-medium;
+  }
+
+  [data-sidebar="rail"] {
+    @apply after:bg-blue-100 hover:after:bg-blue-200;
+  }
+  
+  [data-sidebar="trigger"] {
+    @apply text-blue-600;
   }
 }
