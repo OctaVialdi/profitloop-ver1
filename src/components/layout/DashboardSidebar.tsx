@@ -64,8 +64,8 @@ export function DashboardSidebar({
     >
       <SidebarRail />
       <SidebarContent className="flex flex-col">
-        {/* Menu group - positioned at the top */}
-        <SidebarGroup className="order-first mt-1">
+        {/* Menu group - explicitly positioned first in the flex column */}
+        <SidebarGroup className="flex-none order-none mt-4">
           <SidebarGroupLabel className={isCollapsed ? "opacity-0" : "font-medium text-blue-600"}>
             Menu
           </SidebarGroupLabel>
@@ -89,7 +89,7 @@ export function DashboardSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
         
-        {/* Organization name section moved below menu */}
+        {/* Organization name section - explicitly positioned at the bottom */}
         <div className="flex items-center p-4 justify-between mt-auto">
           {!isCollapsed && (
             <div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">

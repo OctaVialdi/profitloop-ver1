@@ -118,6 +118,11 @@
     @apply text-blue-600 font-medium;
   }
   
+  /* Ensure menu groups are at the top */
+  [data-sidebar="group"] {
+    @apply flex-none;
+  }
+  
   /* Add specific styling for collapsed state to center the icons */
   [data-state="collapsed"] [data-sidebar="menu-button"] {
     @apply justify-center p-2;
