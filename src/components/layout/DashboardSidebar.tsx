@@ -13,6 +13,7 @@ import {
   SidebarGroupLabel,
   SidebarRail
 } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface NavigationItem {
   name: string;
@@ -36,6 +37,9 @@ export function DashboardSidebar({
   logoUrl,
   currentPath 
 }: DashboardSidebarProps) {
+  // Get sidebar state to check if it's expanded or collapsed
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
   
   const navigationItems: NavigationItem[] = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -61,7 +65,7 @@ export function DashboardSidebar({
         <SidebarRail />
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>
+            <SidebarGroupLabel className={isCollapsed ? "opacity-0" : ""}>
               {organization?.name || "Organisasi"}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -73,9 +77,9 @@ export function DashboardSidebar({
                       isActive={currentPath === item.href}
                       asChild
                     >
-                      <Link to={item.href}>
-                        <item.icon />
-                        <span>{item.name}</span>
+                      <Link to={item.href} className="flex items-center">
+                        <item.icon className="shrink-0" />
+                        <span className={isCollapsed ? "sr-only" : ""}>{item.name}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

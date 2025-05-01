@@ -111,4 +111,14 @@
   [data-sidebar="trigger"] {
     @apply text-blue-600;
   }
+  
+  /* Add specific styling for collapsed state to center the icons */
+  [data-state="collapsed"] [data-sidebar="menu-button"] {
+    @apply justify-center;
+  }
+  
+  /* Improve the spacing when the sidebar is collapsed */
+  [data-collapsible="icon"] [data-sidebar="sidebar"] {
+    @apply p-1;
+  }
 }
