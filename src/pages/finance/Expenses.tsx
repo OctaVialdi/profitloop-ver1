@@ -14,8 +14,13 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Expenses() {
+  // Navigation hooks
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // State to track the active view for expense breakdown
   const [expenseView, setExpenseView] = useState<"chart" | "table">("chart");
   
@@ -102,6 +107,13 @@ export default function Expenses() {
     },
   ];
 
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    if (value === "budget") {
+      navigate("/finance/expenses/budget");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -113,7 +125,7 @@ export default function Expenses() {
 
       {/* Top Navigation Tabs */}
       <div className="flex overflow-auto pb-2">
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="overview" className="w-full" onValueChange={handleTabChange}>
           <TabsList className="bg-muted h-11">
             <TabsTrigger 
               value="overview" 

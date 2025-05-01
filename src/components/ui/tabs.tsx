@@ -1,9 +1,31 @@
+
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 
 import { cn } from "@/lib/utils"
 
-const Tabs = TabsPrimitive.Root
+const Tabs = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root> & {
+    onValueChange?: (value: string) => void;
+  }
+>(({ className, onValueChange, ...props }, ref) => {
+  const handleValueChange = (value: string) => {
+    if (onValueChange) {
+      onValueChange(value);
+    }
+  };
+
+  return (
+    <TabsPrimitive.Root
+      ref={ref}
+      className={cn(className)}
+      onValueChange={handleValueChange}
+      {...props}
+    />
+  );
+});
+Tabs.displayName = "Tabs";
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,

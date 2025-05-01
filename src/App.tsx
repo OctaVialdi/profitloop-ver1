@@ -27,12 +27,13 @@ import CatatanMeetings from "@/pages/CatatanMeetings";
 // Import Finance Pages
 import FinanceDashboard from "@/pages/finance/Dashboard";
 import Expenses from "@/pages/finance/Expenses";
+import ExpenseBudget from "@/pages/finance/ExpenseBudget"; // New import
 import IncomeTarget from "@/pages/finance/IncomeTarget";
 import ReminderBills from "@/pages/finance/ReminderBills";
 import PayrollSummary from "@/pages/finance/PayrollSummary";
 import CashManagement from "@/pages/finance/CashManagement";
 import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
-import BillApprovals from "@/pages/finance/BillApprovals"; // New import for bill approvals
+import BillApprovals from "@/pages/finance/BillApprovals";
 import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 
@@ -138,9 +139,10 @@ function App() {
           >
             <Route path="dashboard" element={<FinanceDashboard />} />
             <Route path="expenses" element={<Expenses />} />
+            <Route path="expenses/budget" element={<ExpenseBudget />} /> {/* New route for budget */}
             <Route path="income-target" element={<IncomeTarget />} />
             <Route path="reminder-bills" element={<ReminderBills />} />
-            <Route path="reminder-bills/approvals" element={<BillApprovals />} /> {/* New route for bill approvals */}
+            <Route path="reminder-bills/approvals" element={<BillApprovals />} />
             <Route path="payroll-summary" element={<PayrollSummary />} />
             <Route path="cash-management" element={<CashManagement />} />
             <Route path="cash-management/daftar-transaksi" element={<DaftarTransaksi />} />
