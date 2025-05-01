@@ -49,7 +49,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
 
   return (
     <div className="w-full space-y-4">
-      <Card className="mb-4 p-1 overflow-x-auto">
+      <Card className="sticky top-0 z-10 mb-4 p-1 overflow-x-auto bg-white">
         <Tabs defaultValue={defaultTab} value={defaultTab} className="w-full">
           <TabsList className="w-full justify-start">
             {filteredTabs.map((tab) => (
@@ -66,7 +66,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
         </Tabs>
       </Card>
       
-      <div>
+      <div className="pb-4">
         {children}
       </div>
     </div>
