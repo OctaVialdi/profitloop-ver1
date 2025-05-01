@@ -222,7 +222,7 @@ const CatatanMeetings = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <div className="max-w-full mx-auto">
         <div className="flex justify-between items-center p-6 bg-white border-b">
           <h1 className="text-2xl font-semibold">{currentDate}</h1>
@@ -238,7 +238,7 @@ const CatatanMeetings = () => {
         
         <div className="flex flex-1">
           {/* Main content area - 75% */}
-          <div className="w-3/4 p-6">
+          <div className="w-3/4 p-6 overflow-hidden">
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Meeting Points</h2>
@@ -360,7 +360,7 @@ const CatatanMeetings = () => {
             </Card>
             
             <h3 className="text-lg font-medium mb-4">Recent Updates</h3>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar">
               {recentUpdates.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">No recent updates.</p>
               ) : (
@@ -379,12 +379,12 @@ const CatatanMeetings = () => {
         </div>
       </div>
       
-      {/* Floating action button */}
-      <div className="fixed bottom-8 right-8">
+      {/* Floating action button - made sticky to the bottom */}
+      <div className="fixed bottom-8 right-8 z-30">
         <Button 
           variant="default" 
           size="icon" 
-          className="h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700"
+          className="h-14 w-14 rounded-full shadow-lg bg-purple-600 hover:bg-purple-700 transition-colors"
           onClick={handleCreateMeeting}
         >
           <Plus className="h-6 w-6" />

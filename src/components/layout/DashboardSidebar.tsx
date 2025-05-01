@@ -59,7 +59,7 @@ export function DashboardSidebar({
   return (
     <Sidebar variant="sidebar" collapsible="icon" className="sticky top-0 h-screen z-20">
       <SidebarRail />
-      <SidebarContent className="flex flex-col">
+      <SidebarContent className="flex flex-col h-full">
         {/* Organization header */}
         <div className="flex items-center p-4 justify-between">
           {!isCollapsed && (
@@ -95,8 +95,8 @@ export function DashboardSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
         
-        {/* Spacer to push content to top */}
-        <div className="flex-grow"></div>
+        {/* Empty flex-grow div at the bottom to push content to top */}
+        <div className="mt-auto"></div>
       </SidebarContent>
     </Sidebar>
   );

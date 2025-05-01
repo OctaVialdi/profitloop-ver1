@@ -106,7 +106,7 @@ export const VirtualizedMeetingTable = ({
         }`}
       >
         <div className="col-span-2">{point.date}</div>
-        <div className="col-span-4 truncate" title={point.discussion_point}>
+        <div className="col-span-4 line-clamp-2 break-words" title={point.discussion_point}>
           {point.discussion_point}
         </div>
         <div className="col-span-2">
