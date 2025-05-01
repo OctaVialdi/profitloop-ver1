@@ -41,9 +41,9 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
-  // Navigation items - added Dashboard above Settings
+  // Navigation items - updated Dashboard href to point to /dashboard instead of /settings/dashboard
   const navigationItems: NavigationItem[] = [
-    { name: "Dashboard", href: "/settings/dashboard", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Settings", href: "/settings/dashboard", icon: Settings, requiredRole: "admin" },
   ];
 
