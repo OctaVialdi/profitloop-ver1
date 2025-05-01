@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
@@ -15,6 +15,8 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isEmailUnverified, setIsEmailUnverified] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -41,49 +43,55 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error("Email tidak boleh kosong");
+      return;
+    }
+    
+    setResendingVerification(true);
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Email verifikasi berhasil dikirim ulang. Silakan cek kotak masuk email Anda.");
+      navigate("/auth/verification-sent", { state: { 
+        email,
+        ...(invitationToken && { isInvitation: true, invitationToken })
+      }});
+    } catch (error: any) {
+      console.error("Resend verification error:", error);
+      toast.error(error.message || "Gagal mengirim ulang email verifikasi.");
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setLoginError(null);
-    
-    // Improved retry mechanism with more granular control
-    let retryCount = 0;
-    const maxRetries = 3;
-    const retryDelay = 1500; // 1.5 seconds between retries
-    
-    const attemptLogin = async (): Promise<any> => {
-      try {
-        // Clean direct login approach to avoid internal issues
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) throw error;
-        return data;
-      } catch (error: any) {
-        console.error("Login attempt error:", error);
-        
-        // Only retry on database errors with a cleaner approach
-        if ((error.message === "Database error granting user" || 
-             error.message.includes("database") || 
-             error.status === 500) && 
-            retryCount < maxRetries) {
-          
-          retryCount++;
-          console.log(`Retrying login attempt ${retryCount} of ${maxRetries}...`);
-          
-          // Use increasing delay between retries
-          await new Promise(resolve => setTimeout(resolve, retryDelay * retryCount));
-          return attemptLogin();
-        } else {
-          throw error;
-        }
-      }
-    };
+    setIsEmailUnverified(false);
     
     try {
-      const data = await attemptLogin();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        // Check specifically for email verification error
+        if (error.message === "Email not confirmed") {
+          setIsEmailUnverified(true);
+          throw new Error("Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.");
+        }
+        throw error;
+      }
       
       if (data.user) {
         // If we have invitation token, join organization after login
@@ -140,8 +148,9 @@ const Login = () => {
         setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat atau hubungi dukungan teknis.");
       } else if (error.message.includes("Invalid login credentials")) {
         setLoginError("Email atau password salah. Mohon periksa kembali.");
-      } else if (error.message.includes("Email not confirmed")) {
-        setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda.");
+      } else if (error.message.includes("Email not confirmed") || error.message.includes("Email belum dikonfirmasi")) {
+        setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda atau kirim ulang email verifikasi.");
+        setIsEmailUnverified(true);
       } else {
         setLoginError(error.message || "Gagal login. Periksa email dan password Anda.");
       }
@@ -171,6 +180,37 @@ const Login = () => {
               <AlertDescription>{loginError}</AlertDescription>
             </Alert>
           )}
+          
+          {isEmailUnverified && (
+            <div className="mb-4 p-4 border border-yellow-300 bg-yellow-50 rounded-md">
+              <div className="flex items-start">
+                <Mail className="h-5 w-5 text-yellow-600 mt-0.5 mr-2" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">Email belum diverifikasi</p>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    Anda perlu memverifikasi email sebelum bisa login. Silakan cek kotak masuk email Anda.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2 border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                    onClick={handleResendVerification}
+                    disabled={resendingVerification}
+                  >
+                    {resendingVerification ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        Mengirim...
+                      </>
+                    ) : (
+                      'Kirim Ulang Email Verifikasi'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
