@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, UploadCloud } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +77,8 @@ const AddExpenseDialog: React.FC = () => {
   const [isRecurring, setIsRecurring] = useState<boolean>(false);
   const [recurringFrequency, setRecurringFrequency] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
 
   const { toast } = useToast();
 
@@ -84,6 +86,30 @@ const AddExpenseDialog: React.FC = () => {
     // Allow only numbers and format as needed
     const value = e.target.value.replace(/[^\d]/g, "");
     setAmount(value);
+  };
+
+  const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setReceipt(file);
+      
+      // Create preview URL for the uploaded image
+      const previewUrl = URL.createObjectURL(file);
+      setReceiptPreview(previewUrl);
+      
+      toast({
+        title: "Receipt Uploaded",
+        description: `File "${file.name}" successfully uploaded`,
+      });
+    }
+  };
+
+  const removeReceipt = () => {
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview);
+    }
+    setReceipt(null);
+    setReceiptPreview(null);
   };
 
   const handleSubmit = () => {
@@ -116,7 +142,8 @@ const AddExpenseDialog: React.FC = () => {
       department,
       expenseType,
       isRecurring,
-      recurringFrequency: isRecurring ? recurringFrequency : null
+      recurringFrequency: isRecurring ? recurringFrequency : null,
+      receipt: receipt // Include the receipt file
     };
 
     // Submit expense (in a real app, this would be an API call)
@@ -142,6 +169,11 @@ const AddExpenseDialog: React.FC = () => {
     setExpenseType("");
     setIsRecurring(false);
     setRecurringFrequency("");
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview);
+    }
+    setReceipt(null);
+    setReceiptPreview(null);
   };
 
   return (
@@ -198,6 +230,46 @@ const AddExpenseDialog: React.FC = () => {
                   placeholder="0" 
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Receipt upload section */}
+          <div className="space-y-2">
+            <label className="text-base font-medium">Receipt</label>
+            <div className="border border-dashed border-gray-300 rounded-md p-4">
+              {receiptPreview ? (
+                <div className="relative">
+                  <img 
+                    src={receiptPreview} 
+                    alt="Receipt preview" 
+                    className="max-h-[150px] mx-auto rounded-md object-contain" 
+                  />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-1 right-1 h-8 w-8 p-0"
+                    onClick={removeReceipt}
+                  >
+                    ×
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-4">
+                  <UploadCloud className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500 mb-2">Upload receipt image</p>
+                  <label className="cursor-pointer">
+                    <span className="bg-[#8B5CF6] text-white px-4 py-2 rounded-md text-sm hover:bg-[#7c4ff1]">
+                      Select File
+                    </span>
+                    <Input 
+                      type="file" 
+                      className="hidden" 
+                      onChange={handleReceiptUpload}
+                      accept="image/*"
+                    />
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 
