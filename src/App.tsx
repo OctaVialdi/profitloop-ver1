@@ -20,6 +20,7 @@ import NotFound from "@/pages/NotFound";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SettingsLayout from "@/components/layout/SettingsLayout";
 import FinanceLayout from "@/components/layout/FinanceLayout";
+import OperationsLayout from "@/components/layout/OperationsLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AuthLayout from "@/components/layout/AuthLayout";
 import MagicLinkJoin from "./pages/auth/MagicLinkJoin";
@@ -28,15 +29,19 @@ import CatatanMeetings from "@/pages/CatatanMeetings";
 import FinanceDashboard from "@/pages/finance/Dashboard";
 import Expenses from "@/pages/finance/Expenses";
 import ExpenseBudget from "@/pages/finance/ExpenseBudget"; 
-import ExpenseBudgetForecast from "@/pages/finance/ExpenseBudgetForecast"; // Add this import
+import ExpenseBudgetForecast from "@/pages/finance/ExpenseBudgetForecast"; 
 import IncomeTarget from "@/pages/finance/IncomeTarget";
 import ReminderBills from "@/pages/finance/ReminderBills";
 import PayrollSummary from "@/pages/finance/PayrollSummary";
 import CashManagement from "@/pages/finance/CashManagement";
 import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
 import BillApprovals from "@/pages/finance/BillApprovals";
+// Import Operations Pages
+import OperationsDashboard from "@/pages/operations/Dashboard";
+import CustomerServicePage from "@/pages/operations/CustomerService";
+import SalesPage from "@/pages/operations/Sales";
+import LogisticsPage from "@/pages/operations/Logistics";
 import { useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
 
 function App() {
   // Check if the app is running in a development environment
@@ -141,7 +146,7 @@ function App() {
             <Route path="dashboard" element={<FinanceDashboard />} />
             <Route path="expenses" element={<Expenses />} />
             <Route path="expenses/budget" element={<ExpenseBudget />} />
-            <Route path="expenses/budget/forecast" element={<ExpenseBudgetForecast />} /> {/* New route for budget forecast */}
+            <Route path="expenses/budget/forecast" element={<ExpenseBudgetForecast />} />
             <Route path="income-target" element={<IncomeTarget />} />
             <Route path="reminder-bills" element={<ReminderBills />} />
             <Route path="reminder-bills/approvals" element={<BillApprovals />} />
@@ -150,6 +155,27 @@ function App() {
             <Route path="cash-management/daftar-transaksi" element={<DaftarTransaksi />} />
             {/* Redirect to dashboard if no path matches */}
             <Route path="" element={<Navigate to="/finance/dashboard" replace />} />
+          </Route>
+
+          {/* Operations Routes - New section */}
+          <Route
+            path="/operations"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <OperationsLayout>
+                    <Outlet />
+                  </OperationsLayout>
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<OperationsDashboard />} />
+            <Route path="customer-service" element={<CustomerServicePage />} />
+            <Route path="sales" element={<SalesPage />} />
+            <Route path="logistics" element={<LogisticsPage />} />
+            {/* Redirect to dashboard if no path matches */}
+            <Route path="" element={<Navigate to="/operations/dashboard" replace />} />
           </Route>
 
           {/* Settings Layout */}
