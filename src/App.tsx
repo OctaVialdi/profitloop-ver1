@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NotificationSystem } from "@/components/NotificationSystem";
 import Index from "@/pages/Index";
@@ -77,7 +77,7 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <SettingsLayout>
-                    {/* Tambahkan children property untuk SettingsLayout */}
+                    <Outlet />
                   </SettingsLayout>
                 </DashboardLayout>
               </ProtectedRoute>
