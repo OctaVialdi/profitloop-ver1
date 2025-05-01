@@ -517,7 +517,7 @@ export default function PayrollSummary() {
         </div>
       </div>
       
-      {/* Charts Section - New addition */}
+      {/* Charts Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Department Bar Chart */}
         <Card className="p-6">
@@ -530,12 +530,12 @@ export default function PayrollSummary() {
               <BarChart
                 data={departmentData}
                 layout="vertical"
-                margin={{ top: 0, right: 0, bottom: 0, left: 70 }}
+                margin={{ top: 0, right: 30, bottom: 0, left: 70 }}
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                 <XAxis
                   type="number"
-                  tickFormatter={(value) => `Rp${value.toLocaleString()}`}
+                  tickFormatter={(value) => `Rp${value/1000000}M`}
                   domain={[0, 25000000]}
                   tickCount={6}
                 />
@@ -547,9 +547,8 @@ export default function PayrollSummary() {
                 />
                 <Bar 
                   dataKey="value" 
-                  fill="var(--color-bar1)" 
+                  fill="#ff6384" 
                   radius={[0, 4, 4, 0]} 
-                  name="Marketing" 
                   barSize={30}
                 />
                 <ChartTooltip
@@ -615,9 +614,9 @@ export default function PayrollSummary() {
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke="var(--color-line)"
+                  stroke="#2563eb"
                   strokeWidth={2}
-                  dot={{ r: 4, fill: "var(--color-line)" }}
+                  dot={{ r: 4, fill: "#2563eb" }}
                 />
                 <ChartTooltip
                   content={({ active, payload, label }) => {
@@ -654,7 +653,7 @@ export default function PayrollSummary() {
         </Card>
       </div>
 
-      {/* Payroll Records Table - New addition */}
+      {/* Payroll Records Table */}
       <Card>
         <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
