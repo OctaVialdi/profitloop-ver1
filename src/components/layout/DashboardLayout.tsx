@@ -1,6 +1,6 @@
 
 import { ReactNode } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Building, Home, LogOut, Menu, Users, UserPlus, CreditCard, Bell, Settings } from "lucide-react";
@@ -12,7 +12,7 @@ import { useAppTheme } from "@/components/ThemeProvider";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface DashboardLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
@@ -176,7 +176,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </aside>
         
         {/* Page content */}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">{children || <Outlet />}</main>
       </div>
     </div>
   );

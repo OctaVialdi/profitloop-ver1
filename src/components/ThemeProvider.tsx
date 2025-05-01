@@ -6,6 +6,12 @@ interface ThemeContextType {
   themeSettings: Record<string, any> | null;
 }
 
+interface ThemeProviderProps {
+  children: ReactNode;
+  defaultTheme?: string;
+  storageKey?: string;
+}
+
 const ThemeContext = createContext<ThemeContextType>({ 
   logoUrl: null,
   themeSettings: null
@@ -13,7 +19,7 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const useAppTheme = () => useContext(ThemeContext);
 
-export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+export const ThemeProvider = ({ children, defaultTheme = "light", storageKey = "app-theme" }: ThemeProviderProps) => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [themeSettings, setThemeSettings] = useState<Record<string, any> | null>(null);
 
@@ -90,8 +96,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   // Initialize theme from localStorage if available
   useEffect(() => {
     try {
-      const storedTheme = localStorage.getItem('app_theme_settings');
-      const storedLogo = localStorage.getItem('app_logo_url');
+      const storedTheme = localStorage.getItem(`${storageKey}_settings`);
+      const storedLogo = localStorage.getItem(`${storageKey}_logo_url`);
       
       if (storedTheme) {
         const parsedTheme = JSON.parse(storedTheme);
@@ -105,7 +111,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.log("Could not initialize theme from localStorage");
     }
-  }, []);
+  }, [storageKey]);
 
   return (
     <ThemeContext.Provider value={{ logoUrl, themeSettings }}>
@@ -115,11 +121,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 };
 
 // Utility function to save theme data to localStorage
-export const saveThemeToStorage = (settings: Record<string, any>, logoUrl: string | null) => {
+export const saveThemeToStorage = (settings: Record<string, any>, logoUrl: string | null, storageKey: string = "app-theme") => {
   try {
-    localStorage.setItem('app_theme_settings', JSON.stringify(settings));
+    localStorage.setItem(`${storageKey}_settings`, JSON.stringify(settings));
     if (logoUrl) {
-      localStorage.setItem('app_logo_url', logoUrl);
+      localStorage.setItem(`${storageKey}_logo_url`, logoUrl);
     }
   } catch (error) {
     console.error("Failed to save theme to localStorage", error);

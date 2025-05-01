@@ -24,7 +24,7 @@ import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="app-theme">
+    <ThemeProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />

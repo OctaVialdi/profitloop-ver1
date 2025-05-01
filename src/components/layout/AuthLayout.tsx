@@ -1,8 +1,9 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { Outlet } from "react-router-dom";
 
 interface AuthLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 const AuthLayout = ({ children }: AuthLayoutProps) => {
@@ -12,7 +13,7 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
         <div className="w-full max-w-md mx-auto text-center mb-8">
           <h1 className="text-2xl font-bold text-blue-600">Multi-Tenant App</h1>
         </div>
-        {children}
+        {children || <Outlet />}
       </div>
     </div>
   );
