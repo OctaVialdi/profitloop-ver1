@@ -69,6 +69,7 @@ const CatatanMeetings = () => {
     requestBy: 'all',
     timeRange: 'all'
   });
+  const [updateCounts, setUpdateCounts] = useState<Record<string, number>>({});
   const currentDate = new Date().toLocaleDateString('en-US', { 
     day: 'numeric', 
     month: 'long',
@@ -89,6 +90,14 @@ const CatatanMeetings = () => {
     // Load recent updates
     const updates = await getMeetingUpdates();
     setRecentUpdates(updates.slice(0, 5)); // Get only the 5 most recent updates
+    
+    // Calculate update counts for each meeting point
+    const counts: Record<string, number> = {};
+    points.forEach(point => {
+      const pointUpdates = updates.filter(u => u.meeting_point_id === point.id);
+      counts[point.id] = pointUpdates.length;
+    });
+    setUpdateCounts(counts);
     
     setLoading(false);
   };
@@ -200,7 +209,7 @@ const CatatanMeetings = () => {
   const rejectedCount = meetingPoints.filter(point => point.status === "rejected").length;
   const presentedCount = meetingPoints.filter(point => point.status === "presented").length;
   const updatesCount = recentUpdates.length;
-
+  
   // Add the handleUpdateAdded function to reload data after an update is added
   const handleUpdateAdded = () => {
     loadData();
@@ -344,7 +353,7 @@ const CatatanMeetings = () => {
                               >
                                 <History size={16} />
                                 <span className="ml-2">
-                                  {recentUpdates.filter(u => u.meeting_point_id === point.id).length || 0}
+                                  {updateCounts[point.id] || 0}
                                 </span>
                               </Button>
                             </div>
@@ -439,11 +448,11 @@ const CatatanMeetings = () => {
               {recentUpdates.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">No recent updates.</p>
               ) : (
-                recentUpdates.slice(0, 5).map((update) => (
+                recentUpdates.map((update) => (
                   <MeetingUpdateItem
                     key={update.id}
                     title={update.title}
-                    status={update.status as MeetingStatus}
+                    status={update.status}
                     person={update.person}
                     date={update.date}
                   />

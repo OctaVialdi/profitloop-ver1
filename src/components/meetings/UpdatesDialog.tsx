@@ -84,7 +84,7 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
           meeting_point_id: meetingPoint.id,
           status: meetingPoint.status,
           person: meetingPoint.request_by || "Unknown",
-          date: formattedDate,
+          date: formatCurrentDate(),
           title: newUpdate
         };
         
@@ -104,6 +104,17 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
     }
   };
 
+  const formatCurrentDate = () => {
+    const currentDate = new Date();
+    const day = currentDate.getDate();
+    const month = currentDate.toLocaleString('default', { month: 'long' });
+    const year = currentDate.getFullYear();
+    const hours = String(currentDate.getHours()).padStart(2, '0');
+    const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+    
+    return `${day} ${month} ${year} - ${hours}.${minutes}`;
+  };
+
   const handleEditUpdate = (update: MeetingUpdate) => {
     setEditingUpdate(update);
     setNewUpdate(update.title);
@@ -114,6 +125,7 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
       await deleteMeetingUpdate(update.id);
       toast.success("Update deleted successfully");
       loadUpdates(); // Reload updates after deletion
+      onUpdateAdded(); // Notify parent component
     } catch (error) {
       console.error("Error deleting update:", error);
       toast.error("Failed to delete update");
