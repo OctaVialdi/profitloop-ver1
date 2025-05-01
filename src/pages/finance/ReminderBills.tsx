@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Calendar,
   CircleAlert, 
@@ -24,6 +24,16 @@ import {
 export default function ReminderBills() {
   // State for active tab
   const [activeTab, setActiveTab] = useState("overview");
+  const navigate = useNavigate();
+  
+  // Handle tab change with navigation for the "approvals" tab
+  const handleTabChange = (value: string) => {
+    if (value === "approvals") {
+      navigate("/finance/reminder-bills/approvals");
+    } else {
+      setActiveTab(value);
+    }
+  };
   
   return (
     <div className="space-y-6">
@@ -34,10 +44,10 @@ export default function ReminderBills() {
         </button>
       </div>
 
-      {/* Bills Navigation - Updated to horizontal with scroll */}
+      {/* Bills Navigation - Updated to horizontal with scroll and handle navigation */}
       <Card className="p-1">
         <ScrollArea className="w-full">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="flex min-w-max bg-transparent h-auto px-1">
               <TabsTrigger 
                 value="overview" 

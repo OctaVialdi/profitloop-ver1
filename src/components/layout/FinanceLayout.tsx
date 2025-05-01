@@ -42,7 +42,7 @@ export default function FinanceLayout({ children }: FinanceLayoutProps) {
   // Find the active tab based on the current path
   const activeTab = filteredTabs.find(tab => 
     currentPath === tab.href || 
-    currentPath.startsWith(`${tab.href}/`)
+    (currentPath.startsWith(`${tab.href}/`) && tab.href !== "/finance")
   );
   
   // If no active tab is found, default to the first tab
