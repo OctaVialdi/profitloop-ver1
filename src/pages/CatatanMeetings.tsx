@@ -110,21 +110,31 @@ const CatatanMeetings = () => {
   
   const handleAddPoint = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && newPoint.trim() !== "") {
-      const newMeetingPoint = {
-        date: new Date().toLocaleDateString('en-US', { 
-          day: 'numeric', 
-          month: 'short',
-          year: 'numeric'
-        }),
-        discussion_point: newPoint,
-        request_by: "",
-        status: "not-started" as MeetingStatus
-      };
-      
-      const result = await createMeetingPoint(newMeetingPoint);
-      if (result) {
-        setNewPoint("");
-        loadData();
+      try {
+        const newMeetingPoint = {
+          date: new Date().toLocaleDateString('en-US', { 
+            day: 'numeric', 
+            month: 'short',
+            year: 'numeric'
+          }),
+          discussion_point: newPoint.trim(),
+          request_by: "",
+          status: "not-started" as MeetingStatus
+        };
+        
+        console.log("Creating new meeting point:", newMeetingPoint);
+        const result = await createMeetingPoint(newMeetingPoint);
+        
+        if (result) {
+          toast.success("New meeting point added");
+          setNewPoint("");
+          await loadData();
+        } else {
+          toast.error("Failed to add meeting point");
+        }
+      } catch (error) {
+        console.error("Error adding meeting point:", error);
+        toast.error("Error adding meeting point");
       }
     }
   };

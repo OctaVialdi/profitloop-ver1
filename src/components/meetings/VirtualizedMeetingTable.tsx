@@ -7,6 +7,7 @@ import { MeetingActionButton } from "./MeetingActionButton";
 import { Edit, Trash2, History } from "lucide-react";
 import { MeetingStatus, MeetingPoint } from "@/types/meetings";
 import Spinner from "../Spinner";
+import { Input } from "@/components/ui/input"; 
 
 interface VirtualizedMeetingTableProps {
   meetingPoints: MeetingPoint[];
@@ -84,7 +85,7 @@ export const VirtualizedMeetingTable = ({
         <div style={style} className="grid grid-cols-12 gap-4 items-center py-2 px-4 border-t bg-white">
           <div className="col-span-2">{currentDate}</div>
           <div className="col-span-10">
-            <input
+            <Input
               type="text"
               placeholder="Type a new discussion point and press Enter..."
               className="w-full py-2 focus:outline-none text-gray-500 italic"
@@ -172,7 +173,7 @@ export const VirtualizedMeetingTable = ({
         <div className="mt-4 px-4 flex items-center">
           <div className="w-1/6">{currentDate}</div>
           <div className="w-5/6">
-            <input
+            <Input
               type="text"
               placeholder="Type a new discussion point and press Enter..."
               className="w-full py-2 focus:outline-none text-gray-500 italic"
