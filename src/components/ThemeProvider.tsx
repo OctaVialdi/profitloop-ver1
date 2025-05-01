@@ -4,6 +4,7 @@ import { ReactNode, createContext, useContext, useEffect, useState } from "react
 interface ThemeContextType {
   logoUrl: string | null;
   themeSettings: Record<string, any> | null;
+  setTheme: (theme: string) => void; // Added this property
 }
 
 interface ThemeProviderProps {
@@ -14,7 +15,8 @@ interface ThemeProviderProps {
 
 const ThemeContext = createContext<ThemeContextType>({ 
   logoUrl: null,
-  themeSettings: null
+  themeSettings: null,
+  setTheme: () => {} // Add default implementation
 });
 
 export const useAppTheme = () => useContext(ThemeContext);
@@ -22,6 +24,7 @@ export const useAppTheme = () => useContext(ThemeContext);
 export const ThemeProvider = ({ children, defaultTheme = "light", storageKey = "app-theme" }: ThemeProviderProps) => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [themeSettings, setThemeSettings] = useState<Record<string, any> | null>(null);
+  const [theme, setThemeState] = useState<string>(defaultTheme);
 
   // Function to apply theme settings to document
   const applyThemeSettings = (settings: Record<string, any>) => {
@@ -83,6 +86,23 @@ export const ThemeProvider = ({ children, defaultTheme = "light", storageKey = "
     root.style.setProperty('--sidebar-background', hexToHSL(settings.sidebar_color));
   };
 
+  // Set theme function
+  const setTheme = (newTheme: string) => {
+    setThemeState(newTheme);
+    
+    // Apply theme to document
+    const html = document.documentElement;
+    html.classList.remove('light', 'dark');
+    html.classList.add(newTheme);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem(`${storageKey}`, newTheme);
+    } catch (error) {
+      console.error("Failed to save theme to localStorage", error);
+    }
+  };
+
   // Store theme data into context
   const setThemeData = (settings: Record<string, any> | null, logo: string | null) => {
     setThemeSettings(settings);
@@ -96,11 +116,16 @@ export const ThemeProvider = ({ children, defaultTheme = "light", storageKey = "
   // Initialize theme from localStorage if available
   useEffect(() => {
     try {
-      const storedTheme = localStorage.getItem(`${storageKey}_settings`);
+      const storedTheme = localStorage.getItem(storageKey);
+      const storedThemeSettings = localStorage.getItem(`${storageKey}_settings`);
       const storedLogo = localStorage.getItem(`${storageKey}_logo_url`);
       
       if (storedTheme) {
-        const parsedTheme = JSON.parse(storedTheme);
+        setTheme(storedTheme);
+      }
+      
+      if (storedThemeSettings) {
+        const parsedTheme = JSON.parse(storedThemeSettings);
         setThemeSettings(parsedTheme);
         applyThemeSettings(parsedTheme);
       }
@@ -114,7 +139,7 @@ export const ThemeProvider = ({ children, defaultTheme = "light", storageKey = "
   }, [storageKey]);
 
   return (
-    <ThemeContext.Provider value={{ logoUrl, themeSettings }}>
+    <ThemeContext.Provider value={{ logoUrl, themeSettings, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
