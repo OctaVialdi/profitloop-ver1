@@ -129,7 +129,7 @@ export const useAppThemeManager = () => {
     
     // Save theme change to database
     if (userProfile?.id) {
-      saveThemeChanges(isDarkMode ? "dark" : "light");
+      saveThemeChanges(isDarkMode ? "dark" : "light", userProfile.id);
     }
     
     // If user is logged in, save preference to database

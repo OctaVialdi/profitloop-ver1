@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -88,7 +87,7 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
           title: newUpdate
         };
         
-        await createMeetingUpdate(meetingPoint.id, updateData);
+        await createMeetingUpdate(updateData);
         toast.success("Update added successfully");
       }
       

@@ -1,44 +1,12 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { MeetingPoint, MeetingStatus, MeetingPointFilters, MeetingUpdate } from '@/types/meetings';
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { MeetingPoint, MeetingStatus, MeetingUpdate } from "@/types/meetings";
 
-// Create a new meeting update
-export const createMeetingUpdate = async (meetingPointId: string, updateData: Partial<MeetingUpdate>): Promise<boolean> => {
+// Function to get all meeting points with optional filters
+export const getMeetingPoints = async (filters?: any): Promise<MeetingPoint[]> => {
   try {
-    // Ensure all required properties are present
-    const completeUpdateData = {
-      meeting_point_id: meetingPointId,
-      person: updateData.person || 'Unknown',
-      status: updateData.status || 'not-started',
-      title: updateData.title || '',
-      date: updateData.date || new Date().toISOString().split('T')[0]
-    };
-    
-    const { error } = await supabase
-      .from('meeting_updates')
-      .insert(completeUpdateData);
-    
-    if (error) {
-      toast.error('Failed to create update: ' + error.message);
-      return false;
-    }
-    
-    toast.success('Update added successfully');
-    return true;
-  } catch (error) {
-    toast.error('An error occurred while creating the update');
-    return false;
-  }
-};
-
-// Get all meeting points with optional filters
-export const getMeetingPoints = async (filters?: MeetingPointFilters): Promise<MeetingPoint[]> => {
-  try {
-    let query = supabase
-      .from('meeting_points')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let query = supabase.from('meeting_points').select('*');
     
     // Apply filters if provided
     if (filters) {
@@ -54,139 +22,184 @@ export const getMeetingPoints = async (filters?: MeetingPointFilters): Promise<M
         const now = new Date();
         let startDate;
         
-        switch (filters.timeRange) {
-          case 'today':
-            startDate = now.toISOString().split('T')[0];
-            query = query.eq('date', startDate);
-            break;
-          case 'this-week':
-            // Get first day of current week (Sunday)
-            const day = now.getDay();
-            startDate = new Date(now.setDate(now.getDate() - day)).toISOString().split('T')[0];
-            query = query.gte('date', startDate);
-            break;
-          case 'this-month':
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-            query = query.gte('date', startDate);
-            break;
+        if (filters.timeRange === 'today') {
+          startDate = new Date(now.setHours(0, 0, 0, 0));
+        } else if (filters.timeRange === 'this-week') {
+          const day = now.getDay();
+          startDate = new Date(now.setDate(now.getDate() - day));
+        } else if (filters.timeRange === 'this-month') {
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        }
+        
+        if (startDate) {
+          query = query.gte('created_at', startDate.toISOString());
         }
       }
     }
     
-    const { data, error } = await query;
+    const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) {
-      toast.error('Failed to fetch meeting points: ' + error.message);
+      console.error('Error fetching meeting points:', error);
+      toast.error('Failed to fetch meeting points');
       return [];
     }
     
-    // Cast the status to ensure it matches MeetingStatus type
-    return data.map(item => ({
+    // Cast the status to MeetingStatus type to satisfy TypeScript
+    return (data || []).map(item => ({
       ...item,
       status: item.status as MeetingStatus
-    })) as MeetingPoint[];
+    }));
   } catch (error) {
-    toast.error('An error occurred while fetching meeting points');
+    console.error('Unexpected error fetching meeting points:', error);
+    toast.error('An unexpected error occurred');
     return [];
   }
 };
 
-// Get all meeting updates
+// Function to get meeting updates for a specific meeting point or all updates
 export const getMeetingUpdates = async (meetingPointId?: string): Promise<MeetingUpdate[]> => {
   try {
-    let query = supabase
-      .from('meeting_updates')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let query = supabase.from('meeting_updates').select('*');
     
     if (meetingPointId) {
       query = query.eq('meeting_point_id', meetingPointId);
     }
     
-    const { data, error } = await query;
+    const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) {
-      toast.error('Failed to fetch meeting updates: ' + error.message);
+      console.error('Error fetching meeting updates:', error);
+      toast.error('Failed to fetch meeting updates');
       return [];
     }
     
-    // Cast the status to ensure it matches MeetingStatus type
-    return data.map(item => ({
+    // Cast the status to MeetingStatus type to satisfy TypeScript
+    return (data || []).map(item => ({
       ...item,
       status: item.status as MeetingStatus
-    })) as MeetingUpdate[];
+    }));
   } catch (error) {
-    toast.error('An error occurred while fetching meeting updates');
+    console.error('Unexpected error fetching meeting updates:', error);
+    toast.error('An unexpected error occurred');
     return [];
   }
 };
 
-// Create a new meeting point
-export const createMeetingPoint = async (pointData: Omit<MeetingPoint, 'id' | 'created_at' | 'updated_at' | 'organization_id'>): Promise<boolean> => {
+// Function to create a new meeting point
+export const createMeetingPoint = async (meetingData: Omit<MeetingPoint, 'id' | 'created_at' | 'updated_at' | 'organization_id'>): Promise<boolean> => {
   try {
+    // Format the current date for the meeting point
+    if (!meetingData.date) {
+      meetingData.date = formatCurrentDate();
+    }
+    
     const { error } = await supabase
       .from('meeting_points')
-      .insert({
-        ...pointData,
-        date: pointData.date || new Date().toISOString().split('T')[0]
-      });
+      .insert(meetingData);
     
     if (error) {
-      toast.error('Failed to create meeting point: ' + error.message);
+      console.error('Error creating meeting point:', error);
+      toast.error('Failed to create meeting point');
       return false;
     }
     
     toast.success('Meeting point created successfully');
     return true;
   } catch (error) {
-    toast.error('An error occurred while creating the meeting point');
+    console.error('Unexpected error creating meeting point:', error);
+    toast.error('An unexpected error occurred');
     return false;
   }
 };
 
-// Update an existing meeting point
-export const updateMeetingPoint = async (id: string, pointData: Partial<MeetingPoint>): Promise<boolean> => {
+// Function to update an existing meeting point
+export const updateMeetingPoint = async (id: string, meetingData: Partial<MeetingPoint>): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('meeting_points')
-      .update(pointData)
+      .update(meetingData)
       .eq('id', id);
     
     if (error) {
-      toast.error('Failed to update meeting point: ' + error.message);
+      console.error('Error updating meeting point:', error);
+      toast.error('Failed to update meeting point');
       return false;
     }
     
     toast.success('Meeting point updated successfully');
     return true;
   } catch (error) {
-    toast.error('An error occurred while updating the meeting point');
+    console.error('Unexpected error updating meeting point:', error);
+    toast.error('An unexpected error occurred');
     return false;
   }
 };
 
-// Delete a meeting point
+// Function to delete a meeting point
 export const deleteMeetingPoint = async (id: string): Promise<boolean> => {
   try {
+    // Delete associated updates first
+    const { error: updateDeleteError } = await supabase
+      .from('meeting_updates')
+      .delete()
+      .eq('meeting_point_id', id);
+    
+    if (updateDeleteError) {
+      console.error('Error deleting associated updates:', updateDeleteError);
+    }
+    
+    // Then delete the meeting point
     const { error } = await supabase
       .from('meeting_points')
       .delete()
       .eq('id', id);
     
     if (error) {
-      toast.error('Failed to delete meeting point: ' + error.message);
+      console.error('Error deleting meeting point:', error);
+      toast.error('Failed to delete meeting point');
       return false;
     }
     
     toast.success('Meeting point deleted successfully');
     return true;
   } catch (error) {
-    toast.error('An error occurred while deleting the meeting point');
+    console.error('Unexpected error deleting meeting point:', error);
+    toast.error('An unexpected error occurred');
     return false;
   }
 };
 
-// Update a meeting update
+export const createMeetingUpdate = async (updateData: Omit<MeetingUpdate, 'id' | 'created_at'>) => {
+  try {
+    // Explicitly list the fields to insert instead of using spread operator
+    const { error: insertError } = await supabase
+      .from('meeting_updates')
+      .insert({
+        meeting_point_id: updateData.meeting_point_id,
+        title: updateData.title,
+        status: updateData.status,
+        person: updateData.person,
+        date: updateData.date,
+        // Include any other fields that need to be inserted
+      });
+
+    if (insertError) {
+      console.error('Error creating meeting update:', insertError);
+      toast.error('Failed to create meeting update');
+      return false;
+    }
+
+    toast.success('Meeting update created successfully');
+    return true;
+  } catch (error) {
+    console.error('Unexpected error creating meeting update:', error);
+    toast.error('An unexpected error occurred');
+    return false;
+  }
+};
+
+// Function to update an existing meeting update
 export const updateMeetingUpdate = async (id: string, updateData: Partial<MeetingUpdate>): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -195,19 +208,21 @@ export const updateMeetingUpdate = async (id: string, updateData: Partial<Meetin
       .eq('id', id);
     
     if (error) {
-      toast.error('Failed to update meeting update: ' + error.message);
+      console.error('Error updating meeting update:', error);
+      toast.error('Failed to update meeting update');
       return false;
     }
     
     toast.success('Meeting update updated successfully');
     return true;
   } catch (error) {
-    toast.error('An error occurred while updating the meeting update');
+    console.error('Unexpected error updating meeting update:', error);
+    toast.error('An unexpected error occurred');
     return false;
   }
 };
 
-// Delete a meeting update
+// Function to delete a meeting update
 export const deleteMeetingUpdate = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -216,49 +231,67 @@ export const deleteMeetingUpdate = async (id: string): Promise<boolean> => {
       .eq('id', id);
     
     if (error) {
-      toast.error('Failed to delete meeting update: ' + error.message);
+      console.error('Error deleting meeting update:', error);
+      toast.error('Failed to delete meeting update');
       return false;
     }
     
     toast.success('Meeting update deleted successfully');
     return true;
   } catch (error) {
-    toast.error('An error occurred while deleting the meeting update');
+    console.error('Unexpected error deleting meeting update:', error);
+    toast.error('An unexpected error occurred');
     return false;
   }
 };
 
-// Generate meeting minutes for a specific date
+// Function to generate meeting minutes document
 export const generateMeetingMinutes = async (date: string): Promise<boolean> => {
+  // This is a placeholder function that would be connected to a real PDF/document generation service
   try {
-    // In a real application, this would generate a PDF or document
-    // For now, we'll just pretend it was successful
-    toast.success('Meeting minutes generated successfully');
+    // In a real app, this would connect to a backend service to generate a PDF
+    console.log(`Generating meeting minutes for ${date}`);
+    
+    // Simulate successful generation
     return true;
   } catch (error) {
-    toast.error('An error occurred while generating meeting minutes');
+    console.error('Error generating meeting minutes:', error);
+    toast.error('Failed to generate meeting minutes');
     return false;
   }
 };
 
-// Format the current date in a readable format
+// Function to format the current date in a consistent format
 export const formatCurrentDate = (): string => {
-  return new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const currentDate = new Date();
+  const day = currentDate.getDate();
+  const month = currentDate.toLocaleString('default', { month: 'long' });
+  const year = currentDate.getFullYear();
+  const hours = String(currentDate.getHours()).padStart(2, '0');
+  const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+  
+  return `${day} ${month} ${year} - ${hours}.${minutes}`;
 };
 
-// Save theme changes (required by useTheme.tsx)
-export const saveThemeChanges = async (theme: string): Promise<boolean> => {
+// Function to save theme changes to database
+export const saveThemeChanges = async (themeMode: string, userId: string): Promise<boolean> => {
   try {
-    // In a real application, this would save to local storage or a database
-    localStorage.setItem('app-theme', theme);
+    // Update the user's preferences in the database
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        preferences: { dark_mode: themeMode === 'dark' } 
+      })
+      .eq('id', userId);
+    
+    if (error) {
+      console.error('Error saving theme changes:', error);
+      return false;
+    }
+    
     return true;
   } catch (error) {
-    console.error('Failed to save theme changes:', error);
+    console.error('Unexpected error saving theme changes:', error);
     return false;
   }
 };
