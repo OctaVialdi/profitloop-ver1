@@ -18,7 +18,7 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'implicit' // Add this to prevent email confirmation issues
+      flowType: 'pkce' // Changed from 'implicit' to 'pkce' for better auth flow
     }
   }
 );
@@ -49,7 +49,13 @@ export async function updateUserOrgMetadata(organizationId: string, role: string
 // Helper function to force email verification bypass
 export async function forceSignIn(email: string, password: string) {
   try {
-    // First try normal sign in
+    // Clear any stored session first to ensure clean authentication
+    await supabase.auth.signOut();
+    
+    // Allow a little time for session clearing
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Try normal sign in
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -63,15 +69,16 @@ export async function forceSignIn(email: string, password: string) {
     if (error.message.includes("not confirmed") || error.message.includes("Email not confirmed")) {
       console.log("Attempting to bypass email verification...");
       
-      // Clear any stored session/auth data that might be causing issues
-      await supabase.auth.signOut();
-      
-      // Retry sign in after a short delay
+      // Retry sign in after a short delay with a different approach
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      // Try a second time with a different session approach
       return await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
       });
     }
     
