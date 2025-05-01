@@ -20,7 +20,12 @@ import {
   Wand2,
 } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
-import { Sidebar } from "./sidebar";
+import { 
+  Sidebar,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton
+} from "./sidebar";
 
 interface SidebarConfig {
   title: string;
@@ -74,19 +79,35 @@ export function RoleBasedMenu() {
     return false;
   });
 
-  // Menggunakan komponen sidebar yang benar sesuai dengan struktur yang ada
+  // Using the correct sidebar components structure
   return (
-    <Sidebar
-      items={filteredItems.map((item) => ({
-        title: item.title,
-        href: item.href,
-        icon: item.icon,
-        variant: item.title.startsWith("divider-") ? "ghost" : "default",
-        className: cn(
-          item.title.startsWith("divider-") &&
-          "h-px bg-muted my-2 -mx-2 dark:bg-muted"
-        ),
-      }))}
-    />
+    <div className="w-full">
+      <SidebarMenu>
+        {filteredItems.map((item) => (
+          item.title.startsWith("divider-") ? (
+            <div
+              key={item.title}
+              className="h-px bg-muted my-2 mx-2 dark:bg-muted"
+            />
+          ) : (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild={item.href ? true : false}>
+                {item.href ? (
+                  <a href={item.href} className="w-full flex items-center">
+                    <item.icon className="mr-2 h-4 w-4" />
+                    <span>{item.title}</span>
+                  </a>
+                ) : (
+                  <span className="w-full flex items-center">
+                    <item.icon className="mr-2 h-4 w-4" />
+                    <span>{item.title}</span>
+                  </span>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )
+        ))}
+      </SidebarMenu>
+    </div>
   );
 }
