@@ -31,8 +31,7 @@ export function useAvailableOrganizations() {
 
       // Fetch all organizations the user belongs to
       const { data: userOrgs, error: orgsError } = await supabase
-        .rpc('get_user_organizations')
-        .select('*');
+        .rpc('get_user_organizations');
 
       if (orgsError) {
         throw orgsError;
@@ -42,8 +41,11 @@ export function useAvailableOrganizations() {
       const currentOrgId = session.user.user_metadata?.organization_id || null;
 
       // Mark the current organization
-      const availableOrgs = userOrgs.map(org => ({
-        ...org,
+      const availableOrgs = userOrgs.map((org: any) => ({
+        id: org.id,
+        name: org.name,
+        role: org.role,
+        logo_path: org.logo_path,
         is_current: org.id === currentOrgId
       }));
 

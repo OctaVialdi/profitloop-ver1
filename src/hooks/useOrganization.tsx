@@ -46,6 +46,34 @@ export function useOrganization(): OrganizationData {
         return;
       }
       
+      // Check if the organization ID in the session metadata is different from the one in the profile
+      // This can happen after switching organizations
+      const orgIdInMetadata = session.user.user_metadata?.organization_id;
+      
+      if (orgIdInMetadata && profile.organization_id !== orgIdInMetadata) {
+        // The user has switched organizations, get the profile for the new organization
+        console.log("Organization changed in metadata, updating profile data");
+        const { data: profileWithOrgId } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .eq('organization_id', orgIdInMetadata)
+          .single();
+          
+        if (profileWithOrgId) {
+          // Use this profile instead
+          profile.organization_id = profileWithOrgId.organization_id;
+          profile.role = profileWithOrgId.role;
+        } else {
+          // Metadata points to an organization that doesn't exist in the profile
+          // Update user metadata to match the profile's organization
+          await updateUserOrgMetadata(
+            profile.organization_id || '', 
+            profile.role || 'employee'
+          );
+        }
+      }
+      
       if (!profile.organization_id) {
         console.log("No organization associated with profile, redirecting to onboarding");
         navigate('/onboarding');

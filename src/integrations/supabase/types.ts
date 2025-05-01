@@ -278,6 +278,15 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_organizations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          role: string
+          logo_path: string
+        }[]
+      }
       get_user_profile_by_id: {
         Args: { user_id: string }
         Returns: {
