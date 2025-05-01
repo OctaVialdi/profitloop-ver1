@@ -236,9 +236,12 @@ export async function deleteMeetingUpdate(id: string) {
 
 export async function createMeetingUpdate(update: Omit<MeetingUpdate, 'id' | 'created_at'>) {
   try {
+    // Here was the issue - we need to ensure 'update' is a proper object before spreading
+    const updateData = update ? { ...update } : {};
+    
     const { data, error } = await supabase
       .from('meeting_updates')
-      .insert(update)
+      .insert(updateData)
       .select()
       .single();
       
