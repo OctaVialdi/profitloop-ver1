@@ -5,12 +5,35 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Check, X, Download } from "lucide-react";
+import { Check, X, Download, FileText, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function DaftarTransaksi() {
   return (
     <div className="space-y-6">
+      {/* Cash Management Header - Added to match the reference image */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold">Cash Management</h2>
+        <div className="flex gap-2">
+          <Button className="bg-green-600 hover:bg-green-700 gap-1">
+            <Plus size={18} />
+            <span>Catat Transaksi</span>
+          </Button>
+          <Button variant="outline" className="border-gray-300 text-gray-700 gap-1">
+            <FileText size={18} />
+            <span>Lihat Laporan</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Balance Card - Added to match the reference image */}
+      <Card className="p-6 border border-gray-200">
+        <div className="space-y-2">
+          <p className="text-sm text-gray-500">SALDO KAS HARI INI</p>
+          <h3 className="text-4xl font-bold text-gray-900">Rp 7.500.000</h3>
+        </div>
+      </Card>
+
       <div className="border-b border-gray-200">
         <Tabs defaultValue="daftar-transaksi" className="w-fit">
           <TabsList className="bg-transparent border-b-0 p-0">
