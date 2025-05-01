@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
@@ -17,7 +17,6 @@ interface Member {
   full_name: string | null;
   role: 'super_admin' | 'admin' | 'employee';
   created_at: string;
-  last_active: string | null;
 }
 
 interface RemoveMemberResponse {
@@ -44,7 +43,7 @@ const MemberManagement = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, role, created_at, last_active')
+        .select('id, email, full_name, role, created_at')
         .eq('organization_id', userProfile.organization_id)
         .order('role', { ascending: false });
       
@@ -161,27 +160,6 @@ const MemberManagement = () => {
     }
   };
 
-  const getLastActiveStatus = (lastActive: string | null) => {
-    if (!lastActive) return "Belum pernah aktif";
-    
-    const lastActiveDate = new Date(lastActive);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - lastActiveDate.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-    
-    if (diffMinutes < 60) {
-      return diffMinutes === 0 ? "Baru saja" : `${diffMinutes} menit yang lalu`;
-    } else if (diffHours < 24) {
-      return `${diffHours} jam yang lalu`;
-    } else if (diffDays < 30) {
-      return `${diffDays} hari yang lalu`;
-    } else {
-      return formatDate(lastActive);
-    }
-  };
-
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-5xl mx-auto">
@@ -215,7 +193,6 @@ const MemberManagement = () => {
                       <TableHead>Nama / Email</TableHead>
                       <TableHead>Peran</TableHead>
                       <TableHead>Bergabung</TableHead>
-                      <TableHead>Terakhir Aktif</TableHead>
                       {isAdmin && <TableHead className="text-right">Aksi</TableHead>}
                     </TableRow>
                   </TableHeader>
@@ -235,9 +212,6 @@ const MemberManagement = () => {
                         </TableCell>
                         <TableCell className="text-sm text-gray-500">
                           {formatDate(member.created_at)}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-500">
-                          {getLastActiveStatus(member.last_active)}
                         </TableCell>
                         {isAdmin && (
                           <TableCell className="text-right">
