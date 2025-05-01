@@ -111,8 +111,8 @@ const MemberManagement = () => {
       
       if (error) throw error;
       
-      // Cast the data to the expected response type
-      const response = data as RemoveMemberResponse;
+      // Fix: Cast data to unknown first, then to RemoveMemberResponse
+      const response = (data as unknown) as RemoveMemberResponse;
       
       if (response.success) {
         setMembers(members.filter(member => member.id !== memberId));
