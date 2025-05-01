@@ -4,19 +4,17 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   BarChart3,
   LineChart,
   PieChart,
   TrendingUp,
+  TrendingDown,
   Users,
 } from "lucide-react";
 import {
@@ -26,7 +24,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   BarChart,
   Bar,
   PieChart as RechartPie,
@@ -37,7 +34,6 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 const Dashboard = () => {
-  // Sample data for the dashboard
   const [activeTab, setActiveTab] = useState("overview");
 
   // Sample data for the metrics
@@ -127,9 +123,9 @@ const Dashboard = () => {
                   <div className="text-2xl font-bold">{metric.value}</div>
                   <div className="flex items-center space-x-2">
                     {metric.trend === "up" ? (
-                      <ArrowUpRight className="h-4 w-4 text-green-500" />
+                      <TrendingUp className="h-4 w-4 text-green-500" />
                     ) : (
-                      <ArrowDownRight className="h-4 w-4 text-red-500" />
+                      <TrendingDown className="h-4 w-4 text-red-500" />
                     )}
                     <p
                       className={`text-xs ${
@@ -138,7 +134,7 @@ const Dashboard = () => {
                           : "text-red-500"
                       }`}
                     >
-                      {metric.change}%
+                      {Math.abs(metric.change)}%
                     </p>
                     <p className="text-xs text-muted-foreground">
                       from previous month
@@ -150,15 +146,15 @@ const Dashboard = () => {
           </div>
 
           {/* Charts */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {/* Line Chart */}
-            <Card className="col-span-2">
+            <Card>
               <CardHeader>
                 <CardTitle>Progress Overview</CardTitle>
                 <CardDescription>Monthly project progress</CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={{ value: { theme: { light: '#2563eb', dark: '#3b82f6' } } }} className="aspect-[4/2]">
+                <ChartContainer config={{ value: { theme: { light: '#2563eb', dark: '#3b82f6' } } }} className="aspect-[4/3]">
                   <RechartLine data={lineChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
@@ -209,25 +205,6 @@ const Dashboard = () => {
                     <Tooltip content={<ChartTooltipContent />} />
                     <Legend />
                   </RechartPie>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            {/* Bar Chart */}
-            <Card className="col-span-3 md:col-span-2">
-              <CardHeader>
-                <CardTitle>Project Workload</CardTitle>
-                <CardDescription>Tasks per project</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={{ value: { theme: { light: '#2563eb', dark: '#3b82f6' } } }} className="aspect-[3/2]">
-                  <BarChart data={barChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" fill="var(--color-value)" />
-                  </BarChart>
                 </ChartContainer>
               </CardContent>
             </Card>
