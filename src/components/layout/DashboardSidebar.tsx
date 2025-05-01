@@ -1,5 +1,5 @@
 
-import { Settings, LayoutDashboard, MessageSquare } from "lucide-react";
+import { Settings, LayoutDashboard, MessageSquare, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarRail, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 interface NavigationItem {
@@ -28,7 +28,7 @@ export function DashboardSidebar({
   } = useSidebar();
   const isCollapsed = state === "collapsed";
 
-  // Navigation items - added Catatan Meetings above Settings
+  // Navigation items - added Finance menu item between Catatan Meetings and Settings
   const navigationItems: NavigationItem[] = [{
     name: "Dashboard",
     href: "/dashboard",
@@ -37,6 +37,10 @@ export function DashboardSidebar({
     name: "Catatan Meetings",
     href: "/catatan-meetings",
     icon: MessageSquare
+  }, {
+    name: "Finance",
+    href: "/finance/dashboard",
+    icon: DollarSign
   }, {
     name: "Settings",
     href: "/settings/dashboard",

@@ -19,10 +19,18 @@ import ProfileSettings from "@/pages/settings/ProfileSettings";
 import NotFound from "@/pages/NotFound";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SettingsLayout from "@/components/layout/SettingsLayout";
+import FinanceLayout from "@/components/layout/FinanceLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AuthLayout from "@/components/layout/AuthLayout";
 import MagicLinkJoin from "./pages/auth/MagicLinkJoin";
 import CatatanMeetings from "@/pages/CatatanMeetings";
+// Import Finance Pages
+import FinanceDashboard from "@/pages/finance/Dashboard";
+import Expenses from "@/pages/finance/Expenses";
+import IncomeTarget from "@/pages/finance/IncomeTarget";
+import ReminderBills from "@/pages/finance/ReminderBills";
+import PayrollSummary from "@/pages/finance/PayrollSummary";
+import CashManagement from "@/pages/finance/CashManagement";
 import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 
@@ -111,6 +119,29 @@ function App() {
             }
           >
             <Route index element={<CatatanMeetings />} />
+          </Route>
+
+          {/* New Finance Routes */}
+          <Route
+            path="/finance"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <FinanceLayout>
+                    <Outlet />
+                  </FinanceLayout>
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<FinanceDashboard />} />
+            <Route path="expenses" element={<Expenses />} />
+            <Route path="income-target" element={<IncomeTarget />} />
+            <Route path="reminder-bills" element={<ReminderBills />} />
+            <Route path="payroll-summary" element={<PayrollSummary />} />
+            <Route path="cash-management" element={<CashManagement />} />
+            {/* Redirect to dashboard if no path matches */}
+            <Route path="" element={<Navigate to="/finance/dashboard" replace />} />
           </Route>
 
           {/* Settings Layout */}
