@@ -128,7 +128,7 @@ const InviteMembers = () => {
           .select('id')
           .eq('email', email)
           .eq('organization_id', organizationId)
-          .single();
+          .maybeSingle();
           
         if (existingUser) {
           toast.error("Pengguna dengan email ini sudah ada di organisasi Anda.");
@@ -184,7 +184,7 @@ const InviteMembers = () => {
         .eq('email', email)
         .eq('organization_id', organizationId)
         .eq('status', 'pending')
-        .single();
+        .maybeSingle();
       
       if (existingInvite) {
         toast.error("Email ini sudah memiliki undangan yang tertunda.");
@@ -198,7 +198,7 @@ const InviteMembers = () => {
         .select('id')
         .eq('email', email)
         .eq('organization_id', organizationId)
-        .single();
+        .maybeSingle();
         
       if (existingUser) {
         toast.error("Pengguna dengan email ini sudah ada di organisasi Anda.");
@@ -261,6 +261,8 @@ const InviteMembers = () => {
       if (response.error) {
         throw new Error(response.error.message || "Gagal mengirim email undangan");
       }
+      
+      console.log("Invitation email sent response:", response);
       
       // Update the local state to reflect that the invitation was sent
       setInvitations(invitations.map(inv => 
@@ -370,7 +372,7 @@ const InviteMembers = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Undang Anggota</h1>
         
-        <Tabs defaultValue="email" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="email">Kirim via Email</TabsTrigger>
             <TabsTrigger value="link">Bagikan Tautan</TabsTrigger>

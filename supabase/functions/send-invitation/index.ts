@@ -19,6 +19,7 @@ serve(async (req) => {
 
   try {
     const { invitationId } = await req.json();
+    console.log("Processing invitation ID:", invitationId);
 
     // Create Supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -33,6 +34,9 @@ serve(async (req) => {
       .eq("id", invitationId)
       .eq("status", "pending")
       .single();
+
+    console.log("Invitation data:", invitation);
+    console.log("Invitation error:", invitationError);
 
     if (invitationError || !invitation) {
       console.error("Error fetching invitation:", invitationError);
@@ -49,10 +53,20 @@ serve(async (req) => {
       .eq("organization_id", invitation.organizations.id)
       .limit(1);
 
+    console.log("Profiles data:", profiles);
+    console.log("Profile error:", profileError);
+
     const senderName = profiles && profiles.length > 0 ? profiles[0].full_name : "Tim";
     const organizationName = invitation.organizations.name;
     const userRole = invitation.role || "employee"; // Use the role from the invitation or default to "employee"
 
+    // Generate invitation link
+    const baseUrl = supabaseUrl.includes("localhost") 
+      ? "http://localhost:5173" 
+      : "https://app.profitloop.id";
+      
+    const inviteUrl = `${baseUrl}/accept-invitation?token=${invitation.token}&email=${encodeURIComponent(invitation.email)}`;
+    
     // In a real app, you would send an email using a service like SendGrid, Postmark, or Resend
     // For demo purposes, we'll just log the email details
     console.log("=== EMAIL INVITATION DETAILS ===");
@@ -63,7 +77,7 @@ serve(async (req) => {
       <p>Halo,</p>
       <p>${senderName} mengundang Anda untuk bergabung dengan organisasi mereka di Multi-Tenant App sebagai ${userRole}.</p>
       <p>Klik tautan di bawah ini untuk menerima undangan:</p>
-      <a href="${supabaseUrl}/accept-invitation?token=${invitation.token}">Terima Undangan</a>
+      <a href="${inviteUrl}">Terima Undangan</a>
       <p>Tautan ini akan kedaluwarsa dalam 7 hari.</p>
       <p>Jika Anda tidak mengenali pengirim, silakan abaikan email ini.</p>
     `);
@@ -75,7 +89,11 @@ serve(async (req) => {
       .eq("id", invitationId);
 
     return new Response(
-      JSON.stringify({ success: true, message: "Undangan berhasil dikirim" }),
+      JSON.stringify({ 
+        success: true, 
+        message: "Undangan berhasil dikirim",
+        invitation_url: inviteUrl
+      }),
       { 
         status: 200, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 

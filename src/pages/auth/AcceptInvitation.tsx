@@ -39,7 +39,7 @@ const AcceptInvitation = () => {
   const [invitation, setInvitation] = useState<any | null>(null);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   
-  // Extract the token and email from the URL query parameters
+  // Extract token from the URL query parameters
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get('token');
   const email = searchParams.get('email');
@@ -56,19 +56,30 @@ const AcceptInvitation = () => {
 
   useEffect(() => {
     const verifyToken = async () => {
-      if (!token || !email) {
-        setError("Token undangan atau email tidak ditemukan");
+      if (!token) {
+        setError("Token undangan tidak ditemukan");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!email) {
+        setError("Email tidak ditemukan dalam URL");
         setIsLoading(false);
         return;
       }
 
       try {
-        // Call the validate_invitation function
+        console.log("Validating invitation with token:", token, "and email:", email);
+        
+        // Call the validate_invitation RPC function to verify the token
         const { data: validationResult, error: validationError } = await supabase
           .rpc('validate_invitation', { 
-            invitation_token: token, 
+            invitation_token: token,
             invitee_email: email 
           });
+        
+        console.log("Validation result:", validationResult);
+        console.log("Validation error:", validationError);
 
         if (validationError) {
           throw new Error(validationError.message);
@@ -81,27 +92,29 @@ const AcceptInvitation = () => {
         const invitationData = validationResult[0];
 
         if (!invitationData.valid) {
-          throw new Error(invitationData.message);
+          throw new Error(invitationData.message || "Undangan tidak valid");
         }
 
         // Check if the user with this email already exists
-        const { data: authUser, error: authError } = await supabase.auth.signInWithOtp({
+        const { data: userCheck, error: userCheckError } = await supabase.auth.signInWithOtp({
           email: email,
           options: {
             shouldCreateUser: false,
           }
         });
 
-        // If the user doesn't exist, show the register form
-        if (authError && authError.message.includes("Email not found")) {
+        // If error contains "Email not found", the user doesn't exist yet
+        if (userCheckError && userCheckError.message.includes("Email not found")) {
+          console.log("User doesn't exist, showing register form");
           setShowRegisterForm(true);
           setInvitation({
             ...invitationData,
-            email: email,
-            token: token
+            email,
+            token
           });
         } else {
-          // If the user exists, get details about the organization
+          console.log("User exists, showing accept invitation form");
+          // User exists, get organization details
           const { data: orgData, error: orgError } = await supabase
             .from('organizations')
             .select('name')
@@ -114,8 +127,8 @@ const AcceptInvitation = () => {
 
           setInvitation({
             ...invitationData,
-            email: email,
-            token: token,
+            email,
+            token,
             organizationName: orgData.name
           });
         }
@@ -242,7 +255,7 @@ const AcceptInvitation = () => {
   };
   
   const handleRejectInvitation = async () => {
-    if (!invitation) return;
+    if (!invitation || !token) return;
     
     setIsSubmitting(true);
     

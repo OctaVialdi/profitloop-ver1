@@ -26,7 +26,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
     { name: "Collaborations", href: "/settings/collaborations", requiredRole: "admin" },
     { name: "Subscription", href: "/settings/subscription", requiredRole: "admin" },
     { name: "Organization", href: "/settings/organization", requiredRole: "admin" },
-    { name: "Profile", href: "/settings/profile" }, // Added new tab for profile settings
+    { name: "Profile", href: "/settings/profile" },
   ];
   
   const filteredTabs = tabs.filter(tab => {
@@ -36,15 +36,21 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
     return false;
   });
 
-  const currentTab = filteredTabs.find(tab => 
-    location.pathname === tab.href || 
-    location.pathname.startsWith(`${tab.href}/`)
+  const currentPath = location.pathname;
+  
+  // Find the active tab based on the current path
+  const activeTab = filteredTabs.find(tab => 
+    currentPath === tab.href || 
+    currentPath.startsWith(`${tab.href}/`)
   );
+  
+  // If no active tab is found, default to the first tab
+  const defaultTab = activeTab?.href || filteredTabs[0]?.href || "/settings/profile";
 
   return (
     <div className="w-full space-y-4">
       <Card className="mb-4 p-1 overflow-x-auto">
-        <Tabs defaultValue={currentTab?.href || filteredTabs[0].href} className="w-full">
+        <Tabs defaultValue={defaultTab} value={defaultTab} className="w-full">
           <TabsList className="w-full justify-start">
             {filteredTabs.map((tab) => (
               <TabsTrigger 

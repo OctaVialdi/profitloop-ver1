@@ -92,6 +92,50 @@ export type Database = {
           },
         ]
       }
+      magic_link_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          organization_id: string
+          role: string
+          status: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          organization_id: string
+          role?: string
+          status?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          organization_id?: string
+          role?: string
+          status?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "magic_link_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -287,6 +331,10 @@ export type Database = {
         }
         Returns: Json
       }
+      generate_magic_link_invitation: {
+        Args: { email_address: string; org_id: string; user_role?: string }
+        Returns: Json
+      }
       get_user_organizations: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -314,6 +362,10 @@ export type Database = {
           success: boolean
           message: string
         }[]
+      }
+      process_magic_link_invitation: {
+        Args: { invitation_token: string; user_id: string }
+        Returns: Json
       }
       remove_organization_member: {
         Args: { member_id: string }
