@@ -72,13 +72,11 @@ export async function forceSignIn(email: string, password: string) {
       // Retry sign in after a short delay with a different approach
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Try a second time with a different session approach
+      // Try a second time with a different session approach - without the redirectTo option
+      // since it's not supported in the type definition
       return await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          redirectTo: window.location.origin  // Using 'redirectTo' instead of 'emailRedirectTo'
-        }
+        password
       });
     }
     
