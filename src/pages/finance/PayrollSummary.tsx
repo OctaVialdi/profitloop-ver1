@@ -3,7 +3,69 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle, Filter } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Bar, BarChart, Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+import PayrollTable from "@/components/finance/PayrollTable";
+
+// Department payroll data for the bar chart
+const departmentData = [
+  { name: "Marketing", value: 15000000 },
+  { name: "IT", value: 20000000 },
+  { name: "Finance", value: 10000000 },
+  { name: "HR", value: 8000000 },
+  { name: "Operations", value: 7000000 },
+];
+
+// Monthly payroll trend data for the line chart
+const monthlyTrendData = [
+  { month: "Nov 2024", value: 55000000 },
+  { month: "Dec 2024", value: 60000000 },
+  { month: "Jan 2025", value: 58000000 },
+  { month: "Feb 2025", value: 52000000 },
+  { month: "Mar 2025", value: 60000000 },
+  { month: "Apr 2025", value: 62000000 },
+];
+
+// Chart configuration
+const chartConfig = {
+  line: {
+    theme: {
+      light: "#2563eb",
+      dark: "#3b82f6",
+    },
+  },
+  bar1: {
+    theme: {
+      light: "#ff6384",
+      dark: "#ff6384",
+    },
+  },
+  bar2: {
+    theme: {
+      light: "#36a2eb",
+      dark: "#36a2eb",
+    },
+  },
+  bar3: {
+    theme: {
+      light: "#4db6ac",
+      dark: "#4db6ac",
+    },
+  },
+  bar4: {
+    theme: {
+      light: "#ffcd56",
+      dark: "#ffcd56",
+    },
+  },
+  bar5: {
+    theme: {
+      light: "#9966ff",
+      dark: "#9966ff",
+    },
+  },
+};
 
 export default function PayrollSummary() {
   const [month, setMonth] = useState("April");
@@ -454,6 +516,163 @@ export default function PayrollSummary() {
           </Card>
         </div>
       </div>
+      
+      {/* Charts Section - New addition */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Department Bar Chart */}
+        <Card className="p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold">Payroll by Department</h3>
+            <p className="text-sm text-muted-foreground">Total payroll expenses distribution across departments</p>
+          </div>
+          <div className="h-80">
+            <ChartContainer config={chartConfig}>
+              <BarChart
+                data={departmentData}
+                layout="vertical"
+                margin={{ top: 0, right: 0, bottom: 0, left: 70 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                <XAxis
+                  type="number"
+                  tickFormatter={(value) => `Rp${value.toLocaleString()}`}
+                  domain={[0, 25000000]}
+                  tickCount={6}
+                />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Bar 
+                  dataKey="value" 
+                  fill="var(--color-bar1)" 
+                  radius={[0, 4, 4, 0]} 
+                  name="Marketing" 
+                  barSize={30}
+                />
+                <ChartTooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="rounded-lg border bg-background p-2 shadow-sm">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="flex flex-col">
+                              <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                Department
+                              </span>
+                              <span className="font-bold text-muted-foreground">
+                                {payload[0].payload.name}
+                              </span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                Amount
+                              </span>
+                              <span className="font-bold">
+                                Rp{payload[0].value.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                />
+              </BarChart>
+            </ChartContainer>
+          </div>
+        </Card>
+
+        {/* Monthly Trend Line Chart */}
+        <Card className="p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold">Monthly Payroll Trend</h3>
+            <p className="text-sm text-muted-foreground">Payroll expenses over the last 6 months</p>
+          </div>
+          <div className="h-80">
+            <ChartContainer config={chartConfig}>
+              <LineChart
+                data={monthlyTrendData}
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => `Rp${value/1000000}M`}
+                  domain={[0, 70000000]}
+                  tick={{ fontSize: 12 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="var(--color-line)"
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: "var(--color-line)" }}
+                />
+                <ChartTooltip
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="rounded-lg border bg-background p-2 shadow-sm">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="flex flex-col">
+                              <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                Month
+                              </span>
+                              <span className="font-bold text-muted-foreground">
+                                {label}
+                              </span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                Amount
+                              </span>
+                              <span className="font-bold">
+                                Rp{payload[0].value.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                />
+              </LineChart>
+            </ChartContainer>
+          </div>
+        </Card>
+      </div>
+
+      {/* Payroll Records Table - New addition */}
+      <Card>
+        <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h3 className="text-lg font-semibold">Payroll Records</h3>
+            <p className="text-sm text-muted-foreground">Detailed breakdown of payroll expenses</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Filter
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              Export to Excel
+            </Button>
+          </div>
+        </div>
+        <PayrollTable />
+      </Card>
     </div>
   );
 }
