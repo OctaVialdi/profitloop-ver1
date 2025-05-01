@@ -79,13 +79,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           </header>
           
-          {/* Page content with scroll area */}
-          <div className="h-[calc(100vh-4rem)] overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="p-4 md:p-6">
-                {children || <Outlet />}
-              </div>
-            </ScrollArea>
+          {/* Page content - removed ScrollArea wrapper */}
+          <div className="h-[calc(100vh-4rem)] overflow-auto">
+            <div className="p-4 md:p-6">
+              {children || <Outlet />}
+            </div>
           </div>
         </SidebarInset>
       </div>
