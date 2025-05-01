@@ -4,9 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
-import { Users, User, Shield } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Users, User, Shield, UserMinus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from "date-fns";
 
 interface Member {
   id: string;
@@ -14,13 +17,15 @@ interface Member {
   full_name: string | null;
   role: 'super_admin' | 'admin' | 'employee';
   created_at: string;
+  last_active: string | null;
 }
 
 const MemberManagement = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRemoving, setIsRemoving] = useState<Record<string, boolean>>({});
   const [isUpdating, setIsUpdating] = useState<Record<string, boolean>>({});
-  const { userProfile, isSuperAdmin, isAdmin } = useOrganization();
+  const { userProfile, isSuperAdmin, isAdmin, refreshData } = useOrganization();
 
   useEffect(() => {
     fetchMembers();
@@ -33,7 +38,7 @@ const MemberManagement = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, role, created_at')
+        .select('id, email, full_name, role, created_at, last_active')
         .eq('organization_id', userProfile.organization_id)
         .order('role', { ascending: false });
       
@@ -86,6 +91,34 @@ const MemberManagement = () => {
     }
   };
 
+  const handleRemoveMember = async (memberId: string) => {
+    if (memberId === userProfile?.id) {
+      toast.error("Anda tidak dapat menghapus akun Anda sendiri");
+      return;
+    }
+
+    setIsRemoving(prev => ({ ...prev, [memberId]: true }));
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('remove_organization_member', { member_id: memberId });
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        setMembers(members.filter(member => member.id !== memberId));
+        toast.success(`Anggota berhasil dihapus dari organisasi`);
+      } else {
+        toast.error(data.message || "Tidak dapat menghapus anggota");
+      }
+    } catch (error: any) {
+      toast.error("Gagal menghapus anggota dari organisasi");
+      console.error("Error removing member:", error);
+    } finally {
+      setIsRemoving(prev => ({ ...prev, [memberId]: false }));
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     switch(role) {
       case 'super_admin':
@@ -109,12 +142,35 @@ const MemberManagement = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy, HH:mm');
+    } catch (e) {
+      return "-";
+    }
+  };
+
+  const getLastActiveStatus = (lastActive: string | null) => {
+    if (!lastActive) return "Belum pernah aktif";
+    
+    const lastActiveDate = new Date(lastActive);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - lastActiveDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    
+    if (diffMinutes < 60) {
+      return diffMinutes === 0 ? "Baru saja" : `${diffMinutes} menit yang lalu`;
+    } else if (diffHours < 24) {
+      return `${diffHours} jam yang lalu`;
+    } else if (diffDays < 30) {
+      return `${diffDays} hari yang lalu`;
+    } else {
+      return formatDate(lastActive);
+    }
   };
 
   return (
@@ -144,69 +200,109 @@ const MemberManagement = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 text-gray-700 text-xs uppercase tracking-wider">
-                    <tr>
-                      <th className="py-3 px-4 text-left">Nama / Email</th>
-                      <th className="py-3 px-4 text-left">Peran</th>
-                      <th className="py-3 px-4 text-left">Bergabung</th>
-                      {isAdmin && <th className="py-3 px-4 text-right">Aksi</th>}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nama / Email</TableHead>
+                      <TableHead>Peran</TableHead>
+                      <TableHead>Bergabung</TableHead>
+                      <TableHead>Terakhir Aktif</TableHead>
+                      {isAdmin && <TableHead className="text-right">Aksi</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {members.map((member) => (
-                      <tr key={member.id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4">
+                      <TableRow key={member.id}>
+                        <TableCell>
                           <div className="font-medium">
                             {member.full_name || 'Nama tidak tersedia'}
                           </div>
                           <div className="text-sm text-gray-500">
                             {member.email}
                           </div>
-                        </td>
-                        <td className="py-3 px-4">
+                        </TableCell>
+                        <TableCell>
                           {getRoleBadge(member.role)}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-500">
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-500">
                           {formatDate(member.created_at)}
-                        </td>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-500">
+                          {getLastActiveStatus(member.last_active)}
+                        </TableCell>
                         {isAdmin && (
-                          <td className="py-3 px-4 text-right">
-                            {member.id !== userProfile?.id ? (
-                              <Select 
-                                defaultValue={member.role}
-                                onValueChange={(value) => handleRoleChange(
-                                  member.id, 
-                                  value as 'super_admin' | 'admin' | 'employee'
-                                )}
-                                disabled={
-                                  isUpdating[member.id] || 
-                                  (member.role === 'super_admin' && !isSuperAdmin) ||
-                                  (!isSuperAdmin && userProfile?.role !== 'super_admin')
-                                }
-                              >
-                                <SelectTrigger className="w-[130px]">
-                                  <SelectValue placeholder="Ubah Peran" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {isSuperAdmin && (
-                                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                                  )}
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="employee">Karyawan</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <span className="text-sm text-gray-500">
-                                Anda
-                              </span>
-                            )}
-                          </td>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end items-center gap-2">
+                              {member.id !== userProfile?.id ? (
+                                <>
+                                  <Select 
+                                    defaultValue={member.role}
+                                    onValueChange={(value) => handleRoleChange(
+                                      member.id, 
+                                      value as 'super_admin' | 'admin' | 'employee'
+                                    )}
+                                    disabled={
+                                      isUpdating[member.id] || 
+                                      (member.role === 'super_admin' && !isSuperAdmin) ||
+                                      (!isSuperAdmin && userProfile?.role !== 'super_admin')
+                                    }
+                                  >
+                                    <SelectTrigger className="w-[130px]">
+                                      <SelectValue placeholder="Ubah Peran" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {isSuperAdmin && (
+                                        <SelectItem value="super_admin">Super Admin</SelectItem>
+                                      )}
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="employee">Karyawan</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                        disabled={isRemoving[member.id]}
+                                      >
+                                        <UserMinus size={18} />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Hapus Anggota</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Apakah Anda yakin ingin menghapus {member.full_name || member.email} dari organisasi?
+                                          <br /><br />
+                                          Akun pengguna tidak akan dihapus, hanya keanggotaan dalam organisasi ini yang akan dihapus.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleRemoveMember(member.id)}
+                                          className="bg-red-600 text-white hover:bg-red-700"
+                                        >
+                                          Hapus
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </>
+                              ) : (
+                                <span className="text-sm text-gray-500 italic">
+                                  Anda
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
                         )}
-                      </tr>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
             
