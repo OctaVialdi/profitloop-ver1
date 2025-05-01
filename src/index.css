@@ -131,4 +131,19 @@
   [data-state="collapsed"] [data-sidebar="menu-button"] + [role="tooltip"] {
     @apply block;
   }
+  
+  /* Fix for the sidebar trigger button visibility */
+  [data-sidebar="trigger"] {
+    @apply opacity-100 visible z-20;
+  }
+  
+  /* Ensure trigger button is visible in collapsed state */
+  [data-state="collapsed"] [data-sidebar="trigger"] {
+    @apply opacity-100 visible;
+  }
+  
+  /* Fix for the sidebar trigger alignment in collapsed state */
+  .group[data-state="collapsed"] [data-sidebar="trigger"] {
+    @apply ml-1;
+  }
 }
