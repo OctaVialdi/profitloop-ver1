@@ -47,6 +47,26 @@ export async function updateUserOrgMetadata(organizationId: string, role: string
   }
 }
 
+// Helper function to save user preferences
+export async function saveUserPreferences(userId: string, preferences: any) {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ preferences })
+      .eq('id', userId);
+      
+    if (error) {
+      console.error("Error saving preferences:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error("Exception saving preferences:", err);
+    return false;
+  }
+}
+
 // Helper function to allow login even with unverified emails
 export async function forceSignIn(email: string, password: string) {
   try {

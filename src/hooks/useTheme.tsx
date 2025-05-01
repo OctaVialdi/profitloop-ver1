@@ -21,7 +21,8 @@ const defaultTheme: ThemeSettings = {
 };
 
 export const useAppThemeManager = () => {
-  const { organization, isAdmin, refreshData } = useOrganization();
+  const { organization, isAdmin, refreshData, userProfile } = useOrganization();
+  const { setTheme } = useAppTheme();
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultTheme);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +131,45 @@ export const useAppThemeManager = () => {
     }
   };
 
+  // Function to set dark mode
+  const setDarkMode = (isDarkMode: boolean) => {
+    setTheme(isDarkMode ? "dark" : "light");
+    
+    // If user is logged in, save preference to database
+    if (userProfile?.id) {
+      saveUserPreferences(isDarkMode);
+    }
+  };
+  
+  // Helper to save user dark mode preference
+  const saveUserPreferences = async (isDarkMode: boolean) => {
+    if (!userProfile) return;
+    
+    try {
+      // First get current preferences
+      const currentPreferences = userProfile.preferences || {
+        notification_emails: true,
+        marketing_emails: false,
+        dark_mode: false
+      };
+      
+      // Update dark mode setting
+      const updatedPreferences = {
+        ...currentPreferences,
+        dark_mode: isDarkMode
+      };
+      
+      // Save to database
+      await supabase
+        .from('profiles')
+        .update({ preferences: updatedPreferences })
+        .eq('id', userProfile.id);
+        
+    } catch (error) {
+      console.error("Error saving dark mode preference:", error);
+    }
+  };
+
   return {
     themeSettings,
     logoUrl,
@@ -137,7 +177,8 @@ export const useAppThemeManager = () => {
     isSaving,
     saveThemeSettings,
     uploadLogo,
-    isAdmin
+    isAdmin,
+    setDarkMode
   };
 };
 

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { timezones } from "@/lib/timezones";
+import { useTheme } from "@/hooks/useTheme";
 
 // Profile form schema
 const profileFormSchema = z.object({
@@ -43,6 +44,7 @@ const preferencesSchema = z.object({
 
 const ProfileSettings = () => {
   const { userProfile, refreshData } = useOrganization();
+  const { setDarkMode } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [preferences, setPreferences] = useState({
@@ -103,9 +105,14 @@ const ProfileSettings = () => {
           notificationEmails: userPrefs.notification_emails || true,
           darkMode: userPrefs.dark_mode || false,
         });
+        
+        // Apply dark mode setting from database
+        if (userPrefs.dark_mode) {
+          setDarkMode(true);
+        }
       }
     }
-  }, [userProfile]);
+  }, [userProfile, setDarkMode]);
 
   // Update profile handler
   const onProfileSubmit = async (values: z.infer<typeof profileFormSchema>) => {
@@ -137,6 +144,19 @@ const ProfileSettings = () => {
     try {
       setIsPasswordLoading(true);
       
+      // First verify current password by attempting a sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: userProfile?.email || "",
+        password: values.currentPassword
+      });
+
+      if (signInError) {
+        toast.error("Password saat ini tidak valid");
+        setIsPasswordLoading(false);
+        return;
+      }
+      
+      // If current password is valid, update to new password
       const { error } = await supabase.auth.updateUser({
         password: values.newPassword
       });
@@ -157,7 +177,59 @@ const ProfileSettings = () => {
     }
   };
 
-  // Update preferences handler
+  // Update preferences handler with automatic saving
+  const onPreferenceChange = async (field: keyof typeof preferences, value: boolean) => {
+    try {
+      setIsLoading(true);
+      
+      // Update local state first for responsive UI
+      const newPreferences = {
+        ...preferences,
+        [field]: value
+      };
+      
+      setPreferences(newPreferences);
+      
+      // Format for database
+      const dbPreferences = {
+        marketing_emails: newPreferences.marketingEmails,
+        notification_emails: newPreferences.notificationEmails,
+        dark_mode: newPreferences.darkMode
+      };
+      
+      // Save to database
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          preferences: dbPreferences
+        })
+        .eq("id", userProfile?.id);
+
+      if (error) throw error;
+      
+      // Apply dark mode immediately if changed
+      if (field === 'darkMode') {
+        setDarkMode(value);
+      }
+      
+      // Update form values too
+      preferencesForm.setValue(field, value);
+      
+      toast.success("Preferensi berhasil diperbarui");
+      refreshData(); // Refresh user data after update
+    } catch (error: any) {
+      console.error("Error updating preferences:", error);
+      toast.error(error.message || "Gagal memperbarui preferensi");
+      
+      // Revert local state on error
+      setPreferences(prev => ({...prev, [field]: !value}));
+      preferencesForm.setValue(field, !value);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update all preferences at once handler
   const onPreferencesSubmit = async (values: z.infer<typeof preferencesSchema>) => {
     try {
       setIsLoading(true);
@@ -176,6 +248,14 @@ const ProfileSettings = () => {
         .eq("id", userProfile?.id);
 
       if (error) throw error;
+      
+      // Apply dark mode setting
+      setDarkMode(values.darkMode);
+      setPreferences({
+        marketingEmails: values.marketingEmails,
+        notificationEmails: values.notificationEmails,
+        darkMode: values.darkMode
+      });
       
       toast.success("Preferensi berhasil diperbarui");
       refreshData(); // Refresh user data after update
@@ -346,86 +426,70 @@ const ProfileSettings = () => {
         </CardHeader>
         <CardContent>
           <Form {...preferencesForm}>
-            <form onSubmit={preferencesForm.handleSubmit(onPreferencesSubmit)} className="space-y-4">
-              <div className="space-y-4">
-                <FormField
-                  control={preferencesForm.control}
-                  name="notificationEmails"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Pemberitahuan Email</FormLabel>
-                        <FormDescription>
-                          Terima email untuk aksi penting dan pemberitahuan.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch 
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={preferencesForm.control}
-                  name="marketingEmails"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Email Marketing</FormLabel>
-                        <FormDescription>
-                          Terima email tentang produk baru dan penawaran.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch 
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={preferencesForm.control}
-                  name="darkMode"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Mode Gelap</FormLabel>
-                        <FormDescription>
-                          Gunakan tema gelap untuk aplikasi.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch 
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Menyimpan...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Simpan Preferensi
-                  </>
+            <div className="space-y-4">
+              <FormField
+                control={preferencesForm.control}
+                name="notificationEmails"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Pemberitahuan Email</FormLabel>
+                      <FormDescription>
+                        Terima email untuk aksi penting dan pemberitahuan.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch 
+                        checked={field.value}
+                        onCheckedChange={(value) => onPreferenceChange('notificationEmails', value)}
+                      />
+                    </FormControl>
+                  </FormItem>
                 )}
-              </Button>
-            </form>
+              />
+              
+              <FormField
+                control={preferencesForm.control}
+                name="marketingEmails"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Email Marketing</FormLabel>
+                      <FormDescription>
+                        Terima email tentang produk baru dan penawaran.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch 
+                        checked={field.value}
+                        onCheckedChange={(value) => onPreferenceChange('marketingEmails', value)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={preferencesForm.control}
+                name="darkMode"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Mode Gelap</FormLabel>
+                      <FormDescription>
+                        Gunakan tema gelap untuk aplikasi.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch 
+                        checked={field.value}
+                        onCheckedChange={(value) => onPreferenceChange('darkMode', value)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
           </Form>
         </CardContent>
       </Card>
