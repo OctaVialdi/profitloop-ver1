@@ -56,27 +56,27 @@ const formatCurrency = (value: number) => {
 
 export default function PayrollTable() {
   return (
-    <div className="border rounded-md">
+    <div className="border-t">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="text-gray-600 font-medium">Department</TableHead>
-              <TableHead className="text-gray-600 font-medium">Employee ID</TableHead>
-              <TableHead className="text-gray-600 font-medium">Period</TableHead>
-              <TableHead className="text-gray-600 font-medium">Base Salary</TableHead>
-              <TableHead className="text-gray-600 font-medium">Allowance</TableHead>
-              <TableHead className="text-gray-600 font-medium">Incentives</TableHead>
-              <TableHead className="text-gray-600 font-medium">Deductions</TableHead>
-              <TableHead className="text-gray-600 font-medium">Total</TableHead>
-              <TableHead className="text-gray-600 font-medium">Status</TableHead>
-              <TableHead className="text-gray-600 font-medium">Actions</TableHead>
+            <TableRow>
+              <TableHead>Department</TableHead>
+              <TableHead>Employee ID</TableHead>
+              <TableHead>Period</TableHead>
+              <TableHead>Base Salary</TableHead>
+              <TableHead>Allowance</TableHead>
+              <TableHead>Incentives</TableHead>
+              <TableHead>Deductions</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {payrollData.map((record, index) => (
-              <TableRow key={record.employeeId} className="border-b hover:bg-gray-50">
-                <TableCell className="font-medium">{record.department}</TableCell>
+              <TableRow key={record.employeeId}>
+                <TableCell>{record.department}</TableCell>
                 <TableCell>{record.employeeId}</TableCell>
                 <TableCell>{record.period}</TableCell>
                 <TableCell>{formatCurrency(record.baseSalary)}</TableCell>
@@ -85,17 +85,17 @@ export default function PayrollTable() {
                 <TableCell>{formatCurrency(record.deductions)}</TableCell>
                 <TableCell className="font-medium">{formatCurrency(record.total)}</TableCell>
                 <TableCell>
-                  <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded text-xs font-medium">
+                  <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-medium">
                     {record.status}
                   </span>
                 </TableCell>
                 <TableCell>
                   {index === 0 ? (
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white rounded-md">
+                    <Button className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1 h-8">
                       Selected
                     </Button>
                   ) : (
-                    <Button variant="ghost" size="sm" className="text-gray-600">
+                    <Button variant="ghost" className="text-xs px-3 py-1 h-8">
                       View
                     </Button>
                   )}
