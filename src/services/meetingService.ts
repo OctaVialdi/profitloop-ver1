@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MeetingPoint, MeetingUpdate, MeetingStatus } from "@/types/meetings";
@@ -167,6 +166,46 @@ export async function deleteMeetingPoint(id: string) {
   } catch (error: any) {
     console.error('Error deleting meeting point:', error.message);
     toast.error('Failed to delete meeting point');
+    return false;
+  }
+}
+
+export async function updateMeetingUpdate(id: string, updates: Partial<MeetingUpdate>) {
+  try {
+    const { data, error } = await supabase
+      .from('meeting_updates')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      throw error;
+    }
+    
+    return data;
+  } catch (error: any) {
+    console.error('Error updating meeting update:', error.message);
+    toast.error('Failed to update meeting record');
+    return null;
+  }
+}
+
+export async function deleteMeetingUpdate(id: string) {
+  try {
+    const { error } = await supabase
+      .from('meeting_updates')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (error: any) {
+    console.error('Error deleting meeting update:', error.message);
+    toast.error('Failed to delete meeting update');
     return false;
   }
 }
