@@ -253,11 +253,11 @@ const CatatanMeetings = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-white border-b">
-                        <TableHead className="w-[120px] py-4 whitespace-nowrap">DATE</TableHead>
+                        <TableHead className="w-[120px] py-4  text-left whitespace-nowrap">DATE</TableHead>
                         <TableHead className="w-[300px] py-4 text-left px-[24px] mx-0">DISCUSSION POINT</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap text-center">REQUEST BY</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap text-center">STATUS</TableHead>
-                        <TableHead className="w-[100px] whitespace-nowrap text-center mx-0 my-[178px] py-px px-[10px]">UPDATES</TableHead>
+                        <TableHead className="w-[100px] whitespace-nowrap text-center my-0 mx-[35px] px-0 py-0">UPDATES</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap text-right mx-0 px-[22px]">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -278,7 +278,7 @@ const CatatanMeetings = () => {
                               </TableCell>
                             </TableRow> : meetingPoints.map((point, index) => <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
                                 <TableCell className="w-[120px] py-4 whitespace-nowrap my-0 px-[15px]">{point.date}</TableCell>
-                                <TableCell className="w-[300px] text-left px-0 py-0 my-0 mx-0">
+                                <TableCell className="w-[300px] text-left py-0 my-0 mx-0 px-0">
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -296,7 +296,7 @@ const CatatanMeetings = () => {
                                     </Tooltip>
                                   </TooltipProvider>
                                 </TableCell>
-                                <TableCell className="w-[140px] whitespace-nowrap text-center mx-0 my-[25px] py-0 px-[26px]">
+                                <TableCell className="w-[140px] whitespace-nowrap text-center my-[0px] py-0 mx-[4px] px-[19px]">
                                   <Select defaultValue={point.request_by || "unassigned"} onValueChange={value => handleRequestByChange(point.id, value)}>
                                     <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
                                       <SelectValue placeholder="Select person" />
@@ -310,7 +310,7 @@ const CatatanMeetings = () => {
                                     </SelectContent>
                                   </Select>
                                 </TableCell>
-                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-center my-[12px] mx-[32px] px-0">
+                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-center my-[0px] mx-[0px] px-0">
                                   <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
                                 </TableCell>
                                 <TableCell className="w-[100px] py-4 whitespace-nowrap text-center">
