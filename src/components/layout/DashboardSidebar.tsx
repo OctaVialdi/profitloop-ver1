@@ -1,7 +1,6 @@
 
-import { Building, Home, Users, UserPlus, CreditCard, Bell, Settings, PanelLeft } from "lucide-react";
+import { Home, Users, Bell, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Sidebar, 
   SidebarContent,
@@ -42,14 +41,12 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
+  // Simplified navigation items
   const navigationItems: NavigationItem[] = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Undang Anggota", href: "/invite", icon: UserPlus, requiredRole: "admin" },
-    { name: "Anggota Tim", href: "/members", icon: Users },
-    { name: "Kolaborasi", href: "/collaborations", icon: Building, requiredRole: "admin" },
-    { name: "Subscription", href: "/subscription", icon: CreditCard, requiredRole: "admin" },
-    { name: "Pengaturan", href: "/organization/settings", icon: Settings, requiredRole: "admin" },
-    { name: "Notifikasi", href: "/notifications", icon: Bell },
+    { name: "Members", href: "/members", icon: Users },
+    { name: "Settings", href: "/settings/dashboard", icon: Settings, requiredRole: "admin" },
+    { name: "Notifications", href: "/notifications", icon: Bell },
   ];
 
   // Filter navigation items based on user role
@@ -83,7 +80,7 @@ export function DashboardSidebar({
                 <SidebarMenuItem key={item.name}>
                   <SidebarMenuButton 
                     tooltip={item.name}
-                    isActive={currentPath === item.href}
+                    isActive={currentPath.startsWith(item.href)}
                     asChild
                   >
                     <Link to={item.href} className="flex items-center">

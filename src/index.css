@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -139,5 +140,14 @@
   /* Fix for the sidebar trigger alignment in collapsed state */
   .group[data-state="collapsed"] [data-sidebar="trigger"] {
     @apply ml-1;
+  }
+  
+  /* Settings tabs styling */
+  [data-radix-tabs-trigger][data-state="active"] {
+    @apply bg-blue-50 text-blue-700;
+  }
+  
+  [data-radix-tabs-trigger] {
+    @apply whitespace-nowrap;
   }
 }

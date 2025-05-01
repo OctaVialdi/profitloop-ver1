@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import NotFound from "@/pages/NotFound";
@@ -21,6 +21,7 @@ import WelcomePage from "@/pages/WelcomePage";
 // New imports
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
 import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
+import SettingsLayout from "@/components/layout/SettingsLayout";
 
 function App() {
   return (
@@ -45,12 +46,25 @@ function App() {
           {/* Dashboard Routes */}
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/invite" element={<InviteMembers />} />
-            <Route path="/organization/settings" element={<OrganizationSettings />} />
             <Route path="/members" element={<MemberManagement />} />
-            <Route path="/subscription" element={<Subscription />} />
-            <Route path="/collaborations" element={<OrganizationCollaboration />} />
             <Route path="/notifications" element={<Notifications />} />
+            
+            {/* Settings Routes - All reorganized under /settings */}
+            <Route path="/settings" element={<SettingsLayout />}>
+              <Route path="" element={<Navigate to="/settings/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="invite" element={<InviteMembers />} />
+              <Route path="members" element={<MemberManagement />} />
+              <Route path="collaborations" element={<OrganizationCollaboration />} />
+              <Route path="subscription" element={<Subscription />} />
+              <Route path="organization" element={<OrganizationSettings />} />
+            </Route>
+            
+            {/* Legacy routes redirects */}
+            <Route path="/invite" element={<Navigate to="/settings/invite" replace />} />
+            <Route path="/organization/settings" element={<Navigate to="/settings/organization" replace />} />
+            <Route path="/subscription" element={<Navigate to="/settings/subscription" replace />} />
+            <Route path="/collaborations" element={<Navigate to="/settings/collaborations" replace />} />
           </Route>
           
           {/* 404 Page */}
