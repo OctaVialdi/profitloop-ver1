@@ -55,3 +55,4 @@ multiuser_enabled = false
 [functions]
 [functions.send-magic-link]
 verify_jwt = true
+
