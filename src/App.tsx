@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import NotFound from "@/pages/NotFound";
@@ -50,7 +50,11 @@ function App() {
             <Route path="/notifications" element={<Notifications />} />
             
             {/* Settings Routes - All reorganized under /settings */}
-            <Route path="/settings" element={<SettingsLayout />}>
+            <Route path="/settings" element={
+              <SettingsLayout>
+                <Outlet />
+              </SettingsLayout>
+            }>
               <Route path="" element={<Navigate to="/settings/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="invite" element={<InviteMembers />} />
