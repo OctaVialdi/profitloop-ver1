@@ -252,7 +252,13 @@ export async function createMeetingUpdate(update: Omit<MeetingUpdate, 'id' | 'cr
     
     const { data, error } = await supabase
       .from('meeting_updates')
-      .insert(update) // Insert directly without spreading
+      .insert({
+        meeting_point_id: update.meeting_point_id,
+        status: update.status,
+        person: update.person,
+        date: update.date,
+        title: update.title
+      })
       .select()
       .single();
       
