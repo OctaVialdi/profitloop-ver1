@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -42,6 +44,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError(null);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -54,23 +57,34 @@ const Login = () => {
       if (data.user) {
         // If we have invitation token, join organization after login
         if (invitationToken) {
-          const { data: joinResult, error: joinError } = await supabase
-            .rpc('join_organization', { 
-              user_id: data.user.id, 
-              invitation_token: invitationToken 
-            });
-          
-          if (joinError) {
-            throw joinError;
+          try {
+            const { data: joinResult, error: joinError } = await supabase
+              .rpc('join_organization', { 
+                user_id: data.user.id, 
+                invitation_token: invitationToken 
+              });
+            
+            if (joinError) {
+              throw joinError;
+            }
+            
+            // Type check the response
+            if (!joinResult || typeof joinResult[0] !== 'object' || joinResult[0].success === undefined) {
+              throw new Error("Format respons tidak valid");
+            }
+            
+            if (!joinResult[0].success) {
+              throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
+            }
+            
+            toast.success("Berhasil bergabung dengan organisasi!");
+            navigate("/employee-welcome");
+            return;
+          } catch (joinErr: any) {
+            console.error("Error joining organization:", joinErr);
+            toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
+            // Still allow login but without joining organization
           }
-          
-          if (!joinResult || !joinResult[0].success) {
-            throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
-          }
-          
-          toast.success("Berhasil bergabung dengan organisasi!");
-          navigate("/employee-welcome");
-          return;
         }
         
         // Normal login flow - check if user has organization
@@ -90,7 +104,17 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(error.message || "Gagal login. Periksa email dan password Anda.");
+      
+      // Handle specific error cases
+      if (error.message === "Database error granting user") {
+        setLoginError("Terjadi masalah di server. Silakan coba lagi dalam beberapa saat.");
+      } else if (error.message.includes("Invalid login credentials")) {
+        setLoginError("Email atau password salah. Mohon periksa kembali.");
+      } else if (error.message.includes("Email not confirmed")) {
+        setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda.");
+      } else {
+        setLoginError(error.message || "Gagal login. Periksa email dan password Anda.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -111,6 +135,12 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loginError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
