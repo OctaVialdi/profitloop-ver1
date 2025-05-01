@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MeetingPoint, MeetingUpdate, MeetingStatus, MeetingPointFilters } from "@/types/meetings";
 import { 
@@ -54,7 +53,7 @@ export const useMeetingPoints = () => {
     }
   };
 
-  const handleAddPoint = async (discussionPoint: string) => {
+  const handleAddPoint = async (discussionPoint: string): Promise<boolean> => {
     try {
       // Date will be empty at first and added during create by the backend
       const newMeetingPoint = {

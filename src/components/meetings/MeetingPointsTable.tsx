@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Table, 
@@ -32,7 +31,7 @@ interface MeetingPointsTableProps {
   onEdit: (meeting: MeetingPoint) => void;
   onDelete: (meeting: MeetingPoint) => void;
   onViewUpdates: (meeting: MeetingPoint) => void;
-  onAddPoint: (point: string) => void;
+  onAddPoint: (point: string) => Promise<boolean>;
   requestByOptions: string[];
 }
 
