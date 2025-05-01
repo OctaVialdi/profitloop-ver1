@@ -9,8 +9,17 @@ import {
   CircleAlert, 
   Clock, 
   CheckCircle2, 
-  Cog
+  Cog,
+  MoreHorizontal
 } from "lucide-react";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell
+} from "@/components/ui/table";
 
 export default function ReminderBills() {
   // State for active tab
@@ -167,6 +176,89 @@ export default function ReminderBills() {
               <div className="h-40 bg-gray-50 rounded-md flex items-center justify-center text-gray-400">
                 Chart placeholder
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Overdue Bills Table - NEW SECTION */}
+          <Card className="mt-6">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-bold mb-1 text-red-500">Overdue Bills</h3>
+              <p className="text-gray-500 text-sm mb-4">Bills that are past their due date</p>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bill Name</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <div className="w-1 h-12 bg-red-500 rounded-full mr-4"></div>
+                        <div>
+                          <div>Electricity</div>
+                          <div className="inline-flex items-center mt-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Recurring
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>26 Apr 2025</div>
+                      <div className="text-red-500 text-xs">5 days overdue</div>
+                    </TableCell>
+                    <TableCell>Rp 1.500.000</TableCell>
+                    <TableCell>Utilities</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs">
+                        Overdue
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <button className="text-gray-500 hover:text-gray-800">
+                        <MoreHorizontal className="h-5 w-5" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <div className="w-1 h-12 bg-red-500 rounded-full mr-4"></div>
+                        <div>
+                          <div>Internet Service</div>
+                          <div className="inline-flex items-center mt-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Recurring
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>29 Apr 2025</div>
+                      <div className="text-red-500 text-xs">2 days overdue</div>
+                    </TableCell>
+                    <TableCell>Rp 1.200.000</TableCell>
+                    <TableCell>Internet</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs">
+                        Overdue
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <button className="text-gray-500 hover:text-gray-800">
+                        <MoreHorizontal className="h-5 w-5" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
