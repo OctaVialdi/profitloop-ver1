@@ -41,9 +41,9 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
-  // Changed to point to /settings/profile
+  // Only Settings navigation item
   const navigationItems: NavigationItem[] = [
-    { name: "Settings", href: "/settings/profile", icon: Settings, requiredRole: "admin" },
+    { name: "Settings", href: "/settings/dashboard", icon: Settings, requiredRole: "admin" },
   ];
 
   // Filter navigation items based on user role

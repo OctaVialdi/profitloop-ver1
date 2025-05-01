@@ -1,165 +1,138 @@
 
-import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MailCheck, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { EmailTips } from '@/components/auth/EmailTips';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, ArrowRight, RefreshCw } from "lucide-react";
+import { useEmailVerification } from "@/hooks/useEmailVerification";
+import { EmailTips } from "@/components/auth/EmailTips";
+import { VerificationStatus } from "@/components/auth/VerificationStatus";
+import { EmailNotFound } from "@/components/auth/EmailNotFound";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const VerificationSent = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [resendingEmail, setResendingEmail] = useState(false);
   
   const email = location.state?.email || "";
-  const password = location.state?.password || "";
+  const password = location.state?.password || ""; // Store password for auto-login
   const isInvitation = location.state?.isInvitation || false;
   const invitationToken = location.state?.invitationToken || "";
-  const organizationName = location.state?.organizationName || "";
-  const role = location.state?.role || "";
   
-  useEffect(() => {
+  const { 
+    showTip, 
+    secondsLeft, 
+    allowResend, 
+    checkingVerification,
+    handleResendVerification 
+  } = useEmailVerification({ 
+    email, 
+    password, 
+    invitationToken 
+  });
+
+  // Function to manually resend verification email
+  const resendVerificationEmail = async () => {
     if (!email) {
-      navigate('/auth/login');
+      toast.error("Email tidak ditemukan");
       return;
     }
     
-    // Listen for auth state change
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        // If user has signed in
-        toast.success("Email verified successfully");
-        
-        // Process invitation if present
-        if (invitationToken) {
-          handleInvitationAcceptance(session?.user.id);
-        } else {
-          // Normal sign in, redirect to dashboard
-          navigate('/dashboard');
-        }
-      }
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [email, navigate, invitationToken]);
-  
-  const handleInvitationAcceptance = async (userId: string | undefined) => {
-    if (!userId || !invitationToken) return;
-    
-    try {
-      // Process the magic link invitation
-      const { data, error } = await supabase.rpc(
-        'process_magic_link_invitation',
-        {
-          invitation_token: invitationToken,
-          user_id: userId
-        }
-      );
-      
-      if (error) throw error;
-      
-      if (data && typeof data === 'object' && 'success' in data && data.success) {
-        toast.success("Successfully joined organization");
-        // Navigate to employee welcome page with organization info
-        navigate("/employee-welcome", { 
-          state: { 
-            organizationName, 
-            role 
-          }
-        });
-      } else {
-        throw new Error(data && typeof data === 'object' && 'message' in data ? String(data.message) : "Failed to join organization");
-      }
-    } catch (error: any) {
-      console.error("Error accepting invitation:", error);
-      toast.error(error.message || "Failed to join organization");
-      navigate("/dashboard");
-    }
-  };
-  
-  const handleResendEmail = async () => {
+    setResendingEmail(true);
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email
+        email: email,
       });
       
-      if (error) throw error;
-      
-      toast.success("Verification email resent successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to resend verification email");
+      if (error) {
+        console.error("Error sending verification email:", error);
+        toast.error("Gagal mengirim ulang email: " + error.message);
+      } else {
+        toast.success("Email verifikasi berhasil dikirim ulang");
+      }
+    } catch (err) {
+      console.error("Exception sending verification email:", err);
+      toast.error("Terjadi kesalahan saat mengirim email");
+    } finally {
+      setResendingEmail(false);
     }
+  };
+
+  useEffect(() => {
+    // Auto-redirect when email is verified (handled in the hook)
+    if (checkingVerification === false && secondsLeft === 0) {
+      // This means verification might have succeeded
+      const checkLogin = async () => {
+        // This is just a placeholder - the actual logic is in the hook
+      };
+      checkLogin();
+    }
+  }, [checkingVerification, secondsLeft]);
+  
+  // Menambahkan parameter verified=true saat kembali ke login
+  // dan juga menyimpan password untuk auto-login jika tersedia
+  const goToLogin = () => {
+    navigate("/auth/login?verified=true", { 
+      state: { 
+        verifiedEmail: email,
+        password: password,
+        isAttemptingVerification: true 
+      } 
+    });
   };
   
-  const handleLogin = async () => {
-    if (!password) {
-      navigate('/auth/login');
-      return;
-    }
-    
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) throw error;
-      
-      navigate('/dashboard');
-    } catch (error: any) {
-      toast.error(error.message || "Failed to log in");
-    }
-  };
+  if (!email) {
+    return <EmailNotFound />;
+  }
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4">
-          <div className="flex justify-center">
-            <div className="bg-green-100 p-3 rounded-full">
-              <MailCheck className="h-6 w-6 text-green-600" />
-            </div>
+        <CardHeader>
+          <div className="flex justify-center mb-4">
+            <CheckCircle className="h-12 w-12 text-green-500" />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">
-            {invitationToken ? "Magic Link Sent" : "Check your email"}
-          </CardTitle>
+          <CardTitle className="text-center text-2xl">Verifikasi Email</CardTitle>
           <CardDescription className="text-center">
-            {invitationToken ? (
-              <>A magic link has been sent to <strong>{email}</strong>. Click the link in the email to join the organization.</>
-            ) : (
-              <>We've sent a verification link to <strong>{email}</strong>. Please click the link to verify your email address.</>
-            )}
+            Kami telah mengirimkan email verifikasi ke:
+            <div className="font-medium text-lg mt-2">{email}</div>
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <EmailTips showTip={true} />
-          
-          <div className="flex flex-col space-y-2">
-            <Button 
-              variant="outline" 
-              onClick={handleResendEmail}
-            >
-              Resend Email
-            </Button>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-center">
+              Silakan periksa email Anda dan klik tautan verifikasi untuk menyelesaikan proses pendaftaran.
+              {isInvitation && (
+                <span className="block mt-2 font-medium text-blue-600">
+                  Setelah verifikasi, Anda akan otomatis bergabung dengan organisasi yang mengundang Anda.
+                </span>
+              )}
+            </p>
             
-            {password && !invitationToken && (
-              <Button onClick={handleLogin}>
-                Try to Log In
-              </Button>
-            )}
-            
-            <Button 
-              variant="link" 
-              onClick={() => navigate('/auth/login')}
-            >
-              Use a different email
-            </Button>
+            <EmailTips showTip={showTip} />
+            <VerificationStatus isChecking={checkingVerification} />
           </div>
         </CardContent>
+        <CardFooter className="flex flex-col gap-3">
+          <Button
+            variant={allowResend ? "default" : "outline"} 
+            className="w-full"
+            disabled={!allowResend || resendingEmail}
+            onClick={resendVerificationEmail}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${(resendingEmail || !allowResend) && 'animate-spin'}`} />
+            {resendingEmail ? "Mengirim..." : 
+              allowResend ? "Kirim Ulang Email" : `Tunggu ${secondsLeft} detik`}
+          </Button>
+          
+          <Button variant="outline" onClick={goToLogin} className="w-full">
+            Kembali ke Login
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );
