@@ -99,43 +99,25 @@ export async function forceSignIn(email: string, password: string) {
         return { data: null, error: retryError as Error };
       }
     } 
-    // Handle database error specifically
+    // Handle database error specifically with simple retry - skip complex retries that might cause issues
     else if (error.message.includes("Database error")) {
-      console.log("Database error detected during login, attempting multiple retries...");
+      console.log("Database error detected during login, attempting simple retry...");
       
-      // Try multiple times with increasing delays
-      for (let i = 0; i < 3; i++) {
-        const delay = (i + 1) * 2000; // 2s, 4s, 6s
-        console.log(`Retry attempt ${i+1} after ${delay}ms delay...`);
+      // Simple retry with a short delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      try {
+        // Simple retry login
+        const result = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
         
-        await new Promise(resolve => setTimeout(resolve, delay));
-        
-        try {
-          // Retry login
-          const result = await supabase.auth.signInWithPassword({
-            email,
-            password
-          });
-          
-          if (!result.error) {
-            console.log(`Login successful on retry attempt ${i+1}`);
-            return result;
-          }
-          
-          console.log(`Retry attempt ${i+1} failed:`, result.error.message);
-          
-          // If we still get "not confirmed" on final retry, notify the caller
-          if (i === 2 && result.error.message.includes("not confirmed")) {
-            console.log("Final retry still shows email not confirmed");
-          }
-        } catch (retryError) {
-          console.error(`Error during retry attempt ${i+1}:`, retryError);
-          // Continue to next retry
-        }
+        return result;
+      } catch (retryError) {
+        console.error("Error during simple retry:", retryError);
+        return { data: null, error: retryError as Error };
       }
-      
-      // If all retries fail, return the original error
-      return { data, error };
     }
     
     // Return original error for other cases

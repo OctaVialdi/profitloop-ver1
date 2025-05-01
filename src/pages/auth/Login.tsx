@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
-import { supabase, forceSignIn } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle, Mail, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AuthError } from "@supabase/supabase-js";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,10 +17,7 @@ const Login = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isEmailUnverified, setIsEmailUnverified] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
-  const [isManuallyVerified, setIsManuallyVerified] = useState(false);
-  const [loginRetries, setLoginRetries] = useState(0);
   const [justVerified, setJustVerified] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,9 +26,8 @@ const Login = () => {
   const invitationEmail = location.state?.invitationEmail || "";
   const invitationToken = location.state?.invitationToken || "";
   
-  // Check if we're coming from verification page with auto-login
+  // Check if we're coming from verification page
   const verifiedEmail = location.state?.verifiedEmail || "";
-  const autoLoginPassword = location.state?.password || "";
   const isAttemptingVerification = location.state?.isAttemptingVerification || false;
 
   // If we have invitation email, use it
@@ -41,11 +36,8 @@ const Login = () => {
       setEmail(invitationEmail);
     } else if (verifiedEmail) {
       setEmail(verifiedEmail);
-      if (autoLoginPassword) {
-        setPassword(autoLoginPassword);
-      }
     }
-  }, [invitationEmail, verifiedEmail, autoLoginPassword]);
+  }, [invitationEmail, verifiedEmail]);
 
   // Check URL parameters for verification status
   useEffect(() => {
@@ -53,19 +45,10 @@ const Login = () => {
     const verified = params.get('verified') === 'true';
     
     if (verified) {
-      setIsManuallyVerified(true);
       setJustVerified(true);
       toast.success("Email berhasil diverifikasi. Silakan login.");
-      
-      // If we have email and password from verification page, try to auto-login
-      if (verifiedEmail && autoLoginPassword && isAttemptingVerification) {
-        // Attempt auto-login with short delay to ensure verification has propagated
-        setTimeout(() => {
-          handleAutoLogin(verifiedEmail, autoLoginPassword);
-        }, 1500);
-      }
     }
-  }, [location.search, verifiedEmail, autoLoginPassword, isAttemptingVerification]);
+  }, [location.search]);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -78,38 +61,6 @@ const Login = () => {
     
     checkSession();
   }, [navigate]);
-
-  const handleAutoLogin = async (email: string, password: string) => {
-    if (!email || !password) return;
-    
-    setIsLoading(true);
-    setLoginError(null);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
-      
-      const { data, error } = await forceSignIn(email, password);
-      
-      if (error) {
-        if (error.message === "Email not confirmed" || error.message.includes("not confirmed")) {
-          // Still not verified in the system - show manual login option
-          setLoginError("Email masih dalam proses verifikasi. Coba login secara manual dalam beberapa menit.");
-          return;
-        }
-        throw error;
-      }
-      
-      if (data?.user) {
-        toast.success("Login berhasil!");
-        handleSuccessfulLogin(data.user);
-      }
-    } catch (error: any) {
-      console.error("Auto-login error:", error);
-      // Silent fail for auto-login, just let the user log in manually
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleResendVerification = async () => {
     if (!email) {
@@ -131,7 +82,7 @@ const Login = () => {
       navigate("/auth/verification-sent", { 
         state: { 
           email,
-          password, // Pass password for auto-login after verification
+          password,
           ...(invitationToken && { isInvitation: true, invitationToken })
         }
       });
@@ -143,83 +94,23 @@ const Login = () => {
     }
   };
 
-  // Helper function to add delay
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const manualVerifyEmailAndLogin = async () => {
-    try {
-      // Try multiple sign-in attempts with increasing delays
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await delay((attempt + 1) * 1000); // 1s, 2s, 3s delays
-        
-        const { data, error } = await forceSignIn(email, password);
-        
-        if (!error && data?.user) {
-          toast.success("Login berhasil!");
-          handleSuccessfulLogin(data.user);
-          return true;
-        }
-        
-        // If still getting "not confirmed" error on final attempt, break loop
-        if (attempt === 2 && error?.message?.includes("not confirmed")) {
-          break;
-        }
-      }
-
-      return false;
-    } catch (error) {
-      console.error("Manual verification failed:", error);
-      return false;
-    }
-  };
-
+  // Simplified login function to avoid database errors
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setLoginError(null);
     setIsEmailUnverified(false);
-    setDebugInfo(null);
-    
-    console.log("Attempting login with email:", email);
     
     try {
-      // Try using our force sign in helper first
-      const { data, error } = await forceSignIn(email, password);
-
-      // Store debug information for any errors
-      if (error) {
-        const errorStatus = (error as AuthError)?.status || 'unknown';
-        setDebugInfo({
-          errorCode: errorStatus,
-          errorName: error.name || 'Error',
-          errorMessage: error.message
-        });
-        console.error("Login error details:", error);
-      }
+      // Simple login approach
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
       if (error) {
-        // Handle email verification error
-        if (error.message === "Email not confirmed" || error.message.includes("not confirmed")) {
+        if (error.message.includes("Email not confirmed")) {
           setIsEmailUnverified(true);
-          
-          console.log("Email verification required. Current state:", { 
-            isManuallyVerified, 
-            justVerified,
-            loginRetries
-          });
-          
-          // If flag manual verified active or we're retrying, try again with delay
-          if (isManuallyVerified || justVerified || loginRetries >= 1) {
-            toast.loading("Mencoba memverifikasi email...");
-            await delay(1500);
-            const success = await manualVerifyEmailAndLogin();
-            
-            if (success) {
-              return;
-            }
-          }
-          
-          setLoginRetries(prev => prev + 1);
           throw new Error("Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.");
         }
         throw error;
@@ -227,140 +118,66 @@ const Login = () => {
       
       if (data?.user) {
         toast.success("Login berhasil!");
-        handleSuccessfulLogin(data.user);
+        
+        // If we have invitation token, handle it
+        if (invitationToken) {
+          try {
+            const { data: joinResult, error: joinError } = await supabase
+              .rpc('join_organization', { 
+                user_id: data.user.id, 
+                invitation_token: invitationToken 
+              });
+            
+            if (joinError) {
+              throw joinError;
+            }
+            
+            if (joinResult && Array.isArray(joinResult) && joinResult[0] && joinResult[0].success) {
+              toast.success("Berhasil bergabung dengan organisasi!");
+              navigate("/employee-welcome");
+              return;
+            } else {
+              throw new Error("Gagal bergabung dengan organisasi");
+            }
+          } catch (joinErr: any) {
+            console.error("Error joining organization:", joinErr);
+            toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
+          }
+        }
+        
+        // Check if user has organization
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', data.user.id)
+            .maybeSingle();
+          
+          if (profileData && profileData.organization_id) {
+            navigate("/dashboard");
+          } else {
+            navigate("/onboarding");
+          }
+        } catch (err) {
+          console.error("Error fetching profile:", err);
+          navigate("/dashboard");
+        }
       }
     } catch (error: any) {
       console.error("Login error:", error);
       
-      // Improved error handling
-      if (error.message === "Database error granting user" || (error as AuthError)?.status === 500) {
-        // Database error case - often happens when email is verified but last_sign_in not updated
-        if (loginRetries < 3) {
-          setLoginRetries(prev => prev + 1);
-          
-          toast.loading("Mencoba ulang login...");
-          
-          setTimeout(async () => {
-            try {
-              const delay = loginRetries * 2000; // 2s, 4s, 6s
-              await new Promise(resolve => setTimeout(resolve, delay));
-              
-              const { data: retryData, error: retryError } = await forceSignIn(email, password);
-              
-              if (!retryError && retryData?.user) {
-                setIsLoading(false);
-                toast.success("Login berhasil!");
-                handleSuccessfulLogin(retryData.user);
-                return;
-              }
-            } catch (retryErr) {
-              console.error("Retry login failed:", retryErr);
-            }
-            
-            setIsLoading(false);
-            setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat.");
-          }, 500);
-          return;
-        } else {
-          setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat atau hubungi dukungan teknis.");
-        }
-      } else if (error.message.includes("Invalid login credentials")) {
+      if (error.message.includes("Invalid login credentials")) {
         setLoginError("Email atau password salah. Mohon periksa kembali.");
       } else if (error.message.includes("Email not confirmed") || error.message.includes("Email belum dikonfirmasi")) {
         setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda atau kirim ulang email verifikasi.");
         setIsEmailUnverified(true);
+      } else if (error.message.includes("Database error")) {
+        setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat.");
       } else {
         setLoginError(error.message || "Gagal login. Periksa email dan password Anda.");
       }
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const bypassEmailVerificationLogin = async () => {
-    setIsLoading(true);
-    setLoginError(null);
-    
-    try {
-      // Force a login attempt by first checking the user exists
-      const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
-      console.log("Attempting bypass login...");
-      
-      if (userError) {
-        throw userError;
-      }
-      
-      // Now try signing in directly
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data.user) {
-        toast.success("Login berhasil!");
-        handleSuccessfulLogin(data.user);
-      }
-    } catch (error: any) {
-      console.error("Bypass login error:", error);
-      setLoginError("Gagal login bypass: " + error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSuccessfulLogin = async (user: any) => {
-    // If we have invitation token, join organization after login
-    if (invitationToken) {
-      try {
-        const { data: joinResult, error: joinError } = await supabase
-          .rpc('join_organization', { 
-            user_id: user.id, 
-            invitation_token: invitationToken 
-          });
-        
-        if (joinError) {
-          throw joinError;
-        }
-        
-        if (!joinResult || !Array.isArray(joinResult) || joinResult.length === 0) {
-          throw new Error("Format respons tidak valid");
-        }
-        
-        if (!joinResult[0].success) {
-          throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
-        }
-        
-        toast.success("Berhasil bergabung dengan organisasi!");
-        navigate("/employee-welcome");
-        return;
-      } catch (joinErr: any) {
-        console.error("Error joining organization:", joinErr);
-        toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
-        // Still allow login but without joining organization
-      }
-    }
-    
-    // Normal login flow - check if user has organization
-    try {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (profileData && profileData.organization_id) {
-        navigate("/dashboard");
-      } else {
-        navigate("/onboarding");
-      }
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-      // Default to dashboard if we can't determine organization status
-      navigate("/dashboard");
     }
   };
 
@@ -389,15 +206,6 @@ const Login = () => {
           )}
         </CardHeader>
         <CardContent>
-          {debugInfo && (
-            <div className="mb-4 p-3 bg-gray-100 border border-gray-300 rounded-md text-xs text-gray-800 font-mono">
-              <p>Error Code: {debugInfo.errorCode}</p>
-              <p>Error Type: {debugInfo.errorName}</p>
-              <p>Message: {debugInfo.errorMessage}</p>
-              <p className="mt-2 text-blue-600">Email confirmation is disabled in Supabase</p>
-            </div>
-          )}
-          
           {loginError && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
