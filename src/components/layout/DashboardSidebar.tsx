@@ -1,5 +1,5 @@
 
-import { Settings } from "lucide-react";
+import { Settings, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { 
   Sidebar, 
@@ -41,8 +41,9 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
-  // Only Settings navigation item
+  // Navigation items - added Dashboard above Settings
   const navigationItems: NavigationItem[] = [
+    { name: "Dashboard", href: "/settings/dashboard", icon: LayoutDashboard },
     { name: "Settings", href: "/settings/dashboard", icon: Settings, requiredRole: "admin" },
   ];
 
