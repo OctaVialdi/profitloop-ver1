@@ -1,13 +1,13 @@
 
 import { ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Building, CreditCard, Bell, Activity } from "lucide-react";
+import { Building, CreditCard, Bell, Activity, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOrganization } from "@/hooks/useOrganization";
 
 interface SettingsTabProps {
   href: string;
-  icon: React.ElementRef<typeof Building>;
+  icon: LucideIcon;
   label: string;
   isActive: boolean;
   requiredRole?: "admin" | "super_admin";
