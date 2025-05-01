@@ -277,7 +277,7 @@ const CatatanMeetings = () => {
                                 No meeting points found. Add one above.
                               </TableCell>
                             </TableRow> : meetingPoints.map((point, index) => <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                              <TableCell className="w-[120px]">{point.date}</TableCell>
+                              <TableCell className="w-[120px] text-center">{point.date}</TableCell>
                               <TableCell className="w-[300px] text-left">
                                 <TooltipProvider>
                                   <Tooltip>
@@ -296,7 +296,7 @@ const CatatanMeetings = () => {
                                   </Tooltip>
                                 </TooltipProvider>
                               </TableCell>
-                              <TableCell className="w-[140px]">
+                              <TableCell className="w-[140px] text-center">
                                 <Select defaultValue={point.request_by || "unassigned"} onValueChange={value => handleRequestByChange(point.id, value)}>
                                   <SelectTrigger className="w-[120px] mx-auto bg-[#f5f5fa]">
                                     <SelectValue placeholder="Select person" />
@@ -310,10 +310,10 @@ const CatatanMeetings = () => {
                                   </SelectContent>
                                 </Select>
                               </TableCell>
-                              <TableCell className="w-[140px]">
+                              <TableCell className="w-[140px] text-center">
                                 <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
                               </TableCell>
-                              <TableCell className="w-[100px]">
+                              <TableCell className="w-[100px] text-center">
                                 <div className="flex justify-center">
                                   <Button variant="ghost" size="sm" onClick={() => handleAddUpdates(point)} className="text-blue-500 hover:text-blue-700" title="View and Add Updates">
                                     <History size={16} />
