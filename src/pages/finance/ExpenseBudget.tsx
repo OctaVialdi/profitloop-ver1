@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Edit } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function ExpenseBudget() {
   const navigate = useNavigate();
@@ -59,9 +60,16 @@ export default function ExpenseBudget() {
     }
   };
 
-  // Handle navigation to forecast page
-  const handleNavigateToForecast = () => {
-    navigate("/finance/expenses/budget/forecast");
+  // Handle budget view selection
+  const handleBudgetViewChange = (value: string) => {
+    switch (value) {
+      case "current":
+        // Already on current budget page
+        break;
+      case "forecast":
+        navigate("/finance/expenses/budget/forecast");
+        break;
+    }
   };
 
   return (
@@ -105,22 +113,17 @@ export default function ExpenseBudget() {
         </Tabs>
       </div>
 
-      {/* Top Navigation */}
-      <div className="flex items-center space-x-4 mb-6">
-        <Button variant="outline" className="bg-white font-medium px-6 py-6 h-auto">
-          Current Budget
-        </Button>
-        <Button 
-          variant="outline" 
-          className="bg-muted font-medium px-6 py-6 h-auto flex items-center gap-2"
-          onClick={handleNavigateToForecast}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 22V8L10 2L17 8V22H3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M9 22V16H13V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Budget Forecast
-        </Button>
+      {/* Budget View Selector Dropdown */}
+      <div className="mb-6">
+        <Select defaultValue="current" onValueChange={handleBudgetViewChange}>
+          <SelectTrigger className="w-[240px] bg-white">
+            <SelectValue placeholder="Select Budget View" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="current">Current Budget</SelectItem>
+            <SelectItem value="forecast">Budget Forecast</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Budget Tracking Header */}
