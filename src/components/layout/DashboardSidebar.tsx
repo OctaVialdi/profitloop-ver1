@@ -78,8 +78,8 @@ export function DashboardSidebar({
                       asChild
                     >
                       <Link to={item.href} className="flex items-center">
-                        <item.icon className="shrink-0" />
-                        <span className={isCollapsed ? "sr-only" : ""}>{item.name}</span>
+                        <item.icon className="shrink-0 h-5 w-5" />
+                        <span className={isCollapsed ? "sr-only" : "ml-2"}>{item.name}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

@@ -114,11 +114,21 @@
   
   /* Add specific styling for collapsed state to center the icons */
   [data-state="collapsed"] [data-sidebar="menu-button"] {
-    @apply justify-center;
+    @apply justify-center p-2;
+  }
+
+  /* Make icons more visible and consistent in collapsed state */
+  [data-state="collapsed"] [data-sidebar="menu-button"] svg {
+    @apply h-5 w-5 mx-auto;
   }
   
   /* Improve the spacing when the sidebar is collapsed */
   [data-collapsible="icon"] [data-sidebar="sidebar"] {
     @apply p-1;
+  }
+
+  /* Ensure the tooltip appears properly in collapsed mode */
+  [data-state="collapsed"] [data-sidebar="menu-button"] + [role="tooltip"] {
+    @apply block;
   }
 }
