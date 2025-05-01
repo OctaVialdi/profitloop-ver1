@@ -46,13 +46,35 @@ const Login = () => {
     setIsLoading(true);
     setLoginError(null);
     
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+    // Add a retry mechanism for database errors
+    let retryCount = 0;
+    const maxRetries = 2;
+    
+    const attemptLogin = async (): Promise<any> => {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+        return data;
+      } catch (error: any) {
+        // Only retry on database errors
+        if (error.message === "Database error granting user" && retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Retrying login attempt ${retryCount} of ${maxRetries}...`);
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return attemptLogin();
+        } else {
+          throw error;
+        }
+      }
+    };
+    
+    try {
+      const data = await attemptLogin();
       
       if (data.user) {
         // If we have invitation token, join organization after login
@@ -107,7 +129,7 @@ const Login = () => {
       
       // Handle specific error cases
       if (error.message === "Database error granting user") {
-        setLoginError("Terjadi masalah di server. Silakan coba lagi dalam beberapa saat.");
+        setLoginError("Terjadi masalah sementara di server. Silakan coba lagi dalam beberapa saat.");
       } else if (error.message.includes("Invalid login credentials")) {
         setLoginError("Email atau password salah. Mohon periksa kembali.");
       } else if (error.message.includes("Email not confirmed")) {
