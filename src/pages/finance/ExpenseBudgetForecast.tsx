@@ -18,6 +18,7 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AddExpenseDialog from "./components/AddExpenseDialog";
 
 export default function ExpenseBudgetForecast() {
   const navigate = useNavigate();
@@ -157,8 +158,11 @@ export default function ExpenseBudgetForecast() {
             View projected expenses based on historical data and growth patterns
           </p>
         </div>
-        <div className="bg-green-100 text-green-800 px-4 py-1 rounded-full font-medium">
-          Forecast Accuracy: 92%
+        <div className="flex items-center gap-4">
+          <div className="bg-green-100 text-green-800 px-4 py-1 rounded-full font-medium">
+            Forecast Accuracy: 92%
+          </div>
+          <AddExpenseDialog />
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import { Edit } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AddExpenseDialog from "./components/AddExpenseDialog";
 
 export default function ExpenseBudget() {
   const navigate = useNavigate();
@@ -74,11 +75,14 @@ export default function ExpenseBudget() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Expenses</h2>
-        <p className="text-muted-foreground">
-          Manage and track your organization's expenses
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Expenses</h2>
+          <p className="text-muted-foreground">
+            Manage and track your organization's expenses
+          </p>
+        </div>
+        <AddExpenseDialog />
       </div>
 
       {/* Top Navigation Tabs */}
