@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LineChart,
   Line,
@@ -69,6 +70,31 @@ export default function ExpenseBudgetForecast() {
     },
   ];
 
+  // Handle tab navigation
+  const handleTabChange = (value: string) => {
+    switch (value) {
+      case "overview":
+        navigate("/finance/expenses");
+        break;
+      case "add-expense":
+        navigate("/finance/expenses");
+        break;
+      case "budget":
+        // Already on budget section
+        navigate("/finance/expenses/budget");
+        break;
+      case "payroll":
+        navigate("/finance/expenses");
+        break;
+      case "compliance":
+        navigate("/finance/expenses");
+        break;
+      case "approvals":
+        navigate("/finance/expenses");
+        break;
+    }
+  };
+
   const handleNavigateBack = () => {
     navigate("/finance/expenses/budget");
   };
@@ -95,6 +121,50 @@ export default function ExpenseBudgetForecast() {
         <div className="bg-green-100 text-green-800 px-4 py-1 rounded-full font-medium">
           Forecast Accuracy: 92%
         </div>
+      </div>
+
+      {/* Top Navigation Tabs */}
+      <div className="flex overflow-auto pb-2">
+        <Tabs defaultValue="budget" className="w-full" onValueChange={handleTabChange}>
+          <TabsList className="bg-muted h-11">
+            <TabsTrigger 
+              value="overview" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="add-expense" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Add Expense
+            </TabsTrigger>
+            <TabsTrigger 
+              value="budget" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Budget
+            </TabsTrigger>
+            <TabsTrigger 
+              value="payroll" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Payroll
+            </TabsTrigger>
+            <TabsTrigger 
+              value="compliance" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Compliance
+            </TabsTrigger>
+            <TabsTrigger 
+              value="approvals" 
+              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+            >
+              Approvals
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Top Navigation */}
