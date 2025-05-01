@@ -201,6 +201,11 @@ const CatatanMeetings = () => {
   const presentedCount = meetingPoints.filter(point => point.status === "presented").length;
   const updatesCount = recentUpdates.length;
 
+  // Add the handleUpdateAdded function to reload data after an update is added
+  const handleUpdateAdded = () => {
+    loadData();
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-full mx-auto">
