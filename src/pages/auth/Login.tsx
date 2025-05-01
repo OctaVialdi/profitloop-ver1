@@ -46,12 +46,14 @@ const Login = () => {
     setIsLoading(true);
     setLoginError(null);
     
-    // Add a retry mechanism for database errors
+    // Improved retry mechanism with more granular control
     let retryCount = 0;
-    const maxRetries = 2;
+    const maxRetries = 3;
+    const retryDelay = 1500; // 1.5 seconds between retries
     
     const attemptLogin = async (): Promise<any> => {
       try {
+        // Clean direct login approach to avoid internal issues
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
@@ -60,12 +62,19 @@ const Login = () => {
         if (error) throw error;
         return data;
       } catch (error: any) {
-        // Only retry on database errors
-        if (error.message === "Database error granting user" && retryCount < maxRetries) {
+        console.error("Login attempt error:", error);
+        
+        // Only retry on database errors with a cleaner approach
+        if ((error.message === "Database error granting user" || 
+             error.message.includes("database") || 
+             error.status === 500) && 
+            retryCount < maxRetries) {
+          
           retryCount++;
           console.log(`Retrying login attempt ${retryCount} of ${maxRetries}...`);
-          // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Use increasing delay between retries
+          await new Promise(resolve => setTimeout(resolve, retryDelay * retryCount));
           return attemptLogin();
         } else {
           throw error;
@@ -90,8 +99,7 @@ const Login = () => {
               throw joinError;
             }
             
-            // Type check the response
-            if (!joinResult || typeof joinResult[0] !== 'object' || joinResult[0].success === undefined) {
+            if (!joinResult || !Array.isArray(joinResult) || joinResult.length === 0) {
               throw new Error("Format respons tidak valid");
             }
             
@@ -127,9 +135,9 @@ const Login = () => {
     } catch (error: any) {
       console.error("Login error:", error);
       
-      // Handle specific error cases
-      if (error.message === "Database error granting user") {
-        setLoginError("Terjadi masalah sementara di server. Silakan coba lagi dalam beberapa saat.");
+      // Improved error handling with more specific error messages
+      if (error.message === "Database error granting user" || error.status === 500) {
+        setLoginError("Server sedang mengalami masalah. Silakan coba lagi dalam beberapa saat atau hubungi dukungan teknis.");
       } else if (error.message.includes("Invalid login credentials")) {
         setLoginError("Email atau password salah. Mohon periksa kembali.");
       } else if (error.message.includes("Email not confirmed")) {
