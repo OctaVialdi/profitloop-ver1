@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { toast } from "@/components/ui/sonner";
 import { supabase, forceSignIn } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle, Mail, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError } from "@supabase/supabase-js";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -186,8 +188,9 @@ const Login = () => {
 
       // Store debug information for any errors
       if (error) {
+        const errorStatus = (error as AuthError)?.status || 'unknown';
         setDebugInfo({
-          errorCode: error.status || 'unknown',
+          errorCode: errorStatus,
           errorName: error.name || 'Error',
           errorMessage: error.message
         });
@@ -230,7 +233,7 @@ const Login = () => {
       console.error("Login error:", error);
       
       // Improved error handling
-      if (error.message === "Database error granting user" || error.status === 500) {
+      if (error.message === "Database error granting user" || (error as AuthError)?.status === 500) {
         // Database error case - often happens when email is verified but last_sign_in not updated
         if (loginRetries < 3) {
           setLoginRetries(prev => prev + 1);
