@@ -5,8 +5,6 @@ import { LineChart, BarChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { DollarSign, TrendingUp, TrendingDown, Coins, Receipt, PiggyBank, CreditCard } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import AddExpenseDialog from "./components/AddExpenseDialog";
 
 // Sample data for the charts
 const revenueData = [
@@ -31,14 +29,11 @@ export default function FinanceDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Finance Dashboard</h2>
-          <p className="text-muted-foreground">
-            Financial overview for {organization?.name || "your organization"}
-          </p>
-        </div>
-        <AddExpenseDialog />
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Finance Dashboard</h2>
+        <p className="text-muted-foreground">
+          Financial overview for {organization?.name || "your organization"}
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
