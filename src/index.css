@@ -120,7 +120,7 @@
   
   /* Ensure menu groups are at the top */
   [data-sidebar="group"] {
-    @apply flex-none;
+    @apply flex-none order-first;
   }
   
   /* Add specific styling for collapsed state to center the icons */
