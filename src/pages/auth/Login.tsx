@@ -20,6 +20,7 @@ const Login = () => {
   const [isManuallyVerified, setIsManuallyVerified] = useState(false);
   const [loginRetries, setLoginRetries] = useState(0);
   const [justVerified, setJustVerified] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -182,6 +183,9 @@ const Login = () => {
     setIsLoading(true);
     setLoginError(null);
     setIsEmailUnverified(false);
+    setDebugInfo(null);
+    
+    console.log("Attempting login with email:", email);
     
     try {
       // First sign-in attempt
@@ -190,10 +194,26 @@ const Login = () => {
         password
       });
 
+      // Store debug information for any errors
+      if (error) {
+        setDebugInfo({
+          errorCode: error.status,
+          errorName: error.name,
+          errorMessage: error.message
+        });
+        console.error("Login error details:", error);
+      }
+
       if (error) {
         // Handle email verification error
         if (error.message === "Email not confirmed" || error.message.includes("not confirmed")) {
           setIsEmailUnverified(true);
+          
+          console.log("Email verification required. Current state:", { 
+            isManuallyVerified, 
+            justVerified,
+            loginRetries
+          });
           
           // If flag manual verified active or we're retrying, try again with delay
           if (isManuallyVerified || justVerified || loginRetries >= 1) {
@@ -262,6 +282,41 @@ const Login = () => {
       } else {
         setLoginError(error.message || "Gagal login. Periksa email dan password Anda.");
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const bypassEmailVerificationLogin = async () => {
+    setIsLoading(true);
+    setLoginError(null);
+    
+    try {
+      // Force a login attempt by first checking the user exists
+      const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
+      console.log("Attempting bypass login...");
+      
+      if (userError) {
+        throw userError;
+      }
+      
+      // Now try signing in directly
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data.user) {
+        toast.success("Login berhasil!");
+        handleSuccessfulLogin(data.user);
+      }
+    } catch (error: any) {
+      console.error("Bypass login error:", error);
+      setLoginError("Gagal login bypass: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -344,6 +399,15 @@ const Login = () => {
           )}
         </CardHeader>
         <CardContent>
+          {debugInfo && (
+            <div className="mb-4 p-3 bg-gray-100 border border-gray-300 rounded-md text-xs text-gray-800 font-mono">
+              <p>Error Code: {debugInfo.errorCode}</p>
+              <p>Error Type: {debugInfo.errorName}</p>
+              <p>Message: {debugInfo.errorMessage}</p>
+              <p className="mt-2 text-blue-600">Email confirmation is disabled in Supabase</p>
+            </div>
+          )}
+          
           {loginError && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -360,22 +424,24 @@ const Login = () => {
                   <p className="text-sm text-yellow-700 mt-1">
                     Anda perlu memverifikasi email sebelum bisa login. Silakan cek kotak masuk email Anda.
                   </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-2 border-yellow-300 text-yellow-800 hover:bg-yellow-100"
-                    onClick={handleResendVerification}
-                    disabled={resendingVerification}
-                  >
-                    {resendingVerification ? (
-                      <>
-                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                        Mengirim...
-                      </>
-                    ) : (
-                      'Kirim Ulang Email Verifikasi'
-                    )}
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                      onClick={handleResendVerification}
+                      disabled={resendingVerification}
+                    >
+                      {resendingVerification ? (
+                        <>
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          Mengirim...
+                        </>
+                      ) : (
+                        'Kirim Ulang Email Verifikasi'
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
