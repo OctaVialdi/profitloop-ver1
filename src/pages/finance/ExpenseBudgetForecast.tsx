@@ -12,7 +12,11 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  BarChart,
+  Bar,
 } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { TrendingUp } from "lucide-react";
 
 export default function ExpenseBudgetForecast() {
   const navigate = useNavigate();
@@ -67,6 +71,38 @@ export default function ExpenseBudgetForecast() {
       IT: 31500000, 
       Operations: 27000000, 
       HR: 18000000 
+    },
+  ];
+
+  // Monthly comparison data
+  const monthlyComparisonData = [
+    {
+      month: "Apr",
+      Marketing: 48000000,
+      IT: 30000000,
+      Operations: 24000000,
+      HR: 15000000,
+    },
+    {
+      month: "Jun",
+      Marketing: 49000000,
+      IT: 30000000,
+      Operations: 24500000,
+      HR: 16000000,
+    },
+    {
+      month: "Jul",
+      Marketing: 57000000,
+      IT: 31000000,
+      Operations: 26000000,
+      HR: 17000000,
+    },
+    {
+      month: "Aug",
+      Marketing: 58000000,
+      IT: 31000000,
+      Operations: 27000000,
+      HR: 18000000,
     },
   ];
 
@@ -251,6 +287,142 @@ export default function ExpenseBudgetForecast() {
           <p>* Dotted line indicates projected expenses for future months</p>
         </div>
       </Card>
+
+      {/* Additional Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monthly Budget Comparison */}
+        <Card className="p-6">
+          <h3 className="text-xl font-bold mb-6">Monthly Budget Comparison</h3>
+          <div className="w-full h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={monthlyComparisonData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 20,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="month" />
+                <YAxis 
+                  tickFormatter={formatYAxis} 
+                  domain={[0, 60000000]} 
+                  ticks={[0, 15000000, 30000000, 45000000, 60000000]} 
+                />
+                <Tooltip 
+                  formatter={(value: number) => `Rp${(value).toLocaleString()}`}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
+                <Legend />
+                <Bar dataKey="Marketing" fill="#0EA5E9" />
+                <Bar dataKey="IT" fill="#10B981" />
+                <Bar dataKey="Operations" fill="#F97316" />
+                <Bar dataKey="HR" fill="#ea384c" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+        
+        {/* Forecast Analysis */}
+        <Card className="p-6">
+          <h3 className="text-xl font-bold mb-4">Forecast Analysis</h3>
+          
+          <div className="space-y-6">
+            {/* Marketing */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h4 className="font-semibold">Marketing</h4>
+                <span className="text-red-500 font-medium flex items-center gap-1">
+                  920.4% <TrendingUp className="h-4 w-4" />
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Current: Rp 5.000.000</span>
+                <span>Forecast: Rp 51.018.362</span>
+              </div>
+              <div className="text-xs text-gray-500">Budget Limit: Rp 50.000.000</div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-red-500" style={{ width: '100%' }}></div>
+              </div>
+            </div>
+            
+            {/* IT */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h4 className="font-semibold">IT</h4>
+                <span className="text-red-500 font-medium flex items-center gap-1">
+                  104.8% <TrendingUp className="h-4 w-4" />
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Current: Rp 15.000.000</span>
+                <span>Forecast: Rp 30.718.874</span>
+              </div>
+              <div className="text-xs text-gray-500">Budget Limit: Rp 30.000.000</div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-red-500" style={{ width: '100%' }}></div>
+              </div>
+            </div>
+            
+            {/* Operations */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h4 className="font-semibold">Operations</h4>
+                <span className="text-red-500 font-medium flex items-center gap-1">
+                  Infinity% <TrendingUp className="h-4 w-4" />
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Current: Rp 0</span>
+                <span>Forecast: Rp 24.684.220</span>
+              </div>
+              <div className="text-xs text-gray-500">Budget Limit: Rp 25.000.000</div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-yellow-500" style={{ width: '98%' }}></div>
+              </div>
+            </div>
+            
+            {/* HR */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h4 className="font-semibold">HR</h4>
+                <span className="text-red-500 font-medium flex items-center gap-1">
+                  Infinity% <TrendingUp className="h-4 w-4" />
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Current: Rp 0</span>
+                <span>Forecast: Rp 16.530.884</span>
+              </div>
+              <div className="text-xs text-gray-500">Budget Limit: Rp 15.000.000</div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-red-500" style={{ width: '100%' }}></div>
+              </div>
+            </div>
+            
+            {/* Recommendations */}
+            <div className="pt-4 border-t border-gray-200">
+              <h4 className="font-semibold mb-2">Recommendations</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 font-bold">•</span>
+                  <span>Review Marketing budget allocation - projected to exceed by 12%</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500 font-bold">•</span>
+                  <span>IT expenses trending upward - monitor closely</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 font-bold">•</span>
+                  <span>HR spending remains within budget parameters</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
