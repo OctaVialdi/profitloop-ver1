@@ -361,7 +361,7 @@ export default function PayrollSummary() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="text-sm font-medium text-red-500">High Increase</h4>
-                      <p className="text-sm mt-1">Salary increase > 50% detected for IT Department employee EMP001</p>
+                      <p className="text-sm mt-1">Salary increase {'>'}  50% detected for IT Department employee EMP001</p>
                       <p className="text-xs text-gray-500 mt-1">Detected on 5/1/2025</p>
                     </div>
                     <Button size="sm" className="bg-white text-red-500 border border-red-500 hover:bg-red-50">
