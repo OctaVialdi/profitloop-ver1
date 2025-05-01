@@ -71,9 +71,9 @@ export const VirtualizedMeetingTable = ({
       <div className="col-span-2">DATE</div>
       <div className="col-span-4">DISCUSSION POINT</div>
       <div className="col-span-2">REQUEST BY</div>
-      <div className="col-span-1">STATUS</div>
+      <div className="col-span-2">STATUS</div>
       <div className="col-span-1">UPDATES</div>
-      <div className="col-span-2">ACTIONS</div>
+      <div className="col-span-1">ACTIONS</div>
     </div>
   );
 
@@ -127,7 +127,7 @@ export const VirtualizedMeetingTable = ({
             </SelectContent>
           </Select>
         </div>
-        <div className="col-span-1">
+        <div className="col-span-2">
           <MeetingStatusBadge 
             status={point.status} 
             onChange={(value) => onStatusChange(point.id, value as MeetingStatus)} 
@@ -135,14 +135,14 @@ export const VirtualizedMeetingTable = ({
         </div>
         <div className="col-span-1">
           <div 
-            className="flex items-center gap-2 text-blue-500 hover:text-blue-700 cursor-pointer"
+            className="flex items-center gap-1 text-blue-500 hover:text-blue-700 cursor-pointer"
             onClick={() => onAddUpdates(point)}
           >
             <History size={16} />
             <span>{updateCounts[point.id] || 0}</span>
           </div>
         </div>
-        <div className="col-span-2">
+        <div className="col-span-1">
           <div className="flex space-x-2">
             <MeetingActionButton 
               icon={Edit} 
