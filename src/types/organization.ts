@@ -28,6 +28,8 @@ export interface UserProfile {
   organization_id: string | null;
   role: 'super_admin' | 'admin' | 'employee' | null;
   invited_by: string | null;
+  timezone: string | null; // Added timezone property
+  preferences: Record<string, any> | null; // Added preferences property
 }
 
 export interface OrganizationData {
