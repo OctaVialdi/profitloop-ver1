@@ -236,12 +236,20 @@ export async function deleteMeetingUpdate(id: string) {
 
 export async function createMeetingUpdate(update: Omit<MeetingUpdate, 'id' | 'created_at'>) {
   try {
-    // Here was the issue - we need to ensure 'update' is a proper object before spreading
-    const updateData = update ? { ...update } : {};
+    // Fix: Ensure we have all required fields before inserting
+    // If update is somehow falsy or missing required fields, we need to handle that
+    if (!update || 
+        !update.meeting_point_id || 
+        !update.status || 
+        !update.person || 
+        !update.date || 
+        !update.title) {
+      throw new Error('Missing required fields for meeting update');
+    }
     
     const { data, error } = await supabase
       .from('meeting_updates')
-      .insert(updateData)
+      .insert(update)
       .select()
       .single();
       
