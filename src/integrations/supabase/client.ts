@@ -141,7 +141,12 @@ export async function processInvitation(invitationToken: string, userId: string)
       return { success: false, error };
     }
     
-    return { success: data.success, data };
+    // Type checking to ensure data has the expected structure
+    if (data && typeof data === 'object' && 'success' in data) {
+      return { success: Boolean(data.success), data };
+    }
+    
+    return { success: false, error: new Error("Invalid response format") };
   } catch (err) {
     console.error("Exception processing invitation:", err);
     return { success: false, error: err };

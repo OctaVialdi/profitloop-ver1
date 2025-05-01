@@ -1,10 +1,11 @@
+
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MailCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import EmailTips from '@/components/auth/EmailTips';
+import { EmailTips } from '@/components/auth/EmailTips';
 import { supabase } from '@/integrations/supabase/client';
 
 const VerificationSent = () => {
@@ -34,7 +35,7 @@ const VerificationSent = () => {
         if (invitationToken) {
           handleInvitationAcceptance(session?.user.id);
         } else {
-          // Normal sign in, redirect to dashboard or onboarding
+          // Normal sign in, redirect to dashboard
           navigate('/dashboard');
         }
       }
@@ -60,7 +61,7 @@ const VerificationSent = () => {
       
       if (error) throw error;
       
-      if (data.success) {
+      if (data && typeof data === 'object' && 'success' in data && data.success) {
         toast.success("Successfully joined organization");
         // Navigate to employee welcome page with organization info
         navigate("/employee-welcome", { 
@@ -70,7 +71,7 @@ const VerificationSent = () => {
           }
         });
       } else {
-        throw new Error(data.message);
+        throw new Error(data && typeof data === 'object' && 'message' in data ? String(data.message) : "Failed to join organization");
       }
     } catch (error: any) {
       console.error("Error accepting invitation:", error);
@@ -135,7 +136,7 @@ const VerificationSent = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <EmailTips />
+          <EmailTips showTip={true} />
           
           <div className="flex flex-col space-y-2">
             <Button 

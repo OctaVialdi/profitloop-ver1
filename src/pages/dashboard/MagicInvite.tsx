@@ -49,7 +49,11 @@ const MagicInvite = () => {
         throw error;
       }
       
-      setInvitations(data || []);
+      // Type cast the data to match MagicInvitation interface
+      setInvitations(data?.map(item => ({
+        ...item,
+        status: item.status as 'pending' | 'sent' | 'accepted' | 'rejected'
+      })) || []);
     } catch (error: any) {
       console.error("Error fetching invitations:", error);
       toast.error("Failed to load invitations");
@@ -99,8 +103,8 @@ const MagicInvite = () => {
       await fetchInvitations();
       
       // Automatically send the invitation email if token was generated
-      if (data.invitation_id) {
-        await sendInvitationEmail(data.invitation_id);
+      if (data && typeof data === 'object' && 'invitation_id' in data) {
+        await sendInvitationEmail(data.invitation_id as string);
       }
     } catch (error: any) {
       console.error("Invitation error:", error);

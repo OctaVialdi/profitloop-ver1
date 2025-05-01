@@ -1,7 +1,7 @@
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { NotificationProvider } from '@/hooks/useNotifications'
 
 // Layouts
 import AuthLayout from '@/components/layout/AuthLayout'
@@ -34,45 +34,41 @@ import './App.css'
 function App() {
   return (
     <ThemeProvider>
-      <NotificationProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/welcome" element={<WelcomePage />} />
-            <Route path="/employee-welcome" element={<EmployeeWelcome />} />
-            <Route path="/onboarding" element={<OrganizationSetup />} />
-            <Route path="/accept-invitation" element={<AcceptInvitation />} />
-            <Route path="/accept-magic-invitation" element={<AcceptMagicInvitation />} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/welcome" element={<WelcomePage />} />
+          <Route path="/employee-welcome" element={<EmployeeWelcome />} />
+          <Route path="/onboarding" element={<OrganizationSetup />} />
+          <Route path="/accept-invitation" element={<AcceptInvitation />} />
+          <Route path="/accept-magic-invitation" element={<AcceptMagicInvitation />} />
+          
+          {/* Auth routes */}
+          <Route element={<AuthLayout />}>
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/register" element={<Register />} />
+            <Route path="/auth/verification-sent" element={<VerificationSent />} />
+          </Route>
+          
+          {/* Dashboard routes */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/invite" element={<InviteMembers />} />
+            <Route path="/magic-invite" element={<MagicInvite />} />
+            <Route path="/members" element={<MemberManagement />} />
+            <Route path="/organization-settings" element={<OrganizationSettings />} />
+            <Route path="/collaborations" element={<OrganizationCollaboration />} />
+            <Route path="/subscription" element={<Subscription />} />
             
-            {/* Auth routes */}
-            <Route element={<AuthLayout />}>
-              <Route path="/auth/login" element={<Login />} />
-              <Route path="/auth/register" element={<Register />} />
-              <Route path="/auth/verification-sent" element={<VerificationSent />} />
-            </Route>
-            
-            {/* Dashboard routes */}
-            <Route element={<DashboardLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/invite" element={<InviteMembers />} />
-              <Route path="/magic-invite" element={<MagicInvite />} />
-              <Route path="/members" element={<MemberManagement />} />
-              <Route path="/organization-settings" element={<OrganizationSettings />} />
-              <Route path="/collaborations" element={<OrganizationCollaboration />} />
-              <Route path="/subscription" element={<Subscription />} />
-              
-              {/* Settings routes */}
-              <Route element={<SettingsLayout />}>
-                <Route path="/settings/profile" element={<ProfileSettings />} />
-              </Route>
-            </Route>
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+            {/* Settings routes */}
+            <Route path="/settings/profile" element={<ProfileSettings />} />
+          </Route>
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
         <Toaster />
-      </NotificationProvider>
+      </BrowserRouter>
     </ThemeProvider>
   )
 }

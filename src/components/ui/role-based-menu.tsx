@@ -1,6 +1,6 @@
+
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SidebarItemsNav } from "./sidebar";
 import {
   BuildingIcon,
   CreditCard,
@@ -17,9 +17,10 @@ import {
   UserCircle,
   Link2Icon,
   FileCog,
-  Magic,
+  Wand2,
 } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
+import { Sidebar } from "./sidebar";
 
 interface SidebarConfig {
   title: string;
@@ -42,7 +43,7 @@ export function RoleBasedMenu() {
     // Management section
     { title: "Team Management", href: "", icon: Users, roles: ["admin", "super_admin"] },
     { title: "Invite Members", href: "/invite", icon: UserPlus, roles: ["admin", "super_admin"] },
-    { title: "Magic Link Invite", href: "/magic-invite", icon: Magic, roles: ["admin", "super_admin"] },
+    { title: "Magic Link Invite", href: "/magic-invite", icon: Wand2, roles: ["admin", "super_admin"] },
     { title: "Manage Members", href: "/members", icon: UserCircle, roles: ["admin", "super_admin"] },
     { title: "Organizations", href: "/collaborations", icon: Link2Icon, roles: ["admin", "super_admin"] },
     
@@ -74,7 +75,7 @@ export function RoleBasedMenu() {
   });
 
   return (
-    <SidebarItemsNav
+    <Sidebar.Menu
       items={filteredItems.map((item) => ({
         title: item.title,
         href: item.href,
