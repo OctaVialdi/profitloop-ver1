@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, forceSignIn } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle, Mail, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -87,10 +86,7 @@ const Login = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { data, error } = await forceSignIn(email, password);
       
       if (error) {
         if (error.message === "Email not confirmed" || error.message.includes("not confirmed")) {
@@ -101,7 +97,7 @@ const Login = () => {
         throw error;
       }
       
-      if (data.user) {
+      if (data?.user) {
         toast.success("Login berhasil!");
         handleSuccessfulLogin(data.user);
       }
@@ -154,12 +150,9 @@ const Login = () => {
       for (let attempt = 0; attempt < 3; attempt++) {
         await delay((attempt + 1) * 1000); // 1s, 2s, 3s delays
         
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+        const { data, error } = await forceSignIn(email, password);
         
-        if (!error && data.user) {
+        if (!error && data?.user) {
           toast.success("Login berhasil!");
           handleSuccessfulLogin(data.user);
           return true;
@@ -188,17 +181,14 @@ const Login = () => {
     console.log("Attempting login with email:", email);
     
     try {
-      // First sign-in attempt
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Try using our force sign in helper first
+      const { data, error } = await forceSignIn(email, password);
 
       // Store debug information for any errors
       if (error) {
         setDebugInfo({
-          errorCode: error.status,
-          errorName: error.name,
+          errorCode: error.status || 'unknown',
+          errorName: error.name || 'Error',
           errorMessage: error.message
         });
         console.error("Login error details:", error);
@@ -232,7 +222,7 @@ const Login = () => {
         throw error;
       }
       
-      if (data.user) {
+      if (data?.user) {
         toast.success("Login berhasil!");
         handleSuccessfulLogin(data.user);
       }
@@ -252,12 +242,9 @@ const Login = () => {
               const delay = loginRetries * 2000; // 2s, 4s, 6s
               await new Promise(resolve => setTimeout(resolve, delay));
               
-              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-                email,
-                password
-              });
+              const { data: retryData, error: retryError } = await forceSignIn(email, password);
               
-              if (!retryError && retryData.user) {
+              if (!retryError && retryData?.user) {
                 setIsLoading(false);
                 toast.success("Login berhasil!");
                 handleSuccessfulLogin(retryData.user);
