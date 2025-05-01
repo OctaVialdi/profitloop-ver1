@@ -19,7 +19,7 @@ interface VirtualizedMeetingTableProps {
   onDeletePrompt: (meeting: MeetingPoint) => void;
   onAddUpdates: (meeting: MeetingPoint) => void;
   onNewPointChange: (value: string) => void;
-  onNewPointKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onNewPointKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   newPoint: string;
   requestByOptions: string[];
 }
@@ -95,7 +95,7 @@ export const VirtualizedMeetingTable = ({
       <EmptyMeetingTable
         currentDate={currentDate}
         newPoint={newPoint}
-        onNewPointChange={(e) => onNewPointChange(e.target.value)}
+        onNewPointChange={onNewPointChange}
         onNewPointKeyDown={onNewPointKeyDown}
       />
     );

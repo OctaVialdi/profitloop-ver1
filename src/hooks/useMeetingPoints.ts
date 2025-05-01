@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -71,8 +70,8 @@ export const useMeetingPoints = () => {
     setNewPoint(value);
   };
   
-  const handleAddPoint = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && newPoint.trim() !== "") {
+  const handleAddPoint = async (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && newPoint.trim() !== "") {
       try {
         const newMeetingPoint = {
           date: new Date().toLocaleDateString('en-US', { 
