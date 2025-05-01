@@ -1,5 +1,4 @@
-
-import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, UserHeadset, CircleDollarSign, Truck } from "lucide-react";
+import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, Headset, CircleDollarSign, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarRail, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 interface NavigationItem {
