@@ -14,13 +14,17 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 export default function Expenses() {
+  // State to track the active view for expense breakdown
+  const [expenseView, setExpenseView] = useState<"chart" | "table">("chart");
+  
   // Sample data for the charts and tables
   const expenseBreakdownData = [
-    { name: "Equipment", value: 66.7, color: "#FFBA2C" },
-    { name: "Office Supplies", value: 11.1, color: "#42B96A" },
-    { name: "Advertising", value: 22.2, color: "#4192F7" },
+    { name: "Equipment", value: 66.7, color: "#FFBA2C", amount: "Rp 15.000.000" },
+    { name: "Office Supplies", value: 11.1, color: "#42B96A", amount: "Rp 2.500.000" },
+    { name: "Advertising", value: 22.2, color: "#4192F7", amount: "Rp 5.000.000" },
   ];
 
   const monthlyComparisonData = [
@@ -344,7 +348,7 @@ export default function Expenses() {
 
       {/* Bottom Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expense Breakdown - Updated to match the reference design */}
+        {/* Expense Breakdown - Updated with Table View option */}
         <Card className="p-6">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -368,55 +372,78 @@ export default function Expenses() {
             <div className="grid grid-cols-2 bg-gray-50 rounded-md overflow-hidden">
               <Button 
                 variant="ghost" 
-                className="flex-1 rounded-none flex items-center justify-center gap-2 h-12 bg-white"
+                className={`flex-1 rounded-none flex items-center justify-center gap-2 h-12 ${expenseView === 'chart' ? 'bg-white' : ''}`}
+                onClick={() => setExpenseView('chart')}
               >
                 <ChartPie className="h-5 w-5" /> Chart
               </Button>
               <Button 
                 variant="ghost" 
-                className="flex-1 rounded-none flex items-center justify-center gap-2 h-12"
+                className={`flex-1 rounded-none flex items-center justify-center gap-2 h-12 ${expenseView === 'table' ? 'bg-white' : ''}`}
+                onClick={() => setExpenseView('table')}
               >
                 <TableIcon className="h-5 w-5" /> Table
               </Button>
             </div>
             
-            <div className="h-[400px] relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={expenseBreakdownData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={150}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {expenseBreakdownData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              
-              {/* Category Labels With Percentages */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* Equipment Label (Left) */}
-                <div className="absolute left-6 text-xl font-semibold" style={{ color: "#FFBA2C" }}>
-                  Equipment: {expenseBreakdownData[0].value}%
-                </div>
+            {expenseView === 'chart' ? (
+              <div className="h-[400px] relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expenseBreakdownData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={150}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {expenseBreakdownData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
                 
-                {/* Office Supplies Label (Right Top) */}
-                <div className="absolute right-6 top-1/3 text-xl font-semibold" style={{ color: "#42B96A" }}>
-                  Office Supplies: {expenseBreakdownData[1].value}%
-                </div>
-                
-                {/* Advertising Label (Right Bottom) */}
-                <div className="absolute right-6 bottom-1/3 text-xl font-semibold" style={{ color: "#4192F7" }}>
-                  Advertising: {expenseBreakdownData[2].value}%
+                {/* Category Labels With Percentages */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {/* Equipment Label (Left) */}
+                  <div className="absolute left-6 text-xl font-semibold" style={{ color: "#FFBA2C" }}>
+                    Equipment: {expenseBreakdownData[0].value}%
+                  </div>
+                  
+                  {/* Office Supplies Label (Right Top) */}
+                  <div className="absolute right-6 top-1/3 text-xl font-semibold" style={{ color: "#42B96A" }}>
+                    Office Supplies: {expenseBreakdownData[1].value}%
+                  </div>
+                  
+                  {/* Advertising Label (Right Bottom) */}
+                  <div className="absolute right-6 bottom-1/3 text-xl font-semibold" style={{ color: "#4192F7" }}>
+                    Advertising: {expenseBreakdownData[2].value}%
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="pt-4">
+                <div className="grid grid-cols-3 border-b pb-4">
+                  <div className="text-lg font-bold">Category</div>
+                  <div className="text-lg font-bold text-right">Amount</div>
+                  <div className="text-lg font-bold text-right">%</div>
+                </div>
+                
+                {expenseBreakdownData.map((category, index) => (
+                  <div key={index} className="grid grid-cols-3 py-5 border-b">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-4 h-4 rounded-full" style={{ backgroundColor: category.color }}></span>
+                      <span className="text-lg">{category.name}</span>
+                    </div>
+                    <div className="text-lg text-right">{category.amount}</div>
+                    <div className="text-lg text-right">{category.value}%</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </Card>
 
