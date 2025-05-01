@@ -51,7 +51,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         />
         
         {/* Main content */}
-        <SidebarInset className="overflow-hidden">
+        <SidebarInset>
           {/* Top navigation */}
           <header className="bg-white border-b sticky top-0 z-10">
             <div className="px-4 h-16 flex items-center justify-between">
@@ -79,11 +79,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           </header>
           
-          {/* Page content - with single scroll */}
-          <div className="h-[calc(100vh-4rem)] overflow-auto">
-            <div className="p-4 md:p-6">
-              {children || <Outlet />}
-            </div>
+          {/* Page content with scroll area */}
+          <div className="h-[calc(100vh-4rem)] overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-4 md:p-6">
+                {children || <Outlet />}
+              </div>
+            </ScrollArea>
           </div>
         </SidebarInset>
       </div>
