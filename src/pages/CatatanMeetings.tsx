@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -314,113 +315,123 @@ const CatatanMeetings = () => {
                 </div>
               </div>
               
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
+              <div className="bg-white rounded-lg shadow">
+                {/* Fixed width table container to ensure header and body columns align */}
+                <div className="overflow-hidden">
+                  {/* Table header outside of scroll area to stay fixed */}
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-white border-b">
                         <TableHead className="w-[120px] py-4 whitespace-nowrap">DATE</TableHead>
-                        <TableHead className="py-4 w-[300px]">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[300px] py-4">DISCUSSION POINT</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap">REQUEST BY</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap">STATUS</TableHead>
-                        <TableHead className="w-[100px] py-4 whitespace-nowrap">UPDATES</TableHead>
+                        <TableHead className="w-[100px] py-4 whitespace-nowrap text-center">UPDATES</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {loading ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">Loading meeting points...</TableCell>
-                        </TableRow>
-                      ) : meetingPoints.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                            No meeting points found. Add one above.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        meetingPoints.map((point, index) => (
-                          <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                            <TableCell className="py-4 whitespace-nowrap h-14">{point.date}</TableCell>
-                            <TableCell className="py-4 w-[300px] h-14">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="relative h-10 overflow-hidden">
-                                      <ScrollArea className="h-10 w-full">
-                                        <div className="pr-3">
-                                          {point.discussion_point}
-                                        </div>
-                                      </ScrollArea>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-md p-2 bg-white">
-                                    <p className="text-sm">{point.discussion_point}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap h-14">
-                              <Select 
-                                defaultValue={point.request_by || "unassigned"} 
-                                onValueChange={(value) => handleRequestByChange(point.id, value)}
-                              >
-                                <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
-                                  <SelectValue placeholder="Select person" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="unassigned">Select person</SelectItem>
-                                  {/* Dynamically generate list from unique requestBy values */}
-                                  {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
-                                    <SelectItem key={person} value={person as string}>
-                                      {person}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap h-14">
-                              <MeetingStatusBadge 
-                                status={point.status} 
-                                onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
-                              />
-                            </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap h-14">
-                              <div className="flex space-x-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={() => handleAddUpdates(point)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="View and Add Updates"
-                                >
-                                  <History size={16} />
-                                  <span className="ml-2">
-                                    {updateCounts[point.id] || 0}
-                                  </span>
-                                </Button>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4 whitespace-nowrap h-14">
-                              <div className="flex space-x-2">
-                                <MeetingActionButton 
-                                  icon={Edit} 
-                                  label="Edit" 
-                                  onClick={() => handleEditMeeting(point)} 
-                                />
-                                <MeetingActionButton 
-                                  icon={Trash2} 
-                                  label="Delete" 
-                                  variant="destructive" 
-                                  onClick={() => handleDeletePrompt(point)} 
-                                />
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
                   </Table>
+                  
+                  {/* Scrollable table body */}
+                  <div className="overflow-hidden" style={{ height: "700px" }}>
+                    <ScrollArea className="h-full">
+                      <Table>
+                        <TableBody>
+                          {loading ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8">Loading meeting points...</TableCell>
+                            </TableRow>
+                          ) : meetingPoints.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                No meeting points found. Add one above.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            meetingPoints.map((point, index) => (
+                              <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
+                                <TableCell className="w-[120px] py-4 whitespace-nowrap">{point.date}</TableCell>
+                                <TableCell className="w-[300px] py-4">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="relative h-10 overflow-hidden">
+                                          <ScrollArea className="h-10 w-full">
+                                            <div className="pr-3">
+                                              {point.discussion_point}
+                                            </div>
+                                          </ScrollArea>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-md p-2 bg-white">
+                                        <p className="text-sm">{point.discussion_point}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </TableCell>
+                                <TableCell className="w-[140px] py-4 whitespace-nowrap">
+                                  <Select 
+                                    defaultValue={point.request_by || "unassigned"} 
+                                    onValueChange={(value) => handleRequestByChange(point.id, value)}
+                                  >
+                                    <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
+                                      <SelectValue placeholder="Select person" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="unassigned">Select person</SelectItem>
+                                      {/* Dynamically generate list from unique requestBy values */}
+                                      {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
+                                        <SelectItem key={person} value={person as string}>
+                                          {person}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                                <TableCell className="w-[140px] py-4 whitespace-nowrap">
+                                  <MeetingStatusBadge 
+                                    status={point.status} 
+                                    onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
+                                  />
+                                </TableCell>
+                                <TableCell className="w-[100px] py-4 whitespace-nowrap text-center">
+                                  <div className="flex justify-center">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => handleAddUpdates(point)}
+                                      className="text-blue-500 hover:text-blue-700"
+                                      title="View and Add Updates"
+                                    >
+                                      <History size={16} />
+                                      <span className="ml-2">
+                                        {updateCounts[point.id] || 0}
+                                      </span>
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="w-[140px] py-4 whitespace-nowrap">
+                                  <div className="flex space-x-2">
+                                    <MeetingActionButton 
+                                      icon={Edit} 
+                                      label="Edit" 
+                                      onClick={() => handleEditMeeting(point)} 
+                                    />
+                                    <MeetingActionButton 
+                                      icon={Trash2} 
+                                      label="Delete" 
+                                      variant="destructive" 
+                                      onClick={() => handleDeletePrompt(point)} 
+                                    />
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </div>
                 </div>
               </div>
             </div>
