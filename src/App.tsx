@@ -27,7 +27,8 @@ import CatatanMeetings from "@/pages/CatatanMeetings";
 // Import Finance Pages
 import FinanceDashboard from "@/pages/finance/Dashboard";
 import Expenses from "@/pages/finance/Expenses";
-import ExpenseBudget from "@/pages/finance/ExpenseBudget"; // New import
+import ExpenseBudget from "@/pages/finance/ExpenseBudget"; 
+import ExpenseBudgetForecast from "@/pages/finance/ExpenseBudgetForecast"; // Add this import
 import IncomeTarget from "@/pages/finance/IncomeTarget";
 import ReminderBills from "@/pages/finance/ReminderBills";
 import PayrollSummary from "@/pages/finance/PayrollSummary";
@@ -89,7 +90,7 @@ function App() {
             <Route path="verification-sent" element={<VerificationSent />} />
           </Route>
           
-          {/* Accept Invitations - IMPORTANT: Making these routes more explicit */}
+          {/* Accept Invitations */}
           <Route path="/accept-invitation" element={<AcceptInvitation />} />
           <Route path="/join-organization" element={<MagicLinkJoin />} />
 
@@ -112,7 +113,7 @@ function App() {
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
 
-          {/* New Catatan Meetings Route */}
+          {/* Catatan Meetings Route */}
           <Route
             path="/catatan-meetings"
             element={
@@ -124,7 +125,7 @@ function App() {
             <Route index element={<CatatanMeetings />} />
           </Route>
 
-          {/* New Finance Routes */}
+          {/* Finance Routes */}
           <Route
             path="/finance"
             element={
@@ -139,7 +140,8 @@ function App() {
           >
             <Route path="dashboard" element={<FinanceDashboard />} />
             <Route path="expenses" element={<Expenses />} />
-            <Route path="expenses/budget" element={<ExpenseBudget />} /> {/* New route for budget */}
+            <Route path="expenses/budget" element={<ExpenseBudget />} />
+            <Route path="expenses/budget/forecast" element={<ExpenseBudgetForecast />} /> {/* New route for budget forecast */}
             <Route path="income-target" element={<IncomeTarget />} />
             <Route path="reminder-bills" element={<ReminderBills />} />
             <Route path="reminder-bills/approvals" element={<BillApprovals />} />

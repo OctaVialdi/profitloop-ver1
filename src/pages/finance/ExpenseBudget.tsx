@@ -65,6 +65,11 @@ export default function ExpenseBudget() {
     }
   };
 
+  // Handle navigation to forecast page
+  const handleNavigateToForecast = () => {
+    navigate("/finance/expenses/budget/forecast");
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -123,7 +128,11 @@ export default function ExpenseBudget() {
         <Button variant="outline" className="bg-white font-medium px-6 py-6 h-auto">
           Current Budget
         </Button>
-        <Button variant="outline" className="bg-muted font-medium px-6 py-6 h-auto flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          className="bg-muted font-medium px-6 py-6 h-auto flex items-center gap-2"
+          onClick={handleNavigateToForecast}
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 22V8L10 2L17 8V22H3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M9 22V16H13V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
