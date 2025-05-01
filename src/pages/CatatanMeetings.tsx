@@ -1,21 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Toaster } from "@/components/ui/toaster";
 import { AlertTriangle, Clock, CheckCircle, XCircle, Presentation, History, Download, Edit, Trash2, Plus } from "lucide-react";
 import { MeetingSummaryCard } from "@/components/meetings/MeetingSummaryCard";
@@ -28,42 +15,15 @@ import { MeetingDialog } from "@/components/meetings/MeetingDialog";
 import { HistoryDialog } from "@/components/meetings/HistoryDialog";
 import { UpdatesDialog } from "@/components/meetings/UpdatesDialog";
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  getMeetingPoints, 
-  getMeetingUpdates, 
-  createMeetingPoint, 
-  updateMeetingPoint, 
-  deleteMeetingPoint,
-  generateMeetingMinutes,
-  formatCurrentDate
-} from "@/services/meetingService";
-import { 
-  MeetingPoint, 
-  MeetingUpdate, 
-  MeetingPointFilters, 
-  MeetingStatus,
-  MeetingSummaryStatus
-} from "@/types/meetings";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
+import { getMeetingPoints, getMeetingUpdates, createMeetingPoint, updateMeetingPoint, deleteMeetingPoint, generateMeetingMinutes, formatCurrentDate } from "@/services/meetingService";
+import { MeetingPoint, MeetingUpdate, MeetingPointFilters, MeetingStatus, MeetingSummaryStatus } from "@/types/meetings";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 const CatatanMeetings = () => {
-  const { organization } = useOrganization();
+  const {
+    organization
+  } = useOrganization();
   const [meetingPoints, setMeetingPoints] = useState<MeetingPoint[]>([]);
   const [newPoint, setNewPoint] = useState<string>("");
   const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false);
@@ -79,27 +39,25 @@ const CatatanMeetings = () => {
     timeRange: 'all'
   });
   const [updateCounts, setUpdateCounts] = useState<Record<string, number>>({});
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    day: 'numeric', 
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
-  
   useEffect(() => {
     if (organization) {
       loadData();
     }
   }, [organization, filters]);
-  
   const loadData = async () => {
     setLoading(true);
     const points = await getMeetingPoints(filters);
     setMeetingPoints(points);
-    
+
     // Load recent updates
     const updates = await getMeetingUpdates();
     setRecentUpdates(updates.slice(0, 5)); // Get only the 5 most recent updates
-    
+
     // Calculate update counts for each meeting point
     const counts: Record<string, number> = {};
     points.forEach(point => {
@@ -107,21 +65,19 @@ const CatatanMeetings = () => {
       counts[point.id] = pointUpdates.length;
     });
     setUpdateCounts(counts);
-    
     setLoading(false);
   };
-  
   const handleAddPoint = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newPoint.trim() !== "") {
       // Date will be empty at first and added during create by the backend
       const newMeetingPoint = {
-        date: "", // Empty date that will be filled on server
+        date: "",
+        // Empty date that will be filled on server
         discussion_point: newPoint,
         request_by: "",
         status: "not-started" as MeetingStatus
       };
-      
       const result = await createMeetingPoint(newMeetingPoint);
       if (result) {
         setNewPoint("");
@@ -129,27 +85,22 @@ const CatatanMeetings = () => {
       }
     }
   };
-  
   const handleEditMeeting = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setEditDialogOpen(true);
   };
-  
   const handleViewHistory = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setHistoryDialogOpen(true);
   };
-
   const handleAddUpdates = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setUpdatesDialogOpen(true);
   };
-  
   const handleDeletePrompt = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setDeleteDialogOpen(true);
   };
-  
   const handleDeleteMeeting = async () => {
     if (selectedMeeting) {
       const success = await deleteMeetingPoint(selectedMeeting.id);
@@ -159,12 +110,10 @@ const CatatanMeetings = () => {
       }
     }
   };
-  
   const handleCreateMeeting = () => {
     setSelectedMeeting(null);
     setEditDialogOpen(true);
   };
-  
   const handleSaveMeeting = async (meetingData: Partial<MeetingPoint>) => {
     if (selectedMeeting) {
       // Update existing
@@ -180,27 +129,28 @@ const CatatanMeetings = () => {
       }
     }
   };
-  
   const handleStatusChange = async (meetingId: string, newStatus: MeetingStatus) => {
     const meeting = meetingPoints.find(m => m.id === meetingId);
     if (meeting) {
-      const updated = await updateMeetingPoint(meetingId, { status: newStatus });
+      const updated = await updateMeetingPoint(meetingId, {
+        status: newStatus
+      });
       if (updated) {
         loadData();
       }
     }
   };
-  
   const handleRequestByChange = async (meetingId: string, requestBy: string) => {
     const meeting = meetingPoints.find(m => m.id === meetingId);
     if (meeting) {
-      const updated = await updateMeetingPoint(meetingId, { request_by: requestBy });
+      const updated = await updateMeetingPoint(meetingId, {
+        request_by: requestBy
+      });
       if (updated) {
         loadData();
       }
     }
   };
-  
   const handleGenerateMinutes = async () => {
     const minutes = await generateMeetingMinutes(currentDate);
     if (minutes) {
@@ -208,7 +158,7 @@ const CatatanMeetings = () => {
       toast.success("Meeting minutes downloaded successfully");
     }
   };
-  
+
   // Count meeting points by status
   const notStartedCount = meetingPoints.filter(point => point.status === "not-started").length;
   const onGoingCount = meetingPoints.filter(point => point.status === "on-going").length;
@@ -216,22 +166,16 @@ const CatatanMeetings = () => {
   const rejectedCount = meetingPoints.filter(point => point.status === "rejected").length;
   const presentedCount = meetingPoints.filter(point => point.status === "presented").length;
   const updatesCount = recentUpdates.length;
-  
+
   // Add the handleUpdateAdded function to reload data after an update is added
   const handleUpdateAdded = () => {
     loadData();
   };
-  
-  return (
-    <div className="w-full">
+  return <div className="w-full">
       <div className="max-w-full mx-auto">
         <div className="flex justify-between items-center p-6 bg-white border-b w-full sticky top-0 z-10">
           <h1 className="text-2xl font-semibold">{currentDate}</h1>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={handleGenerateMinutes}
-          >
+          <Button variant="outline" className="flex items-center gap-2" onClick={handleGenerateMinutes}>
             <Download size={16} />
             Download Minutes
           </Button>
@@ -239,18 +183,8 @@ const CatatanMeetings = () => {
         
         {/* New Discussion Point Input */}
         <form onSubmit={handleAddPoint} className="flex items-center px-6 py-3 bg-gray-50">
-          <Input
-            type="text"
-            placeholder="Type a new discussion point and press Enter..."
-            className="w-full"
-            value={newPoint}
-            onChange={(e) => setNewPoint(e.target.value)}
-          />
-          <Button 
-            type="submit" 
-            className="ml-2 bg-blue-500 hover:bg-blue-600"
-            disabled={!newPoint.trim()}
-          >
+          <Input type="text" placeholder="Type a new discussion point and press Enter..." className="w-full" value={newPoint} onChange={e => setNewPoint(e.target.value)} />
+          <Button type="submit" className="ml-2 bg-blue-500 hover:bg-blue-600" disabled={!newPoint.trim()}>
             Add
           </Button>
         </form>
@@ -262,10 +196,10 @@ const CatatanMeetings = () => {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Meeting Points</h2>
                 <div className="flex space-x-2">
-                  <Select
-                    value={filters.status}
-                    onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-                  >
+                  <Select value={filters.status} onValueChange={value => setFilters(prev => ({
+                  ...prev,
+                  status: value
+                }))}>
                     <SelectTrigger className="w-[150px] bg-[#f5f5fa]">
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
@@ -279,28 +213,26 @@ const CatatanMeetings = () => {
                     </SelectContent>
                   </Select>
                   
-                  <Select
-                    value={filters.requestBy}
-                    onValueChange={(value) => setFilters(prev => ({ ...prev, requestBy: value }))}
-                  >
+                  <Select value={filters.requestBy} onValueChange={value => setFilters(prev => ({
+                  ...prev,
+                  requestBy: value
+                }))}>
                     <SelectTrigger className="w-[150px] bg-[#f5f5fa]">
                       <SelectValue placeholder="All Request By" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Request By</SelectItem>
                       {/* Dynamically generate list from unique requestBy values */}
-                      {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
-                        <SelectItem key={person} value={person as string}>
+                      {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map(person => <SelectItem key={person} value={person as string}>
                           {person}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
                   
-                  <Select
-                    value={filters.timeRange}
-                    onValueChange={(value) => setFilters(prev => ({ ...prev, timeRange: value }))}
-                  >
+                  <Select value={filters.timeRange} onValueChange={value => setFilters(prev => ({
+                  ...prev,
+                  timeRange: value
+                }))}>
                     <SelectTrigger className="w-[150px] bg-[#f5f5fa]">
                       <SelectValue placeholder="All Time" />
                     </SelectTrigger>
@@ -322,35 +254,31 @@ const CatatanMeetings = () => {
                     <TableHeader>
                       <TableRow className="bg-white border-b">
                         <TableHead className="w-[120px] py-4 whitespace-nowrap">DATE</TableHead>
-                        <TableHead className="w-[300px] py-4 text-left">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[300px] py-4 text-left px-[24px] mx-0">DISCUSSION POINT</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap text-center">REQUEST BY</TableHead>
                         <TableHead className="w-[140px] py-4 whitespace-nowrap text-center">STATUS</TableHead>
-                        <TableHead className="w-[100px] py-4 whitespace-nowrap text-center">UPDATES</TableHead>
-                        <TableHead className="w-[140px] py-4 whitespace-nowrap text-right">ACTIONS</TableHead>
+                        <TableHead className="w-[100px] whitespace-nowrap text-center mx-0 my-[178px] py-px px-[10px]">UPDATES</TableHead>
+                        <TableHead className="w-[140px] py-4 whitespace-nowrap text-right mx-0 px-[22px]">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
                   </Table>
                   
                   {/* Scrollable table body - Updated height to 800px */}
-                  <div className="overflow-hidden" style={{ height: "800px" }}>
+                  <div className="overflow-hidden" style={{
+                  height: "800px"
+                }}>
                     <ScrollArea className="h-full">
                       <Table>
                         <TableBody>
-                          {loading ? (
-                            <TableRow>
+                          {loading ? <TableRow>
                               <TableCell colSpan={6} className="text-center py-8">Loading meeting points...</TableCell>
-                            </TableRow>
-                          ) : meetingPoints.length === 0 ? (
-                            <TableRow>
+                            </TableRow> : meetingPoints.length === 0 ? <TableRow>
                               <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                                 No meeting points found. Add one above.
                               </TableCell>
-                            </TableRow>
-                          ) : (
-                            meetingPoints.map((point, index) => (
-                              <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                                <TableCell className="w-[120px] py-4 whitespace-nowrap">{point.date}</TableCell>
-                                <TableCell className="w-[300px] py-4 text-left">
+                            </TableRow> : meetingPoints.map((point, index) => <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
+                                <TableCell className="w-[120px] py-4 whitespace-nowrap my-0 px-[15px]">{point.date}</TableCell>
+                                <TableCell className="w-[300px] text-left px-0 py-0 my-0 mx-0">
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -368,40 +296,26 @@ const CatatanMeetings = () => {
                                     </Tooltip>
                                   </TooltipProvider>
                                 </TableCell>
-                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-center">
-                                  <Select 
-                                    defaultValue={point.request_by || "unassigned"} 
-                                    onValueChange={(value) => handleRequestByChange(point.id, value)}
-                                  >
+                                <TableCell className="w-[140px] whitespace-nowrap text-center mx-0 my-[25px] py-0 px-[26px]">
+                                  <Select defaultValue={point.request_by || "unassigned"} onValueChange={value => handleRequestByChange(point.id, value)}>
                                     <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
                                       <SelectValue placeholder="Select person" />
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="unassigned">Select person</SelectItem>
                                       {/* Dynamically generate list from unique requestBy values */}
-                                      {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
-                                        <SelectItem key={person} value={person as string}>
+                                      {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map(person => <SelectItem key={person} value={person as string}>
                                           {person}
-                                        </SelectItem>
-                                      ))}
+                                        </SelectItem>)}
                                     </SelectContent>
                                   </Select>
                                 </TableCell>
-                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-center">
-                                  <MeetingStatusBadge 
-                                    status={point.status} 
-                                    onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
-                                  />
+                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-center my-[12px] mx-[32px] px-0">
+                                  <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
                                 </TableCell>
                                 <TableCell className="w-[100px] py-4 whitespace-nowrap text-center">
                                   <div className="flex justify-center">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      onClick={() => handleAddUpdates(point)}
-                                      className="text-blue-500 hover:text-blue-700"
-                                      title="View and Add Updates"
-                                    >
+                                    <Button variant="ghost" size="sm" onClick={() => handleAddUpdates(point)} className="text-blue-500 hover:text-blue-700" title="View and Add Updates">
                                       <History size={16} />
                                       <span className="ml-2">
                                         {updateCounts[point.id] || 0}
@@ -411,22 +325,11 @@ const CatatanMeetings = () => {
                                 </TableCell>
                                 <TableCell className="w-[140px] py-4 whitespace-nowrap text-right">
                                   <div className="flex justify-end space-x-2">
-                                    <MeetingActionButton 
-                                      icon={Edit} 
-                                      label="Edit" 
-                                      onClick={() => handleEditMeeting(point)} 
-                                    />
-                                    <MeetingActionButton 
-                                      icon={Trash2} 
-                                      label="Delete" 
-                                      variant="destructive" 
-                                      onClick={() => handleDeletePrompt(point)} 
-                                    />
+                                    <MeetingActionButton icon={Edit} label="Edit" onClick={() => handleEditMeeting(point)} />
+                                    <MeetingActionButton icon={Trash2} label="Delete" variant="destructive" onClick={() => handleDeletePrompt(point)} />
                                   </div>
                                 </TableCell>
-                              </TableRow>
-                            ))
-                          )}
+                              </TableRow>)}
                         </TableBody>
                       </Table>
                     </ScrollArea>
@@ -444,61 +347,19 @@ const CatatanMeetings = () => {
               <CardContent className="p-6">
                 <h3 className="text-lg font-medium mb-4">Today's Points</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <MeetingSummaryCard 
-                    status="not-started" 
-                    count={notStartedCount} 
-                    icon={AlertTriangle} 
-                    label="Not Started" 
-                  />
-                  <MeetingSummaryCard 
-                    status="on-going" 
-                    count={onGoingCount} 
-                    icon={Clock} 
-                    label="On Going" 
-                  />
-                  <MeetingSummaryCard 
-                    status="completed" 
-                    count={completedCount} 
-                    icon={CheckCircle} 
-                    label="Completed" 
-                  />
-                  <MeetingSummaryCard 
-                    status="rejected" 
-                    count={rejectedCount} 
-                    icon={XCircle} 
-                    label="Rejected" 
-                  />
-                  <MeetingSummaryCard 
-                    status="presented" 
-                    count={presentedCount} 
-                    icon={Presentation} 
-                    label="Presented" 
-                  />
-                  <MeetingSummaryCard 
-                    status={"updates" as MeetingSummaryStatus} 
-                    count={updatesCount} 
-                    icon={History} 
-                    label="Updates" 
-                  />
+                  <MeetingSummaryCard status="not-started" count={notStartedCount} icon={AlertTriangle} label="Not Started" />
+                  <MeetingSummaryCard status="on-going" count={onGoingCount} icon={Clock} label="On Going" />
+                  <MeetingSummaryCard status="completed" count={completedCount} icon={CheckCircle} label="Completed" />
+                  <MeetingSummaryCard status="rejected" count={rejectedCount} icon={XCircle} label="Rejected" />
+                  <MeetingSummaryCard status="presented" count={presentedCount} icon={Presentation} label="Presented" />
+                  <MeetingSummaryCard status={"updates" as MeetingSummaryStatus} count={updatesCount} icon={History} label="Updates" />
                 </div>
               </CardContent>
             </Card>
             
             <h3 className="text-lg font-medium mb-4">Recent Updates</h3>
             <div className="space-y-4 max-h-72 overflow-y-auto pr-2">
-              {recentUpdates.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No recent updates.</p>
-              ) : (
-                recentUpdates.map((update) => (
-                  <MeetingUpdateItem
-                    key={update.id}
-                    title={update.title}
-                    status={update.status}
-                    person={update.person}
-                    date={update.date}
-                  />
-                ))
-              )}
+              {recentUpdates.length === 0 ? <p className="text-gray-500 text-center py-4">No recent updates.</p> : recentUpdates.map(update => <MeetingUpdateItem key={update.id} title={update.title} status={update.status} person={update.person} date={update.date} />)}
             </div>
           </div>
         </div>
@@ -506,43 +367,19 @@ const CatatanMeetings = () => {
       
       {/* Floating action button - made sticky */}
       <div className="fixed bottom-8 right-8 z-30">
-        <Button 
-          variant="default" 
-          size="icon" 
-          className="h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 transition-all"
-          onClick={handleCreateMeeting}
-        >
+        <Button variant="default" size="icon" className="h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 transition-all" onClick={handleCreateMeeting}>
           <Plus className="h-6 w-6" />
         </Button>
       </div>
       
       {/* Edit Dialog */}
-      <MeetingDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSave={handleSaveMeeting}
-        meetingPoint={selectedMeeting || undefined}
-        title={selectedMeeting ? "Edit Meeting Point" : "Add Meeting Point"}
-      />
+      <MeetingDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} onSave={handleSaveMeeting} meetingPoint={selectedMeeting || undefined} title={selectedMeeting ? "Edit Meeting Point" : "Add Meeting Point"} />
       
       {/* History Dialog */}
-      {selectedMeeting && (
-        <HistoryDialog
-          open={historyDialogOpen}
-          onOpenChange={setHistoryDialogOpen}
-          meetingPoint={selectedMeeting}
-        />
-      )}
+      {selectedMeeting && <HistoryDialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen} meetingPoint={selectedMeeting} />}
 
       {/* Updates Dialog */}
-      {selectedMeeting && (
-        <UpdatesDialog
-          open={updatesDialogOpen}
-          onOpenChange={setUpdatesDialogOpen}
-          meetingPoint={selectedMeeting}
-          onUpdateAdded={handleUpdateAdded}
-        />
-      )}
+      {selectedMeeting && <UpdatesDialog open={updatesDialogOpen} onOpenChange={setUpdatesDialogOpen} meetingPoint={selectedMeeting} onUpdateAdded={handleUpdateAdded} />}
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -561,8 +398,6 @@ const CatatanMeetings = () => {
       </AlertDialog>
       
       <Toaster />
-    </div>
-  );
+    </div>;
 };
-
 export default CatatanMeetings;
