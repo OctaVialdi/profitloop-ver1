@@ -253,17 +253,17 @@ const CatatanMeetings = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-white border-b">
-                        <TableHead className="w-[120px] py-4  text-left whitespace-nowrap">DATE</TableHead>
-                        <TableHead className="w-[300px] py-4 text-left px-[24px] mx-0">DISCUSSION POINT</TableHead>
-                        <TableHead className="w-[140px] py-4 whitespace-nowrap text-center">REQUEST BY</TableHead>
-                        <TableHead className="w-[140px] py-4 whitespace-nowrap text-center">STATUS</TableHead>
-                        <TableHead className="w-[100px] whitespace-nowrap text-center my-0 mx-[35px] px-0 py-0">UPDATES</TableHead>
-                        <TableHead className="w-[140px] py-4 whitespace-nowrap text-right mx-0 px-[22px]">ACTIONS</TableHead>
+                        <TableHead className="w-[120px] py-4">DATE</TableHead>
+                        <TableHead className="w-[300px] py-4 text-left">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[140px] py-4">REQUEST BY</TableHead>
+                        <TableHead className="w-[140px] py-4">STATUS</TableHead>
+                        <TableHead className="w-[100px] py-4">UPDATES</TableHead>
+                        <TableHead className="w-[140px] py-4 text-right">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
                   </Table>
                   
-                  {/* Scrollable table body - Updated height to 800px */}
+                  {/* Scrollable table body */}
                   <div className="overflow-hidden" style={{
                   height: "800px"
                 }}>
@@ -277,59 +277,59 @@ const CatatanMeetings = () => {
                                 No meeting points found. Add one above.
                               </TableCell>
                             </TableRow> : meetingPoints.map((point, index) => <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                                <TableCell className="w-[120px] py-4 whitespace-nowrap my-0 px-[15px]">{point.date}</TableCell>
-                                <TableCell className="w-[300px] text-left py-0 my-0 mx-0 px-0">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="relative h-10 overflow-hidden">
-                                          <ScrollArea className="h-10 w-full">
-                                            <div className="pr-3 text-left">
-                                              {point.discussion_point}
-                                            </div>
-                                          </ScrollArea>
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-md p-2 bg-white">
-                                        <p className="text-sm">{point.discussion_point}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </TableCell>
-                                <TableCell className="w-[140px] whitespace-nowrap text-center my-[0px] py-0 mx-[4px] px-[19px]">
-                                  <Select defaultValue={point.request_by || "unassigned"} onValueChange={value => handleRequestByChange(point.id, value)}>
-                                    <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
-                                      <SelectValue placeholder="Select person" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="unassigned">Select person</SelectItem>
-                                      {/* Dynamically generate list from unique requestBy values */}
-                                      {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map(person => <SelectItem key={person} value={person as string}>
-                                          {person}
-                                        </SelectItem>)}
-                                    </SelectContent>
-                                  </Select>
-                                </TableCell>
-                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-center my-[0px] mx-[0px] px-0">
-                                  <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
-                                </TableCell>
-                                <TableCell className="w-[100px] py-4 whitespace-nowrap text-center">
-                                  <div className="flex justify-center">
-                                    <Button variant="ghost" size="sm" onClick={() => handleAddUpdates(point)} className="text-blue-500 hover:text-blue-700" title="View and Add Updates">
-                                      <History size={16} />
-                                      <span className="ml-2">
-                                        {updateCounts[point.id] || 0}
-                                      </span>
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="w-[140px] py-4 whitespace-nowrap text-right">
-                                  <div className="flex justify-end space-x-2">
-                                    <MeetingActionButton icon={Edit} label="Edit" onClick={() => handleEditMeeting(point)} />
-                                    <MeetingActionButton icon={Trash2} label="Delete" variant="destructive" onClick={() => handleDeletePrompt(point)} />
-                                  </div>
-                                </TableCell>
-                              </TableRow>)}
+                              <TableCell className="w-[120px] text-center">{point.date}</TableCell>
+                              <TableCell className="w-[300px] text-left">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="relative h-10 overflow-hidden">
+                                        <ScrollArea className="h-10 w-full">
+                                          <div className="pr-3 text-left">
+                                            {point.discussion_point}
+                                          </div>
+                                        </ScrollArea>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-md p-2 bg-white">
+                                      <p className="text-sm">{point.discussion_point}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </TableCell>
+                              <TableCell className="w-[140px] text-center">
+                                <Select defaultValue={point.request_by || "unassigned"} onValueChange={value => handleRequestByChange(point.id, value)}>
+                                  <SelectTrigger className="w-[120px] mx-auto bg-[#f5f5fa]">
+                                    <SelectValue placeholder="Select person" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="unassigned">Select person</SelectItem>
+                                    {/* Dynamically generate list from unique requestBy values */}
+                                    {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map(person => <SelectItem key={person} value={person as string}>
+                                        {person}
+                                      </SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="w-[140px] text-center">
+                                <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
+                              </TableCell>
+                              <TableCell className="w-[100px] text-center">
+                                <div className="flex justify-center">
+                                  <Button variant="ghost" size="sm" onClick={() => handleAddUpdates(point)} className="text-blue-500 hover:text-blue-700" title="View and Add Updates">
+                                    <History size={16} />
+                                    <span className="ml-2">
+                                      {updateCounts[point.id] || 0}
+                                    </span>
+                                  </Button>
+                                </div>
+                              </TableCell>
+                              <TableCell className="w-[140px] text-right">
+                                <div className="flex justify-end space-x-2">
+                                  <MeetingActionButton icon={Edit} label="Edit" onClick={() => handleEditMeeting(point)} />
+                                  <MeetingActionButton icon={Trash2} label="Delete" variant="destructive" onClick={() => handleDeletePrompt(point)} />
+                                </div>
+                              </TableCell>
+                            </TableRow>)}
                         </TableBody>
                       </Table>
                     </ScrollArea>
@@ -377,7 +377,7 @@ const CatatanMeetings = () => {
       
       {/* History Dialog */}
       {selectedMeeting && <HistoryDialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen} meetingPoint={selectedMeeting} />}
-
+      
       {/* Updates Dialog */}
       {selectedMeeting && <UpdatesDialog open={updatesDialogOpen} onOpenChange={setUpdatesDialogOpen} meetingPoint={selectedMeeting} onUpdateAdded={handleUpdateAdded} />}
       
