@@ -34,7 +34,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   getMeetingPoints, 
   getMeetingUpdates, 
@@ -346,12 +345,10 @@ const CatatanMeetings = () => {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <div className="relative h-10 overflow-hidden">
-                                      <ScrollArea className="h-10 w-full">
-                                        <div className="pr-3">
-                                          {point.discussion_point}
-                                        </div>
-                                      </ScrollArea>
+                                    <div className="break-words line-clamp-2 max-h-12 cursor-pointer" style={{ 
+                                      maxWidth: '300px'
+                                    }}>
+                                      {point.discussion_point}
                                     </div>
                                   </TooltipTrigger>
                                   <TooltipContent className="max-w-md p-2 bg-white">
