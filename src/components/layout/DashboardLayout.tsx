@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AnimatePresence, motion } from "framer-motion";
 
 // Import your sidebar navigation component
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
@@ -83,7 +84,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="h-[calc(100vh-4rem)] overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-4 md:p-6">
-                {children || <Outlet />}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {children || <Outlet />}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </ScrollArea>
           </div>

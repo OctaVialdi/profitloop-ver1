@@ -24,6 +24,7 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import MagicLinkJoin from "./pages/auth/MagicLinkJoin";
 import CatatanMeetings from "@/pages/CatatanMeetings";
 import { useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 
 function App() {
   // Check if the app is running in a development environment

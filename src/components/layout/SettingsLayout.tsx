@@ -1,9 +1,10 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOrganization } from "@/hooks/useOrganization";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface Tab {
   name: string;
@@ -66,9 +67,18 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
         </Tabs>
       </Card>
       
-      <div className="pb-4">
-        {children}
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="pb-4"
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
