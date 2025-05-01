@@ -1,88 +1,98 @@
-
-import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { Toaster } from "@/components/ui/sonner";
-import NotFound from "@/pages/NotFound";
-import Index from "@/pages/Index";
-import AuthLayout from "@/components/layout/AuthLayout";
-import Login from "@/pages/auth/Login";
-import Register from "@/pages/auth/Register";
-import VerificationSent from "@/pages/auth/VerificationSent";
-import OrganizationSetup from "@/pages/onboarding/OrganizationSetup";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import Dashboard from "@/pages/dashboard/Dashboard";
-import InviteMembers from "@/pages/dashboard/InviteMembers";
-import OrganizationSettings from "@/pages/dashboard/OrganizationSettings";
-import MemberManagement from "@/pages/dashboard/MemberManagement";
-import Subscription from "@/pages/dashboard/Subscription";
-import OrganizationCollaboration from "@/pages/dashboard/OrganizationCollaboration";
-import Notifications from "@/pages/dashboard/Notifications";
-import WelcomePage from "@/pages/WelcomePage";
-// New imports
-import AcceptInvitation from "@/pages/auth/AcceptInvitation";
-import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
-import SettingsLayout from "@/components/layout/SettingsLayout";
-// Import the new profile settings page
-import ProfileSettings from "@/pages/settings/ProfileSettings";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { NotificationSystem } from "@/components/NotificationSystem";
+import { Index } from "@/pages/Index";
+import { Login } from "@/pages/auth/Login";
+import { Register } from "@/pages/auth/Register";
+import { VerificationSent } from "@/pages/auth/VerificationSent";
+import { AcceptInvitation } from "@/pages/auth/AcceptInvitation";
+import { OrganizationSetup } from "@/pages/OrganizationSetup";
+import { EmployeeWelcome } from "@/pages/EmployeeWelcome";
+import { Dashboard } from "@/pages/dashboard/Dashboard";
+import { Notifications } from "@/pages/dashboard/Notifications";
+import { MemberManagement } from "@/pages/dashboard/MemberManagement";
+import { InviteMembers } from "@/pages/dashboard/InviteMembers";
+import { OrganizationCollaboration } from "@/pages/dashboard/OrganizationCollaboration";
+import { Subscription } from "@/pages/dashboard/Subscription";
+import { OrganizationSettings } from "@/pages/dashboard/OrganizationSettings";
+import { ProfileSettings } from "@/pages/dashboard/ProfileSettings";
+import { NotFound } from "@/pages/NotFound";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { SettingsLayout } from "@/components/layout/SettingsLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AuthLayout } from "@/components/layout/AuthLayout";
+import MagicLinkJoin from "./pages/auth/MagicLinkJoin";
 
 function App() {
+  // Check if the app is running in a development environment
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // Log the environment status to the console
+  useEffect(() => {
+    console.log(`App is running in ${isDevelopment ? 'development' : 'production'} mode.`);
+  }, [isDevelopment]);
+
   return (
-    <ThemeProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <NotificationSystem />
         <Routes>
+          {/* Public Route */}
           <Route path="/" element={<Index />} />
-          
+
           {/* Auth Routes */}
-          <Route element={<AuthLayout />}>
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/register" element={<Register />} />
-            <Route path="/auth/verification-sent" element={<VerificationSent />} />
-            <Route path="/accept-invitation" element={<AcceptInvitation />} />
+          <Route path="/auth" element={<AuthLayout />}>
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="verification-sent" element={<VerificationSent />} />
           </Route>
           
-          {/* Onboarding Routes */}
+          {/* Accept Invitations */}
+          <Route path="/accept-invitation" element={<AcceptInvitation />} />
+          <Route path="/join-organization" element={<MagicLinkJoin />} />
+
+          {/* Protected Routes */}
           <Route path="/onboarding" element={<OrganizationSetup />} />
-          <Route path="/welcome" element={<WelcomePage />} />
           <Route path="/employee-welcome" element={<EmployeeWelcome />} />
-          
-          {/* Dashboard Routes */}
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/members" element={<MemberManagement />} />
-            <Route path="/notifications" element={<Notifications />} />
-            
-            {/* Settings Routes - All reorganized under /settings */}
-            <Route path="/settings" element={
-              <SettingsLayout>
-                <Outlet />
-              </SettingsLayout>
-            }>
-              <Route path="" element={<Navigate to="/settings/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="invite" element={<InviteMembers />} />
-              <Route path="members" element={<MemberManagement />} />
-              <Route path="collaborations" element={<OrganizationCollaboration />} />
-              <Route path="subscription" element={<Subscription />} />
-              <Route path="organization" element={<OrganizationSettings />} />
-              {/* Add the profile route */}
-              <Route path="profile" element={<ProfileSettings />} />
-            </Route>
-            
-            {/* Legacy routes redirects */}
-            <Route path="/invite" element={<Navigate to="/settings/invite" replace />} />
-            <Route path="/organization/settings" element={<Navigate to="/settings/organization" replace />} />
-            <Route path="/subscription" element={<Navigate to="/settings/subscription" replace />} />
-            <Route path="/collaborations" element={<Navigate to="/settings/collaborations" replace />} />
-            {/* Add a redirect for direct profile access */}
-            <Route path="/profile" element={<Navigate to="/settings/profile" replace />} />
+
+          {/* Dashboard Layout */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="notifications" element={<Notifications />} />
           </Route>
-          
-          {/* 404 Page */}
+
+          {/* Settings Layout */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SettingsLayout />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="members" element={<MemberManagement />} />
+            <Route path="invite" element={<InviteMembers />} />
+            <Route path="collaborations" element={<OrganizationCollaboration />} />
+            <Route path="subscription" element={<Subscription />} />
+            <Route path="organization" element={<OrganizationSettings />} />
+            <Route path="profile" element={<ProfileSettings />} />
+          </Route>
+
+          {/* Catch all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-      <Toaster />
-    </ThemeProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 
