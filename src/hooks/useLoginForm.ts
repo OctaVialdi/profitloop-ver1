@@ -15,6 +15,13 @@ export function useLoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Pre-fill email from location state if available
+  useState(() => {
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+  });
+  
   const handleResendVerification = async () => {
     if (!email) {
       toast.error("Email tidak boleh kosong");
@@ -39,6 +46,9 @@ export function useLoginForm() {
           ...(location.state?.invitationToken && { 
             isInvitation: true, 
             invitationToken: location.state.invitationToken 
+          }),
+          ...(location.state?.magicLinkToken && {
+            magicLinkToken: location.state.magicLinkToken
           })
         }
       });
@@ -75,8 +85,40 @@ export function useLoginForm() {
       if (data?.user) {
         toast.success("Login berhasil!");
         
-        // Handle invitation token if present
-        if (location.state?.invitationToken) {
+        // Handle magic link token if present
+        const magicLinkToken = location.state?.magicLinkToken;
+        if (magicLinkToken) {
+          try {
+            const { data: joinResult, error: joinError } = await supabase.rpc(
+              'process_magic_link_invitation',
+              { 
+                invitation_token: magicLinkToken,
+                user_id: data.user.id
+              }
+            );
+            
+            if (joinError) {
+              throw joinError;
+            }
+            
+            // Handle result as an object
+            const result = joinResult as { success: boolean, message: string, organization_id?: string };
+            
+            if (result.success) {
+              toast.success("Berhasil bergabung dengan organisasi!");
+              navigate("/employee-welcome");
+              return;
+            } else {
+              throw new Error(result.message || "Gagal bergabung dengan organisasi");
+            }
+          } catch (joinErr: any) {
+            console.error("Error joining organization:", joinErr);
+            toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
+          }
+        }
+        
+        // Handle invitation token (legacy) if present
+        else if (location.state?.invitationToken) {
           try {
             const { data: joinResult, error: joinError } = await supabase
               .rpc('join_organization', { 

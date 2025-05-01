@@ -11,13 +11,40 @@ const MagicLinkJoin = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token");
+  const email = searchParams.get("email");
+  const errorCode = searchParams.get("error_code");
+  const errorDescription = searchParams.get("error_description");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [organizationName, setOrganizationName] = useState<string>("");
 
+  // Function to handle manual login with token
+  const handleLoginAndJoin = async () => {
+    if (!email || !token) {
+      toast.error("Email atau token tidak valid");
+      return;
+    }
+
+    setIsLoading(true);
+    navigate("/auth/login", { 
+      state: { 
+        email,
+        magicLinkToken: token 
+      }
+    });
+  };
+
   useEffect(() => {
     const processInvitation = async () => {
+      // Check if there's an error in the URL (from Supabase redirect)
+      if (errorCode) {
+        console.error("Error from Supabase auth:", errorCode, errorDescription);
+        setError(errorDescription || "Link undangan tidak valid atau sudah kadaluarsa");
+        setIsLoading(false);
+        return;
+      }
+
       if (!token) {
         setError("Token undangan tidak ditemukan");
         setIsLoading(false);
@@ -31,6 +58,7 @@ const MagicLinkJoin = () => {
           // Jika pengguna belum login, redirect ke halaman login dengan token
           navigate("/auth/login", { 
             state: { 
+              email,
               magicLinkToken: token 
             }
           });
@@ -97,7 +125,7 @@ const MagicLinkJoin = () => {
     };
 
     processInvitation();
-  }, [token, navigate, organizationName]);
+  }, [token, navigate, organizationName, email, errorCode, errorDescription]);
 
   if (isLoading) {
     return (
@@ -127,8 +155,21 @@ const MagicLinkJoin = () => {
         </CardHeader>
         <CardContent>
           <p className="text-center mb-6">{error}</p>
-          <div className="flex justify-center">
-            <Button onClick={() => navigate("/auth/login")}>
+          {email && token && (
+            <div className="flex flex-col gap-4">
+              <p className="text-center text-sm text-gray-500">
+                Link telah kadaluarsa. Anda masih dapat bergabung dengan login terlebih dahulu.
+              </p>
+              <Button onClick={handleLoginAndJoin} className="w-full">
+                Login untuk Bergabung
+              </Button>
+              <div className="text-center">
+                <span className="text-sm text-gray-500">atau</span>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-center mt-4">
+            <Button onClick={() => navigate("/auth/login")} variant="outline">
               Kembali ke Login
             </Button>
           </div>
