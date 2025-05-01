@@ -17,7 +17,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Toaster } from "@/components/ui/toaster";
-import { AlertTriangle, Clock, CheckCircle, XCircle, Presentation, History, Download, Edit, Trash2, Plus } from "lucide-react";
+import { AlertTriangle, Clock, CheckCircle, XCircle, Presentation, History, Download, Plus } from "lucide-react";
 import { MeetingSummaryCard } from "@/components/meetings/MeetingSummaryCard";
 import { MeetingUpdateItem } from "@/components/meetings/MeetingUpdateItem";
 import { MeetingStatusBadge } from "@/components/meetings/MeetingStatusBadge";
@@ -27,6 +27,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { MeetingDialog } from "@/components/meetings/MeetingDialog";
 import { HistoryDialog } from "@/components/meetings/HistoryDialog";
 import { UpdatesDialog } from "@/components/meetings/UpdatesDialog";
+import { VirtualizedMeetingTable } from "@/components/meetings/VirtualizedMeetingTable";
 import { 
   getMeetingPoints, 
   getMeetingUpdates, 
@@ -75,6 +76,11 @@ const CatatanMeetings = () => {
     month: 'long',
     year: 'numeric'
   });
+  
+  // Get unique request by values for dropdown
+  const requestByOptions = Array.from(
+    new Set(meetingPoints.map(p => p.request_by).filter(Boolean))
+  ) as string[];
   
   useEffect(() => {
     if (organization) {
@@ -263,9 +269,8 @@ const CatatanMeetings = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Request By</SelectItem>
-                      {/* Dynamically generate list from unique requestBy values */}
-                      {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
-                        <SelectItem key={person} value={person as string}>
+                      {requestByOptions.map((person) => (
+                        <SelectItem key={person} value={person}>
                           {person}
                         </SelectItem>
                       ))}
@@ -289,109 +294,20 @@ const CatatanMeetings = () => {
                 </div>
               </div>
               
-              <div className="bg-white rounded-lg shadow">
-                <Table className="border-collapse">
-                  <TableHeader>
-                    <TableRow className="bg-white border-b">
-                      <TableHead className="w-[150px] py-4">DATE</TableHead>
-                      <TableHead className="py-4">DISCUSSION POINT</TableHead>
-                      <TableHead className="py-4">REQUEST BY</TableHead>
-                      <TableHead className="py-4">STATUS</TableHead>
-                      <TableHead className="py-4">UPDATES</TableHead>
-                      <TableHead className="py-4">ACTIONS</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">Loading meeting points...</TableCell>
-                      </TableRow>
-                    ) : meetingPoints.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                          No meeting points found. Add one below.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      meetingPoints.map((point, index) => (
-                        <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                          <TableCell className="py-4">{point.date}</TableCell>
-                          <TableCell className="py-4">{point.discussion_point}</TableCell>
-                          <TableCell className="py-4">
-                            <Select 
-                              defaultValue={point.request_by || "unassigned"} 
-                              onValueChange={(value) => handleRequestByChange(point.id, value)}
-                            >
-                              <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
-                                <SelectValue placeholder="Select person" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="unassigned">Select person</SelectItem>
-                                {/* Dynamically generate list from unique requestBy values */}
-                                {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
-                                  <SelectItem key={person} value={person as string}>
-                                    {person}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <MeetingStatusBadge 
-                              status={point.status} 
-                              onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
-                            />
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="flex space-x-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleAddUpdates(point)}
-                                className="text-blue-500 hover:text-blue-700"
-                                title="View and Add Updates"
-                              >
-                                <History size={16} />
-                                <span className="ml-2">
-                                  {updateCounts[point.id] || 0}
-                                </span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="flex space-x-2">
-                              <MeetingActionButton 
-                                icon={Edit} 
-                                label="Edit" 
-                                onClick={() => handleEditMeeting(point)} 
-                              />
-                              <MeetingActionButton 
-                                icon={Trash2} 
-                                label="Delete" 
-                                variant="destructive" 
-                                onClick={() => handleDeletePrompt(point)} 
-                              />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                    <TableRow>
-                      <TableCell className="py-4">{currentDate}</TableCell>
-                      <TableCell colSpan={5} className="py-4">
-                        <input
-                          type="text"
-                          placeholder="Type a new discussion point and press Enter..."
-                          className="w-full py-2 focus:outline-none text-gray-500 italic"
-                          value={newPoint}
-                          onChange={(e) => setNewPoint(e.target.value)}
-                          onKeyDown={handleAddPoint}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
+              <VirtualizedMeetingTable
+                meetingPoints={meetingPoints}
+                loading={loading}
+                updateCounts={updateCounts}
+                onStatusChange={handleStatusChange}
+                onRequestByChange={handleRequestByChange}
+                onEditMeeting={handleEditMeeting}
+                onDeletePrompt={handleDeletePrompt}
+                onAddUpdates={handleAddUpdates}
+                onNewPointChange={(value) => setNewPoint(value)}
+                onNewPointKeyDown={handleAddPoint}
+                newPoint={newPoint}
+                requestByOptions={requestByOptions}
+              />
             </div>
           </div>
           
