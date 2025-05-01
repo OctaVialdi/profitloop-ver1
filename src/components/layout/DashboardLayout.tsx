@@ -11,7 +11,7 @@ import { useAppTheme } from "@/components/ThemeProvider";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
 import { 
-  SidebarProvider, 
+  SidebarProviderWithTooltip as SidebarProvider, 
   SidebarInset
 } from "@/components/ui/sidebar";
 
