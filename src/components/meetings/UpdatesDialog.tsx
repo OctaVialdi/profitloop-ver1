@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -65,9 +64,6 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
     setLoading(true);
     
     try {
-      const currentDate = new Date();
-      const formattedDate = `${currentDate.getDate()} ${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getFullYear()} - ${currentDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
-      
       if (editingUpdate) {
         // Update existing update - since there's no direct update function for updates,
         // We'll delete the old update and add a new one with the same properties but updated title
@@ -130,8 +126,6 @@ export const UpdatesDialog: React.FC<UpdatesDialogProps> = ({
   const handleDeleteUpdate = async (update: MeetingUpdate) => {
     try {
       // Since there's no direct delete function for an update, we'll need a workaround
-      // This is a simplification - in a real implementation, you would have a proper
-      // deleteMeetingUpdate function in your service
       await deleteMeetingPoint(update.id);
       toast.success("Update deleted successfully");
       loadUpdates(); // Reload updates after deletion

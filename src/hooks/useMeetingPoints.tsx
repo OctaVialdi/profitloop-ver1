@@ -9,6 +9,7 @@ import {
   deleteMeetingPoint
 } from "@/services/meetingService";
 import { useOrganization } from "@/hooks/useOrganization";
+import { toast } from "sonner";
 
 export const useMeetingPoints = () => {
   const { organization } = useOrganization();
@@ -30,75 +31,114 @@ export const useMeetingPoints = () => {
 
   const loadData = async () => {
     setLoading(true);
-    const points = await getMeetingPoints(filters);
-    setMeetingPoints(points);
-    
-    // Load recent updates
-    const updates = await getMeetingUpdates();
-    setRecentUpdates(updates.slice(0, 5)); // Get only the 5 most recent updates
-    
-    // Calculate update counts for each meeting point
-    const counts: Record<string, number> = {};
-    points.forEach(point => {
-      const pointUpdates = updates.filter(u => u.meeting_point_id === point.id);
-      counts[point.id] = pointUpdates.length;
-    });
-    setUpdateCounts(counts);
-    
-    setLoading(false);
+    try {
+      const points = await getMeetingPoints(filters);
+      setMeetingPoints(points);
+      
+      // Load recent updates
+      const updates = await getMeetingUpdates();
+      setRecentUpdates(updates.slice(0, 5)); // Get only the 5 most recent updates
+      
+      // Calculate update counts for each meeting point
+      const counts: Record<string, number> = {};
+      points.forEach(point => {
+        const pointUpdates = updates.filter(u => u.meeting_point_id === point.id);
+        counts[point.id] = pointUpdates.length;
+      });
+      setUpdateCounts(counts);
+    } catch (error) {
+      console.error("Error loading meeting data:", error);
+      toast.error("Failed to load meeting data");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddPoint = async (discussionPoint: string) => {
-    // Date will be empty at first and added during create by the backend
-    const newMeetingPoint = {
-      date: "", // Empty date that will be filled on server
-      discussion_point: discussionPoint,
-      request_by: "",
-      status: "not-started" as MeetingStatus
-    };
-    
-    const result = await createMeetingPoint(newMeetingPoint);
-    if (result) {
-      loadData();
-      return true;
+    try {
+      // Date will be empty at first and added during create by the backend
+      const newMeetingPoint = {
+        date: "", // Empty date that will be filled on server
+        discussion_point: discussionPoint,
+        request_by: "",
+        status: "not-started" as MeetingStatus
+      };
+      
+      const result = await createMeetingPoint(newMeetingPoint);
+      if (result) {
+        await loadData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error creating meeting point:", error);
+      toast.error("Failed to create meeting point");
+      return false;
     }
-    return false;
   };
 
   const handleStatusChange = async (meetingId: string, newStatus: MeetingStatus) => {
-    const meeting = meetingPoints.find(m => m.id === meetingId);
-    if (meeting) {
-      const updated = await updateMeetingPoint(meetingId, { status: newStatus });
-      if (updated) {
-        loadData();
+    try {
+      const meeting = meetingPoints.find(m => m.id === meetingId);
+      if (meeting) {
+        const updated = await updateMeetingPoint(meetingId, { status: newStatus });
+        if (updated) {
+          loadData();
+          return true;
+        }
       }
+      return false;
+    } catch (error) {
+      console.error("Error updating meeting status:", error);
+      toast.error("Failed to update meeting status");
+      return false;
     }
   };
   
   const handleRequestByChange = async (meetingId: string, requestBy: string) => {
-    const meeting = meetingPoints.find(m => m.id === meetingId);
-    if (meeting) {
-      const updated = await updateMeetingPoint(meetingId, { request_by: requestBy });
-      if (updated) {
-        loadData();
+    try {
+      const meeting = meetingPoints.find(m => m.id === meetingId);
+      if (meeting) {
+        const updated = await updateMeetingPoint(meetingId, { request_by: requestBy });
+        if (updated) {
+          loadData();
+          return true;
+        }
       }
+      return false;
+    } catch (error) {
+      console.error("Error updating requestBy:", error);
+      toast.error("Failed to update request person");
+      return false;
     }
   };
 
   const handleDeleteMeeting = async (meetingId: string) => {
-    const success = await deleteMeetingPoint(meetingId);
-    if (success) {
-      loadData();
+    try {
+      const success = await deleteMeetingPoint(meetingId);
+      if (success) {
+        loadData();
+      }
+      return success;
+    } catch (error) {
+      console.error("Error deleting meeting point:", error);
+      toast.error("Failed to delete meeting point");
+      return false;
     }
-    return success;
   };
 
   const handleUpdateMeeting = async (meetingId: string, meetingData: Partial<MeetingPoint>) => {
-    const updated = await updateMeetingPoint(meetingId, meetingData);
-    if (updated) {
-      loadData();
+    try {
+      const updated = await updateMeetingPoint(meetingId, meetingData);
+      if (updated) {
+        loadData();
+      }
+      return updated;
+    } catch (error) {
+      console.error("Error updating meeting point:", error);
+      toast.error("Failed to update meeting point");
+      return false;
     }
-    return updated;
   };
 
   // Calculate counts for different status types

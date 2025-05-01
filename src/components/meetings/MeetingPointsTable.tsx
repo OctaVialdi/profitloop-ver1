@@ -21,6 +21,7 @@ import {
   SelectTrigger, 
   SelectValue
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface MeetingPointsTableProps {
   meetingPoints: MeetingPoint[];
@@ -48,11 +49,29 @@ export const MeetingPointsTable: React.FC<MeetingPointsTableProps> = ({
   requestByOptions
 }) => {
   const [newPoint, setNewPoint] = useState<string>("");
+  const [inputLoading, setInputLoading] = useState<boolean>(false);
   
-  const handleAddPoint = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAddPoint = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && newPoint.trim() !== "") {
-      onAddPoint(newPoint);
-      setNewPoint("");
+      try {
+        setInputLoading(true);
+        // Prevent default to avoid form submission if this is inside a form
+        e.preventDefault();
+        
+        // Call the onAddPoint function passed from parent component
+        const success = await onAddPoint(newPoint);
+        
+        if (success) {
+          // Only clear input if save was successful
+          setNewPoint("");
+          toast.success("Meeting point added successfully");
+        }
+      } catch (error) {
+        console.error("Error adding meeting point:", error);
+        toast.error("Failed to add meeting point. Please try again.");
+      } finally {
+        setInputLoading(false);
+      }
     }
   };
 
@@ -167,7 +186,9 @@ export const MeetingPointsTable: React.FC<MeetingPointsTableProps> = ({
                   value={newPoint}
                   onChange={(e) => setNewPoint(e.target.value)}
                   onKeyDown={handleAddPoint}
+                  disabled={inputLoading}
                 />
+                {inputLoading && <span className="text-xs text-gray-400 ml-2">Saving...</span>}
               </TableCell>
             </TableRow>
           </TableBody>
