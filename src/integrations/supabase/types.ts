@@ -196,7 +196,6 @@ export type Database = {
           full_name: string | null
           id: string
           invited_by: string | null
-          last_active: string | null
           organization_id: string | null
           preferences: Json | null
           role: string | null
@@ -208,7 +207,6 @@ export type Database = {
           full_name?: string | null
           id: string
           invited_by?: string | null
-          last_active?: string | null
           organization_id?: string | null
           preferences?: Json | null
           role?: string | null
@@ -220,7 +218,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           invited_by?: string | null
-          last_active?: string | null
           organization_id?: string | null
           preferences?: Json | null
           role?: string | null
@@ -314,10 +311,6 @@ export type Database = {
           success: boolean
           message: string
         }[]
-      }
-      remove_organization_member: {
-        Args: { member_id: string }
-        Returns: Json
       }
       update_user_organization: {
         Args: { user_id: string; org_id: string; user_role: string }
