@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, saveThemeToDatabase } from "@/integrations/supabase/client";
 import { useOrganization } from "./useOrganization";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { useAppTheme } from "@/components/ThemeProvider";
 import { saveThemeToStorage } from "@/components/ThemeProvider";
+import { saveThemeChanges } from "@/services/meetingService";
 
 export type ThemeSettings = {
   primary_color: string;
@@ -68,12 +69,8 @@ export const useAppThemeManager = () => {
     setIsSaving(true);
     
     try {
-      const { error } = await supabase
-        .from('organizations')
-        .update({ theme_settings: newSettings })
-        .eq('id', organization.id);
-      
-      if (error) throw error;
+      // Update database with theme settings
+      await saveThemeToDatabase(organization.id, newSettings);
       
       setThemeSettings(newSettings);
       // Update localStorage
@@ -112,12 +109,7 @@ export const useAppThemeManager = () => {
       if (uploadError) throw uploadError;
       
       // Update organization record with logo path
-      const { error: updateError } = await supabase
-        .from('organizations')
-        .update({ logo_path: filePath })
-        .eq('id', organization.id);
-      
-      if (updateError) throw updateError;
+      await saveThemeToDatabase(organization.id, themeSettings, filePath);
       
       // Get public URL
       fetchLogoUrl(filePath);
@@ -134,6 +126,11 @@ export const useAppThemeManager = () => {
   // Function to set dark mode
   const setDarkMode = (isDarkMode: boolean) => {
     setTheme(isDarkMode ? "dark" : "light");
+    
+    // Save theme change to database
+    if (userProfile?.id) {
+      saveThemeChanges(isDarkMode ? "dark" : "light", userProfile.id);
+    }
     
     // If user is logged in, save preference to database
     if (userProfile?.id) {

@@ -67,6 +67,32 @@ export async function saveUserPreferences(userId: string, preferences: any) {
   }
 }
 
+// Helper function to save theme settings to database
+export async function saveThemeToDatabase(organizationId: string, themeSettings: any, logoPath?: string) {
+  try {
+    const updateData: any = { theme_settings: themeSettings };
+    
+    if (logoPath) {
+      updateData.logo_path = logoPath;
+    }
+    
+    const { error } = await supabase
+      .from('organizations')
+      .update(updateData)
+      .eq('id', organizationId);
+      
+    if (error) {
+      console.error("Error saving theme settings to database:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error("Exception saving theme settings:", err);
+    return false;
+  }
+}
+
 // Helper function to allow login even with unverified emails
 export async function forceSignIn(email: string, password: string) {
   try {

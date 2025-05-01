@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MeetingPoint, MeetingUpdate, MeetingStatus } from "@/types/meetings";
@@ -72,6 +73,26 @@ export async function getMeetingUpdates(meetingPointId?: string) {
   }
 }
 
+// Format current date as "DD Month YYYY - HH.MM" in Indonesian
+export function formatCurrentDate() {
+  const now = new Date();
+  
+  // Month names in Indonesian
+  const monthNames = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+  
+  const day = now.getDate();
+  const monthIndex = now.getMonth();
+  const year = now.getFullYear();
+  
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  
+  return `${day} ${monthNames[monthIndex]} ${year} - ${hours}.${minutes}`;
+}
+
 export async function createMeetingPoint(meetingPoint: Omit<MeetingPoint, 'id' | 'created_at' | 'updated_at' | 'organization_id'>) {
   try {
     // Get current user profile to get organization_id
@@ -91,10 +112,14 @@ export async function createMeetingPoint(meetingPoint: Omit<MeetingPoint, 'id' |
       throw new Error('No organization found for user');
     }
     
+    // Use formatted date when creating new meeting points
+    const formattedDate = formatCurrentDate();
+    
     const { data, error } = await supabase
       .from('meeting_points')
       .insert({
         ...meetingPoint,
+        date: formattedDate, // Use formatted date
         organization_id: profile.organization_id
       })
       .select()
@@ -115,9 +140,12 @@ export async function createMeetingPoint(meetingPoint: Omit<MeetingPoint, 'id' |
 
 export async function updateMeetingPoint(id: string, updates: Partial<MeetingPoint>) {
   try {
+    // Save timestamp for update
+    const updateTime = new Date().toISOString();
+    
     const { data, error } = await supabase
       .from('meeting_points')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updates, updated_at: updateTime })
       .eq('id', id)
       .select()
       .single();
@@ -132,11 +160,7 @@ export async function updateMeetingPoint(id: string, updates: Partial<MeetingPoi
         meeting_point_id: id,
         status: updates.status,
         person: updates.request_by || 'Unknown',
-        date: new Date().toLocaleDateString('en-US', { 
-          day: 'numeric', 
-          month: 'short',
-          year: 'numeric'
-        }),
+        date: formatCurrentDate(), // Use formatted date for updates
         title: data.discussion_point
       });
     }
@@ -256,5 +280,42 @@ export async function generateMeetingMinutes(date: string) {
     console.error('Error generating meeting minutes:', error.message);
     toast.error('Failed to generate meeting minutes');
     return null;
+  }
+}
+
+// Function to save theme changes to database
+export async function saveThemeChanges(theme: string, userId?: string) {
+  try {
+    if (userId) {
+      // Get current preferences
+      const { data } = await supabase
+        .from('profiles')
+        .select('preferences')
+        .eq('id', userId)
+        .single();
+      
+      if (data?.preferences) {
+        const updatedPreferences = {
+          ...data.preferences,
+          theme: theme
+        };
+        
+        // Update preferences
+        const { error } = await supabase
+          .from('profiles')
+          .update({ preferences: updatedPreferences })
+          .eq('id', userId);
+          
+        if (error) {
+          console.error("Error saving theme preference:", error);
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  } catch (error: any) {
+    console.error('Error saving theme changes:', error.message);
+    return false;
   }
 }

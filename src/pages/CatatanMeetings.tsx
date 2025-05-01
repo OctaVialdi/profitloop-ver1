@@ -34,7 +34,8 @@ import {
   createMeetingPoint, 
   updateMeetingPoint, 
   deleteMeetingPoint,
-  generateMeetingMinutes
+  generateMeetingMinutes,
+  formatCurrentDate
 } from "@/services/meetingService";
 import { 
   MeetingPoint, 
@@ -105,12 +106,9 @@ const CatatanMeetings = () => {
   
   const handleAddPoint = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && newPoint.trim() !== "") {
+      // Date will be empty at first and added during create by the backend
       const newMeetingPoint = {
-        date: new Date().toLocaleDateString('en-US', { 
-          day: 'numeric', 
-          month: 'short',
-          year: 'numeric'
-        }),
+        date: "", // Empty date that will be filled on server
         discussion_point: newPoint,
         request_by: "",
         status: "not-started" as MeetingStatus
@@ -290,111 +288,120 @@ const CatatanMeetings = () => {
                 </div>
               </div>
               
-              <div className="bg-white rounded-lg shadow overflow-hidden overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-white border-b">
-                      <TableHead className="w-[120px] py-4">DATE</TableHead>
-                      <TableHead className="py-4">DISCUSSION POINT</TableHead>
-                      <TableHead className="w-[140px] py-4">REQUEST BY</TableHead>
-                      <TableHead className="w-[140px] py-4">STATUS</TableHead>
-                      <TableHead className="w-[100px] py-4">UPDATES</TableHead>
-                      <TableHead className="w-[140px] py-4">ACTIONS</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">Loading meeting points...</TableCell>
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-white border-b">
+                        <TableHead className="w-[120px] py-4 whitespace-nowrap">DATE</TableHead>
+                        <TableHead className="py-4 w-[300px]">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[140px] py-4 whitespace-nowrap">REQUEST BY</TableHead>
+                        <TableHead className="w-[140px] py-4 whitespace-nowrap">STATUS</TableHead>
+                        <TableHead className="w-[100px] py-4 whitespace-nowrap">UPDATES</TableHead>
+                        <TableHead className="w-[140px] py-4 whitespace-nowrap">ACTIONS</TableHead>
                       </TableRow>
-                    ) : meetingPoints.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                          No meeting points found. Add one below.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      meetingPoints.map((point, index) => (
-                        <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
-                          <TableCell className="py-4">{point.date}</TableCell>
-                          <TableCell className="py-4">
-                            {/* Wrap discussion point text to prevent overflow */}
-                            <div className="whitespace-normal break-words">{point.discussion_point}</div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <Select 
-                              defaultValue={point.request_by || "unassigned"} 
-                              onValueChange={(value) => handleRequestByChange(point.id, value)}
-                            >
-                              <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
-                                <SelectValue placeholder="Select person" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="unassigned">Select person</SelectItem>
-                                {/* Dynamically generate list from unique requestBy values */}
-                                {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
-                                  <SelectItem key={person} value={person as string}>
-                                    {person}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <MeetingStatusBadge 
-                              status={point.status} 
-                              onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
-                            />
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="flex space-x-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleAddUpdates(point)}
-                                className="text-blue-500 hover:text-blue-700"
-                                title="View and Add Updates"
-                              >
-                                <History size={16} />
-                                <span className="ml-2">
-                                  {updateCounts[point.id] || 0}
-                                </span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="flex space-x-2">
-                              <MeetingActionButton 
-                                icon={Edit} 
-                                label="Edit" 
-                                onClick={() => handleEditMeeting(point)} 
-                              />
-                              <MeetingActionButton 
-                                icon={Trash2} 
-                                label="Delete" 
-                                variant="destructive" 
-                                onClick={() => handleDeletePrompt(point)} 
-                              />
-                            </div>
+                    </TableHeader>
+                    <TableBody>
+                      {loading ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8">Loading meeting points...</TableCell>
+                        </TableRow>
+                      ) : meetingPoints.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            No meeting points found. Add one below.
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                    <TableRow>
-                      <TableCell className="py-4">{currentDate}</TableCell>
-                      <TableCell colSpan={5} className="py-4">
-                        <input
-                          type="text"
-                          placeholder="Type a new discussion point and press Enter..."
-                          className="w-full py-2 focus:outline-none text-gray-500 italic"
-                          value={newPoint}
-                          onChange={(e) => setNewPoint(e.target.value)}
-                          onKeyDown={handleAddPoint}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                      ) : (
+                        meetingPoints.map((point, index) => (
+                          <TableRow key={point.id} className={index % 2 === 0 ? "" : "bg-[#f9fafb]"}>
+                            <TableCell className="py-4 whitespace-nowrap">{point.date}</TableCell>
+                            <TableCell className="py-4 w-[300px]">
+                              {/* Fix the discussion point text to prevent overflow */}
+                              <div className="break-words" style={{ 
+                                maxWidth: '300px', 
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                wordWrap: 'break-word'
+                              }}>
+                                {point.discussion_point}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4 whitespace-nowrap">
+                              <Select 
+                                defaultValue={point.request_by || "unassigned"} 
+                                onValueChange={(value) => handleRequestByChange(point.id, value)}
+                              >
+                                <SelectTrigger className="w-[120px] bg-[#f5f5fa]">
+                                  <SelectValue placeholder="Select person" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="unassigned">Select person</SelectItem>
+                                  {/* Dynamically generate list from unique requestBy values */}
+                                  {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map((person) => (
+                                    <SelectItem key={person} value={person as string}>
+                                      {person}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="py-4 whitespace-nowrap">
+                              <MeetingStatusBadge 
+                                status={point.status} 
+                                onChange={(value) => handleStatusChange(point.id, value as MeetingStatus)} 
+                              />
+                            </TableCell>
+                            <TableCell className="py-4 whitespace-nowrap">
+                              <div className="flex space-x-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleAddUpdates(point)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="View and Add Updates"
+                                >
+                                  <History size={16} />
+                                  <span className="ml-2">
+                                    {updateCounts[point.id] || 0}
+                                  </span>
+                                </Button>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4 whitespace-nowrap">
+                              <div className="flex space-x-2">
+                                <MeetingActionButton 
+                                  icon={Edit} 
+                                  label="Edit" 
+                                  onClick={() => handleEditMeeting(point)} 
+                                />
+                                <MeetingActionButton 
+                                  icon={Trash2} 
+                                  label="Delete" 
+                                  variant="destructive" 
+                                  onClick={() => handleDeletePrompt(point)} 
+                                />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                      <TableRow>
+                        <TableCell className="py-4 whitespace-nowrap">{""}</TableCell>
+                        <TableCell colSpan={5} className="py-4">
+                          <input
+                            type="text"
+                            placeholder="Type a new discussion point and press Enter..."
+                            className="w-full py-2 focus:outline-none text-gray-500 italic"
+                            value={newPoint}
+                            onChange={(e) => setNewPoint(e.target.value)}
+                            onKeyDown={handleAddPoint}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
           </div>
