@@ -6,6 +6,7 @@ import {
   ChartTooltipContent 
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, CartesianGrid, Tooltip } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const engagementRateData = [
   { name: 'Sarah Johnson', value: 310 },
@@ -24,6 +25,14 @@ const engagementTimeData = [
   { name: 'Jul', value: 2 },
   { name: 'Aug', value: 4 },
   { name: 'Sep', value: 5 }
+];
+
+// Mobile-friendly data with shorter names
+const engagementRateDataMobile = [
+  { name: 'Sarah', value: 310 },
+  { name: 'Alex', value: 280 },
+  { name: 'Maria', value: 420 },
+  { name: 'Emma', value: 360 }
 ];
 
 const categoryData = [
@@ -45,6 +54,8 @@ export const EngagementAnalysisTab = () => {
     }
   };
   
+  const isMobile = useIsMobile();
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <Card className="col-span-1 md:col-span-1">
@@ -52,9 +63,18 @@ export const EngagementAnalysisTab = () => {
           <h3 className="text-lg font-medium mb-4">Engagement Rate Distribution</h3>
           <ChartContainer config={chartConfig} className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={engagementRateData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} />
-                <YAxis />
+              <BarChart 
+                data={isMobile ? engagementRateDataMobile : engagementRateData} 
+                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 40 : 60 }}
+              >
+                <XAxis 
+                  dataKey="name" 
+                  angle={isMobile ? -30 : -45} 
+                  textAnchor="end" 
+                  height={60}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
                 />
@@ -70,9 +90,15 @@ export const EngagementAnalysisTab = () => {
           <h3 className="text-lg font-medium mb-4">Engagement Over Time</h3>
           <ChartContainer config={chartConfig} className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={engagementTimeData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                <XAxis dataKey="name" />
-                <YAxis />
+              <LineChart 
+                data={engagementTimeData} 
+                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 15 : 20 }}
+              >
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
@@ -100,8 +126,8 @@ export const EngagementAnalysisTab = () => {
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{item.name}</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="flex items-center gap-2 md:gap-4">
+                  <div className={`${isMobile ? 'w-20' : 'w-32'} h-2 bg-gray-100 rounded-full overflow-hidden`}>
                     <div className="h-full bg-purple-500 rounded-full" style={{ width: '70%' }}></div>
                   </div>
                   <span className="font-medium">{item.value}</span>

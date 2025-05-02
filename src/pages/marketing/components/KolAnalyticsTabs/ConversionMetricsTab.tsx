@@ -6,12 +6,21 @@ import {
   ChartTooltipContent 
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, CartesianGrid, Tooltip } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const conversionRateData = [
   { name: 'Sarah Johnson', value: 310 },
   { name: 'Alex Chen', value: 280 },
   { name: 'Maria Rodriguez', value: 450 },
   { name: 'Emma Wilson', value: 370 }
+];
+
+// Mobile-friendly data with shorter names
+const conversionRateDataMobile = [
+  { name: 'Sarah', value: 310 },
+  { name: 'Alex', value: 280 },
+  { name: 'Maria', value: 450 },
+  { name: 'Emma', value: 370 }
 ];
 
 const conversionTrendsData = [
@@ -45,6 +54,8 @@ export const ConversionMetricsTab = () => {
     }
   };
   
+  const isMobile = useIsMobile();
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <Card className="col-span-1 md:col-span-1">
@@ -52,9 +63,18 @@ export const ConversionMetricsTab = () => {
           <h3 className="text-lg font-medium mb-4">Conversion Rate by KOL</h3>
           <ChartContainer config={chartConfig} className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={conversionRateData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} />
-                <YAxis />
+              <BarChart 
+                data={isMobile ? conversionRateDataMobile : conversionRateData} 
+                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 40 : 60 }}
+              >
+                <XAxis 
+                  dataKey="name" 
+                  angle={isMobile ? -30 : -45} 
+                  textAnchor="end" 
+                  height={60} 
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
                 />
@@ -70,9 +90,15 @@ export const ConversionMetricsTab = () => {
           <h3 className="text-lg font-medium mb-4">Conversion Trends</h3>
           <ChartContainer config={chartConfig} className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={conversionTrendsData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                <XAxis dataKey="name" />
-                <YAxis />
+              <LineChart 
+                data={conversionTrendsData} 
+                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 15 : 20 }}
+              >
+                <XAxis 
+                  dataKey="name"
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
@@ -97,13 +123,15 @@ export const ConversionMetricsTab = () => {
           <div className="space-y-4">
             {topPerformersData.map((performer) => (
               <div key={performer.rank} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                   <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-sm">
                     {performer.rank}
                   </div>
-                  <span className="font-medium">{performer.name}</span>
+                  <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>
+                    {isMobile ? performer.name.split(' ')[0] : performer.name}
+                  </span>
                 </div>
-                <div className="text-gray-600">
+                <div className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>
                   <span className="font-bold text-gray-900">{performer.score}</span> score
                 </div>
               </div>
