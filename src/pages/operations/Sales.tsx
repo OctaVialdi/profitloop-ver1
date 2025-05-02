@@ -8,13 +8,11 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Input } from "@/components/ui/input";
 import { Search, Calendar, MoreHorizontal, FileText, Plus, AlertCircle } from "lucide-react";
 import { useState } from "react";
-
 export default function SalesPage() {
   const {
     organization
   } = useOrganization();
   const [activeTab, setActiveTab] = useState("activities");
-
   return <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Sales Operations</h2>
@@ -25,7 +23,7 @@ export default function SalesPage() {
 
       <div>
         <div className="mb-6">
-          <Tabs defaultValue="activities" className="w-full" onValueChange={(value) => setActiveTab(value)}>
+          <Tabs defaultValue="activities" className="w-full" onValueChange={value => setActiveTab(value)}>
             <TabsList>
               <TabsTrigger value="activities">Activities</TabsTrigger>
               <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
@@ -84,8 +82,7 @@ export default function SalesPage() {
       </div>
 
       {/* Conditional content based on active tab */}
-      {activeTab === "pipeline" ? (
-        <div className="border-t pt-6">
+      {activeTab === "pipeline" ? <div className="border-t pt-6">
           <Card>
             <CardContent className="pt-6">
               <h3 className="text-xl font-semibold mb-6">Sales Pipeline</h3>
@@ -181,71 +178,10 @@ export default function SalesPage() {
                 </div>
               </div>
               
-              <div className="mt-10 bg-red-50 rounded-lg p-6">
-                <div className="flex items-center mb-4">
-                  <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-                  <h3 className="text-lg font-medium text-red-700">Deals At Risk</h3>
-                </div>
-                
-                <div className="space-y-8">
-                  <div className="border-b border-red-200 pb-6">
-                    <div className="flex justify-between mb-2">
-                      <h4 className="font-medium">Stellar Systems</h4>
-                      <span className="text-sm text-red-600">Risk Score: 60%</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">Proposal - Negotiation • $28,000</p>
-                    <ul className="space-y-2">
-                      <li className="flex items-center text-sm text-gray-600">
-                        <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
-                        No updates for 13 days
-                      </li>
-                      <li className="flex items-center text-sm text-gray-600">
-                        <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
-                        Negotiation taking longer than average
-                      </li>
-                    </ul>
-                    <div className="mt-4 flex gap-3">
-                      <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" /> Schedule Call
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" /> Send Email
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <h4 className="font-medium">Quantum Industries</h4>
-                      <span className="text-sm text-red-600">Risk Score: 60%</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">Demo - Negotiation • $65,000</p>
-                    <ul className="space-y-2">
-                      <li className="flex items-center text-sm text-gray-600">
-                        <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
-                        No updates for 16 days
-                      </li>
-                      <li className="flex items-center text-sm text-gray-600">
-                        <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
-                        Negotiation taking longer than average
-                      </li>
-                    </ul>
-                    <div className="mt-4 flex gap-3">
-                      <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" /> Schedule Call
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" /> Send Email
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              
             </CardContent>
           </Card>
-        </div>
-      ) : (
-        <div className="border-t pt-6">
+        </div> : <div className="border-t pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex justify-between items-center mb-6">
@@ -258,10 +194,7 @@ export default function SalesPage() {
               <div className="flex gap-4 mb-6">
                 <div className="relative flex-grow">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search by client or status..." 
-                    className="pl-9"
-                  />
+                  <Input placeholder="Search by client or status..." className="pl-9" />
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" className="min-w-[140px] justify-between">
@@ -461,7 +394,6 @@ export default function SalesPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
+        </div>}
     </div>;
 }
