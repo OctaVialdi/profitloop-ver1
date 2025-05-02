@@ -21,6 +21,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   // Update with the proper type
   const [visibleColumns, setVisibleColumns] = useState<EmployeeColumnState>({
     name: true,
+    employeeId: true, // Added employeeId column
     email: true,
     branch: true,
     organization: true,
@@ -44,6 +45,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   // Define the default column order
   const [columnOrder, setColumnOrder] = useState<ColumnOrder>([
     'name',
+    'employeeId', // Added employeeId column
     'email',
     'branch',
     'organization',
@@ -72,6 +74,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
     leaving: 0
   };
 
+  // We need to generate employee IDs for the data
+  const processedData = data.map(employee => ({
+    ...employee,
+    employeeId: employee.employeeId || `EMP-${Math.floor(1000 + Math.random() * 9000)}`
+  }));
+
   return (
     <div className="space-y-4">
       {/* Header section with actions */}
@@ -98,7 +106,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
 
       {/* Employee table with horizontal scroll */}
       <EmployeeTableView 
-        data={data} 
+        data={processedData} 
         visibleColumns={visibleColumns} 
         columnOrder={columnOrder}
       />

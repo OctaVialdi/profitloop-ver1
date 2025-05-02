@@ -21,6 +21,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   // Column label mapping
   const columnLabels: Record<keyof EmployeeColumnState, string> = {
     name: "Employee name",
+    employeeId: "Employee ID", // Added employeeId column
     email: "Email",
     branch: "Branch",
     organization: "Organization",
@@ -60,7 +61,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
     }
     
     // For all other columns, render the value or a dash if not available
-    return employee[columnKey] || '-';
+    return employee[columnKey as keyof Employee] || '-';
   };
 
   return (

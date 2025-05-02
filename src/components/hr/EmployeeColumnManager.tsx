@@ -9,6 +9,7 @@ import { MoveVertical } from 'lucide-react';
 // Define a consistent column structure type
 export type EmployeeColumnState = {
   name: boolean;
+  employeeId: boolean; // Added employeeId column
   email: boolean;
   branch: boolean;
   organization: boolean;
@@ -77,6 +78,7 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
       title: "Basic Information",
       columns: [
         { key: "name" as keyof EmployeeColumnState, label: "Employee name" },
+        { key: "employeeId" as keyof EmployeeColumnState, label: "Employee ID" }, // Added employeeId column
         { key: "email" as keyof EmployeeColumnState, label: "Email" },
         { key: "branch" as keyof EmployeeColumnState, label: "Branch" },
         { key: "organization" as keyof EmployeeColumnState, label: "Organization" },
@@ -180,7 +182,7 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded border cursor-move"
                           >
                             <div className="flex items-center">
                               <MoveVertical className="h-4 w-4 mr-2 text-gray-400" />
@@ -210,4 +212,3 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
     </div>
   );
 };
-

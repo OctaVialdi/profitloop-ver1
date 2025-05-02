@@ -1,6 +1,7 @@
 
 export interface Employee {
   id: string;
+  employeeId?: string; // Added employee ID field
   name: string;
   email: string;
   branch?: string;
