@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -368,15 +367,24 @@ const AdsPerformance = () => {
               <div>
                 <CardTitle>Active Campaigns</CardTitle>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={() => setColumnsDialogOpen(true)}
-              >
-                <Settings className="h-4 w-4" />
-                <span>Columns</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  className="bg-purple-500 hover:bg-purple-600 text-white flex items-center gap-2"
+                  onClick={() => setInputDataDialogOpen(true)}
+                >
+                  <Upload className="h-4 w-4" />
+                  Input Data
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                  onClick={() => setColumnsDialogOpen(true)}
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Columns</span>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
