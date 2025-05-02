@@ -6,21 +6,12 @@ import {
   ChartTooltipContent 
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, CartesianGrid, Tooltip } from "recharts";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const roiByKolData = [
   { name: 'Sarah Johnson', value: 76 },
   { name: 'Alex Chen', value: 72 },
   { name: 'Maria Rodriguez', value: 85 },
   { name: 'Emma Wilson', value: 79 }
-];
-
-// Mobile-friendly data with shorter names
-const roiByKolDataMobile = [
-  { name: 'Sarah', value: 76 },
-  { name: 'Alex', value: 72 },
-  { name: 'Maria', value: 85 },
-  { name: 'Emma', value: 79 }
 ];
 
 const roiTrendsData = [
@@ -46,27 +37,16 @@ export const RoiRevenueTab = () => {
     }
   };
   
-  const isMobile = useIsMobile();
-  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <Card className="bg-white rounded-lg border border-gray-100 shadow-sm">
-        <CardContent className="pt-6 pb-6">
-          <h3 className="text-base font-medium mb-6 text-gray-800">ROI by KOL</h3>
-          <ChartContainer config={chartConfig} className="h-[250px]">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card className="col-span-1">
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-medium mb-4">ROI by KOL</h3>
+          <ChartContainer config={chartConfig} className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={isMobile ? roiByKolDataMobile : roiByKolData} 
-                margin={{ top: 5, right: 5, left: 0, bottom: 60 }}
-              >
-                <XAxis 
-                  dataKey="name" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={60} 
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
+              <BarChart data={roiByKolData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} />
+                <YAxis />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
                 />
@@ -77,21 +57,15 @@ export const RoiRevenueTab = () => {
         </CardContent>
       </Card>
       
-      <Card className="bg-white rounded-lg border border-gray-100 shadow-sm">
-        <CardContent className="pt-6 pb-6">
-          <h3 className="text-base font-medium mb-6 text-gray-800">ROI Trends</h3>
-          <ChartContainer config={chartConfig} className="h-[250px]">
+      <Card className="col-span-1">
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-medium mb-4">ROI Trends</h3>
+          <ChartContainer config={chartConfig} className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart 
-                data={roiTrendsData} 
-                margin={{ top: 5, right: 5, left: 0, bottom: 20 }}
-              >
-                <XAxis 
-                  dataKey="name"
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <LineChart data={roiTrendsData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
                 />
