@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { BarChart, Users, Plus, ChevronDown, Search, SlidersHorizontal } from "lucide-react";
+import { BarChart, Users, Plus, ChevronDown, Search, SlidersHorizontal, LineChart, Wallet, BarChart3 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -230,8 +230,86 @@ const KolManagement = () => {
         </CardContent>
       </Card>
       
-      {/* New Section with clear separation */}
+      {/* New Section with header based on the image */}
       <div className="mt-8 w-full">
+        <div className="px-4 md:px-6 mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">KOL Management</h2>
+            <div className="flex mt-4 md:mt-0 space-x-2">
+              <Button variant="outline" className="bg-white gap-2">
+                <BarChart size={16} />
+                <span>Analytics</span>
+              </Button>
+              <Button variant="outline" className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] border-0 gap-2">
+                <Users size={16} />
+                <span>KOL List</span>
+              </Button>
+              <Button variant="outline" className="bg-[#1A1F2C] text-white hover:bg-gray-800 border-0 gap-2">
+                <Plus size={16} />
+                <span>Add KOL</span>
+              </Button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Total KOLs */}
+            <Card className="bg-white border border-gray-200">
+              <CardContent className="flex items-center p-6">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500">Total KOLs</p>
+                  <h3 className="text-3xl font-bold mt-1">5</h3>
+                  <p className="text-xs text-gray-500 mt-1">4 active KOLs</p>
+                </div>
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Users className="text-purple-500" size={20} />
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Active Projects */}
+            <Card className="bg-white border border-gray-200">
+              <CardContent className="flex items-center p-6">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500">Active Projects</p>
+                  <h3 className="text-3xl font-bold mt-1">13</h3>
+                  <p className="text-xs text-gray-500 mt-1">Live campaigns</p>
+                </div>
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <LineChart className="text-blue-500" size={20} />
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Avg. Engagement */}
+            <Card className="bg-white border border-gray-200">
+              <CardContent className="flex items-center p-6">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500">Avg. Engagement</p>
+                  <h3 className="text-3xl font-bold mt-1">330%</h3>
+                  <p className="text-xs text-gray-500 mt-1">Across all platforms</p>
+                </div>
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="text-green-500" size={20} />
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Total Revenue */}
+            <Card className="bg-white border border-gray-200">
+              <CardContent className="flex items-center p-6">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500">Total Revenue</p>
+                  <h3 className="text-3xl font-bold mt-1">Rp 234.500.000</h3>
+                  <p className="text-xs text-gray-500 mt-1">From all KOL campaigns</p>
+                </div>
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <Wallet className="text-amber-500" size={20} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        
         <Separator className="mb-6" />
         <div className="px-4 md:px-6">
           <div className="mb-6">
