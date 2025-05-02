@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { moveVertical } from 'lucide-react';
+import { MoveVertical } from 'lucide-react';
 
 // Define a consistent column structure type
 export type EmployeeColumnState = {
@@ -184,7 +184,7 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
                           {...provided.dragHandleProps}
                           className="flex items-center p-2 bg-gray-50 rounded border"
                         >
-                          <moveVertical className="h-4 w-4 mr-2 text-gray-400" />
+                          <MoveVertical className="h-4 w-4 mr-2 text-gray-400" />
                           <span className="text-sm">{columnLabel}</span>
                         </div>
                       )}
