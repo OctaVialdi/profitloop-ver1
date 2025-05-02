@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -27,11 +28,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Filter, BarChart as BarChartIcon, Users, Plus } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 interface ConversionMetricsProps {
   timeFilter: string;
@@ -120,104 +120,8 @@ export const ConversionMetrics = ({ timeFilter }: ConversionMetricsProps) => {
     }
   ];
 
-  // KOL summary stats
-  const kolSummaryData = {
-    totalKols: 5,
-    activeKols: 4,
-    activeProjects: 13,
-    averageEngagement: "330%",
-    totalRevenue: "Rp 234.500.000"
-  };
-
   return (
     <div className="space-y-6">
-      {/* KOL Management Header with top separator */}
-      <div className="mt-2 mb-8">
-        <Separator className="mb-6" />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold">KOL Management</h1>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              className="bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 rounded-md flex items-center gap-2"
-            >
-              <BarChartIcon size={16} />
-              <span>Analytics</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200 rounded-md flex items-center gap-2"
-            >
-              <Users size={16} />
-              <span>KOL List</span>
-            </Button>
-            <Button
-              className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2"
-            >
-              <Plus size={16} />
-              <span>Add KOL</span>
-            </Button>
-          </div>
-        </div>
-        
-        {/* KOL Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <Card className="border border-gray-100">
-            <CardContent className="p-4 flex flex-col">
-              <span className="text-sm text-gray-500">Total KOLs</span>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-2xl font-semibold">{kolSummaryData.totalKols}</span>
-                <div className="h-8 w-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <Users className="h-4 w-4 text-purple-600" />
-                </div>
-              </div>
-              <span className="text-xs text-gray-500 mt-1">{kolSummaryData.activeKols} active KOLs</span>
-            </CardContent>
-          </Card>
-          
-          <Card className="border border-gray-100">
-            <CardContent className="p-4 flex flex-col">
-              <span className="text-sm text-gray-500">Active Projects</span>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-2xl font-semibold">{kolSummaryData.activeProjects}</span>
-                <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <BarChartIcon className="h-4 w-4 text-blue-600" />
-                </div>
-              </div>
-              <span className="text-xs text-gray-500 mt-1">Live campaigns</span>
-            </CardContent>
-          </Card>
-          
-          <Card className="border border-gray-100">
-            <CardContent className="p-4 flex flex-col">
-              <span className="text-sm text-gray-500">Avg. Engagement</span>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-2xl font-semibold">{kolSummaryData.averageEngagement}</span>
-                <div className="h-8 w-8 rounded-lg bg-green-100 flex items-center justify-center">
-                  <BarChartIcon className="h-4 w-4 text-green-600" />
-                </div>
-              </div>
-              <span className="text-xs text-gray-500 mt-1">Across all platforms</span>
-            </CardContent>
-          </Card>
-          
-          <Card className="border border-gray-100">
-            <CardContent className="p-4 flex flex-col">
-              <span className="text-sm text-gray-500">Total Revenue</span>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-2xl font-semibold">{kolSummaryData.totalRevenue}</span>
-                <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <BarChartIcon className="h-4 w-4 text-amber-600" />
-                </div>
-              </div>
-              <span className="text-xs text-gray-500 mt-1">From all KOL campaigns</span>
-            </CardContent>
-          </Card>
-        </div>
-        <Separator className="mt-6" />
-      </div>
-
-      {/* Original charts section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -301,7 +205,7 @@ export const ConversionMetrics = ({ timeFilter }: ConversionMetricsProps) => {
         </Card>
       </div>
       
-      {/* Additional Conversion Insights section */}
+      {/* New section with header */}
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Additional Conversion Insights</h2>
         <div className="bg-white p-6 rounded-lg border border-gray-200">
