@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { BarChart, Users, Plus, ChevronDown } from "lucide-react";
+import { BarChart, Users, Plus, ChevronDown, Search, SlidersHorizontal } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,10 +16,113 @@ import { EngagementAnalysis } from "./components/EngagementAnalysis";
 import { RoiAnalysis } from "./components/RoiAnalysis";
 import { ConversionMetrics } from "./components/ConversionMetrics";
 import { Separator } from "@/components/ui/separator";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const KolManagement = () => {
   const [activeTab, setActiveTab] = useState("engagement");
   const [timeFilter, setTimeFilter] = useState("last-month");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // KOL data
+  const kolData = [
+    {
+      id: 1,
+      name: "Sarah Johnson",
+      platforms: ["Instagram", "TikTok"],
+      category: "Beauty",
+      followers: 500000,
+      engagement: 3.2,
+      score: 78,
+      status: "Active",
+      avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png",
+    },
+    {
+      id: 2,
+      name: "Alex Chen",
+      platforms: ["Instagram", "TikTok"],
+      category: "Tech",
+      followers: 350000,
+      engagement: 2.8,
+      score: 72,
+      status: "Active",
+      avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png",
+    },
+    {
+      id: 3,
+      name: "Maria Rodriguez",
+      platforms: ["Instagram", "TikTok"],
+      category: "Fitness",
+      followers: 620000,
+      engagement: 4.5,
+      score: 86,
+      status: "Active",
+      avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png",
+    },
+    {
+      id: 4,
+      name: "David Kim",
+      platforms: ["Instagram"],
+      category: "Fashion",
+      followers: 280000,
+      engagement: 2.2,
+      score: 65,
+      status: "Inactive",
+      avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png",
+    },
+    {
+      id: 5,
+      name: "Emma Wilson",
+      platforms: ["Instagram", "TikTok"],
+      category: "Food",
+      followers: 420000,
+      engagement: 3.8,
+      score: 81,
+      status: "Active",
+      avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png",
+    },
+  ];
+
+  // Filter KOLs based on search query
+  const filteredKols = kolData.filter((kol) => 
+    kol.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    kol.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Format number with commas
+  const formatNumber = (num) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Get badge color based on score
+  const getScoreBadgeColor = (score) => {
+    if (score >= 80) return "bg-green-100 text-green-800";
+    if (score >= 70) return "bg-yellow-100 text-yellow-800";
+    return "bg-orange-100 text-orange-800";
+  };
+
+  // Get status badge color
+  const getStatusBadgeColor = (status) => {
+    return status === "Active" 
+      ? "bg-green-100 text-green-800" 
+      : "bg-gray-100 text-gray-800";
+  };
 
   return (
     <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 px-0">
@@ -140,13 +243,91 @@ const KolManagement = () => {
           
           <Card className="w-full bg-white shadow-sm border">
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 gap-6">
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h3 className="font-medium mb-2">Content coming soon</h3>
-                  <p className="text-sm text-gray-500">
-                    This section will contain detailed KOL performance analytics and reporting tools.
-                  </p>
+              <div className="flex flex-col space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <Input
+                      placeholder="Search KOLs by name or category..."
+                      className="pl-10"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <SlidersHorizontal size={16} />
+                    <span>Filters</span>
+                  </Button>
                 </div>
+
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50">
+                        <TableHead className="w-[250px]">NAME</TableHead>
+                        <TableHead>CATEGORY</TableHead>
+                        <TableHead>FOLLOWERS</TableHead>
+                        <TableHead>ENGAGEMENT</TableHead>
+                        <TableHead>SCORE</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredKols.map((kol) => (
+                        <TableRow key={kol.id} className="hover:bg-gray-50/50">
+                          <TableCell className="font-medium">
+                            <div className="flex items-center space-x-3">
+                              <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100">
+                                <img 
+                                  src={kol.avatar} 
+                                  alt={kol.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                              <div>
+                                <div>{kol.name}</div>
+                                <div className="text-xs text-gray-500">
+                                  {kol.platforms.join(", ")}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-md">
+                              {kol.category}
+                            </span>
+                          </TableCell>
+                          <TableCell>{formatNumber(kol.followers)}</TableCell>
+                          <TableCell>{kol.engagement}%</TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getScoreBadgeColor(kol.score)}`}>
+                              {kol.score}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeColor(kol.status)}`}>
+                              {kol.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                <Pagination className="mt-4">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious href="#" />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#" isActive>1</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationNext href="#" />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </CardContent>
           </Card>
