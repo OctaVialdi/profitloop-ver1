@@ -1,8 +1,6 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Grid } from "@/components/ui/grid";
 import {
   Bar,
   Line,
@@ -14,7 +12,6 @@ import {
   ResponsiveContainer,
   BarChart,
   LineChart,
-  Label,
 } from "recharts";
 
 interface EngagementAnalysisProps {
