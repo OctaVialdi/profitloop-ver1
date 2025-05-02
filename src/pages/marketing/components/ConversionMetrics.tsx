@@ -130,14 +130,6 @@ export const ConversionMetrics = ({ timeFilter }: ConversionMetricsProps) => {
           </CardContent>
         </Card>
       </div>
-      
-      {/* New section with header */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Additional Conversion Insights</h2>
-        <div className="bg-gray-50 p-6 rounded-lg border border-gray-100">
-          <p className="text-gray-600">This section will contain additional conversion metrics and insights.</p>
-        </div>
-      </div>
     </div>
   );
 };
