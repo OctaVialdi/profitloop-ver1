@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -5,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft } from "lucide-react";
 
 interface FilterMenuProps {
-  onClose?: () => void; // Make the prop optional
+  onClose: () => void;
 }
 
 type FilterCategory = 'main' | 'status' | 'employmentStatus' | 'branch' | 'organization' | 'jobPosition' | 'jobLevel' | 'sbu';
 
-export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose = () => {} }) => {
+export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
   const [currentMenu, setCurrentMenu] = useState<FilterCategory>('main');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -117,7 +118,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose = () => 
       </div>
       
       <div className="bg-primary p-4 mt-auto">
-        <Button className="w-full text-sm" onClick={onClose}>Filter</Button>
+        <Button className="w-full text-sm">Filter</Button>
       </div>
     </div>
   );

@@ -3,8 +3,6 @@ import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { GripVertical } from "lucide-react";
 
 // Define a consistent column structure type
 export type EmployeeColumnState = {
@@ -29,22 +27,12 @@ export type EmployeeColumnState = {
   maritalStatus: boolean;
 }
 
-// Define column order type
-export type EmployeeColumnOrder = Array<keyof EmployeeColumnState>;
-
 interface ColumnManagerProps {
   columns: EmployeeColumnState;
-  columnOrder: EmployeeColumnOrder;
   onColumnChange: (columns: EmployeeColumnState) => void;
-  onColumnOrderChange: (order: EmployeeColumnOrder) => void;
 }
 
-export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ 
-  columns, 
-  columnOrder, 
-  onColumnChange, 
-  onColumnOrderChange 
-}) => {
+export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ columns, onColumnChange }) => {
   const handleToggleColumn = (name: keyof EmployeeColumnState) => {
     onColumnChange({
       ...columns,
@@ -61,25 +49,10 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
     onColumnChange(allSelected);
   };
 
-  const handleDragEnd = (result: any) => {
-    // Drop outside the list
-    if (!result.destination) {
-      return;
-    }
-
-    // Reorder column order
-    const newColumnOrder = [...columnOrder];
-    const [movedItem] = newColumnOrder.splice(result.source.index, 1);
-    newColumnOrder.splice(result.destination.index, 0, movedItem);
-    
-    onColumnOrderChange(newColumnOrder);
-  };
-
   // Convert columns into a more organized structure for rendering
   const columnGroups = [
     {
       title: "Basic Information",
-      id: "basic",
       columns: [
         { key: "name" as keyof EmployeeColumnState, label: "Employee name" },
         { key: "email" as keyof EmployeeColumnState, label: "Email" },
@@ -89,7 +62,6 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
     },
     {
       title: "Job Information",
-      id: "job",
       columns: [
         { key: "jobPosition" as keyof EmployeeColumnState, label: "Job position" },
         { key: "jobLevel" as keyof EmployeeColumnState, label: "Job level" },
@@ -98,7 +70,6 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
     },
     {
       title: "Dates",
-      id: "dates",
       columns: [
         { key: "joinDate" as keyof EmployeeColumnState, label: "Join date" },
         { key: "endDate" as keyof EmployeeColumnState, label: "End date" },
@@ -108,7 +79,6 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
     },
     {
       title: "Personal Information",
-      id: "personal",
       columns: [
         { key: "barcode" as keyof EmployeeColumnState, label: "Barcode" },
         { key: "birthDate" as keyof EmployeeColumnState, label: "Birth date" },
@@ -121,9 +91,6 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
       ]
     }
   ];
-
-  // Get all column definitions in a flat array
-  const allColumns = columnGroups.flatMap(group => group.columns);
 
   return (
     <div className="h-full max-h-[500px] overflow-hidden flex flex-col">
@@ -158,49 +125,6 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
               ))}
             </div>
           ))}
-
-          <div className="pt-4 border-t">
-            <h4 className="text-xs font-medium text-gray-500 mb-2">Column Order</h4>
-            <p className="text-xs text-gray-500 mb-4">Drag and drop to change the order of columns in the table</p>
-            
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="droppable-columns">
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="space-y-1 border rounded-md p-2"
-                  >
-                    {columnOrder
-                      .filter(colKey => columns[colKey]) // Only show selected columns
-                      .map((colKey, index) => {
-                        // Find column definition to get label
-                        const column = allColumns.find(c => c.key === colKey);
-                        if (!column) return null;
-                        
-                        return (
-                          <Draggable key={colKey} draggableId={colKey} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className="flex items-center p-2 bg-gray-50 rounded border"
-                              >
-                                <div {...provided.dragHandleProps} className="mr-2">
-                                  <GripVertical size={16} className="text-gray-500" />
-                                </div>
-                                <span className="text-sm">{column.label}</span>
-                              </div>
-                            )}
-                          </Draggable>
-                        );
-                      })}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </div>
         </div>
       </ScrollArea>
       
