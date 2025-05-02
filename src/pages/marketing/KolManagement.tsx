@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EngagementAnalysis } from "./components/EngagementAnalysis";
+import { RoiAnalysis } from "./components/RoiAnalysis";
 
 const KolManagement = () => {
   const [activeTab, setActiveTab] = useState("engagement");
@@ -113,9 +114,7 @@ const KolManagement = () => {
             </TabsContent>
 
             <TabsContent value="roi" className="mt-0 p-4 md:p-6">
-              <div className="text-muted-foreground">
-                <p>ROI & Revenue content will go here. This tab shows return on investment and revenue generation from your KOL marketing campaigns.</p>
-              </div>
+              <RoiAnalysis timeFilter={timeFilter} />
             </TabsContent>
 
             <TabsContent value="conversion" className="mt-0 p-4 md:p-6">
