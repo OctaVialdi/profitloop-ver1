@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrganization } from '@/hooks/useOrganization';
 import { toast } from '@/components/ui/sonner';
-import { Employee } from '@/components/hr/EmployeeList';
+import { Employee } from '@/components/hr/employee-list/types';
 
 export const useEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
