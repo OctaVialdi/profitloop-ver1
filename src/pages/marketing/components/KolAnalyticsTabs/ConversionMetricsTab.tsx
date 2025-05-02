@@ -57,15 +57,15 @@ export const ConversionMetricsTab = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <Card className="col-span-1 md:col-span-1">
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">Conversion Rate by KOL</h3>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+          <ChartContainer config={chartConfig} className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={isMobile ? conversionRateDataMobile : conversionRateData} 
-                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 40 : 60 }}
+                margin={{ top: 5, right: 5, left: 0, bottom: isMobile ? 40 : 60 }}
               >
                 <XAxis 
                   dataKey="name" 
@@ -88,11 +88,11 @@ export const ConversionMetricsTab = () => {
       <Card className="col-span-1 md:col-span-1">
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">Conversion Trends</h3>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+          <ChartContainer config={chartConfig} className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart 
                 data={conversionTrendsData} 
-                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 15 : 20 }}
+                margin={{ top: 5, right: 5, left: 0, bottom: isMobile ? 15 : 20 }}
               >
                 <XAxis 
                   dataKey="name"
@@ -120,7 +120,7 @@ export const ConversionMetricsTab = () => {
       <Card className="col-span-1 md:col-span-1">
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">Top Performers</h3>
-          <div className="space-y-4">
+          <div className="space-y-4 pb-2">
             {topPerformersData.map((performer) => (
               <div key={performer.rank} className="flex items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-3">

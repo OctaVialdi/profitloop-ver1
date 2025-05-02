@@ -57,15 +57,15 @@ export const EngagementAnalysisTab = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <Card className="col-span-1 md:col-span-1">
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">Engagement Rate Distribution</h3>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+          <ChartContainer config={chartConfig} className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={isMobile ? engagementRateDataMobile : engagementRateData} 
-                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 40 : 60 }}
+                margin={{ top: 5, right: 5, left: 0, bottom: isMobile ? 40 : 60 }}
               >
                 <XAxis 
                   dataKey="name" 
@@ -88,11 +88,11 @@ export const EngagementAnalysisTab = () => {
       <Card className="col-span-1 md:col-span-1">
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">Engagement Over Time</h3>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+          <ChartContainer config={chartConfig} className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart 
                 data={engagementTimeData} 
-                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 15 : 20 }}
+                margin={{ top: 5, right: 5, left: 0, bottom: isMobile ? 15 : 20 }}
               >
                 <XAxis 
                   dataKey="name" 
@@ -127,10 +127,10 @@ export const EngagementAnalysisTab = () => {
                   <span className="font-medium">{item.name}</span>
                 </div>
                 <div className="flex items-center gap-2 md:gap-4">
-                  <div className={`${isMobile ? 'w-20' : 'w-32'} h-2 bg-gray-100 rounded-full overflow-hidden`}>
+                  <div className={`${isMobile ? 'w-16' : 'w-28'} h-2 bg-gray-100 rounded-full overflow-hidden`}>
                     <div className="h-full bg-purple-500 rounded-full" style={{ width: '70%' }}></div>
                   </div>
-                  <span className="font-medium">{item.value}</span>
+                  <span className="font-medium min-w-[20px] text-right">{item.value}</span>
                 </div>
               </div>
             ))}

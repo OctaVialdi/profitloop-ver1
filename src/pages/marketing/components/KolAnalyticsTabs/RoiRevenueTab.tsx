@@ -49,15 +49,15 @@ export const RoiRevenueTab = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="col-span-1">
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">ROI by KOL</h3>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+          <ChartContainer config={chartConfig} className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={isMobile ? roiByKolDataMobile : roiByKolData} 
-                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 40 : 60 }}
+                margin={{ top: 5, right: 5, left: 0, bottom: isMobile ? 40 : 60 }}
               >
                 <XAxis 
                   dataKey="name" 
@@ -80,11 +80,11 @@ export const RoiRevenueTab = () => {
       <Card className="col-span-1">
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">ROI Trends</h3>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+          <ChartContainer config={chartConfig} className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart 
                 data={roiTrendsData} 
-                margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 15 : 20 }}
+                margin={{ top: 5, right: 5, left: 0, bottom: isMobile ? 15 : 20 }}
               >
                 <XAxis 
                   dataKey="name"
