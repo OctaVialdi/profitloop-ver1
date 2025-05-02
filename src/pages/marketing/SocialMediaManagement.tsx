@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const SocialMediaManagement = () => {
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full min-h-screen p-4">
       <h1 className="text-3xl font-bold mb-6">Social Media Management</h1>
       
       <Card>
