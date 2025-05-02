@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Employee } from './employee-list/types';
-import { EmployeeColumnState, ColumnOrder } from './EmployeeColumnManager';
+import { EmployeeColumnState, EmployeeColumnOrder } from './EmployeeColumnManager';
 import { EmployeeHeader } from './employee-list/EmployeeHeader';
 import { EmployeeFilters } from './employee-list/EmployeeFilters';
 import { EmployeeSearchBar } from './employee-list/EmployeeSearchBar';
@@ -40,28 +40,13 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
     gender: true,
     maritalStatus: true,
   });
-
-  // Define the default column order
-  const [columnOrder, setColumnOrder] = useState<ColumnOrder>([
-    'name',
-    'email',
-    'branch',
-    'organization',
-    'jobPosition',
-    'jobLevel',
-    'employmentStatus',
-    'joinDate',
-    'endDate',
-    'signDate',
-    'resignDate',
-    'barcode',
-    'birthDate',
-    'birthPlace',
-    'address',
-    'mobilePhone',
-    'religion',
-    'gender',
-    'maritalStatus'
+  
+  // Initialize column order (default order)
+  const [columnOrder, setColumnOrder] = useState<EmployeeColumnOrder>([
+    'name', 'email', 'branch', 'organization', 'jobPosition', 'jobLevel', 
+    'employmentStatus', 'joinDate', 'endDate', 'signDate', 'resignDate', 
+    'barcode', 'birthDate', 'birthPlace', 'address', 'mobilePhone', 
+    'religion', 'gender', 'maritalStatus'
   ]);
 
   // Statistics for this period (May 2025)
