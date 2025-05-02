@@ -106,17 +106,9 @@ const AgencyComparison = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Button 
-            className="bg-purple-500 hover:bg-purple-600 text-white flex items-center gap-2"
-            onClick={() => setInputDataDialogOpen(true)}
-          >
-            <Upload className="h-4 w-4" />
-            Input Data
-          </Button>
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">View Mode</p>
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-700">View Mode</p>
+          <div className="flex items-center gap-4">
             <div className="relative">
               <div 
                 className="flex items-center justify-between gap-2 px-4 py-2 bg-purple-50 rounded-md min-w-[200px] cursor-pointer"
@@ -173,7 +165,7 @@ const AgencyComparison = () => {
       
       {/* Agency Performance Comparison Table */}
       <Card className="w-full mb-6">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Agency Performance Comparison</CardTitle>
         </CardHeader>
         <CardContent>
@@ -211,6 +203,25 @@ const AgencyComparison = () => {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Active Campaigns Section */}
+      <Card className="w-full mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Active Campaigns</CardTitle>
+          <Button 
+            className="bg-purple-500 hover:bg-purple-600 text-white flex items-center gap-2"
+            onClick={() => setInputDataDialogOpen(true)}
+          >
+            <Upload className="h-4 w-4" />
+            Input Data
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full h-64 flex items-center justify-center bg-gray-50 rounded-md">
+            <p className="text-gray-500">Active campaigns would be displayed here</p>
           </div>
         </CardContent>
       </Card>
