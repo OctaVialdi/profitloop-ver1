@@ -3,10 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const SeoManagement = () => {
   return (
-    <div className="w-full min-h-screen p-4">
+    <div className="w-full min-h-screen p-4 md:p-6 lg:p-8">
       <h1 className="text-3xl font-bold mb-6">SEO Management</h1>
       
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Search Engine Optimization</CardTitle>
           <CardDescription>

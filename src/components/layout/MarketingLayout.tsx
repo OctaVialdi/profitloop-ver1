@@ -37,8 +37,8 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
   const defaultTab = activeTab?.href || tabs[0]?.href || "/marketing/ads-performance";
 
   return (
-    <div className="w-full space-y-4">
-      <Card className="sticky top-0 z-10 mb-4 p-1 overflow-x-auto bg-white">
+    <div className="w-full space-y-0">
+      <Card className="sticky top-0 z-10 mb-4 p-1 overflow-x-auto bg-white shadow">
         <Tabs defaultValue={defaultTab} value={defaultTab} className="w-full">
           <TabsList className="w-full justify-start">
             {tabs.map((tab) => (

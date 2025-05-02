@@ -3,10 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const KolManagement = () => {
   return (
-    <div className="w-full min-h-screen p-4">
+    <div className="w-full min-h-screen p-4 md:p-6 lg:p-8">
       <h1 className="text-3xl font-bold mb-6">KOL Management</h1>
       
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Key Opinion Leaders Management</CardTitle>
           <CardDescription>
