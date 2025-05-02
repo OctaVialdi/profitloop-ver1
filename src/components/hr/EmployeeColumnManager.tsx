@@ -156,46 +156,52 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
           Drag and drop to reorder visible columns
         </p>
         
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="columns">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-2"
-              >
-                {columnOrder.map((key, index) => {
-                  // Only show enabled columns in the reorder section
-                  if (!columns[key]) return null;
-                  
-                  // Find the column in our groups to get the label
-                  let columnLabel = '';
-                  columnGroups.forEach(group => {
-                    const found = group.columns.find(col => col.key === key);
-                    if (found) columnLabel = found.label;
-                  });
-                  
-                  return (
-                    <Draggable key={key} draggableId={key} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="flex items-center p-2 bg-gray-50 rounded border"
-                        >
-                          <MoveVertical className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="text-sm">{columnLabel}</span>
-                        </div>
-                      )}
-                    </Draggable>
-                  );
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+        <ScrollArea className="h-[200px]">
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="columns">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="space-y-2"
+                >
+                  {columnOrder.map((key, index) => {
+                    // Find the column in our groups to get the label
+                    let columnLabel = '';
+                    columnGroups.forEach(group => {
+                      const found = group.columns.find(col => col.key === key);
+                      if (found) columnLabel = found.label;
+                    });
+                    
+                    return (
+                      <Draggable key={key} draggableId={key} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                          >
+                            <div className="flex items-center">
+                              <MoveVertical className="h-4 w-4 mr-2 text-gray-400" />
+                              <span className="text-sm">{columnLabel}</span>
+                            </div>
+                            <Checkbox
+                              checked={columns[key] || false}
+                              onCheckedChange={() => handleToggleColumn(key)}
+                              aria-label={`Toggle visibility for ${columnLabel}`}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </ScrollArea>
       </div>
       
       <div className="mt-auto p-4 bg-white">
@@ -204,3 +210,4 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
     </div>
   );
 };
+
