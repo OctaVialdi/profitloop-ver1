@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Employee } from './employee-list/types';
-import { EmployeeColumnState, EmployeeColumnOrder } from './EmployeeColumnManager';
+import { EmployeeColumnState } from './EmployeeColumnManager';
 import { EmployeeHeader } from './employee-list/EmployeeHeader';
 import { EmployeeFilters } from './employee-list/EmployeeFilters';
 import { EmployeeSearchBar } from './employee-list/EmployeeSearchBar';
@@ -40,14 +40,6 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
     gender: true,
     maritalStatus: true,
   });
-  
-  // Initialize column order (default order)
-  const [columnOrder, setColumnOrder] = useState<EmployeeColumnOrder>([
-    'name', 'email', 'branch', 'organization', 'jobPosition', 'jobLevel', 
-    'employmentStatus', 'joinDate', 'endDate', 'signDate', 'resignDate', 
-    'barcode', 'birthDate', 'birthPlace', 'address', 'mobilePhone', 
-    'religion', 'gender', 'maritalStatus'
-  ]);
 
   // Statistics for this period (May 2025)
   const periodStats = {
@@ -71,8 +63,6 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
           setShowColumns={setShowColumns}
           visibleColumns={visibleColumns}
           setVisibleColumns={setVisibleColumns}
-          columnOrder={columnOrder}
-          setColumnOrder={setColumnOrder}
         />
         
         <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
@@ -82,11 +72,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
       <EmployeeStats periodStats={periodStats} />
 
       {/* Employee table with horizontal scroll */}
-      <EmployeeTableView 
-        data={data} 
-        visibleColumns={visibleColumns} 
-        columnOrder={columnOrder}
-      />
+      <EmployeeTableView data={data} visibleColumns={visibleColumns} />
 
       {/* Pagination */}
       <EmployeePagination totalCount={data.length} />
