@@ -141,33 +141,7 @@ const KolManagement = () => {
           >
             <div className="border-b bg-gray-50/50">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 py-4">
-                <div className="flex space-x-2 mb-4 md:mb-0">
-                  <Button 
-                    variant="outline" 
-                    className={`bg-[#9b87f5] text-white hover:bg-[#7E69AB] border-0 rounded-md flex items-center gap-2`}
-                  >
-                    <BarChart size={16} />
-                    <span>Analytics</span>
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="bg-white text-black border border-gray-200 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                  >
-                    <Users size={16} />
-                    <span>KOL List</span>
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="bg-[#1A1F2C] text-white hover:bg-gray-800 border-0 rounded-md flex items-center gap-2"
-                  >
-                    <Plus size={16} />
-                    <span>Add KOL</span>
-                  </Button>
-                </div>
-                
-                <div className="w-full md:w-56">
+                <div className="w-full md:w-56 ml-auto">
                   <Select
                     value={timeFilter}
                     onValueChange={setTimeFilter}
@@ -229,16 +203,15 @@ const KolManagement = () => {
         </CardContent>
       </Card>
       
+      {/* Separator between sections */}
+      <Separator className="my-8" />
+      
       {/* New Section with KOL Performance Deep Dive */}
-      <div className="mt-8 w-full">
+      <div className="w-full">
         <div className="px-4 md:px-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <h2 className="text-2xl font-bold tracking-tight">KOL Management</h2>
             <div className="flex mt-4 md:mt-0 space-x-2">
-              <Button variant="outline" className="bg-white gap-2">
-                <BarChart size={16} />
-                <span>Analytics</span>
-              </Button>
               <Button variant="outline" className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] border-0 gap-2">
                 <Users size={16} />
                 <span>KOL List</span>
