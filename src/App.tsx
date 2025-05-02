@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "@/pages/Index";
@@ -48,6 +47,7 @@ import SocialMediaManagement from "@/pages/marketing/SocialMediaManagement";
 import KolManagement from "@/pages/marketing/KolManagement";
 import SeoManagement from "@/pages/marketing/SeoManagement";
 import RatingPerformance from "@/pages/marketing/RatingPerformance";
+import AgencyComparison from "@/pages/marketing/AgencyComparison";
 import { useEffect } from "react";
 
 function App() {
@@ -205,6 +205,7 @@ function App() {
             <Route path="kol" element={<KolManagement />} />
             <Route path="seo" element={<SeoManagement />} />
             <Route path="ratings" element={<RatingPerformance />} />
+            <Route path="agency-comparison" element={<AgencyComparison />} />
             {/* Redirect to ads performance if no path matches */}
             <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
           </Route>
