@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EngagementAnalysis } from "./components/EngagementAnalysis";
 
 const KolManagement = () => {
   const [activeTab, setActiveTab] = useState("engagement");
@@ -109,9 +109,7 @@ const KolManagement = () => {
             </div>
 
             <TabsContent value="engagement" className="mt-0 p-4 md:p-6">
-              <div className="text-muted-foreground">
-                <p>Engagement analysis content will go here. This tab shows data about how audiences are engaging with your Key Opinion Leaders' content.</p>
-              </div>
+              <EngagementAnalysis timeFilter={timeFilter} />
             </TabsContent>
 
             <TabsContent value="roi" className="mt-0 p-4 md:p-6">
