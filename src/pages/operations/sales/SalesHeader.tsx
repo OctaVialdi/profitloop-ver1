@@ -1,6 +1,6 @@
 
 import { useOrganization } from "@/hooks/useOrganization";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
@@ -66,13 +66,3 @@ export const SalesHeader = () => {
     </>
   );
 };
-
-interface CardContentProps {
-  children: React.ReactNode;
-}
-
-export const CardContent = ({ children }: CardContentProps) => (
-  <div className="pt-6">
-    {children}
-  </div>
-);
