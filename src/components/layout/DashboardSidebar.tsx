@@ -1,4 +1,5 @@
-import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, Headset, CircleDollarSign, Truck } from "lucide-react";
+
+import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, Headset, CircleDollarSign, Truck, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarRail, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 interface NavigationItem {
@@ -27,7 +28,7 @@ export function DashboardSidebar({
   } = useSidebar();
   const isCollapsed = state === "collapsed";
 
-  // Navigation items - added Operational menu item between Finance and Settings
+  // Navigation items - added Digital Marketing menu item between Operational and Settings
   const navigationItems: NavigationItem[] = [{
     name: "Dashboard",
     href: "/dashboard",
@@ -44,6 +45,10 @@ export function DashboardSidebar({
     name: "Operational",
     href: "/operations/dashboard",
     icon: Activity
+  }, {
+    name: "Digital Marketing",
+    href: "/marketing/ads-performance",
+    icon: TrendingUp
   }, {
     name: "Settings",
     href: "/settings/dashboard",

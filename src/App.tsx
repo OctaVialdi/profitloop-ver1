@@ -41,6 +41,13 @@ import OperationsDashboard from "@/pages/operations/Dashboard";
 import CustomerServicePage from "@/pages/operations/CustomerService";
 import SalesPage from "@/pages/operations/Sales";
 import LogisticsPage from "@/pages/operations/Logistics";
+// Import Marketing Pages
+import MarketingLayout from "@/components/layout/MarketingLayout";
+import AdsPerformance from "@/pages/marketing/AdsPerformance";
+import SocialMediaManagement from "@/pages/marketing/SocialMediaManagement";
+import KolManagement from "@/pages/marketing/KolManagement";
+import SeoManagement from "@/pages/marketing/SeoManagement";
+import RatingPerformance from "@/pages/marketing/RatingPerformance";
 import { useEffect } from "react";
 
 function App() {
@@ -178,6 +185,28 @@ function App() {
             <Route path="logistics" element={<LogisticsPage />} />
             {/* Redirect to dashboard if no path matches */}
             <Route path="" element={<Navigate to="/operations/dashboard" replace />} />
+          </Route>
+          
+          {/* Marketing Routes - New section */}
+          <Route
+            path="/marketing"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <MarketingLayout>
+                    <Outlet />
+                  </MarketingLayout>
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="ads-performance" element={<AdsPerformance />} />
+            <Route path="social-media" element={<SocialMediaManagement />} />
+            <Route path="kol" element={<KolManagement />} />
+            <Route path="seo" element={<SeoManagement />} />
+            <Route path="ratings" element={<RatingPerformance />} />
+            {/* Redirect to ads performance if no path matches */}
+            <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
           </Route>
 
           {/* Settings Layout */}

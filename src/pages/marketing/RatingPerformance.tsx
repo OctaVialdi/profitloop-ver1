@@ -1,0 +1,26 @@
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+const RatingPerformance = () => {
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Rating Performance</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Rating & Reviews Management</CardTitle>
+          <CardDescription>
+            Monitor and respond to customer ratings and reviews
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            This page will display metrics about your customer ratings and reviews across various platforms.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default RatingPerformance;
