@@ -9,7 +9,10 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ChevronDown, Upload } from "lucide-react";
 
 const AgencyComparison = () => {
   const [compareMode, setCompareMode] = useState(false);
@@ -18,6 +21,9 @@ const AgencyComparison = () => {
   const [activeTab, setActiveTab] = useState("meta");
   const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
   const [viewMode, setViewMode] = useState("Agency Comparison");
+  const [inputDataDialogOpen, setInputDataDialogOpen] = useState(false);
+  const [selectedAgency, setSelectedAgency] = useState("");
+  const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
 
   // Mock data for the comparison
   const agencyData = [
@@ -100,39 +106,49 @@ const AgencyComparison = () => {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">View Mode</p>
-          <div className="relative">
-            <div 
-              className="flex items-center justify-between gap-2 px-4 py-2 bg-purple-50 rounded-md min-w-[200px] cursor-pointer"
-              onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
-            >
-              <span>{viewMode}</span>
-              <ChevronDown className="h-4 w-4" />
-            </div>
-            
-            {viewDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-full bg-white border rounded-md shadow-lg z-30">
-                <div 
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => {
-                    setViewMode("Campaigns View");
-                    setViewDropdownOpen(false);
-                  }}
-                >
-                  Campaigns View
-                </div>
-                <div 
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => {
-                    setViewMode("Agency Comparison");
-                    setViewDropdownOpen(false);
-                  }}
-                >
-                  Agency Comparison
-                </div>
+        <div className="flex items-center gap-4">
+          <Button 
+            className="bg-purple-500 hover:bg-purple-600 text-white flex items-center gap-2"
+            onClick={() => setInputDataDialogOpen(true)}
+          >
+            <Upload className="h-4 w-4" />
+            Input Data
+          </Button>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-700">View Mode</p>
+            <div className="relative">
+              <div 
+                className="flex items-center justify-between gap-2 px-4 py-2 bg-purple-50 rounded-md min-w-[200px] cursor-pointer"
+                onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
+              >
+                <span>{viewMode}</span>
+                <ChevronDown className="h-4 w-4" />
               </div>
-            )}
+              
+              {viewDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1 w-full bg-white border rounded-md shadow-lg z-30">
+                  <div 
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      setViewMode("Campaigns View");
+                      setViewDropdownOpen(false);
+                    }}
+                  >
+                    Campaigns View
+                  </div>
+                  <div 
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      setViewMode("Agency Comparison");
+                      setViewDropdownOpen(false);
+                    }}
+                  >
+                    Agency Comparison
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -223,6 +239,85 @@ const AgencyComparison = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Input Data Dialog */}
+      <Dialog open={inputDataDialogOpen} onOpenChange={setInputDataDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Upload Campaign Data</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-6">
+            <p className="text-gray-600">Select an agency and upload campaign data in Excel or CSV format</p>
+            
+            <div className="space-y-2">
+              <label className="font-medium">Select Agency</label>
+              <div className="relative">
+                <div 
+                  className="w-full border rounded-md px-4 py-2 flex items-center justify-between cursor-pointer"
+                  onClick={() => setShowAgencyDropdown(!showAgencyDropdown)}
+                >
+                  <span>{selectedAgency || "Select an agency"}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </div>
+                
+                {showAgencyDropdown && (
+                  <div className="absolute w-full mt-1 border rounded-md bg-white shadow-lg z-40">
+                    {agencyData.map((agency) => (
+                      <div 
+                        key={agency.name}
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => {
+                          setSelectedAgency(agency.name);
+                          setShowAgencyDropdown(false);
+                        }}
+                      >
+                        {agency.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-500">Campaign data will only be visible when this agency is selected in the dashboard</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="font-medium">Upload File (Excel/CSV)</label>
+              <div className="flex gap-3">
+                <div className="relative flex-grow">
+                  <Input
+                    type="file"
+                    className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                    accept=".csv,.xlsx,.xls"
+                  />
+                  <div className="flex items-center justify-between w-full border rounded-md px-4 py-2 bg-white">
+                    <span className="text-gray-500">Choose file...</span>
+                    <Upload className="h-4 w-4 text-gray-500" />
+                  </div>
+                </div>
+                <Button className="bg-purple-500 hover:bg-purple-600">
+                  Upload
+                </Button>
+              </div>
+              <p className="text-sm text-gray-500">Supported formats: CSV, Excel (.xlsx, .xls)</p>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-md">
+              <h3 className="font-medium text-blue-700 mb-2">Required Columns</h3>
+              <ul className="text-sm text-blue-600 space-y-1">
+                <li>• Campaign Name</li>
+                <li>• Start Date</li>
+                <li>• End Date</li>
+                <li>• Budget</li>
+                <li>• Impressions</li>
+                <li>• Clicks</li>
+                <li>• Conversions (optional)</li>
+                <li>• Spend</li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
