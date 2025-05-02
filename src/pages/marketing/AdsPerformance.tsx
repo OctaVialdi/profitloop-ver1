@@ -1,9 +1,6 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
 const AdsPerformance = () => {
-  return (
-    <div className="w-full min-h-screen p-4 md:p-6 lg:p-8">
+  return <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 px-0">
       <h1 className="text-3xl font-bold mb-6">Ads Performance</h1>
       
       <Card className="w-full">
@@ -19,8 +16,6 @@ const AdsPerformance = () => {
           </p>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default AdsPerformance;
