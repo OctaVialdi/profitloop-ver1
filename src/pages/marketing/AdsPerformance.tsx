@@ -359,6 +359,15 @@ const AdsPerformance = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Button 
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={() => setInputDataDialogOpen(true)}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span>Input Data</span>
+                </Button>
+                <Button 
                   variant="outline" 
                   size="sm" 
                   className="flex items-center gap-1"
