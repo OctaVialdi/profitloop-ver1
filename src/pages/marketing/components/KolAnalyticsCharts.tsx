@@ -93,11 +93,11 @@ const config = {
 };
 
 const KolAnalyticsCharts = () => {
-  const [activeTab, setActiveTab] = useState("engagement");
+  const [activeMetricTab, setActiveMetricTab] = useState("engagement");
   
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeMetricTab} onValueChange={setActiveMetricTab} className="w-full">
         <TabsList className="grid grid-cols-3 max-w-md">
           <TabsTrigger value="engagement">Engagement Analysis</TabsTrigger>
           <TabsTrigger value="roi">ROI & Revenue</TabsTrigger>
