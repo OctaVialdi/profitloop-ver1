@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 
 // Mock data for charts
 const engagementData = [
@@ -92,9 +93,11 @@ const config = {
 };
 
 const KolAnalyticsCharts = () => {
+  const [activeTab, setActiveTab] = useState("engagement");
+  
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="engagement" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-3 max-w-md">
           <TabsTrigger value="engagement">Engagement Analysis</TabsTrigger>
           <TabsTrigger value="roi">ROI & Revenue</TabsTrigger>
