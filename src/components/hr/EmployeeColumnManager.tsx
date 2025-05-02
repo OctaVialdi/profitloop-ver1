@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { MoveVertical } from 'lucide-react';
 // Define a consistent column structure type
 export type EmployeeColumnState = {
   name: boolean;
-  employeeId: boolean; // Added employeeId column
+  employeeId: boolean;
   email: boolean;
   branch: boolean;
   organization: boolean;
@@ -37,6 +38,7 @@ interface ColumnManagerProps {
   columnOrder: ColumnOrder;
   onOrderChange: (order: ColumnOrder) => void;
 }
+
 export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
   columns,
   onColumnChange,
@@ -49,6 +51,7 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
       [name]: !columns[name]
     });
   };
+  
   const handleSelectAll = () => {
     const allSelected = Object.keys(columns).reduce((acc, key) => {
       acc[key as keyof EmployeeColumnState] = true;
@@ -58,6 +61,7 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
     });
     onColumnChange(allSelected);
   };
+  
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
     const newOrder = Array.from(columnOrder);
@@ -75,9 +79,7 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
     }, {
       key: "employeeId" as keyof EmployeeColumnState,
       label: "Employee ID"
-    },
-    // Added employeeId column
-    {
+    }, {
       key: "email" as keyof EmployeeColumnState,
       label: "Email"
     }, {
@@ -142,7 +144,9 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
       label: "Marital status"
     }]
   }];
-  return <div className="h-full max-h-[500px] overflow-hidden flex flex-col">
+  
+  return (
+    <div className="h-full max-h-[500px] overflow-hidden flex flex-col">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">MANAGE COLUMN</h3>
@@ -152,7 +156,30 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
         </div>
       </div>
       
-      
+      {/* Column groups with checkboxes */}
+      <div className="px-4 py-2 flex-1 overflow-hidden">
+        <ScrollArea className="h-[180px] pr-2">
+          <div className="space-y-4 pb-2">
+            {columnGroups.map((group, groupIndex) => (
+              <div key={groupIndex}>
+                <h4 className="text-xs font-medium text-gray-500 mb-2">{group.title}</h4>
+                <div className="space-y-2">
+                  {group.columns.map((column) => (
+                    <div key={column.key} className="flex items-center justify-between">
+                      <span className="text-sm">{column.label}</span>
+                      <Checkbox 
+                        checked={columns[column.key] || false} 
+                        onCheckedChange={() => handleToggleColumn(column.key)} 
+                        aria-label={`Toggle visibility for ${column.label}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
       <div className="p-4 border-t border-b">
         <h4 className="text-xs font-medium text-gray-500 mb-2">Column Order</h4>
@@ -163,28 +190,48 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
         <ScrollArea className="h-[200px]">
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="columns">
-              {provided => <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+              {provided => (
+                <div 
+                  {...provided.droppableProps} 
+                  ref={provided.innerRef} 
+                  className="space-y-2"
+                >
                   {columnOrder.map((key, index) => {
-                // Find the column in our groups to get the label
-                let columnLabel = '';
-                columnGroups.forEach(group => {
-                  const found = group.columns.find(col => col.key === key);
-                  if (found) columnLabel = found.label;
-                });
-                return <Draggable key={key} draggableId={key} index={index}>
-                        {provided => <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="flex items-center justify-between p-2 bg-gray-50 rounded border cursor-move">
+                    // Find the column in our groups to get the label
+                    let columnLabel = '';
+                    columnGroups.forEach(group => {
+                      const found = group.columns.find(col => col.key === key);
+                      if (found) columnLabel = found.label;
+                    });
+                    
+                    return (
+                      <Draggable key={key} draggableId={key} index={index}>
+                        {provided => (
+                          <div 
+                            ref={provided.innerRef} 
+                            {...provided.draggableProps} 
+                            {...provided.dragHandleProps} 
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded border cursor-move"
+                          >
                             <div className="flex items-center gap-2">
                               <MoveVertical className="h-4 w-4 text-gray-400" />
                               <span className="text-sm">{columnLabel}</span>
                             </div>
                             <div>
-                              <Checkbox checked={columns[key] || false} onCheckedChange={() => handleToggleColumn(key)} aria-label={`Toggle visibility for ${columnLabel}`} />
+                              <Checkbox 
+                                checked={columns[key] || false} 
+                                onCheckedChange={() => handleToggleColumn(key)} 
+                                aria-label={`Toggle visibility for ${columnLabel}`} 
+                              />
                             </div>
-                          </div>}
-                      </Draggable>;
-              })}
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
                   {provided.placeholder}
-                </div>}
+                </div>
+              )}
             </Droppable>
           </DragDropContext>
         </ScrollArea>
@@ -193,5 +240,6 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
       <div className="mt-auto p-4 bg-white">
         <Button className="w-full text-sm">Apply</Button>
       </div>
-    </div>;
+    </div>
+  );
 };
