@@ -17,11 +17,11 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
   
   const renderMainMenu = () => (
     <div className="space-y-4 p-4">
-      <h4 className="font-medium text-xl mb-2">Filter</h4>
+      <h4 className="font-medium text-lg mb-2">Filter</h4>
       <div className="flex flex-col space-y-1">
         <Button 
           variant="ghost" 
-          className="flex justify-between items-center w-full text-lg" 
+          className="flex justify-between items-center w-full text-sm" 
           onClick={() => setCurrentMenu('status')}
         >
           Status
@@ -29,7 +29,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
         </Button>
         <Button 
           variant="ghost" 
-          className="flex justify-between items-center w-full text-lg" 
+          className="flex justify-between items-center w-full text-sm" 
           onClick={() => setCurrentMenu('employmentStatus')}
         >
           Employment status
@@ -37,7 +37,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
         </Button>
         <Button 
           variant="ghost" 
-          className="flex justify-between items-center w-full text-lg" 
+          className="flex justify-between items-center w-full text-sm" 
           onClick={() => setCurrentMenu('branch')}
         >
           Branch
@@ -45,7 +45,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
         </Button>
         <Button 
           variant="ghost" 
-          className="flex justify-between items-center w-full text-lg" 
+          className="flex justify-between items-center w-full text-sm" 
           onClick={() => setCurrentMenu('organization')}
         >
           Organization
@@ -53,7 +53,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
         </Button>
         <Button 
           variant="ghost" 
-          className="flex justify-between items-center w-full text-lg" 
+          className="flex justify-between items-center w-full text-sm" 
           onClick={() => setCurrentMenu('jobPosition')}
         >
           Job position
@@ -61,7 +61,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
         </Button>
         <Button 
           variant="ghost" 
-          className="flex justify-between items-center w-full text-lg" 
+          className="flex justify-between items-center w-full text-sm" 
           onClick={() => setCurrentMenu('jobLevel')}
         >
           Job level
@@ -69,7 +69,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
         </Button>
         <Button 
           variant="ghost" 
-          className="flex justify-between items-center w-full text-lg" 
+          className="flex justify-between items-center w-full text-sm" 
           onClick={() => setCurrentMenu('sbu')}
         >
           SBU
@@ -85,7 +85,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
         <Button variant="ghost" size="icon" onClick={() => setCurrentMenu('main')}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
-        <h4 className="font-medium text-lg ml-2">{title}</h4>
+        <h4 className="font-medium text-sm ml-2">{title}</h4>
       </div>
       
       <div className="p-4 space-y-4 flex-1 overflow-auto">
@@ -94,6 +94,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
             placeholder="Search..." 
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
+            className="text-sm"
           />
         </div>
         
@@ -111,13 +112,13 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
               </div>
             ))
           ) : (
-            <div className="text-center py-4 text-gray-500">No data found</div>
+            <div className="text-center py-4 text-gray-500 text-sm">No data found</div>
           )}
         </div>
       </div>
       
       <div className="bg-primary p-4 mt-auto">
-        <Button className="w-full">Filter</Button>
+        <Button className="w-full text-sm">Filter</Button>
       </div>
     </div>
   );
