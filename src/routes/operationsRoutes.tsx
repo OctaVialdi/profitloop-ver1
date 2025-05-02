@@ -7,6 +7,7 @@ import OperationsDashboard from "@/pages/operations/Dashboard";
 import CustomerServicePage from "@/pages/operations/CustomerService";
 import SalesPage from "@/pages/operations/Sales";
 import LogisticsPage from "@/pages/operations/Logistics";
+import { Outlet } from "react-router-dom";
 
 export const operationsRoutes = (
   <Route
@@ -16,7 +17,7 @@ export const operationsRoutes = (
       <ProtectedRoute>
         <DashboardLayout>
           <OperationsLayout>
-            {/* Outlet will be rendered here */}
+            <Outlet />
           </OperationsLayout>
         </DashboardLayout>
       </ProtectedRoute>
@@ -32,4 +33,3 @@ export const operationsRoutes = (
     <Route path="" element={<Navigate to="/operations/dashboard" replace />} />
   </Route>
 );
-

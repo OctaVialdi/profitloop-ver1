@@ -10,6 +10,7 @@ import OrganizationCollaboration from "@/pages/dashboard/OrganizationCollaborati
 import Subscription from "@/pages/dashboard/Subscription";
 import OrganizationSettings from "@/pages/dashboard/OrganizationSettings";
 import ProfileSettings from "@/pages/settings/ProfileSettings";
+import { Outlet } from "react-router-dom";
 
 export const settingsRoutes = (
   <Route
@@ -19,7 +20,7 @@ export const settingsRoutes = (
       <ProtectedRoute>
         <DashboardLayout>
           <SettingsLayout>
-            {/* Outlet will be rendered here */}
+            <Outlet />
           </SettingsLayout>
         </DashboardLayout>
       </ProtectedRoute>
@@ -34,4 +35,3 @@ export const settingsRoutes = (
     <Route path="profile" element={<ProfileSettings />} />
   </Route>
 );
-

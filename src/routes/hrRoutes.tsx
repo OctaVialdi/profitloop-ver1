@@ -13,6 +13,7 @@ import HRKontrak from "@/pages/hr/Kontrak";
 import HRTraining from "@/pages/hr/Training";
 import HRKinerja from "@/pages/hr/Kinerja";
 import HRCompany from "@/pages/hr/Company";
+import { Outlet } from "react-router-dom";
 
 export const hrRoutes = (
   <Route
@@ -22,7 +23,7 @@ export const hrRoutes = (
       <ProtectedRoute>
         <DashboardLayout>
           <HRLayout>
-            {/* Outlet will be rendered here */}
+            <Outlet />
           </HRLayout>
         </DashboardLayout>
       </ProtectedRoute>
@@ -42,4 +43,3 @@ export const hrRoutes = (
     <Route path="" element={<Navigate to="/hr/dashboard" replace />} />
   </Route>
 );
-

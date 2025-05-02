@@ -6,6 +6,7 @@ import ITLayout from "@/components/layout/ITLayout";
 import ITDashboard from "@/pages/it/Dashboard";
 import ITSupport from "@/pages/it/Support";
 import ITDeveloper from "@/pages/it/Developer";
+import { Outlet } from "react-router-dom";
 
 export const itRoutes = (
   <Route
@@ -15,7 +16,7 @@ export const itRoutes = (
       <ProtectedRoute>
         <DashboardLayout>
           <ITLayout>
-            {/* Outlet will be rendered here */}
+            <Outlet />
           </ITLayout>
         </DashboardLayout>
       </ProtectedRoute>
@@ -28,4 +29,3 @@ export const itRoutes = (
     <Route path="" element={<Navigate to="/it/dashboard" replace />} />
   </Route>
 );
-

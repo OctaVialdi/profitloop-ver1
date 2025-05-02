@@ -13,6 +13,7 @@ import BillApprovals from "@/pages/finance/BillApprovals";
 import PayrollSummary from "@/pages/finance/PayrollSummary";
 import CashManagement from "@/pages/finance/CashManagement";
 import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
+import { Outlet } from "react-router-dom";
 
 export const financeRoutes = (
   <Route
@@ -22,7 +23,7 @@ export const financeRoutes = (
       <ProtectedRoute>
         <DashboardLayout>
           <FinanceLayout>
-            {/* Outlet will be rendered here */}
+            <Outlet />
           </FinanceLayout>
         </DashboardLayout>
       </ProtectedRoute>
@@ -42,4 +43,3 @@ export const financeRoutes = (
     <Route path="" element={<Navigate to="/finance/dashboard" replace />} />
   </Route>
 );
-

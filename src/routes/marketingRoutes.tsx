@@ -9,6 +9,7 @@ import KolManagement from "@/pages/marketing/KolManagement";
 import SeoManagement from "@/pages/marketing/SeoManagement";
 import RatingPerformance from "@/pages/marketing/RatingPerformance";
 import AgencyComparison from "@/pages/marketing/AgencyComparison";
+import { Outlet } from "react-router-dom";
 
 export const marketingRoutes = (
   <Route
@@ -18,7 +19,7 @@ export const marketingRoutes = (
       <ProtectedRoute>
         <DashboardLayout>
           <MarketingLayout>
-            {/* Outlet will be rendered here */}
+            <Outlet />
           </MarketingLayout>
         </DashboardLayout>
       </ProtectedRoute>
@@ -34,4 +35,3 @@ export const marketingRoutes = (
     <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
   </Route>
 );
-
