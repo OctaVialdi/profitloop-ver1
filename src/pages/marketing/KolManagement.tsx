@@ -10,7 +10,7 @@ const KolManagement = () => {
   return (
     <div className="w-full min-h-screen p-4 md:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-8">
-        <div></div> {/* Empty div for spacing */}
+        <h1 className="text-2xl font-bold hidden md:block">KOL Management</h1>
         <div className={`flex items-center ${isMobile ? 'flex-col gap-2 w-full' : 'gap-3'}`}>
           <Button 
             variant="outline" 

@@ -17,10 +17,10 @@ export const KolAnalyticsDashboard = () => {
       <div className={`flex ${isMobile ? 'flex-col' : 'justify-between'} items-start md:items-center gap-4`}>
         <h2 className="text-2xl font-bold">KOL Analytics Dashboard</h2>
         <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
+          <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'} bg-white`}>
             <SelectValue placeholder="Time Range" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white">
             <SelectItem value="last-week">Last Week</SelectItem>
             <SelectItem value="last-month">Last Month</SelectItem>
             <SelectItem value="last-quarter">Last Quarter</SelectItem>
@@ -57,15 +57,15 @@ export const KolAnalyticsDashboard = () => {
         </TabsList>
         
         <div className="mt-6">
-          <TabsContent value="engagement">
+          <TabsContent value="engagement" className="m-0">
             <EngagementAnalysisTab />
           </TabsContent>
           
-          <TabsContent value="roi">
+          <TabsContent value="roi" className="m-0">
             <RoiRevenueTab />
           </TabsContent>
           
-          <TabsContent value="conversion">
+          <TabsContent value="conversion" className="m-0">
             <ConversionMetricsTab />
           </TabsContent>
         </div>
