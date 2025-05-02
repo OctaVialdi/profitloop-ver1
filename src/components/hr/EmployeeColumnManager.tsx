@@ -3,6 +3,8 @@ import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { moveVertical } from 'lucide-react';
 
 // Define a consistent column structure type
 export type EmployeeColumnState = {
@@ -27,12 +29,22 @@ export type EmployeeColumnState = {
   maritalStatus: boolean;
 }
 
+// Define a column order type 
+export type ColumnOrder = Array<keyof EmployeeColumnState>;
+
 interface ColumnManagerProps {
   columns: EmployeeColumnState;
   onColumnChange: (columns: EmployeeColumnState) => void;
+  columnOrder: ColumnOrder;
+  onOrderChange: (order: ColumnOrder) => void;
 }
 
-export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ columns, onColumnChange }) => {
+export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ 
+  columns, 
+  onColumnChange, 
+  columnOrder, 
+  onOrderChange 
+}) => {
   const handleToggleColumn = (name: keyof EmployeeColumnState) => {
     onColumnChange({
       ...columns,
@@ -47,6 +59,16 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ columns, o
     }, { ...columns });
     
     onColumnChange(allSelected);
+  };
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    const newOrder = Array.from(columnOrder);
+    const [removed] = newOrder.splice(result.source.index, 1);
+    newOrder.splice(result.destination.index, 0, removed);
+    
+    onOrderChange(newOrder);
   };
 
   // Convert columns into a more organized structure for rendering
@@ -127,8 +149,56 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ columns, o
           ))}
         </div>
       </ScrollArea>
+
+      <div className="p-4 border-t border-b">
+        <h4 className="text-xs font-medium text-gray-500 mb-2">Column Order</h4>
+        <p className="text-xs text-gray-500 mb-3">
+          Drag and drop to reorder visible columns
+        </p>
+        
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="columns">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="space-y-2"
+              >
+                {columnOrder.map((key, index) => {
+                  // Only show enabled columns in the reorder section
+                  if (!columns[key]) return null;
+                  
+                  // Find the column in our groups to get the label
+                  let columnLabel = '';
+                  columnGroups.forEach(group => {
+                    const found = group.columns.find(col => col.key === key);
+                    if (found) columnLabel = found.label;
+                  });
+                  
+                  return (
+                    <Draggable key={key} draggableId={key} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="flex items-center p-2 bg-gray-50 rounded border"
+                        >
+                          <moveVertical className="h-4 w-4 mr-2 text-gray-400" />
+                          <span className="text-sm">{columnLabel}</span>
+                        </div>
+                      )}
+                    </Draggable>
+                  );
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </div>
       
-      <div className="mt-auto p-4 border-t bg-white">
+      <div className="mt-auto p-4 bg-white">
         <Button className="w-full text-sm">Apply</Button>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft } from "lucide-react";
 
 interface FilterMenuProps {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 type FilterCategory = 'main' | 'status' | 'employmentStatus' | 'branch' | 'organization' | 'jobPosition' | 'jobLevel' | 'sbu';
@@ -15,6 +15,10 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
   const [currentMenu, setCurrentMenu] = useState<FilterCategory>('main');
   const [searchQuery, setSearchQuery] = useState('');
   
+  const handleClose = () => {
+    if (onClose) onClose();
+  };
+
   const renderMainMenu = () => (
     <div className="space-y-4 p-4">
       <h4 className="font-medium text-lg mb-2">Filter</h4>
@@ -118,7 +122,7 @@ export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
       </div>
       
       <div className="bg-primary p-4 mt-auto">
-        <Button className="w-full text-sm">Filter</Button>
+        <Button className="w-full text-sm" onClick={handleClose}>Filter</Button>
       </div>
     </div>
   );
