@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +18,8 @@ interface HRLayoutProps {
 export default function HRLayout({ children }: HRLayoutProps) {
   const location = useLocation();
   
-  const tabs: Tab[] = [
+  // Memoize tabs to prevent unnecessary re-creation
+  const tabs = useMemo<Tab[]>(() => [
     { name: "Dashboard", href: "/hr/dashboard" },
     { name: "OKR", href: "/hr/okr" },
     { name: "Data Karyawan", href: "/hr/data" },
@@ -29,18 +30,18 @@ export default function HRLayout({ children }: HRLayoutProps) {
     { name: "Training", href: "/hr/training" },
     { name: "Kinerja", href: "/hr/kinerja" },
     { name: "Company", href: "/hr/company" },
-  ];
+  ], []);
   
   const currentPath = location.pathname;
   
-  // Find the active tab based on the current path
-  const activeTab = tabs.find(tab => 
-    currentPath === tab.href || 
-    currentPath.startsWith(`${tab.href}/`)
-  );
-  
-  // If no active tab is found, default to the first tab
-  const defaultTab = activeTab?.href || tabs[0]?.href;
+  // Memoize the active tab calculation to prevent recalculations on renders
+  const defaultTab = useMemo(() => {
+    const activeTab = tabs.find(tab => 
+      currentPath === tab.href || 
+      currentPath.startsWith(`${tab.href}/`)
+    );
+    return activeTab?.href || tabs[0]?.href;
+  }, [currentPath, tabs]);
 
   return (
     <div className="w-full space-y-4">

@@ -1,5 +1,5 @@
 
-import { ReactNode } from "react";
+import { ReactNode, memo } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
@@ -23,8 +23,42 @@ interface DashboardLayoutProps {
   children?: ReactNode;
 }
 
+// Use memo to prevent unnecessary re-renders of the HeaderContent
+const HeaderContent = memo(({ organization, logoUrl }: { 
+  organization: any, 
+  logoUrl: string | undefined 
+}) => (
+  <div className="flex items-center gap-2">
+    <Link to="/dashboard" className="flex items-center gap-2">
+      {logoUrl ? (
+        <Avatar className="h-8 w-8 hidden md:flex">
+          <AvatarImage src={logoUrl} alt={organization?.name || "Logo"} />
+          <AvatarFallback>
+            {organization?.name?.charAt(0) || "O"}
+          </AvatarFallback>
+        </Avatar>
+      ) : null}
+      <span className="text-xl font-semibold text-blue-600">
+        {organization?.name || "Multi-Tenant"}
+      </span>
+    </Link>
+  </div>
+));
+
+HeaderContent.displayName = "HeaderContent";
+
+// Use memo for the right side of the header to prevent unnecessary re-renders
+const HeaderActions = memo(() => (
+  <div className="flex items-center gap-3">
+    <OrganizationSwitcher />
+    <NotificationSystem />
+    <ProfileDropdown />
+  </div>
+));
+
+HeaderActions.displayName = "HeaderActions";
+
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { organization, userProfile, isLoading, isAdmin, isSuperAdmin } = useOrganization();
   const { logoUrl } = useAppTheme();
@@ -55,27 +89,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {/* Top navigation - Modified to be full width without scroll constraints */}
           <header className="bg-white border-b sticky top-0 z-10 w-full">
             <div className="px-4 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Link to="/dashboard" className="flex items-center gap-2">
-                  {logoUrl ? (
-                    <Avatar className="h-8 w-8 hidden md:flex">
-                      <AvatarImage src={logoUrl} alt={organization?.name || "Logo"} />
-                      <AvatarFallback>
-                        {organization?.name?.charAt(0) || "O"}
-                      </AvatarFallback>
-                    </Avatar>
-                  ) : null}
-                  <span className="text-xl font-semibold text-blue-600">
-                    {organization?.name || "Multi-Tenant"}
-                  </span>
-                </Link>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <OrganizationSwitcher />
-                <NotificationSystem />
-                <ProfileDropdown />
-              </div>
+              <HeaderContent organization={organization} logoUrl={logoUrl} />
+              <HeaderActions />
             </div>
           </header>
           

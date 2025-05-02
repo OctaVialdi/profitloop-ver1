@@ -10,11 +10,12 @@ const Tabs = React.forwardRef<
     onValueChange?: (value: string) => void;
   }
 >(({ className, onValueChange, ...props }, ref) => {
-  const handleValueChange = (value: string) => {
+  // Memoize the handler to prevent recreation on each render
+  const handleValueChange = React.useCallback((value: string) => {
     if (onValueChange) {
       onValueChange(value);
     }
-  };
+  }, [onValueChange]);
 
   return (
     <TabsPrimitive.Root
@@ -42,7 +43,7 @@ const TabsList = React.forwardRef<
 ))
 TabsList.displayName = TabsPrimitive.List.displayName
 
-const TabsTrigger = React.forwardRef<
+const TabsTrigger = React.memo(React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, ...props }, ref) => (
@@ -54,8 +55,8 @@ const TabsTrigger = React.forwardRef<
     )}
     {...props}
   />
-))
-TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+)))
+TabsTrigger.displayName = "TabsTrigger"
 
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
