@@ -3,13 +3,36 @@ import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 
+// Define a consistent column structure type
+export type EmployeeColumnState = {
+  name: boolean;
+  email: boolean;
+  branch: boolean;
+  organization: boolean;
+  jobPosition: boolean;
+  jobLevel: boolean;
+  employmentStatus: boolean;
+  joinDate: boolean;
+  endDate: boolean;
+  signDate: boolean;
+  resignDate: boolean;
+  barcode: boolean;
+  birthDate: boolean;
+  birthPlace: boolean;
+  address: boolean;
+  mobilePhone: boolean;
+  religion: boolean;
+  gender: boolean;
+  maritalStatus: boolean;
+}
+
 interface ColumnManagerProps {
-  columns: Record<string, boolean>;
-  onColumnChange: (columns: Record<string, boolean>) => void;
+  columns: EmployeeColumnState;
+  onColumnChange: (columns: EmployeeColumnState) => void;
 }
 
 export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ columns, onColumnChange }) => {
-  const handleToggleColumn = (name: string) => {
+  const handleToggleColumn = (name: keyof EmployeeColumnState) => {
     onColumnChange({
       ...columns,
       [name]: !columns[name],
@@ -18,9 +41,9 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ columns, o
 
   const handleSelectAll = () => {
     const allSelected = Object.keys(columns).reduce((acc, key) => {
-      acc[key] = true;
+      acc[key as keyof EmployeeColumnState] = true;
       return acc;
-    }, {} as Record<string, boolean>);
+    }, { ...columns });
     
     onColumnChange(allSelected);
   };
@@ -30,40 +53,40 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({ columns, o
     {
       title: "Basic Information",
       columns: [
-        { key: "name", label: "Employee name" },
-        { key: "email", label: "Email" },
-        { key: "branch", label: "Branch" },
-        { key: "organization", label: "Organization" },
+        { key: "name" as keyof EmployeeColumnState, label: "Employee name" },
+        { key: "email" as keyof EmployeeColumnState, label: "Email" },
+        { key: "branch" as keyof EmployeeColumnState, label: "Branch" },
+        { key: "organization" as keyof EmployeeColumnState, label: "Organization" },
       ]
     },
     {
       title: "Job Information",
       columns: [
-        { key: "jobPosition", label: "Job position" },
-        { key: "jobLevel", label: "Job level" },
-        { key: "employmentStatus", label: "Employment status" },
+        { key: "jobPosition" as keyof EmployeeColumnState, label: "Job position" },
+        { key: "jobLevel" as keyof EmployeeColumnState, label: "Job level" },
+        { key: "employmentStatus" as keyof EmployeeColumnState, label: "Employment status" },
       ]
     },
     {
       title: "Dates",
       columns: [
-        { key: "joinDate", label: "Join date" },
-        { key: "endDate", label: "End date" },
-        { key: "signDate", label: "Sign date" },
-        { key: "resignDate", label: "Resign date" },
+        { key: "joinDate" as keyof EmployeeColumnState, label: "Join date" },
+        { key: "endDate" as keyof EmployeeColumnState, label: "End date" },
+        { key: "signDate" as keyof EmployeeColumnState, label: "Sign date" },
+        { key: "resignDate" as keyof EmployeeColumnState, label: "Resign date" },
       ]
     },
     {
       title: "Personal Information",
       columns: [
-        { key: "barcode", label: "Barcode" },
-        { key: "birthDate", label: "Birth date" },
-        { key: "birthPlace", label: "Birth place" },
-        { key: "address", label: "Address" },
-        { key: "mobilePhone", label: "Mobile phone" },
-        { key: "religion", label: "Religion" },
-        { key: "gender", label: "Gender" },
-        { key: "maritalStatus", label: "Marital status" },
+        { key: "barcode" as keyof EmployeeColumnState, label: "Barcode" },
+        { key: "birthDate" as keyof EmployeeColumnState, label: "Birth date" },
+        { key: "birthPlace" as keyof EmployeeColumnState, label: "Birth place" },
+        { key: "address" as keyof EmployeeColumnState, label: "Address" },
+        { key: "mobilePhone" as keyof EmployeeColumnState, label: "Mobile phone" },
+        { key: "religion" as keyof EmployeeColumnState, label: "Religion" },
+        { key: "gender" as keyof EmployeeColumnState, label: "Gender" },
+        { key: "maritalStatus" as keyof EmployeeColumnState, label: "Marital status" },
       ]
     }
   ];

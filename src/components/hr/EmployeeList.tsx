@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { EmployeeFilterMenu } from "./EmployeeFilterMenu";
 import { EmployeeActions } from "./EmployeeActions";
-import { EmployeeColumnManager } from "./EmployeeColumnManager";
+import { EmployeeColumnManager, EmployeeColumnState } from "./EmployeeColumnManager";
 import { Avatar } from "@/components/ui/avatar";
 
 export interface Employee {
@@ -46,8 +46,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   const [showFilter, setShowFilter] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
   
-  // Sample columns state
-  const [visibleColumns, setVisibleColumns] = useState({
+  // Update with the proper type
+  const [visibleColumns, setVisibleColumns] = useState<EmployeeColumnState>({
     name: true,
     email: true,
     branch: true,
