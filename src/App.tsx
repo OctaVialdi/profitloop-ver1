@@ -54,6 +54,18 @@ import ITLayout from "@/components/layout/ITLayout";
 import ITDashboard from "@/pages/it/Dashboard";
 import ITSupport from "@/pages/it/Support";
 import ITDeveloper from "@/pages/it/Developer";
+// Import HR Pages
+import HRLayout from "@/components/layout/HRLayout";
+import HRDashboard from "@/pages/hr/Dashboard";
+import HROKR from "@/pages/hr/OKR";
+import HRDataKaryawan from "@/pages/hr/DataKaryawan";
+import HRAbsensi from "@/pages/hr/Absensi";
+import HRCutiIzin from "@/pages/hr/CutiIzin";
+import HRPayroll from "@/pages/hr/Payroll";
+import HRKontrak from "@/pages/hr/Kontrak";
+import HRTraining from "@/pages/hr/Training";
+import HRKinerja from "@/pages/hr/Kinerja";
+import HRCompany from "@/pages/hr/Company";
 import { useEffect } from "react";
 
 function App() {
@@ -141,6 +153,33 @@ function App() {
             }
           >
             <Route index element={<CatatanMeetings />} />
+          </Route>
+          
+          {/* HR Routes - New section */}
+          <Route
+            path="/hr"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <HRLayout>
+                    <Outlet />
+                  </HRLayout>
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<HRDashboard />} />
+            <Route path="okr" element={<HROKR />} />
+            <Route path="data" element={<HRDataKaryawan />} />
+            <Route path="absensi" element={<HRAbsensi />} />
+            <Route path="cuti" element={<HRCutiIzin />} />
+            <Route path="payroll" element={<HRPayroll />} />
+            <Route path="kontrak" element={<HRKontrak />} />
+            <Route path="training" element={<HRTraining />} />
+            <Route path="kinerja" element={<HRKinerja />} />
+            <Route path="company" element={<HRCompany />} />
+            {/* Redirect to dashboard if no path matches */}
+            <Route path="" element={<Navigate to="/hr/dashboard" replace />} />
           </Route>
 
           {/* Finance Routes */}
