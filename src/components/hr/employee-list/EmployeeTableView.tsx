@@ -16,15 +16,15 @@ interface EmployeeTableViewProps {
 export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({ data, visibleColumns }) => {
   return (
     <div className="border rounded-md overflow-hidden">
-      <ScrollArea className="w-full max-w-full">
+      <div className="w-full overflow-auto" style={{ maxHeight: "500px" }}>
         <div className="min-w-max">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-20 bg-background">
               <TableRow>
-                <TableHead className="w-[40px] sticky left-0 z-10 bg-background">
+                <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
                   <Checkbox />
                 </TableHead>
-                {visibleColumns.name && <TableHead className="sticky left-[40px] z-10 bg-background">Employee name</TableHead>}
+                {visibleColumns.name && <TableHead className="sticky left-[40px] z-30 bg-background">Employee name</TableHead>}
                 {visibleColumns.branch && <TableHead>Branch</TableHead>}
                 {visibleColumns.organization && <TableHead>Organization</TableHead>}
                 {visibleColumns.jobPosition && <TableHead>Job position</TableHead>}
@@ -43,17 +43,17 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({ data, visi
                 {visibleColumns.religion && <TableHead>Religion</TableHead>}
                 {visibleColumns.gender && <TableHead>Gender</TableHead>}
                 {visibleColumns.maritalStatus && <TableHead>Marital status</TableHead>}
-                <TableHead className="text-right sticky right-0 z-10 bg-background">Actions</TableHead>
+                <TableHead className="text-right sticky right-0 z-30 bg-background">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map(employee => (
                 <TableRow key={employee.id}>
-                  <TableCell className="sticky left-0 z-10 bg-background">
+                  <TableCell className="sticky left-0 z-20 bg-background">
                     <Checkbox />
                   </TableCell>
                   {visibleColumns.name && (
-                    <TableCell className="sticky left-[40px] z-10 bg-background">
+                    <TableCell className="sticky left-[40px] z-20 bg-background">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
                           <div className="bg-gray-100 h-full w-full rounded-full flex items-center justify-center">
@@ -82,7 +82,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({ data, visi
                   {visibleColumns.religion && <TableCell>{employee.religion || '-'}</TableCell>}
                   {visibleColumns.gender && <TableCell>{employee.gender || '-'}</TableCell>}
                   {visibleColumns.maritalStatus && <TableCell>{employee.maritalStatus || '-'}</TableCell>}
-                  <TableCell className="text-right sticky right-0 z-10 bg-background">
+                  <TableCell className="text-right sticky right-0 z-20 bg-background">
                     <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
                   </TableCell>
                 </TableRow>
@@ -97,7 +97,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({ data, visi
             </TableBody>
           </Table>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 };
