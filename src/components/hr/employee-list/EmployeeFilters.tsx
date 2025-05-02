@@ -41,7 +41,7 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0" align="start">
-          <EmployeeFilterMenu />
+          <EmployeeFilterMenu onClose={() => setShowFilter(false)} />
         </PopoverContent>
       </Popover>
 
