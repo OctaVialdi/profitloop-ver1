@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -230,11 +229,11 @@ const KolManagement = () => {
         </CardContent>
       </Card>
       
-      {/* New Section with header based on the image */}
+      {/* New Section with KOL Performance Deep Dive */}
       <div className="mt-8 w-full">
-        <div className="px-4 md:px-6 mb-6">
+        <div className="px-4 md:px-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">KOL Management</h2>
+            <h2 className="text-2xl font-bold tracking-tight">KOL Management</h2>
             <div className="flex mt-4 md:mt-0 space-x-2">
               <Button variant="outline" className="bg-white gap-2">
                 <BarChart size={16} />
@@ -251,7 +250,7 @@ const KolManagement = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             {/* Total KOLs */}
             <Card className="bg-white border border-gray-200">
               <CardContent className="flex items-center p-6">
@@ -308,10 +307,7 @@ const KolManagement = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
-        
-        <Separator className="mb-6" />
-        <div className="px-4 md:px-6">
+          
           <div className="mb-6">
             <h2 className="text-2xl font-bold tracking-tight">KOL Performance Deep Dive</h2>
             <p className="text-muted-foreground mt-1">
