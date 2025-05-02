@@ -17,7 +17,31 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { Calendar } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Edit, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { format, addMonths, subMonths, addDays, subDays } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface ContentManager {
   name: string;
@@ -38,8 +62,13 @@ interface TabData {
 const SocialMediaManagement = () => {
   const [activeTab, setActiveTab] = useState<string>("content-planner");
   const [activeSubTab, setActiveSubTab] = useState<string>("dashboard");
-  const currentDate = new Date();
-  const formattedDate = `${String(currentDate.getDate()).padStart(2, '0')} May 2025`;
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isMonthSelectorOpen, setIsMonthSelectorOpen] = useState(false);
+  const [isEditTargetOpen, setIsEditTargetOpen] = useState(false);
+  const [editingManager, setEditingManager] = useState<ContentManager | null>(null);
+  const [targetValue, setTargetValue] = useState<string>("20");
   
   const primaryTabs: TabData[] = [
     { id: "content-planner", label: "Content Planner" },
@@ -110,6 +139,119 @@ const SocialMediaManagement = () => {
     }
   };
 
+  const handlePreviousMonth = () => {
+    setSelectedMonth(subMonths(selectedMonth, 1));
+  };
+
+  const handleNextMonth = () => {
+    setSelectedMonth(addMonths(selectedMonth, 1));
+  };
+
+  const handleEditTarget = (manager: ContentManager) => {
+    setEditingManager(manager);
+    setTargetValue(manager.monthlyTargetAdjusted.toString());
+    setIsEditTargetOpen(true);
+  };
+
+  const handleSaveTarget = () => {
+    // In a real app, you would update the manager's target here
+    setIsEditTargetOpen(false);
+    setEditingManager(null);
+  };
+
+  const months = [
+    "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const renderMonthCalendar = () => {
+    const daysOfWeek = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+    const currentYear = selectedMonth.getFullYear();
+    const currentMonth = selectedMonth.getMonth();
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    // Get days from previous month to fill the first week
+    const prevMonthDays = [];
+    const prevMonth = subMonths(selectedMonth, 1);
+    const daysInPrevMonth = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0).getDate();
+    
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      prevMonthDays.unshift(daysInPrevMonth - i);
+    }
+    
+    // Current month days
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    
+    // Calculate how many days we need from next month
+    const totalCells = Math.ceil((firstDayOfMonth + daysInMonth) / 7) * 7;
+    const nextMonthDays = Array.from({ length: totalCells - (prevMonthDays.length + days.length) }, (_, i) => i + 1);
+    
+    return (
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <button 
+            onClick={handlePreviousMonth} 
+            className="p-2 rounded-full hover:bg-gray-200"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="text-xl font-medium">
+            {format(selectedMonth, "MMMM yyyy")}
+          </div>
+          <button 
+            onClick={handleNextMonth} 
+            className="p-2 rounded-full hover:bg-gray-200"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="grid grid-cols-7 gap-1 text-center">
+          {daysOfWeek.map(day => (
+            <div key={day} className="text-gray-500 font-medium py-2">
+              {day}
+            </div>
+          ))}
+          {prevMonthDays.map(day => (
+            <div key={`prev-${day}`} className="py-2 text-gray-300">
+              {day}
+            </div>
+          ))}
+          {days.map(day => {
+            const isToday = 
+              day === new Date().getDate() && 
+              currentMonth === new Date().getMonth() && 
+              currentYear === new Date().getFullYear();
+            const isSelected = 
+              day === selectedDate.getDate() && 
+              currentMonth === selectedDate.getMonth() && 
+              currentYear === selectedDate.getFullYear();
+            
+            return (
+              <div 
+                key={`current-${day}`}
+                className={`py-2 cursor-pointer rounded-full hover:bg-gray-100 ${isToday ? 'font-bold' : ''} ${
+                  isSelected ? 'bg-purple-500 text-white hover:bg-purple-600' : ''
+                }`}
+                onClick={() => {
+                  setSelectedDate(new Date(currentYear, currentMonth, day));
+                  setIsCalendarOpen(false);
+                }}
+              >
+                {day}
+              </div>
+            );
+          })}
+          {nextMonthDays.map(day => (
+            <div key={`next-${day}`} className="py-2 text-gray-300">
+              {day}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 space-y-6">
       {/* Primary Tab Navigation */}
@@ -157,32 +299,72 @@ const SocialMediaManagement = () => {
                 <TableRow>
                   <TableHead className="w-[150px]">PIC</TableHead>
                   <TableHead className="text-center w-[150px]">
-                    <div className="flex items-center justify-center gap-1">
-                      <span>{formattedDate}</span>
-                      <Calendar className="h-4 w-4" />
-                    </div>
+                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center justify-center gap-1 w-full font-normal"
+                        >
+                          <span>{format(selectedDate, "dd MMM yyyy")}</span>
+                          <CalendarIcon className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        {renderMonthCalendar()}
+                      </PopoverContent>
+                    </Popover>
                   </TableHead>
                   <TableHead className="text-center w-[150px]">
-                    <div className="flex items-center justify-center gap-1">
-                      <span>May 2025</span>
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        className="h-4 w-4" 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        stroke="currentColor"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M19 9l-7 7-7-7" 
-                        />
-                      </svg>
-                    </div>
+                    <DropdownMenu 
+                      open={isMonthSelectorOpen} 
+                      onOpenChange={setIsMonthSelectorOpen}
+                    >
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center justify-center gap-1 w-full font-normal"
+                        >
+                          <span>{format(selectedMonth, "MMMM yyyy")}</span>
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto">
+                        {months.map((month, index) => {
+                          const isCurrentYear = new Date().getFullYear() === selectedMonth.getFullYear();
+                          const isCurrentMonth = index === selectedMonth.getMonth() && isCurrentYear;
+                          
+                          return (
+                            <DropdownMenuItem
+                              key={month}
+                              className={`flex items-center py-2 px-4 ${isCurrentMonth ? 'bg-gray-100' : ''}`}
+                              onClick={() => {
+                                setSelectedMonth(new Date(selectedMonth.getFullYear(), index));
+                                setIsMonthSelectorOpen(false);
+                              }}
+                            >
+                              {isCurrentMonth && (
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  className="h-4 w-4 mr-2 text-blue-500" 
+                                  viewBox="0 0 20 20" 
+                                  fill="currentColor"
+                                >
+                                  <path 
+                                    fillRule="evenodd" 
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                    clipRule="evenodd" 
+                                  />
+                                </svg>
+                              )}
+                              {month} {selectedMonth.getFullYear()}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableHead>
                   <TableHead className="text-center w-[150px]">
-                    Target May 2025
+                    Target {format(selectedMonth, "MMMM yyyy")}
                   </TableHead>
                   <TableHead className="w-[200px]">Progress</TableHead>
                   <TableHead className="text-center">On Time Rate</TableHead>
@@ -199,21 +381,13 @@ const SocialMediaManagement = () => {
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
                         <span>{manager.monthlyTargetAdjusted}</span>
-                        <Button variant="ghost" size="icon" className="h-5 w-5">
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            className="h-4 w-4" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
-                            stroke="currentColor"
-                          >
-                            <path 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              strokeWidth={2} 
-                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
-                            />
-                          </svg>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-5 w-5"
+                          onClick={() => handleEditTarget(manager)}
+                        >
+                          <Edit className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -321,6 +495,65 @@ const SocialMediaManagement = () => {
           </p>
         </CardContent>
       </Card>
+
+      {/* Edit Target Dialog */}
+      <Dialog open={isEditTargetOpen} onOpenChange={setIsEditTargetOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Edit Target for {format(selectedMonth, "MMMM yyyy")}
+            </DialogTitle>
+            <button 
+              onClick={() => setIsEditTargetOpen(false)} 
+              className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label htmlFor="month" className="text-base font-medium">Month</label>
+              <Select value={format(selectedMonth, "MMMM yyyy")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>{format(selectedMonth, "MMMM yyyy")}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {months.map((month, index) => (
+                      <SelectItem key={month} value={`${month} ${selectedMonth.getFullYear()}`}>
+                        {month} {selectedMonth.getFullYear()}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="target" className="text-base font-medium">Target Value</label>
+              <Input 
+                id="target" 
+                type="number" 
+                value={targetValue}
+                onChange={(e) => setTargetValue(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditTargetOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="bg-purple-500 hover:bg-purple-600 text-white" 
+              onClick={handleSaveTarget}
+            >
+              Save Target
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
