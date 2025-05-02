@@ -15,6 +15,14 @@ const engagementRateData = [
   { name: 'Emma Wilson', value: 360 }
 ];
 
+// Mobile-friendly data with shorter names
+const engagementRateDataMobile = [
+  { name: 'Sarah', value: 310 },
+  { name: 'Alex', value: 280 },
+  { name: 'Maria', value: 420 },
+  { name: 'Emma', value: 360 }
+];
+
 const engagementTimeData = [
   { name: 'Jan', value: 3 },
   { name: 'Feb', value: 2 },
@@ -25,14 +33,6 @@ const engagementTimeData = [
   { name: 'Jul', value: 2 },
   { name: 'Aug', value: 4 },
   { name: 'Sep', value: 5 }
-];
-
-// Mobile-friendly data with shorter names
-const engagementRateDataMobile = [
-  { name: 'Sarah', value: 310 },
-  { name: 'Alex', value: 280 },
-  { name: 'Maria', value: 420 },
-  { name: 'Emma', value: 360 }
 ];
 
 const categoryData = [
@@ -57,24 +57,24 @@ export const EngagementAnalysisTab = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Card className="col-span-1 md:col-span-1">
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Engagement Rate Distribution</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
+      <Card className="lg:col-span-5 bg-white rounded-lg border border-gray-100 shadow-sm">
+        <CardContent className="pt-6 pb-6">
+          <h3 className="text-base font-medium mb-6 text-gray-800">Engagement Rate Distribution</h3>
           <ChartContainer config={chartConfig} className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={isMobile ? engagementRateDataMobile : engagementRateData} 
-                margin={{ top: 5, right: 5, left: 0, bottom: isMobile ? 40 : 60 }}
+                margin={{ top: 5, right: 5, left: 0, bottom: 60 }}
               >
                 <XAxis 
                   dataKey="name" 
-                  angle={isMobile ? -30 : -45} 
+                  angle={-45} 
                   textAnchor="end" 
                   height={60}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                  tick={{ fontSize: 12 }}
                 />
-                <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
                 />
@@ -85,21 +85,21 @@ export const EngagementAnalysisTab = () => {
         </CardContent>
       </Card>
       
-      <Card className="col-span-1 md:col-span-1">
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Engagement Over Time</h3>
+      <Card className="lg:col-span-5 bg-white rounded-lg border border-gray-100 shadow-sm">
+        <CardContent className="pt-6 pb-6">
+          <h3 className="text-base font-medium mb-6 text-gray-800">Engagement Over Time</h3>
           <ChartContainer config={chartConfig} className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart 
                 data={engagementTimeData} 
-                margin={{ top: 5, right: 5, left: 0, bottom: isMobile ? 15 : 20 }}
+                margin={{ top: 5, right: 5, left: 0, bottom: 20 }}
               >
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                  tick={{ fontSize: 12 }}
                 />
-                <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
                 />
@@ -117,20 +117,20 @@ export const EngagementAnalysisTab = () => {
         </CardContent>
       </Card>
       
-      <Card className="col-span-1 md:col-span-1">
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Top Categories</h3>
-          <div className="space-y-4">
+      <Card className="lg:col-span-2 bg-white rounded-lg border border-gray-100 shadow-sm">
+        <CardContent className="pt-6 pb-6">
+          <h3 className="text-base font-medium mb-6 text-gray-800">Top Categories</h3>
+          <div className="space-y-5 pb-2">
             {categoryData.map((item, index) => (
               <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{item.name}</span>
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-700">{item.name}</span>
                 </div>
-                <div className="flex items-center gap-2 md:gap-4">
-                  <div className={`${isMobile ? 'w-16' : 'w-28'} h-2 bg-gray-100 rounded-full overflow-hidden`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full bg-purple-500 rounded-full" style={{ width: '70%' }}></div>
                   </div>
-                  <span className="font-medium min-w-[20px] text-right">{item.value}</span>
+                  <span className="font-medium text-sm min-w-[20px] text-right text-gray-700">{item.value}</span>
                 </div>
               </div>
             ))}

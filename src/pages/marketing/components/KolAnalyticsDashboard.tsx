@@ -13,9 +13,8 @@ export const KolAnalyticsDashboard = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="space-y-6">
-      <div className={`flex ${isMobile ? 'flex-col' : 'justify-between'} items-start md:items-center gap-4 mb-2`}>
-        <h2 className="text-2xl font-bold">KOL Analytics Dashboard</h2>
+    <div className="space-y-4">
+      <div className={`flex ${isMobile ? 'flex-col' : 'justify-end'} items-start md:items-center gap-4 mb-2`}>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
             <SelectValue placeholder="Time Range" />
@@ -35,28 +34,28 @@ export const KolAnalyticsDashboard = () => {
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className={`w-full grid grid-cols-3 bg-gray-50 p-1 rounded-lg ${isMobile ? 'text-xs' : ''}`}>
+        <TabsList className="w-full grid grid-cols-3 bg-transparent">
           <TabsTrigger 
             value="engagement" 
-            className="py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="py-2 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-purple-500 data-[state=active]:rounded-none data-[state=active]:shadow-none rounded-none"
           >
-            {isMobile ? 'Engagement' : 'Engagement Analysis'}
+            Engagement Analysis
           </TabsTrigger>
           <TabsTrigger 
             value="roi" 
-            className="py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="py-2 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-purple-500 data-[state=active]:rounded-none data-[state=active]:shadow-none rounded-none"
           >
-            {isMobile ? 'ROI' : 'ROI & Revenue'}
+            ROI & Revenue
           </TabsTrigger>
           <TabsTrigger 
             value="conversion" 
-            className="py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="py-2 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-purple-500 data-[state=active]:rounded-none data-[state=active]:shadow-none rounded-none"
           >
-            {isMobile ? 'Conversion' : 'Conversion Metrics'}
+            Conversion Metrics
           </TabsTrigger>
         </TabsList>
         
-        <div className="mt-6">
+        <div className="mt-4">
           <TabsContent value="engagement" className="mt-0">
             <EngagementAnalysisTab />
           </TabsContent>

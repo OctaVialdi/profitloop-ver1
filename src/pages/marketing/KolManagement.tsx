@@ -8,8 +8,8 @@ const KolManagement = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="w-full min-h-screen p-4 md:p-6 lg:p-8">
-      <div className="flex justify-end items-center mb-8">
+    <div className="w-full min-h-screen p-0 md:p-6 lg:p-8 bg-gray-50/50">
+      <div className="flex justify-end items-center mb-6">
         <div className={`flex items-center ${isMobile ? 'flex-col gap-2 w-full' : 'gap-3'}`}>
           <Button 
             variant="outline" 
