@@ -475,23 +475,6 @@ const AdsPerformance = () => {
             </CardContent>
           </Card>
 
-          {/* AI Optimization Tips */}
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>AI Optimization Tips</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-3">
-                {tips.map((tip, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span>•</span>
-                    <p>{tip}</p>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
           {/* Target Management Card */}
           <Card className="w-full">
             <CardHeader>
