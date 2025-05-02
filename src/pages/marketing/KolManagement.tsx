@@ -100,28 +100,7 @@ const KolManagement = () => {
         <CardContent className="p-0">
           <Tabs defaultValue="engagement" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="border-b bg-gray-50/50">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 py-4">
-                <div className="w-full md:w-56 ml-auto">
-                  <Select value={timeFilter} onValueChange={setTimeFilter}>
-                    <SelectTrigger className="w-full border rounded-md bg-white">
-                      <SelectValue placeholder="Time Period">
-                        {timeFilter === "last-week" && "Last Week"}
-                        {timeFilter === "last-month" && "Last Month"}
-                        {timeFilter === "last-quarter" && "Last Quarter"}
-                        {timeFilter === "last-year" && "Last Year"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="last-week">Last Week</SelectItem>
-                        <SelectItem value="last-month">Last Month</SelectItem>
-                        <SelectItem value="last-quarter">Last Quarter</SelectItem>
-                        <SelectItem value="last-year">Last Year</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              
 
               <TabsList className="bg-transparent w-full justify-start rounded-none px-4 py-0">
                 <TabsTrigger value="engagement" className="py-3 px-4 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
