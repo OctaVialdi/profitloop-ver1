@@ -16,7 +16,7 @@ interface EmployeeTableViewProps {
 export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({ data, visibleColumns }) => {
   return (
     <div className="border rounded-md overflow-hidden">
-      <ScrollArea className="w-full overflow-auto" orientation="horizontal">
+      <ScrollArea className="w-full overflow-auto">
         <div className="min-w-max">
           <Table>
             <TableHeader>
