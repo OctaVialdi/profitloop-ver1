@@ -369,11 +369,13 @@ const AdsPerformance = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Button 
-                  className="bg-purple-500 hover:bg-purple-600 text-white flex items-center gap-2"
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
                   onClick={() => setInputDataDialogOpen(true)}
                 >
                   <Upload className="h-4 w-4" />
-                  Input Data
+                  <span>Input Data</span>
                 </Button>
                 <Button 
                   variant="outline" 
