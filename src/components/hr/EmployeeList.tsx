@@ -18,34 +18,34 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   const [showFilter, setShowFilter] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
   
-  // Update with default 8 visible columns
+  // Update with the proper type
   const [visibleColumns, setVisibleColumns] = useState<EmployeeColumnState>({
     name: true,
-    employeeId: true,
+    employeeId: true, // Added employeeId column
     email: true,
     branch: true,
     organization: true,
     jobPosition: true,
     jobLevel: true,
     employmentStatus: true,
-    joinDate: false,
-    endDate: false,
-    signDate: false,
-    resignDate: false,
-    barcode: false,
-    birthDate: false,
-    birthPlace: false,
-    address: false,
-    mobilePhone: false,
-    religion: false,
-    gender: false,
-    maritalStatus: false,
+    joinDate: true,
+    endDate: true,
+    signDate: true,
+    resignDate: true,
+    barcode: true,
+    birthDate: true,
+    birthPlace: true,
+    address: true,
+    mobilePhone: true,
+    religion: true,
+    gender: true,
+    maritalStatus: true,
   });
 
   // Define the default column order
   const [columnOrder, setColumnOrder] = useState<ColumnOrder>([
     'name',
-    'employeeId',
+    'employeeId', // Added employeeId column
     'email',
     'branch',
     'organization',
