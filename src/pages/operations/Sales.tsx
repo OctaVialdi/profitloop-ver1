@@ -1,9 +1,10 @@
 
 import { useOrganization } from "@/hooks/useOrganization";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function SalesPage() {
   const { organization } = useOrganization();
@@ -73,6 +74,59 @@ export default function SalesPage() {
               <p>Top Performer: Jane Doe</p>
               <p>$78K revenue</p>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* New Section */}
+      <div className="border-t pt-6">
+        <h3 className="text-xl font-semibold mb-4">Sales Performance Analysis</h3>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Team Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <h4 className="text-sm font-medium mb-2">Top Performers</h4>
+                <div className="space-y-2">
+                  {["Jane Doe", "John Smith", "Emily Johnson"].map((name, i) => (
+                    <div key={name} className="flex items-center justify-between border-b pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium">
+                          {i + 1}
+                        </span>
+                        <span>{name}</span>
+                      </div>
+                      <span className="font-medium">${(78 - i * 12)}K</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-2">Performance by Region</h4>
+                <div className="space-y-2">
+                  {[
+                    { region: "North America", revenue: "$120K", growth: "+8%" },
+                    { region: "Europe", revenue: "$85K", growth: "+15%" },
+                    { region: "Asia Pacific", revenue: "$45K", growth: "+22%" },
+                  ].map((item) => (
+                    <div key={item.region} className="flex items-center justify-between border-b pb-2">
+                      <span>{item.region}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{item.revenue}</span>
+                        <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">
+                          {item.growth}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="mt-4">
+              View Full Report
+            </Button>
           </CardContent>
         </Card>
       </div>
