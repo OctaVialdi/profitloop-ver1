@@ -2,16 +2,15 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
 import { EmployeeActions } from "../EmployeeActions";
-import { Employee, ColumnKey } from './types';
-import { EmployeeColumnState } from '../EmployeeColumnManager';
+import { Employee } from './types';
+import { EmployeeColumnState, ColumnOrder } from '../EmployeeColumnManager';
 
 interface EmployeeTableViewProps {
   data: Employee[];
   visibleColumns: EmployeeColumnState;
-  columnOrder: ColumnKey[];
+  columnOrder: ColumnOrder;
 }
 
 export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({ 
@@ -19,8 +18,34 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   visibleColumns, 
   columnOrder 
 }) => {
-  // Helper function to render the cell content based on column key
-  const renderCell = (employee: Employee, columnKey: ColumnKey) => {
+  // Column label mapping
+  const columnLabels: Record<keyof EmployeeColumnState, string> = {
+    name: "Employee name",
+    email: "Email",
+    branch: "Branch",
+    organization: "Organization",
+    jobPosition: "Job position",
+    jobLevel: "Job level",
+    employmentStatus: "Employment status",
+    joinDate: "Join date",
+    endDate: "End date",
+    signDate: "Sign date",
+    resignDate: "Resign date",
+    barcode: "Barcode",
+    birthDate: "Birth date",
+    birthPlace: "Birth place",
+    address: "Address",
+    mobilePhone: "Mobile phone",
+    religion: "Religion",
+    gender: "Gender",
+    maritalStatus: "Marital status"
+  };
+  
+  // Filter the column order to only include visible columns
+  const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
+  
+  // Render cell content based on column key
+  const renderCellContent = (employee: Employee, columnKey: keyof EmployeeColumnState) => {
     if (columnKey === 'name') {
       return (
         <div className="flex items-center gap-2">
@@ -34,36 +59,8 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
       );
     }
     
+    // For all other columns, render the value or a dash if not available
     return employee[columnKey] || '-';
-  };
-
-  // Get column labels for headers
-  const getColumnLabel = (key: string): string => {
-    const labelMap: Record<string, string> = {
-      name: "Employee name",
-      email: "Email",
-      branch: "Branch",
-      parentBranch: "Parent branch",
-      organization: "Organization",
-      sbu: "SBU",
-      jobPosition: "Job position",
-      jobLevel: "Job level",
-      employmentStatus: "Employment status",
-      joinDate: "Join date",
-      endDate: "End date",
-      signDate: "Sign date",
-      resignDate: "Resign date",
-      barcode: "Barcode",
-      birthDate: "Birth date",
-      birthPlace: "Birth place",
-      address: "Address",
-      mobilePhone: "Mobile phone",
-      religion: "Religion",
-      gender: "Gender",
-      maritalStatus: "Marital status"
-    };
-    
-    return labelMap[key] || key;
   };
 
   return (
@@ -76,18 +73,21 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                 <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
                   <Checkbox />
                 </TableHead>
-                {/* Render the name column first if visible, as it should always be sticky */}
-                {visibleColumns.name && (
-                  <TableHead className="sticky left-[40px] z-30 bg-background">
-                    {getColumnLabel('name')}
-                  </TableHead>
-                )}
-                {/* Then render the rest of the columns in the user-defined order */}
-                {columnOrder
-                  .filter(key => key !== 'name' && visibleColumns[key]) // Skip name as it's handled above
-                  .map(key => (
-                    <TableHead key={key}>{getColumnLabel(key)}</TableHead>
-                  ))}
+                
+                {/* Render table headers in the order specified by columnOrder */}
+                {visibleColumnsOrder.map((colKey, index) => {
+                  // Special styling for the name column to make it sticky
+                  const isNameColumn = colKey === 'name';
+                  return (
+                    <TableHead 
+                      key={colKey}
+                      className={isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""}
+                    >
+                      {columnLabels[colKey]}
+                    </TableHead>
+                  );
+                })}
+                
                 <TableHead className="text-right sticky right-0 z-30 bg-background">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -97,18 +97,21 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                   <TableCell className="sticky left-0 z-20 bg-background">
                     <Checkbox />
                   </TableCell>
-                  {/* Always render name column first if visible */}
-                  {visibleColumns.name && (
-                    <TableCell className="sticky left-[40px] z-20 bg-background">
-                      {renderCell(employee, 'name')}
-                    </TableCell>
-                  )}
-                  {/* Then render the rest of the columns in the user-defined order */}
-                  {columnOrder
-                    .filter(key => key !== 'name' && visibleColumns[key])
-                    .map(key => (
-                      <TableCell key={key}>{renderCell(employee, key)}</TableCell>
-                    ))}
+                  
+                  {/* Render table cells in the order specified by columnOrder */}
+                  {visibleColumnsOrder.map((colKey) => {
+                    // Special styling for the name column to make it sticky
+                    const isNameColumn = colKey === 'name';
+                    return (
+                      <TableCell 
+                        key={colKey}
+                        className={isNameColumn ? "sticky left-[40px] z-20 bg-background" : ""}
+                      >
+                        {renderCellContent(employee, colKey)}
+                      </TableCell>
+                    );
+                  })}
+                  
                   <TableCell className="text-right sticky right-0 z-20 bg-background">
                     <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
                   </TableCell>
@@ -116,7 +119,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
               ))}
               {data.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={Object.values(visibleColumns).filter(Boolean).length + 2} className="text-center py-8">
+                  <TableCell colSpan={visibleColumnsOrder.length + 2} className="text-center py-8">
                     No employee data found
                   </TableCell>
                 </TableRow>

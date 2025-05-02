@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { EmployeeFilterMenu } from "../EmployeeFilterMenu";
-import { EmployeeColumnManager, EmployeeColumnState } from "../EmployeeColumnManager";
-import { ColumnKey } from './types';
+import { EmployeeColumnManager, EmployeeColumnState, ColumnOrder } from "../EmployeeColumnManager";
 
 interface EmployeeFiltersProps {
   showFilter: boolean;
@@ -14,8 +13,8 @@ interface EmployeeFiltersProps {
   setShowColumns: (value: boolean) => void;
   visibleColumns: EmployeeColumnState;
   setVisibleColumns: (columns: EmployeeColumnState) => void;
-  columnOrder: ColumnKey[];
-  setColumnOrder: (order: ColumnKey[]) => void;
+  columnOrder: ColumnOrder;
+  setColumnOrder: (order: ColumnOrder) => void;
 }
 
 export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
@@ -51,9 +50,9 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
           <PopoverContent className="w-[300px] p-0" align="end">
             <EmployeeColumnManager 
               columns={visibleColumns} 
-              onColumnChange={(newColumns) => setVisibleColumns(newColumns)} 
+              onColumnChange={(newColumns) => setVisibleColumns(newColumns)}
               columnOrder={columnOrder}
-              onColumnOrderChange={setColumnOrder}
+              onOrderChange={(newOrder) => setColumnOrder(newOrder)}
             />
           </PopoverContent>
         </Popover>
