@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { EngagementAnalysis } from "./components/EngagementAnalysis";
 import { RoiAnalysis } from "./components/RoiAnalysis";
+import { ConversionMetrics } from "./components/ConversionMetrics";
 
 const KolManagement = () => {
   const [activeTab, setActiveTab] = useState("engagement");
@@ -118,9 +120,7 @@ const KolManagement = () => {
             </TabsContent>
 
             <TabsContent value="conversion" className="mt-0 p-4 md:p-6">
-              <div className="text-muted-foreground">
-                <p>Conversion Metrics content will go here. This tab shows how many users are converting after interacting with your KOL content.</p>
-              </div>
+              <ConversionMetrics timeFilter={timeFilter} />
             </TabsContent>
           </Tabs>
         </CardContent>
