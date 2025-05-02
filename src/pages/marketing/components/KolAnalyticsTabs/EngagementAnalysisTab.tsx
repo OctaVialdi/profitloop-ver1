@@ -15,14 +15,6 @@ const engagementRateData = [
   { name: 'Emma Wilson', value: 360 }
 ];
 
-// Mobile-friendly data with shorter names
-const engagementRateDataMobile = [
-  { name: 'Sarah', value: 310 },
-  { name: 'Alex', value: 280 },
-  { name: 'Maria', value: 420 },
-  { name: 'Emma', value: 360 }
-];
-
 const engagementTimeData = [
   { name: 'Jan', value: 3 },
   { name: 'Feb', value: 2 },
@@ -33,6 +25,14 @@ const engagementTimeData = [
   { name: 'Jul', value: 2 },
   { name: 'Aug', value: 4 },
   { name: 'Sep', value: 5 }
+];
+
+// Mobile-friendly data with shorter names
+const engagementRateDataMobile = [
+  { name: 'Sarah', value: 310 },
+  { name: 'Alex', value: 280 },
+  { name: 'Maria', value: 420 },
+  { name: 'Emma', value: 360 }
 ];
 
 const categoryData = [
