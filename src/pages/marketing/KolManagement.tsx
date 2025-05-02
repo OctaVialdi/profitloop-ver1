@@ -15,6 +15,7 @@ import {
 import { EngagementAnalysis } from "./components/EngagementAnalysis";
 import { RoiAnalysis } from "./components/RoiAnalysis";
 import { ConversionMetrics } from "./components/ConversionMetrics";
+import { Separator } from "@/components/ui/separator";
 
 const KolManagement = () => {
   const [activeTab, setActiveTab] = useState("engagement");
@@ -125,6 +126,32 @@ const KolManagement = () => {
           </Tabs>
         </CardContent>
       </Card>
+      
+      {/* New Section with clear separation */}
+      <div className="mt-8 w-full">
+        <Separator className="mb-6" />
+        <div className="px-4 md:px-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold tracking-tight">KOL Performance Deep Dive</h2>
+            <p className="text-muted-foreground mt-1">
+              Detailed analysis and insights about your KOL campaign performance
+            </p>
+          </div>
+          
+          <Card className="w-full bg-white shadow-sm border">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 gap-6">
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <h3 className="font-medium mb-2">Content coming soon</h3>
+                  <p className="text-sm text-gray-500">
+                    This section will contain detailed KOL performance analytics and reporting tools.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
