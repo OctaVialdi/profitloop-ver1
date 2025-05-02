@@ -1,3 +1,4 @@
+
 import { useOrganization } from "@/hooks/useOrganization";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -288,7 +289,7 @@ export default function CustomerServicePage() {
           </TabsTrigger>
         </TabsList>
 
-        {activeTab === "dashboard" && (
+        <TabsContent value="dashboard">
           <div className="space-y-6">
             {/* KPI Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -449,9 +450,9 @@ export default function CustomerServicePage() {
               </Card>
             </div>
           </div>
-        )}
+        </TabsContent>
 
-        {activeTab === "tickets" && (
+        <TabsContent value="tickets">
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6">
@@ -638,9 +639,9 @@ export default function CustomerServicePage() {
               </CardContent>
             </Card>
           </div>
-        )}
+        </TabsContent>
         
-        {activeTab === "kanban" && (
+        <TabsContent value="kanban">
           <div className="space-y-4">
             <Card className="pb-6">
               <CardHeader className="pb-2">
@@ -710,7 +711,7 @@ export default function CustomerServicePage() {
               </CardContent>
             </Card>
           </div>
-        )}
+        </TabsContent>
       </Tabs>
 
       {/* Ticket Details Dialog */}
@@ -815,8 +816,126 @@ export default function CustomerServicePage() {
                           <p className="text-gray-600">Escalated to development team</p>
                           <p className="text-sm text-gray-400">5/1/2025 01:23 AM</p>
                         </div>
-                        <div className="border-l-4 border-red-400 pl-4 py-1">
+                        
+                        <div className="border-l-4 border-blue-400 pl-4 py-1">
                           <div className="flex justify-between">
                             <p className="font-medium">Alex Johnson</p>
-                            <span className="text-red-500 text-sm font-medium bg-red-50 px-2 py-0.5 rounded-full">Escalation</span>
+                            <span className="text-blue-500 text-sm font-medium bg-blue-50 px-2 py-0.5 rounded-full">Update</span>
                           </div>
+                          <p className="text-gray-600">Investigating the issue</p>
+                          <p className="text-sm text-gray-400">5/1/2025 11:45 AM</p>
+                        </div>
+                        
+                        <div className="border-l-4 border-green-400 pl-4 py-1">
+                          <div className="flex justify-between">
+                            <p className="font-medium">John Doe</p>
+                            <span className="text-green-500 text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full">Resolution</span>
+                          </div>
+                          <p className="text-gray-600">Fixed the issue by updating the configuration</p>
+                          <p className="text-sm text-gray-400">5/2/2025 09:12 AM</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <DialogFooter className="mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={closeTicketDetails}
+                  >
+                    Close
+                  </Button>
+                  <Button onClick={() => setIsEditMode(true)}>
+                    Add Update
+                  </Button>
+                </DialogFooter>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Update Type</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={updateType === "Progress Update" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUpdateType("Progress Update")}
+                    >
+                      Progress Update
+                    </Button>
+                    <Button
+                      variant={updateType === "Customer Response" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUpdateType("Customer Response")}
+                    >
+                      Customer Response
+                    </Button>
+                    <Button
+                      variant={updateType === "Internal Note" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUpdateType("Internal Note")}
+                    >
+                      Internal Note
+                    </Button>
+                    <Button
+                      variant={updateType === "Escalation" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUpdateType("Escalation")}
+                    >
+                      Escalation
+                    </Button>
+                    <Button
+                      variant={updateType === "Resolution" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUpdateType("Resolution")}
+                    >
+                      Resolution
+                    </Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Comment</h3>
+                  <textarea 
+                    className="w-full border border-gray-300 rounded-md p-2 min-h-[120px]"
+                    placeholder="Add your update here..."
+                  ></textarea>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Update Status</h3>
+                  <select 
+                    className="w-full p-2 border border-gray-300 rounded-md" 
+                    value={selectedTicket.status}
+                    onChange={(e) => {
+                      setSelectedTicket({...selectedTicket, status: e.target.value});
+                    }}
+                  >
+                    {TICKET_STATUSES.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditMode(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={() => {
+                    // Here you would handle the comment submission
+                    setIsEditMode(false);
+                  }}>
+                    Submit Update
+                  </Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
