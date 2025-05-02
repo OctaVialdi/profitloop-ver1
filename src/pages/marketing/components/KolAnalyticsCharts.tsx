@@ -68,17 +68,26 @@ const topPerformers = [
 ];
 
 const config = {
-  engagementColor: {
-    light: '#9b87f5',
-    dark: '#9b87f5',
+  engagement: {
+    label: "Engagement",
+    theme: {
+      light: '#9b87f5',
+      dark: '#9b87f5',
+    }
   },
-  roiColor: {
-    light: '#f97316',
-    dark: '#f97316',
+  roi: {
+    label: "ROI",
+    theme: {
+      light: '#f97316',
+      dark: '#f97316',
+    }
   },
-  conversionColor: {
-    light: '#0EA5E9',
-    dark: '#0EA5E9',
+  conversion: {
+    label: "Conversion",
+    theme: {
+      light: '#0EA5E9',
+      dark: '#0EA5E9',
+    }
   }
 };
 
