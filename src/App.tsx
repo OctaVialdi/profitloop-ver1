@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "@/pages/Index";
@@ -48,6 +49,11 @@ import KolManagement from "@/pages/marketing/KolManagement";
 import SeoManagement from "@/pages/marketing/SeoManagement";
 import RatingPerformance from "@/pages/marketing/RatingPerformance";
 import AgencyComparison from "@/pages/marketing/AgencyComparison";
+// Import IT Pages
+import ITLayout from "@/components/layout/ITLayout";
+import ITDashboard from "@/pages/it/Dashboard";
+import ITSupport from "@/pages/it/Support";
+import ITDeveloper from "@/pages/it/Developer";
 import { useEffect } from "react";
 
 function App() {
@@ -208,6 +214,26 @@ function App() {
             <Route path="agency-comparison" element={<AgencyComparison />} />
             {/* Redirect to ads performance if no path matches */}
             <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
+          </Route>
+          
+          {/* IT Routes - New section */}
+          <Route
+            path="/it"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ITLayout>
+                    <Outlet />
+                  </ITLayout>
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<ITDashboard />} />
+            <Route path="support" element={<ITSupport />} />
+            <Route path="developer" element={<ITDeveloper />} />
+            {/* Redirect to dashboard if no path matches */}
+            <Route path="" element={<Navigate to="/it/dashboard" replace />} />
           </Route>
 
           {/* Settings Layout */}
