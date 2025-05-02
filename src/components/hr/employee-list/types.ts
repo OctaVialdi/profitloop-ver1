@@ -20,4 +20,14 @@ export interface Employee {
   religion?: string;
   gender?: string;
   maritalStatus?: string;
+  parentBranch?: string;
+  sbu?: string;
+}
+
+export type ColumnKey = keyof Omit<Employee, 'id'>;
+
+export interface ColumnDisplayInfo {
+  key: ColumnKey;
+  label: string;
+  group: string;
 }
