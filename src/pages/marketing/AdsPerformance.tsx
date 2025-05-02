@@ -258,49 +258,39 @@ const AdsPerformance = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Button 
-            className="bg-purple-500 hover:bg-purple-600 text-white flex items-center gap-2"
-            onClick={() => setInputDataDialogOpen(true)}
-          >
-            <Upload className="h-4 w-4" />
-            Input Data
-          </Button>
-          
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">View Mode</p>
-            <div className="relative">
-              <div 
-                className="flex items-center justify-between gap-2 px-4 py-2 bg-purple-50 rounded-md min-w-[200px] cursor-pointer"
-                onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
-              >
-                <span>{viewMode}</span>
-                <ChevronDown className="h-4 w-4" />
-              </div>
-              
-              {viewDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1 w-full bg-white border rounded-md shadow-lg z-30">
-                  <div 
-                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => {
-                      setViewMode("Campaigns View");
-                      setViewDropdownOpen(false);
-                    }}
-                  >
-                    Campaigns View
-                  </div>
-                  <div 
-                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => {
-                      setViewMode("Agency Comparison");
-                      setViewDropdownOpen(false);
-                    }}
-                  >
-                    Agency Comparison
-                  </div>
-                </div>
-              )}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-700">View Mode</p>
+          <div className="relative">
+            <div 
+              className="flex items-center justify-between gap-2 px-4 py-2 bg-purple-50 rounded-md min-w-[200px] cursor-pointer"
+              onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
+            >
+              <span>{viewMode}</span>
+              <ChevronDown className="h-4 w-4" />
             </div>
+            
+            {viewDropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 w-full bg-white border rounded-md shadow-lg z-30">
+                <div 
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => {
+                    setViewMode("Campaigns View");
+                    setViewDropdownOpen(false);
+                  }}
+                >
+                  Campaigns View
+                </div>
+                <div 
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => {
+                    setViewMode("Agency Comparison");
+                    setViewDropdownOpen(false);
+                  }}
+                >
+                  Agency Comparison
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -368,15 +358,6 @@ const AdsPerformance = () => {
                 <CardTitle>Active Campaigns</CardTitle>
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                  onClick={() => setInputDataDialogOpen(true)}
-                >
-                  <Upload className="h-4 w-4" />
-                  <span>Input Data</span>
-                </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
