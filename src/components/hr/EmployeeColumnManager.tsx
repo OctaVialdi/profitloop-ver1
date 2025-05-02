@@ -184,15 +184,17 @@ export const EmployeeColumnManager: React.FC<ColumnManagerProps> = ({
                             {...provided.dragHandleProps}
                             className="flex items-center justify-between p-2 bg-gray-50 rounded border cursor-move"
                           >
-                            <div className="flex items-center">
-                              <MoveVertical className="h-4 w-4 mr-2 text-gray-400" />
+                            <div className="flex items-center gap-2">
+                              <MoveVertical className="h-4 w-4 text-gray-400" />
                               <span className="text-sm">{columnLabel}</span>
                             </div>
-                            <Checkbox
-                              checked={columns[key] || false}
-                              onCheckedChange={() => handleToggleColumn(key)}
-                              aria-label={`Toggle visibility for ${columnLabel}`}
-                            />
+                            <div>
+                              <Checkbox
+                                checked={columns[key] || false}
+                                onCheckedChange={() => handleToggleColumn(key)}
+                                aria-label={`Toggle visibility for ${columnLabel}`}
+                              />
+                            </div>
                           </div>
                         )}
                       </Draggable>
