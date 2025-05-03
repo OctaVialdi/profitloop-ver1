@@ -43,7 +43,8 @@ export const createOrganization = async (formData: OrganizationFormData) => {
     }
     
     // Using a transaction to ensure all operations succeed or fail together
-    // Note: trial_end_date is now set to 14 days instead of default 30 days
+    // Note: We need to modify the DB function to accept a trial_days parameter,
+    // but for now we'll remove it from the call since the function doesn't expect it
     const { data, error } = await supabase.rpc('create_organization_with_profile', {
       user_id: userId,
       org_name: formData.name,
@@ -51,8 +52,8 @@ export const createOrganization = async (formData: OrganizationFormData) => {
       org_employee_count: formData.employeeCount ? parseInt(formData.employeeCount) : 1,
       org_address: formData.address || null,
       org_phone: formData.phone || null,
-      user_role: 'super_admin',
-      trial_days: 14  // Setting trial period to 14 days
+      user_role: 'super_admin'
+      // Removing the trial_days parameter since it's not in the function signature
     });
 
     if (error) {
