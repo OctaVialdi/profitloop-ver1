@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +36,7 @@ export const ProtectedRoute = ({
         
         if (data.session) {
           console.log("User is authenticated via session check");
+          console.log("User is authenticated:", data.session.user.id);
           setAuthenticated(true);
           
           // Check if user has an organization
@@ -46,14 +46,22 @@ export const ProtectedRoute = ({
             .eq('id', data.session.user.id)
             .maybeSingle();
             
-          setHasOrganization(!!profileData?.organization_id);
+          if (profileData?.organization_id) {
+            console.log("User already has an organization:", profileData.organization_id);
+            setHasOrganization(true);
+          } else {
+            console.log("User has no organization");
+            setHasOrganization(false);
+          }
         } else {
           console.log("No active session found");
           setAuthenticated(false);
+          setHasOrganization(false);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
         setAuthenticated(false);
+        setHasOrganization(false);
       } finally {
         setLoading(false);
       }
@@ -64,6 +72,24 @@ export const ProtectedRoute = ({
       (event, session) => {
         console.log("Auth state changed:", event);
         setAuthenticated(!!session);
+        
+        // When auth state changes, also check for organization
+        if (session) {
+          const checkOrganization = async () => {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('organization_id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            setHasOrganization(!!profileData?.organization_id);
+          };
+          
+          checkOrganization();
+        } else {
+          setHasOrganization(false);
+        }
+        
         setLoading(false);
       }
     );
@@ -90,14 +116,21 @@ export const ProtectedRoute = ({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // If user is not on employee-welcome, not on organizations page, and not on auth pages
-  if (authenticated && !hasOrganization && 
-      currentPath !== '/employee-welcome' &&
-      currentPath !== '/organizations' &&
-      !currentPath.startsWith('/auth/')) {
+  // If user is authenticated, has no organization, and is NOT on the organizations page
+  // redirect them to the organizations page
+  if (authenticated && !hasOrganization && currentPath !== '/organizations') {
+    console.log("User has no organization, redirecting to organizations page");
     return <Navigate to="/organizations" replace />;
   }
+  
+  // If user is authenticated, has an organization, and IS on the organizations page
+  // redirect them to the employee welcome page or dashboard
+  if (authenticated && hasOrganization && currentPath === '/organizations') {
+    console.log("User already has an organization, redirecting to employee welcome");
+    return <Navigate to="/employee-welcome" replace />;
+  }
 
+  // Otherwise, render children
   return <>{children}</>;
 };
 

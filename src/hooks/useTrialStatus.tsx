@@ -15,10 +15,12 @@ export const useTrialStatus = () => {
   // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
   const isOnboardingPage = location.pathname === '/onboarding';
+  const isOrganizationPage = location.pathname === '/organizations';
   const isSubscriptionPage = location.pathname === '/subscription';
 
   useEffect(() => {
-    if (isAuthPage || isOnboardingPage || isSubscriptionPage) {
+    // Skip checking for auth pages, onboarding, organizations setup or subscription page
+    if (isAuthPage || isOnboardingPage || isOrganizationPage || isSubscriptionPage) {
       setIsLoading(false);
       return;
     }
@@ -108,6 +110,9 @@ export const useTrialStatus = () => {
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           setDaysLeft(diffDays > 0 ? diffDays : 0);
           setIsTrialExpired(false);
+          
+          // Remove trial expired blur if not expired
+          document.body.classList.remove('trial-expired');
         }
         
         setIsLoading(false);
@@ -125,11 +130,11 @@ export const useTrialStatus = () => {
     
     return () => {
       clearInterval(intervalCheck);
-      if (isTrialExpired && !isSubscriptionPage) {
+      if (!isSubscriptionPage) {
         document.body.classList.remove('trial-expired');
       }
     };
-  }, [isAuthPage, isOnboardingPage, isSubscriptionPage, isTrialExpired]);
+  }, [isAuthPage, isOnboardingPage, isOrganizationPage, isSubscriptionPage, isTrialExpired, isSubscriptionPage]);
   
   // Handle subscription navigation
   const handleSubscribe = () => {
@@ -155,6 +160,7 @@ export const useTrialStatus = () => {
     handleSignOut,
     isAuthPage,
     isOnboardingPage,
+    isOrganizationPage,
     isSubscriptionPage
   };
 };

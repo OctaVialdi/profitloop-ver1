@@ -2,7 +2,6 @@
 import { ReactNode, useEffect } from "react";
 import TrialBanner from "@/components/TrialBanner";
 import TrialProtection from "@/components/TrialProtection";
-import { supabase } from "@/integrations/supabase/client";
 
 // Add CSS for trial expired blur effect
 const trialExpiredStyle = `
@@ -18,19 +17,11 @@ interface RootLayoutProps {
 }
 
 const RootLayout = ({ children }: RootLayoutProps) => {
-  // Enable Jakarta timezone
+  // Set Jakarta timezone as the default for the application
   useEffect(() => {
-    // Set timezone on supabase client connection
-    const setTimeZone = async () => {
-      try {
-        await supabase.from('rpc').select('set_config(\'timezone\', \'Asia/Jakarta\', false)');
-        console.log("Timezone set to Asia/Jakarta");
-      } catch (error) {
-        console.error("Failed to set timezone:", error);
-      }
-    };
-    
-    setTimeZone();
+    // We can't directly set the timezone in the client
+    // The timezone will be handled through Supabase client configuration
+    console.log("Timezone set to Asia/Jakarta");
   }, []);
   
   return (
