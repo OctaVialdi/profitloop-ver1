@@ -11,6 +11,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormValues } from "../../types";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface PersonalInfoSectionProps {
   formValues: FormValues;
@@ -140,13 +150,6 @@ const BirthdateSelector: React.FC<{
   birthdate: Date | undefined;
   setBirthdate: React.Dispatch<React.SetStateAction<Date | undefined>>;
 }> = ({ birthdate, setBirthdate }) => {
-  const { format } = require("date-fns");
-  const { CalendarIcon } = require("lucide-react");
-  const { Popover, PopoverContent, PopoverTrigger } = require("@/components/ui/popover");
-  const { Button } = require("@/components/ui/button");
-  const { Calendar } = require("@/components/ui/calendar");
-  const { cn } = require("@/lib/utils");
-
   return (
     <Popover>
       <PopoverTrigger asChild>
