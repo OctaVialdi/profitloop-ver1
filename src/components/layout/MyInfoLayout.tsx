@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface MyInfoLayoutProps {
@@ -11,16 +11,29 @@ interface MyInfoLayoutProps {
 
 export default function MyInfoLayout({ children }: MyInfoLayoutProps) {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const employeeId = searchParams.get("id");
   
-  // Extract active tab from query parameters or default to "personal"
-  const queryParams = new URLSearchParams(location.search);
-  const activeTab = queryParams.get("tab") || "personal";
-  const employeeId = queryParams.get("id");
+  // Extract active tab from the path instead of query parameters
+  const path = location.pathname.split('/');
+  const currentPath = path[path.length - 1];
+  
+  // Map path to tab value for the Tabs component
+  const getTabFromPath = (path: string) => {
+    switch(path) {
+      case 'personal': return 'personal';
+      case 'employment': return 'employment';
+      case 'education': return 'education';
+      default: return 'personal';
+    }
+  };
+  
+  const activeTab = getTabFromPath(currentPath);
   
   const tabs = [
-    { name: "Personal", value: "personal" },
-    { name: "Employment", value: "employment" },
-    { name: "Education", value: "education" },
+    { name: "Personal", value: "personal", path: `/my-info/personal` },
+    { name: "Employment", value: "employment", path: `/my-info/employment` },
+    { name: "Education", value: "education", path: `/my-info/education` },
   ];
 
   return (
@@ -35,7 +48,7 @@ export default function MyInfoLayout({ children }: MyInfoLayoutProps) {
                 className="min-w-[100px] transition-all duration-200 ease-in-out" 
                 asChild
               >
-                <Link to={`/my-info/index?id=${employeeId}&tab=${tab.value}`}>{tab.name}</Link>
+                <Link to={`${tab.path}?id=${employeeId}`}>{tab.name}</Link>
               </TabsTrigger>
             ))}
           </TabsList>

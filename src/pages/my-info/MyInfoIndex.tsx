@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useEmployees, Employee } from "@/hooks/useEmployees";
 import { EmployeeDetail } from "@/components/hr/EmployeeDetail";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,39 @@ import { ArrowLeft } from "lucide-react";
 export default function MyInfoIndex() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { employees } = useEmployees();
   
   // Extract the employee ID from the query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const employeeId = queryParams.get("id");
-  const activeTab = queryParams.get("tab") || "personal";
+  const employeeId = searchParams.get("id");
+  
+  // Get the active tab from the path
+  const path = location.pathname.split('/');
+  const currentPath = path[path.length - 1];
+  
+  // Map path to tab value
+  const getTabFromPath = (path: string) => {
+    switch(path) {
+      case 'personal': return 'personal';
+      case 'employment': return 'employment';
+      case 'education': return 'education';
+      case 'files': return 'files';
+      case 'assets': return 'assets';
+      case 'time-management': return 'time-management';
+      case 'payroll': return 'payroll';
+      case 'finance': return 'finance';
+      case 'history': return 'history';
+      case 'index': return 'personal'; // Default to personal if at index route
+      default: 
+        // For nested paths like 'payroll/tax', use the parent
+        if (path.includes('/')) {
+          return path.split('/')[0];
+        }
+        return path;
+    }
+  };
+  
+  const activeTab = getTabFromPath(currentPath);
   
   const [employee, setEmployee] = useState<Employee | null>(null);
   
@@ -25,6 +52,13 @@ export default function MyInfoIndex() {
       setEmployee(foundEmployee || null);
     }
   }, [employeeId, employees]);
+
+  // Redirect to personal route if at index
+  useEffect(() => {
+    if (currentPath === 'index' && employeeId) {
+      navigate(`/my-info/personal?id=${employeeId}`, { replace: true });
+    }
+  }, [currentPath, employeeId, navigate]);
 
   if (!employeeId) {
     return (

@@ -21,5 +21,14 @@ export const myInfoRoutes = (
     }
   >
     <Route path="index" element={<MyInfoIndex />} />
+    <Route path="personal" element={<MyInfoIndex />} />
+    <Route path="employment" element={<MyInfoIndex />} />
+    <Route path="education" element={<MyInfoIndex />} />
+    <Route path="files" element={<MyInfoIndex />} />
+    <Route path="assets" element={<MyInfoIndex />} />
+    <Route path="time-management" element={<MyInfoIndex />} />
+    <Route path="payroll" element={<MyInfoIndex />} />
+    <Route path="finance" element={<MyInfoIndex />} />
+    <Route path="history" element={<MyInfoIndex />} />
   </Route>
 );

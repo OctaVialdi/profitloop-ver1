@@ -16,7 +16,7 @@ const EmployeeDetail = () => {
 
   // Redirect the user to the new route format
   if (employee) {
-    window.location.href = `/my-info/index?id=${id}`;
+    window.location.href = `/my-info/personal?id=${id}`;
     return null;
   }
 

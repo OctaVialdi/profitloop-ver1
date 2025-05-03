@@ -45,7 +45,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 
   // Handle edit button click
   const handleEdit = (section: string) => {
-    const route = `/my-info/index?id=${employee.id}&tab=${section}`;
+    const route = `/my-info/${section}?id=${employee.id}`;
     navigate(route);
     setActiveTab(section);
     
@@ -120,10 +120,10 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Attendance</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Schedule</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Time Off</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Shift</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-management/attendance')}>Attendance</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-management/schedule')}>Schedule</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-management/time-off')}>Time Off</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-management/shift')}>Shift</div>
               </CollapsibleContent>
             </Collapsible>
 
@@ -139,9 +139,9 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Bank Account</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Tax</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">BPJS</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('payroll/bank-account')}>Bank Account</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('payroll/tax')}>Tax</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('payroll/bpjs')}>BPJS</div>
               </CollapsibleContent>
             </Collapsible>
 
@@ -157,9 +157,9 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Reimbursement</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Cash Advance</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Loan</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('finance/reimbursement')}>Reimbursement</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('finance/cash-advance')}>Cash Advance</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('finance/loan')}>Loan</div>
               </CollapsibleContent>
             </Collapsible>
 
@@ -199,10 +199,10 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Employment</div>
-                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Position</div>
-                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Compensation</div>
-                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Organization</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/employment')}>Employment</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/position')}>Position</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/compensation')}>Compensation</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/organization')}>Organization</div>
                 </CollapsibleContent>
               </Collapsible>
             </div>
