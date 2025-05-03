@@ -36,13 +36,11 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
   // General section state
   const [openGeneral, setOpenGeneral] = useState(true);
   
-  // Collapsible sections state
+  // Collapsible sections state - All start as closed
   const [openTimeManagement, setOpenTimeManagement] = useState(false);
   const [openPayroll, setOpenPayroll] = useState(false);
   const [openFinance, setOpenFinance] = useState(false);
   const [openHistory, setOpenHistory] = useState(false);
-  const [openAssets, setOpenAssets] = useState(false);
-  const [openFiles, setOpenFiles] = useState(false);
 
   // Handle edit button click
   const handleEdit = (section: string) => {
@@ -57,159 +55,11 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     }
   };
 
-  return (
-    <div className="flex flex-col md:flex-row gap-6">
-      {/* Left sidebar with profile picture and navigation */}
-      <div className="w-full md:w-64 space-y-4">
-        <Card className="p-6 flex flex-col items-center">
-          <Avatar className="w-24 h-24 mb-2">
-            <div className="bg-gray-200 h-full w-full rounded-full flex items-center justify-center text-xl font-medium relative">
-              {employee.name.charAt(0)}
-              <div className="absolute bottom-0 right-0 bg-black text-white rounded-full p-1">
-                <FileText size={14} />
-              </div>
-            </div>
-          </Avatar>
-          <h3 className="text-lg font-semibold">{employee.name}</h3>
-          <p className="text-sm text-gray-500">{employee.jobPosition || "-"}</p>
-        </Card>
-
-        <Card>
-          <div className="py-2">
-            {/* General with dropdown */}
-            <Collapsible open={openGeneral} onOpenChange={setOpenGeneral}>
-              <CollapsibleTrigger className="w-full">
-                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                  <div className="flex items-center">
-                    <User size={16} className="mr-2" />
-                    <span>General</span>
-                  </div>
-                  {openGeneral ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div 
-                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'personal' ? 'text-blue-600 font-medium' : 'text-gray-700'}`} 
-                  onClick={() => handleEdit('personal')}
-                >
-                  Personal
-                </div>
-                <div 
-                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'employment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                  onClick={() => handleEdit('employment')}
-                >
-                  Employment
-                </div>
-                <div 
-                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'education' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                  onClick={() => handleEdit('education')}
-                >
-                  Education & Experience
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-
-            {/* Time Management with dropdown */}
-            <Collapsible open={openTimeManagement} onOpenChange={setOpenTimeManagement}>
-              <CollapsibleTrigger className="w-full">
-                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Clock size={16} className="mr-2" />
-                    <span>Time Management</span>
-                  </div>
-                  {openTimeManagement ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('attendance')}>Attendance</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('schedule')}>Schedule</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-off')}>Time Off</div>
-              </CollapsibleContent>
-            </Collapsible>
-
-            {/* Payroll with dropdown */}
-            <Collapsible open={openPayroll} onOpenChange={setOpenPayroll}>
-              <CollapsibleTrigger className="w-full">
-                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                  <div className="flex items-center">
-                    <CircleDollarSign size={16} className="mr-2" />
-                    <span>Payroll</span>
-                  </div>
-                  {openPayroll ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('payroll-info')}>Payroll Info</div>
-              </CollapsibleContent>
-            </Collapsible>
-
-            {/* Finance with dropdown */}
-            <Collapsible open={openFinance} onOpenChange={setOpenFinance}>
-              <CollapsibleTrigger className="w-full">
-                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Wallet size={16} className="mr-2" />
-                    <span>Finance</span>
-                  </div>
-                  {openFinance ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('reimbursement')}>Reimbursement</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('cash-advance')}>Cash Advance</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('loan')}>Loan</div>
-              </CollapsibleContent>
-            </Collapsible>
-
-            {/* Files with chevron */}
-            <div 
-              className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'files' ? 'bg-gray-50' : ''} flex items-center justify-between`}
-              onClick={() => handleEdit('files')}
-            >
-              <div className="flex items-center">
-                <FileText size={16} className="mr-2" />
-                <span>Files</span>
-              </div>
-              <ChevronRight size={16} />
-            </div>
-
-            {/* Assets with chevron */}
-            <div 
-              className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'assets' ? 'bg-gray-50' : ''} flex items-center justify-between`}
-              onClick={() => handleEdit('assets')}
-            >
-              <div className="flex items-center">
-                <Boxes size={16} className="mr-2" />
-                <span>Assets</span>
-              </div>
-              <ChevronRight size={16} />
-            </div>
-
-            {/* History with dropdown */}
-            <Collapsible open={openHistory} onOpenChange={setOpenHistory}>
-              <CollapsibleTrigger className="w-full">
-                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                  <div className="flex items-center">
-                    <BarChart2 size={16} className="mr-2" />
-                    <span>History</span>
-                  </div>
-                  {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('adjustment')}>Adjustment</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('transfer')}>Transfer</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('npp')}>NPP</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('reprimand')}>Reprimand</div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </Card>
-      </div>
-
-      {/* Main content area */}
-      <div className="flex-1">
-        {activeTab === 'personal' && (
+  // Render content for each section
+  const renderSectionContent = () => {
+    switch (activeTab) {
+      case 'personal':
+        return (
           <Card>
             <div className="p-6">
               <div className="mb-6">
@@ -380,9 +230,10 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </Tabs>
             </div>
           </Card>
-        )}
-
-        {activeTab === 'employment' && (
+        );
+        
+      case 'employment':
+        return (
           <Card>
             <div className="p-6">
               <div className="mb-6">
@@ -457,9 +308,10 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </div>
             </div>
           </Card>
-        )}
-
-        {activeTab === 'education' && (
+        );
+        
+      case 'education':
+        return (
           <Card>
             <div className="p-6">
               <div className="mb-6">
@@ -529,10 +381,202 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </Tabs>
             </div>
           </Card>
-        )}
+        );
 
-        {(activeTab === 'time-management' || activeTab === 'payroll' || activeTab === 'finance' || 
-          activeTab === 'files' || activeTab === 'assets' || activeTab === 'history') && (
+      // Attendance section in Time Management
+      case 'attendance':
+      case 'schedule':
+      case 'time-off':
+        const timeTitle = activeTab === 'attendance' ? 'Attendance' : 
+                          activeTab === 'schedule' ? 'Schedule' : 'Time Off';
+        return (
+          <Card>
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold">{timeTitle}</h2>
+              </div>
+              <div className="text-center py-12">
+                <div className="mx-auto w-24 h-24 mb-4">
+                  <img src="/placeholder.svg" alt="No data" className="w-full h-full" />
+                </div>
+                <h3 className="text-lg font-medium">There is no data to display</h3>
+                <p className="text-gray-500 mt-2">Your {timeTitle.toLowerCase()} data will be displayed here.</p>
+                
+                <div className="mt-6 flex justify-center gap-3">
+                  <Button size="sm" onClick={() => handleEdit(activeTab)}>Add new</Button>
+                  <Button size="sm" variant="outline">Import</Button>
+                  <Button size="sm" variant="outline">Export</Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        );
+
+      // Payroll section  
+      case 'payroll-info':
+        return (
+          <Card>
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold">Payroll Information</h2>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Payroll data</h3>
+                <p className="text-sm text-gray-500 mb-4">Your payroll information data will be displayed here.</p>
+                
+                <div className="border rounded-md">
+                  <div className="flex justify-between items-center p-3 border-b">
+                    <div></div>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="gap-2 flex items-center"
+                      onClick={() => handleEdit("payroll-info")}
+                    >
+                      <Edit size={14} /> Edit
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Basic salary</p>
+                        <p className="font-medium">-</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Bank name</p>
+                        <p className="font-medium">-</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Account number</p>
+                        <p className="font-medium">-</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Account name</p>
+                        <p className="font-medium">-</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        );
+
+      // Finance sections
+      case 'reimbursement':
+      case 'cash-advance':
+      case 'loan':
+        const financeTitle = activeTab === 'reimbursement' ? 'Reimbursement' : 
+                          activeTab === 'cash-advance' ? 'Cash Advance' : 'Loan';
+        return (
+          <Card>
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold">{financeTitle}</h2>
+              </div>
+              <div className="text-center py-12">
+                <div className="mx-auto w-24 h-24 mb-4">
+                  <img src="/placeholder.svg" alt="No data" className="w-full h-full" />
+                </div>
+                <h3 className="text-lg font-medium">There is no data to display</h3>
+                <p className="text-gray-500 mt-2">Your {financeTitle.toLowerCase()} data will be displayed here.</p>
+                
+                <div className="mt-6 flex justify-center gap-3">
+                  <Button size="sm" onClick={() => handleEdit(activeTab)}>Add new</Button>
+                  <Button size="sm" variant="outline">Import</Button>
+                  <Button size="sm" variant="outline">Export</Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        );
+
+      // Files section
+      case 'files':
+        return (
+          <Card>
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold">Files</h2>
+              </div>
+              <div className="text-center py-12">
+                <div className="mx-auto w-24 h-24 mb-4">
+                  <img src="/placeholder.svg" alt="No data" className="w-full h-full" />
+                </div>
+                <h3 className="text-lg font-medium">There is no data to display</h3>
+                <p className="text-gray-500 mt-2">Your files will be displayed here.</p>
+                
+                <div className="mt-6 flex justify-center gap-3">
+                  <Button size="sm" onClick={() => handleEdit("files")}>Upload file</Button>
+                  <Button size="sm" variant="outline">Import</Button>
+                  <Button size="sm" variant="outline">Export</Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        );
+
+      // Assets section
+      case 'assets':
+        return (
+          <Card>
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold">Assets</h2>
+              </div>
+              <div className="text-center py-12">
+                <div className="mx-auto w-24 h-24 mb-4">
+                  <img src="/placeholder.svg" alt="No data" className="w-full h-full" />
+                </div>
+                <h3 className="text-lg font-medium">There is no data to display</h3>
+                <p className="text-gray-500 mt-2">Your assets data will be displayed here.</p>
+                
+                <div className="mt-6 flex justify-center gap-3">
+                  <Button size="sm" onClick={() => handleEdit("assets")}>Add new</Button>
+                  <Button size="sm" variant="outline">Import</Button>
+                  <Button size="sm" variant="outline">Export</Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        );
+
+      // History sections
+      case 'adjustment':
+      case 'transfer':
+      case 'npp':
+      case 'reprimand':
+        const historyTitle = activeTab === 'adjustment' ? 'Adjustment' : 
+                          activeTab === 'transfer' ? 'Transfer' : 
+                          activeTab === 'npp' ? 'NPP' : 'Reprimand';
+        return (
+          <Card>
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold">{historyTitle}</h2>
+              </div>
+              <div className="text-center py-12">
+                <div className="mx-auto w-24 h-24 mb-4">
+                  <img src="/placeholder.svg" alt="No data" className="w-full h-full" />
+                </div>
+                <h3 className="text-lg font-medium">There is no data to display</h3>
+                <p className="text-gray-500 mt-2">Your {historyTitle.toLowerCase()} history data will be displayed here.</p>
+                
+                <div className="mt-6 flex justify-center gap-3">
+                  <Button size="sm" onClick={() => handleEdit(activeTab)}>Add new</Button>
+                  <Button size="sm" variant="outline">Import</Button>
+                  <Button size="sm" variant="outline">Export</Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        );
+
+      // Default case for any other sections
+      default:
+        return (
           <Card>
             <div className="p-6 text-center py-12">
               <h2 className="text-2xl font-bold mb-6">{activeTab.split('-')
@@ -548,7 +592,218 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </div>
             </div>
           </Card>
-        )}
+        );
+    }
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row gap-6">
+      {/* Left sidebar with profile picture and navigation */}
+      <div className="w-full md:w-64 space-y-4">
+        <Card className="p-6 flex flex-col items-center">
+          <Avatar className="w-24 h-24 mb-2">
+            <div className="bg-gray-200 h-full w-full rounded-full flex items-center justify-center text-xl font-medium relative">
+              {employee.name.charAt(0)}
+              <div className="absolute bottom-0 right-0 bg-black text-white rounded-full p-1">
+                <FileText size={14} />
+              </div>
+            </div>
+          </Avatar>
+          <h3 className="text-lg font-semibold">{employee.name}</h3>
+          <p className="text-sm text-gray-500">{employee.jobPosition || "-"}</p>
+        </Card>
+
+        <Card>
+          <div className="py-2">
+            {/* General with dropdown */}
+            <Collapsible open={openGeneral} onOpenChange={setOpenGeneral}>
+              <CollapsibleTrigger className="w-full">
+                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                  <div className="flex items-center">
+                    <User size={16} className="mr-2" />
+                    <span>General</span>
+                  </div>
+                  {openGeneral ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'personal' ? 'text-blue-600 font-medium' : 'text-gray-700'}`} 
+                  onClick={() => handleEdit('personal')}
+                >
+                  Personal
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'employment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('employment')}
+                >
+                  Employment
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'education' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('education')}
+                >
+                  Education & Experience
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Time Management with dropdown */}
+            <Collapsible open={openTimeManagement} onOpenChange={setOpenTimeManagement}>
+              <CollapsibleTrigger className="w-full">
+                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Clock size={16} className="mr-2" />
+                    <span>Time Management</span>
+                  </div>
+                  {openTimeManagement ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'attendance' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('attendance')}
+                >
+                  Attendance
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'schedule' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('schedule')}
+                >
+                  Schedule
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'time-off' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('time-off')}
+                >
+                  Time Off
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Payroll with dropdown */}
+            <Collapsible open={openPayroll} onOpenChange={setOpenPayroll}>
+              <CollapsibleTrigger className="w-full">
+                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                  <div className="flex items-center">
+                    <CircleDollarSign size={16} className="mr-2" />
+                    <span>Payroll</span>
+                  </div>
+                  {openPayroll ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'payroll-info' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('payroll-info')}
+                >
+                  Payroll Info
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Finance with dropdown */}
+            <Collapsible open={openFinance} onOpenChange={setOpenFinance}>
+              <CollapsibleTrigger className="w-full">
+                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Wallet size={16} className="mr-2" />
+                    <span>Finance</span>
+                  </div>
+                  {openFinance ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'reimbursement' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('reimbursement')}
+                >
+                  Reimbursement
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'cash-advance' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('cash-advance')}
+                >
+                  Cash Advance
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'loan' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('loan')}
+                >
+                  Loan
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Files link */}
+            <div 
+              className={`px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between ${activeTab === 'files' ? 'bg-gray-50' : ''}`}
+              onClick={() => handleEdit('files')}
+            >
+              <div className="flex items-center">
+                <FileText size={16} className="mr-2" />
+                <span className={activeTab === 'files' ? 'text-blue-600 font-medium' : ''}>Files</span>
+              </div>
+              <ChevronRight size={16} />
+            </div>
+
+            {/* Assets link */}
+            <div 
+              className={`px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between ${activeTab === 'assets' ? 'bg-gray-50' : ''}`}
+              onClick={() => handleEdit('assets')}
+            >
+              <div className="flex items-center">
+                <Boxes size={16} className="mr-2" />
+                <span className={activeTab === 'assets' ? 'text-blue-600 font-medium' : ''}>Assets</span>
+              </div>
+              <ChevronRight size={16} />
+            </div>
+
+            {/* History with dropdown */}
+            <Collapsible open={openHistory} onOpenChange={setOpenHistory}>
+              <CollapsibleTrigger className="w-full">
+                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                  <div className="flex items-center">
+                    <BarChart2 size={16} className="mr-2" />
+                    <span>History</span>
+                  </div>
+                  {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'adjustment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('adjustment')}
+                >
+                  Adjustment
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'transfer' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('transfer')}
+                >
+                  Transfer
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'npp' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('npp')}
+                >
+                  NPP
+                </div>
+                <div 
+                  className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'reprimand' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                  onClick={() => handleEdit('reprimand')}
+                >
+                  Reprimand
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        </Card>
+      </div>
+
+      {/* Main content area */}
+      <div className="flex-1">
+        {renderSectionContent()}
       </div>
     </div>
   );
