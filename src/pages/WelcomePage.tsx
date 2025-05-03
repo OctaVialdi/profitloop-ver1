@@ -8,10 +8,47 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const WelcomePage = () => {
   const { organization, isLoading, daysLeftInTrial, isTrialActive, hasPaidSubscription, subscriptionPlan } = useOrganization();
+  const [countdownString, setCountdownString] = useState<string>('');
   const navigate = useNavigate();
+  
+  // Calculate the countdown string when the organization data is loaded
+  useEffect(() => {
+    if (isLoading || !organization?.trial_end_date) return;
+    
+    const updateCountdown = () => {
+      const trialEndDate = new Date(organization.trial_end_date!);
+      const now = new Date();
+      const diffTime = trialEndDate.getTime() - now.getTime();
+      
+      if (diffTime <= 0) {
+        setCountdownString('0 hari 00:00:00');
+        return;
+      }
+      
+      // Calculate days, hours, minutes, seconds
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+      
+      // Format as "X hari HH:MM:SS"
+      const formattedTime = `${days} hari ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      setCountdownString(formattedTime);
+    };
+    
+    // Initial update
+    updateCountdown();
+    
+    // Set up interval for updating the countdown
+    const interval = setInterval(updateCountdown, 1000);
+    
+    // Clean up on unmount
+    return () => clearInterval(interval);
+  }, [isLoading, organization?.trial_end_date]);
   
   const features = [
     {
@@ -27,10 +64,10 @@ const WelcomePage = () => {
       path: "/collaborations",
     },
     {
-      name: hasPaidSubscription ? "Paket Premium Aktif" : "Masa Trial 30 Hari",
+      name: hasPaidSubscription ? "Paket Premium Aktif" : "Masa Trial",
       description: hasPaidSubscription 
         ? `Paket ${subscriptionPlan?.name} aktif`
-        : `Akses semua fitur premium selama ${daysLeftInTrial} hari lagi`,
+        : `Akses semua fitur premium selama ${countdownString || `${daysLeftInTrial} hari`}`,
       icon: hasPaidSubscription ? CreditCard : Calendar,
       path: "/subscription",
     },
@@ -89,7 +126,9 @@ const WelcomePage = () => {
               <AlertDescription>
                 <div className="mt-2 space-y-2">
                   <Progress value={(daysLeftInTrial / 30) * 100} className="h-2" />
-                  <p className="text-sm text-blue-700">Anda memiliki {daysLeftInTrial} hari lagi untuk menikmati semua fitur premium.</p>
+                  <p className="text-sm text-blue-700">
+                    Anda memiliki <span className="font-medium">{countdownString || `${daysLeftInTrial} hari`}</span> lagi untuk menikmati semua fitur premium.
+                  </p>
                 </div>
               </AlertDescription>
             </Alert>
@@ -139,7 +178,7 @@ const WelcomePage = () => {
           <p className="text-center text-sm text-gray-500 mt-4">
             {hasPaidSubscription 
               ? `Anda menggunakan paket ${subscriptionPlan?.name || "Premium"}. Nikmati semua fitur tanpa batasan.`
-              : `Anda memiliki masa trial ${daysLeftInTrial} hari lagi. Berlangganan untuk menikmati semua fitur premium.`}
+              : `Anda memiliki masa trial ${countdownString || `${daysLeftInTrial} hari`} lagi. Berlangganan untuk menikmati semua fitur premium.`}
           </p>
         </CardFooter>
       </Card>

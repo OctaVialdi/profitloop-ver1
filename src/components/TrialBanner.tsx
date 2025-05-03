@@ -16,15 +16,53 @@ import {
 
 const TrialBanner = () => {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
+  const [countdownString, setCountdownString] = useState<string>('');
   const [isDismissed, setIsDismissed] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
   const location = useLocation();
   
   // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
   const isOnboardingPage = location.pathname === '/onboarding';
+  
+  // Update countdown every second when we have a trial end date
+  useEffect(() => {
+    if (!trialEndDate || isDismissed || isAuthPage || isOnboardingPage) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const diffTime = trialEndDate.getTime() - now.getTime();
+      
+      if (diffTime <= 0) {
+        setCountdownString('0 hari 00:00:00');
+        setDaysLeft(0);
+        return;
+      }
+      
+      // Calculate days, hours, minutes, seconds
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+      
+      // Format as "X hari HH:MM:SS"
+      const formattedTime = `${days} hari ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      setCountdownString(formattedTime);
+      setDaysLeft(days);
+    };
+    
+    // Initial update
+    updateCountdown();
+    
+    // Set up interval for updating the countdown
+    const interval = setInterval(updateCountdown, 1000);
+    
+    // Clean up on unmount
+    return () => clearInterval(interval);
+  }, [trialEndDate, isDismissed, isAuthPage, isOnboardingPage]);
   
   // Get trial information
   useEffect(() => {
@@ -71,7 +109,9 @@ const TrialBanner = () => {
       const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
       
       if (orgData.trial_expired || isTrialExpiredByDate) {
+        setTrialEndDate(trialEndDate);
         setDaysLeft(0);
+        setCountdownString('0 hari 00:00:00');
         // Show subscription dialog on non-auth pages when trial has expired
         setShowSubscriptionDialog(true);
         
@@ -88,6 +128,7 @@ const TrialBanner = () => {
       }
       
       if (trialEndDate) {
+        setTrialEndDate(trialEndDate);
         const diffTime = trialEndDate.getTime() - now.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         setDaysLeft(diffDays > 0 ? diffDays : 0);
@@ -125,7 +166,7 @@ const TrialBanner = () => {
           <CalendarClock className="h-4 w-4 text-blue-600 mr-2" />
           <AlertDescription className="text-blue-700 font-medium text-sm">
             {daysLeft > 0 ? (
-              <>Masa trial Anda berakhir dalam <span className="font-semibold">{daysLeft} hari</span>. </>
+              <>Masa trial Anda berakhir dalam <span className="font-semibold">{countdownString}</span>. </>
             ) : (
               <>Masa trial Anda telah berakhir. </>
             )}
