@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Calendar, Home, UserPlus, Building, Shield, CreditCard } from "lucide-react";
+import { User, Settings, Calendar, Home, UserPlus, Building, Shield, CreditCard, Timer } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -68,7 +68,7 @@ const WelcomePage = () => {
       description: hasPaidSubscription 
         ? `Paket ${subscriptionPlan?.name} aktif`
         : `Akses semua fitur premium selama ${countdownString || `${daysLeftInTrial} hari`}`,
-      icon: hasPaidSubscription ? CreditCard : Calendar,
+      icon: hasPaidSubscription ? CreditCard : Timer,
       path: "/subscription",
     },
     {
@@ -81,7 +81,7 @@ const WelcomePage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 trial-exempt">
         <Card className="w-full max-w-4xl">
           <CardHeader className="space-y-1">
             <Skeleton className="h-8 w-3/4 mx-auto mb-2" />
@@ -121,7 +121,7 @@ const WelcomePage = () => {
         {isTrialActive && !hasPaidSubscription && (
           <div className="px-6 pb-2">
             <Alert className="bg-blue-50 border-blue-200">
-              <Calendar className="h-4 w-4 text-blue-600" />
+              <Timer className="h-4 w-4 text-blue-600" />
               <AlertTitle>Masa Trial Aktif</AlertTitle>
               <AlertDescription>
                 <div className="mt-2 space-y-2">

@@ -106,22 +106,14 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
         flagValue: orgData?.trial_expired
       });
       
-      // If trial is expired by date OR flag is true, and no active subscription, redirect to subscription page
-      if ((isTrialExpiredByDate || orgData?.trial_expired) && !orgData?.subscription_plan_id) {
-        console.log("Trial expired, redirecting to subscription");
-        
-        // Also update the trial_expired flag if it's not set but date is expired
-        if (isTrialExpiredByDate && !orgData?.trial_expired) {
-          console.log("Updating trial_expired flag in database");
-          await supabase
-            .from('organizations')
-            .update({ trial_expired: true })
-            .eq('id', profileData.organization_id);
-        }
-        
-        if (!isPathAllowed()) {
-          navigate("/subscription", { replace: true });
-        }
+      // Instead of redirecting for expired trials, we'll let the TrialBanner component
+      // handle showing the modal, so we just need to set the expired flag in the database
+      if (isTrialExpiredByDate && !orgData?.trial_expired) {
+        console.log("Updating trial_expired flag in database");
+        await supabase
+          .from('organizations')
+          .update({ trial_expired: true })
+          .eq('id', profileData.organization_id);
       }
       
       setIsLoading(false);
