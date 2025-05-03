@@ -23,7 +23,8 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
   
   // Paths that need authentication but are not under trial protection
   const authPaths = [
-    "/employee-welcome"
+    "/employee-welcome",
+    "/organizations"
   ];
   
   const isPathAllowed = () => {
@@ -31,7 +32,7 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
   };
   
   const isAuthPath = () => {
-    return authPaths.some(path => location.pathname === path);
+    return authPaths.some(path => location.pathname.startsWith(path));
   };
   
   useEffect(() => {
@@ -80,10 +81,10 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
         .maybeSingle();
         
       if (!profileData?.organization_id) {
-        // No organization, redirect to employee welcome
-        console.log("User has no organization, redirecting to employee welcome");
+        // No organization, redirect to organizations
+        console.log("User has no organization, redirecting to organizations page");
         setIsLoading(false);
-        navigate("/employee-welcome", { replace: true });
+        navigate("/organizations", { replace: true });
         return;
       }
       

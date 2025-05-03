@@ -90,11 +90,12 @@ export const ProtectedRoute = ({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // If user is not on employee-welcome and not on auth pages
+  // If user is not on employee-welcome, not on organizations page, and not on auth pages
   if (authenticated && !hasOrganization && 
       currentPath !== '/employee-welcome' &&
+      currentPath !== '/organizations' &&
       !currentPath.startsWith('/auth/')) {
-    return <Navigate to="/employee-welcome" replace />;
+    return <Navigate to="/organizations" replace />;
   }
 
   return <>{children}</>;
