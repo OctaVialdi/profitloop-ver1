@@ -9,13 +9,13 @@ import MagicLinkJoin from "@/pages/auth/MagicLinkJoin";
 
 export const authRoutes = [
   <Route key="auth-layout" path="/auth" element={<AuthLayout />}>
+    <Route path="login" element={<Login />} />
     <Route path="register" element={<Register />} />
     <Route path="verification-sent" element={<VerificationSent />} />
   </Route>,
-  <Route key="login" path="/login" element={<Login />} />,
   <Route key="accept-invitation" path="/accept-invitation" element={<AcceptInvitation />} />,
   <Route key="join-organization" path="/join-organization" element={<MagicLinkJoin />} />,
 ];
 
 // Redirect from root to login
-export const rootRedirect = <Route key="root" path="/" element={<Navigate to="/login" replace />} />;
+export const rootRedirect = <Route key="root" path="/" element={<Navigate to="/auth/login" replace />} />;

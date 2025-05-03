@@ -32,7 +32,7 @@ const NotFound = () => {
         <h1 className="text-4xl font-bold mb-4">404</h1>
         <p className="text-xl text-gray-600 mb-4">Halaman tidak ditemukan</p>
         <Button 
-          onClick={() => navigate("/login")}
+          onClick={() => navigate("/")}
           variant="default"
         >
           Kembali ke Beranda
