@@ -1,0 +1,112 @@
+
+import React from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+
+interface IdentityAddressSectionProps {
+  passportExpiry: Date | undefined;
+  setPassportExpiry: React.Dispatch<React.SetStateAction<Date | undefined>>;
+  useResidentialAddress: boolean;
+  setUseResidentialAddress: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
+  passportExpiry,
+  setPassportExpiry,
+  useResidentialAddress,
+  setUseResidentialAddress,
+}) => {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold mb-1">Identity & address</h3>
+      <p className="text-sm text-gray-500 mb-4">Employee identity address information</p>
+      
+      {/* NIK & Passport */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="nik">NIK (NPWP 16 digit)</Label>
+          <Input id="nik" placeholder="0000 0000 0000 0000" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="passportNumber">Passport number</Label>
+          <Input id="passportNumber" />
+        </div>
+      </div>
+      
+      {/* Passport expiry & Postal code */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="passportExpiry">Passport expiry date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+              >
+                {passportExpiry ? (
+                  format(passportExpiry, "PPP")
+                ) : (
+                  <span className="text-gray-400">Select date</span>
+                )}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={passportExpiry}
+                onSelect={setPassportExpiry}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="postalCode">Postal code</Label>
+          <Input id="postalCode" placeholder="0" />
+        </div>
+      </div>
+      
+      {/* Citizen ID Address */}
+      <div className="space-y-2">
+        <Label htmlFor="citizenAddress">Citizen ID address</Label>
+        <Input id="citizenAddress" className="h-24" />
+      </div>
+      
+      {/* Use as residential address checkbox */}
+      <div className="flex items-start space-x-2">
+        <Checkbox 
+          id="useAsResidential" 
+          checked={useResidentialAddress}
+          onCheckedChange={(checked) => setUseResidentialAddress(checked as boolean)}
+        />
+        <Label 
+          htmlFor="useAsResidential" 
+          className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Use as residential address
+        </Label>
+      </div>
+      
+      {/* Residential Address */}
+      {!useResidentialAddress && (
+        <div className="space-y-2">
+          <Label htmlFor="residentialAddress">Residential address</Label>
+          <Input id="residentialAddress" className="h-24" />
+        </div>
+      )}
+    </div>
+  );
+};
