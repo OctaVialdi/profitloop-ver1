@@ -47,31 +47,15 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   };
   
   // Filter the column order to only include visible columns
-  const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
+  const visibleColumnsOrder: Array<keyof EmployeeColumnState> = columnOrder.filter(col => visibleColumns[col]);
   
-  // Important: We need exactly 5 data columns (plus checkbox and actions columns) for a total of 7
-  const limitedVisibleColumnsOrder: Array<keyof EmployeeColumnState> = (() => {
-    const maxDataColumns = 5; // Maximum number of data columns to display
-    
-    // If name is in the visible columns, we need to ensure it's included
-    const nameIndex = visibleColumnsOrder.indexOf('name');
-    
-    if (nameIndex === -1) {
-      // If name is not in the visible columns, just take the first 5
-      return visibleColumnsOrder.slice(0, maxDataColumns) as Array<keyof EmployeeColumnState>;
-    } else {
-      // Remove "name" from the array for now
-      const withoutName = [...visibleColumnsOrder];
-      withoutName.splice(nameIndex, 1);
-      
-      // Take the name column plus up to (maxDataColumns-1) more columns
-      return ['name' as keyof EmployeeColumnState, 
-        ...withoutName.slice(0, maxDataColumns - 1) as Array<keyof EmployeeColumnState>];
-    }
-  })();
+  // Always ensure 'name' is included if it's visible
+  if (visibleColumns['name'] && !visibleColumnsOrder.includes('name')) {
+    visibleColumnsOrder.unshift('name');
+  }
   
-  // Check if we need horizontal scrolling (more columns exist than are shown)
-  const needsHorizontalScroll = visibleColumnsOrder.length > limitedVisibleColumnsOrder.length;
+  // Check if we need horizontal scrolling (we always want to enable it when there are many columns)
+  const needsHorizontalScroll = true; // Always enable horizontal scrolling
 
   // Handle click on employee name to navigate to employee detail with new route pattern
   const handleEmployeeClick = (employee: Employee) => {
@@ -102,18 +86,17 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
 
   // Calculate width for columns to ensure alignment
   const getColumnWidth = (colKey: keyof EmployeeColumnState) => {
-    if (colKey === 'name') return 'w-[220px]';
-    if (colKey === 'employeeId') return 'w-[140px]';
-    if (colKey === 'email') return 'w-[200px]';
-    return 'w-[180px]';
+    if (colKey === 'name') return 'min-w-[220px]';
+    if (colKey === 'employeeId') return 'min-w-[140px]';
+    if (colKey === 'email') return 'min-w-[200px]';
+    return 'min-w-[180px]';
   };
 
   return (
     <div className="border rounded-md">
       <div className="relative">
-        {/* Using a single table structure for better alignment */}
-        <ScrollArea className="w-full" type={needsHorizontalScroll ? "always" : "auto"}>
-          <div className={needsHorizontalScroll ? "min-w-max" : "w-full"}>
+        <ScrollArea className="w-full" type="always">
+          <div className="min-w-max">
             <Table>
               <TableHeader className="sticky top-0 z-20 bg-background">
                 <TableRow>
@@ -121,18 +104,27 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                     <Checkbox />
                   </TableHead>
                   
-                  {limitedVisibleColumnsOrder.map((colKey) => {
-                    const isNameColumn = colKey === 'name';
-                    const columnWidth = getColumnWidth(colKey);
-                    return (
+                  {/* Name column always sticky if included */}
+                  {visibleColumns['name'] && (
+                    <TableHead 
+                      className="sticky left-[40px] z-30 bg-background min-w-[220px]"
+                    >
+                      {columnLabels['name']}
+                    </TableHead>
+                  )}
+                  
+                  {/* All other visible columns */}
+                  {visibleColumnsOrder
+                    .filter(colKey => colKey !== 'name') // Skip name as we handled it separately
+                    .map((colKey) => (
                       <TableHead 
                         key={colKey}
-                        className={`${isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""} ${columnWidth}`}
+                        className={`${getColumnWidth(colKey)}`}
                       >
                         {columnLabels[colKey]}
                       </TableHead>
-                    );
-                  })}
+                    ))
+                  }
                   
                   <TableHead className="text-right sticky right-0 z-30 bg-background w-[100px]">
                     Actions
@@ -146,18 +138,27 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                       <Checkbox />
                     </TableCell>
                     
-                    {limitedVisibleColumnsOrder.map((colKey) => {
-                      const isNameColumn = colKey === 'name';
-                      const columnWidth = getColumnWidth(colKey);
-                      return (
+                    {/* Name column always sticky if included */}
+                    {visibleColumns['name'] && (
+                      <TableCell 
+                        className="sticky left-[40px] z-20 bg-background min-w-[220px]"
+                      >
+                        {renderCellContent(employee, 'name')}
+                      </TableCell>
+                    )}
+                    
+                    {/* All other visible columns */}
+                    {visibleColumnsOrder
+                      .filter(colKey => colKey !== 'name') // Skip name as we handled it separately
+                      .map((colKey) => (
                         <TableCell 
                           key={colKey}
-                          className={`${isNameColumn ? "sticky left-[40px] z-20 bg-background" : ""} ${columnWidth}`}
+                          className={`${getColumnWidth(colKey)}`}
                         >
                           {renderCellContent(employee, colKey)}
                         </TableCell>
-                      );
-                    })}
+                      ))
+                    }
                     
                     <TableCell className="text-right sticky right-0 z-20 bg-background w-[100px]">
                       <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
@@ -166,7 +167,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                 ))}
                 {data.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={limitedVisibleColumnsOrder.length + 2} className="text-center py-8">
+                    <TableCell colSpan={visibleColumnsOrder.length + 2} className="text-center py-8">
                       No employee data found
                     </TableCell>
                   </TableRow>
@@ -174,7 +175,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
               </TableBody>
             </Table>
           </div>
-          {needsHorizontalScroll && <ScrollBar orientation="horizontal" />}
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
     </div>
