@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   User, 
@@ -28,14 +27,30 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
   activeTab,
   handleEdit
 }) => {
-  // General section state
-  const [openGeneral, setOpenGeneral] = useState(true);
+  // Determine which sections should be initially open based on activeTab
+  const isTimeManagementTab = ['attendance', 'schedule', 'time-off'].includes(activeTab);
+  const isPayrollTab = ['payroll-info'].includes(activeTab);
+  const isFinanceTab = ['reimbursement', 'cash-advance', 'loan'].includes(activeTab);
+  const isHistoryTab = ['adjustment', 'transfer', 'npp', 'reprimand'].includes(activeTab);
+  const isGeneralTab = ['personal', 'employment', 'education'].includes(activeTab);
   
-  // Collapsible sections state - All start as closed
-  const [openTimeManagement, setOpenTimeManagement] = useState(false);
-  const [openPayroll, setOpenPayroll] = useState(false);
-  const [openFinance, setOpenFinance] = useState(false);
-  const [openHistory, setOpenHistory] = useState(false);
+  // General section state - open if activeTab is related to general
+  const [openGeneral, setOpenGeneral] = useState(isGeneralTab);
+  
+  // Other sections state - open based on activeTab
+  const [openTimeManagement, setOpenTimeManagement] = useState(isTimeManagementTab);
+  const [openPayroll, setOpenPayroll] = useState(isPayrollTab);
+  const [openFinance, setOpenFinance] = useState(isFinanceTab);
+  const [openHistory, setOpenHistory] = useState(isHistoryTab);
+
+  // Keep dropdown sections open when navigating between tabs
+  useEffect(() => {
+    if (isTimeManagementTab) setOpenTimeManagement(true);
+    if (isPayrollTab) setOpenPayroll(true);
+    if (isFinanceTab) setOpenFinance(true);
+    if (isHistoryTab) setOpenHistory(true);
+    if (isGeneralTab) setOpenGeneral(true);
+  }, [activeTab, isTimeManagementTab, isPayrollTab, isFinanceTab, isHistoryTab, isGeneralTab]);
 
   // Toggle functions that don't automatically close dropdowns when clicking items inside
   const toggleGeneral = (e: React.MouseEvent) => {
@@ -61,6 +76,12 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
   const toggleHistory = (e: React.MouseEvent) => {
     e.stopPropagation();
     setOpenHistory(!openHistory);
+  };
+
+  // Navigation handler that prevents event bubbling
+  const handleNavigation = (e: React.MouseEvent, section: string) => {
+    e.stopPropagation();
+    handleEdit(section);
   };
 
   return (
@@ -92,19 +113,19 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'personal' ? 'text-blue-600 font-medium' : 'text-gray-700'}`} 
-                onClick={() => handleEdit('personal')}
+                onClick={(e) => handleNavigation(e, 'personal')}
               >
                 Personal
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'employment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('employment')}
+                onClick={(e) => handleNavigation(e, 'employment')}
               >
                 Employment
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'education' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('education')}
+                onClick={(e) => handleNavigation(e, 'education')}
               >
                 Education & Experience
               </div>
@@ -123,19 +144,19 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'attendance' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('attendance')}
+                onClick={(e) => handleNavigation(e, 'attendance')}
               >
                 Attendance
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'schedule' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('schedule')}
+                onClick={(e) => handleNavigation(e, 'schedule')}
               >
                 Schedule
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'time-off' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('time-off')}
+                onClick={(e) => handleNavigation(e, 'time-off')}
               >
                 Time Off
               </div>
@@ -154,7 +175,7 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'payroll-info' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('payroll-info')}
+                onClick={(e) => handleNavigation(e, 'payroll-info')}
               >
                 Payroll Info
               </div>
@@ -173,19 +194,19 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'reimbursement' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('reimbursement')}
+                onClick={(e) => handleNavigation(e, 'reimbursement')}
               >
                 Reimbursement
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'cash-advance' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('cash-advance')}
+                onClick={(e) => handleNavigation(e, 'cash-advance')}
               >
                 Cash Advance
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'loan' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('loan')}
+                onClick={(e) => handleNavigation(e, 'loan')}
               >
                 Loan
               </div>
@@ -195,25 +216,23 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
           {/* Files link */}
           <div 
             className={`px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between ${activeTab === 'files' ? 'bg-gray-50' : ''}`}
-            onClick={() => handleEdit('files')}
+            onClick={(e) => handleNavigation(e, 'files')}
           >
             <div className="flex items-center">
               <FileText size={16} className="mr-2" />
               <span className={activeTab === 'files' ? 'text-blue-600 font-medium' : ''}>Files</span>
             </div>
-            <ChevronRight size={16} />
           </div>
 
           {/* Assets link */}
           <div 
             className={`px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between ${activeTab === 'assets' ? 'bg-gray-50' : ''}`}
-            onClick={() => handleEdit('assets')}
+            onClick={(e) => handleNavigation(e, 'assets')}
           >
             <div className="flex items-center">
               <Boxes size={16} className="mr-2" />
               <span className={activeTab === 'assets' ? 'text-blue-600 font-medium' : ''}>Assets</span>
             </div>
-            <ChevronRight size={16} />
           </div>
 
           {/* History with dropdown */}
@@ -228,25 +247,25 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'adjustment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('adjustment')}
+                onClick={(e) => handleNavigation(e, 'adjustment')}
               >
                 Adjustment
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'transfer' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('transfer')}
+                onClick={(e) => handleNavigation(e, 'transfer')}
               >
                 Transfer
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'npp' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('npp')}
+                onClick={(e) => handleNavigation(e, 'npp')}
               >
                 NPP
               </div>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'reprimand' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                onClick={() => handleEdit('reprimand')}
+                onClick={(e) => handleNavigation(e, 'reprimand')}
               >
                 Reprimand
               </div>
