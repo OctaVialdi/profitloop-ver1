@@ -2,7 +2,6 @@
 import { Route, Routes } from "react-router-dom";
 import NotFound from "@/pages/NotFound";
 import { rootRedirect, authRoutes } from "./authRoutes";
-import { onboardingRoutes } from "./onboardingRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
 import { hrRoutes } from "./hrRoutes";
 import { financeRoutes } from "./financeRoutes";
@@ -11,6 +10,8 @@ import { marketingRoutes } from "./marketingRoutes";
 import { itRoutes } from "./itRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
+import OrganizationSetup from "@/pages/onboarding/OrganizationSetup";
+import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
 
 export const AppRoutes = () => {
   return (
@@ -21,8 +22,9 @@ export const AppRoutes = () => {
       {/* Auth Routes */}
       {authRoutes}
       
-      {/* Protected Routes */}
-      {onboardingRoutes}
+      {/* Manual routes that were previously in onboardingRoutes */}
+      <Route path="/onboarding" element={<OrganizationSetup />} />
+      <Route path="/employee-welcome" element={<EmployeeWelcome />} />
 
       {/* Dashboard Routes */}
       {dashboardRoutes}
