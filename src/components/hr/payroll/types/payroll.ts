@@ -20,3 +20,14 @@ export interface EmployeePayrollDetail {
   createdDate: string;
   modifiedDate: string;
 }
+
+export interface EmployeePayrollSummary {
+  id: string;
+  department: string;
+  baseSalary: number;
+  allowances: number;
+  incentives: number;
+  deductions: number;
+  total: number;
+  status: "Draft" | "Submitted" | "Approved" | "Rejected";
+}
