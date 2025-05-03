@@ -122,9 +122,10 @@ export async function createOrganization(formData: OrganizationFormData) {
     // Get business field options
     const employeeCount = parseInt(formData.employeeCount) || 0;
     
-    // Call the function to create organization with profile and pass the user's created_at timestamp
+    // Call the function to create organization with profile
+    // We need to use 'create_organization_with_profile' as that's what's in the TypeScript types
     const { data: orgData, error } = await supabase.rpc(
-      'create_organization_with_profile_sync_timestamp',
+      'create_organization_with_profile',
       {
         user_id: session.user.id,
         org_name: formData.name.trim(),
