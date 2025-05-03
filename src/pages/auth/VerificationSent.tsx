@@ -1,98 +1,108 @@
 
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Mail, RefreshCw } from "lucide-react";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
+import { EmailTips } from "@/components/auth/EmailTips";
+import { VerificationStatus } from "@/components/auth/VerificationStatus";
 
 const VerificationSent = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const email = location.state?.email || "";
   const password = location.state?.password || "";
+  const invitationToken = location.state?.invitationToken || "";
+  const magicLinkToken = location.state?.magicLinkToken || "";
   const isInvitation = location.state?.isInvitation || false;
-  const invitationToken = location.state?.invitationToken || null;
+  const organizationName = location.state?.organizationName || "";
 
-  // Use the custom hook for email verification
-  const { showTip, secondsLeft, allowResend, checkingVerification, handleResendVerification } = 
-    useEmailVerification({ email, password, invitationToken });
-
+  // If no email is provided, redirect to login
   if (!email) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Halaman Tidak Valid</CardTitle>
-            <CardDescription className="text-center">
-              Anda harus mengakses halaman ini dari proses pendaftaran.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-center">
-              <Button onClick={() => window.location.href = "/auth/register"}>
-                Kembali ke Halaman Pendaftaran
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    navigate("/auth/login");
+    return null;
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="mx-auto bg-primary/10 p-3 rounded-full">
-            <Mail className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle className="text-2xl font-bold text-center">Cek Email Anda</CardTitle>
-          <CardDescription className="text-center">
-            Kami telah mengirimkan tautan verifikasi ke <span className="font-bold">{email}</span><br />
-            Klik tautan di email untuk melanjutkan
-            {isInvitation && " dan bergabung dengan organisasi"}
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {checkingVerification && (
-            <div className="text-center text-sm text-blue-600">
-              Memeriksa status verifikasi...
-            </div>
-          )}
+  const {
+    showTip,
+    secondsLeft,
+    allowResend,
+    checkingVerification,
+    handleResendVerification
+  } = useEmailVerification({ 
+    email, 
+    password,
+    invitationToken: invitationToken || magicLinkToken
+  });
 
-          {showTip && (
-            <Alert className="bg-amber-50 text-amber-800 border-amber-200">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertDescription>
-                Tidak menerima email? Periksa folder spam atau junk Anda.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <div className="w-12 h-12 bg-blue-100 rounded-full text-blue-600 flex items-center justify-center mx-auto mb-4">
+          <Mail className="h-6 w-6" />
+        </div>
+        <CardTitle className="text-center">Cek Email Anda</CardTitle>
+        <CardDescription className="text-center">
+          Kami telah mengirimkan email verifikasi ke{" "}
+          <span className="font-medium">{email}</span>
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        <VerificationStatus isChecking={checkingVerification} />
         
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="w-full">
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              disabled={!allowResend}
-              onClick={handleResendVerification}
-            >
-              {!allowResend ? `Kirim Ulang (${secondsLeft})` : "Kirim Ulang Email"}
-            </Button>
+        {/* Show info about joining organization if coming from invitation */}
+        {isInvitation && (
+          <div className="p-3 bg-blue-50 border border-blue-100 rounded-md text-sm text-blue-700">
+            {magicLinkToken ? (
+              <p>
+                Setelah mengklik tautan verifikasi di email, Anda harus login terlebih dahulu, kemudian akan bergabung dengan organisasi
+                {organizationName ? <strong> {organizationName}</strong> : ''}.
+              </p>
+            ) : (
+              <p>
+                Setelah mengklik tautan verifikasi di email, Anda perlu login kembali untuk menyelesaikan proses 
+                bergabung dengan organisasi
+                {organizationName ? <strong> {organizationName}</strong> : ''}.
+              </p>
+            )}
           </div>
+        )}
           
-          <div className="text-center text-sm text-gray-600">
-            <span>Kembali ke </span>
-            <a href="/auth/login" className="text-primary hover:underline">
-              halaman login
-            </a>
-          </div>
-        </CardFooter>
-      </Card>
-    </div>
+        <div className="text-center">
+          <p className="text-sm text-gray-600 mb-2">
+            Belum menerima email?
+          </p>
+          
+          <Button
+            variant="outline"
+            onClick={handleResendVerification}
+            disabled={!allowResend || secondsLeft > 0}
+            className="flex items-center"
+          >
+            {secondsLeft > 0 ? (
+              <>
+                <RefreshCw className="mr-1.5 h-4 w-4" />
+                Kirim Ulang ({secondsLeft}s)
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-1.5 h-4 w-4" />
+                Kirim Ulang Email
+              </>
+            )}
+          </Button>
+        </div>
+
+        <EmailTips showTip={showTip} />
+        
+        <div className="border-t border-gray-200 pt-4 mt-4 text-center">
+          <Button variant="link" onClick={() => navigate("/auth/login")}>
+            Kembali ke halaman login
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

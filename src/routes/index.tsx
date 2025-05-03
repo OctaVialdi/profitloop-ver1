@@ -10,7 +10,6 @@ import { marketingRoutes } from "./marketingRoutes";
 import { itRoutes } from "./itRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
-import { organizationRoutes } from "./organizationRoutes";
 import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
 
 export const AppRoutes = () => {
@@ -24,9 +23,6 @@ export const AppRoutes = () => {
       
       {/* Employee welcome page */}
       <Route path="/employee-welcome" element={<EmployeeWelcome />} />
-
-      {/* Organization Routes */}
-      {organizationRoutes}
 
       {/* Dashboard Routes */}
       {dashboardRoutes}

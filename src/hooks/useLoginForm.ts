@@ -118,8 +118,8 @@ export function useLoginForm() {
         if (organizationId) {
           navigate("/dashboard");
         } else {
-          // Always redirect to organizations setup if user doesn't have organization
-          navigate("/organizations");
+          // Always redirect to onboarding if user doesn't have organization
+          navigate("/onboarding");
         }
       }
     } catch (error: any) {

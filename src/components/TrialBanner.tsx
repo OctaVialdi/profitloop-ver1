@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import useTrialStatus from '@/hooks/useTrialStatus';
 import TrialBannerAlert from '@/components/trial/TrialBannerAlert';
 import TrialExpiredModal from '@/components/trial/TrialExpiredModal';
@@ -19,7 +19,6 @@ const TrialBanner = () => {
     handleSignOut,
     isAuthPage,
     isOnboardingPage,
-    isOrganizationPage,
     isSubscriptionPage
   } = useTrialStatus();
   
@@ -32,21 +31,13 @@ const TrialBanner = () => {
       }
     }
   });
-  
-  // Show subscription dialog if trial is expired and not on subscription page
-  useEffect(() => {
-    if (isTrialExpired && !isSubscriptionPage && !isAuthPage && !isOnboardingPage && !isOrganizationPage) {
-      setShowSubscriptionDialog(true);
-    }
-  }, [isTrialExpired, isSubscriptionPage, isAuthPage, isOnboardingPage, isOrganizationPage]);
 
   // Don't show anything if loading, not authenticated, on auth pages, or dismissed
   if (
     isLoading || 
     !isAuthenticated || 
     isAuthPage || 
-    isOnboardingPage ||
-    isOrganizationPage ||
+    isOnboardingPage || 
     isDismissed || 
     daysLeft === null
   ) {

@@ -1,16 +1,19 @@
 
 import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { AppRoutes } from "@/routes";
-import RootLayout from "@/components/layout/RootLayout";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { AppRoutes } from "./routes";
+import TrialBanner from "./components/TrialBanner";
+import TrialProtection from "./components/TrialProtection";
 
 function App() {
   return (
     <BrowserRouter>
-      <RootLayout>
-        <AppRoutes />
-        <Toaster position="top-center" />
-      </RootLayout>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <TrialProtection>
+          <TrialBanner />
+          <AppRoutes />
+        </TrialProtection>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
