@@ -6,7 +6,8 @@ import {
   Controls, 
   MiniMap,
   ConnectionLineType,
-  Panel
+  Panel,
+  ConnectionMode
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { ZoomIn, ZoomOut, Focus } from 'lucide-react';
@@ -94,7 +95,7 @@ const OrganizationFlowChart: React.FC<OrganizationFlowChartProps> = ({
       defaultViewport={{ x: 0, y: 0, zoom: 1 }}
       minZoom={0.1}
       maxZoom={2}
-      connectionMode="loose"
+      connectionMode={ConnectionMode.LOOSE}
       snapToGrid
       snapGrid={[15, 15]}
     >
