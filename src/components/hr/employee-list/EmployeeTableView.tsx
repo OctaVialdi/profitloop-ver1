@@ -48,6 +48,9 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   
   // Filter the column order to only include visible columns
   const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
+  
+  // Check if we need horizontal scrolling (more than 7 visible columns)
+  const needsHorizontalScroll = visibleColumnsOrder.length > 7;
 
   // Handle click on employee name to navigate to employee detail with new route pattern
   const handleEmployeeClick = (employee: Employee) => {
@@ -78,7 +81,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
 
   return (
     <div className="border rounded-md overflow-hidden">
-      {/* Table with fixed header and horizontally scrollable body */}
+      {/* Table with fixed header and horizontally scrollable body if needed */}
       <div className="relative">
         {/* Header - Fixed */}
         <Table>
@@ -95,7 +98,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                 return (
                   <TableHead 
                     key={colKey}
-                    className={isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""}
+                    className={`${isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""}`}
                   >
                     {columnLabels[colKey]}
                   </TableHead>
@@ -107,10 +110,10 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
           </TableHeader>
         </Table>
         
-        {/* Body - Scrollable horizontally */}
+        {/* Body - Scrollable horizontally if needed */}
         <div className="max-h-[400px] overflow-hidden">
-          <ScrollArea className="h-full w-full" type="always">
-            <div className="min-w-max">
+          <ScrollArea className="h-full w-full" type={needsHorizontalScroll ? "always" : "auto"}>
+            <div className={needsHorizontalScroll ? "min-w-max" : "w-full"}>
               <Table>
                 <TableBody>
                   {data.map(employee => (
@@ -126,7 +129,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                         return (
                           <TableCell 
                             key={colKey}
-                            className={isNameColumn ? "sticky left-[40px] z-20 bg-background" : ""}
+                            className={`${isNameColumn ? "sticky left-[40px] z-20 bg-background" : ""}`}
                           >
                             {renderCellContent(employee, colKey)}
                           </TableCell>
@@ -148,7 +151,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                 </TableBody>
               </Table>
             </div>
-            <ScrollBar orientation="horizontal" />
+            {needsHorizontalScroll && <ScrollBar orientation="horizontal" />}
           </ScrollArea>
         </div>
       </div>
