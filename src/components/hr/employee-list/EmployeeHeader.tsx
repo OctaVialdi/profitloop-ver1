@@ -1,13 +1,10 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
-
 export const EmployeeHeader: React.FC = () => {
-  return (
-    <div className="flex items-center justify-between">
+  return <div className="flex items-center justify-between">
       <h2 className="text-2xl font-bold">Employee list</h2>
       <div className="flex items-center gap-2">
         <DropdownMenu>
@@ -23,8 +20,8 @@ export const EmployeeHeader: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        <Button variant="outline">Employee transfer</Button>
-        <Button variant="outline">Bulk update data</Button>
+        
+        
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -40,6 +37,5 @@ export const EmployeeHeader: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </div>
-  );
+    </div>;
 };
