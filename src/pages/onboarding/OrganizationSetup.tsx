@@ -100,8 +100,8 @@ const OrganizationSetup = () => {
       
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
-        // Explicitly redirect to welcome page after success
-        navigate("/welcome");
+        // Explicitly redirect to employee-welcome page after success
+        navigate("/employee-welcome");
       } else {
         toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");
       }
