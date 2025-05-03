@@ -6,6 +6,7 @@ import { CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLoginForm } from "@/hooks/useLoginForm";
 import LoginForm from "@/components/auth/LoginForm";
+import AuthLayout from "@/components/layout/AuthLayout";
 
 const Login = () => {
   const [justVerified, setJustVerified] = useState(false);
@@ -64,8 +65,8 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
+    <AuthLayout>
+      <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
           <CardDescription className="text-center">
@@ -111,7 +112,7 @@ const Login = () => {
           </div>
         </CardFooter>
       </Card>
-    </div>
+    </AuthLayout>
   );
 };
 
