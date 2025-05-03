@@ -40,19 +40,13 @@ export const ProtectedRoute = ({
           setAuthenticated(true);
           
           // Check if user has an organization
-          if (currentPath === '/onboarding') {
-            // If already on onboarding page, don't redirect
-            setHasOrganization(false);
-          } else {
-            // Check if user has an organization
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('organization_id')
-              .eq('id', data.session.user.id)
-              .maybeSingle();
-              
-            setHasOrganization(!!profileData?.organization_id);
-          }
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', data.session.user.id)
+            .maybeSingle();
+            
+          setHasOrganization(!!profileData?.organization_id);
         } else {
           console.log("No active session found");
           setAuthenticated(false);
@@ -90,18 +84,17 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Always redirect unauthenticated users to login page, including /onboarding
+  // Always redirect unauthenticated users to login page
   if (!authenticated && !isPublicRoute) {
     console.log("Not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // Only if authenticated, check if user has organization
+  // If user is not on employee-welcome and not on auth pages
   if (authenticated && !hasOrganization && 
-      currentPath !== '/onboarding' && 
       currentPath !== '/employee-welcome' &&
       !currentPath.startsWith('/auth/')) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/employee-welcome" replace />;
   }
 
   return <>{children}</>;
