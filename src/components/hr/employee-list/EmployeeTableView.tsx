@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmployeeActions } from "../EmployeeActions";
 import { Employee } from './types';
 import { EmployeeColumnState, ColumnOrder } from '../EmployeeColumnManager';
@@ -77,34 +76,33 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   };
 
   return (
-    <div className="border rounded-md">
-      {/* Use a ScrollArea only for the table body, with fixed height */}
-      <Table>
-        <TableHeader className="sticky top-0 z-20 bg-background">
-          <TableRow>
-            <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
-              <Checkbox />
-            </TableHead>
-            
-            {/* Render table headers in the order specified by columnOrder */}
-            {visibleColumnsOrder.map((colKey) => {
-              // Special styling for the name column to make it sticky
-              const isNameColumn = colKey === 'name';
-              return (
-                <TableHead 
-                  key={colKey}
-                  className={isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""}
-                >
-                  {columnLabels[colKey]}
+    <div className="border rounded-md overflow-hidden">
+      <div className="w-full overflow-auto" style={{ maxHeight: "500px" }}>
+        <div className="min-w-max">
+          <Table>
+            <TableHeader className="sticky top-0 z-20 bg-background">
+              <TableRow>
+                <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
+                  <Checkbox />
                 </TableHead>
-              );
-            })}
-            
-            <TableHead className="text-right sticky right-0 z-30 bg-background">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <ScrollArea className="h-[400px]">
-          <ScrollArea orientation="horizontal">
+                
+                {/* Render table headers in the order specified by columnOrder */}
+                {visibleColumnsOrder.map((colKey) => {
+                  // Special styling for the name column to make it sticky
+                  const isNameColumn = colKey === 'name';
+                  return (
+                    <TableHead 
+                      key={colKey}
+                      className={isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""}
+                    >
+                      {columnLabels[colKey]}
+                    </TableHead>
+                  );
+                })}
+                
+                <TableHead className="text-right sticky right-0 z-30 bg-background">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {data.map(employee => (
                 <TableRow key={employee.id}>
@@ -139,9 +137,9 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                 </TableRow>
               )}
             </TableBody>
-          </ScrollArea>
-        </ScrollArea>
-      </Table>
+          </Table>
+        </div>
+      </div>
     </div>
   );
 };
