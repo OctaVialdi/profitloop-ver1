@@ -15,7 +15,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Employee } from "@/hooks/useEmployees";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface EmployeeDetailSidebarProps {
   employee: Employee;
@@ -37,6 +37,32 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
   const [openFinance, setOpenFinance] = useState(false);
   const [openHistory, setOpenHistory] = useState(false);
 
+  // Toggle functions that don't automatically close dropdowns when clicking items inside
+  const toggleGeneral = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenGeneral(!openGeneral);
+  };
+
+  const toggleTimeManagement = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenTimeManagement(!openTimeManagement);
+  };
+
+  const togglePayroll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenPayroll(!openPayroll);
+  };
+
+  const toggleFinance = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenFinance(!openFinance);
+  };
+
+  const toggleHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenHistory(!openHistory);
+  };
+
   return (
     <div className="w-full md:w-64 space-y-4">
       <Card className="p-6 flex flex-col items-center">
@@ -55,16 +81,14 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
       <Card>
         <div className="py-2">
           {/* General with dropdown */}
-          <Collapsible open={openGeneral} onOpenChange={setOpenGeneral}>
-            <CollapsibleTrigger className="w-full">
-              <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                <div className="flex items-center">
-                  <User size={16} className="mr-2" />
-                  <span>General</span>
-                </div>
-                {openGeneral ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <Collapsible open={openGeneral}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={toggleGeneral}>
+              <div className="flex items-center">
+                <User size={16} className="mr-2" />
+                <span>General</span>
               </div>
-            </CollapsibleTrigger>
+              {openGeneral ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'personal' ? 'text-blue-600 font-medium' : 'text-gray-700'}`} 
@@ -88,16 +112,14 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
           </Collapsible>
 
           {/* Time Management with dropdown */}
-          <Collapsible open={openTimeManagement} onOpenChange={setOpenTimeManagement}>
-            <CollapsibleTrigger className="w-full">
-              <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                <div className="flex items-center">
-                  <Clock size={16} className="mr-2" />
-                  <span>Time Management</span>
-                </div>
-                {openTimeManagement ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <Collapsible open={openTimeManagement}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={toggleTimeManagement}>
+              <div className="flex items-center">
+                <Clock size={16} className="mr-2" />
+                <span>Time Management</span>
               </div>
-            </CollapsibleTrigger>
+              {openTimeManagement ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'attendance' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
@@ -121,16 +143,14 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
           </Collapsible>
 
           {/* Payroll with dropdown */}
-          <Collapsible open={openPayroll} onOpenChange={setOpenPayroll}>
-            <CollapsibleTrigger className="w-full">
-              <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                <div className="flex items-center">
-                  <CircleDollarSign size={16} className="mr-2" />
-                  <span>Payroll</span>
-                </div>
-                {openPayroll ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <Collapsible open={openPayroll}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={togglePayroll}>
+              <div className="flex items-center">
+                <CircleDollarSign size={16} className="mr-2" />
+                <span>Payroll</span>
               </div>
-            </CollapsibleTrigger>
+              {openPayroll ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'payroll-info' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
@@ -142,16 +162,14 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
           </Collapsible>
 
           {/* Finance with dropdown */}
-          <Collapsible open={openFinance} onOpenChange={setOpenFinance}>
-            <CollapsibleTrigger className="w-full">
-              <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                <div className="flex items-center">
-                  <Wallet size={16} className="mr-2" />
-                  <span>Finance</span>
-                </div>
-                {openFinance ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <Collapsible open={openFinance}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={toggleFinance}>
+              <div className="flex items-center">
+                <Wallet size={16} className="mr-2" />
+                <span>Finance</span>
               </div>
-            </CollapsibleTrigger>
+              {openFinance ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'reimbursement' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
@@ -199,16 +217,14 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
           </div>
 
           {/* History with dropdown */}
-          <Collapsible open={openHistory} onOpenChange={setOpenHistory}>
-            <CollapsibleTrigger className="w-full">
-              <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                <div className="flex items-center">
-                  <BarChart2 size={16} className="mr-2" />
-                  <span>History</span>
-                </div>
-                {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <Collapsible open={openHistory}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={toggleHistory}>
+              <div className="flex items-center">
+                <BarChart2 size={16} className="mr-2" />
+                <span>History</span>
               </div>
-            </CollapsibleTrigger>
+              {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
             <CollapsibleContent>
               <div 
                 className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'adjustment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
