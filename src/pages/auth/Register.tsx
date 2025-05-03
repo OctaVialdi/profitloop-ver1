@@ -73,6 +73,21 @@ const Register = () => {
         return;
       }
 
+      // Check if this is the first user in the system (to assign super_admin role)
+      const { count, error: countError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) {
+        console.error("Error checking for existing profiles:", countError);
+      }
+      
+      // If no profiles exist (or we couldn't check), this is likely the first user
+      const isFirstUser = count === 0 || count === null;
+      const role = isFirstUser ? 'super_admin' : 'employee';
+      
+      console.log(`Registering user with role: ${role} (isFirstUser: ${isFirstUser}, count: ${count})`);
+
       // Register with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -80,7 +95,8 @@ const Register = () => {
         options: {
           data: {
             full_name: fullName,
-            email: email, // Ensure email is included in user metadata
+            email: email,
+            role: role, // Set the role in metadata
           },
         },
       });
@@ -88,13 +104,14 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
-        // Create a profile record explicitly to ensure it exists
+        // Create a profile record explicitly to ensure it exists with proper role
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
             id: data.user.id,
             email: email.toLowerCase(),
-            full_name: fullName
+            full_name: fullName,
+            role: role // Set the role in profiles table
           })
           .select();
           
@@ -102,7 +119,7 @@ const Register = () => {
           console.error("Error creating profile:", profileError);
           // We continue anyway, as the trigger might create the profile
         } else {
-          console.log("Profile created successfully");
+          console.log("Profile created successfully with role:", role);
         }
         
         // Always redirect to verification page, never skip this step
