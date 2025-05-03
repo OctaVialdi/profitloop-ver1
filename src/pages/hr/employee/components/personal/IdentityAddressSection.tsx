@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,6 +27,33 @@ export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
   useResidentialAddress,
   setUseResidentialAddress,
 }) => {
+  const [nikValue, setNikValue] = useState<string>('');
+  const [nikError, setNikError] = useState<string | null>(null);
+  
+  // Format and validate NPWP as it's entered
+  const handleNikChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Remove all non-digit characters
+    const value = e.target.value.replace(/\D/g, '');
+    
+    // Format the number with spaces for readability: XX.XX.XXX.X-XXX.XXX
+    let formattedValue = '';
+    for (let i = 0; i < value.length && i < 16; i++) {
+      if (i === 2 || i === 4 || i === 7 || i === 8 || i === 11) {
+        formattedValue += ' ';
+      }
+      formattedValue += value[i];
+    }
+    
+    setNikValue(formattedValue);
+    
+    // Validate: NPWP must be exactly 16 digits (or 15 digits plus a check digit)
+    if (value.length > 0 && value.length !== 16) {
+      setNikError('NIK (NPWP 16 digit) must be 16 digit');
+    } else {
+      setNikError(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold mb-1">Identity & address</h3>
@@ -34,9 +61,18 @@ export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
       
       {/* NIK & Passport */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="nik">NIK (NPWP 16 digit)</Label>
-          <Input id="nik" placeholder="0000 0000 0000 0000" />
+          <Input 
+            id="nik" 
+            placeholder="0000 0000 0000 0000" 
+            value={nikValue}
+            onChange={handleNikChange}
+            className={nikError ? "border-red-500" : ""}
+          />
+          {nikError && (
+            <p className="text-sm text-red-500">{nikError}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="passportNumber">Passport number</Label>
