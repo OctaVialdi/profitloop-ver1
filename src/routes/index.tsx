@@ -12,6 +12,7 @@ import { itRoutes } from "./itRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import JoinOrganization from "@/pages/auth/JoinOrganization";
 
 export const AppRoutes = () => {
   return (
@@ -21,6 +22,9 @@ export const AppRoutes = () => {
 
       {/* Auth Routes */}
       {authRoutes}
+      
+      {/* Join Organization Route - Public accessible */}
+      <Route path="/join-organization" element={<JoinOrganization />} />
       
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
