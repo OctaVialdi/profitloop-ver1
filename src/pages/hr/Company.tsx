@@ -1,19 +1,27 @@
 
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import CompanyTabs from "@/components/hr/company/CompanyTabs";
+import CompanyProfile from "@/components/hr/company/CompanyProfile";
+import AssetsTab from "@/components/hr/company/AssetsTab";
+import ReprimandTab from "@/components/hr/company/ReprimandTab";
+import FilesTab from "@/components/hr/company/FilesTab";
+import ChangeHistoryTab from "@/components/hr/company/ChangeHistoryTab";
 
 export default function HRCompany() {
+  const [activeTab, setActiveTab] = useState("profile");
+
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Company</CardTitle>
-          <CardDescription>
-            Company structure and organization
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Company organization section.</p>
+        <CardContent className="pt-6">
+          <CompanyTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          
+          {activeTab === "profile" && <CompanyProfile />}
+          {activeTab === "assets" && <AssetsTab />}
+          {activeTab === "reprimand" && <ReprimandTab />}
+          {activeTab === "files" && <FilesTab />}
+          {activeTab === "history" && <ChangeHistoryTab />}
         </CardContent>
       </Card>
     </div>
