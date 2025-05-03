@@ -36,7 +36,7 @@ const OrganizationSetup = () => {
         
         console.log("User is authenticated:", session.user.id);
         
-        // Check if user already has an organization
+        // Check if user already has an organization, either in their profile or created by them
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('organization_id')
@@ -49,6 +49,22 @@ const OrganizationSetup = () => {
         } else if (profileData?.organization_id) {
           console.log("User already has an organization:", profileData.organization_id);
           toast.info("Anda sudah memiliki organisasi.");
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        // Also check if this email has already created an organization
+        const { data: orgCreatorData, error: orgCreatorError } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('creator_email', session.user.email?.toLowerCase())
+          .maybeSingle();
+        
+        if (orgCreatorError) {
+          console.error("Error checking if email has created organization:", orgCreatorError);
+        } else if (orgCreatorData) {
+          console.log("This email has already created an organization:", orgCreatorData.id);
+          toast.info("Email ini sudah digunakan untuk membuat organisasi.");
           navigate("/dashboard", { replace: true });
           return;
         }
@@ -89,8 +105,23 @@ const OrganizationSetup = () => {
       // Show loading toast
       const loadingToastId = toast.loading("Sedang membuat organisasi...");
       
-      console.log("Submitting organization data:", formData);
-      const result = await createOrganization(formData);
+      // Get current user's email
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.dismiss(loadingToastId);
+        toast.error("Sesi tidak ditemukan. Silakan login kembali.");
+        navigate("/auth/login", { replace: true });
+        return;
+      }
+      
+      // Add creator email to form data
+      const formDataWithCreator = {
+        ...formData,
+        creator_email: session.user.email?.toLowerCase()
+      };
+      
+      console.log("Submitting organization data:", formDataWithCreator);
+      const result = await createOrganization(formDataWithCreator);
       
       // Dismiss the loading toast
       toast.dismiss(loadingToastId);

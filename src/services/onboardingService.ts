@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Organization, SubscriptionPlan, UserProfile } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
@@ -100,7 +99,7 @@ export async function checkTrialExpiration(): Promise<void> {
   }
 }
 
-export async function createOrganization(formData: OrganizationFormData) {
+export async function createOrganization(formData: OrganizationFormData & { creator_email?: string }) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -112,7 +111,7 @@ export async function createOrganization(formData: OrganizationFormData) {
     // Get business field options
     const employeeCount = parseInt(formData.employeeCount) || 0;
     
-    // Call the function to create organization with profile
+    // Call the function to create organization with profile and store creator email
     // We need to use 'create_organization_with_profile' as that's what's in the TypeScript types
     const { data: orgData, error } = await supabase.rpc(
       'create_organization_with_profile',
@@ -123,7 +122,8 @@ export async function createOrganization(formData: OrganizationFormData) {
         org_employee_count: employeeCount,
         org_address: formData.address || null,
         org_phone: formData.phone || null,
-        user_role: 'super_admin'
+        user_role: 'super_admin',
+        org_creator_email: formData.creator_email || session.user.email?.toLowerCase() || null
       }
     );
     
