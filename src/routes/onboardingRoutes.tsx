@@ -6,7 +6,7 @@ import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
 export const onboardingRoutes = [
   <Route 
     key="org-setup" 
-    path="/onboarding" 
+    path="/organizations" 
     element={<OrganizationSetup />} 
   />,
   <Route 
