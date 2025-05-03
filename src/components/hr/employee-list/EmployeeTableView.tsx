@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
@@ -18,10 +19,12 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   visibleColumns, 
   columnOrder 
 }) => {
+  const navigate = useNavigate();
+
   // Column label mapping
   const columnLabels: Record<keyof EmployeeColumnState, string> = {
     name: "Employee name",
-    employeeId: "Employee ID", // Added employeeId column
+    employeeId: "Employee ID", 
     email: "Email",
     branch: "Branch",
     organization: "Organization",
@@ -44,18 +47,26 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   
   // Filter the column order to only include visible columns
   const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
+
+  // Handle click on employee name to navigate to employee detail
+  const handleEmployeeClick = (employee: Employee) => {
+    navigate(`/hr/data/employee/${employee.id}`);
+  };
   
   // Render cell content based on column key
   const renderCellContent = (employee: Employee, columnKey: keyof EmployeeColumnState) => {
     if (columnKey === 'name') {
       return (
-        <div className="flex items-center gap-2">
+        <div 
+          className="flex items-center gap-2 cursor-pointer" 
+          onClick={() => handleEmployeeClick(employee)}
+        >
           <Avatar className="h-8 w-8">
             <div className="bg-gray-100 h-full w-full rounded-full flex items-center justify-center">
               {employee.name.charAt(0)}
             </div>
           </Avatar>
-          <div>{employee.name}</div>
+          <div className="text-blue-600 hover:underline">{employee.name}</div>
         </div>
       );
     }
@@ -76,7 +87,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                 </TableHead>
                 
                 {/* Render table headers in the order specified by columnOrder */}
-                {visibleColumnsOrder.map((colKey, index) => {
+                {visibleColumnsOrder.map((colKey) => {
                   // Special styling for the name column to make it sticky
                   const isNameColumn = colKey === 'name';
                   return (
