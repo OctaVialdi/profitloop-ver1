@@ -59,20 +59,24 @@ const OrganizationSetup = () => {
     checkAuth();
   }, [navigate]);
 
-  const handleChange = (field: keyof OrganizationFormData, value: string) => {
+  function handleChange(field: keyof OrganizationFormData, value: string) {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  }
 
-  const validateForm = () => {
+  function validateForm() {
     if (!formData.name.trim()) {
       toast.error("Nama organisasi wajib diisi");
       return false;
     }
     return true;
-  };
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
     
     try {
       // Show loading toast
@@ -106,7 +110,7 @@ const OrganizationSetup = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">

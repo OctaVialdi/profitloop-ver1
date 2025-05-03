@@ -9,8 +9,8 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        <TrialBanner />
         <TrialProtection>
+          <TrialBanner />
           <AppRoutes />
         </TrialProtection>
       </ThemeProvider>

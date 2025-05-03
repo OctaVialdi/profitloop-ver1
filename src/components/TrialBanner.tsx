@@ -19,28 +19,38 @@ const TrialBanner = () => {
   const [isDismissed, setIsDismissed] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
   
   // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
+  const isOnboardingPage = location.pathname === '/onboarding';
   
   // Get trial information
   useEffect(() => {
-    if (isAuthPage || isDismissed) return;
+    if (isAuthPage || isDismissed || isOnboardingPage) return;
     
     const fetchTrialInfo = async () => {
-      // Get current user organization
+      // Check authentication first
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session?.user) return;
+      if (!session?.user) {
+        setIsAuthenticated(false);
+        return;
+      }
       
+      setIsAuthenticated(true);
+      
+      // Get current user organization
       const { data: profileData } = await supabase
         .from('profiles')
         .select('organization_id')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
         
-      if (!profileData?.organization_id) return;
+      if (!profileData?.organization_id) {
+        return;
+      }
       
       setOrganizationId(profileData.organization_id);
       
@@ -49,7 +59,7 @@ const TrialBanner = () => {
         .from('organizations')
         .select('trial_end_date, trial_expired')
         .eq('id', profileData.organization_id)
-        .single();
+        .maybeSingle();
         
       if (!orgData) {
         return;
@@ -77,7 +87,7 @@ const TrialBanner = () => {
     };
     
     fetchTrialInfo();
-  }, [isAuthPage, isDismissed]);
+  }, [isAuthPage, isDismissed, isOnboardingPage]);
   
   // Handle subscription navigation
   const handleSubscribe = () => {
@@ -85,7 +95,8 @@ const TrialBanner = () => {
     setShowSubscriptionDialog(false);
   };
   
-  if (isAuthPage || isDismissed || daysLeft === null || daysLeft > 14) return null;
+  // Don't show anything if not authenticated or on auth pages
+  if (!isAuthenticated || isAuthPage || isOnboardingPage || isDismissed || daysLeft === null) return null;
   
   return (
     <>
