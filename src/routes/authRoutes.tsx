@@ -19,4 +19,3 @@ export const authRoutes = [
 
 // Redirect from root to login
 export const rootRedirect = <Route key="root" path="/" element={<Navigate to="/auth/login" replace />} />;
-
