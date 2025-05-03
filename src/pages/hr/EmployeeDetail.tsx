@@ -1,18 +1,24 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Edit } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Edit, User, Clock, CircleDollarSign, Wallet, FileText, Boxes, BarChart2 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { useEmployees } from "@/hooks/useEmployees";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const EmployeeDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { employees } = useEmployees();
   const [activeTab, setActiveTab] = useState("basic-info");
+
+  // Collapsible sections state
+  const [openTimeManagement, setOpenTimeManagement] = useState(false);
+  const [openPayroll, setOpenPayroll] = useState(false);
+  const [openFinance, setOpenFinance] = useState(false);
+  const [openHistory, setOpenHistory] = useState(false);
 
   // Find the employee with the matching ID
   const employee = employees.find(emp => emp.id === id);
@@ -56,52 +62,136 @@ const EmployeeDetail = () => {
 
           <Card>
             <div className="py-2">
-              <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-medium text-primary">
-                General
-              </div>
-              <div className="pl-6 space-y-1">
-                <div className={`px-4 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab.startsWith('basic-info') ? 'text-primary' : 'text-gray-700'}`}
-                  onClick={() => setActiveTab('basic-info')}>
-                  Personal
+              {/* General option */}
+              <div 
+                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab.startsWith('basic-info') ? 'bg-gray-50' : ''} flex items-center justify-between`}
+                onClick={() => setActiveTab('basic-info')}
+              >
+                <div className="flex items-center">
+                  <User size={16} className="mr-2" />
+                  <span>General</span>
                 </div>
-                <div className={`px-4 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'employment' ? 'text-primary' : 'text-gray-700'}`}
-                  onClick={() => setActiveTab('employment')}>
-                  Employment
+                <ChevronRight size={16} />
+              </div>
+
+              {/* Time Management with dropdown */}
+              <Collapsible open={openTimeManagement} onOpenChange={setOpenTimeManagement}>
+                <CollapsibleTrigger className="w-full">
+                  <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'time-management' ? 'bg-gray-50' : ''} flex items-center justify-between`}>
+                    <div className="flex items-center">
+                      <Clock size={16} className="mr-2" />
+                      <span>Time Management</span>
+                    </div>
+                    {openTimeManagement ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('attendance')}>
+                    Attendance
+                  </div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('timeoff')}>
+                    Timeoff
+                  </div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('overtime')}>
+                    Overtime
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Payroll with dropdown */}
+              <Collapsible open={openPayroll} onOpenChange={setOpenPayroll}>
+                <CollapsibleTrigger className="w-full">
+                  <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'payroll' ? 'bg-gray-50' : ''} flex items-center justify-between`}>
+                    <div className="flex items-center">
+                      <CircleDollarSign size={16} className="mr-2 text-blue-500" />
+                      <span className={openPayroll ? "font-medium text-blue-600" : ""}>Payroll</span>
+                    </div>
+                    {openPayroll ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-blue-600" onClick={() => setActiveTab('payroll-info')}>
+                    Payroll Info
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Finance with dropdown */}
+              <Collapsible open={openFinance} onOpenChange={setOpenFinance}>
+                <CollapsibleTrigger className="w-full">
+                  <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'finance' ? 'bg-gray-50' : ''} flex items-center justify-between`}>
+                    <div className="flex items-center">
+                      <Wallet size={16} className="mr-2" />
+                      <span>Finance</span>
+                    </div>
+                    {openFinance ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('reimbursement')}>
+                    Reimbursement
+                  </div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('loan')}>
+                    Loan
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Files option */}
+              <div 
+                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'files' ? 'bg-gray-50' : ''} flex items-center justify-between`}
+                onClick={() => setActiveTab('files')}
+              >
+                <div className="flex items-center">
+                  <FileText size={16} className="mr-2" />
+                  <span>Files</span>
                 </div>
-                <div className={`px-4 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'education' ? 'text-primary' : 'text-gray-700'}`}
-                  onClick={() => setActiveTab('education')}>
-                  Education & Experience
+                <ChevronRight size={16} />
+              </div>
+
+              {/* Assets option */}
+              <div 
+                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'assets' ? 'bg-gray-50' : ''} flex items-center justify-between`}
+                onClick={() => setActiveTab('assets')}
+              >
+                <div className="flex items-center">
+                  <Boxes size={16} className="mr-2" />
+                  <span>Assets</span>
                 </div>
+                <ChevronRight size={16} />
               </div>
-              <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'time-management' ? 'text-primary font-medium' : 'text-gray-700'}`}
-                onClick={() => setActiveTab('time-management')}>
-                Time Management
-              </div>
-              <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'payroll' ? 'text-primary font-medium' : 'text-gray-700'}`}
-                onClick={() => setActiveTab('payroll')}>
-                Payroll
-              </div>
-              <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'finance' ? 'text-primary font-medium' : 'text-gray-700'}`}
-                onClick={() => setActiveTab('finance')}>
-                Finance
-              </div>
-              <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'files' ? 'text-primary font-medium' : 'text-gray-700'}`}
-                onClick={() => setActiveTab('files')}>
-                Files
-              </div>
-              <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'assets' ? 'text-primary font-medium' : 'text-gray-700'}`}
-                onClick={() => setActiveTab('assets')}>
-                Assets
-              </div>
-              <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'history' ? 'text-primary font-medium' : 'text-gray-700'}`}
-                onClick={() => setActiveTab('history')}>
-                History
-              </div>
+
+              {/* History with dropdown */}
+              <Collapsible open={openHistory} onOpenChange={setOpenHistory}>
+                <CollapsibleTrigger className="w-full">
+                  <div className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'history' ? 'bg-gray-50' : ''} flex items-center justify-between`}>
+                    <div className="flex items-center">
+                      <BarChart2 size={16} className="mr-2" />
+                      <span>History</span>
+                    </div>
+                    {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('adjustment')}>
+                    Adjustment
+                  </div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('transfer')}>
+                    Transfer
+                  </div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('npp')}>
+                    NPP
+                  </div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer text-gray-700" onClick={() => setActiveTab('reprimand')}>
+                    Reprimand
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </Card>
         </div>
 
-        {/* Main content area with tabs */}
+        {/* Main content area */}
         <div className="flex-1">
           {activeTab === 'basic-info' && (
             <Card>
@@ -410,6 +500,33 @@ const EmployeeDetail = () => {
             </Card>
           )}
 
+          {/* Display generic content for dropdown subitems */}
+          {['attendance', 'timeoff', 'overtime', 'payroll-info', 'reimbursement', 'loan', 'adjustment', 'transfer', 'npp', 'reprimand'].includes(activeTab) && (
+            <Card>
+              <div className="p-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold">{activeTab.split('-')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ')}</h2>
+                </div>
+                <div className="text-center py-12">
+                  <div className="mx-auto w-24 h-24 mb-4">
+                    <img src="/placeholder.svg" alt="No data" className="w-full h-full" />
+                  </div>
+                  <h3 className="text-lg font-medium">There is no data to display</h3>
+                  <p className="text-gray-500 mt-2">Your {activeTab.replace('-', ' ')} data will be displayed here.</p>
+                  
+                  <div className="mt-6 flex justify-center gap-3">
+                    <Button size="sm">Add new</Button>
+                    <Button size="sm" variant="outline">Import</Button>
+                    <Button size="sm" variant="outline">Export</Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Display for other top-level menu items */}
           {(activeTab === 'time-management' || activeTab === 'payroll' || activeTab === 'finance' || 
             activeTab === 'files' || activeTab === 'assets' || activeTab === 'history') && (
             <Card>
