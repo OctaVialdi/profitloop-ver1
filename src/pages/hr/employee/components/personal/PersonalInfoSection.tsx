@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -22,8 +23,8 @@ import {
 } from "@/components/ui/popover";
 
 interface PersonalInfoSectionProps {
-  formValues: Partial<FormValues>;
-  setFormValues: React.Dispatch<React.SetStateAction<Partial<FormValues>>>;
+  formValues: FormValues;
+  setFormValues: React.Dispatch<React.SetStateAction<FormValues>>;
   birthdate: Date | undefined;
   setBirthdate: React.Dispatch<React.SetStateAction<Date | undefined>>;
 }

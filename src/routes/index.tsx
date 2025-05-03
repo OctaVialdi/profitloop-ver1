@@ -10,7 +10,6 @@ import { operationsRoutes } from "./operationsRoutes";
 import { marketingRoutes } from "./marketingRoutes";
 import { itRoutes } from "./itRoutes";
 import { settingsRoutes } from "./settingsRoutes";
-import { myInfoRoutes } from "./myInfoRoutes";
 
 export const AppRoutes = () => {
   return (
@@ -29,9 +28,6 @@ export const AppRoutes = () => {
 
       {/* HR Routes */}
       {hrRoutes}
-
-      {/* My Info Routes */}
-      {myInfoRoutes}
 
       {/* Finance Routes */}
       {financeRoutes}

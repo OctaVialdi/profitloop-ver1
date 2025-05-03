@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -6,12 +7,10 @@ export interface Employee {
   name: string;
   email: string;
   mobilePhone?: string;
-  phone?: string; // Added phone property
   birthPlace?: string;
   birthDate?: string;
   gender?: string;
   maritalStatus?: string;
-  bloodType?: string; // Added bloodType property
   religion?: string;
   address?: string;
   jobPosition?: string;
@@ -38,12 +37,10 @@ export function useEmployees() {
       name: "Adam Johnson",
       email: "adam.johnson@example.com",
       mobilePhone: "0812-3456-7890",
-      phone: "021-123-4567", // Added phone
       birthPlace: "Jakarta",
       birthDate: "15 Jan 1992",
       gender: "Male",
       maritalStatus: "Married",
-      bloodType: "O", // Added bloodType
       religion: "Islam",
       address: "Jl. Sudirman No. 123, Jakarta",
       jobPosition: "HR Manager",
