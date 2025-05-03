@@ -20,72 +20,77 @@ serve(async (req) => {
   
   try {
     const now = new Date();
+    console.log("Running check-trial-expiration at", now.toISOString());
     
-    // Fetch organizations with expired trials - notice we check if trial_end_date is in the past
-    // regardless of the trial_expired flag
+    // Fetch organizations with expired trials - both by date and by flag
     const { data: expiredTrials, error } = await supabase
       .from('organizations')
-      .select('id, name, subscription_plan_id')
-      .lt('trial_end_date', now.toISOString())
-      .eq('trial_expired', false);
+      .select('id, name, subscription_plan_id, trial_expired, trial_end_date')
+      .or(`trial_expired.eq.true,and(trial_end_date.lte.${now.toISOString()},trial_expired.is.null)`);
     
     if (error) {
+      console.error("Error fetching expired trials:", error);
       throw error;
     }
     
-    console.log(`Found ${expiredTrials?.length || 0} organizations with newly expired trials`);
+    console.log(`Found ${expiredTrials?.length || 0} organizations with expired trials`);
     
     // Process expired trials
+    let updatedOrgs = 0;
     if (expiredTrials && expiredTrials.length > 0) {
       for (const org of expiredTrials) {
-        console.log(`Processing expired trial for organization: ${org.id} (${org.name})`);
-        
-        // Get organization admins to notify them
-        const { data: admins } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .eq('organization_id', org.id)
-          .in('role', ['super_admin', 'admin']);
+        // Only process orgs that haven't been marked as expired but have an expired date
+        if (!org.trial_expired && new Date(org.trial_end_date) <= now) {
+          console.log(`Processing expired trial for organization: ${org.id} (${org.name})`);
+          updatedOrgs++;
           
-        console.log(`Found ${admins?.length || 0} admins to notify for organization ${org.id}`);
-        
-        // Get basic plan ID for default plan after trial
-        const basicPlanId = await getBasicPlanId(supabase);
-        
-        // Mark the organization as expired
-        const { error: updateError } = await supabase
-          .from('organizations')
-          .update({ 
-            trial_expired: true,
-            // If they don't have a subscription plan, set to the basic free plan
-            subscription_plan_id: org.subscription_plan_id || basicPlanId
-          })
-          .eq('id', org.id);
+          // Get organization admins to notify them
+          const { data: admins } = await supabase
+            .from('profiles')
+            .select('id, email')
+            .eq('organization_id', org.id)
+            .in('role', ['super_admin', 'admin']);
+            
+          console.log(`Found ${admins?.length || 0} admins to notify for organization ${org.id}`);
           
-        if (updateError) {
-          console.error(`Error updating organization ${org.id}:`, updateError);
-        } else {
-          console.log(`Marked organization ${org.id} as trial expired`);
+          // Get basic plan ID for default plan after trial
+          const basicPlanId = await getBasicPlanId(supabase);
           
-          // Create notifications for all organization admins
-          if (admins && admins.length > 0) {
-            for (const admin of admins) {
-              // Add a notification in the notifications table
-              const { error: notificationError } = await supabase
-                .from('notifications')
-                .insert({
-                  user_id: admin.id,
-                  organization_id: org.id,
-                  title: 'Masa Trial Berakhir',
-                  message: `Masa trial untuk organisasi ${org.name} telah berakhir. Silakan berlangganan untuk terus menggunakan semua fitur premium.`,
-                  type: 'warning',
-                  action_url: '/subscription'
-                });
-                
-              if (notificationError) {
-                console.error(`Error creating notification for admin ${admin.email}:`, notificationError);
-              } else {
-                console.log(`Created notification for admin ${admin.email}`);
+          // Mark the organization as expired
+          const { error: updateError } = await supabase
+            .from('organizations')
+            .update({ 
+              trial_expired: true,
+              // If they don't have a subscription plan, set to the basic free plan
+              subscription_plan_id: org.subscription_plan_id || basicPlanId
+            })
+            .eq('id', org.id);
+            
+          if (updateError) {
+            console.error(`Error updating organization ${org.id}:`, updateError);
+          } else {
+            console.log(`Marked organization ${org.id} as trial expired`);
+            
+            // Create notifications for all organization admins
+            if (admins && admins.length > 0) {
+              for (const admin of admins) {
+                // Add a notification in the notifications table
+                const { error: notificationError } = await supabase
+                  .from('notifications')
+                  .insert({
+                    user_id: admin.id,
+                    organization_id: org.id,
+                    title: 'Masa Trial Berakhir',
+                    message: `Masa trial untuk organisasi ${org.name} telah berakhir. Silakan berlangganan untuk terus menggunakan semua fitur premium.`,
+                    type: 'warning',
+                    action_url: '/subscription'
+                  });
+                  
+                if (notificationError) {
+                  console.error(`Error creating notification for admin ${admin.email}:`, notificationError);
+                } else {
+                  console.log(`Created notification for admin ${admin.email}`);
+                }
               }
             }
           }
@@ -95,20 +100,29 @@ serve(async (req) => {
     
     // Also update any organization where trial_end_date is in the past but trial_expired is still false
     // This handles cases where the function wasn't triggered at the exact time
-    const { error: manualUpdateError } = await supabase
+    const { data: updateResults, error: manualUpdateError } = await supabase
       .from('organizations')
       .update({ trial_expired: true })
       .lt('trial_end_date', now.toISOString())
-      .eq('trial_expired', false);
+      .eq('trial_expired', false)
+      .select('id, name');
       
     if (manualUpdateError) {
       console.error("Error during manual update of expired trials:", manualUpdateError);
+    } else {
+      if (updateResults && updateResults.length > 0) {
+        console.log(`Updated ${updateResults.length} organizations with expired trials:`, updateResults);
+        updatedOrgs += updateResults.length;
+      } else {
+        console.log("No additional organizations needed updates");
+      }
     }
     
     return new Response(
       JSON.stringify({ 
         success: true, 
-        processed: expiredTrials?.length || 0
+        processed: updatedOrgs,
+        timestamp: now.toISOString()
       }),
       { 
         headers: { 

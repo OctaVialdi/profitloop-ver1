@@ -76,7 +76,7 @@
   }
 }
 
-/* Trial expired styles */
+/* Trial expired styles - stronger blur and overlay */
 body.trial-expired #root > div:not(.trial-exempt) {
   filter: blur(5px);
   pointer-events: none;

@@ -2,6 +2,7 @@
 import { useState, useEffect, ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { checkAndUpdateTrialStatus } from "@/services/subscriptionService";
 
 interface TrialProtectionProps {
   children: ReactNode;
@@ -97,7 +98,7 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
       // Check if trial has expired based on date comparison
       const trialEndDate = orgData?.trial_end_date ? new Date(orgData.trial_end_date) : null;
       const now = new Date();
-      const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
+      const isTrialExpiredByDate = trialEndDate && trialEndDate <= now;
       
       console.log("Trial status check:", {
         trialEndDate,
@@ -106,20 +107,32 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
         flagValue: orgData?.trial_expired
       });
       
-      // Instead of redirecting for expired trials, we'll let the TrialBanner component
-      // handle showing the modal, so we just need to set the expired flag in the database
-      if (isTrialExpiredByDate && !orgData?.trial_expired) {
-        console.log("Updating trial_expired flag in database");
-        await supabase
-          .from('organizations')
-          .update({ trial_expired: true })
-          .eq('id', profileData.organization_id);
+      // If trial is expired (by date or by flag), but not on subscription page,
+      // apply the blur effect
+      if ((isTrialExpiredByDate || orgData?.trial_expired) && !location.pathname.startsWith('/subscription')) {
+        console.log("Trial expired, applying blur effect");
+        document.body.classList.add('trial-expired');
+        
+        // Update trial_expired flag in database if needed
+        if (isTrialExpiredByDate && !orgData?.trial_expired) {
+          await checkAndUpdateTrialStatus(profileData.organization_id);
+        }
+      } else {
+        // Remove blur effect if not expired or on subscription page
+        document.body.classList.remove('trial-expired');
       }
       
       setIsLoading(false);
     };
     
     checkTrialStatus();
+    
+    // Clean up when unmounting
+    return () => {
+      if (!isPathAllowed() && !location.pathname.startsWith('/subscription')) {
+        document.body.classList.remove('trial-expired');
+      }
+    };
   }, [location.pathname, navigate]);
   
   if (isLoading) {

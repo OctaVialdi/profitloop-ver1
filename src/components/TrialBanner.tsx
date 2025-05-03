@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -31,145 +30,163 @@ const TrialBanner = () => {
   const isOnboardingPage = location.pathname === '/onboarding';
   const isSubscriptionPage = location.pathname === '/subscription';
   
-  // Update countdown every second when we have a trial end date
+  // Force check trial expiration status immediately on mount
   useEffect(() => {
-    if (!trialEndDate || isDismissed || isAuthPage || isOnboardingPage) return;
-
-    const updateCountdown = () => {
-      const now = new Date();
-      const diffTime = trialEndDate.getTime() - now.getTime();
-      
-      if (diffTime <= 0) {
-        setCountdownString('0 hari 00:00:00');
-        setDaysLeft(0);
-        setIsTrialExpired(true);
-        return;
-      }
-      
-      // Calculate days, hours, minutes, seconds
-      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
-      
-      // Format as "X hari HH:MM:SS"
-      const formattedTime = `${days} hari ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      setCountdownString(formattedTime);
-      setDaysLeft(days);
-      setIsTrialExpired(false);
-    };
+    if (isAuthPage || isOnboardingPage || isSubscriptionPage) return;
     
-    // Initial update
-    updateCountdown();
+    // Set a flag to track if this is the first run to avoid multiple setTimeouts
+    let isFirstRun = true;
     
-    // Set up interval for updating the countdown
-    const interval = setInterval(updateCountdown, 1000);
-    
-    // Clean up on unmount
-    return () => clearInterval(interval);
-  }, [trialEndDate, isDismissed, isAuthPage, isOnboardingPage]);
-  
-  // Get trial information
-  useEffect(() => {
-    if (isAuthPage || isDismissed || isOnboardingPage) return;
-    
-    const fetchTrialInfo = async () => {
-      // Check authentication first
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        setIsAuthenticated(false);
-        return;
-      }
-      
-      setIsAuthenticated(true);
-      
-      // Get current user organization
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('id', session.user.id)
-        .maybeSingle();
+    const checkTrialExpiration = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
-      if (!profileData?.organization_id) {
-        return;
-      }
-      
-      setOrganizationId(profileData.organization_id);
-      
-      // Get organization trial information
-      const { data: orgData } = await supabase
-        .from('organizations')
-        .select('trial_end_date, trial_expired')
-        .eq('id', profileData.organization_id)
-        .maybeSingle();
-        
-      if (!orgData) {
-        return;
-      }
-      
-      // Check if trial has expired based on date
-      const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
-      const now = new Date();
-      const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
-      
-      if (orgData.trial_expired || isTrialExpiredByDate) {
-        setTrialEndDate(trialEndDate);
-        setDaysLeft(0);
-        setCountdownString('0 hari 00:00:00');
-        setIsTrialExpired(true);
-        
-        // Show subscription dialog on non-subscription pages when trial has expired
-        if (!isSubscriptionPage) {
-          setShowSubscriptionDialog(true);
-          
-          // Add blur class to body when trial has expired
-          document.body.classList.add('trial-expired');
+        if (!session?.user) {
+          setIsAuthenticated(false);
+          return;
         }
         
-        // If the trial is expired by date but not flagged as expired, update the flag
-        if (isTrialExpiredByDate && !orgData.trial_expired) {
-          console.log("Updating trial_expired flag to true");
+        setIsAuthenticated(true);
+        
+        // Get user's organization
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', session.user.id)
+          .maybeSingle();
+          
+        if (!profileData?.organization_id) return;
+        
+        setOrganizationId(profileData.organization_id);
+        
+        // Get organization details
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('trial_end_date, trial_expired')
+          .eq('id', profileData.organization_id)
+          .maybeSingle();
+          
+        if (!orgData) return;
+        
+        // Set trial end date
+        const endDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
+        setTrialEndDate(endDate);
+        
+        // Check if trial has expired
+        const now = new Date();
+        const isExpiredByDate = endDate && endDate <= now; 
+        const isExpiredByFlag = orgData.trial_expired === true;
+        
+        console.log("Trial expiration check:", {
+          endDate, 
+          now,
+          isExpiredByDate,
+          isExpiredByFlag,
+          isPastTrialDate: endDate && now > endDate
+        });
+        
+        // If trial is expired by date but not by flag, update the flag
+        if (isExpiredByDate && !isExpiredByFlag) {
+          console.log("Trial is expired by date but not by flag, updating...");
           await supabase
             .from('organizations')
             .update({ trial_expired: true })
             .eq('id', profileData.organization_id);
+            
+          // Also trigger the edge function to process trial expiration
+          try {
+            await supabase.functions.invoke('check-trial-expiration');
+          } catch (err) {
+            console.error("Failed to invoke check-trial-expiration:", err);
+          }
         }
         
-        return;
+        // If trial is expired (by date or flag), show expiry dialog and apply blur
+        if (isExpiredByDate || isExpiredByFlag) {
+          setIsTrialExpired(true);
+          setDaysLeft(0);
+          setCountdownString('0 hari 00:00:00');
+          
+          if (!isSubscriptionPage) {
+            setShowSubscriptionDialog(true);
+            document.body.classList.add('trial-expired');
+          }
+        } else if (endDate) {
+          // Trial not expired, calculate days left
+          const diffTime = endDate.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          setDaysLeft(diffDays > 0 ? diffDays : 0);
+          setIsTrialExpired(false);
+        }
+        
+        // If this is first run and we're not on a special page and the trial is active, 
+        // set up the countdown interval
+        if (isFirstRun && !isAuthPage && !isOnboardingPage && !isTrialExpired) {
+          isFirstRun = false;
+          startCountdown();
+        }
+      } catch (error) {
+        console.error("Error checking trial expiration:", error);
       }
+    };
+    
+    // Start countdown timer
+    const startCountdown = () => {
+      if (!trialEndDate) return;
       
-      if (trialEndDate) {
-        setTrialEndDate(trialEndDate);
+      const updateCountdown = () => {
+        if (!trialEndDate) return;
+        
+        const now = new Date();
         const diffTime = trialEndDate.getTime() - now.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        setDaysLeft(diffDays > 0 ? diffDays : 0);
-        setIsTrialExpired(diffDays <= 0);
         
-        // Trial has ended but not marked as expired yet
-        if (diffDays <= 0 && !isSubscriptionPage) {
-          setShowSubscriptionDialog(true);
-          document.body.classList.add('trial-expired');
+        if (diffTime <= 0) {
+          setCountdownString('0 hari 00:00:00');
+          setDaysLeft(0);
+          setIsTrialExpired(true);
           
-          // Update the trial_expired flag
-          console.log("Trial has ended, updating trial_expired flag");
-          await supabase
-            .from('organizations')
-            .update({ trial_expired: true })
-            .eq('id', profileData.organization_id);
+          // Immediately apply blur effect and show modal when countdown reaches zero
+          if (!isSubscriptionPage) {
+            setShowSubscriptionDialog(true);
+            document.body.classList.add('trial-expired');
+          }
+          return;
         }
-      }
+        
+        // Calculate days, hours, minutes, seconds
+        const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+        
+        // Format as "X hari HH:MM:SS"
+        const formattedTime = `${days} hari ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        setCountdownString(formattedTime);
+        setDaysLeft(days);
+      };
+      
+      // Initial update
+      updateCountdown();
+      
+      // Set interval for countdown
+      const interval = setInterval(updateCountdown, 1000);
+      
+      return () => clearInterval(interval);
     };
     
-    fetchTrialInfo();
+    // Initial check on mount
+    checkTrialExpiration();
     
-    // Cleanup function
+    // Check again every minute in case the trial expires while using the app
+    const intervalCheck = setInterval(checkTrialExpiration, 60000);
+    
     return () => {
+      clearInterval(intervalCheck);
       if (isTrialExpired && !isSubscriptionPage) {
         document.body.classList.remove('trial-expired');
       }
     };
-  }, [isAuthPage, isDismissed, isOnboardingPage, isSubscriptionPage, isTrialExpired]);
+  }, [isAuthPage, isOnboardingPage, isSubscriptionPage]);
   
   // Handle subscription navigation
   const handleSubscribe = () => {
