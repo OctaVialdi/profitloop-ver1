@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmployeeActions } from "../EmployeeActions";
 import { Employee } from './types';
 import { EmployeeColumnState, ColumnOrder } from '../EmployeeColumnManager';
@@ -76,9 +77,11 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   };
 
   return (
-    <div className="border rounded-md overflow-hidden">
-      <div className="w-full overflow-auto" style={{ maxHeight: "500px" }}>
-        <div className="min-w-max">
+    <div className="border rounded-md">
+      {/* Replace the nested divs with ScrollArea for better scrolling */}
+      <ScrollArea className="h-[500px]" type="always">
+        {/* Add another ScrollArea for horizontal scrolling */}
+        <ScrollArea orientation="horizontal">
           <Table>
             <TableHeader className="sticky top-0 z-20 bg-background">
               <TableRow>
@@ -138,8 +141,8 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
               )}
             </TableBody>
           </Table>
-        </div>
-      </div>
+        </ScrollArea>
+      </ScrollArea>
     </div>
   );
 };
