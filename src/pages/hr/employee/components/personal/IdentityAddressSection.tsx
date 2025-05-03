@@ -35,14 +35,8 @@ export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
     // Remove all non-digit characters
     const value = e.target.value.replace(/\D/g, '');
     
-    // Format the number with hyphens for readability: 1234-1234-1234-1234
-    let formattedValue = '';
-    for (let i = 0; i < value.length && i < 16; i++) {
-      if (i === 4 || i === 8 || i === 12) {
-        formattedValue += '-';
-      }
-      formattedValue += value[i];
-    }
+    // Just use the digits without formatting
+    let formattedValue = value.substring(0, 16);
     
     setNikValue(formattedValue);
     
@@ -65,7 +59,7 @@ export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
           <Label htmlFor="nik">NIK (NPWP 16 digit)</Label>
           <Input 
             id="nik" 
-            placeholder="1234-1234-1234-1234" 
+            placeholder="1234123412341234" 
             value={nikValue}
             onChange={handleNikChange}
             className={nikError ? "border-red-500" : ""}
