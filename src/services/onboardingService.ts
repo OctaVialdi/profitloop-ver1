@@ -109,12 +109,22 @@ export async function createOrganization(formData: OrganizationFormData) {
       return false;
     }
     
+    // Fetch the user's actual creation timestamp from auth.users
+    // Using the admin API we can't directly access auth.users, so we'll use a custom approach
+    // Get the user's metadata which includes created_at
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error("Error fetching user data:", userError);
+      return false;
+    }
+    
     // Get business field options
     const employeeCount = parseInt(formData.employeeCount) || 0;
     
-    // Call the function to create organization with profile
+    // Call the function to create organization with profile and pass the user's created_at timestamp
     const { data: orgData, error } = await supabase.rpc(
-      'create_organization_with_profile',
+      'create_organization_with_profile_sync_timestamp',
       {
         user_id: session.user.id,
         org_name: formData.name.trim(),

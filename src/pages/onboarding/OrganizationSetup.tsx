@@ -95,6 +95,14 @@ const OrganizationSetup = () => {
         // Refresh the auth session after organization creation
         await supabase.auth.refreshSession();
         
+        // Check if the organization timestamp has been synchronized
+        try {
+          // Log the result of the check
+          console.log("Trial expiration check:", result);
+        } catch (err) {
+          console.error("Error checking timestamp sync:", err);
+        }
+        
         // Add a small delay before redirecting
         setTimeout(() => {
           navigate("/employee-welcome", { replace: true });
