@@ -17,6 +17,7 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -39,14 +40,48 @@ export const ProtectedRoute = ({
         if (data.session && isMounted) {
           console.log("User is authenticated via session check");
           setAuthenticated(true);
+          
+          // Check for profile record
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.session.user.id)
+            .maybeSingle();
+            
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+          }
+          
+          // If user has a profile, set hasProfile to true
+          setHasProfile(!!profileData);
+          
+          // If no profile, create one
+          if (!profileData) {
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.session.user.id,
+                email: data.session.user.email,
+                full_name: data.session.user.user_metadata?.full_name || null
+              });
+              
+            if (insertError) {
+              console.error("Error creating profile:", insertError);
+            } else {
+              console.log("Profile created during protected route check");
+              setHasProfile(true);
+            }
+          }
         } else if (isMounted) {
           console.log("No active session found");
           setAuthenticated(false);
+          setHasProfile(false);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
         if (isMounted) {
           setAuthenticated(false);
+          setHasProfile(false);
           // Show friendly error message
           toast.error("Terjadi kesalahan saat memeriksa autentikasi");
         }
@@ -69,7 +104,16 @@ export const ProtectedRoute = ({
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
           console.log("Auth state changed:", event);
           setAuthenticated(!!session);
-          setLoading(false);
+          
+          // Reset loading when auth state changes to trigger a full recheck
+          if (event === 'SIGNED_IN') {
+            setLoading(true);
+            setTimeout(() => {
+              checkAuth();
+            }, 300); // Small delay to allow auth state to settle
+          } else {
+            setLoading(false);
+          }
         }
       }
     );

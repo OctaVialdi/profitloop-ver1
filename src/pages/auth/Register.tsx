@@ -88,6 +88,23 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
+        // Create a profile record explicitly to ensure it exists
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: email.toLowerCase(),
+            full_name: fullName
+          })
+          .select();
+          
+        if (profileError && !profileError.message.includes('duplicate key')) {
+          console.error("Error creating profile:", profileError);
+          // We continue anyway, as the trigger might create the profile
+        } else {
+          console.log("Profile created successfully");
+        }
+        
         // Always redirect to verification page, never skip this step
         toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
         navigate("/auth/verification-sent", { 

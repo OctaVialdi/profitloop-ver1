@@ -50,6 +50,11 @@ export function useAuth() {
         throw error;
       }
       
+      // After successful login, make sure profile exists
+      if (data.user) {
+        await ensureProfileExists(data.user);
+      }
+      
       return { data, error: null };
     } catch (error: any) {
       console.error("Authentication error:", error);
@@ -67,6 +72,42 @@ export function useAuth() {
       return { data: null, error };
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Ensure profile exists for user
+  const ensureProfileExists = async (user: User) => {
+    try {
+      // Check if profile exists
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+        
+      if (profileError) {
+        console.error("Error checking profile:", profileError);
+        return;
+      }
+      
+      // If profile doesn't exist, create it
+      if (!existingProfile) {
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || null
+          });
+          
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+        } else {
+          console.log("Profile created successfully");
+        }
+      }
+    } catch (error) {
+      console.error("Error ensuring profile exists:", error);
     }
   };
 
@@ -90,6 +131,7 @@ export function useAuth() {
     session,
     signInWithEmailPassword,
     signOut,
-    setLoginError
+    setLoginError,
+    ensureProfileExists
   };
 }
