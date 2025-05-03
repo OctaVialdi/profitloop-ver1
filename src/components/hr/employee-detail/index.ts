@@ -11,3 +11,10 @@ export * from "./FilesSection";
 export * from "./AssetsSection";
 export * from "./HistorySection";
 export * from "./DefaultSection";
+
+// Export editable sections
+export * from "./EditablePersonalSection";
+export * from "./EditableEmploymentSection";
+export * from "./EditableFilesSection";
+export * from "./EditableAssetsSection";
+export * from "./EditableEducationSection";
