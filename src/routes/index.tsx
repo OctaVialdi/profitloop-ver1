@@ -10,6 +10,7 @@ import { marketingRoutes } from "./marketingRoutes";
 import { itRoutes } from "./itRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
+import OrganizationSetup from "@/pages/onboarding/OrganizationSetup";
 import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
 
 export const AppRoutes = () => {
@@ -21,7 +22,8 @@ export const AppRoutes = () => {
       {/* Auth Routes */}
       {authRoutes}
       
-      {/* Employee welcome page */}
+      {/* Manual routes that were previously in onboardingRoutes */}
+      <Route path="/onboarding" element={<OrganizationSetup />} />
       <Route path="/employee-welcome" element={<EmployeeWelcome />} />
 
       {/* Dashboard Routes */}

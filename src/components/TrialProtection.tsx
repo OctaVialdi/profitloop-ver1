@@ -23,6 +23,7 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
   
   // Paths that need authentication but are not under trial protection
   const authPaths = [
+    "/onboarding",
     "/employee-welcome"
   ];
   
@@ -60,7 +61,7 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
       
       setIsAuthenticated(true);
       
-      // If on auth path but authenticated, handle separately
+      // If on auth path but authenticated, handle separately (e.g., onboarding)
       if (isAuthPath()) {
         setIsLoading(false);
         return;
@@ -80,10 +81,10 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
         .maybeSingle();
         
       if (!profileData?.organization_id) {
-        // No organization, redirect to employee welcome
-        console.log("User has no organization, redirecting to employee welcome");
+        // No organization, redirect to onboarding
+        console.log("User has no organization, redirecting to onboarding");
         setIsLoading(false);
-        navigate("/employee-welcome", { replace: true });
+        navigate("/onboarding", { replace: true });
         return;
       }
       
