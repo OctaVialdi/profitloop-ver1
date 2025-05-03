@@ -112,7 +112,10 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
         
         {/* Body - Scrollable horizontally if needed */}
         <div className="max-h-[400px] overflow-hidden">
-          <ScrollArea className="h-full w-full" type={needsHorizontalScroll ? "always" : "auto"}>
+          <ScrollArea 
+            className="h-full w-full" 
+            type={needsHorizontalScroll ? "always" : "auto"}
+          >
             <div className={needsHorizontalScroll ? "min-w-max" : "w-full"}>
               <Table>
                 <TableBody>
