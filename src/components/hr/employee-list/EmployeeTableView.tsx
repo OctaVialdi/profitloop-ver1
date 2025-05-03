@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -49,8 +48,30 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   // Filter the column order to only include visible columns
   const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
   
-  // Check if we need horizontal scrolling (more than 7 visible columns)
-  const needsHorizontalScroll = visibleColumnsOrder.length > 7;
+  // Limit to 7 visible columns and ensure "name" is always included
+  const limitedVisibleColumnsOrder = (() => {
+    // If 7 or fewer columns are visible, use all of them
+    if (visibleColumnsOrder.length <= 7) {
+      return visibleColumnsOrder;
+    }
+    
+    // Otherwise, limit to 7 columns, ensuring "name" is always included
+    const nameIndex = visibleColumnsOrder.indexOf('name');
+    if (nameIndex === -1) {
+      // If name is not in the visible columns, just take the first 7
+      return visibleColumnsOrder.slice(0, 7);
+    } else {
+      // Remove "name" from the array for now
+      const withoutName = [...visibleColumnsOrder];
+      withoutName.splice(nameIndex, 1);
+      
+      // Take the first 6 items plus "name"
+      return ['name', ...withoutName.slice(0, 6)];
+    }
+  })();
+  
+  // Check if we need horizontal scrolling (more columns exist than are shown)
+  const needsHorizontalScroll = visibleColumnsOrder.length > limitedVisibleColumnsOrder.length;
 
   // Handle click on employee name to navigate to employee detail with new route pattern
   const handleEmployeeClick = (employee: Employee) => {
@@ -100,7 +121,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                     <Checkbox />
                   </TableHead>
                   
-                  {visibleColumnsOrder.map((colKey) => {
+                  {limitedVisibleColumnsOrder.map((colKey) => {
                     const isNameColumn = colKey === 'name';
                     const columnWidth = getColumnWidth(colKey);
                     return (
@@ -125,7 +146,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                       <Checkbox />
                     </TableCell>
                     
-                    {visibleColumnsOrder.map((colKey) => {
+                    {limitedVisibleColumnsOrder.map((colKey) => {
                       const isNameColumn = colKey === 'name';
                       const columnWidth = getColumnWidth(colKey);
                       return (
@@ -145,7 +166,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                 ))}
                 {data.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={visibleColumnsOrder.length + 2} className="text-center py-8">
+                    <TableCell colSpan={limitedVisibleColumnsOrder.length + 2} className="text-center py-8">
                       No employee data found
                     </TableCell>
                   </TableRow>
