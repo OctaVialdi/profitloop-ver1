@@ -1,6 +1,5 @@
-
 import { useSearchParams } from "react-router-dom";
-import { useMagicLinkProcess } from "@/hooks/useMagicLinkProcess";
+import { useMagicLink } from "@/hooks/auth/useMagicLink";
 import LoadingState from "@/components/auth/magic-link/LoadingState";
 import ErrorState from "@/components/auth/magic-link/ErrorState";
 import SuccessState from "@/components/auth/magic-link/SuccessState";
@@ -16,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { validateInvitationToken, getOrganizationName } from "@/hooks/auth/magicLinkUtils";
 
 // Schema for login form
 const loginSchema = z.object({
@@ -63,7 +63,7 @@ const MagicLinkJoin = () => {
   const [tokenError, setTokenError] = useState<string | null>(null);
 
   // Process the magic link invitation
-  const { isLoading, error, success, organizationName } = useMagicLinkProcess({
+  const { isLoading, error, success, organizationName } = useMagicLink({
     token,
     email,
     accessToken,
@@ -102,28 +102,15 @@ const MagicLinkJoin = () => {
 
       try {
         // First, try to validate as a magic link invitation
-        const { data: magicLinkData, error: magicLinkError } = await supabase.rpc(
-          'validate_invitation',
-          { 
-            invitation_token: token,
-            invitee_email: email || ""
-          }
-        );
+        const validationResult = await validateInvitationToken(token, email || "");
 
-        console.log("Magic link validation result:", magicLinkData, magicLinkError);
-
-        if (!magicLinkError && magicLinkData && magicLinkData[0]?.valid) {
+        if (validationResult.valid) {
           // Token is valid, get organization details
-          const { data: orgData } = await supabase
-            .from('organizations')
-            .select('name, logo_path')
-            .eq('id', magicLinkData[0].organization_id)
-            .maybeSingle();
+          const orgName = await getOrganizationName(validationResult.organizationId);
 
           setOrganizationDetails({
-            ...magicLinkData[0],
-            name: orgData?.name || "Organization",
-            logo: orgData?.logo_path
+            ...validationResult,
+            name: orgName || "Organization",
           });
           
           setTokenValid(true);
