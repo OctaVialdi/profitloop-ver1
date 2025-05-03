@@ -78,34 +78,33 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
 
   return (
     <div className="border rounded-md">
-      {/* Replace the nested divs with ScrollArea for better scrolling */}
-      <ScrollArea className="h-[500px]" type="always">
-        {/* Add another ScrollArea for horizontal scrolling */}
-        <ScrollArea orientation="horizontal">
-          <Table>
-            <TableHeader className="sticky top-0 z-20 bg-background">
-              <TableRow>
-                <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
-                  <Checkbox />
+      {/* Use a ScrollArea only for the table body, with fixed height */}
+      <Table>
+        <TableHeader className="sticky top-0 z-20 bg-background">
+          <TableRow>
+            <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
+              <Checkbox />
+            </TableHead>
+            
+            {/* Render table headers in the order specified by columnOrder */}
+            {visibleColumnsOrder.map((colKey) => {
+              // Special styling for the name column to make it sticky
+              const isNameColumn = colKey === 'name';
+              return (
+                <TableHead 
+                  key={colKey}
+                  className={isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""}
+                >
+                  {columnLabels[colKey]}
                 </TableHead>
-                
-                {/* Render table headers in the order specified by columnOrder */}
-                {visibleColumnsOrder.map((colKey) => {
-                  // Special styling for the name column to make it sticky
-                  const isNameColumn = colKey === 'name';
-                  return (
-                    <TableHead 
-                      key={colKey}
-                      className={isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""}
-                    >
-                      {columnLabels[colKey]}
-                    </TableHead>
-                  );
-                })}
-                
-                <TableHead className="text-right sticky right-0 z-30 bg-background">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+              );
+            })}
+            
+            <TableHead className="text-right sticky right-0 z-30 bg-background">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <ScrollArea className="h-[400px]">
+          <ScrollArea orientation="horizontal">
             <TableBody>
               {data.map(employee => (
                 <TableRow key={employee.id}>
@@ -140,9 +139,9 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </ScrollArea>
         </ScrollArea>
-      </ScrollArea>
+      </Table>
     </div>
   );
 };

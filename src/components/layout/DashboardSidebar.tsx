@@ -2,12 +2,14 @@
 import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, Headset, CircleDollarSign, Truck, TrendingUp, Laptop, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarRail, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+
 interface NavigationItem {
   name: string;
   href: string;
   icon: React.ElementType;
   requiredRole?: "admin" | "super_admin";
 }
+
 interface DashboardSidebarProps {
   organization: any;
   isAdmin: boolean;
@@ -15,6 +17,7 @@ interface DashboardSidebarProps {
   logoUrl?: string;
   currentPath: string;
 }
+
 export function DashboardSidebar({
   organization,
   isAdmin,
@@ -71,6 +74,7 @@ export function DashboardSidebar({
     if (item.requiredRole === "super_admin" && isSuperAdmin) return true;
     return false;
   });
+  
   return <Sidebar variant="sidebar" collapsible="icon" className="sticky top-0 h-screen z-20 border-r bg-white dark:bg-sidebar">
       <SidebarRail />
       <SidebarContent className="flex flex-col justify-between h-full">
