@@ -56,7 +56,7 @@ const VerificationSent = () => {
           <div className="p-3 bg-blue-50 border border-blue-100 rounded-md text-sm text-blue-700">
             {magicLinkToken ? (
               <p>
-                Setelah mengklik tautan verifikasi di email, Anda akan langsung bergabung dengan organisasi
+                Setelah mengklik tautan verifikasi di email, Anda harus login terlebih dahulu, kemudian akan bergabung dengan organisasi
                 {organizationName ? <strong> {organizationName}</strong> : ''}.
               </p>
             ) : (

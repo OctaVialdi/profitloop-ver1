@@ -82,6 +82,7 @@ export function useLoginForm() {
         if (organizationId) {
           navigate("/dashboard");
         } else {
+          // Always redirect to onboarding if user doesn't have organization
           navigate("/onboarding");
         }
       }

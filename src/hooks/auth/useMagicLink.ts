@@ -107,9 +107,9 @@ export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
             
             return;
           } else {
-            // If we don't have a token but authentication succeeded, redirect to dashboard
-            toast.success("Login berhasil!");
-            navigate("/dashboard");
+            // If we don't have a token but authentication succeeded, require login first
+            toast.success("Email berhasil diverifikasi! Silakan login untuk melanjutkan.");
+            navigate("/auth/login");
             return;
           }
         } catch (error: any) {

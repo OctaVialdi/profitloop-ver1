@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,18 +65,15 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Skip email check if using invitation email
-      if (!invitationEmail) {
-        // Check if email already exists
-        const emailExists = await checkEmailExists(email);
-        if (emailExists) {
-          toast.error("Email sudah terdaftar. Silakan gunakan email lain atau login.");
-          setIsLoading(false);
-          return;
-        }
+      // Check if email already exists - never skip this check
+      const emailExists = await checkEmailExists(email);
+      if (emailExists) {
+        toast.error("Email sudah terdaftar. Silakan gunakan email lain atau login.");
+        setIsLoading(false);
+        return;
       }
 
-      // Daftar dengan Supabase Auth
+      // Register with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -90,38 +88,14 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
-        // If we have invitation token, process it
-        if (invitationToken) {
-          // Attempt to join organization (although this might need email verification first)
-          const { data: joinResult, error: joinError } = await supabase
-            .rpc('join_organization', { 
-              user_id: data.user.id, 
-              invitation_token: invitationToken 
-            });
-          
-          if (joinError) {
-            console.error("Note: Organization join will happen after email verification", joinError);
-          }
-          
-          // Redirect to verification page with invitation context
-          toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
-          navigate("/auth/verification-sent", { 
-            state: { 
-              email,
-              password, // Pass password for auto-login after verification
-              isInvitation: true,
-              invitationToken
-            } 
-          });
-          return;
-        }
-        
-        // Normal registration flow
+        // Always redirect to verification page, never skip this step
         toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
         navigate("/auth/verification-sent", { 
           state: { 
             email,
-            password // Pass password for auto-login after verification
+            password, // Pass password for auto-login after verification
+            isInvitation: !!invitationToken,
+            invitationToken: invitationToken || null
           } 
         });
       }
