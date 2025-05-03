@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Employee {
@@ -27,6 +27,9 @@ export interface Employee {
 }
 
 export function useEmployees() {
+  // Add isLoading state
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
   // This is a mock implementation. In a real app, we would fetch this from an API
   const [employees, setEmployees] = useState<Employee[]>([
     {
@@ -81,6 +84,15 @@ export function useEmployees() {
     },
   ]);
 
+  // Simulate API loading delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   const addEmployee = (employee: Omit<Employee, "id">) => {
     const newEmployee = {
       ...employee,
@@ -105,6 +117,7 @@ export function useEmployees() {
 
   return {
     employees,
+    isLoading,
     addEmployee,
     updateEmployee,
     removeEmployee,
