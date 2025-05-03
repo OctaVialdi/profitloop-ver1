@@ -40,7 +40,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
     <div className="w-full space-y-0">
       <Card className="sticky top-0 z-10 mb-4 p-0.5 overflow-x-auto bg-white shadow">
         <Tabs defaultValue={defaultTab} value={defaultTab} className="w-full">
-          <TabsList className="w-full justify-start h-8">
+          <TabsList className="w-full justify-start">
             {tabs.map((tab) => (
               <TabsTrigger 
                 key={tab.href} 
