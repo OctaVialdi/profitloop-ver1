@@ -1,12 +1,14 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
 interface SuccessStateProps {
   organizationName: string;
+  onContinue?: () => void;
 }
 
-const SuccessState = ({ organizationName }: SuccessStateProps) => {
+const SuccessState = ({ organizationName, onContinue }: SuccessStateProps) => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
@@ -25,6 +27,13 @@ const SuccessState = ({ organizationName }: SuccessStateProps) => {
         <p className="text-center text-gray-600 text-sm mb-6">
           Mengalihkan Anda ke halaman selamat datang...
         </p>
+        {onContinue && (
+          <div className="flex justify-center">
+            <Button onClick={onContinue} className="px-6">
+              Lanjutkan
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -149,7 +149,7 @@ const JoinOrganization = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       {isLoading ? (
-        <LoadingState message="Processing your invitation..." />
+        <LoadingState />
       ) : error ? (
         <ErrorState 
           error={error} 
