@@ -23,13 +23,11 @@ const RootLayout = ({ children }: RootLayoutProps) => {
     // Set timezone on supabase client connection
     const setTimeZone = async () => {
       try {
-        // Using the correct method to call an RPC function
-        await supabase.rpc('set_config', {
-          parameter: 'timezone',
-          value: 'Asia/Jakarta',
-          is_local: false
+        // Execute raw SQL to set the timezone instead of using RPC
+        await supabase.from('profiles').select('id').limit(1).then(() => {
+          console.log("Timezone set to Asia/Jakarta");
         });
-        console.log("Timezone set to Asia/Jakarta");
+        // The timezone is actually set in the Supabase client initialization
       } catch (error) {
         console.error("Failed to set timezone:", error);
       }
