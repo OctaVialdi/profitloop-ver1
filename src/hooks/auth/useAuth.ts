@@ -41,9 +41,7 @@ export function useAuth() {
     setLoginError(null);
     
     try {
-      // First check if the user's email is verified
-      const { data: { user: userData }, error: userError } = await supabase.auth.signIn
-      
+      // Use the correct Supabase auth method for signing in
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
