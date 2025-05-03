@@ -66,7 +66,7 @@ serve(async (req) => {
     let emailError = null;
     
     try {
-      // Coba kirim email menggunakan fitur bawaan Supabase
+      // Try to send email using Supabase's built-in feature
       const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
         redirectTo: magicLinkUrl,
         data: {
@@ -88,10 +88,10 @@ serve(async (req) => {
       console.error("Exception sending email with Supabase auth:", err);
     }
     
-    // Jika email sudah terdaftar atau ada error lain, coba alternatif kedua: mengirim email langsung
+    // If email is already registered or there's another error, try the second alternative: sending a direct email
     if (!emailSent && emailError?.message?.includes("already been registered")) {
       try {
-        // Cari pengguna yang sudah ada
+        // Find the existing user
         const { data: userData, error: userError } = await supabase
           .from('profiles')
           .select('id, email')
@@ -105,7 +105,7 @@ serve(async (req) => {
         if (userData) {
           console.log("Found existing user:", userData);
           
-          // Kirim notifikasi ke pengguna yang sudah ada
+          // Send notification to existing user
           const { error: notifError } = await supabase
             .from('notifications')
             .insert({
