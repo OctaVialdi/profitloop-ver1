@@ -48,9 +48,9 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   // Filter the column order to only include visible columns
   const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
 
-  // Handle click on employee name to navigate to employee detail
+  // Handle click on employee name to navigate to employee detail with new route pattern
   const handleEmployeeClick = (employee: Employee) => {
-    navigate(`/hr/data/employee/${employee.id}`);
+    navigate(`/my-info/index?id=${employee.id}`);
   };
   
   // Render cell content based on column key
