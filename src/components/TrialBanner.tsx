@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -215,9 +216,9 @@ const TrialBanner = () => {
         </Alert>
       )}
       
-      {/* Fullscreen Subscription Modal */}
+      {/* Fullscreen Subscription Modal - Using the "bottom" side and custom styling to center it */}
       <Sheet open={isTrialExpired && showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
-        <SheetContent side="center" className="w-full sm:max-w-md border-none bg-white shadow-lg rounded-lg p-0">
+        <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white shadow-lg p-0">
           <div className="flex flex-col items-center p-6">
             {/* Timer Icon */}
             <div className="w-28 h-28 bg-blue-50 rounded-full flex items-center justify-center mb-6">

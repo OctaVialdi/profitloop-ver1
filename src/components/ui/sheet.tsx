@@ -1,3 +1,4 @@
+
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
@@ -39,6 +40,7 @@ const sheetVariants = cva(
         left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
         right:
           "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+        center: "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] border data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
       },
     },
     defaultVariants: {

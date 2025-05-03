@@ -106,6 +106,19 @@ body.trial-expired .trial-exempt {
   z-index: 60;
 }
 
+/* Custom styles for the centered Sheet component */
+[data-radix-sheet-content][data-side="bottom"] {
+  /* Center the sheet modal */
+  width: 90%;
+  max-width: 28rem;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 0.75rem;
+  max-height: max-content;
+  height: auto;
+  margin-bottom: 15vh;
+}
+
 /* Custom styles for the expiry modal */
 [data-radix-sheet-content][data-side="center"] {
   inset: 0;
