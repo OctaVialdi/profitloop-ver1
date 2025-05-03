@@ -486,15 +486,26 @@ export type Database = {
     }
     Functions: {
       create_organization_with_profile: {
-        Args: {
-          user_id: string
-          org_name: string
-          org_business_field: string
-          org_employee_count: number
-          org_address: string
-          org_phone: string
-          user_role: string
-        }
+        Args:
+          | {
+              user_id: string
+              org_name: string
+              org_business_field: string
+              org_employee_count: number
+              org_address: string
+              org_phone: string
+              user_role: string
+            }
+          | {
+              user_id: string
+              org_name: string
+              org_business_field: string
+              org_employee_count: number
+              org_address: string
+              org_phone: string
+              user_role: string
+              creator_email?: string
+            }
         Returns: Json
       }
       generate_magic_link_invitation: {
