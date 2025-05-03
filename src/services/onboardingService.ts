@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Organization, SubscriptionPlan, UserProfile } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
@@ -111,7 +112,8 @@ export async function createOrganization(formData: OrganizationFormData & { crea
     // Get business field options
     const employeeCount = parseInt(formData.employeeCount) || 0;
     
-    // Call the function to create organization with profile and store creator email
+    // Call the function to create organization with profile
+    // Make sure the parameter names match exactly with what's defined in the SQL function
     const { data: orgData, error } = await supabase.rpc(
       'create_organization_with_profile',
       {
