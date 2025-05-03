@@ -38,14 +38,14 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
 
   return (
     <div className="w-full space-y-0">
-      <Card className="sticky top-0 z-10 mb-4 p-0.5 overflow-x-auto bg-white shadow">
+      <Card className="sticky top-0 z-10 mb-4 p-1 overflow-x-auto bg-white shadow">
         <Tabs defaultValue={defaultTab} value={defaultTab} className="w-full">
           <TabsList className="w-full justify-start">
             {tabs.map((tab) => (
               <TabsTrigger 
                 key={tab.href} 
                 value={tab.href} 
-                className="text-sm min-w-[90px] h-7 transition-all duration-200 ease-in-out" 
+                className="min-w-[100px] transition-all duration-200 ease-in-out" 
                 asChild
               >
                 <Link to={tab.href}>{tab.name}</Link>
