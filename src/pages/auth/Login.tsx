@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import LoginForm from "@/components/auth/LoginForm";
 const Login = () => {
   const [justVerified, setJustVerified] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Check if we have invitation data from redirect
   const invitationEmail = location.state?.invitationEmail || "";
@@ -55,12 +56,12 @@ const Login = () => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
       }
     };
     
     checkSession();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
