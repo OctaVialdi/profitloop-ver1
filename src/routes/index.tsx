@@ -16,7 +16,7 @@ import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
 export const AppRoutes = () => {
   return (
     <Routes>
-      {/* Root redirects to login */}
+      {/* Root redirects to register page */}
       {rootRedirect}
 
       {/* Auth Routes */}

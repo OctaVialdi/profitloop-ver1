@@ -17,5 +17,5 @@ export const authRoutes = [
   <Route key="join-organization" path="/join-organization" element={<MagicLinkJoin />} />,
 ];
 
-// Redirect from root to login
-export const rootRedirect = <Route key="root" path="/" element={<Navigate to="/auth/login" replace />} />;
+// Redirect from root to register instead of login
+export const rootRedirect = <Route key="root" path="/" element={<Navigate to="/auth/register" replace />} />;
