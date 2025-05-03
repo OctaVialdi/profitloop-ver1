@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { 
   ReactFlow, 
@@ -95,7 +94,7 @@ const OrganizationFlowChart: React.FC<OrganizationFlowChartProps> = ({
       defaultViewport={{ x: 0, y: 0, zoom: 1 }}
       minZoom={0.1}
       maxZoom={2}
-      connectionMode={ConnectionMode.LOOSE}
+      connectionMode={ConnectionMode.Loose}
       snapToGrid
       snapGrid={[15, 15]}
     >
