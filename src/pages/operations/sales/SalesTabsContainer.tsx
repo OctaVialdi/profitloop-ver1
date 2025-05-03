@@ -12,14 +12,14 @@ export const SalesTabsContainer = () => {
   
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-4">
         <Tabs defaultValue="activities" className="w-full" onValueChange={value => setActiveTab(value)}>
-          <TabsList>
-            <TabsTrigger value="activities">Activities</TabsTrigger>
-            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="gamification">Gamification</TabsTrigger>
-            <TabsTrigger value="okr">OKR System</TabsTrigger>
+          <TabsList className="h-8">
+            <TabsTrigger value="activities" className="text-xs h-7">Activities</TabsTrigger>
+            <TabsTrigger value="pipeline" className="text-xs h-7">Pipeline</TabsTrigger>
+            <TabsTrigger value="dashboard" className="text-xs h-7">Dashboard</TabsTrigger>
+            <TabsTrigger value="gamification" className="text-xs h-7">Gamification</TabsTrigger>
+            <TabsTrigger value="okr" className="text-xs h-7">OKR System</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
