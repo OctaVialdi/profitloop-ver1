@@ -20,15 +20,9 @@ const NotFound = () => {
     }
     
     // Check if the current path might be a magic link hash fragment
-    // or email verification link
     if (location.hash && location.hash.includes("access_token")) {
       console.log("Detected access token in URL hash, redirecting to /join-organization");
       navigate(`/join-organization${location.search}${location.hash}`);
-    } else if (location.hash && location.hash.includes("type=signup")) {
-      // This is an email verification link, redirect to login with verified=true
-      console.log("Detected email verification link, redirecting to login");
-      navigate("/auth/login?verified=true");
-      return;
     }
   }, [navigate, location]);
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
@@ -55,11 +54,7 @@ export function useEmailVerification({
             // Email is verified, clear interval and redirect to login
             clearInterval(verificationChecker!);
             toast.success("Email berhasil diverifikasi! Mengalihkan ke halaman login...");
-            
-            // Important: Always redirect to login after verification, not directly to onboarding
-            navigate("/auth/login?verified=true", { 
-              state: { verifiedEmail: email } 
-            });
+            navigate("/auth/login?verified=true");
           }
         } catch (err) {
           // Ignore errors, just keep checking

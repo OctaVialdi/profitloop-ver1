@@ -41,8 +41,8 @@ export function useOrganization(): OrganizationData {
       const profile = await getUserProfile(session.user.id);
       
       if (!profile) {
-        console.log("No profile found");
-        // Removed redirect to onboarding
+        console.log("No profile found, redirecting to onboarding");
+        navigate('/onboarding');
         return;
       }
       
@@ -83,8 +83,8 @@ export function useOrganization(): OrganizationData {
       }
       
       if (!profile.organization_id) {
-        console.log("No organization associated with profile");
-        // Removed redirect to onboarding
+        console.log("No organization associated with profile, redirecting to onboarding");
+        navigate('/onboarding');
         return;
       }
 

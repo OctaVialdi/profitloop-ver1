@@ -59,8 +59,6 @@ export function useAuth() {
       
       if (error.message.includes("Invalid login credentials")) {
         errorMessage = "Email atau password salah. Mohon periksa kembali.";
-      } else if (error.message.includes("Email not confirmed")) {
-        errorMessage = "Email belum diverifikasi. Silakan cek email Anda untuk tautan verifikasi.";
       } else if (error.message.includes("Database error")) {
         errorMessage = "Terjadi masalah server saat login. Mohon coba lagi dalam beberapa saat.";
       }

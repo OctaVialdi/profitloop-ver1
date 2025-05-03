@@ -138,11 +138,11 @@ export async function createOrganization(formData: OrganizationFormData) {
       // The result is a JSON object, so we need to cast it properly
       const organizationData = orgData as { id: string };
       
-      // Set trial_end_date to 14 days from now instead of 1 minute
+      // Set a trial_end_date to 1 minute from now for testing
       const { error: updateError } = await supabase
         .from('organizations')
         .update({
-          trial_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days from now
+          trial_end_date: new Date(Date.now() + 60 * 1000).toISOString() // 1 minute from now
         })
         .eq('id', organizationData.id);
         
@@ -150,18 +150,13 @@ export async function createOrganization(formData: OrganizationFormData) {
         console.error("Error updating trial end date:", updateError);
       }
       
-      // Update user metadata with organization ID - using auth.updateUser to prevent the 403 error
-      try {
-        await supabase.auth.updateUser({
-          data: {
-            organization_id: organizationData.id,
-            role: 'super_admin'
-          }
-        });
-      } catch (metaError) {
-        console.error("Error updating user metadata:", metaError);
-        // Continue even if this fails - the organization is already created
-      }
+      // Update user metadata with organization ID
+      await supabase.auth.updateUser({
+        data: {
+          organization_id: organizationData.id,
+          role: 'super_admin'
+        }
+      });
       
       return orgData;
     }

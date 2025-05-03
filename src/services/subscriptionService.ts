@@ -19,7 +19,7 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
     // Check if trial has expired based on date
     const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
     const now = new Date();
-    const isTrialExpiredByDate = trialEndDate && trialEndDate <= now;
+    const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
     
     // If trial is expired by date but not flagged, update it
     if (isTrialExpiredByDate && !orgData.trial_expired) {
