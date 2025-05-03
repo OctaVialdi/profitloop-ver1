@@ -90,23 +90,18 @@ export const ProtectedRoute = ({
     );
   }
 
-  // If user is trying to access onboarding but already has organization, redirect to dashboard
-  if (authenticated && currentPath === '/onboarding' && hasOrganization) {
-    return <Navigate to="/dashboard" replace />;
+  // Always redirect unauthenticated users to login page, including /onboarding
+  if (!authenticated && !isPublicRoute) {
+    console.log("Not authenticated, redirecting to:", redirectTo);
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // If user is authenticated but doesn't have organization and not already on onboarding page,
-  // redirect to onboarding (but only if not on specific pages)
+  // Only if authenticated, check if user has organization
   if (authenticated && !hasOrganization && 
       currentPath !== '/onboarding' && 
       currentPath !== '/employee-welcome' &&
       !currentPath.startsWith('/auth/')) {
     return <Navigate to="/onboarding" replace />;
-  }
-
-  if (!authenticated && !isPublicRoute) {
-    console.log("Not authenticated, redirecting to:", redirectTo);
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
