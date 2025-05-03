@@ -65,23 +65,43 @@ const TrialBanner = () => {
         return;
       }
       
-      if (orgData.trial_expired) {
+      // Check if trial has expired based on date or flag
+      const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
+      const now = new Date();
+      const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
+      
+      if (orgData.trial_expired || isTrialExpiredByDate) {
         setDaysLeft(0);
         // Show subscription dialog on non-auth pages when trial has expired
         setShowSubscriptionDialog(true);
+        
+        // If the trial is expired by date but not flagged as expired, update the flag
+        if (isTrialExpiredByDate && !orgData.trial_expired) {
+          console.log("Updating trial_expired flag to true");
+          await supabase
+            .from('organizations')
+            .update({ trial_expired: true })
+            .eq('id', profileData.organization_id);
+        }
+        
         return;
       }
       
-      if (orgData.trial_end_date) {
-        const endDate = new Date(orgData.trial_end_date);
-        const now = new Date();
-        const diffTime = endDate.getTime() - now.getTime();
+      if (trialEndDate) {
+        const diffTime = trialEndDate.getTime() - now.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         setDaysLeft(diffDays > 0 ? diffDays : 0);
         
         if (diffDays <= 0) {
           // Trial has ended but not marked as expired yet
           setShowSubscriptionDialog(true);
+          
+          // Update the trial_expired flag
+          console.log("Trial has ended, updating trial_expired flag");
+          await supabase
+            .from('organizations')
+            .update({ trial_expired: true })
+            .eq('id', profileData.organization_id);
         }
       }
     };

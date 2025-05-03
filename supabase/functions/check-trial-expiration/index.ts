@@ -21,7 +21,8 @@ serve(async (req) => {
   try {
     const now = new Date();
     
-    // Fetch organizations with expired trials
+    // Fetch organizations with expired trials - notice we check if trial_end_date is in the past
+    // regardless of the trial_expired flag
     const { data: expiredTrials, error } = await supabase
       .from('organizations')
       .select('id, name, subscription_plan_id')
@@ -90,6 +91,18 @@ serve(async (req) => {
           }
         }
       }
+    }
+    
+    // Also update any organization where trial_end_date is in the past but trial_expired is still false
+    // This handles cases where the function wasn't triggered at the exact time
+    const { error: manualUpdateError } = await supabase
+      .from('organizations')
+      .update({ trial_expired: true })
+      .lt('trial_end_date', now.toISOString())
+      .eq('trial_expired', false);
+      
+    if (manualUpdateError) {
+      console.error("Error during manual update of expired trials:", manualUpdateError);
     }
     
     // Now update JWT claims for all users to include org_id and role
