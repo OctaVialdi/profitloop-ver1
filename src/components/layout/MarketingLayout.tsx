@@ -45,7 +45,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
               <TabsTrigger 
                 key={tab.href} 
                 value={tab.href} 
-                className="text-xs min-w-[90px] h-7 transition-all duration-200 ease-in-out" 
+                className="text-sm min-w-[90px] h-7 transition-all duration-200 ease-in-out" 
                 asChild
               >
                 <Link to={tab.href}>{tab.name}</Link>
