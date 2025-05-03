@@ -50,16 +50,8 @@ serve(async (req) => {
       .eq('id', organizationId)
       .single();
 
-    // Determine the correct base URL for the magic link
-    // Use the origin from request headers, or fallback to a sensible default
-    let baseUrl = req.headers.get("origin");
-    
-    // If origin is not available or appears to be a localhost URL while the 
-    // Supabase URL is not localhost, use app.profitloop.id instead
-    if (!baseUrl || 
-        (baseUrl.includes("localhost") && !supabaseUrl.includes("localhost"))) {
-      baseUrl = "https://app.profitloop.id";
-    }
+    // Always use the production domain for magic links
+    const baseUrl = "https://app.profitloop.id";
       
     // Generate the magic link URL - critical part for auth flow
     const magicLinkUrl = `${baseUrl}/join-organization?token=${result.token}&email=${encodeURIComponent(email)}`;
