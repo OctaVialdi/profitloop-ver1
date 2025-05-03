@@ -35,18 +35,18 @@ export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
     // Remove all non-digit characters
     const value = e.target.value.replace(/\D/g, '');
     
-    // Format the number with spaces for readability: XX.XX.XXX.X-XXX.XXX
+    // Format the number with hyphens for readability: 1234-1234-1234-1234
     let formattedValue = '';
     for (let i = 0; i < value.length && i < 16; i++) {
-      if (i === 2 || i === 4 || i === 7 || i === 8 || i === 11) {
-        formattedValue += ' ';
+      if (i === 4 || i === 8 || i === 12) {
+        formattedValue += '-';
       }
       formattedValue += value[i];
     }
     
     setNikValue(formattedValue);
     
-    // Validate: NPWP must be exactly 16 digits (or 15 digits plus a check digit)
+    // Validate: NPWP must be exactly 16 digits
     if (value.length > 0 && value.length !== 16) {
       setNikError('NIK (NPWP 16 digit) must be 16 digit');
     } else {
@@ -65,7 +65,7 @@ export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
           <Label htmlFor="nik">NIK (NPWP 16 digit)</Label>
           <Input 
             id="nik" 
-            placeholder="0000 0000 0000 0000" 
+            placeholder="1234-1234-1234-1234" 
             value={nikValue}
             onChange={handleNikChange}
             className={nikError ? "border-red-500" : ""}
