@@ -142,9 +142,9 @@ const Register = () => {
                 placeholder="nama@perusahaan.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
                 readOnly={!!invitationEmail}
                 className={invitationEmail ? "bg-gray-100" : ""}
-                required
               />
             </div>
             <div className="space-y-2">
@@ -152,9 +152,11 @@ const Register = () => {
               <Input
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
             <div className="space-y-2">
@@ -162,16 +164,18 @@ const Register = () => {
               <Input
                 id="confirmPassword"
                 type="password"
+                placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading || isCheckingEmail}>
-              {isLoading || isCheckingEmail ? (
+              {(isLoading || isCheckingEmail) ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isCheckingEmail ? "Memeriksa..." : "Memproses..."}
+                  {isCheckingEmail ? "Memeriksa email..." : "Mendaftar..."}
                 </>
               ) : (
                 "Daftar"
@@ -182,7 +186,11 @@ const Register = () => {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-600">
             Sudah memiliki akun?{" "}
-            <Link to="/auth/login" className="text-blue-500 hover:text-blue-700">
+            <Link 
+              to="/auth/login" 
+              className="text-blue-500 hover:text-blue-700"
+              state={invitationEmail ? { invitationEmail, invitationToken } : {}}
+            >
               Login disini
             </Link>
           </div>

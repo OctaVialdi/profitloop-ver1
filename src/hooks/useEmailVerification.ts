@@ -124,3 +124,5 @@ export function useEmailVerification({
     handleResendVerification
   };
 }
+
+export default useEmailVerification;
