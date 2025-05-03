@@ -16,6 +16,7 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const [hasOrganization, setHasOrganization] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -37,6 +38,21 @@ export const ProtectedRoute = ({
         if (data.session) {
           console.log("User is authenticated via session check");
           setAuthenticated(true);
+          
+          // Check if user has an organization
+          if (currentPath === '/onboarding') {
+            // If already on onboarding page, don't redirect
+            setHasOrganization(false);
+          } else {
+            // Check if user has an organization
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('organization_id')
+              .eq('id', data.session.user.id)
+              .maybeSingle();
+              
+            setHasOrganization(!!profileData?.organization_id);
+          }
         } else {
           console.log("No active session found");
           setAuthenticated(false);
@@ -64,7 +80,7 @@ export const ProtectedRoute = ({
     return () => {
       subscription.unsubscribe();
     };
-  }, [isPublicRoute]);
+  }, [isPublicRoute, currentPath]);
 
   if (loading) {
     return (
@@ -72,6 +88,20 @@ export const ProtectedRoute = ({
         <p>Loading...</p>
       </div>
     );
+  }
+
+  // If user is trying to access onboarding but already has organization, redirect to dashboard
+  if (authenticated && currentPath === '/onboarding' && hasOrganization) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // If user is authenticated but doesn't have organization and not already on onboarding page,
+  // redirect to onboarding (but only if not on specific pages)
+  if (authenticated && !hasOrganization && 
+      currentPath !== '/onboarding' && 
+      currentPath !== '/employee-welcome' &&
+      !currentPath.startsWith('/auth/')) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   if (!authenticated && !isPublicRoute) {
