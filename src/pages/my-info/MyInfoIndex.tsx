@@ -10,7 +10,7 @@ export default function MyInfoIndex() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { employees, updateEmployee } = useEmployees();
+  const { employees } = useEmployees();
   
   // Extract the employee ID from the query parameters
   const employeeId = searchParams.get("id");
@@ -62,12 +62,6 @@ export default function MyInfoIndex() {
     }
   }, [currentPath, employeeId, navigate]);
 
-  // Function to handle employee updates
-  const handleUpdateEmployee = (updatedEmployee: Employee) => {
-    updateEmployee(updatedEmployee);
-    setEmployee(updatedEmployee);
-  };
-
   if (!employeeId) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -103,11 +97,7 @@ export default function MyInfoIndex() {
         </Button>
       </div>
 
-      <EmployeeDetail 
-        employee={employee} 
-        activeTab={activeTab} 
-        updateEmployee={handleUpdateEmployee}
-      />
+      <EmployeeDetail employee={employee} activeTab={activeTab} />
     </div>
   );
 }
