@@ -348,6 +348,7 @@ export type Database = {
           address: string | null
           business_field: string | null
           created_at: string | null
+          creator_email: string | null
           employee_count: number | null
           id: string
           logo_path: string | null
@@ -362,6 +363,7 @@ export type Database = {
           address?: string | null
           business_field?: string | null
           created_at?: string | null
+          creator_email?: string | null
           employee_count?: number | null
           id?: string
           logo_path?: string | null
@@ -376,6 +378,7 @@ export type Database = {
           address?: string | null
           business_field?: string | null
           created_at?: string | null
+          creator_email?: string | null
           employee_count?: number | null
           id?: string
           logo_path?: string | null
