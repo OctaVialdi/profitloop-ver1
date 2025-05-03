@@ -79,84 +79,82 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
     return employee[columnKey as keyof Employee] || '-';
   };
 
+  // Calculate width for columns to ensure alignment
+  const getColumnWidth = (colKey: keyof EmployeeColumnState) => {
+    if (colKey === 'name') return 'w-[220px]';
+    if (colKey === 'employeeId') return 'w-[140px]';
+    if (colKey === 'email') return 'w-[200px]';
+    return 'w-[180px]';
+  };
+
   return (
-    <div className="border rounded-md overflow-hidden">
-      {/* Table with fixed header and horizontally scrollable body if needed */}
+    <div className="border rounded-md">
       <div className="relative">
-        {/* Header - Fixed */}
-        <Table>
-          <TableHeader className="sticky top-0 z-20 bg-background">
-            <TableRow>
-              <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
-                <Checkbox />
-              </TableHead>
-              
-              {/* Render table headers in the order specified by columnOrder */}
-              {visibleColumnsOrder.map((colKey) => {
-                // Special styling for the name column to make it sticky
-                const isNameColumn = colKey === 'name';
-                return (
-                  <TableHead 
-                    key={colKey}
-                    className={`${isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""}`}
-                  >
-                    {columnLabels[colKey]}
+        {/* Using a single table structure for better alignment */}
+        <ScrollArea className="w-full" type={needsHorizontalScroll ? "always" : "auto"}>
+          <div className={needsHorizontalScroll ? "min-w-max" : "w-full"}>
+            <Table>
+              <TableHeader className="sticky top-0 z-20 bg-background">
+                <TableRow>
+                  <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
+                    <Checkbox />
                   </TableHead>
-                );
-              })}
-              
-              <TableHead className="text-right sticky right-0 z-30 bg-background">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-        </Table>
-        
-        {/* Body - Scrollable horizontally if needed */}
-        <div className="max-h-[400px] overflow-hidden">
-          <ScrollArea 
-            className="h-full w-full" 
-            type={needsHorizontalScroll ? "always" : "auto"}
-          >
-            <div className={needsHorizontalScroll ? "min-w-max" : "w-full"}>
-              <Table>
-                <TableBody>
-                  {data.map(employee => (
-                    <TableRow key={employee.id}>
-                      <TableCell className="sticky left-0 z-20 bg-background">
-                        <Checkbox />
-                      </TableCell>
-                      
-                      {/* Render table cells in the order specified by columnOrder */}
-                      {visibleColumnsOrder.map((colKey) => {
-                        // Special styling for the name column to make it sticky
-                        const isNameColumn = colKey === 'name';
-                        return (
-                          <TableCell 
-                            key={colKey}
-                            className={`${isNameColumn ? "sticky left-[40px] z-20 bg-background" : ""}`}
-                          >
-                            {renderCellContent(employee, colKey)}
-                          </TableCell>
-                        );
-                      })}
-                      
-                      <TableCell className="text-right sticky right-0 z-20 bg-background">
-                        <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {data.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={visibleColumnsOrder.length + 2} className="text-center py-8">
-                        No employee data found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            {needsHorizontalScroll && <ScrollBar orientation="horizontal" />}
-          </ScrollArea>
-        </div>
+                  
+                  {visibleColumnsOrder.map((colKey) => {
+                    const isNameColumn = colKey === 'name';
+                    const columnWidth = getColumnWidth(colKey);
+                    return (
+                      <TableHead 
+                        key={colKey}
+                        className={`${isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""} ${columnWidth}`}
+                      >
+                        {columnLabels[colKey]}
+                      </TableHead>
+                    );
+                  })}
+                  
+                  <TableHead className="text-right sticky right-0 z-30 bg-background w-[100px]">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="relative">
+                {data.map(employee => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="sticky left-0 z-20 bg-background">
+                      <Checkbox />
+                    </TableCell>
+                    
+                    {visibleColumnsOrder.map((colKey) => {
+                      const isNameColumn = colKey === 'name';
+                      const columnWidth = getColumnWidth(colKey);
+                      return (
+                        <TableCell 
+                          key={colKey}
+                          className={`${isNameColumn ? "sticky left-[40px] z-20 bg-background" : ""} ${columnWidth}`}
+                        >
+                          {renderCellContent(employee, colKey)}
+                        </TableCell>
+                      );
+                    })}
+                    
+                    <TableCell className="text-right sticky right-0 z-20 bg-background w-[100px]">
+                      <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {data.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={visibleColumnsOrder.length + 2} className="text-center py-8">
+                      No employee data found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          {needsHorizontalScroll && <ScrollBar orientation="horizontal" />}
+        </ScrollArea>
       </div>
     </div>
   );
