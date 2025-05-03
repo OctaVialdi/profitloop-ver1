@@ -51,9 +51,9 @@ const EmployeeDetail = () => {
   // Handle edit button click
   const handleEdit = (section: string) => {
     if (section === "personal" || section === "identity") {
-      navigate(`/hr/my-info/personal/${id}`);
+      navigate(`/my-info/index?id=${id}`);
     } else if (section === "employment") {
-      navigate(`/hr/my-info/employment/${id}`);
+      navigate(`/my-info/employment?id=${id}`);
     } else {
       toast.success(`Editing ${section} information`, {
         description: "This feature is coming soon."
@@ -71,6 +71,16 @@ const EmployeeDetail = () => {
       </div>
     );
   }
+
+  // Handle Personal link click from sidebar
+  const handlePersonalClick = () => {
+    navigate(`/my-info/index?id=${id}`);
+  };
+
+  // Handle Employment link click from sidebar
+  const handleEmploymentClick = () => {
+    navigate(`/my-info/employment?id=${id}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -117,13 +127,13 @@ const EmployeeDetail = () => {
                 <CollapsibleContent>
                   <div 
                     className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'personal' ? 'text-blue-600 font-medium' : 'text-gray-700'}`} 
-                    onClick={() => setActiveTab('personal')}
+                    onClick={handlePersonalClick}
                   >
                     Personal
                   </div>
                   <div 
                     className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'employment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                    onClick={() => setActiveTab('employment')}
+                    onClick={handleEmploymentClick}
                   >
                     Employment
                   </div>

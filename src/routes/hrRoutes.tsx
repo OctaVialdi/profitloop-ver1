@@ -15,8 +15,6 @@ import HRKinerja from "@/pages/hr/Kinerja";
 import HRCompany from "@/pages/hr/Company";
 import AddEmployee from "@/pages/hr/AddEmployee";
 import EmployeeDetail from "@/pages/hr/EmployeeDetail";
-import EmployeePersonal from "@/pages/hr/employee/EmployeePersonal";
-import EmployeeEmployment from "@/pages/hr/employee/EmployeeEmployment";
 import { Outlet } from "react-router-dom";
 
 export const hrRoutes = (
@@ -38,8 +36,6 @@ export const hrRoutes = (
     <Route path="data" element={<HRDataKaryawan />} />
     <Route path="data/employee/:id" element={<EmployeeDetail />} />
     <Route path="data/add-employee" element={<AddEmployee />} />
-    <Route path="my-info/personal/:id" element={<EmployeePersonal />} />
-    <Route path="my-info/employment/:id" element={<EmployeeEmployment />} />
     <Route path="absensi" element={<HRAbsensi />} />
     <Route path="cuti" element={<HRCutiIzin />} />
     <Route path="payroll" element={<HRPayroll />} />
