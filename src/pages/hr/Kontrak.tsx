@@ -10,6 +10,7 @@ import { KontrakTable } from "@/components/hr/kontrak/KontrakTable";
 import { KontrakDetailDialog } from "@/components/hr/kontrak/KontrakDetailDialog";
 import { KontrakPerpanjangDialog } from "@/components/hr/kontrak/KontrakPerpanjangDialog";
 import { KontrakBaruDialog } from "@/components/hr/kontrak/KontrakBaruDialog";
+import { KontrakTemplateSection } from "@/components/hr/kontrak/KontrakTemplateSection";
 import { ContractType, KontrakData } from "@/components/hr/kontrak/types";
 
 export default function HRKontrak() {
@@ -76,6 +77,50 @@ export default function HRKontrak() {
       status: "Active",
       statusClass: "bg-green-100 text-green-800",
     },
+  ];
+
+  // Mock data for contract templates
+  const contractTemplates = [
+    {
+      id: "1",
+      title: "Permanent Employee Contract",
+      description: "Standard contract template for permanent employees",
+      type: ContractType.PERMANENT,
+      updatedDate: "03 Nov 2024",
+      version: "2.1"
+    },
+    {
+      id: "2",
+      title: "Contract Employee Agreement",
+      description: "Fixed-term contract template (1 year duration)",
+      type: ContractType.CONTRACT,
+      updatedDate: "03 Feb 2025",
+      version: "1.3"
+    },
+    {
+      id: "3",
+      title: "Probation Period Agreement",
+      description: "Standard 3-month probationary period agreement",
+      type: ContractType.PROBATION,
+      updatedDate: "03 May 2024", 
+      version: "1.0"
+    },
+    {
+      id: "4",
+      title: "Internship Agreement",
+      description: "Standard internship agreement (6 months)",
+      type: ContractType.INTERNSHIP,
+      updatedDate: "03 May 2024",
+      version: "1.1"
+    },
+    {
+      id: "5",
+      title: "Agency Service Agreement",
+      description: "Template for external agency contractors",
+      type: ContractType.TEMPORARY,
+      updatedDate: "03 Mar 2025",
+      version: "1.2"
+    }
   ];
 
   const handleDetailClick = (contract: KontrakData) => {
@@ -150,11 +195,7 @@ export default function HRKontrak() {
         </TabsContent>
 
         <TabsContent value="template" className="pt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-center py-8 text-gray-500">Template kontrak akan ditampilkan di sini</p>
-            </CardContent>
-          </Card>
+          <KontrakTemplateSection templates={contractTemplates} />
         </TabsContent>
       </Tabs>
       

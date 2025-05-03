@@ -4,7 +4,8 @@ export enum ContractType {
   PROBATION = "Probation",
   PERMANENT = "Permanent",
   TEMPORARY = "Temporary",
-  INTERNSHIP = "Internship"
+  INTERNSHIP = "Internship",
+  AGENCY = "Agency"
 }
 
 export interface KontrakData {
@@ -31,4 +32,13 @@ export interface ContractDocument {
   version: string;
   signedDate: string;
   signedBy: string;
+}
+
+export interface ContractTemplate {
+  id: string;
+  title: string;
+  description: string;
+  type: ContractType;
+  updatedDate: string;
+  version: string;
 }
