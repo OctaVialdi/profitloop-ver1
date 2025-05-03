@@ -9,7 +9,6 @@ interface TrialProtectionProps {
 
 const TrialProtection = ({ children }: TrialProtectionProps) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [trialExpired, setTrialExpired] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -95,26 +94,24 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
         .eq('id', profileData.organization_id)
         .single();
       
-      // Check if trial has expired based on date comparison or the trial_expired flag
+      // Check if trial has expired based on date comparison
       const trialEndDate = orgData?.trial_end_date ? new Date(orgData.trial_end_date) : null;
       const now = new Date();
       const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
-      const isTrialExpiredFlag = orgData?.trial_expired;
       
       console.log("Trial status check:", {
         trialEndDate,
         currentDate: now,
         isTrialExpiredByDate,
-        isTrialExpiredFlag
+        flagValue: orgData?.trial_expired
       });
       
       // If trial is expired by date OR flag is true, and no active subscription, redirect to subscription page
-      if ((isTrialExpiredByDate || isTrialExpiredFlag) && !orgData?.subscription_plan_id) {
-        console.log("Trial expired or flagged as expired, redirecting to subscription");
-        setTrialExpired(true);
+      if ((isTrialExpiredByDate || orgData?.trial_expired) && !orgData?.subscription_plan_id) {
+        console.log("Trial expired, redirecting to subscription");
         
         // Also update the trial_expired flag if it's not set but date is expired
-        if (isTrialExpiredByDate && !isTrialExpiredFlag) {
+        if (isTrialExpiredByDate && !orgData?.trial_expired) {
           console.log("Updating trial_expired flag in database");
           await supabase
             .from('organizations')

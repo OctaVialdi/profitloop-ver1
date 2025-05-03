@@ -65,7 +65,7 @@ const TrialBanner = () => {
         return;
       }
       
-      // Check if trial has expired based on date or flag
+      // Check if trial has expired based on date
       const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
       const now = new Date();
       const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
@@ -92,8 +92,8 @@ const TrialBanner = () => {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         setDaysLeft(diffDays > 0 ? diffDays : 0);
         
+        // Trial has ended but not marked as expired yet
         if (diffDays <= 0) {
-          // Trial has ended but not marked as expired yet
           setShowSubscriptionDialog(true);
           
           // Update the trial_expired flag

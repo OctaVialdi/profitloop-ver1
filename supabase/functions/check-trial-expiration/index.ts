@@ -105,14 +105,10 @@ serve(async (req) => {
       console.error("Error during manual update of expired trials:", manualUpdateError);
     }
     
-    // Now update JWT claims for all users to include org_id and role
-    await updateCustomClaims(supabase);
-    
     return new Response(
       JSON.stringify({ 
         success: true, 
-        processed: expiredTrials?.length || 0,
-        claims_updated: true
+        processed: expiredTrials?.length || 0
       }),
       { 
         headers: { 
@@ -165,47 +161,4 @@ async function getBasicPlanId(supabase) {
   }
   
   return data.id;
-}
-
-// Update custom claims for all users
-async function updateCustomClaims(supabase) {
-  try {
-    // Get all profiles with their organizations
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('id, organization_id, role');
-    
-    if (error) {
-      throw error;
-    }
-    
-    console.log(`Updating custom claims for ${profiles?.length || 0} users`);
-    
-    // Update custom claims for each user
-    if (profiles && profiles.length > 0) {
-      for (const profile of profiles) {
-        if (profile.organization_id && profile.role) {
-          // Set custom claims for the user
-          const { error: claimError } = await supabase.auth.admin.updateUserById(
-            profile.id,
-            { 
-              user_metadata: { 
-                org_id: profile.organization_id,
-                role: profile.role
-              }
-            }
-          );
-          
-          if (claimError) {
-            console.error(`Error updating claims for user ${profile.id}:`, claimError);
-          }
-        }
-      }
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error updating custom claims:", error);
-    return false;
-  }
 }
