@@ -1,96 +1,112 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/hooks/useOrganization';
-import { toast } from '@/components/ui/sonner';
-import { Employee } from '@/components/hr/employee-list/types';
+import { useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 
-export const useEmployees = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { userProfile } = useOrganization();
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  mobilePhone?: string;
+  birthPlace?: string;
+  birthDate?: string;
+  gender?: string;
+  maritalStatus?: string;
+  religion?: string;
+  address?: string;
+  jobPosition?: string;
+  jobLevel?: string;
+  organization?: string;
+  employeeId?: string;
+  barcode?: string;
+  employmentStatus?: string;
+  branch?: string;
+  joinDate?: string;
+  signDate?: string;
+  status: string;
+  role: string;
+}
 
-  // Fetch employees data
-  const fetchEmployees = async () => {
-    if (!userProfile?.organization_id) return;
+export function useEmployees() {
+  // This is a mock implementation. In a real app, we would fetch this from an API
+  const [employees, setEmployees] = useState<Employee[]>([
+    {
+      id: "05930e10-a1a2-4f60-83f9-70a922ba4d30",
+      name: "Adam Johnson",
+      email: "adam.johnson@example.com",
+      mobilePhone: "0812-3456-7890",
+      birthPlace: "Jakarta",
+      birthDate: "15 Jan 1992",
+      gender: "Male",
+      maritalStatus: "Married",
+      religion: "Islam",
+      address: "Jl. Sudirman No. 123, Jakarta",
+      jobPosition: "HR Manager",
+      jobLevel: "Senior",
+      organization: "HR",
+      employeeId: "EMP001",
+      barcode: "EMP001/HR",
+      employmentStatus: "Permanent",
+      branch: "Pusat",
+      joinDate: "10 Nov 2010",
+      status: "Active",
+      role: "HR Manager",
+    },
+    {
+      id: uuidv4(),
+      name: "Jane Smith",
+      email: "jane.smith@example.com",
+      status: "Active",
+      role: "IT Manager",
+    },
+    {
+      id: uuidv4(),
+      name: "Robert Lee",
+      email: "robert.lee@example.com",
+      status: "Active",
+      role: "Finance Analyst",
+    },
+    {
+      id: uuidv4(),
+      name: "Sarah Williams",
+      email: "sarah.williams@example.com",
+      status: "Inactive",
+      role: "Marketing Specialist",
+    },
+    {
+      id: uuidv4(),
+      name: "Michael Brown",
+      email: "michael.brown@example.com",
+      status: "On Leave",
+      role: "Software Developer",
+    },
+  ]);
 
-    setIsLoading(true);
-    try {
-      // This would ideally fetch from a proper employees table in Supabase
-      // For now we'll use mock data with the organization members
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role, created_at')
-        .eq('organization_id', userProfile.organization_id);
-
-      if (error) throw error;
-
-      // Transform the data to match our Employee interface
-      const employeeData = data.map((item: any) => ({
-        id: item.id,
-        name: item.full_name || 'Unnamed User',
-        email: item.email,
-        branch: 'Pusat',
-        employmentStatus: 'Permanent',
-        joinDate: new Date(item.created_at).toLocaleDateString(),
-        // We'd add more fields here from a real employees table
-      }));
-
-      setEmployees(employeeData);
-    } catch (error: any) {
-      console.error('Error fetching employees:', error);
-      toast.error('Failed to load employees data');
-    } finally {
-      setIsLoading(false);
-    }
+  const addEmployee = (employee: Omit<Employee, "id">) => {
+    const newEmployee = {
+      ...employee,
+      id: uuidv4(),
+    };
+    setEmployees([...employees, newEmployee]);
+    return newEmployee;
   };
 
-  // For demonstration purposes, we'll also provide a mock employee
-  const getMockEmployee = (): Employee => ({
-    id: '000',
-    name: 'Octa Vialdi',
-    email: 'admin@vialdi.id',
-    branch: 'Pusat',
-    organization: '-',
-    jobPosition: '-',
-    jobLevel: 'No Level',
-    employmentStatus: 'Permanent',
-    joinDate: '10 Nov 2010',
-    endDate: '-',
-    signDate: '-',
-    resignDate: '-',
-    barcode: '-',
-    birthDate: '19 Jan 1995',
-    birthPlace: 'Jakarta',
-    address: '-',
-    mobilePhone: '081281714855',
-    religion: 'Islam',
-    gender: 'Male',
-    maritalStatus: 'Married'
-  });
-
-  // Add a mock employee if there are none
-  const ensureMockData = () => {
-    if (employees.length === 0) {
-      setEmployees([getMockEmployee()]);
-    }
+  const updateEmployee = (updatedEmployee: Employee) => {
+    setEmployees(
+      employees.map((employee) => 
+        employee.id === updatedEmployee.id ? updatedEmployee : employee
+      )
+    );
+    return updatedEmployee;
   };
 
-  useEffect(() => {
-    fetchEmployees();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile?.organization_id]);
-
-  useEffect(() => {
-    // Add mock data for demonstration after fetching
-    if (!isLoading && employees.length === 0) {
-      ensureMockData();
-    }
-  }, [isLoading, employees]);
+  const removeEmployee = (id: string) => {
+    setEmployees(employees.filter((employee) => employee.id !== id));
+  };
 
   return {
     employees,
-    isLoading,
-    refetch: fetchEmployees
+    addEmployee,
+    updateEmployee,
+    removeEmployee,
   };
-};
+}

@@ -50,9 +50,15 @@ const EmployeeDetail = () => {
 
   // Handle edit button click
   const handleEdit = (section: string) => {
-    toast.success(`Editing ${section} information`, {
-      description: "This feature is coming soon."
-    });
+    if (section === "personal" || section === "identity") {
+      navigate(`/hr/my-info/personal/${id}`);
+    } else if (section === "employment") {
+      navigate(`/hr/my-info/employment/${id}`);
+    } else {
+      toast.success(`Editing ${section} information`, {
+        description: "This feature is coming soon."
+      });
+    }
   };
 
   if (!employee) {
@@ -130,41 +136,60 @@ const EmployeeDetail = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Time Management with chevron */}
-              <div 
-                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'time-management' ? 'bg-gray-50' : ''} flex items-center justify-between`}
-                onClick={() => setActiveTab('time-management')}
-              >
-                <div className="flex items-center">
-                  <Clock size={16} className="mr-2" />
-                  <span>Time Management</span>
-                </div>
-                <ChevronRight size={16} />
-              </div>
+              {/* Time Management with dropdown */}
+              <Collapsible open={openTimeManagement} onOpenChange={setOpenTimeManagement}>
+                <CollapsibleTrigger className="w-full">
+                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Clock size={16} className="mr-2" />
+                      <span>Time Management</span>
+                    </div>
+                    {openTimeManagement ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Attendance</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Schedule</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Time Off</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Shift</div>
+                </CollapsibleContent>
+              </Collapsible>
 
-              {/* Payroll with chevron */}
-              <div 
-                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'payroll' ? 'bg-gray-50' : ''} flex items-center justify-between`}
-                onClick={() => setActiveTab('payroll')}
-              >
-                <div className="flex items-center">
-                  <CircleDollarSign size={16} className="mr-2" />
-                  <span>Payroll</span>
-                </div>
-                <ChevronRight size={16} />
-              </div>
+              {/* Payroll with dropdown */}
+              <Collapsible open={openPayroll} onOpenChange={setOpenPayroll}>
+                <CollapsibleTrigger className="w-full">
+                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                    <div className="flex items-center">
+                      <CircleDollarSign size={16} className="mr-2" />
+                      <span>Payroll</span>
+                    </div>
+                    {openPayroll ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Bank Account</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Tax</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">BPJS</div>
+                </CollapsibleContent>
+              </Collapsible>
 
-              {/* Finance with chevron */}
-              <div 
-                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'finance' ? 'bg-gray-50' : ''} flex items-center justify-between`}
-                onClick={() => setActiveTab('finance')}
-              >
-                <div className="flex items-center">
-                  <Wallet size={16} className="mr-2" />
-                  <span>Finance</span>
-                </div>
-                <ChevronRight size={16} />
-              </div>
+              {/* Finance with dropdown */}
+              <Collapsible open={openFinance} onOpenChange={setOpenFinance}>
+                <CollapsibleTrigger className="w-full">
+                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Wallet size={16} className="mr-2" />
+                      <span>Finance</span>
+                    </div>
+                    {openFinance ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Reimbursement</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Cash Advance</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Loan</div>
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* Files with chevron */}
               <div 
@@ -190,17 +215,24 @@ const EmployeeDetail = () => {
                 <ChevronRight size={16} />
               </div>
 
-              {/* History with chevron */}
-              <div 
-                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'history' ? 'bg-gray-50' : ''} flex items-center justify-between`}
-                onClick={() => setActiveTab('history')}
-              >
-                <div className="flex items-center">
-                  <BarChart2 size={16} className="mr-2" />
-                  <span>History</span>
-                </div>
-                <ChevronRight size={16} />
-              </div>
+              {/* History with dropdown */}
+              <Collapsible open={openHistory} onOpenChange={setOpenHistory}>
+                <CollapsibleTrigger className="w-full">
+                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                    <div className="flex items-center">
+                      <BarChart2 size={16} className="mr-2" />
+                      <span>History</span>
+                    </div>
+                    {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Employment</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Position</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Compensation</div>
+                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer">Organization</div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </Card>
         </div>
