@@ -7,6 +7,7 @@ import AssetsTab from "@/components/hr/company/AssetsTab";
 import ReprimandTab from "@/components/hr/company/ReprimandTab";
 import FilesTab from "@/components/hr/company/FilesTab";
 import ChangeHistoryTab from "@/components/hr/company/ChangeHistoryTab";
+import OrganizationalStructureTab from "@/components/hr/company/OrganizationalStructureTab";
 
 export default function HRCompany() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -22,6 +23,7 @@ export default function HRCompany() {
           {activeTab === "reprimand" && <ReprimandTab />}
           {activeTab === "files" && <FilesTab />}
           {activeTab === "history" && <ChangeHistoryTab />}
+          {activeTab === "org-structure" && <OrganizationalStructureTab />}
         </CardContent>
       </Card>
     </div>
