@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Organization, SubscriptionPlan, UserProfile } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";

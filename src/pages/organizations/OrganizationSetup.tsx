@@ -45,7 +45,13 @@ const OrganizationSetup = () => {
   const onSubmit = async (data: OrganizationFormValues) => {
     setIsSubmitting(true);
     try {
-      const result = await createOrganization(data);
+      const result = await createOrganization({
+        name: data.name,
+        businessField: data.businessField,
+        employeeCount: data.employeeCount,
+        address: data.address || "",
+        phone: data.phone || "",
+      });
       
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
