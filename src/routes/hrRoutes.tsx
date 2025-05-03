@@ -13,6 +13,7 @@ import HRKontrak from "@/pages/hr/Kontrak";
 import HRTraining from "@/pages/hr/Training";
 import HRKinerja from "@/pages/hr/Kinerja";
 import HRCompany from "@/pages/hr/Company";
+import AddEmployee from "@/pages/hr/AddEmployee";
 import { Outlet } from "react-router-dom";
 
 export const hrRoutes = (
@@ -32,6 +33,7 @@ export const hrRoutes = (
     <Route path="dashboard" element={<HRDashboard />} />
     <Route path="okr" element={<HROKR />} />
     <Route path="data" element={<HRDataKaryawan />} />
+    <Route path="data/add-employee" element={<AddEmployee />} />
     <Route path="absensi" element={<HRAbsensi />} />
     <Route path="cuti" element={<HRCutiIzin />} />
     <Route path="payroll" element={<HRPayroll />} />

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 
@@ -32,7 +33,9 @@ export const EmployeeHeader: React.FC = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Add employee</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/hr/data/add-employee">Add employee</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem>Import employee</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
