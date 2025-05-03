@@ -1,10 +1,11 @@
 
 import { ReactNode, useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children?: ReactNode;
   redirectTo?: string;
   publicRoutes?: string[];
 }
@@ -44,6 +45,9 @@ export const ProtectedRoute = ({
       } catch (error) {
         console.error("Error checking auth:", error);
         setAuthenticated(false);
+        
+        // Show friendly error message
+        toast.error("Terjadi kesalahan saat memeriksa autentikasi");
       } finally {
         setLoading(false);
       }
@@ -79,5 +83,7 @@ export const ProtectedRoute = ({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
+  return children ? <>{children}</> : <Outlet />;
 };
+
+export default ProtectedRoute;

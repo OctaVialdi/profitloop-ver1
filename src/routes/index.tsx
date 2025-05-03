@@ -11,6 +11,7 @@ import { marketingRoutes } from "./marketingRoutes";
 import { itRoutes } from "./itRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export const AppRoutes = () => {
   return (
@@ -22,31 +23,49 @@ export const AppRoutes = () => {
       {authRoutes}
       
       {/* Protected Routes */}
-      {onboardingRoutes}
+      <Route element={<ProtectedRoute />}>
+        {onboardingRoutes}
+      </Route>
 
       {/* Dashboard Routes */}
-      {dashboardRoutes}
+      <Route element={<ProtectedRoute />}>
+        {dashboardRoutes}
+      </Route>
 
       {/* HR Routes */}
-      {hrRoutes}
+      <Route element={<ProtectedRoute />}>
+        {hrRoutes}
+      </Route>
       
       {/* My Info Routes */}
-      {myInfoRoutes}
+      <Route element={<ProtectedRoute />}>
+        {myInfoRoutes}
+      </Route>
 
       {/* Finance Routes */}
-      {financeRoutes}
+      <Route element={<ProtectedRoute />}>
+        {financeRoutes}
+      </Route>
 
       {/* Operations Routes */}
-      {operationsRoutes}
+      <Route element={<ProtectedRoute />}>
+        {operationsRoutes}
+      </Route>
       
       {/* Marketing Routes */}
-      {marketingRoutes}
+      <Route element={<ProtectedRoute />}>
+        {marketingRoutes}
+      </Route>
       
       {/* IT Routes */}
-      {itRoutes}
+      <Route element={<ProtectedRoute />}>
+        {itRoutes}
+      </Route>
 
       {/* Settings Routes */}
-      {settingsRoutes}
+      <Route element={<ProtectedRoute />}>
+        {settingsRoutes}
+      </Route>
 
       {/* Catch all */}
       <Route path="*" element={<NotFound />} />

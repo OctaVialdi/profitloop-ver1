@@ -92,13 +92,13 @@ const OrganizationSetup = () => {
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
         
-        // Tambahkan logging untuk memverifikasi redirect
-        console.log("Redirecting to employee-welcome page");
+        // Refresh the auth session after organization creation
+        await supabase.auth.refreshSession();
         
-        // Gunakan timeout kecil untuk memastikan redirect berjalan setelah state diupdate
+        // Add a small delay before redirecting
         setTimeout(() => {
           navigate("/employee-welcome", { replace: true });
-        }, 100);
+        }, 300);
       } else {
         toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");
       }
