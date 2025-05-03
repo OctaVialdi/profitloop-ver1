@@ -207,7 +207,7 @@ export function useMagicLinkProcess({
           
           // If user is logged in, process the invitation token
           console.log("User already logged in, processing invitation token");
-          const { data, error: joinError } = await supabase.rpc(
+          const { data: joinResult, error: joinError } = await supabase.rpc(
             'process_magic_link_invitation',
             { 
               invitation_token: token,
@@ -223,7 +223,7 @@ export function useMagicLinkProcess({
           }
 
           // Handle the response
-          const invitationResult = data as { 
+          const invitationResult = joinResult as { 
             success: boolean, 
             message: string, 
             organization_id?: string, 

@@ -13,7 +13,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({
   children,
   redirectTo = "/auth/login",
-  publicRoutes = ["/join-organization"]
+  publicRoutes = ["/join-organization", "/accept-invitation"]
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
