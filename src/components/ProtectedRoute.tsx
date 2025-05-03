@@ -17,6 +17,15 @@ export const ProtectedRoute = ({
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
+    // First set up the auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setAuthenticated(!!session);
+        setLoading(false);
+      }
+    );
+
+    // Then check for an existing session
     const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession();
@@ -35,14 +44,6 @@ export const ProtectedRoute = ({
     };
 
     checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setAuthenticated(!!session);
-        setLoading(false);
-      }
-    );
 
     return () => {
       subscription.unsubscribe();

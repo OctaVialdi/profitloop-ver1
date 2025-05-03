@@ -1,6 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Session, User } from "@supabase/supabase-js";
 
 export interface AuthCredentials {
   email: string;
@@ -10,6 +11,29 @@ export interface AuthCredentials {
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  
+  // Listen for auth state changes
+  useEffect(() => {
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
   
   // Handle authentication with email and password
   const signInWithEmailPassword = async (credentials: AuthCredentials) => {
@@ -46,10 +70,26 @@ export function useAuth() {
     }
   };
 
+  const signOut = async () => {
+    setIsLoading(true);
+    try {
+      await supabase.auth.signOut();
+      return { error: null };
+    } catch (error) {
+      console.error("Error signing out:", error);
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     loginError,
+    user,
+    session,
     signInWithEmailPassword,
+    signOut,
     setLoginError
   };
 }

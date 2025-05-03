@@ -17,9 +17,8 @@ export const supabase = createClient<Database>(
       storage: localStorage,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true, // Important: enable session detection in URLs
-      flowType: 'pkce', // Using PKCE flow for better security
-      debug: true // Enable debug mode to track auth-related issues
+      detectSessionInUrl: true, // Critical: enable session detection in URLs
+      flowType: 'pkce' // Using PKCE flow for better security
     }
   }
 );

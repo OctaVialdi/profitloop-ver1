@@ -2,12 +2,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export function useMagicLinkHandler() {
   const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const processMagicLinkToken = async (userId: string, magicLinkToken: string) => {
     try {
+      setIsProcessing(true);
       console.log("Processing magic link token after login:", magicLinkToken);
       
       const { data: joinResult, error: joinError } = await supabase.rpc(
@@ -61,11 +64,14 @@ export function useMagicLinkHandler() {
       console.error("Error joining organization:", err);
       toast.error(err.message || "Gagal bergabung dengan organisasi");
       return false;
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const processInvitationToken = async (userId: string, invitationToken: string) => {
     try {
+      setIsProcessing(true);
       const { data: joinResult, error: joinError } = await supabase
         .rpc('join_organization', { 
           user_id: userId, 
@@ -87,11 +93,14 @@ export function useMagicLinkHandler() {
       console.error("Error joining organization:", joinErr);
       toast.error(joinErr.message || "Gagal bergabung dengan organisasi");
       return false;
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return {
     processMagicLinkToken,
-    processInvitationToken
+    processInvitationToken,
+    isProcessing
   };
 }
