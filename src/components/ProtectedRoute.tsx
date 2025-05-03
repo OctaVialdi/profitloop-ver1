@@ -58,12 +58,22 @@ export const ProtectedRoute = ({
     );
   }
 
+  // Jika berada di app.profitloop.id, sebaiknya tidak redirect ke login
+  // karena mungkin ini adalah permasalahan domain dan bukan autentikasi
   if (!authenticated) {
-    // Check if we're in production and on the wrong domain
-    if (process.env.NODE_ENV === 'production' && window.location.hostname === 'app.profitloop.id') {
-      // If we detect that we're using app.profitloop.id in production but it's not working,
-      // we might need to redirect to the correct domain or handle it differently
-      console.error("Domain mismatch detected. Please check your configuration.");
+    // Handle app.profitloop.id domain specially
+    if (window.location.hostname === 'app.profitloop.id') {
+      console.log("Detected app.profitloop.id domain. Not redirecting to login.");
+      // Instead of redirecting, we'll show a simple message
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 flex-col">
+          <h2 className="text-2xl font-bold mb-4">Domain Error</h2>
+          <p className="mb-4 text-center max-w-md">
+            app.profitloop.id domain is not configured correctly. 
+            Please contact the administrator.
+          </p>
+        </div>
+      );
     }
     
     return <Navigate to={redirectTo} />;

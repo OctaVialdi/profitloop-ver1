@@ -31,19 +31,21 @@ const NotFound = () => {
       "Hash:",
       location.hash,
       "Error code:",
-      searchParams.get('error_code') || location.hash.split('error_code=')[1]?.split('&')[0]
+      searchParams.get('error_code') || location.hash.split('error_code=')[1]?.split('&')[0],
+      "Hostname:",
+      window.location.hostname
     );
     
-    // Check if the user is attempting to access app.profitloop.id instead of the correct domain
-    if (window.location.hostname === 'app.profitloop.id') {
-      // If we're in development, redirect to localhost
-      if (process.env.NODE_ENV === 'development') {
-        window.location.href = `http://localhost:5173${location.pathname}${location.search}`;
-        return;
-      }
+    // Perubahan utama: Jangan pindahkan user di domain app.profitloop.id
+    // karena ini mungkin masalah domain, bukan masalah routing
+    const isAppProfitloopDomain = window.location.hostname === 'app.profitloop.id';
+    
+    if (isAppProfitloopDomain) {
+      console.log("User is on app.profitloop.id domain - not redirecting automatically");
+      return; // Don't redirect, just show the Not Found page
     }
     
-    // If this is an invitation URL but not being properly routed
+    // Jika ini adalah URL undangan tapi tidak diarahkan dengan benar
     if (isExpiredInvitation && token && !location.pathname.includes('/join-organization')) {
       // Redirect to the proper route
       navigate(`/join-organization?token=${token}&email=${encodeURIComponent(email || '')}`);
@@ -63,7 +65,9 @@ const NotFound = () => {
         }
       };
       
-      checkAuth();
+      if (!isAppProfitloopDomain) {
+        checkAuth();
+      }
     }
   }, [location.pathname, searchParams, location.hash, isExpiredInvitation, navigate, email, token]);
 
@@ -80,6 +84,35 @@ const NotFound = () => {
       navigate("/auth/login");
     }
   };
+
+  // Special case for app.profitloop.id domain
+  if (window.location.hostname === 'app.profitloop.id') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-center">Domain Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-gray-600 mb-4">
+              Terjadi masalah dengan domain app.profitloop.id. Aplikasi ini seharusnya tidak diakses melalui domain ini.
+            </p>
+            <p className="text-center text-sm text-gray-500">
+              Path: {location.pathname}
+            </p>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <Button 
+              onClick={() => window.location.href = "/"} 
+              variant="default"
+            >
+              Kembali ke Beranda
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   if (isExpiredInvitation) {
     return (
@@ -125,7 +158,7 @@ const NotFound = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
+        <p className="text-xl text-gray-600 mb-4">Oops! Halaman tidak ditemukan</p>
         <Button 
           onClick={() => navigate("/")}
           variant="default"

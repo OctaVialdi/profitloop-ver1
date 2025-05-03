@@ -11,11 +11,13 @@ function App() {
   // Log the environment status to the console
   useEffect(() => {
     console.log(`App is running in ${isDevelopment ? 'development' : 'production'} mode.`);
+    console.log(`Current hostname: ${window.location.hostname}`);
     
-    // Handle domain mismatch - redirect if on app.profitloop.id in development
-    if (window.location.hostname === 'app.profitloop.id' && isDevelopment) {
-      window.location.href = `http://localhost:5173${window.location.pathname}${window.location.search}`;
-    }
+    // Only handle domain redirections if explicitly requested
+    // Commented out the redirect to avoid navigation loops
+    // if (window.location.hostname === 'app.profitloop.id' && isDevelopment) {
+    //   window.location.href = `http://localhost:5173${window.location.pathname}${window.location.search}`;
+    // }
 
     // Improve scrolling performance
     document.documentElement.classList.add('antialiased');
