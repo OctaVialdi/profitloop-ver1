@@ -39,11 +39,8 @@ export const ProtectedRoute = ({
           console.log("User is authenticated via session check");
           setAuthenticated(true);
           
-          // Check if user has an organization
-          if (currentPath === '/onboarding') {
-            // If already on onboarding page, don't redirect
-            setHasOrganization(false);
-          } else {
+          // Check if user has an organization only when necessary
+          if (currentPath !== '/onboarding') {
             // Check if user has an organization
             const { data: profileData } = await supabase
               .from('profiles')
@@ -52,6 +49,9 @@ export const ProtectedRoute = ({
               .maybeSingle();
               
             setHasOrganization(!!profileData?.organization_id);
+          } else {
+            // If already on onboarding page, don't check for organization
+            setHasOrganization(false);
           }
         } else {
           console.log("No active session found");
@@ -70,7 +70,8 @@ export const ProtectedRoute = ({
       (event, session) => {
         console.log("Auth state changed:", event);
         setAuthenticated(!!session);
-        setLoading(false);
+        // Don't check for organization on auth state change to avoid recursion
+        // The checkAuth function will do that
       }
     );
 
@@ -96,11 +97,12 @@ export const ProtectedRoute = ({
   }
 
   // If user is authenticated but doesn't have organization and not already on onboarding page,
-  // redirect to onboarding (but only if not on specific pages)
+  // redirect to onboarding (but only if not on specific paths)
   if (authenticated && !hasOrganization && 
       currentPath !== '/onboarding' && 
       currentPath !== '/employee-welcome' &&
       !currentPath.startsWith('/auth/')) {
+    console.log("User has no organization, redirecting to onboarding");
     return <Navigate to="/onboarding" replace />;
   }
 

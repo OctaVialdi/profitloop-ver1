@@ -150,13 +150,18 @@ export async function createOrganization(formData: OrganizationFormData) {
         console.error("Error updating trial end date:", updateError);
       }
       
-      // Update user metadata with organization ID
-      await supabase.auth.updateUser({
-        data: {
-          organization_id: organizationData.id,
-          role: 'super_admin'
-        }
-      });
+      // Update user metadata with organization ID - using auth.updateUser to prevent the 403 error
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            organization_id: organizationData.id,
+            role: 'super_admin'
+          }
+        });
+      } catch (metaError) {
+        console.error("Error updating user metadata:", metaError);
+        // Continue even if this fails - the organization is already created
+      }
       
       return orgData;
     }

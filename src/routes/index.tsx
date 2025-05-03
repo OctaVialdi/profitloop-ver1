@@ -12,6 +12,7 @@ import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
 import OrganizationSetup from "@/pages/onboarding/OrganizationSetup";
 import EmployeeWelcome from "@/pages/employee/EmployeeWelcome";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export const AppRoutes = () => {
   return (
@@ -22,9 +23,18 @@ export const AppRoutes = () => {
       {/* Auth Routes */}
       {authRoutes}
       
-      {/* Manual routes that were previously in onboardingRoutes */}
-      <Route path="/onboarding" element={<OrganizationSetup />} />
-      <Route path="/employee-welcome" element={<EmployeeWelcome />} />
+      {/* Protected onboarding route */}
+      <Route path="/onboarding" element={
+        <ProtectedRoute>
+          <OrganizationSetup />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/employee-welcome" element={
+        <ProtectedRoute>
+          <EmployeeWelcome />
+        </ProtectedRoute>
+      } />
 
       {/* Dashboard Routes */}
       {dashboardRoutes}
