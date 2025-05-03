@@ -36,6 +36,12 @@ const MagicLinkJoin = () => {
   };
 
   useEffect(() => {
+    // Log useful debugging information
+    console.log("MagicLinkJoin component mounted");
+    console.log("URL parameters:", { token, email, errorCode, errorDescription });
+    console.log("Full URL:", window.location.href);
+    console.log("Hash:", window.location.hash);
+    
     const processInvitation = async () => {
       // Check if there's an error in the URL (from Supabase redirect)
       if (errorCode || errorDescription || window.location.hash.includes('error=access_denied')) {

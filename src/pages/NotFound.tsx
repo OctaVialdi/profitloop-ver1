@@ -1,9 +1,30 @@
 
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if this might be a magic link with a different format
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get("token");
+    const email = url.searchParams.get("email");
+    
+    // If it has token and email parameters, it's likely a magic link
+    if (token && email) {
+      console.log("Detected possible magic link parameters, redirecting to /join-organization");
+      navigate(`/join-organization?token=${token}&email=${email}`);
+    }
+    
+    // Check if the current path might be a magic link hash fragment
+    if (location.hash && location.hash.includes("access_token")) {
+      console.log("Detected access token in URL hash, redirecting to /join-organization");
+      navigate(`/join-organization${location.search}${location.hash}`);
+    }
+  }, [navigate, location]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

@@ -50,10 +50,12 @@ serve(async (req) => {
       .eq('id', organizationId)
       .single();
 
-    // Generate magic link URL
-    const baseUrl = supabaseUrl.includes("localhost") 
-      ? "http://localhost:5173" 
-      : "https://app.profitloop.id";
+    // Generate magic link URL - this is the key part that needs to be correct
+    // Make sure this URL will work for both local development and production
+    const baseUrl = req.headers.get("origin") || 
+                  (supabaseUrl.includes("localhost") 
+                    ? "http://localhost:5173" 
+                    : "https://app.profitloop.id");
       
     const magicLinkUrl = `${baseUrl}/join-organization?token=${result.token}&email=${encodeURIComponent(email)}`;
     
