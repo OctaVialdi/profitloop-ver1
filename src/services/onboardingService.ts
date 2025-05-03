@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Organization, SubscriptionPlan, UserProfile } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
@@ -133,13 +134,17 @@ export async function createOrganization(formData: OrganizationFormData) {
     if (orgData) {
       console.log("Organization created successfully:", orgData);
       
+      // We need to properly handle the return type from the RPC function
+      // The result is a JSON object, so we need to cast it properly
+      const organizationData = orgData as { id: string };
+      
       // Set a trial_end_date to 1 minute from now for testing
       const { error: updateError } = await supabase
         .from('organizations')
         .update({
           trial_end_date: new Date(Date.now() + 60 * 1000).toISOString() // 1 minute from now
         })
-        .eq('id', orgData.id);
+        .eq('id', organizationData.id);
         
       if (updateError) {
         console.error("Error updating trial end date:", updateError);
@@ -148,7 +153,7 @@ export async function createOrganization(formData: OrganizationFormData) {
       // Update user metadata with organization ID
       await supabase.auth.updateUser({
         data: {
-          organization_id: orgData.id,
+          organization_id: organizationData.id,
           role: 'super_admin'
         }
       });
