@@ -68,7 +68,7 @@ const NodeEditDialog: React.FC<NodeEditDialogProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit Node</DialogTitle>
+          <DialogTitle>Edit Organization Node</DialogTitle>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
@@ -109,21 +109,24 @@ const NodeEditDialog: React.FC<NodeEditDialogProps> = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="label">Label</Label>
+              <Label htmlFor="label">Name/Title</Label>
               <Input 
                 id="label" 
                 value={editedNode.data.label || ''} 
                 onChange={(e) => handleChange('label', e.target.value)} 
+                placeholder={editedNode.type === 'department' ? 'Department Name' : 
+                             editedNode.type === 'position' ? 'Position Title' : 'Person Name'}
               />
             </div>
             
             {(editedNode.type === 'person' || editedNode.type === 'position') && (
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">Role/Description</Label>
                 <Input 
                   id="role" 
                   value={editedNode.data.role || ''} 
                   onChange={(e) => handleChange('role', e.target.value)} 
+                  placeholder={editedNode.type === 'person' ? 'Job Title' : 'Role Description'}
                 />
               </div>
             )}
@@ -134,6 +137,7 @@ const NodeEditDialog: React.FC<NodeEditDialogProps> = ({
                 id="department" 
                 value={editedNode.data.department || ''} 
                 onChange={(e) => handleChange('department', e.target.value)} 
+                placeholder="Department Name"
               />
             </div>
             
@@ -146,6 +150,7 @@ const NodeEditDialog: React.FC<NodeEditDialogProps> = ({
                     type="email" 
                     value={editedNode.data.email || ''} 
                     onChange={(e) => handleChange('email', e.target.value)} 
+                    placeholder="email@example.com"
                   />
                 </div>
                 
@@ -188,6 +193,24 @@ const NodeEditDialog: React.FC<NodeEditDialogProps> = ({
                   onChange={(e) => handleChange('color', e.target.value)} 
                   className="flex-1"
                 />
+              </div>
+              
+              <div className="mt-4">
+                <Label>Preview</Label>
+                <div className="mt-2 p-4 rounded-md border" 
+                  style={{
+                    backgroundColor: editedNode.type === 'department' ? 
+                      `${editedNode.data.color || '#9b87f5'}15` : 
+                      editedNode.type === 'position' ? '#f8f8f8' : '#ffffff',
+                    borderLeft: editedNode.type === 'department' ? 
+                      `4px solid ${editedNode.data.color || '#9b87f5'}` : undefined,
+                    borderColor: editedNode.type !== 'department' ? 
+                      editedNode.data.color || '#9b87f5' : undefined,
+                  }}
+                >
+                  <div className="font-medium">{editedNode.data.label || 'Node Title'}</div>
+                  {editedNode.data.role && <div className="text-sm text-gray-500">{editedNode.data.role}</div>}
+                </div>
               </div>
             </div>
           </TabsContent>

@@ -1,15 +1,18 @@
 
-import React, { useState, useCallback, useRef } from 'react';
-import { Network, ZoomIn, ZoomOut, PlusCircle, Trash2, Edit, Move } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Network, ZoomIn, ZoomOut, PlusCircle, Trash2, Edit, Move, Save, AlertTriangle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { toast } from 'sonner';
+import { useNodesState, useEdgesState, addEdge } from '@xyflow/react';
+import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from '@/hooks/useOrganization';
+
 import OrganizationFlowChart from './organization/OrganizationFlowChart';
 import NodeEditDialog from './organization/NodeEditDialog';
-import { useOrganization } from '@/hooks/useOrganization';
-import { toast } from 'sonner';
 
 export type OrgNode = {
   id: string;
@@ -35,13 +38,102 @@ export type OrgEdge = {
   animated?: boolean;
 };
 
+// Type definitions for database data
+type DbOrgNode = {
+  id: string;
+  name: string;
+  role: string | null;
+  parent_id: string | null;
+  color_hex: string | null;
+  profile_pic_url: string | null;
+  type: 'department' | 'position' | 'person';
+  order_index: number | null;
+};
+
 const OrganizationalStructureTab: React.FC = () => {
   const { organization } = useOrganization();
   const [viewMode, setViewMode] = useState<'vertical' | 'horizontal'>('vertical');
-  const [nodes, setNodes] = useState<OrgNode[]>(initialNodes);
-  const [edges, setEdges] = useState<OrgEdge[]>(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<OrgNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<OrgEdge>([]);
   const [selectedNode, setSelectedNode] = useState<OrgNode | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Load organizational structure from Supabase
+  const fetchOrgStructure = useCallback(async () => {
+    if (!organization?.id) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const { data: orgStructureData, error } = await supabase
+        .from('org_structure')
+        .select('id, name, role, parent_id, color_hex, profile_pic_url, type, order_index')
+        .eq('organization_id', organization.id)
+        .order('order_index', { ascending: true });
+        
+      if (error) {
+        throw error;
+      }
+
+      if (orgStructureData && orgStructureData.length > 0) {
+        const transformedNodes: OrgNode[] = [];
+        const transformedEdges: OrgEdge[] = [];
+        
+        // Process nodes
+        orgStructureData.forEach((node: DbOrgNode, index) => {
+          // Generate a position for the node
+          // This is a simple hierarchical layout - in a real app, you'd use a more sophisticated algorithm
+          const position = {
+            x: ((node.order_index || index) % 3) * 300 + 100,
+            y: Math.floor((node.order_index || index) / 3) * 150 + 100
+          };
+          
+          // If the node has a parent, create an edge
+          if (node.parent_id) {
+            transformedEdges.push({
+              id: `edge-${node.parent_id}-${node.id}`,
+              source: node.parent_id,
+              target: node.id,
+              animated: true
+            });
+          }
+          
+          // Transform database node to OrgNode
+          transformedNodes.push({
+            id: node.id,
+            type: node.type || 'department',
+            data: {
+              label: node.name,
+              role: node.role || undefined,
+              profileImage: node.profile_pic_url || undefined,
+              color: node.color_hex || undefined
+            },
+            position
+          });
+        });
+        
+        setNodes(transformedNodes);
+        setEdges(transformedEdges);
+      } else {
+        // If no data, set empty arrays
+        setNodes([]);
+        setEdges([]);
+      }
+    } catch (error) {
+      console.error("Error fetching organization structure:", error);
+      toast.error("Failed to load organization structure");
+    } finally {
+      setIsLoading(false);
+      setHasChanges(false);
+    }
+  }, [organization?.id, setNodes, setEdges]);
+  
+  // Call the fetch function when the component mounts or organization changes
+  useEffect(() => {
+    fetchOrgStructure();
+  }, [fetchOrgStructure]);
 
   // Functions for node operations
   const handleNodeClick = (node: OrgNode) => {
@@ -59,6 +151,7 @@ const OrganizationalStructureTab: React.FC = () => {
     setNodes((nds) => [...nds, newNode]);
     setSelectedNode(newNode);
     setIsEditDialogOpen(true);
+    setHasChanges(true);
     toast.success("New position added. Edit the details.");
   };
 
@@ -79,6 +172,7 @@ const OrganizationalStructureTab: React.FC = () => {
         )
       );
       setSelectedNode(null);
+      setHasChanges(true);
       toast.success("Node deleted successfully");
     } else {
       toast.error("Please select a node to delete");
@@ -91,39 +185,9 @@ const OrganizationalStructureTab: React.FC = () => {
     );
     setIsEditDialogOpen(false);
     setSelectedNode(updatedNode);
+    setHasChanges(true);
     toast.success("Node updated successfully");
   };
-
-  const handleNodesChange = useCallback((changes: any) => {
-    setNodes((nds) => {
-      const updatedNodes = [...nds];
-      changes.forEach((change: any) => {
-        if (change.type === 'position' && change.id) {
-          const nodeIndex = updatedNodes.findIndex((n) => n.id === change.id);
-          if (nodeIndex !== -1) {
-            updatedNodes[nodeIndex] = {
-              ...updatedNodes[nodeIndex],
-              position: {
-                x: change.position?.x || updatedNodes[nodeIndex].position.x,
-                y: change.position?.y || updatedNodes[nodeIndex].position.y,
-              },
-            };
-          }
-        }
-      });
-      return updatedNodes;
-    });
-  }, []);
-
-  const handleEdgesChange = useCallback((changes: any) => {
-    setEdges((eds) => {
-      return eds.filter((edge) => {
-        return !changes.some((change: any) => 
-          change.type === 'remove' && change.id === edge.id
-        );
-      });
-    });
-  }, []);
 
   const handleConnect = useCallback((params: any) => {
     const newEdge = { 
@@ -133,12 +197,84 @@ const OrganizationalStructureTab: React.FC = () => {
       animated: true
     };
     setEdges((eds) => [...eds, newEdge]);
-  }, []);
+    setHasChanges(true);
+  }, [setEdges]);
 
-  const saveOrganizationStructure = () => {
-    console.log("Saving organization structure:", { nodes, edges });
-    // Here we would save to database in the future
-    toast.success("Organization structure saved successfully");
+  // Export current view as PNG
+  const handleExportPNG = () => {
+    // The implementation of this would typically use html2canvas or a similar library
+    // For now, we'll just show a toast
+    toast.success("Export feature will be implemented soon");
+  };
+
+  // Save the organization structure to Supabase
+  const saveOrganizationStructure = async () => {
+    if (!organization?.id) {
+      toast.error("No organization found");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // First, let's delete all existing structure to rebuild it
+      // In a production app, you might want a more sophisticated approach that only updates what changed
+      await supabase
+        .from('org_structure')
+        .delete()
+        .eq('organization_id', organization.id);
+      
+      // Insert all nodes
+      const dbNodes = nodes.map((node, index) => ({
+        id: node.id.startsWith('node-') ? undefined : node.id, // Use undefined for new nodes to let Supabase generate UUIDs
+        organization_id: organization.id,
+        name: node.data.label,
+        role: node.data.role || null,
+        type: node.type,
+        color_hex: node.data.color || null,
+        profile_pic_url: node.data.profileImage || null,
+        order_index: index,
+        // We'll set parent_id in a second pass
+      }));
+      
+      const { data: insertedNodes, error: insertError } = await supabase
+        .from('org_structure')
+        .insert(dbNodes)
+        .select();
+        
+      if (insertError) {
+        throw insertError;
+      }
+      
+      // Create a mapping of our temporary IDs to the real UUIDs
+      const idMapping: Record<string, string> = {};
+      insertedNodes?.forEach((node, index) => {
+        idMapping[nodes[index].id] = node.id;
+      });
+      
+      // Now add the parent relationships
+      const updatePromises = edges.map(edge => {
+        const sourceId = idMapping[edge.source] || edge.source;
+        const targetId = idMapping[edge.target] || edge.target;
+        
+        return supabase
+          .from('org_structure')
+          .update({ parent_id: sourceId })
+          .eq('id', targetId);
+      });
+      
+      await Promise.all(updatePromises);
+      
+      // Refetch to get the latest data
+      await fetchOrgStructure();
+      
+      toast.success("Organization structure saved successfully");
+    } catch (error) {
+      console.error("Error saving organization structure:", error);
+      toast.error("Failed to save organization structure");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -148,7 +284,22 @@ const OrganizationalStructureTab: React.FC = () => {
           <Network className="h-5 w-5 text-purple-500" />
           <h2 className="text-2xl font-bold">Organizational Structure</h2>
         </div>
-        <Button onClick={saveOrganizationStructure}>Save Structure</Button>
+        <div className="flex gap-2">
+          {hasChanges && (
+            <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-300 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              Unsaved Changes
+            </Badge>
+          )}
+          <Button 
+            onClick={saveOrganizationStructure} 
+            disabled={isLoading || !hasChanges}
+            className="flex items-center gap-1"
+          >
+            <Save className="h-4 w-4" />
+            Save Structure
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center justify-between">
@@ -166,6 +317,15 @@ const OrganizationalStructureTab: React.FC = () => {
           </Tabs>
         </div>
         <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={handleExportPNG}
+            className="gap-1"
+          >
+            <Download className="h-4 w-4" />
+            Export PNG
+          </Button>
           <Button 
             size="sm" 
             variant="outline" 
@@ -239,15 +399,21 @@ const OrganizationalStructureTab: React.FC = () => {
       )}
 
       <div className="border rounded-lg h-[600px] bg-white relative">
-        <OrganizationFlowChart 
-          nodes={nodes}
-          edges={edges}
-          direction={viewMode === 'vertical' ? 'TB' : 'LR'}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={handleEdgesChange}
-          onConnect={handleConnect}
-          onNodeClick={handleNodeClick}
-        />
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700"></div>
+          </div>
+        ) : (
+          <OrganizationFlowChart 
+            nodes={nodes}
+            edges={edges}
+            direction={viewMode === 'vertical' ? 'TB' : 'LR'}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={handleConnect}
+            onNodeClick={handleNodeClick}
+          />
+        )}
       </div>
       
       <NodeEditDialog 
@@ -259,74 +425,5 @@ const OrganizationalStructureTab: React.FC = () => {
     </div>
   );
 };
-
-// Sample initial data
-const initialNodes: OrgNode[] = [
-  {
-    id: 'ceo',
-    type: 'person',
-    data: { 
-      label: 'CEO', 
-      role: 'Chief Executive Officer',
-      email: 'ceo@company.com',
-      joinDate: '2020-01-15',
-      color: '#8B5CF6'
-    },
-    position: { x: 250, y: 0 }
-  },
-  {
-    id: 'cto',
-    type: 'person',
-    data: { 
-      label: 'CTO', 
-      role: 'Chief Technology Officer',
-      department: 'Technology',
-      email: 'cto@company.com',
-      joinDate: '2020-03-10',
-      color: '#0EA5E9'
-    },
-    position: { x: 100, y: 100 }
-  },
-  {
-    id: 'cfo',
-    type: 'person',
-    data: { 
-      label: 'CFO', 
-      role: 'Chief Financial Officer',
-      department: 'Finance',
-      email: 'cfo@company.com',
-      joinDate: '2020-02-20',
-      color: '#F97316'
-    },
-    position: { x: 400, y: 100 }
-  },
-  {
-    id: 'dev-team',
-    type: 'department',
-    data: { 
-      label: 'Development Team',
-      department: 'Technology',
-      color: '#0EA5E9'
-    },
-    position: { x: 100, y: 200 }
-  },
-  {
-    id: 'finance-team',
-    type: 'department',
-    data: { 
-      label: 'Finance Team',
-      department: 'Finance',
-      color: '#F97316'
-    },
-    position: { x: 400, y: 200 }
-  }
-];
-
-const initialEdges: OrgEdge[] = [
-  { id: 'e-ceo-cto', source: 'ceo', target: 'cto' },
-  { id: 'e-ceo-cfo', source: 'ceo', target: 'cfo' },
-  { id: 'e-cto-dev', source: 'cto', target: 'dev-team' },
-  { id: 'e-cfo-fin', source: 'cfo', target: 'finance-team' }
-];
 
 export default OrganizationalStructureTab;

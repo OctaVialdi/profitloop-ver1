@@ -259,6 +259,90 @@ export type Database = {
           },
         ]
       }
+      org_members: {
+        Row: {
+          node_id: string
+          user_id: string
+        }
+        Insert: {
+          node_id: string
+          user_id: string
+        }
+        Update: {
+          node_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "org_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_structure: {
+        Row: {
+          color_hex: string | null
+          created_at: string | null
+          id: string
+          name: string
+          order_index: number | null
+          organization_id: string
+          parent_id: string | null
+          profile_pic_url: string | null
+          role: string | null
+          type: string | null
+        }
+        Insert: {
+          color_hex?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          order_index?: number | null
+          organization_id: string
+          parent_id?: string | null
+          profile_pic_url?: string | null
+          role?: string | null
+          type?: string | null
+        }
+        Update: {
+          color_hex?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          order_index?: number | null
+          organization_id?: string
+          parent_id?: string | null
+          profile_pic_url?: string | null
+          role?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_structure_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_structure_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "org_structure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           address: string | null

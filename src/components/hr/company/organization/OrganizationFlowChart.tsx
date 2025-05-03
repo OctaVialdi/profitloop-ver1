@@ -9,7 +9,7 @@ import {
   Panel
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { ZoomIn, ZoomOut } from 'lucide-react';
+import { ZoomIn, ZoomOut, Focus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import OrgPersonNode from './nodes/OrgPersonNode';
@@ -60,6 +60,12 @@ const OrganizationFlowChart: React.FC<OrganizationFlowChartProps> = ({
       flowInstance.current.zoomOut();
     }
   };
+  
+  const handleFitView = () => {
+    if (flowInstance.current) {
+      flowInstance.current.fitView({ padding: 0.2 });
+    }
+  };
 
   const handleNodeClick = useCallback((_, node) => {
     if (onNodeClick) {
@@ -84,21 +90,36 @@ const OrganizationFlowChart: React.FC<OrganizationFlowChartProps> = ({
       }}
       fitView
       proOptions={{ hideAttribution: true }}
+      nodeOrigin={[0.5, 0]}
+      defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+      minZoom={0.1}
+      maxZoom={2}
+      connectionMode="loose"
+      snapToGrid
+      snapGrid={[15, 15]}
     >
-      <Background />
+      <Background 
+        color="#f0f0f0"
+        gap={20}
+        size={1}
+      />
       <Controls position="bottom-right" />
       <MiniMap 
         nodeStrokeWidth={3}
         zoomable
         pannable
+        maskColor="rgba(240, 240, 240, 0.6)"
       />
       <Panel position="top-right">
-        <div className="flex gap-2">
-          <Button onClick={handleZoomIn} size="icon" variant="outline">
+        <div className="flex gap-2 bg-white rounded-md shadow-sm p-1">
+          <Button onClick={handleZoomIn} size="icon" variant="outline" title="Zoom In">
             <ZoomIn className="h-4 w-4" />
           </Button>
-          <Button onClick={handleZoomOut} size="icon" variant="outline">
+          <Button onClick={handleZoomOut} size="icon" variant="outline" title="Zoom Out">
             <ZoomOut className="h-4 w-4" />
+          </Button>
+          <Button onClick={handleFitView} size="icon" variant="outline" title="Fit View">
+            <Focus className="h-4 w-4" />
           </Button>
         </div>
       </Panel>
