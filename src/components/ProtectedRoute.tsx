@@ -1,8 +1,7 @@
 
-import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { ReactNode, useEffect, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,7 +16,8 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
-  const currentPath = window.location.pathname;
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   // Check if current path is in public routes
   const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
@@ -29,22 +29,16 @@ export const ProtectedRoute = ({
       return;
     }
 
-    // First set up the auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setAuthenticated(!!session);
-        setLoading(false);
-      }
-    );
-
-    // Then check for an existing session
     const checkAuth = async () => {
       try {
+        // First get the current session directly
         const { data } = await supabase.auth.getSession();
         
         if (data.session) {
+          console.log("User is authenticated via session check");
           setAuthenticated(true);
         } else {
+          console.log("No active session found");
           setAuthenticated(false);
         }
       } catch (error) {
@@ -55,6 +49,16 @@ export const ProtectedRoute = ({
       }
     };
 
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Auth state changed:", event);
+        setAuthenticated(!!session);
+        setLoading(false);
+      }
+    );
+
+    // Check for an existing session
     checkAuth();
 
     return () => {
@@ -71,7 +75,8 @@ export const ProtectedRoute = ({
   }
 
   if (!authenticated && !isPublicRoute) {
-    return <Navigate to={redirectTo} />;
+    console.log("Not authenticated, redirecting to:", redirectTo);
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

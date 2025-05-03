@@ -64,7 +64,7 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
       if (orgData?.trial_expired && !orgData?.subscription_plan_id) {
         setTrialExpired(true);
         if (!isPathAllowed()) {
-          navigate("/subscription");
+          navigate("/subscription", { replace: true });
         }
       }
       

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -17,7 +16,6 @@ const OrganizationSetup = () => {
   });
   
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const navigate = useNavigate();
 
   // Check authentication status and existing organization on component mount
@@ -27,14 +25,13 @@ const OrganizationSetup = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          setIsAuthenticated(false);
+          console.log("Not authenticated, redirecting to login");
           toast.error("Anda belum login. Silakan login terlebih dahulu.");
-          navigate("/auth/login");
+          navigate("/auth/login", { replace: true });
           return;
         } 
         
         console.log("User is authenticated:", session.user.id);
-        setIsAuthenticated(true);
         
         // Check if user already has an organization
         const { data: profileData, error: profileError } = await supabase
@@ -49,14 +46,13 @@ const OrganizationSetup = () => {
         } else if (profileData?.organization_id) {
           console.log("User already has an organization:", profileData.organization_id);
           toast.info("Anda sudah memiliki organisasi.");
-          navigate("/dashboard");
+          navigate("/dashboard", { replace: true });
           return;
         }
       } catch (error) {
         console.error("Error checking auth:", error);
         toast.error("Terjadi kesalahan saat memeriksa autentikasi.");
-        setIsAuthenticated(false);
-        navigate("/auth/login");
+        navigate("/auth/login", { replace: true });
       }
     };
     
@@ -77,16 +73,6 @@ const OrganizationSetup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!isAuthenticated) {
-      toast.error("Anda belum login. Silakan login terlebih dahulu.");
-      navigate("/auth/login");
-      return;
-    }
-    
-    if (!validateForm()) return;
-    
-    setIsLoading(true);
     
     try {
       // Show loading toast
@@ -121,17 +107,6 @@ const OrganizationSetup = () => {
       setIsLoading(false);
     }
   };
-
-  if (isAuthenticated === null) {
-    // Still checking authentication
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
-        <div className="text-center">
-          <p>Memuat...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
