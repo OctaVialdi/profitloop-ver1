@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Laptop, FileWarning, FileText, History, Hierarchy } from "lucide-react";
+import { Laptop, FileWarning, FileText, History, Network } from "lucide-react";
 
 interface CompanyTabsProps {
   activeTab: string;
@@ -14,7 +14,7 @@ const CompanyTabs: React.FC<CompanyTabsProps> = ({ activeTab, setActiveTab }) =>
     { id: "reprimand", label: "Reprimand", icon: <FileWarning className="w-4 h-4" /> },
     { id: "files", label: "Files", icon: <FileText className="w-4 h-4" /> },
     { id: "history", label: "Change History", icon: <History className="w-4 h-4" /> },
-    { id: "org-structure", label: "Organizational Structure", icon: <Hierarchy className="w-4 h-4" /> },
+    { id: "org-structure", label: "Organizational Structure", icon: <Network className="w-4 h-4" /> },
   ];
 
   return (
