@@ -50,13 +50,18 @@ serve(async (req) => {
       .eq('id', organizationId)
       .single();
 
-    // Generate magic link URL - this is the key part that needs to be correct
-    // Make sure this URL will work for both local development and production
-    const baseUrl = req.headers.get("origin") || 
-                  (supabaseUrl.includes("localhost") 
-                    ? "http://localhost:5173" 
-                    : "https://app.profitloop.id");
+    // Determine the correct base URL for the magic link
+    // Use the origin from request headers, or fallback to a sensible default
+    let baseUrl = req.headers.get("origin");
+    
+    // If origin is not available or appears to be a localhost URL while the 
+    // Supabase URL is not localhost, use app.profitloop.id instead
+    if (!baseUrl || 
+        (baseUrl.includes("localhost") && !supabaseUrl.includes("localhost"))) {
+      baseUrl = "https://app.profitloop.id";
+    }
       
+    // Generate the magic link URL - critical part for auth flow
     const magicLinkUrl = `${baseUrl}/join-organization?token=${result.token}&email=${encodeURIComponent(email)}`;
     
     console.log("Generated Magic Link URL:", magicLinkUrl);
@@ -66,7 +71,8 @@ serve(async (req) => {
     let emailError = null;
     
     try {
-      // Try to send email using Supabase's built-in feature
+      // Send email using Supabase's auth.admin.inviteUserByEmail
+      // This method will create the user if they don't exist and send them an email
       const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
         redirectTo: magicLinkUrl,
         data: {
@@ -88,7 +94,7 @@ serve(async (req) => {
       console.error("Exception sending email with Supabase auth:", err);
     }
     
-    // If email is already registered or there's another error, try the second alternative: sending a direct email
+    // Alternative approach for users who are already registered
     if (!emailSent && emailError?.message?.includes("already been registered")) {
       try {
         // Find the existing user

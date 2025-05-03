@@ -12,11 +12,14 @@ const MagicLinkJoin = () => {
   const navigate = useNavigate();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
-  const errorCode = searchParams.get("error_code") || new URLSearchParams(window.location.hash.substring(1)).get("error_code");
-  const errorDescription = searchParams.get("error_description") || new URLSearchParams(window.location.hash.substring(1)).get("error_description");
-  const accessToken = new URLSearchParams(window.location.hash.substring(1)).get("access_token");
-  const refreshToken = new URLSearchParams(window.location.hash.substring(1)).get("refresh_token");
-  const type = new URLSearchParams(window.location.hash.substring(1)).get("type");
+  
+  // Extract hash parameters (for Supabase auth tokens)
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const accessToken = hashParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token");
+  const type = hashParams.get("type");
+  const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
+  const errorDescription = searchParams.get("error_description") || hashParams.get("error_description");
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,12 +46,11 @@ const MagicLinkJoin = () => {
     // Log useful debugging information
     console.log("MagicLinkJoin component mounted");
     console.log("URL parameters:", { token, email, errorCode, errorDescription });
+    console.log("Hash parameters:", { accessToken, refreshToken, type });
     console.log("Full URL:", window.location.href);
-    console.log("Hash:", window.location.hash);
-    console.log("Hash parsed:", { accessToken, refreshToken, type });
     
     const processInvitation = async () => {
-      // Check if there's an error in the URL (from Supabase redirect)
+      // Check if there's an error in the URL
       if (errorCode || errorDescription || window.location.hash.includes('error=access_denied')) {
         console.error("Error from Supabase auth:", errorCode, errorDescription);
         setError(errorDescription?.replace(/\+/g, ' ') || "Link undangan tidak valid atau sudah kadaluarsa");
@@ -56,35 +58,44 @@ const MagicLinkJoin = () => {
         return;
       }
       
-      // Process the access token if present (Supabase magic link authentication)
-      if (accessToken && refreshToken && type === "invite") {
+      // IMPORTANT: Process the access token if present (from Supabase magic link)
+      if (accessToken && refreshToken) {
         try {
-          console.log("Setting session from URL hash fragments");
+          console.log("Setting session from URL hash tokens");
           
-          // Set the session manually using the tokens from the URL
+          // Set session manually using the tokens from the URL hash
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
           
           if (error) {
-            console.error("Error setting session:", error);
+            console.error("Error setting session from tokens:", error);
             throw error;
           }
           
-          if (!data.session) {
-            throw new Error("No session returned when setting session");
+          if (!data || !data.session) {
+            console.error("No session returned when setting session");
+            throw new Error("Failed to set session from magic link");
           }
           
-          console.log("Successfully set session from magic link tokens");
+          console.log("Auth session set successfully:", data.session.user.id);
           
-          // Now use the token from URL to process the invitation
-          if (token) {
-            // Verify token and join organization
+          // Get user metadata from JWT claims
+          const userMetadata = data.session.user.user_metadata;
+          console.log("User metadata from session:", userMetadata);
+          
+          // If we have a token from the URL, process the invitation
+          if (token || userMetadata?.invitation_token) {
+            const invitationToken = token || userMetadata?.invitation_token;
+            
+            console.log("Processing invitation with token:", invitationToken);
+            
+            // Process the magic link invitation
             const { data: result, error: joinError } = await supabase.rpc(
               'process_magic_link_invitation',
               { 
-                invitation_token: token,
+                invitation_token: invitationToken,
                 user_id: data.session.user.id
               }
             );
@@ -97,7 +108,14 @@ const MagicLinkJoin = () => {
             }
 
             // Handle the response as JSON object
-            const invitationResult = result as { success: boolean, message: string, organization_id?: string, role?: string };
+            const invitationResult = result as { 
+              success: boolean, 
+              message: string, 
+              organization_id?: string, 
+              role?: string 
+            };
+
+            console.log("Invitation processing result:", invitationResult);
 
             if (!invitationResult.success) {
               setError(invitationResult.message || "Token undangan tidak valid atau sudah kadaluarsa");
@@ -105,33 +123,52 @@ const MagicLinkJoin = () => {
               return;
             }
 
-            // Get organization details if joining was successful
-            if (invitationResult.organization_id) {
-              const { data: orgData, error: orgError } = await supabase
+            // Get organization name from metadata or from database
+            let orgName = userMetadata?.organization_name;
+            
+            // If organization name is not in metadata, fetch from database
+            if (!orgName && invitationResult.organization_id) {
+              const { data: orgData } = await supabase
                 .from('organizations')
                 .select('name')
                 .eq('id', invitationResult.organization_id)
                 .single();
 
               if (orgData) {
-                setOrganizationName(orgData.name);
+                orgName = orgData.name;
               }
             }
 
+            setOrganizationName(orgName || "");
             toast.success("Berhasil bergabung dengan organisasi!");
             setSuccess(true);
             setIsLoading(false);
+            
+            // Update user metadata with organization info
+            if (invitationResult.organization_id) {
+              await supabase.auth.updateUser({
+                data: {
+                  organization_id: invitationResult.organization_id,
+                  role: invitationResult.role || userMetadata?.role || "employee"
+                }
+              });
+            }
             
             // Delay before redirect to welcome page
             setTimeout(() => {
               navigate("/employee-welcome", { 
                 state: { 
-                  organizationName,
-                  role: invitationResult.role || "employee" 
+                  organizationName: orgName,
+                  role: invitationResult.role || userMetadata?.role || "employee" 
                 }
               });
             }, 2000);
             
+            return;
+          } else {
+            // If we don't have a token but authentication succeeded, redirect to dashboard
+            toast.success("Login berhasil!");
+            navigate("/dashboard");
             return;
           }
         } catch (error: any) {
@@ -142,81 +179,89 @@ const MagicLinkJoin = () => {
         }
       }
 
-      if (!token) {
-        setError("Token undangan tidak ditemukan");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          // If user is not logged in, redirect to login page with token
-          navigate("/auth/login", { 
-            state: { 
-              email,
-              magicLinkToken: token 
-            }
-          });
-          return;
-        }
-
-        // Verify token and join organization
-        const { data, error: joinError } = await supabase.rpc(
-          'process_magic_link_invitation',
-          { 
-            invitation_token: token,
-            user_id: user.id
+      // If there's no access token in the URL hash but we have a token in the URL parameters,
+      // and the user is not logged in, redirect to login page with the token
+      if (token && !accessToken) {
+        try {
+          // Check if user is already logged in
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (!user) {
+            // If not logged in, redirect to login page with token
+            console.log("No user found, redirecting to login with token");
+            navigate("/auth/login", { 
+              state: { 
+                email,
+                magicLinkToken: token 
+              }
+            });
+            return;
           }
-        );
-
-        if (joinError) {
-          console.error("Error processing invitation:", joinError);
-          setError(joinError.message || "Gagal memproses undangan");
-          setIsLoading(false);
-          return;
-        }
-
-        // Handle the response as JSON object
-        const result = data as { success: boolean, message: string, organization_id?: string };
-
-        if (!result.success) {
-          setError(result.message || "Token undangan tidak valid atau sudah kadaluarsa");
-          setIsLoading(false);
-          return;
-        }
-
-        // Get organization details if joining was successful
-        if (result.organization_id) {
-          const { data: orgData, error: orgError } = await supabase
-            .from('organizations')
-            .select('name')
-            .eq('id', result.organization_id)
-            .single();
-
-          if (orgData) {
-            setOrganizationName(orgData.name);
-          }
-        }
-
-        toast.success("Berhasil bergabung dengan organisasi!");
-        setSuccess(true);
-        setIsLoading(false);
-        
-        // Delay before redirect to welcome page
-        setTimeout(() => {
-          navigate("/employee-welcome", { 
-            state: { 
-              organizationName,
-              role: (data as any).role || "employee" 
+          
+          // If user is logged in, process the invitation token
+          console.log("User already logged in, processing invitation token");
+          const { data, error: joinError } = await supabase.rpc(
+            'process_magic_link_invitation',
+            { 
+              invitation_token: token,
+              user_id: user.id
             }
-          });
-        }, 2000);
+          );
 
-      } catch (error: any) {
-        console.error("Unexpected error:", error);
-        setError(error.message || "Terjadi kesalahan saat memproses undangan");
+          if (joinError) {
+            console.error("Error processing invitation:", joinError);
+            setError(joinError.message || "Gagal memproses undangan");
+            setIsLoading(false);
+            return;
+          }
+
+          // Handle the response
+          const invitationResult = data as { 
+            success: boolean, 
+            message: string, 
+            organization_id?: string, 
+            role?: string 
+          };
+
+          if (!invitationResult.success) {
+            setError(invitationResult.message || "Token undangan tidak valid atau sudah kadaluarsa");
+            setIsLoading(false);
+            return;
+          }
+
+          // Get organization name if joining was successful
+          if (invitationResult.organization_id) {
+            const { data: orgData } = await supabase
+              .from('organizations')
+              .select('name')
+              .eq('id', invitationResult.organization_id)
+              .single();
+
+            if (orgData) {
+              setOrganizationName(orgData.name);
+            }
+          }
+
+          toast.success("Berhasil bergabung dengan organisasi!");
+          setSuccess(true);
+          setIsLoading(false);
+          
+          // Delay before redirect to welcome page
+          setTimeout(() => {
+            navigate("/employee-welcome", { 
+              state: { 
+                organizationName,
+                role: invitationResult.role || "employee" 
+              }
+            });
+          }, 2000);
+        } catch (error: any) {
+          console.error("Unexpected error:", error);
+          setError(error.message || "Terjadi kesalahan saat memproses undangan");
+          setIsLoading(false);
+        }
+      } else if (!token && !accessToken) {
+        setError("Tidak ada token undangan yang ditemukan");
         setIsLoading(false);
       }
     };
