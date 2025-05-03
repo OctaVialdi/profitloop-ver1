@@ -49,27 +49,26 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   // Filter the column order to only include visible columns
   const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
   
-  // Limit to 7 visible columns and ensure "name" is always included
+  // Limit to a maximum of 6 visible columns (plus name column) to ensure total of 7 
   // Explicitly type the result as an array of keys from EmployeeColumnState
   const limitedVisibleColumnsOrder: Array<keyof EmployeeColumnState> = (() => {
-    // If 7 or fewer columns are visible, use all of them
-    if (visibleColumnsOrder.length <= 7) {
-      return visibleColumnsOrder;
-    }
+    const maxColumns = 7; // Maximum number of columns to display
     
-    // Otherwise, limit to 7 columns, ensuring "name" is always included
+    // If name is in the visible columns, we need to ensure it's included
+    // and we can have up to 6 more columns
     const nameIndex = visibleColumnsOrder.indexOf('name');
+    
     if (nameIndex === -1) {
-      // If name is not in the visible columns, just take the first 7
-      return visibleColumnsOrder.slice(0, 7) as Array<keyof EmployeeColumnState>;
+      // If name is not in the visible columns, just take the first maxColumns
+      return visibleColumnsOrder.slice(0, maxColumns) as Array<keyof EmployeeColumnState>;
     } else {
       // Remove "name" from the array for now
       const withoutName = [...visibleColumnsOrder];
       withoutName.splice(nameIndex, 1);
       
-      // Take the first 6 items plus "name"
-      // Explicitly cast the result to ensure type safety
-      return ['name' as keyof EmployeeColumnState, ...withoutName.slice(0, 6) as Array<keyof EmployeeColumnState>];
+      // Take the name column plus up to (maxColumns-1) more columns
+      return ['name' as keyof EmployeeColumnState, 
+        ...withoutName.slice(0, maxColumns - 1) as Array<keyof EmployeeColumnState>];
     }
   })();
   
