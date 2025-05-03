@@ -17,12 +17,14 @@ const OrganizationSetup = () => {
   });
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const navigate = useNavigate();
 
-  // Check authentication status and existing organization on component mount
+  // Check authentication status and existing organization once on component mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setIsChecking(true);
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
@@ -54,10 +56,14 @@ const OrganizationSetup = () => {
         console.error("Error checking auth:", error);
         toast.error("Terjadi kesalahan saat memeriksa autentikasi.");
         navigate("/auth/login", { replace: true });
+      } finally {
+        setIsChecking(false);
       }
     };
     
     checkAuth();
+    
+    // Don't set up auth state change listener here to avoid excessive redirects
   }, [navigate]);
 
   function handleChange(field: keyof OrganizationFormData, value: string) {
@@ -92,21 +98,10 @@ const OrganizationSetup = () => {
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
         
-        // Refresh the auth session after organization creation
-        await supabase.auth.refreshSession();
-        
-        // Check if the organization timestamp has been synchronized
-        try {
-          // Log the result of the check
-          console.log("Trial expiration check:", result);
-        } catch (err) {
-          console.error("Error checking timestamp sync:", err);
-        }
-        
-        // Add a small delay before redirecting
+        // Add a small delay before redirecting and only do it once
         setTimeout(() => {
           navigate("/employee-welcome", { replace: true });
-        }, 300);
+        }, 500);
       } else {
         toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");
       }
@@ -125,6 +120,14 @@ const OrganizationSetup = () => {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p>Memeriksa status autentikasi...</p>
+      </div>
+    );
   }
 
   return (

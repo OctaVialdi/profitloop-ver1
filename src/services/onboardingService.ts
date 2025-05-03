@@ -109,16 +109,6 @@ export async function createOrganization(formData: OrganizationFormData) {
       return false;
     }
     
-    // Fetch the user's actual creation timestamp from auth.users
-    // Using the admin API we can't directly access auth.users, so we'll use a custom approach
-    // Get the user's metadata which includes created_at
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      console.error("Error fetching user data:", userError);
-      return false;
-    }
-    
     // Get business field options
     const employeeCount = parseInt(formData.employeeCount) || 0;
     
@@ -149,11 +139,11 @@ export async function createOrganization(formData: OrganizationFormData) {
       // The result is a JSON object, so we need to cast it properly
       const organizationData = orgData as { id: string };
       
-      // Set a trial_end_date to 1 minute from now for testing
+      // Set a trial_end_date to 30 days from now (instead of just 1 minute)
       const { error: updateError } = await supabase
         .from('organizations')
         .update({
-          trial_end_date: new Date(Date.now() + 60 * 1000).toISOString() // 1 minute from now
+          trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
         })
         .eq('id', organizationData.id);
         

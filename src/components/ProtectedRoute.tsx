@@ -30,42 +30,52 @@ export const ProtectedRoute = ({
       return;
     }
 
+    let isMounted = true;
     const checkAuth = async () => {
       try {
         // First get the current session directly
         const { data } = await supabase.auth.getSession();
         
-        if (data.session) {
+        if (data.session && isMounted) {
           console.log("User is authenticated via session check");
           setAuthenticated(true);
-        } else {
+        } else if (isMounted) {
           console.log("No active session found");
           setAuthenticated(false);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
-        setAuthenticated(false);
-        
-        // Show friendly error message
-        toast.error("Terjadi kesalahan saat memeriksa autentikasi");
+        if (isMounted) {
+          setAuthenticated(false);
+          // Show friendly error message
+          toast.error("Terjadi kesalahan saat memeriksa autentikasi");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    // Set up auth state change listener
+    // Check for an existing session once
+    checkAuth();
+
+    // Set up auth state change listener with a more limited scope
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("Auth state changed:", event);
-        setAuthenticated(!!session);
-        setLoading(false);
+        if (!isMounted) return;
+        
+        // Only update on meaningful auth events
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          console.log("Auth state changed:", event);
+          setAuthenticated(!!session);
+          setLoading(false);
+        }
       }
     );
 
-    // Check for an existing session
-    checkAuth();
-
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, [isPublicRoute]);
