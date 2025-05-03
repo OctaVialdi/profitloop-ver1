@@ -6,6 +6,7 @@ import Register from "@/pages/auth/Register";
 import VerificationSent from "@/pages/auth/VerificationSent";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
 import MagicLinkJoin from "@/pages/auth/MagicLinkJoin";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export const authRoutes = [
   <Route key="auth-layout" path="/auth" element={<AuthLayout />}>

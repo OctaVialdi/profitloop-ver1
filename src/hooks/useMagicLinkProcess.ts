@@ -18,6 +18,8 @@ export interface MagicLinkParams {
   refreshToken: string | null;
   errorCode: string | null;
   errorDescription: string | null;
+  type: string | null;
+  redirectTo: string | null;
 }
 
 export function useMagicLinkProcess({
@@ -26,7 +28,9 @@ export function useMagicLinkProcess({
   accessToken,
   refreshToken,
   errorCode,
-  errorDescription
+  errorDescription,
+  type,
+  redirectTo
 }: MagicLinkParams): MagicLinkProcessResult {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +41,7 @@ export function useMagicLinkProcess({
   useEffect(() => {
     // Log useful debugging information
     console.log("useMagicLinkProcess hook running");
-    console.log("URL parameters:", { token, email, errorCode, errorDescription });
+    console.log("URL parameters:", { token, email, errorCode, errorDescription, type, redirectTo });
     console.log("Hash parameters:", { accessToken, refreshToken });
     
     const processInvitation = async () => {
@@ -47,6 +51,22 @@ export function useMagicLinkProcess({
         setError(errorDescription?.replace(/\+/g, ' ') || "Link undangan tidak valid atau sudah kadaluarsa");
         setIsLoading(false);
         return;
+      }
+      
+      // For invite type verification through Supabase
+      if (type === 'invite' && token) {
+        console.log("Processing Supabase invitation link");
+        try {
+          // If user is not logged in, we can't process the invitation yet
+          // Will be handled on the join organization page
+          setIsLoading(false);
+          return;
+        } catch (error: any) {
+          console.error("Error processing Supabase invitation:", error);
+          setError(error.message || "Terjadi kesalahan saat memproses undangan");
+          setIsLoading(false);
+          return;
+        }
       }
       
       // IMPORTANT: Process the access token if present (from Supabase magic link)
@@ -123,7 +143,7 @@ export function useMagicLinkProcess({
                 .from('organizations')
                 .select('name')
                 .eq('id', invitationResult.organization_id)
-                .single();
+                .maybeSingle();
 
               if (orgData) {
                 orgName = orgData.name;
@@ -179,13 +199,9 @@ export function useMagicLinkProcess({
           
           if (!user) {
             // If not logged in, redirect to login page with token
-            console.log("No user found, redirecting to login with token");
-            navigate("/auth/login", { 
-              state: { 
-                email,
-                magicLinkToken: token 
-              }
-            });
+            console.log("No user found, showing join organization page with token");
+            // Continue with the rendering of the join organization page
+            setIsLoading(false);
             return;
           }
           
@@ -226,7 +242,7 @@ export function useMagicLinkProcess({
               .from('organizations')
               .select('name')
               .eq('id', invitationResult.organization_id)
-              .single();
+              .maybeSingle();
 
             if (orgData) {
               setOrganizationName(orgData.name);
@@ -258,7 +274,7 @@ export function useMagicLinkProcess({
     };
 
     processInvitation();
-  }, [token, navigate, organizationName, email, errorCode, errorDescription, accessToken, refreshToken]);
+  }, [token, navigate, organizationName, email, errorCode, errorDescription, accessToken, refreshToken, type, redirectTo]);
 
   return {
     isLoading,

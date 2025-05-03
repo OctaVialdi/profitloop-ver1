@@ -7,16 +7,28 @@ import { useEffect, useState } from "react";
 interface ProtectedRouteProps {
   children: ReactNode;
   redirectTo?: string;
+  publicRoutes?: string[];
 }
 
 export const ProtectedRoute = ({
   children,
-  redirectTo = "/auth/login"
+  redirectTo = "/auth/login",
+  publicRoutes = ["/join-organization"]
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const currentPath = window.location.pathname;
+
+  // Check if current path is in public routes
+  const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
 
   useEffect(() => {
+    // Skip authentication check for public routes
+    if (isPublicRoute) {
+      setLoading(false);
+      return;
+    }
+
     // First set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
@@ -48,7 +60,7 @@ export const ProtectedRoute = ({
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [isPublicRoute]);
 
   if (loading) {
     return (
@@ -58,7 +70,7 @@ export const ProtectedRoute = ({
     );
   }
 
-  if (!authenticated) {
+  if (!authenticated && !isPublicRoute) {
     return <Navigate to={redirectTo} />;
   }
 
