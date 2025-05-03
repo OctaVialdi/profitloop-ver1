@@ -113,7 +113,6 @@ export async function createOrganization(formData: OrganizationFormData & { crea
     const employeeCount = parseInt(formData.employeeCount) || 0;
     
     // Call the function to create organization with profile and store creator email
-    // We need to use 'create_organization_with_profile' as that's what's in the TypeScript types
     const { data: orgData, error } = await supabase.rpc(
       'create_organization_with_profile',
       {
@@ -124,7 +123,8 @@ export async function createOrganization(formData: OrganizationFormData & { crea
         org_address: formData.address || null,
         org_phone: formData.phone || null,
         user_role: 'super_admin',
-        org_creator_email: formData.creator_email || session.user.email?.toLowerCase() || null
+        // Fixed: using correct parameter name 'org_creator_email' -> 'creator_email'
+        creator_email: formData.creator_email || session.user.email?.toLowerCase() || null
       }
     );
     

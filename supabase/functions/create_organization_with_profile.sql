@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION public.create_organization_with_profile(
   org_address text, 
   org_phone text, 
   user_role text,
-  org_creator_email text DEFAULT NULL
+  creator_email text DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -18,7 +18,7 @@ DECLARE
   trial_end_date TIMESTAMP WITH TIME ZONE;
   new_org_id UUID;
   org_data JSONB;
-  creator_email TEXT;
+  creator_email_value TEXT;
 BEGIN
   -- Get default subscription plan (Basic)
   SELECT id INTO plan_id
@@ -37,12 +37,12 @@ BEGIN
   trial_end_date := now() + interval '30 days';
   
   -- Use provided creator email or fetch from auth.users if not provided
-  IF org_creator_email IS NULL THEN
-    SELECT email INTO creator_email 
+  IF creator_email IS NULL THEN
+    SELECT email INTO creator_email_value 
     FROM auth.users 
     WHERE id = user_id;
   ELSE
-    creator_email := org_creator_email;
+    creator_email_value := creator_email;
   END IF;
   
   -- Create new organization
@@ -64,7 +64,7 @@ BEGIN
     org_phone,
     plan_id,
     trial_end_date,
-    creator_email
+    creator_email_value
   )
   RETURNING id INTO new_org_id;
   

@@ -54,19 +54,22 @@ const OrganizationSetup = () => {
         }
 
         // Also check if this email has already created an organization
-        const { data: orgCreatorData, error: orgCreatorError } = await supabase
-          .from('organizations')
-          .select('id')
-          .eq('creator_email', session.user.email?.toLowerCase())
-          .maybeSingle();
-        
-        if (orgCreatorError) {
-          console.error("Error checking if email has created organization:", orgCreatorError);
-        } else if (orgCreatorData) {
-          console.log("This email has already created an organization:", orgCreatorData.id);
-          toast.info("Email ini sudah digunakan untuk membuat organisasi.");
-          navigate("/dashboard", { replace: true });
-          return;
+        const userEmail = session.user.email?.toLowerCase();
+        if (userEmail) {
+          const { data: orgCreatorData, error: orgCreatorError } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('creator_email', userEmail)
+            .maybeSingle();
+          
+          if (orgCreatorError) {
+            console.error("Error checking if email has created organization:", orgCreatorError);
+          } else if (orgCreatorData) {
+            console.log("This email has already created an organization:", orgCreatorData.id);
+            toast.info("Email ini sudah digunakan untuk membuat organisasi.");
+            navigate("/dashboard", { replace: true });
+            return;
+          }
         }
       } catch (error) {
         console.error("Error checking auth:", error);
