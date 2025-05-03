@@ -5,8 +5,8 @@ import { PersonalInfoSection } from "../components/personal/PersonalInfoSection"
 import { IdentityAddressSection } from "../components/personal/IdentityAddressSection";
 
 interface PersonalDataStepProps {
-  formValues: FormValues;
-  setFormValues: React.Dispatch<React.SetStateAction<FormValues>>;
+  formValues: Partial<FormValues>;
+  setFormValues: React.Dispatch<React.SetStateAction<Partial<FormValues>>>;
   birthdate: Date | undefined;
   setBirthdate: React.Dispatch<React.SetStateAction<Date | undefined>>;
   passportExpiry: Date | undefined;

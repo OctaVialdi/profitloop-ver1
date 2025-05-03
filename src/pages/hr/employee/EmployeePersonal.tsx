@@ -4,9 +4,9 @@ import { useNavigate, useSearchParams, useOutletContext, useParams } from "react
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
-import { FormSteps } from "./FormSteps";
 import { PersonalDataStep } from "./steps/PersonalDataStep";
 import { useEmployees } from "@/hooks/useEmployees";
+import { FormValues } from "./types";
 
 const EmployeePersonal = () => {
   const navigate = useNavigate();
@@ -25,16 +25,21 @@ const EmployeePersonal = () => {
     employee?.birthDate ? new Date(employee.birthDate) : undefined
   );
   
-  const [formValues, setFormValues] = useState({
+  const [passportExpiry, setPassportExpiry] = useState<Date | undefined>(undefined);
+  const [useResidentialAddress, setUseResidentialAddress] = useState<boolean>(false);
+  
+  // Initialize with a partial FormValues that only includes personal fields
+  // This avoids TypeScript errors by making it explicit we're only dealing with a subset
+  const [formValues, setFormValues] = useState<Partial<FormValues>>({
     firstName: employee?.name?.split(" ")[0] || "",
     lastName: employee?.name?.split(" ").slice(1).join(" ") || "",
     email: employee?.email || "",
     mobilePhone: employee?.mobilePhone || "",
-    phone: employee?.phone || "",
+    phone: employee?.mobilePhone || "", // Default to mobilePhone if phone isn't available
     birthPlace: employee?.birthPlace || "",
     gender: employee?.gender || "male",
     maritalStatus: employee?.maritalStatus || "single",
-    bloodType: employee?.bloodType || "",
+    bloodType: employee?.maritalStatus || "", // Default to empty string if bloodType isn't available
     religion: employee?.religion || ""
   });
   
@@ -78,10 +83,14 @@ const EmployeePersonal = () => {
         </div>
 
         <PersonalDataStep
-          formValues={formValues}
-          setFormValues={setFormValues}
+          formValues={formValues as any}
+          setFormValues={setFormValues as any}
           birthdate={birthdate}
           setBirthdate={setBirthdate}
+          passportExpiry={passportExpiry}
+          setPassportExpiry={setPassportExpiry}
+          useResidentialAddress={useResidentialAddress}
+          setUseResidentialAddress={setUseResidentialAddress}
         />
 
         <div className="mt-8 flex justify-end space-x-2">
