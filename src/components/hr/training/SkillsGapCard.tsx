@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 export const SkillsGapCard: React.FC = () => {
   const skills = [
@@ -23,19 +24,17 @@ export const SkillsGapCard: React.FC = () => {
           </Button>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4 mt-4">
           {skills.map((skill) => (
             <div key={skill.name}>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">{skill.name}</span>
+              <div className="flex justify-between mb-2">
+                <span className="text-sm font-medium">{skill.name}</span>
                 <span className="text-sm font-medium">{skill.proficiency}%</span>
               </div>
-              <div className="w-full h-2 bg-gray-200 rounded-full">
-                <div 
-                  className="h-2 bg-purple-600 rounded-full" 
-                  style={{ width: `${skill.proficiency}%` }}
-                ></div>
-              </div>
+              <Progress 
+                value={skill.proficiency}
+                className="h-2 bg-gray-200"
+              />
             </div>
           ))}
         </div>
