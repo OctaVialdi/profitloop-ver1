@@ -27,15 +27,22 @@ export default function MyInfoIndex() {
       case 'education': return 'education';
       case 'files': return 'files';
       case 'assets': return 'assets';
-      case 'time-management': return 'time-management';
-      case 'payroll': return 'payroll';
-      case 'finance': return 'finance';
-      case 'history': return 'history';
+      case 'attendance': return 'attendance';
+      case 'schedule': return 'schedule';
+      case 'time-off': return 'time-off';
+      case 'payroll-info': return 'payroll-info';
+      case 'adjustment': return 'history/adjustment';
+      case 'transfer': return 'history/transfer';
+      case 'npp': return 'history/npp';
+      case 'reprimand': return 'history/reprimand';
+      case 'reimbursement': return 'finance/reimbursement';
+      case 'cash-advance': return 'finance/cash-advance';
+      case 'loan': return 'finance/loan';
       case 'index': return 'personal'; // Default to personal if at index route
       default: 
-        // For nested paths like 'payroll/tax', use the parent
+        // For nested paths like 'history/adjustment', use the full path
         if (path.includes('/')) {
-          return path.split('/')[0];
+          return path;
         }
         return path;
     }

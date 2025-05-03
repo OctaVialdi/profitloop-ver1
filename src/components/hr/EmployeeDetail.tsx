@@ -120,10 +120,9 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-management/attendance')}>Attendance</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-management/schedule')}>Schedule</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-management/time-off')}>Time Off</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-management/shift')}>Shift</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('attendance')}>Attendance</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('schedule')}>Schedule</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('time-off')}>Time Off</div>
               </CollapsibleContent>
             </Collapsible>
 
@@ -139,9 +138,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('payroll/bank-account')}>Bank Account</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('payroll/tax')}>Tax</div>
-                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('payroll/bpjs')}>BPJS</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('payroll-info')}>Payroll Info</div>
               </CollapsibleContent>
             </Collapsible>
 
@@ -163,51 +160,51 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </CollapsibleContent>
             </Collapsible>
 
-              {/* Files with chevron */}
-              <div 
-                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'files' ? 'bg-gray-50' : ''} flex items-center justify-between`}
-                onClick={() => handleEdit('files')}
-              >
-                <div className="flex items-center">
-                  <FileText size={16} className="mr-2" />
-                  <span>Files</span>
-                </div>
-                <ChevronRight size={16} />
+            {/* Files with chevron */}
+            <div 
+              className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'files' ? 'bg-gray-50' : ''} flex items-center justify-between`}
+              onClick={() => handleEdit('files')}
+            >
+              <div className="flex items-center">
+                <FileText size={16} className="mr-2" />
+                <span>Files</span>
               </div>
-
-              {/* Assets with chevron */}
-              <div 
-                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'assets' ? 'bg-gray-50' : ''} flex items-center justify-between`}
-                onClick={() => handleEdit('assets')}
-              >
-                <div className="flex items-center">
-                  <Boxes size={16} className="mr-2" />
-                  <span>Assets</span>
-                </div>
-                <ChevronRight size={16} />
-              </div>
-
-              {/* History with dropdown */}
-              <Collapsible open={openHistory} onOpenChange={setOpenHistory}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
-                    <div className="flex items-center">
-                      <BarChart2 size={16} className="mr-2" />
-                      <span>History</span>
-                    </div>
-                    {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/employment')}>Employment</div>
-                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/position')}>Position</div>
-                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/compensation')}>Compensation</div>
-                  <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/organization')}>Organization</div>
-                </CollapsibleContent>
-              </Collapsible>
+              <ChevronRight size={16} />
             </div>
-          </Card>
-        </div>
+
+            {/* Assets with chevron */}
+            <div 
+              className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${activeTab === 'assets' ? 'bg-gray-50' : ''} flex items-center justify-between`}
+              onClick={() => handleEdit('assets')}
+            >
+              <div className="flex items-center">
+                <Boxes size={16} className="mr-2" />
+                <span>Assets</span>
+              </div>
+              <ChevronRight size={16} />
+            </div>
+
+            {/* History with dropdown */}
+            <Collapsible open={openHistory} onOpenChange={setOpenHistory}>
+              <CollapsibleTrigger className="w-full">
+                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between">
+                  <div className="flex items-center">
+                    <BarChart2 size={16} className="mr-2" />
+                    <span>History</span>
+                  </div>
+                  {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/adjustment')}>Adjustment</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/transfer')}>Transfer</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/npp')}>NPP</div>
+                <div className="pl-10 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => handleEdit('history/reprimand')}>Reprimand</div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        </Card>
+      </div>
 
       {/* Main content area */}
       <div className="flex-1">
