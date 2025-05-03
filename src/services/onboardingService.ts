@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Organization, SubscriptionPlan, UserProfile } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
@@ -123,7 +122,6 @@ export async function createOrganization(formData: OrganizationFormData & { crea
         org_address: formData.address || null,
         org_phone: formData.phone || null,
         user_role: 'super_admin',
-        // Fixed: using correct parameter name 'org_creator_email' -> 'creator_email'
         creator_email: formData.creator_email || session.user.email?.toLowerCase() || null
       }
     );

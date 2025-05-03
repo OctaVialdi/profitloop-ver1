@@ -81,8 +81,6 @@ const OrganizationSetup = () => {
     };
     
     checkAuth();
-    
-    // Don't set up auth state change listener here to avoid excessive redirects
   }, [navigate]);
 
   function handleChange(field: keyof OrganizationFormData, value: string) {
