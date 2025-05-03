@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -80,18 +81,24 @@ const OrganizationSetup = () => {
     
     try {
       // Show loading toast
-      toast.loading("Sedang membuat organisasi...");
+      const loadingToastId = toast.loading("Sedang membuat organisasi...");
       
       console.log("Submitting organization data:", formData);
       const result = await createOrganization(formData);
       
       // Dismiss the loading toast
-      toast.dismiss();
+      toast.dismiss(loadingToastId);
       
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
-        // Explicitly redirect to employee-welcome page after success
-        navigate("/employee-welcome");
+        
+        // Tambahkan logging untuk memverifikasi redirect
+        console.log("Redirecting to employee-welcome page");
+        
+        // Gunakan timeout kecil untuk memastikan redirect berjalan setelah state diupdate
+        setTimeout(() => {
+          navigate("/employee-welcome", { replace: true });
+        }, 100);
       } else {
         toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");
       }
