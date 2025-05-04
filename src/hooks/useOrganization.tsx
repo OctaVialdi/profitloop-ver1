@@ -42,7 +42,7 @@ export function useOrganization(): OrganizationData {
       
       if (!profile) {
         console.log("No profile found, redirecting to onboarding");
-        navigate('/onboarding');
+        navigate('/organizations');
         return;
       }
       
@@ -83,9 +83,46 @@ export function useOrganization(): OrganizationData {
       }
       
       if (!profile.organization_id) {
-        console.log("No organization associated with profile, redirecting to onboarding");
-        navigate('/onboarding');
-        return;
+        // Check if this user might have created an organization previously
+        const userEmail = session.user.email?.toLowerCase();
+        if (userEmail) {
+          const { data: createdOrg } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('creator_email', userEmail)
+            .maybeSingle();
+            
+          if (createdOrg) {
+            console.log("Found organization created by this email:", createdOrg.id);
+            
+            // Update the profile with the found organization
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ 
+                organization_id: createdOrg.id,
+                role: 'super_admin'  // Creator gets super_admin role
+              })
+              .eq('id', session.user.id);
+              
+            if (updateError) {
+              console.error("Error linking profile to organization:", updateError);
+            } else {
+              profile.organization_id = createdOrg.id;
+              profile.role = 'super_admin';
+              console.log("Profile updated with existing organization");
+              
+              // Update metadata too
+              await updateUserOrgMetadata(createdOrg.id, 'super_admin');
+            }
+          }
+        }
+        
+        // If still no organization after checking, redirect to onboarding
+        if (!profile.organization_id) {
+          console.log("No organization associated with profile, redirecting to onboarding");
+          navigate('/organizations');
+          return;
+        }
       }
 
       // If organization_id exists but not in user metadata, update it

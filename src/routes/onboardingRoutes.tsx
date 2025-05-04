@@ -10,6 +10,11 @@ export const onboardingRoutes = [
     element={<OrganizationSetup />} 
   />,
   <Route 
+    key="onboarding" 
+    path="/onboarding" 
+    element={<OrganizationSetup />} 
+  />,
+  <Route 
     key="employee-welcome" 
     path="/employee-welcome" 
     element={<EmployeeWelcome />} 

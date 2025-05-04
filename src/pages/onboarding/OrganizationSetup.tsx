@@ -67,6 +67,21 @@ const OrganizationSetup = () => {
               console.error("Error checking if email has created organization:", orgCreatorError);
             } else if (orgCreatorData) {
               console.log("This email has already created an organization:", orgCreatorData.id);
+              
+              // If user has created an org but profile doesn't have org_id, update the profile
+              if (!profileData?.organization_id) {
+                const { error: updateError } = await supabase
+                  .from('profiles')
+                  .update({ organization_id: orgCreatorData.id })
+                  .eq('id', session.user.id);
+                
+                if (updateError) {
+                  console.error("Error updating profile with organization:", updateError);
+                } else {
+                  console.log("Profile updated with existing organization");
+                }
+              }
+              
               toast.info("Email ini sudah digunakan untuk membuat organisasi.");
               navigate("/dashboard", { replace: true });
               return;
