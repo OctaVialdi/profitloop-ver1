@@ -55,7 +55,35 @@ export async function processMagicLinkToken(userId: string, token: string) {
  */
 export async function validateInvitationToken(token: string, email: string) {
   try {
-    const { data: magicLinkData, error: magicLinkError } = await supabase.rpc(
+    // First try validating against magic_link_invitations table directly
+    const { data: magicLinkData, error: magicLinkError } = await supabase
+      .from('magic_link_invitations')
+      .select('id, organization_id, role, email, status, expires_at')
+      .eq('token', token)
+      .eq('status', 'pending')
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    if (!magicLinkError && magicLinkData) {
+      console.log("Magic link found directly in table:", magicLinkData);
+      
+      // Check if email matches if provided
+      if (email && email !== magicLinkData.email) {
+        return {
+          valid: false,
+          message: "Email undangan tidak sesuai"
+        };
+      }
+      
+      return {
+        valid: true,
+        organizationId: magicLinkData.organization_id,
+        role: magicLinkData.role
+      };
+    }
+    
+    // If not found in direct table check, try the RPC function
+    const { data: validationResult, error: validationError } = await supabase.rpc(
       'validate_invitation',
       { 
         invitation_token: token,
@@ -63,26 +91,26 @@ export async function validateInvitationToken(token: string, email: string) {
       }
     );
 
-    console.log("Magic link validation result:", magicLinkData, magicLinkError);
+    console.log("Magic link validation result:", validationResult, validationError);
 
-    if (magicLinkError) {
+    if (validationError) {
       return { 
         valid: false, 
-        message: magicLinkError.message 
+        message: validationError.message 
       };
     }
 
-    if (magicLinkData && magicLinkData[0]?.valid) {
+    if (validationResult && validationResult[0]?.valid) {
       return {
         valid: true,
-        organizationId: magicLinkData[0].organization_id,
-        role: magicLinkData[0].role
+        organizationId: validationResult[0].organization_id,
+        role: validationResult[0].role
       };
     }
 
     return {
       valid: false,
-      message: magicLinkData?.[0]?.message || "Token tidak valid"
+      message: validationResult?.[0]?.message || "Token tidak valid"
     };
   } catch (error: any) {
     console.error("Error validating token:", error);

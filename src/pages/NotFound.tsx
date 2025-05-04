@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,43 +8,52 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Enhanced magic link detection
-    // Check if this might be a magic link with different formats
+    // Enhanced magic link detection - handle more complex URL patterns
     console.log("NotFound: Current URL:", window.location.href);
     console.log("NotFound: Search params:", location.search);
     console.log("NotFound: Hash:", location.hash);
     
-    const url = new URL(window.location.href);
-    const token = url.searchParams.get("token");
-    const email = url.searchParams.get("email");
-    
-    // If it has token and email parameters, it's likely a magic link
-    if (token && email) {
-      console.log("Detected possible magic link parameters, redirecting to /join-organization");
-      // Preserve the original query parameters and hash
-      navigate(`/join-organization${location.search}${location.hash}`);
-      return;
-    }
-    
-    // Check if the hash fragment contains access_token (from Supabase auth)
-    if (location.hash && location.hash.includes("access_token")) {
-      // Parse hash params
+    try {
+      const url = new URL(window.location.href);
+      
+      // Handle URL query parameters for token and email
+      const token = url.searchParams.get("token");
+      const email = url.searchParams.get("email");
+      
+      // Check hash params for Supabase auth tokens
       const hashParams = new URLSearchParams(location.hash.substring(1));
       const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const type = hashParams.get("type") || url.searchParams.get("type");
       
-      if (accessToken) {
-        console.log("Detected access token in URL hash, redirecting to /join-organization");
-        // Keep all parameters intact
-        navigate(`/join-organization${location.search}${location.hash}`);
+      // For debugging
+      console.log("Magic link detection params:", { token, email, accessToken, refreshToken, type });
+      
+      // If there are auth tokens or invite tokens, assume this is a magic link
+      if (
+        (token && email) || 
+        (accessToken && refreshToken) || 
+        type === "invite" || 
+        type === "recovery" ||
+        (location.hash && location.hash.includes("access_token"))
+      ) {
+        console.log("Detected magic link parameters, redirecting to /join-organization");
+        // Preserve all parameters
+        navigate(`/join-organization${location.search}${location.hash}`, { replace: true });
         return;
       }
-    }
-    
-    // Check if this is a type=invite link
-    if (url.searchParams.get("type") === "invite") {
-      console.log("Detected Supabase invitation link, redirecting to /join-organization");
-      navigate(`/join-organization${location.search}${location.hash}`);
-      return;
+      
+      // Added fallback for email verification links 
+      const errorCode = url.searchParams.get("error_code");
+      const errorDescription = url.searchParams.get("error_description");
+      
+      if (errorCode || errorDescription) {
+        console.log("Detected error parameters, likely from auth verification");
+        navigate(`/join-organization${location.search}${location.hash}`, { replace: true });
+        return;
+      }
+    } catch (error) {
+      console.error("Error processing URL in NotFound:", error);
     }
   }, [navigate, location]);
 
