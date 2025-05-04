@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useEmployees } from "@/hooks/useEmployees";
-import { employeeService, updateEmployeePersonalDetails, updateEmployeeIdentityAddress } from "@/services/employeeService";
 
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
