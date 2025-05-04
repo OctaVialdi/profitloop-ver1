@@ -29,8 +29,8 @@ export function useAuth() {
           // Use setTimeout to avoid potential auth state deadlocks
           setTimeout(async () => {
             try {
-              // Handle SIGNED_UP event specifically
-              if (event === "SIGNED_UP") {
+              // Handle SIGNED_UP event specifically - using string comparison
+              if (event.toString() === "SIGNED_UP") {
                 console.log("New signup detected, creating profile");
               }
               
