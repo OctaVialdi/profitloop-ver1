@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User, AuthChangeEvent } from "@supabase/supabase-js";
@@ -33,7 +34,7 @@ export function useAuth() {
               const isEmailVerified = session.user.email_confirmed_at !== null;
               
               // Handle SIGNED_UP or SIGNED_IN events specifically
-              if (event === AuthChangeEvent.SIGNED_UP || event === AuthChangeEvent.SIGNED_IN || event === AuthChangeEvent.USER_UPDATED) {
+              if (event === 'SIGNED_UP' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                 console.log(`${event} detected, ensuring profile and verification status`);
                 
                 try {
