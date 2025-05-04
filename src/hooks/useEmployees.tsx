@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { employeeService, Employee, EmployeeWithDetails, EmployeePersonalDetails, EmployeeIdentityAddress, EmployeeEmployment, EmployeeFamily } from "@/services/employeeService";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the legacy employee interface that our components expect
 export interface LegacyEmployee {

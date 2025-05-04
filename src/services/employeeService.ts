@@ -136,11 +136,9 @@ class EmployeeService {
       // Get personal details and employment info for each employee
       const employeesWithDetails = await Promise.all(
         employees.map(async (employee) => {
-          const [personalDetails, identityAddress, employment] = await Promise.all([
-            this.fetchPersonalDetails(employee.id),
-            this.fetchIdentityAddress(employee.id),
-            this.fetchEmployment(employee.id),
-          ]);
+          const personalDetails = await this.fetchPersonalDetails(employee.id);
+          const identityAddress = await this.fetchIdentityAddress(employee.id);
+          const employment = await this.fetchEmployment(employee.id);
           
           return {
             ...employee,
@@ -172,11 +170,9 @@ class EmployeeService {
         throw error;
       }
       
-      const [personalDetails, identityAddress, employment] = await Promise.all([
-        this.fetchPersonalDetails(id),
-        this.fetchIdentityAddress(id),
-        this.fetchEmployment(id),
-      ]);
+      const personalDetails = await this.fetchPersonalDetails(id);
+      const identityAddress = await this.fetchIdentityAddress(id);
+      const employment = await this.fetchEmployment(id);
       
       return {
         ...employee,
@@ -287,6 +283,25 @@ class EmployeeService {
   }
   
   // Identity & Address
+  async fetchIdentityAddress(employeeId: string): Promise<EmployeeIdentityAddress[]> {
+    try {
+      const { data, error } = await supabase
+        .from('employee_identity_addresses')
+        .select('*')
+        .eq('employee_id', employeeId);
+        
+      if (error) {
+        console.error('Error fetching identity address:', error);
+        throw error;
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Failed to fetch identity address:', error);
+      return [];
+    }
+  }
+  
   async saveIdentityAddress(details: EmployeeIdentityAddress): Promise<EmployeeIdentityAddress | null> {
     try {
       // Format date fields
@@ -361,6 +376,25 @@ class EmployeeService {
   }
   
   // Employment
+  async fetchEmployment(employeeId: string): Promise<EmployeeEmployment[]> {
+    try {
+      const { data, error } = await supabase
+        .from('employee_employment')
+        .select('*')
+        .eq('employee_id', employeeId);
+        
+      if (error) {
+        console.error('Error fetching employment details:', error);
+        throw error;
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Failed to fetch employment details:', error);
+      return [];
+    }
+  }
+  
   async saveEmployment(details: EmployeeEmployment): Promise<EmployeeEmployment | null> {
     try {
       // Format date fields
