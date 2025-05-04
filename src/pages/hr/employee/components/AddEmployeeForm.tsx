@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormMessage,
 } from "@/components/ui/form";
 import { 
   Select,
@@ -18,20 +19,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar } from "lucide-react";
+import { Calendar, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
-import { employeeService } from "@/services/employeeService";
 import { useOrganization } from "@/hooks/useOrganization";
+import { useEmployees } from "@/hooks/useEmployees";
+
+// Helper to format NIK input with dashes
+const formatNik = (value: string) => {
+  // Remove all non-digit characters
+  const digitsOnly = value.replace(/\D/g, '');
+  
+  // Add dashes after every 4 digits
+  let formattedValue = '';
+  for (let i = 0; i < digitsOnly.length && i < 20; i++) {
+    if (i > 0 && i % 4 === 0) {
+      formattedValue += '-';
+    }
+    formattedValue += digitsOnly[i];
+  }
+  
+  return formattedValue;
+};
 
 const AddEmployeeForm = () => {
   const navigate = useNavigate();
   const { userProfile } = useOrganization();
+  const { employees, addEmployee } = useEmployees();
   
   const [activeTab, setActiveTab] = useState("basic-info");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatedEmployeeId, setGeneratedEmployeeId] = useState('');
   
   // Setup form with default values
   const form = useForm({
@@ -40,7 +60,6 @@ const AddEmployeeForm = () => {
       lastName: '',
       email: '',
       mobilePhone: '',
-      phone: '',
       birthPlace: '',
       birthDate: '',
       gender: 'Male',
@@ -64,6 +83,34 @@ const AddEmployeeForm = () => {
       signDate: new Date().toISOString().split('T')[0]
     }
   });
+
+  // Auto-generate employee ID
+  useEffect(() => {
+    generateEmployeeId();
+  }, [employees]);
+
+  // Function to generate a unique employee ID
+  const generateEmployeeId = () => {
+    const prefix = "EMP";
+    const existingIds = employees
+      .map(emp => emp.employee_id || '')
+      .filter(id => id.startsWith(prefix))
+      .map(id => {
+        const numPart = id.replace(prefix, '');
+        return isNaN(parseInt(numPart)) ? 0 : parseInt(numPart);
+      });
+    
+    const maxId = Math.max(0, ...existingIds);
+    const newId = `${prefix}${String(maxId + 1).padStart(4, '0')}`;
+    setGeneratedEmployeeId(newId);
+    form.setValue('employeeId', newId);
+  };
+
+  // Handle NIK input formatting
+  const handleNikChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatNik(e.target.value);
+    form.setValue('nik', formattedValue);
+  };
 
   // Handle save changes
   const onSubmit = async (data: any) => {
@@ -108,9 +155,9 @@ const AddEmployeeForm = () => {
         blood_type: data.bloodType
       };
 
-      // Prepare identity address data
+      // Prepare identity address data - remove dashes from NIK for storage
       const identityAddress = {
-        nik: data.nik,
+        nik: data.nik ? data.nik.replace(/-/g, '') : '',
         passport_number: data.passportNumber,
         passport_expiry: data.passportExpiry || undefined,
         postal_code: data.postalCode,
@@ -138,8 +185,8 @@ const AddEmployeeForm = () => {
         organization_id: userProfile.organization_id
       });
       
-      // Create employee with all details
-      const result = await employeeService.createEmployee(
+      // Create employee using the hook method rather than direct service call
+      const result = await addEmployee(
         employeeData,
         personalDetails,
         identityAddress,
@@ -188,454 +235,462 @@ const AddEmployeeForm = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basic-info" className="pt-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} id="employeeForm" className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-3">Personal data</h3>
-                <p className="text-sm text-gray-500 mb-4">Employee personal information and contact details.</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First name *</FormLabel>
-                        <FormControl>
-                          <Input {...field} required />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} id="employeeForm" className="space-y-6">
+            <TabsContent value="basic-info" className="pt-6">
+              <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Personal data</h3>
+                  <p className="text-sm text-gray-500 mb-4">Employee personal information and contact details.</p>
                   
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="employeeId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Employee ID *</FormLabel>
-                        <FormControl>
-                          <Input {...field} required />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email *</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" required />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="mobilePhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mobile phone</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="birthPlace"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Place of birth</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="birthDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Birthdate</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input {...field} type="date" />
-                            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>Gender</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex gap-6"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Male" id="male" />
-                              <label htmlFor="male">Male</label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Female" id="female" />
-                              <label htmlFor="female">Female</label>
-                            </div>
-                          </RadioGroup>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="maritalStatus"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Marital status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select marital status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Single">Single</SelectItem>
-                            <SelectItem value="Married">Married</SelectItem>
-                            <SelectItem value="Divorced">Divorced</SelectItem>
-                            <SelectItem value="Widowed">Widowed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="bloodType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Blood type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select blood type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="A">A</SelectItem>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="AB">AB</SelectItem>
-                            <SelectItem value="O">O</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="religion"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Religion</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select religion" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Islam">Islam</SelectItem>
-                            <SelectItem value="Christianity">Christianity</SelectItem>
-                            <SelectItem value="Catholicism">Catholicism</SelectItem>
-                            <SelectItem value="Hinduism">Hinduism</SelectItem>
-                            <SelectItem value="Buddhism">Buddhism</SelectItem>
-                            <SelectItem value="Confucianism">Confucianism</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <h3 className="text-lg font-medium mb-3">Identity & Address</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="nik"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>NIK (NPWP 16 digit)</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="passportNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Passport number</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="passportExpiry"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Passport expiration date</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input {...field} type="date" />
-                            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="postalCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Postal code</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="col-span-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="citizenAddress"
+                      name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Citizen ID address</FormLabel>
+                          <FormLabel>First name *</FormLabel>
+                          <FormControl>
+                            <Input {...field} required />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last name</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
                         </FormItem>
                       )}
                     />
-                  </div>
-                  
-                  <div className="col-span-2">
+                    
                     <FormField
                       control={form.control}
-                      name="residentialAddress"
+                      name="employeeId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Residential address</FormLabel>
+                          <FormLabel>Employee ID *</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-2">
+                              <Input {...field} required readOnly className="bg-gray-50" />
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={generateEmployeeId}
+                                title="Generate new ID"
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" required />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="mobilePhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mobile phone</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
                         </FormItem>
                       )}
                     />
+                    
+                    <FormField
+                      control={form.control}
+                      name="birthPlace"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Place of birth</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="birthDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Birthdate</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input {...field} type="date" />
+                              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            </div>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Gender</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex gap-6"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Male" id="male" />
+                                <label htmlFor="male">Male</label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Female" id="female" />
+                                <label htmlFor="female">Female</label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="maritalStatus"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Marital status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select marital status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Single">Single</SelectItem>
+                              <SelectItem value="Married">Married</SelectItem>
+                              <SelectItem value="Divorced">Divorced</SelectItem>
+                              <SelectItem value="Widowed">Widowed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="bloodType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Blood type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select blood type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="A">A</SelectItem>
+                              <SelectItem value="B">B</SelectItem>
+                              <SelectItem value="AB">AB</SelectItem>
+                              <SelectItem value="O">O</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="religion"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Religion</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select religion" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Islam">Islam</SelectItem>
+                              <SelectItem value="Christianity">Christianity</SelectItem>
+                              <SelectItem value="Catholicism">Catholicism</SelectItem>
+                              <SelectItem value="Hinduism">Hinduism</SelectItem>
+                              <SelectItem value="Buddhism">Buddhism</SelectItem>
+                              <SelectItem value="Confucianism">Confucianism</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <h3 className="text-lg font-medium mb-3">Identity & Address</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="nik"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>NIK (NPWP 16 digit)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              value={field.value} 
+                              onChange={(e) => handleNikChange(e)}
+                              placeholder="1234-5678-9012-3456-7890"
+                              maxLength={24} // 20 digits plus 4 dashes
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="passportNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Passport number</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="passportExpiry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Passport expiration date</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input {...field} type="date" />
+                              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            </div>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="postalCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Postal code</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="citizenAddress"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Citizen ID address</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="residentialAddress"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Residential address</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </form>
-          </Form>
-        </TabsContent>
+            </TabsContent>
 
-        <TabsContent value="employment" className="pt-6">
-          <Form {...form}>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-3">Employment details</h3>
-                <p className="text-sm text-gray-500 mb-4">Job position and organizational information.</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="barcode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Barcode</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+            <TabsContent value="employment" className="pt-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Employment details</h3>
+                  <p className="text-sm text-gray-500 mb-4">Job position and organizational information.</p>
                   
-                  <FormField
-                    control={form.control}
-                    name="organization"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Organization</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="jobPosition"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Job Position</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="jobLevel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Job Level</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="employmentStatus"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Employment Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="barcode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Barcode</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
+                            <Input {...field} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Permanent">Permanent</SelectItem>
-                            <SelectItem value="Contract">Contract</SelectItem>
-                            <SelectItem value="Probation">Probation</SelectItem>
-                            <SelectItem value="Internship">Internship</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="branch"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Branch</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="joinDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Join Date</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input {...field} type="date" />
-                            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="signDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sign Date</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input {...field} type="date" />
-                            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="organization"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Organization</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="jobPosition"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Job Position</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="jobLevel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Job Level</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="employmentStatus"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Employment Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Permanent">Permanent</SelectItem>
+                              <SelectItem value="Contract">Contract</SelectItem>
+                              <SelectItem value="Probation">Probation</SelectItem>
+                              <SelectItem value="Internship">Internship</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="branch"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Branch</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="joinDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Join Date</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input {...field} type="date" />
+                              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            </div>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="signDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sign Date</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input {...field} type="date" />
+                              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            </div>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
-              
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
-                <Button type="submit" form="employeeForm" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : "Save Employee"}
-                </Button>
-              </div>
+            </TabsContent>
+
+            {/* Save button outside of tab content, visible for both tabs */}
+            <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+              <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save Employee"}
+              </Button>
             </div>
-          </Form>
-        </TabsContent>
+          </form>
+        </Form>
       </Tabs>
     </Card>
   );
