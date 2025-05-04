@@ -4,7 +4,8 @@ import { supabase, updateUserOrgMetadata } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { OrganizationData } from "@/types/organization";
-import { getUserProfile, getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
+import { getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
+import { getUserProfile } from "@/services/profileService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
 import { formatTimestampToUserTimezone } from "@/utils/dateUtils";
 
