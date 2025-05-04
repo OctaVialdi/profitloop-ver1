@@ -170,10 +170,8 @@ export function useOrganizationSetup() {
             .eq('id', session.user.id);
         }
         
-        // Add a small delay before redirecting and only do it once
-        setTimeout(() => {
-          navigate("/employee-welcome", { replace: true });
-        }, 500);
+        // Following the specific flowchart - redirect to employee-welcome after org creation
+        navigate("/employee-welcome", { replace: true });
       } else {
         toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");
       }

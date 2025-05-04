@@ -53,8 +53,6 @@ export function useAuth() {
       
       // After successful login, make sure profile exists
       if (data.user) {
-        // Get role from user metadata 
-        const role = data.user.user_metadata?.role || 'employee';
         const fullName = data.user.user_metadata?.full_name || null;
         
         await ensureUserProfileExists(data.user.id, {

@@ -18,24 +18,20 @@ export async function ensureUserProfileExists(userId: string, userData: { email:
     
     // If profile doesn't exist, create it
     if (!existingProfile) {
-      // Get role from user metadata
-      const { data: { user } } = await supabase.auth.getUser();
-      const role = user?.user_metadata?.role || 'employee';
-      
       const { error: insertError } = await supabase
         .from('profiles')
         .insert({
           id: userId,
           email: userData.email.toLowerCase(),
           full_name: userData.full_name || null,
-          role: role // Set the role from metadata
+          role: 'employee' // Default role for new users
         });
         
       if (insertError) {
         console.error("Error creating profile:", insertError);
         return false;
       } else {
-        console.log("Profile created successfully with role:", role);
+        console.log("Profile created successfully");
         return true;
       }
     }
