@@ -52,33 +52,41 @@ export function useOrganizationSetup() {
       };
       
       console.log("Submitting organization data:", formDataWithCreator);
-      const result = await createOrganization(formDataWithCreator);
+      
+      // Use the security definer RPC function to create organization
+      const { data: orgResult, error: orgError } = await supabase
+        .rpc('create_organization_with_profile', {
+          user_id: session.user.id,
+          org_name: formData.name,
+          org_business_field: formData.businessField || null,
+          org_employee_count: formData.employeeCount ? parseInt(formData.employeeCount) : null,
+          org_address: formData.address || null,
+          org_phone: formData.phone || null,
+          user_role: 'super_admin',
+          creator_email: session.user.email?.toLowerCase()
+        });
       
       // Dismiss the loading toast
       toast.dismiss(loadingToastId);
       
-      if (result) {
+      if (orgError) {
+        console.error("Organization creation error:", orgError);
+        toast.error("Gagal membuat organisasi: " + orgError.message);
+        return;
+      }
+      
+      if (orgResult) {
         toast.success("Organisasi berhasil dibuat!");
         
-        // Ensure organization ID is available
-        const orgId = (result as any).id;
-        if (!orgId) {
-          toast.error("ID Organisasi tidak tersedia. Mohon coba refresh halaman.");
-          return;
-        }
-        
-        // Update user metadata directly
+        // Update user metadata
         await supabase.auth.updateUser({
           data: {
-            organization_id: orgId,
+            organization_id: orgResult.id,
             role: 'super_admin'
           }
         });
         
-        // Also ensure profile is updated
-        await updateUserWithOrganization(session.user.id, orgId);
-        
-        // Following the specific flowchart - redirect to employee-welcome after org creation
+        // Redirect to employee welcome
         redirectToEmployeeWelcome();
       } else {
         toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");

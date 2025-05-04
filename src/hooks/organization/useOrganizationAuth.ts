@@ -26,15 +26,8 @@ export const useOrganizationAuth = () => {
       
       console.log("User is authenticated:", session.user.id);
       
-      // Ensure profile exists (creates if it doesn't)
-      await ensureProfileExists(session.user.id, {
-        email: session.user.email || '',
-        full_name: session.user.user_metadata?.full_name || null,
-        email_verified: session.user.email_confirmed_at !== null
-      });
-      
-      // Check if user has an organization directly from session metadata first
-      // This avoids the infinite recursion issue with profile policies
+      // Skip profile creation attempts since they cause infinite recursion
+      // Only check auth metadata instead
       if (session.user.user_metadata?.organization_id) {
         console.log("User already has an organization in metadata:", session.user.user_metadata.organization_id);
         toast.info("Anda sudah memiliki organisasi.");
@@ -43,28 +36,32 @@ export const useOrganizationAuth = () => {
       }
       
       try {
-        // Used improved function with more reliable checks
-        const { hasOrganization, emailVerified, organizationId } = await checkExistingOrganization(
-          session.user.id, 
-          session.user.email
-        );
-        
-        // Check if email is verified
-        if (!emailVerified) {
+        // Check if email is verified - use auth data directly
+        if (!session.user.email_confirmed_at) {
           console.log("Email not verified, redirecting to login");
           redirectToLogin("Anda harus memverifikasi email terlebih dahulu. Silakan cek email Anda.");
           return false;
         }
         
-        // Check if user already has an organization
-        if (hasOrganization && organizationId) {
-          console.log("User already has an organization:", organizationId);
+        // Instead of checking with checkExistingOrganization which uses profiles table,
+        // check if this email created an organization directly
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('creator_email', session.user.email?.toLowerCase())
+          .maybeSingle();
+        
+        if (orgData?.id) {
+          console.log("Found organization created by this email:", orgData.id);
           
-          // If this is from creator_email check, we need to update the profile
-          if (!session.user.user_metadata?.organization_id) {
-            await updateUserWithOrganization(session.user.id, organizationId);
-          }
-          
+          // Update user metadata instead of profile
+          await supabase.auth.updateUser({
+            data: {
+              organization_id: orgData.id,
+              role: 'super_admin'
+            }
+          });
+            
           toast.info("Anda sudah memiliki organisasi.");
           redirectToEmployeeWelcome();
           return false;
@@ -72,11 +69,9 @@ export const useOrganizationAuth = () => {
         
         return true;
       } catch (error) {
-        // Special handling for infinite recursion or policy errors
+        // If there's an error, allow continuing to organization setup
+        // Better than blocking the user completely
         console.error("Error in org check:", error);
-        
-        // Continue to organization setup despite errors
-        // Better to let user continue than to block their flow
         return true;
       }
     } catch (error) {
