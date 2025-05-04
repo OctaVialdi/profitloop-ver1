@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { employeeService, Employee, EmployeeWithDetails } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -28,6 +27,8 @@ export interface LegacyEmployee {
   role: string;
   organization_id: string; // Required field
   employee_id: string;     // Making it required to match Employee type
+  phone?: string;          // Adding missing properties
+  bloodType?: string;      // Adding missing properties
 }
 
 export interface UseEmployeesResult {
@@ -65,7 +66,9 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     status: employee.status || "Active",
     role: employee.role || "employee",
     organization_id: employee.organization_id,
-    employee_id: employee.employee_id
+    employee_id: employee.employee_id,
+    phone: employee.personalDetails?.phone || "",
+    bloodType: employee.personalDetails?.blood_type || ""
   };
 }
 

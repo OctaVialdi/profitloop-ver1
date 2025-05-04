@@ -2,7 +2,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Employee } from "@/hooks/useEmployees";
-import { EmptyDataDisplay } from "./PersonalSection";
+import { EmptyDataDisplay } from "./EmptyDataDisplay";
 
 interface FilesSectionProps {
   employee: Employee;
