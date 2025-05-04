@@ -27,8 +27,5 @@ export function useAuth() {
   };
 }
 
-// Re-export the original interface for backwards compatibility
-export interface AuthCredentials {
-  email: string;
-  password: string;
-}
+// Remove duplicate interface and re-export from types
+export type { AuthCredentials } from "./types";
