@@ -1,4 +1,7 @@
 
+import { supabase } from '@/integrations/supabase/client';
+
+export class EmployeeService {
   // Method referenced in updateEmploymentDetails
   async saveEmploymentDetails(employmentDetails: any): Promise<any> {
     try {
@@ -30,3 +33,39 @@
       return null;
     }
   }
+
+  // Add the handleError method that's referenced in saveEmploymentDetails
+  private handleError(error: any, message: string): void {
+    console.error(message, error);
+    // Additional error handling logic if needed
+  }
+}
+
+// Singleton instance
+export const employeeService = new EmployeeService();
+
+// Define the Employee and EmployeeWithDetails types
+export interface Employee {
+  id: string;
+  employee_id: string;
+  [key: string]: any;
+}
+
+export interface EmployeeWithDetails extends Employee {
+  employment?: {
+    barcode?: string;
+    organization?: string;
+    job_position?: string;
+    job_level?: string;
+    employment_status?: string;
+    branch?: string;
+    join_date?: string;
+    sign_date?: string;
+    grade?: string;
+    class?: string;
+    approval_line?: string;
+    manager_id?: string | null;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
