@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -912,4 +913,21 @@ const InviteMembers = () => {
                               <Copy className={`h-4 w-4 ${copied ? "text-green-500" : ""}`} />
                             </Button>
                           </div>
-                          <p className="text-sm text-indigo-700
+                          <p className="text-sm text-indigo-700">
+                            Salin dan bagikan tautan ini secara manual jika pengiriman email gagal.
+                          </p>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default InviteMembers;
