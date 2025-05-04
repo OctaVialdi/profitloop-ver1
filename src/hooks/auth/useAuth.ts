@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -20,7 +19,7 @@ export function useAuth() {
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session) => {
+      async (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
@@ -33,7 +32,7 @@ export function useAuth() {
               // Check if user's email is verified in auth system
               const isEmailVerified = session.user.email_confirmed_at !== null;
               
-              // Handle specific events by string literal comparison
+              // Handle auth events
               if (event === 'SIGNED_UP' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                 console.log(`${event} detected, ensuring profile and verification status`);
                 
@@ -77,7 +76,6 @@ export function useAuth() {
                         
                       if (directError) {
                         console.error("Direct profile creation error:", directError);
-                        throw directError;
                       } else {
                         console.log("Direct profile creation success on auth event");
                       }
@@ -85,26 +83,17 @@ export function useAuth() {
                       console.error("Direct insert failed, trying fallback:", insertErr);
                       
                       // Fallback to helper function
-                      const profileCreated = await ensureProfileExists(session.user.id, {
+                      await ensureProfileExists(session.user.id, {
                         email: session.user.email || '',
                         full_name: session.user.user_metadata?.full_name || null,
                         email_verified: isEmailVerified
                       });
-                      
-                      console.log("Fallback profile creation result:", profileCreated);
                     }
                   }
                 } catch (err) {
                   console.error("Error in profile verification check:", err);
                 }
               }
-              
-              // Always ensure profile exists regardless of auth event
-              await ensureProfileExists(session.user.id, {
-                email: session.user.email || '',
-                full_name: session.user.user_metadata?.full_name || null,
-                email_verified: isEmailVerified
-              });
             } catch (err) {
               console.error("Error in auth listener profile creation/update:", err);
             }

@@ -36,41 +36,77 @@ const EmployeeWelcome = () => {
           return;
         }
 
-        // Get user profile and organization data
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select(`
-            full_name,
-            role,
-            has_seen_welcome,
-            organizations:organization_id (
-              name
-            )
-          `)
-          .eq('id', user.id)
-          .single();
+        // Try to get user metadata first (faster and more reliable)
+        let fullName = user.user_metadata?.full_name || "";
+        let role = user.user_metadata?.role || "karyawan";
+        let organizationName = "";
+        let hasSeenWelcome = false;
+        let organizationId = user.user_metadata?.organization_id;
 
-        if (profileError) {
-          throw profileError;
+        // Get organization data if we have an ID
+        if (organizationId) {
+          try {
+            const { data: orgData, error: orgError } = await supabase
+              .from('organizations')
+              .select('name')
+              .eq('id', organizationId)
+              .single();
+              
+            if (!orgError && orgData) {
+              organizationName = orgData.name;
+            }
+          } catch (orgError) {
+            console.error("Error fetching organization:", orgError);
+          }
         }
 
-        if (!profileData?.organizations?.name) {
+        // Fallback to profile data if needed
+        if (!fullName || !organizationId || !organizationName) {
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select(`
+                full_name,
+                role,
+                has_seen_welcome,
+                organization_id,
+                organizations:organization_id (
+                  name
+                )
+              `)
+              .eq('id', user.id)
+              .maybeSingle();
+
+            if (!profileError && profileData) {
+              if (profileData.full_name) fullName = profileData.full_name;
+              if (profileData.role) role = profileData.role;
+              if (profileData.has_seen_welcome !== null) hasSeenWelcome = profileData.has_seen_welcome;
+              if (profileData.organizations?.name) organizationName = profileData.organizations.name;
+              if (profileData.organization_id) organizationId = profileData.organization_id;
+            }
+          } catch (profileError) {
+            console.error("Error fetching profile:", profileError);
+          }
+        }
+
+        // If no organization ID, redirect to organization setup
+        if (!organizationId) {
           toast.error("Anda belum tergabung dengan organisasi manapun");
-          navigate("/organizations");
+          navigate("/organizations", { replace: true });
           return;
         }
 
         // If user has already seen welcome page, redirect to dashboard
-        if (profileData.has_seen_welcome) {
+        if (hasSeenWelcome) {
           navigate("/dashboard", { replace: true });
           return;
         }
 
-        // Set user data from the database
+        // Set user data
         setUserData({
-          fullName: profileData.full_name || user.user_metadata?.full_name || "",
-          organizationName: profileData.organizations?.name || organizationNameFromLocation || "Organisasi",
-          role: profileData.role || roleFromLocation || "karyawan",
+          fullName: fullName || user.email?.split('@')[0] || "",
+          organizationName: organizationName || organizationNameFromLocation || "Organisasi",
+          role: role || roleFromLocation || "karyawan",
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -100,7 +136,10 @@ const EmployeeWelcome = () => {
         .eq('id', user.id);
         
       if (error) {
-        throw error;
+        // If update fails, try to update auth metadata as fallback
+        await supabase.auth.updateUser({
+          data: { has_seen_welcome: true }
+        });
       }
       
       // Navigate to dashboard
