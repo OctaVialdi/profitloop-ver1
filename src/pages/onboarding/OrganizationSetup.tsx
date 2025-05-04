@@ -195,18 +195,6 @@ const OrganizationSetup = () => {
     }
   }
 
-  function handleChange(field: keyof OrganizationFormData, value: string) {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  }
-
-  function validateForm() {
-    if (!formData.name.trim()) {
-      toast.error("Nama organisasi wajib diisi");
-      return false;
-    }
-    return true;
-  }
-
   if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
