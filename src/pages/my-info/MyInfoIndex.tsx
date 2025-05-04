@@ -1,16 +1,17 @@
 
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useEmployees, Employee } from "@/hooks/useEmployees";
+import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
 import { EmployeeDetail } from "@/components/hr/EmployeeDetail";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function MyInfoIndex() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { employees } = useEmployees();
   
   // Extract the employee ID from the query parameters
   const employeeId = searchParams.get("id");
@@ -45,15 +46,30 @@ export default function MyInfoIndex() {
   
   const activeTab = getTabFromPath(currentPath);
   
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [employee, setEmployee] = useState<EmployeeWithDetails | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   
-  // Find the employee with the matching ID
   useEffect(() => {
-    if (employeeId && employees) {
-      const foundEmployee = employees.find(emp => emp.id === employeeId);
-      setEmployee(foundEmployee || null);
-    }
-  }, [employeeId, employees]);
+    const fetchEmployee = async () => {
+      if (!employeeId) return;
+      
+      setLoading(true);
+      try {
+        const data = await employeeService.fetchEmployeeById(employeeId);
+        setEmployee(data);
+        if (!data) {
+          toast.error("Employee not found");
+        }
+      } catch (error) {
+        console.error("Error fetching employee:", error);
+        toast.error("Failed to load employee data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEmployee();
+  }, [employeeId]);
 
   // Redirect to personal route if at index
   useEffect(() => {
@@ -69,6 +85,17 @@ export default function MyInfoIndex() {
           <h2 className="text-xl font-semibold mb-2">No employee ID provided</h2>
           <Button onClick={() => navigate("/hr/data")}>Back to Employee List</Button>
         </div>
+      </div>
+    );
+  }
+  
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <Skeleton className="h-[600px] w-full" />
       </div>
     );
   }

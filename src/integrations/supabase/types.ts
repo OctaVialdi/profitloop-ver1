@@ -51,6 +51,436 @@ export type Database = {
           },
         ]
       }
+      employee_education: {
+        Row: {
+          created_at: string
+          degree: string | null
+          education_type: string | null
+          employee_id: string
+          end_date: string | null
+          field_of_study: string | null
+          id: string
+          institution: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          degree?: string | null
+          education_type?: string | null
+          employee_id: string
+          end_date?: string | null
+          field_of_study?: string | null
+          id?: string
+          institution: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          degree?: string | null
+          education_type?: string | null
+          employee_id?: string
+          end_date?: string | null
+          field_of_study?: string | null
+          id?: string
+          institution?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_education_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_emergency_contacts: {
+        Row: {
+          address: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          name: string
+          phone: string | null
+          relationship: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          name: string
+          phone?: string | null
+          relationship?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          relationship?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_emergency_contacts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_employment: {
+        Row: {
+          approval_line: string | null
+          barcode: string | null
+          branch: string | null
+          class: string | null
+          created_at: string
+          employee_id: string
+          employment_status: string | null
+          grade: string | null
+          id: string
+          job_level: string | null
+          job_position: string | null
+          join_date: string | null
+          manager_id: string | null
+          organization: string | null
+          schedule: string | null
+          sign_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          approval_line?: string | null
+          barcode?: string | null
+          branch?: string | null
+          class?: string | null
+          created_at?: string
+          employee_id: string
+          employment_status?: string | null
+          grade?: string | null
+          id?: string
+          job_level?: string | null
+          job_position?: string | null
+          join_date?: string | null
+          manager_id?: string | null
+          organization?: string | null
+          schedule?: string | null
+          sign_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approval_line?: string | null
+          barcode?: string | null
+          branch?: string | null
+          class?: string | null
+          created_at?: string
+          employee_id?: string
+          employment_status?: string | null
+          grade?: string | null
+          id?: string
+          job_level?: string | null
+          job_position?: string | null
+          join_date?: string | null
+          manager_id?: string | null
+          organization?: string | null
+          schedule?: string | null
+          sign_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_employment_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_employment_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_family: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          name: string
+          occupation: string | null
+          relationship: string | null
+          updated_at: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          name: string
+          occupation?: string | null
+          relationship?: string | null
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          name?: string
+          occupation?: string | null
+          relationship?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_family_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_identity_addresses: {
+        Row: {
+          citizen_address: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          nik: string | null
+          passport_expiry: string | null
+          passport_number: string | null
+          postal_code: string | null
+          residential_address: string | null
+          updated_at: string
+        }
+        Insert: {
+          citizen_address?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          nik?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
+          postal_code?: string | null
+          residential_address?: string | null
+          updated_at?: string
+        }
+        Update: {
+          citizen_address?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          nik?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
+          postal_code?: string | null
+          residential_address?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_identity_addresses_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_payroll: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          bank_name: string | null
+          basic_salary: number | null
+          created_at: string
+          employee_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          basic_salary?: number | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          basic_salary?: number | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_payroll_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_personal_details: {
+        Row: {
+          birth_date: string | null
+          birth_place: string | null
+          blood_type: string | null
+          created_at: string
+          employee_id: string
+          gender: string | null
+          id: string
+          marital_status: string | null
+          mobile_phone: string | null
+          religion: string | null
+          updated_at: string
+        }
+        Insert: {
+          birth_date?: string | null
+          birth_place?: string | null
+          blood_type?: string | null
+          created_at?: string
+          employee_id: string
+          gender?: string | null
+          id?: string
+          marital_status?: string | null
+          mobile_phone?: string | null
+          religion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string | null
+          birth_place?: string | null
+          blood_type?: string | null
+          created_at?: string
+          employee_id?: string
+          gender?: string | null
+          id?: string
+          marital_status?: string | null
+          mobile_phone?: string | null
+          religion?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_personal_details_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_work_experience: {
+        Row: {
+          company: string
+          created_at: string
+          description: string | null
+          employee_id: string
+          end_date: string | null
+          id: string
+          position: string | null
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          description?: string | null
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          position?: string | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          description?: string | null
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          position?: string | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_work_experience_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string
+          email: string | null
+          employee_id: string | null
+          id: string
+          name: string
+          organization_id: string
+          role: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          employee_id?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          role?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          employee_id?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          role?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           created_at: string | null
@@ -521,6 +951,14 @@ export type Database = {
               creator_email?: string
             }
         Returns: Json
+      }
+      employee_belongs_to_users_org: {
+        Args: { employee_row: Database["public"]["Tables"]["employees"]["Row"] }
+        Returns: boolean
+      }
+      employee_id_belongs_to_users_org: {
+        Args: { employee_id: string }
+        Returns: boolean
       }
       generate_magic_link_invitation: {
         Args: { email_address: string; org_id: string; user_role?: string }
