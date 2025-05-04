@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +39,7 @@ const EmployeeWelcome = () => {
         let fullName = user.user_metadata?.full_name || "";
         let role = user.user_metadata?.role || "karyawan";
         let organizationName = "";
-        let hasSeenWelcome = false;
+        let hasSeenWelcome = user.user_metadata?.has_seen_welcome || false;
         let organizationId = user.user_metadata?.organization_id;
 
         // Get organization data if we have an ID
@@ -91,6 +90,17 @@ const EmployeeWelcome = () => {
 
         // If no organization ID, redirect to organization setup
         if (!organizationId) {
+          // Update user metadata to ensure we don't keep redirecting
+          try {
+            await supabase.auth.updateUser({
+              data: { 
+                has_created_profile: true 
+              }
+            });
+          } catch (e) {
+            console.error("Failed to update user metadata:", e);
+          }
+          
           toast.error("Anda belum tergabung dengan organisasi manapun");
           navigate("/organizations", { replace: true });
           return;

@@ -26,7 +26,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       }
     }
     
-    // Try a direct API call to get profile data (skip RPC which causes recursion issues)
+    // Try a direct API call to get profile data
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -103,7 +103,7 @@ export async function ensureProfileExists(userId: string, userData: { email: str
       return true;
     }
     
-    // Direct insert as primary method since edge function has CORS issues
+    // Direct insert as primary method
     try {
       const { error: insertError } = await supabase
         .from('profiles')
@@ -124,32 +124,7 @@ export async function ensureProfileExists(userId: string, userData: { email: str
         console.error("Direct insert failed:", insertError);
       }
     } catch (insertErr) {
-      console.error("Direct insert exception:", insertErr);
-    }
-    
-    // Edge function method (with proper CORS handling) - try as fallback
-    try {
-      const { data: rpcResult, error: rpcError } = await supabase.functions.invoke(
-        'create-profile-if-not-exists',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            user_id: userId,
-            user_email: userData.email.toLowerCase(),
-            user_full_name: userData.full_name || null,
-            is_email_verified: userData.email_verified || false
-          })
-        }
-      );
-        
-      if (rpcError) {
-        console.log("Edge function profile creation error:", rpcError);
-      } else {
-        console.log("Profile created/updated via edge function");
-        return true;
-      }
-    } catch (err) {
-      console.log("Edge function creation failed:", err);
+      console.error("Direct insert failed:", insertErr);
     }
     
     // Use auth metadata as a fallback - this won't fix the profile 

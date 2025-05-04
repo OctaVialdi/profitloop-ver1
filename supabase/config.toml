@@ -32,4 +32,3 @@ enable_signup = true
 [functions]
 [functions.create-profile-if-not-exists]
 verify_jwt = false
-

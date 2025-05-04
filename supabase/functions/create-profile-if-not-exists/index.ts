@@ -1,4 +1,3 @@
-
 // Create a new file for the edge function
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.3'
@@ -6,7 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.3'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info, apikey',
+  'Access-Control-Allow-Headers': '*',
 }
 
 interface RequestBody {
@@ -58,11 +57,26 @@ serve(async (req: Request) => {
       .eq('id', requestData.user_id)
       .maybeSingle();
       
+    if (checkError) {
+      console.error("Error checking for existing profile:", checkError);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Database error checking for profile', 
+          details: checkError.message
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     // If profile exists, check if we need to update email verification
     if (existingProfile) {
       // Update email_verified if needed
       if (requestData.is_email_verified && !existingProfile.email_verified) {
-        const { data: updateData, error: updateError } = await supabaseClient
+        const { error: updateError } = await supabaseClient
           .from('profiles')
           .update({ 
             email_verified: true,
@@ -72,7 +86,15 @@ serve(async (req: Request) => {
           .eq('id', requestData.user_id);
           
         if (updateError) {
-          throw new Error(`Failed to update profile: ${updateError.message}`);
+          return new Response(
+            JSON.stringify({ 
+              error: `Failed to update profile: ${updateError.message}` 
+            }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
         }
         
         // Also update auth metadata to ensure it's synced
@@ -106,7 +128,7 @@ serve(async (req: Request) => {
     }
     
     // Profile doesn't exist, create it
-    const { data: insertData, error: insertError } = await supabaseClient
+    const { error: insertError } = await supabaseClient
       .from('profiles')
       .insert({
         id: requestData.user_id,
@@ -116,7 +138,32 @@ serve(async (req: Request) => {
       });
       
     if (insertError) {
-      throw new Error(`Failed to create profile: ${insertError.message}`);
+      // Special case for unique violation - treat as success since profile already exists
+      if (insertError.code === '23505') {
+        return new Response(
+          JSON.stringify({ 
+            message: 'Profile already exists (detected conflict)',
+            profile_id: requestData.user_id,
+            status: 'exists'
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      // Other errors
+      return new Response(
+        JSON.stringify({ 
+          error: `Failed to create profile: ${insertError.message}`, 
+          code: insertError.code 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
     
     // Also update auth metadata to ensure it's synced
