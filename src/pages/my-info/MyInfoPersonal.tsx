@@ -23,7 +23,6 @@ export default function MyInfoPersonal() {
   const { user } = useAuthState();
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [employee, setEmployee] = useState<any>(null);
   
   // Form state
@@ -49,65 +48,34 @@ export default function MyInfoPersonal() {
   const fetchEmployeeData = async () => {
     setIsLoading(true);
     try {
-      // Get user profile to get organization_id
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", user?.id)
-        .single();
-      
-      if (!profileData?.organization_id) {
-        toast.error("User is not associated with an organization");
-        setIsLoading(false);
-        return;
-      }
-
       // Get employee data for current user
       const { data: employeeData, error: employeeError } = await supabase
         .from("employees")
-        .select("*")
-        .eq("organization_id", profileData.organization_id)
+        .select("*, employee_personal_details(*)")
+        .eq("organization_id", user?.organization_id)
         .eq("email", user?.email)
         .single();
 
-      if (employeeError) {
-        console.error("Error fetching employee data:", employeeError);
-        toast.error("Could not fetch employee data");
-        setIsLoading(false);
-        return;
-      }
+      if (employeeError) throw employeeError;
 
       if (employeeData) {
-        // Get personal details if they exist
-        const { data: personalDetails } = await supabase
-          .from("employee_personal_details")
-          .select("*")
-          .eq("employee_id", employeeData.id)
-          .single();
-
-        // Set employee with personal details
-        const employeeWithDetails = {
-          ...employeeData,
-          employee_personal_details: personalDetails || {}
-        };
-        
-        setEmployee(employeeWithDetails);
+        setEmployee(employeeData);
         
         // Set form values
         setFormValues({
-          name: employeeWithDetails.name || "",
-          email: employeeWithDetails.email || "",
-          mobilePhone: employeeWithDetails.employee_personal_details?.mobile_phone || "",
-          birthPlace: employeeWithDetails.employee_personal_details?.birth_place || "",
-          gender: employeeWithDetails.employee_personal_details?.gender || "",
-          maritalStatus: employeeWithDetails.employee_personal_details?.marital_status || "",
-          religion: employeeWithDetails.employee_personal_details?.religion || "",
-          bloodType: employeeWithDetails.employee_personal_details?.blood_type || ""
+          name: employeeData.name || "",
+          email: employeeData.email || "",
+          mobilePhone: employeeData.employee_personal_details?.mobile_phone || "",
+          birthPlace: employeeData.employee_personal_details?.birth_place || "",
+          gender: employeeData.employee_personal_details?.gender || "",
+          maritalStatus: employeeData.employee_personal_details?.marital_status || "",
+          religion: employeeData.employee_personal_details?.religion || "",
+          bloodType: employeeData.employee_personal_details?.blood_type || ""
         });
 
         // Set birth date if exists
-        if (employeeWithDetails.employee_personal_details?.birth_date) {
-          const date = new Date(employeeWithDetails.employee_personal_details.birth_date);
+        if (employeeData.employee_personal_details?.birth_date) {
+          const date = new Date(employeeData.employee_personal_details.birth_date);
           if (isValid(date)) {
             setBirthDate(date);
           }
@@ -157,7 +125,7 @@ export default function MyInfoPersonal() {
   const handleSave = async () => {
     if (!employee) return;
     
-    setIsSaving(true);
+    setIsLoading(true);
     
     try {
       // First update the base employee data (name and email)
@@ -189,7 +157,7 @@ export default function MyInfoPersonal() {
       console.error("Failed to update personal details:", error);
       toast.error("Failed to update personal details");
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
 
@@ -222,7 +190,7 @@ export default function MyInfoPersonal() {
                       variant="outline" 
                       className="gap-1 flex items-center"
                       onClick={toggleEditMode}
-                      disabled={isSaving}
+                      disabled={isLoading}
                     >
                       <X size={14} /> Cancel
                     </Button>
@@ -231,9 +199,9 @@ export default function MyInfoPersonal() {
                       variant="default" 
                       className="gap-1 flex items-center"
                       onClick={handleSave}
-                      disabled={isSaving}
+                      disabled={isLoading}
                     >
-                      {isSaving ? (
+                      {isLoading ? (
                         <>
                           <Loader2 className="h-3 w-3 animate-spin" /> Saving...
                         </>
