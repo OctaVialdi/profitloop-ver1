@@ -212,16 +212,24 @@ export const employeeService = {
 
   // Add createEmployee function
   async createEmployee(
-    employeeData: Partial<Employee>,
+    employeeData: {
+      name: string;
+      organization_id: string;
+      email?: string;
+      role?: string;
+      status?: string;
+      employee_id?: string;
+      profile_image?: string;
+    },
     personalDetails?: Partial<EmployeePersonalDetails>,
     identityAddress?: Partial<EmployeeIdentityAddress>,
     employment?: Partial<EmployeeEmployment>
   ): Promise<EmployeeWithDetails | null> {
     try {
-      // Insert basic employee data
+      // Insert basic employee data - FIX: ensure name and organization_id are present
       const { data: newEmployee, error: employeeError } = await supabase
         .from("employees")
-        .insert([employeeData])
+        .insert([employeeData]) // Changed from employeeData (Partial<Employee>) to ensure required fields
         .select()
         .single();
 
@@ -298,14 +306,20 @@ export const employeeService = {
     }
   },
 
-  // Add saveFamilyMember function
+  // Add saveFamilyMember function - FIX: ensure required fields are present
   async saveFamilyMember(
-    familyMember: Partial<EmployeeFamily> & { employee_id: string }
+    familyMember: {
+      employee_id: string;
+      name: string; 
+      relationship?: string | null;
+      birth_date?: string | null;
+      occupation?: string | null;
+    }
   ): Promise<EmployeeFamily | null> {
     try {
       const { data, error } = await supabase
         .from("employee_family")
-        .insert([familyMember])
+        .insert([familyMember]) // Changed from array to ensure proper structure
         .select()
         .single();
 
@@ -463,5 +477,49 @@ export const updateEmployee = async (data: { id: string; [key: string]: any }) =
   } catch (error) {
     console.error("Error updating employee:", error);
     throw error;
+  }
+};
+
+// Add function to update employee profile image
+export const updateEmployeeProfileImage = async (
+  employeeId: string,
+  imageFile: File
+): Promise<string | null> => {
+  try {
+    // Create a unique file name
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${employeeId}-${Date.now()}.${fileExt}`;
+    const filePath = `profile-images/${fileName}`;
+    
+    // Upload the file to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('employee-photos')
+      .upload(filePath, imageFile);
+    
+    if (uploadError) throw uploadError;
+    
+    // Get the public URL for the uploaded file
+    const { data: urlData } = supabase
+      .storage
+      .from('employee-photos')
+      .getPublicUrl(filePath);
+    
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Failed to get public URL for uploaded image');
+    }
+    
+    // Update the employee record with the new profile image URL
+    const { error: updateError } = await supabase
+      .from('employees')
+      .update({ profile_image: urlData.publicUrl })
+      .eq('id', employeeId);
+    
+    if (updateError) throw updateError;
+    
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('Error updating employee profile image:', error);
+    return null;
   }
 };
