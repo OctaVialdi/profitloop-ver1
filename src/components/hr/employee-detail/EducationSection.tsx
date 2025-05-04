@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Employee } from "@/hooks/useEmployees";
-import { EmptyDataDisplay } from "./PersonalSection";
+import { EmptyDataDisplay } from "./EmptyDataDisplay";
 
 interface EducationSectionProps {
   employee: Employee;

@@ -10,9 +10,13 @@ export { FilesSection } from './FilesSection';
 export { AssetsSection } from './AssetsSection';
 export { HistorySection } from './HistorySection';
 export { DefaultSection } from './DefaultSection';
+export { IdentityAddressSection } from './IdentityAddressSection';
 export { EmployeeDetailSidebar } from './EmployeeDetailSidebar';
 
 // Export edit dialog components for convenience
 export { EditPersonalDetailsDialog } from './edit/EditPersonalDetailsDialog';
 export { EditIdentityAddressDialog } from './edit/EditIdentityAddressDialog';
 export { EditEmploymentDialog } from './edit/EditEmploymentDialog';
+
+// Export utility components
+export { EmptyDataDisplay } from './EmptyDataDisplay';

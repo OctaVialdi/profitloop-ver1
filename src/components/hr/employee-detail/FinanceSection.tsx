@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Employee } from "@/hooks/useEmployees";
-import { EmptyDataDisplay } from "./PersonalSection";
+import { EmptyDataDisplay } from "./EmptyDataDisplay";
 import { Button } from "@/components/ui/button";
 import { Plus, DollarSign, FileText, Banknote } from "lucide-react";
 

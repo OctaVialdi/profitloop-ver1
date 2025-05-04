@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Employee } from "@/hooks/useEmployees";
 import { Button } from "@/components/ui/button";
 import { Plus, FileIcon } from "lucide-react";
-import { EmptyDataDisplay } from "./PersonalSection";
+import { EmptyDataDisplay } from "./EmptyDataDisplay";
 
 interface FilesSectionProps {
   employee: Employee;
