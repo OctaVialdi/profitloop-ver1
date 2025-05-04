@@ -1,20 +1,22 @@
 
-// Types for magic link parameters
-export interface MagicLinkParams {
-  token?: string | null;
-  email?: string | null;
-  errorCode?: string | null;
-  errorDescription?: string | null;
-  accessToken?: string | null;
-  refreshToken?: string | null;
-  type?: string | null;
-  redirectTo?: string | null;
+import { Session, User } from "@supabase/supabase-js";
+
+export interface AuthCredentials {
+  email: string;
+  password: string;
 }
 
-// Types for magic link result
-export interface MagicLinkResult {
+export interface AuthState {
   isLoading: boolean;
-  error: string | null;
-  success: boolean;
-  organizationName: string;
+  loginError: string | null;
+  session: Session | null;
+  user: User | null;
+}
+
+export interface AuthSignInResult {
+  data: {
+    session?: Session | null;
+    user?: User | null;
+  } | null;
+  error: Error | null;
 }
