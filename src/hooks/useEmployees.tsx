@@ -84,7 +84,7 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     status: employee.status || "Active",
     role: employee.role || "employee",
     organization_id: employee.organization_id,
-    employee_id: employee.employee_id
+    employee_id: employee.employee_id || ""
   };
 }
 
@@ -156,6 +156,7 @@ export function useEmployees(): UseEmployeesResult {
         employee_id: "EMP-001",
         role: "employee",
         status: "Active",
+        organization_id: "", // Will be set before creating
         personalDetails: {
           mobile_phone: "+62 812-3456-7890",
           birth_place: "Jakarta",
@@ -407,6 +408,24 @@ export function useEmployees(): UseEmployeesResult {
         }
       });
       
+      // Get current user's organization ID
+      const { data: userProfile } = await supabase.auth.getUser();
+      if (!userProfile?.user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', userProfile.user.id)
+        .single();
+      
+      if (!profile?.organization_id) {
+        throw new Error("User doesn't belong to an organization");
+      }
+      
+      const organizationId = profile.organization_id;
+      
       // Process each dummy employee, modifying IDs to avoid conflicts
       for (const dummyEmployee of dummyEmployees) {
         // Skip if employee with this ID already exists
@@ -416,6 +435,9 @@ export function useEmployees(): UseEmployeesResult {
         }
         
         const { personalDetails, identityAddress, employment, familyMembers, ...employeeData } = dummyEmployee;
+        
+        // Set organization_id for the employee
+        employeeData.organization_id = organizationId;
         
         console.log("Adding dummy employee:", employeeData.name);
         
@@ -435,7 +457,8 @@ export function useEmployees(): UseEmployeesResult {
               for (const familyMember of familyMembers) {
                 await employeeService.saveFamilyMember({
                   ...familyMember,
-                  employee_id: newEmployee.id
+                  employee_id: newEmployee.id,
+                  name: familyMember.name // Ensure name is passed
                 });
               }
               console.log(`Added ${familyMembers.length} family members for ${employeeData.name}`);
@@ -471,8 +494,35 @@ export function useEmployees(): UseEmployeesResult {
         employment
       });
 
+      // Get current user's organization ID
+      const { data: userProfile } = await supabase.auth.getUser();
+      if (!userProfile?.user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', userProfile.user.id)
+        .single();
+      
+      if (!profile?.organization_id) {
+        throw new Error("User doesn't belong to an organization");
+      }
+      
+      // Ensure required fields are set
+      const completeEmployeeData = {
+        name: employeeData.name || 'New Employee', // Default name if not provided
+        organization_id: profile.organization_id,
+        email: employeeData.email,
+        role: employeeData.role,
+        status: employeeData.status,
+        employee_id: employeeData.employee_id,
+        profile_image: employeeData.profile_image
+      };
+
       const newEmployee = await employeeService.createEmployee(
-        employeeData, 
+        completeEmployeeData, 
         personalDetails,
         identityAddress,
         employment
