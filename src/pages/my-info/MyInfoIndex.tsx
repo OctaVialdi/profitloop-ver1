@@ -49,25 +49,25 @@ export default function MyInfoIndex() {
   const [employee, setEmployee] = useState<EmployeeWithDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   
-  useEffect(() => {
-    const fetchEmployee = async () => {
-      if (!employeeId) return;
-      
-      setLoading(true);
-      try {
-        const data = await employeeService.fetchEmployeeById(employeeId);
-        setEmployee(data);
-        if (!data) {
-          toast.error("Employee not found");
-        }
-      } catch (error) {
-        console.error("Error fetching employee:", error);
-        toast.error("Failed to load employee data");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchEmployee = async () => {
+    if (!employeeId) return;
     
+    setLoading(true);
+    try {
+      const data = await employeeService.fetchEmployeeById(employeeId);
+      setEmployee(data);
+      if (!data) {
+        toast.error("Employee not found");
+      }
+    } catch (error) {
+      console.error("Error fetching employee:", error);
+      toast.error("Failed to load employee data");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchEmployee();
   }, [employeeId]);
 
@@ -124,7 +124,10 @@ export default function MyInfoIndex() {
         </Button>
       </div>
 
-      <EmployeeDetail employee={employee} activeTab={activeTab} />
+      <EmployeeDetail 
+        employee={employee} 
+        activeTab={activeTab} 
+      />
     </div>
   );
 }

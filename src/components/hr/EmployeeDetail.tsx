@@ -2,12 +2,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { EmployeeWithDetails } from "@/services/employeeService";
+import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
 import { convertToLegacyFormat, LegacyEmployee } from "@/hooks/useEmployees";
 import {
   EmployeeDetailSidebar,
   PersonalSection,
   EmploymentSection,
+  IdentityAddressSection,
   EducationSection,
   TimeManagementSection,
   PayrollSection,
@@ -29,9 +30,27 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const [activeTab] = useState(initialActiveTab);
+  const [employeeData, setEmployeeData] = useState<EmployeeWithDetails>(employee);
+
+  // Convert to legacy employee object format for backward compatibility
+  const legacyEmployee: LegacyEmployee = convertToLegacyFormat(employeeData);
 
   // Handle edit button click
-  const handleEdit = (section: string) => {
+  const handleEdit = async (section: string) => {
+    if (section === "refresh") {
+      try {
+        const refreshedEmployee = await employeeService.fetchEmployeeById(employee.id);
+        if (refreshedEmployee) {
+          setEmployeeData(refreshedEmployee);
+          toast.success("Data refreshed successfully");
+        }
+      } catch (error) {
+        console.error("Error refreshing employee data:", error);
+        toast.error("Failed to refresh data");
+      }
+      return;
+    }
+    
     const route = `/my-info/${section}?id=${employee.id}`;
     navigate(route);
     
@@ -42,14 +61,16 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     }
   };
 
-  // Convert to legacy employee object format for backward compatibility
-  const legacyEmployee: LegacyEmployee = convertToLegacyFormat(employee);
-
   // Render content for each section
   const renderSectionContent = () => {
     switch (activeTab) {
       case 'personal':
-        return <PersonalSection employee={legacyEmployee} handleEdit={handleEdit} />;
+        return (
+          <>
+            <PersonalSection employee={legacyEmployee} handleEdit={handleEdit} />
+            <IdentityAddressSection employee={legacyEmployee} handleEdit={handleEdit} />
+          </>
+        );
         
       case 'employment':
         return <EmploymentSection employee={legacyEmployee} handleEdit={handleEdit} />;

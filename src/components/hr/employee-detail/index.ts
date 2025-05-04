@@ -1,13 +1,18 @@
 
-// Export all components from this directory
-export * from "./EmployeeDetailSidebar";
-export * from "./PersonalSection";
-export * from "./EmploymentSection";
-export * from "./EducationSection";
-export * from "./TimeManagementSection";
-export * from "./PayrollSection";
-export * from "./FinanceSection";
-export * from "./FilesSection";
-export * from "./AssetsSection";
-export * from "./HistorySection";
-export * from "./DefaultSection";
+// Export all components from employee-detail
+export { PersonalSection } from './PersonalSection';
+export { EmploymentSection } from './EmploymentSection';
+export { EducationSection } from './EducationSection';
+export { TimeManagementSection } from './TimeManagementSection';
+export { PayrollSection } from './PayrollSection';
+export { FinanceSection } from './FinanceSection';
+export { FilesSection } from './FilesSection';
+export { AssetsSection } from './AssetsSection';
+export { HistorySection } from './HistorySection';
+export { DefaultSection } from './DefaultSection';
+export { EmployeeDetailSidebar } from './EmployeeDetailSidebar';
+
+// Export edit dialog components for convenience
+export { EditPersonalDetailsDialog } from './edit/EditPersonalDetailsDialog';
+export { EditIdentityAddressDialog } from './edit/EditIdentityAddressDialog';
+export { EditEmploymentDialog } from './edit/EditEmploymentDialog';

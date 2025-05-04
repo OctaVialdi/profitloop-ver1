@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Edit } from "lucide-react";
 import { LegacyEmployee } from "@/hooks/useEmployees";
+import { EditEmploymentDialog } from "./edit/EditEmploymentDialog";
 
 interface EmploymentSectionProps {
   employee: LegacyEmployee;
@@ -14,6 +15,18 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   employee,
   handleEdit
 }) => {
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  
+  const openEditDialog = () => {
+    setEditDialogOpen(true);
+  };
+  
+  const handleSave = () => {
+    setEditDialogOpen(false);
+    // Refresh data
+    handleEdit("refresh");
+  };
+  
   return (
     <Card>
       <div className="p-6">
@@ -32,7 +45,7 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                 size="sm" 
                 variant="outline" 
                 className="gap-2 flex items-center"
-                onClick={() => handleEdit("employment")}
+                onClick={openEditDialog}
               >
                 <Edit size={14} /> Edit
               </Button>
@@ -88,6 +101,13 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
           </div>
         </div>
       </div>
+      
+      <EditEmploymentDialog 
+        open={editDialogOpen}
+        employee={employee}
+        onClose={() => setEditDialogOpen(false)}
+        onSave={handleSave}
+      />
     </Card>
   );
 };
