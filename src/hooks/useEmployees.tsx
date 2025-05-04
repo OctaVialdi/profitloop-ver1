@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { employeeService, Employee, EmployeeWithDetails } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ export interface LegacyEmployee {
   employee_id: string;     // Making it required to match Employee type
   phone?: string;          // Adding missing properties
   bloodType?: string;      // Adding missing properties
+  profileImage?: string;   // Field for profile image URL
 }
 
 export interface UseEmployeesResult {
@@ -39,6 +41,16 @@ export interface UseEmployeesResult {
   updateEmployee: (employee: Partial<Employee> & { id: string }) => Promise<EmployeeWithDetails | null>;
   removeEmployee: (id: string) => Promise<boolean>;
   getEmployee: (id: string) => Promise<EmployeeWithDetails | null>;
+  uploadProfileImage: (employeeId: string, file: File) => Promise<string | null>;
+  updatePersonalDetails: (employeeId: string, details: any) => Promise<any>;
+  updateEmploymentDetails: (employeeId: string, details: any) => Promise<any>;
+  updateIdentityAddress: (employeeId: string, details: any) => Promise<any>;
+  addEducation: (education: any) => Promise<any>;
+  updateEducation: (id: string, education: any) => Promise<any>;
+  deleteEducation: (id: string) => Promise<boolean>;
+  addWorkExperience: (experience: any) => Promise<any>;
+  updateWorkExperience: (id: string, experience: any) => Promise<any>;
+  deleteWorkExperience: (id: string) => Promise<boolean>;
 }
 
 // Helper function to convert from new database format to legacy format
@@ -68,7 +80,8 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     organization_id: employee.organization_id,
     employee_id: employee.employee_id,
     phone: employee.personalDetails?.mobile_phone || "",
-    bloodType: employee.personalDetails?.blood_type || ""
+    bloodType: employee.personalDetails?.blood_type || "",
+    profileImage: employee.profile_image || "",
   };
 }
 
@@ -82,7 +95,8 @@ export function convertFromLegacyFormat(legacyEmployee: Partial<LegacyEmployee>)
     employee_id: legacyEmployee.employeeId || legacyEmployee.employee_id,
     organization_id: legacyEmployee.organization_id,
     status: legacyEmployee.status,
-    role: legacyEmployee.role
+    role: legacyEmployee.role,
+    profile_image: legacyEmployee.profileImage
   };
 
   return employeeData;
@@ -176,6 +190,212 @@ export function useEmployees(): UseEmployeesResult {
     }
   };
 
+  // Upload employee profile image
+  const uploadProfileImage = async (employeeId: string, file: File) => {
+    try {
+      console.log("Uploading profile image for employee:", employeeId);
+      const imageUrl = await employeeService.uploadProfileImage(employeeId, file);
+      
+      if (imageUrl) {
+        // Update the local employees state with the new image URL
+        setEmployees(
+          employees.map((employee) => 
+            employee.id === employeeId 
+              ? { ...employee, profile_image: imageUrl } 
+              : employee
+          )
+        );
+        toast.success("Profile image uploaded successfully");
+        return imageUrl;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      toast.error("Failed to upload profile image");
+      return null;
+    }
+  };
+
+  // Update personal details with better error handling
+  const updatePersonalDetails = async (employeeId: string, details: any) => {
+    try {
+      console.log("Updating personal details for employee:", employeeId, details);
+      const result = await employeeService.updatePersonalDetails(employeeId, details);
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Personal details updated successfully");
+        return result;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error updating personal details:", error);
+      toast.error(error?.message || "Failed to update personal details");
+      return null;
+    }
+  };
+
+  // Update employment details
+  const updateEmploymentDetails = async (employeeId: string, details: any) => {
+    try {
+      console.log("Updating employment details for employee:", employeeId, details);
+      const result = await employeeService.updateEmploymentDetails(employeeId, details);
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Employment details updated successfully");
+        return result;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error updating employment details:", error);
+      toast.error(error?.message || "Failed to update employment details");
+      return null;
+    }
+  };
+
+  // Update identity address
+  const updateIdentityAddress = async (employeeId: string, details: any) => {
+    try {
+      console.log("Updating identity address for employee:", employeeId, details);
+      const result = await employeeService.updateIdentityAddress(employeeId, details);
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Identity and address updated successfully");
+        return result;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error updating identity address:", error);
+      toast.error(error?.message || "Failed to update identity and address");
+      return null;
+    }
+  };
+
+  // Add education
+  const addEducation = async (education: any) => {
+    try {
+      console.log("Adding education:", education);
+      const result = await employeeService.saveEducation(education);
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Education added successfully");
+        return result;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error adding education:", error);
+      toast.error(error?.message || "Failed to add education");
+      return null;
+    }
+  };
+
+  // Update education
+  const updateEducation = async (id: string, education: any) => {
+    try {
+      console.log("Updating education:", id, education);
+      const result = await employeeService.saveEducation({...education, id});
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Education updated successfully");
+        return result;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error updating education:", error);
+      toast.error(error?.message || "Failed to update education");
+      return null;
+    }
+  };
+
+  // Delete education
+  const deleteEducation = async (id: string) => {
+    try {
+      console.log("Deleting education:", id);
+      const result = await employeeService.deleteEducation(id);
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Education deleted successfully");
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      console.error("Error deleting education:", error);
+      toast.error(error?.message || "Failed to delete education");
+      return false;
+    }
+  };
+
+  // Add work experience
+  const addWorkExperience = async (experience: any) => {
+    try {
+      console.log("Adding work experience:", experience);
+      const result = await employeeService.saveWorkExperience(experience);
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Work experience added successfully");
+        return result;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error adding work experience:", error);
+      toast.error(error?.message || "Failed to add work experience");
+      return null;
+    }
+  };
+
+  // Update work experience
+  const updateWorkExperience = async (id: string, experience: any) => {
+    try {
+      console.log("Updating work experience:", id, experience);
+      const result = await employeeService.saveWorkExperience({...experience, id});
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Work experience updated successfully");
+        return result;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error updating work experience:", error);
+      toast.error(error?.message || "Failed to update work experience");
+      return null;
+    }
+  };
+
+  // Delete work experience
+  const deleteWorkExperience = async (id: string) => {
+    try {
+      console.log("Deleting work experience:", id);
+      const result = await employeeService.deleteWorkExperience(id);
+      
+      if (result) {
+        // Refresh the employee data to get the updated details
+        await fetchEmployees();
+        toast.success("Work experience deleted successfully");
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      console.error("Error deleting work experience:", error);
+      toast.error(error?.message || "Failed to delete work experience");
+      return false;
+    }
+  };
+
   return {
     employees,
     isLoading,
@@ -183,7 +403,17 @@ export function useEmployees(): UseEmployeesResult {
     addEmployee,
     updateEmployee,
     removeEmployee,
-    getEmployee
+    getEmployee,
+    uploadProfileImage,
+    updatePersonalDetails,
+    updateEmploymentDetails,
+    updateIdentityAddress,
+    addEducation,
+    updateEducation,
+    deleteEducation,
+    addWorkExperience,
+    updateWorkExperience,
+    deleteWorkExperience
   };
 }
 

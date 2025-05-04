@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -9,6 +10,7 @@ export interface Employee {
   email: string;
   status: string;
   role: string;
+  profile_image?: string; // Add profile image field
 }
 
 export interface EmployeePersonalDetails {
@@ -60,6 +62,7 @@ export interface EmployeeWithDetails {
   email: string;
   status: string;
   role: string;
+  profile_image?: string; // Add profile image field
   personalDetails?: EmployeePersonalDetails;
   identityAddress?: EmployeeIdentityAddress;
   employment?: EmployeeEmployment;
@@ -120,7 +123,102 @@ const formatDateFields = (obj: any): any => {
   return result;
 };
 
+// Helper function to handle errors
+const handleError = (error: any, message: string) => {
+  console.error(`${message}:`, error);
+  
+  // Extract detailed error message for better error handling
+  let errorMessage = `Failed to ${message.toLowerCase()}`;
+  if (error && error.message) {
+    errorMessage = error.message;
+    
+    // Detect specific error types
+    if (errorMessage.includes('violates row-level security policy')) {
+      errorMessage = 'Permission denied. You may not have access to modify this data.';
+    } else if (errorMessage.includes('JWTError')) {
+      errorMessage = 'Authentication error. Please sign in again.';
+    }
+  }
+  
+  toast.error(errorMessage);
+  throw new Error(errorMessage);
+};
+
 class EmployeeService {
+  // Ensure storage bucket exists
+  async ensureProfileImagesBucketExists() {
+    try {
+      // Check if bucket exists
+      const { data: buckets, error: listError } = await supabase
+        .storage
+        .listBuckets();
+      
+      const bucketExists = buckets?.some(bucket => bucket.name === 'profile-images');
+      
+      if (!bucketExists) {
+        // Create the bucket if it doesn't exist
+        const { error: createError } = await supabase
+          .storage
+          .createBucket('profile-images', {
+            public: true,
+            fileSizeLimit: 5242880, // 5MB
+            allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+          });
+          
+        if (createError) throw createError;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to ensure profile images bucket exists:', error);
+      return false;
+    }
+  }
+  
+  // Upload profile image
+  async uploadProfileImage(employeeId: string, file: File): Promise<string | null> {
+    try {
+      // Ensure bucket exists
+      await this.ensureProfileImagesBucketExists();
+      
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${employeeId}-${Date.now()}.${fileExt}`;
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase
+        .storage
+        .from('profile-images')
+        .upload(`employees/${fileName}`, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (error) throw error;
+      
+      // Get public URL
+      const { data: urlData } = supabase
+        .storage
+        .from('profile-images')
+        .getPublicUrl(`employees/${fileName}`);
+        
+      // Update employee record with profile image URL
+      if (urlData) {
+        const { error: updateError } = await supabase
+          .from('employees')
+          .update({ profile_image: urlData.publicUrl })
+          .eq('id', employeeId);
+          
+        if (updateError) throw updateError;
+      }
+      
+      return urlData?.publicUrl || null;
+    } catch (error) {
+      handleError(error, 'upload profile image');
+      return null;
+    }
+  }
+
   async fetchEmployees(): Promise<EmployeeWithDetails[]> {
     try {
       const { data: employees, error } = await supabase
@@ -129,7 +227,6 @@ class EmployeeService {
         .order('name');
         
       if (error) {
-        console.error('Error fetching employees:', error);
         throw error;
       }
       
@@ -153,8 +250,7 @@ class EmployeeService {
       
       return employeesWithDetails;
     } catch (error) {
-      console.error('Failed to fetch employees:', error);
-      toast.error('Failed to load employee data');
+      handleError(error, 'Failed to fetch employees');
       return [];
     }
   }
@@ -168,7 +264,6 @@ class EmployeeService {
         .single();
         
       if (error) {
-        console.error('Error fetching employee:', error);
         throw error;
       }
       
@@ -185,8 +280,7 @@ class EmployeeService {
         employment: employment[0] || undefined,
       };
     } catch (error) {
-      console.error('Failed to fetch employee:', error);
-      toast.error('Failed to load employee data');
+      handleError(error, 'Failed to fetch employee');
       return null;
     }
   }
@@ -200,7 +294,6 @@ class EmployeeService {
         .eq('employee_id', employeeId);
         
       if (error) {
-        console.error('Error fetching personal details:', error);
         throw error;
       }
       
@@ -248,8 +341,7 @@ class EmployeeService {
       
       return result;
     } catch (error) {
-      console.error('Failed to save personal details:', error);
-      toast.error('Failed to save personal details');
+      handleError(error, 'Failed to save personal details');
       return null;
     }
   }
@@ -263,7 +355,6 @@ class EmployeeService {
         .eq('employee_id', employeeId);
         
       if (error) {
-        console.error('Error fetching identity & address:', error);
         throw error;
       }
       
@@ -311,8 +402,7 @@ class EmployeeService {
       
       return result;
     } catch (error) {
-      console.error('Failed to save identity & address:', error);
-      toast.error('Failed to save identity & address');
+      handleError(error, 'Failed to save identity & address');
       return null;
     }
   }
@@ -326,7 +416,6 @@ class EmployeeService {
         .eq('employee_id', employeeId);
         
       if (error) {
-        console.error('Error fetching employment:', error);
         throw error;
       }
       
@@ -374,8 +463,7 @@ class EmployeeService {
       
       return result;
     } catch (error) {
-      console.error('Failed to save employment:', error);
-      toast.error('Failed to save employment');
+      handleError(error, 'Failed to save employment');
       return null;
     }
   }
@@ -457,8 +545,7 @@ class EmployeeService {
       return this.fetchEmployeeById(employee.id);
       
     } catch (error) {
-      console.error('Failed to create employee:', error);
-      toast.error('Failed to create employee');
+      handleError(error, 'Failed to create employee');
       return null;
     }
   }
@@ -516,8 +603,7 @@ class EmployeeService {
       return this.fetchEmployeeById(id);
       
     } catch (error) {
-      console.error('Failed to update employee:', error);
-      toast.error('Failed to update employee');
+      handleError(error, 'Failed to update employee');
       return null;
     }
   }
@@ -534,8 +620,7 @@ class EmployeeService {
       
       return true;
     } catch (error) {
-      console.error('Failed to delete employee:', error);
-      toast.error('Failed to delete employee');
+      handleError(error, 'Failed to delete employee');
       return false;
     }
   }
@@ -587,8 +672,7 @@ class EmployeeService {
       
       return result;
     } catch (error) {
-      console.error('Failed to save family member:', error);
-      toast.error('Failed to save family member');
+      handleError(error, 'Failed to save family member');
       return null;
     }
   }
@@ -604,8 +688,7 @@ class EmployeeService {
       
       return true;
     } catch (error) {
-      console.error('Failed to delete family member:', error);
-      toast.error('Failed to delete family member');
+      handleError(error, 'Failed to delete family member');
       return false;
     }
   }
@@ -657,8 +740,7 @@ class EmployeeService {
       
       return result;
     } catch (error) {
-      console.error('Failed to save emergency contact:', error);
-      toast.error('Failed to save emergency contact');
+      handleError(error, 'Failed to save emergency contact');
       return null;
     }
   }
@@ -674,8 +756,7 @@ class EmployeeService {
       
       return true;
     } catch (error) {
-      console.error('Failed to delete emergency contact:', error);
-      toast.error('Failed to delete emergency contact');
+      handleError(error, 'Failed to delete emergency contact');
       return false;
     }
   }
@@ -701,12 +782,13 @@ class EmployeeService {
   async saveEducation(education: EmployeeEducation): Promise<EmployeeEducation | null> {
     try {
       let result;
+      const formattedEducation = formatDateFields(education);
       
       if (education.id) {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_education')
-          .update(education)
+          .update(formattedEducation)
           .eq('id', education.id)
           .select()
           .single();
@@ -717,7 +799,7 @@ class EmployeeService {
         // Create new record
         const { data, error } = await supabase
           .from('employee_education')
-          .insert(education)
+          .insert(formattedEducation)
           .select()
           .single();
           
@@ -727,8 +809,7 @@ class EmployeeService {
       
       return result;
     } catch (error) {
-      console.error('Failed to save education:', error);
-      toast.error('Failed to save education');
+      handleError(error, 'Failed to save education');
       return null;
     }
   }
@@ -744,8 +825,7 @@ class EmployeeService {
       
       return true;
     } catch (error) {
-      console.error('Failed to delete education:', error);
-      toast.error('Failed to delete education');
+      handleError(error, 'Failed to delete education');
       return false;
     }
   }
@@ -771,12 +851,13 @@ class EmployeeService {
   async saveWorkExperience(experience: EmployeeWorkExperience): Promise<EmployeeWorkExperience | null> {
     try {
       let result;
+      const formattedExperience = formatDateFields(experience);
       
       if (experience.id) {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_work_experience')
-          .update(experience)
+          .update(formattedExperience)
           .eq('id', experience.id)
           .select()
           .single();
@@ -787,7 +868,7 @@ class EmployeeService {
         // Create new record
         const { data, error } = await supabase
           .from('employee_work_experience')
-          .insert(experience)
+          .insert(formattedExperience)
           .select()
           .single();
           
@@ -797,8 +878,7 @@ class EmployeeService {
       
       return result;
     } catch (error) {
-      console.error('Failed to save work experience:', error);
-      toast.error('Failed to save work experience');
+      handleError(error, 'Failed to save work experience');
       return null;
     }
   }
@@ -814,9 +894,51 @@ class EmployeeService {
       
       return true;
     } catch (error) {
-      console.error('Failed to delete work experience:', error);
-      toast.error('Failed to delete work experience');
+      handleError(error, 'Failed to delete work experience');
       return false;
+    }
+  }
+
+  // Update specific functions that will use updated error handling
+  async updatePersonalDetails(employeeId: string, data: Partial<EmployeePersonalDetails>): Promise<EmployeePersonalDetails | null> {
+    try {
+      const personalDetails = {
+        employee_id: employeeId,
+        ...data
+      };
+      
+      return this.savePersonalDetails(personalDetails);
+    } catch (error) {
+      handleError(error, 'Failed to update personal details');
+      return null;
+    }
+  }
+
+  async updateEmploymentDetails(employeeId: string, data: Partial<EmployeeEmployment>): Promise<EmployeeEmployment | null> {
+    try {
+      const employmentDetails = {
+        employee_id: employeeId,
+        ...data
+      };
+      
+      return this.saveEmployment(employmentDetails);
+    } catch (error) {
+      handleError(error, 'Failed to update employment details');
+      return null;
+    }
+  }
+
+  async updateIdentityAddress(employeeId: string, data: Partial<EmployeeIdentityAddress>): Promise<EmployeeIdentityAddress | null> {
+    try {
+      const identityAddress = {
+        employee_id: employeeId,
+        ...data
+      };
+      
+      return this.saveIdentityAddress(identityAddress);
+    } catch (error) {
+      handleError(error, 'Failed to update identity and address');
+      return null;
     }
   }
 }
