@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { EmployeeList } from "@/components/hr/EmployeeList";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +18,13 @@ export default function HRDataKaryawan() {
   const handleAddDummyEmployees = async () => {
     await addDummyEmployees();
   };
+
+  // Add dummy employees automatically if none exist
+  useEffect(() => {
+    if (!isLoading && employees.length === 0) {
+      handleAddDummyEmployees();
+    }
+  }, [isLoading, employees.length]);
 
   return (
     <div className="space-y-4">

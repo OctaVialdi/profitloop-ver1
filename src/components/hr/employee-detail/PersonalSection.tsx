@@ -86,6 +86,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
 
   const age = calculateAge(employee.birthDate);
 
+  // Display fallback values for empty fields
+  const displayValue = (value: string | undefined) => value || "-";
+
   return (
     <Card>
       <div className="p-6">
@@ -129,42 +132,42 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                       <div>
                         <p className="text-sm text-gray-500">Full name</p>
-                        <p className="font-medium">{employee.name}</p>
+                        <p className="font-medium">{displayValue(employee.name)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Mobile phone</p>
-                        <p className="font-medium">{employee.mobilePhone || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.mobilePhone)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Email</p>
-                        <p className="font-medium">{employee.email}</p>
+                        <p className="font-medium">{displayValue(employee.email)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Place of birth</p>
-                        <p className="font-medium">{employee.birthPlace || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.birthPlace)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Birthdate</p>
                         <p className="font-medium">
-                          {formatDate(employee.birthDate)} 
+                          {formatDate(employee.birthDate)}
                           {age !== null && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">{age} years old</span>}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Gender</p>
-                        <p className="font-medium">{employee.gender || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.gender)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Marital status</p>
-                        <p className="font-medium">{employee.maritalStatus || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.maritalStatus)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Blood type</p>
-                        <p className="font-medium">{employee.bloodType || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.bloodType)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Religion</p>
-                        <p className="font-medium">{employee.religion || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.religion)}</p>
                       </div>
                     </div>
                   </div>
@@ -190,27 +193,27 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                       <div>
                         <p className="text-sm text-gray-500">NIK (16 digit)</p>
-                        <p className="font-medium">{formatNik(employee.nik) || "-"}</p>
+                        <p className="font-medium">{formatNik(employee.nik)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Passport number</p>
-                        <p className="font-medium">{employee.passportNumber || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.passportNumber)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Passport expiration date</p>
-                        <p className="font-medium">{formatDate(employee.passportExpiry) || "-"}</p>
+                        <p className="font-medium">{formatDate(employee.passportExpiry)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Postal code</p>
-                        <p className="font-medium">{employee.postalCode || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.postalCode)}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-sm text-gray-500">Citizen ID address</p>
-                        <p className="font-medium">{employee.citizenAddress || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.citizenAddress)}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-sm text-gray-500">Residential address</p>
-                        <p className="font-medium">{employee.address || "-"}</p>
+                        <p className="font-medium">{displayValue(employee.address)}</p>
                       </div>
                     </div>
                   </div>
@@ -245,19 +248,19 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                         <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                           <div>
                             <p className="text-sm text-gray-500">Name</p>
-                            <p className="font-medium">{member.name}</p>
+                            <p className="font-medium">{displayValue(member.name)}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Relationship</p>
-                            <p className="font-medium">{member.relationship || "-"}</p>
+                            <p className="font-medium">{displayValue(member.relationship)}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Birth Date</p>
-                            <p className="font-medium">{formatDate(member.birth_date?.toString()) || "-"}</p>
+                            <p className="font-medium">{formatDate(member.birth_date?.toString())}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Occupation</p>
-                            <p className="font-medium">{member.occupation || "-"}</p>
+                            <p className="font-medium">{displayValue(member.occupation)}</p>
                           </div>
                         </div>
                       </div>

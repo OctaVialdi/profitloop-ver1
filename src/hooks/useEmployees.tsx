@@ -163,7 +163,9 @@ export function useEmployees(): UseEmployeesResult {
           employment_status: "Permanent",
           branch: "Jakarta HQ",
           join_date: "2018-06-01",
-          sign_date: "2018-05-20"
+          sign_date: "2018-05-20",
+          grade: "A",
+          class: "Senior"
         },
         familyMembers: [
           {
@@ -211,9 +213,18 @@ export function useEmployees(): UseEmployeesResult {
           employment_status: "Contract",
           branch: "Surabaya Branch",
           join_date: "2020-02-15",
-          sign_date: "2020-01-30"
+          sign_date: "2020-01-30",
+          grade: "B",
+          class: "Mid"
         },
-        familyMembers: []
+        familyMembers: [
+          {
+            name: "Michael Williams",
+            relationship: "Father",
+            birth_date: "1960-04-18",
+            occupation: "Retired"
+          }
+        ]
       },
       {
         name: "Ahmad Fauzi",
@@ -246,7 +257,9 @@ export function useEmployees(): UseEmployeesResult {
           employment_status: "Permanent",
           branch: "Bandung Branch",
           join_date: "2022-01-10",
-          sign_date: "2021-12-20"
+          sign_date: "2021-12-20",
+          grade: "C",
+          class: "Junior"
         },
         familyMembers: [
           {
@@ -254,6 +267,112 @@ export function useEmployees(): UseEmployeesResult {
             relationship: "Spouse",
             birth_date: "1996-05-17",
             occupation: "Graphic Designer"
+          },
+          {
+            name: "Aisyah Fauzi",
+            relationship: "Child",
+            birth_date: "2022-03-12",
+            occupation: "N/A"
+          }
+        ]
+      },
+      {
+        name: "Budi Santoso",
+        email: "budi.santoso@example.com",
+        employee_id: "EMP-004",
+        role: "employee",
+        status: "Active",
+        personalDetails: {
+          mobile_phone: "+62 821-5566-7788",
+          birth_place: "Yogyakarta",
+          birth_date: "1985-12-05",
+          gender: "Male",
+          marital_status: "Divorced",
+          religion: "Catholic",
+          blood_type: "AB+"
+        },
+        identityAddress: {
+          nik: "3471112505850003",
+          passport_number: "E9988776",
+          passport_expiry: "2025-09-30",
+          postal_code: "55281",
+          citizen_address: "Jl. Malioboro No. 45, Yogyakarta",
+          residential_address: "Perumahan Sejahtera Blok C3, Yogyakarta"
+        },
+        employment: {
+          barcode: "EMP004BARCODE",
+          organization: "Finance",
+          job_position: "Finance Manager",
+          job_level: "Senior",
+          employment_status: "Permanent",
+          branch: "Yogyakarta Branch",
+          join_date: "2015-08-01",
+          sign_date: "2015-07-15",
+          grade: "A",
+          class: "Senior"
+        },
+        familyMembers: [
+          {
+            name: "Dimas Santoso",
+            relationship: "Child",
+            birth_date: "2010-06-23",
+            occupation: "Student"
+          },
+          {
+            name: "Dewi Santoso",
+            relationship: "Child",
+            birth_date: "2014-09-11",
+            occupation: "Student"
+          }
+        ]
+      },
+      {
+        name: "Nur Hidayah",
+        email: "nur.hidayah@example.com",
+        employee_id: "EMP-005",
+        role: "employee",
+        status: "Active",
+        personalDetails: {
+          mobile_phone: "+62 878-8899-0011",
+          birth_place: "Semarang",
+          birth_date: "1992-03-17",
+          gender: "Female",
+          marital_status: "Married",
+          religion: "Islam",
+          blood_type: "O+"
+        },
+        identityAddress: {
+          nik: "3374051703920002",
+          passport_number: "F1122334",
+          passport_expiry: "2026-05-20",
+          postal_code: "50136",
+          citizen_address: "Jl. Veteran No. 17, Semarang",
+          residential_address: "Apartment Riverside Tower A-12, Semarang"
+        },
+        employment: {
+          barcode: "EMP005BARCODE",
+          organization: "Human Resources",
+          job_position: "HR Specialist",
+          job_level: "Mid",
+          employment_status: "Permanent",
+          branch: "Semarang Branch",
+          join_date: "2019-04-10",
+          sign_date: "2019-03-25",
+          grade: "B",
+          class: "Mid"
+        },
+        familyMembers: [
+          {
+            name: "Rizky Pratama",
+            relationship: "Spouse",
+            birth_date: "1990-08-29",
+            occupation: "Architect"
+          },
+          {
+            name: "Zahra Pratama",
+            relationship: "Child",
+            birth_date: "2020-11-03",
+            occupation: "N/A"
           }
         ]
       }
