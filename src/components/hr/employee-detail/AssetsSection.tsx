@@ -1,11 +1,11 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { LegacyEmployee } from "@/hooks/useEmployees";
-import { EmptyDataDisplay } from "./EmptyDataDisplay";
+import { Employee } from "@/hooks/useEmployees";
+import { EmptyDataDisplay } from "./PersonalSection";
 
 interface AssetsSectionProps {
-  employee: LegacyEmployee;
+  employee: Employee;
   handleEdit: (section: string) => void;
 }
 

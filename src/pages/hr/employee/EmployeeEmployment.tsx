@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useEmployees } from "@/hooks/useEmployees";
-import { employeeService } from "@/services/employeeService";
+import { employeeService, updateEmployeeEmployment } from "@/services/employeeService";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 const EmployeeEmployment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { employees, updateEmployee, updateEmploymentDetails } = useEmployees();
+  const { employees, updateEmployee } = useEmployees();
 
   // Find the employee with the matching ID
   const employee = employees.find(emp => emp.id === id);
@@ -47,61 +47,51 @@ const EmployeeEmployment = () => {
       branch: employee?.employment?.branch || 'Pusat',
       joinDate: employee?.employment?.join_date || '',
       signDate: employee?.employment?.sign_date || '',
-      grade: employee?.employment?.grade || '',
-      class: employee?.employment?.class || '',
-      approvalLine: employee?.employment?.approval_line || 'No approval line',
+      grade: '',
+      class: '',
+      approvalLine: 'No approval line',
       isManager: false,
-      manager: employee?.employment?.manager_id || 'No manager',
+      manager: 'No manager',
     }
   });
 
   // Handle save changes
-  const onSubmit = async (data: any) => {
+  const onSubmit = (data: any) => {
     // Update employee data
     if (employee && id) {
-      try {
-        // Show loading toast
-        const loadingToastId = toast.loading("Menyimpan data karyawan...");
-        
-        // Update base employee data
-        const baseUpdate = {
-          id: id,
-          employee_id: data.employeeId
-        };
+      // Update base employee data
+      const baseUpdate = {
+        id: id,
+        employee_id: data.employeeId
+      };
 
-        // Update employment data separately
-        const employmentData = {
-          employee_id: id,
-          barcode: data.barcode,
-          organization: data.organization,
-          job_position: data.jobPosition,
-          job_level: data.jobLevel,
-          employment_status: data.employmentStatus,
-          branch: data.branch,
-          join_date: data.joinDate,
-          sign_date: data.signDate,
-          grade: data.grade,
-          class: data.class,
-          approval_line: data.approvalLine,
-          manager_id: data.isManager ? null : data.manager
-        };
-        
-        // First update the base employee data
-        await updateEmployee(baseUpdate);
-        
-        // Then update the employment data
-        await updateEmploymentDetails(id, employmentData);
-        
-        // Dismiss loading toast and show success toast
-        toast.dismiss(loadingToastId);
-        toast.success("Data karyawan berhasil diperbarui");
-        navigate(`/hr/data/employee/${id}`);
-      } catch (error) {
-        console.error("Error updating employee:", error);
-        toast.error("Gagal menyimpan data: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"));
-      }
-    } else {
-      toast.error("Data karyawan tidak ditemukan");
+      // Update employment data separately
+      const employmentData = {
+        employee_id: id,
+        barcode: data.barcode,
+        organization: data.organization,
+        job_position: data.jobPosition,
+        job_level: data.jobLevel,
+        employment_status: data.employmentStatus,
+        branch: data.branch,
+        join_date: data.joinDate,
+        sign_date: data.signDate
+      };
+      
+      // First update the base employee data
+      updateEmployee(baseUpdate)
+        .then(() => {
+          // Then update the employment data
+          return updateEmployeeEmployment(id, employmentData);
+        })
+        .then(() => {
+          toast.success("Employment data updated successfully");
+          navigate(`/hr/data/employee/${id}`);
+        })
+        .catch(error => {
+          console.error("Error updating employee:", error);
+          toast.error("Failed to update employment data");
+        });
     }
   };
 

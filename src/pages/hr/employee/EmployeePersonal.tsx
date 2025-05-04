@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,12 +25,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useEmployees } from "@/hooks/useEmployees";
-import { employeeService } from "@/services/employeeService";
+import { employeeService, updateEmployeePersonalDetails, updateEmployeeIdentityAddress } from "@/services/employeeService";
 
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { employees, updateEmployee, updatePersonalDetails, updateIdentityAddress } = useEmployees();
+  const { employees, updateEmployee } = useEmployees();
   const [activeTab, setActiveTab] = useState("basic-info");
 
   // Find the employee with the matching ID
@@ -97,11 +98,11 @@ const EmployeePersonal = () => {
       updateEmployee(baseUpdate)
         .then(() => {
           // Then update the personal details data
-          return employeeService.updateEmployeePersonalDetails(id, personalDetailsData);
+          return updateEmployeePersonalDetails(id, personalDetailsData);
         })
         .then(() => {
           // Then update the identity address data
-          return employeeService.updateEmployeeIdentityAddress(id, identityAddressData);
+          return updateEmployeeIdentityAddress(id, identityAddressData);
         })
         .then(() => {
           toast.success("Personal data updated successfully");

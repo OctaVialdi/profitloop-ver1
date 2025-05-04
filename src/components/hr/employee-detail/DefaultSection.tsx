@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LegacyEmployee } from "@/hooks/useEmployees";
+import { Employee } from "@/hooks/useEmployees";
 
 interface DefaultSectionProps {
   activeTab: string;

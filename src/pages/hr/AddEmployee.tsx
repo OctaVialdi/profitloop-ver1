@@ -1,153 +1,292 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { toast } from "sonner";
-
-import { FormValues } from "./employee/types";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Link, useNavigate } from "react-router-dom";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, ChevronDown } from "lucide-react";
+import { FormValues } from "./employee/types";
 import { employeeService } from "@/services/employeeService";
+import { toast } from "sonner";
+import { validateEmployeeData } from "./employee/utils/validation";
+import { SimplePersonalSection } from "./employee/components/simple/SimplePersonalSection";
+import { SimpleEmploymentSection } from "./employee/components/simple/SimpleEmploymentSection";
 
-const AddEmployee = () => {
+export default function AddEmployee() {
   const navigate = useNavigate();
+  
+  // State
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const formSchema = z.object({
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    email: z.string().email().optional(),
-    employeeId: z.string().min(3, {
-      message: "Employee ID must be at least 3 characters.",
-    }),
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  
+  // Date states
+  const [birthdate, setBirthdate] = useState<Date | undefined>(undefined);
+  const [passportExpiry, setPassportExpiry] = useState<Date | undefined>(undefined);
+  const [joinDate, setJoinDate] = useState<Date | undefined>(new Date());
+  const [signDate, setSignDate] = useState<Date | undefined>(new Date());
+  
+  // Initialize formValues with all required properties from FormValues type
+  const [formValues, setFormValues] = useState<FormValues>({
+    // Personal information
+    firstName: "",
+    lastName: "",
+    email: "",
+    mobilePhone: "",
+    phone: "",
+    birthPlace: "",
+    gender: "male", // Set default value
+    maritalStatus: "single", // Set default value
+    bloodType: "",
+    religion: "islam", // Set default value
+    
+    // Identity information
+    nik: "",
+    passportNumber: "",
+    postalCode: "",
+    citizenAddress: "",
+    residentialAddress: "",
+    useResidentialAddress: false,
+    
+    // Employment information
+    employeeId: "",
+    barcode: "",
+    groupStructure: "",
+    employmentStatus: "Permanent",
+    branch: "Pusat",
+    organization: "",
+    jobPosition: "",
+    jobLevel: "",
+    grade: "",
+    class: "",
+    schedule: "",
+    approvalLine: "",
+    manager: "",
+    
+    // Dialog form fields
+    statusName: "",
+    statusHasEndDate: false,
+    orgCode: "",
+    orgName: "",
+    parentOrg: "",
+    positionCode: "",
+    positionName: "",
+    parentPosition: "",
+    levelCode: "",
+    levelName: ""
   });
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      employeeId: "",
-    },
-  });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormValues({
+      ...formValues,
+      [id]: value
+    });
+  };
 
-  const handleSubmit = async (formData: FormValues) => {
+  const handleSelectChange = (name: string, value: string) => {
+    setFormValues({
+      ...formValues,
+      [name]: value
+    });
+  };
+
+  const validateForm = (): boolean => {
+    const errors = validateEmployeeData(formValues, "all");
+    setValidationErrors(errors);
+    
+    if (errors.length > 0) {
+      toast.error(errors[0]);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     try {
       setIsSubmitting(true);
-
-      // Extract name from form values
-      const fullName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim();
+      console.log("Submitting employee data...");
       
-      // Create basic employee record first
-      const newEmployee = await employeeService.createEmployee({
-        name: fullName,
-        email: formData.email,
-        employee_id: formData.employeeId,
-      });
-
-      if (newEmployee) {
-        toast.success("Employee created successfully!");
-        // Redirect to employee detail page
-        navigate(`/hr/data/employee/${newEmployee.id}`);
-      } else {
-        throw new Error("Failed to create employee");
+      // Format the name from firstName and lastName
+      const fullName = [formValues.firstName, formValues.lastName]
+        .filter(Boolean)
+        .join(" ");
+        
+      if (!fullName) {
+        toast.error("Employee name is required");
+        setIsSubmitting(false);
+        return;
       }
-    } catch (error: any) {
-      console.error("Error adding employee:", error);
-      toast.error("Failed to create employee", {
-        description: error.message || "Please try again later"
-      });
+
+      // Prepare employee data
+      const employeeData = {
+        name: fullName,
+        email: formValues.email,
+        employee_id: formValues.employeeId,
+        status: "Active"
+      };
+
+      // Prepare personal details data
+      const personalDetails = {
+        mobile_phone: formValues.mobilePhone,
+        birth_place: formValues.birthPlace,
+        birth_date: birthdate ? birthdate.toISOString() : undefined,
+        gender: formValues.gender,
+        marital_status: formValues.maritalStatus,
+        religion: formValues.religion,
+        blood_type: formValues.bloodType
+      };
+
+      // Prepare identity address data
+      const identityAddress = {
+        nik: formValues.nik,
+        passport_number: formValues.passportNumber,
+        passport_expiry: passportExpiry ? passportExpiry.toISOString() : undefined,
+        postal_code: formValues.postalCode,
+        citizen_address: formValues.citizenAddress,
+        residential_address: formValues.residentialAddress
+      };
+
+      // Prepare employment data
+      const employment = {
+        barcode: formValues.barcode,
+        organization: formValues.organization,
+        job_position: formValues.jobPosition,
+        job_level: formValues.jobLevel,
+        employment_status: formValues.employmentStatus,
+        branch: formValues.branch,
+        join_date: joinDate ? joinDate.toISOString() : undefined,
+        sign_date: signDate ? signDate.toISOString() : undefined,
+      };
+
+      console.log("Creating employee...");
+      
+      // Create employee with all details
+      const result = await employeeService.createEmployee(
+        employeeData,
+        personalDetails,
+        identityAddress,
+        employment
+      );
+      
+      if (!result) {
+        toast.error("Failed to create employee");
+        return;
+      }
+      
+      console.log("Employee created successfully with ID:", result.id);
+      toast.success("Employee created successfully");
+      
+      // Navigate back to employee list
+      navigate(`/hr/data`);
+      
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      toast.error("Failed to create employee");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container max-w-4xl mx-auto mt-10">
-      <h1 className="text-2xl font-bold mb-4">Add New Employee</h1>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="First Name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Last Name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="example@mail.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="employeeId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employee ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="Employee ID" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </Button>
+    <div className="space-y-4 max-w-4xl mx-auto">
+      <div className="flex items-center gap-2 text-sm text-blue-600">
+        <Link to="/hr/data" className="flex items-center hover:underline">
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back to employee list
+        </Link>
+      </div>
+      
+      <h1 className="text-2xl font-bold">Add Employee</h1>
+      
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Personal Data Section */}
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Personal Data</h2>
+            <p className="text-sm text-gray-500 mb-4">Basic employee personal information</p>
+            
+            <SimplePersonalSection 
+              formValues={formValues}
+              setFormValues={setFormValues}
+              birthdate={birthdate}
+              setBirthdate={setBirthdate}
+              handleSelectChange={handleSelectChange}
+            />
+          </div>
+          
+          <div className="border-t pt-6">
+            <h2 className="text-lg font-semibold mb-1">Employment Data</h2>
+            <p className="text-sm text-gray-500 mb-4">Basic employment information</p>
+            
+            <SimpleEmploymentSection 
+              formValues={formValues}
+              handleInputChange={handleInputChange}
+              handleSelectChange={handleSelectChange}
+              joinDate={joinDate}
+              setJoinDate={setJoinDate}
+            />
+          </div>
+          
+          {/* Advanced Options */}
+          <Collapsible
+            open={advancedOpen}
+            onOpenChange={setAdvancedOpen}
+            className="border-t pt-4"
+          >
+            <CollapsibleTrigger asChild>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="flex w-full justify-between items-center"
+              >
+                <span className="text-left font-medium">Advanced Options</span>
+                <ChevronDown 
+                  className={`h-4 w-4 transition-transform ${advancedOpen ? "transform rotate-180" : ""}`} 
+                />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2 space-y-4">
+              <p className="text-sm text-gray-500">
+                Additional information can be added later in the employee details page.
+              </p>
+            </CollapsibleContent>
+          </Collapsible>
+          
+          {/* Validation errors */}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded p-3">
+              <p className="text-red-800 font-medium text-sm mb-1">Please correct the following errors:</p>
+              <ul className="text-red-700 text-sm list-disc pl-5">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {/* Form Actions */}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => navigate('/hr/data')}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save Employee"}
+            </Button>
+          </div>
         </form>
-      </Form>
+      </Card>
     </div>
   );
-};
-
-export default AddEmployee;
+}

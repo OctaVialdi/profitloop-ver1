@@ -201,7 +201,7 @@ export type Database = {
           {
             foreignKeyName: "employee_employment_employee_id_fkey"
             columns: ["employee_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -296,7 +296,7 @@ export type Database = {
           {
             foreignKeyName: "employee_identity_addresses_employee_id_fkey"
             columns: ["employee_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -387,7 +387,7 @@ export type Database = {
           {
             foreignKeyName: "employee_personal_details_employee_id_fkey"
             columns: ["employee_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -445,7 +445,6 @@ export type Database = {
           id: string
           name: string
           organization_id: string
-          profile_image: string | null
           role: string | null
           status: string | null
           updated_at: string
@@ -457,7 +456,6 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
-          profile_image?: string | null
           role?: string | null
           status?: string | null
           updated_at?: string
@@ -469,7 +467,6 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
-          profile_image?: string | null
           role?: string | null
           status?: string | null
           updated_at?: string

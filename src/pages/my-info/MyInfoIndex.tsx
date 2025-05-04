@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
@@ -123,20 +124,7 @@ export default function MyInfoIndex() {
         </Button>
       </div>
 
-      {loading ? (
-        <div className="space-y-6">
-          <Skeleton className="h-[600px] w-full" />
-        </div>
-      ) : !employee ? (
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">Employee not found</h2>
-            <Button onClick={() => navigate("/hr/data")}>Back to Employee List</Button>
-          </div>
-        </div>
-      ) : (
-        <EmployeeDetail employee={employee} activeTab={activeTab} />
-      )}
+      <EmployeeDetail employee={employee} activeTab={activeTab} />
     </div>
   );
 }
