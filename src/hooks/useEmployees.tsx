@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { employeeService, Employee, EmployeeWithDetails } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -190,10 +189,10 @@ export function useEmployees(): UseEmployeesResult {
     }
   };
 
-  // Upload employee profile image
+  // Upload employee profile image with improved error handling
   const uploadProfileImage = async (employeeId: string, file: File) => {
     try {
-      console.log("Uploading profile image for employee:", employeeId);
+      console.log("useEmployees: Uploading profile image for employee:", employeeId);
       const imageUrl = await employeeService.uploadProfileImage(employeeId, file);
       
       if (imageUrl) {
@@ -219,7 +218,7 @@ export function useEmployees(): UseEmployeesResult {
   // Update personal details with better error handling
   const updatePersonalDetails = async (employeeId: string, details: any) => {
     try {
-      console.log("Updating personal details for employee:", employeeId, details);
+      console.log("useEmployees: Updating personal details for employee:", employeeId, details);
       const result = await employeeService.updatePersonalDetails(employeeId, details);
       
       if (result) {

@@ -70,15 +70,21 @@ export const FilesSection: React.FC<FilesSectionProps> = ({
     
     setIsUploading(true);
     try {
-      await uploadProfileImage(employee.id, selectedFile);
-      toast.success("Profile image uploaded successfully");
-      setIsDialogOpen(false);
+      console.log("FilesSection: Starting upload for employee:", employee.id);
+      const result = await uploadProfileImage(employee.id, selectedFile);
       
-      // Clear selected file and preview URL
-      setSelectedFile(null);
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        setPreviewUrl(null);
+      if (result) {
+        toast.success("Profile image uploaded successfully");
+        setIsDialogOpen(false);
+        
+        // Clear selected file and preview URL
+        setSelectedFile(null);
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+          setPreviewUrl(null);
+        }
+      } else {
+        throw new Error("Upload failed");
       }
     } catch (error) {
       console.error("Error uploading profile image:", error);
