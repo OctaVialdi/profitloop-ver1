@@ -10,7 +10,7 @@ export interface Employee {
   status?: string;
   employee_id?: string;
   profile_image?: string;
-  organization_id: string; // Adding organization_id field
+  organization_id: string;
 }
 
 export interface EmployeeBasic {
@@ -63,7 +63,7 @@ export interface EmployeeWithDetails extends EmployeeBasic {
   personalDetails?: EmployeePersonalDetails;
   identityAddress?: EmployeeIdentityAddress;
   employment?: EmployeeEmployment;
-  organization_id: string; // Adding organization_id field
+  organization_id: string; 
 }
 
 // Additional types needed based on the errors
@@ -338,17 +338,14 @@ export const updateEmployeePersonalDetails = async (
   try {
     // Check if the record exists first
     const { data: existingData, error: existingError } = await supabase
-      .from("employee_personal_details")
-      .select("*")
-      .eq("employee_id", employeeId)
-      .single();
+      .rpc('get_employee_personal_details', { employee_id_param: employeeId });
     
     if (existingError && existingError.code !== 'PGRST116') {
       // Real error, not just "no rows returned"
       throw existingError;
     }
     
-    if (!existingData) {
+    if (!existingData || existingData.length === 0) {
       // Record doesn't exist, insert new one
       const { error: insertError } = await supabase
         .from("employee_personal_details")
@@ -382,17 +379,14 @@ export const updateEmployeeIdentityAddress = async (
   try {
     // Check if the record exists first
     const { data: existingData, error: existingError } = await supabase
-      .from("employee_identity_addresses")
-      .select("*")
-      .eq("employee_id", employeeId)
-      .single();
+      .rpc('get_employee_identity_address', { employee_id_param: employeeId });
     
     if (existingError && existingError.code !== 'PGRST116') {
       // Real error, not just "no rows returned"
       throw existingError;
     }
     
-    if (!existingData) {
+    if (!existingData || existingData.length === 0) {
       // Record doesn't exist, insert new one
       const { error: insertError } = await supabase
         .from("employee_identity_addresses")
@@ -426,17 +420,14 @@ export const updateEmployeeEmployment = async (
   try {
     // Check if the record exists first
     const { data: existingData, error: existingError } = await supabase
-      .from("employee_employment")
-      .select("*")
-      .eq("employee_id", employeeId)
-      .single();
+      .rpc('get_employee_employment', { employee_id_param: employeeId });
     
     if (existingError && existingError.code !== 'PGRST116') {
       // Real error, not just "no rows returned"
       throw existingError;
     }
     
-    if (!existingData) {
+    if (!existingData || existingData.length === 0) {
       // Record doesn't exist, insert new one
       const { error: insertError } = await supabase
         .from("employee_employment")
