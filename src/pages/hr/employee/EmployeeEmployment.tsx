@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -58,24 +57,11 @@ const EmployeeEmployment = () => {
   const onSubmit = (data: any) => {
     // Update employee data
     if (employee && id) {
-      // Use our helper function to convert to the correct format
-      const updatedEmployee = convertFromLegacyFormat({
-        id: id,
-        employeeId: data.employeeId, 
-        barcode: data.barcode,
-        organization: data.organization,
-        jobPosition: data.jobPosition,
-        jobLevel: data.jobLevel,
-        employmentStatus: data.employmentStatus,
-        branch: data.branch,
-        joinDate: data.joinDate,
-        signDate: data.signDate
-      });
-
       updateEmployee({
         id: id,
         employee_id: data.employeeId,
         employment: {
+          employee_id: id,
           barcode: data.barcode,
           organization: data.organization,
           job_position: data.jobPosition,

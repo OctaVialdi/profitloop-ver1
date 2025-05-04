@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -17,7 +16,7 @@ export interface EmployeePersonalDetails {
   employee_id: string;
   mobile_phone?: string;
   birth_place?: string;
-  birth_date?: Date | string | null;
+  birth_date?: string | null;
   gender?: string;
   marital_status?: string;
   religion?: string;
@@ -29,7 +28,7 @@ export interface EmployeeIdentityAddress {
   employee_id: string;
   nik?: string;
   passport_number?: string;
-  passport_expiry?: Date | string | null;
+  passport_expiry?: string | null;
   postal_code?: string;
   citizen_address?: string;
   residential_address?: string;
@@ -44,8 +43,8 @@ export interface EmployeeEmployment {
   job_level?: string;
   employment_status?: string;
   branch?: string;
-  join_date?: Date | string | null;
-  sign_date?: Date | string | null;
+  join_date?: string | null;
+  sign_date?: string | null;
   grade?: string;
   class?: string;
   schedule?: string;
@@ -71,7 +70,7 @@ export interface EmployeeFamily {
   employee_id: string;
   name: string;
   relationship?: string;
-  birth_date?: Date | string | null;
+  birth_date?: string | null;
   occupation?: string;
 }
 
@@ -90,8 +89,8 @@ export interface EmployeeEducation {
   institution: string;
   degree?: string;
   field_of_study?: string;
-  start_date?: Date | string | null;
-  end_date?: Date | string | null;
+  start_date?: string | null;
+  end_date?: string | null;
   education_type?: string;
 }
 
@@ -101,9 +100,25 @@ export interface EmployeeWorkExperience {
   company: string;
   position?: string;
   description?: string;
-  start_date?: Date | string | null;
-  end_date?: Date | string | null;
+  start_date?: string | null;
+  end_date?: string | null;
 }
+
+// Helper function to convert dates to ISO strings
+const formatDateFields = (obj: any): any => {
+  if (!obj) return obj;
+  
+  const result = { ...obj };
+  
+  // Process date fields
+  Object.keys(result).forEach(key => {
+    if (result[key] instanceof Date) {
+      result[key] = result[key].toISOString();
+    }
+  });
+  
+  return result;
+};
 
 class EmployeeService {
   async fetchEmployees(): Promise<EmployeeWithDetails[]> {
@@ -198,10 +213,13 @@ class EmployeeService {
   
   async savePersonalDetails(details: EmployeePersonalDetails): Promise<EmployeePersonalDetails | null> {
     try {
+      // Format date fields
+      const formattedDetails = formatDateFields(details);
+      
       const { data: existingDetails } = await supabase
         .from('employee_personal_details')
         .select('id')
-        .eq('employee_id', details.employee_id);
+        .eq('employee_id', formattedDetails.employee_id);
       
       let result;
       
@@ -209,7 +227,7 @@ class EmployeeService {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_personal_details')
-          .update(details)
+          .update(formattedDetails)
           .eq('id', existingDetails[0].id)
           .select()
           .single();
@@ -220,7 +238,7 @@ class EmployeeService {
         // Create new record
         const { data, error } = await supabase
           .from('employee_personal_details')
-          .insert(details)
+          .insert(formattedDetails)
           .select()
           .single();
           
@@ -258,10 +276,13 @@ class EmployeeService {
   
   async saveIdentityAddress(details: EmployeeIdentityAddress): Promise<EmployeeIdentityAddress | null> {
     try {
+      // Format date fields
+      const formattedDetails = formatDateFields(details);
+      
       const { data: existingDetails } = await supabase
         .from('employee_identity_addresses')
         .select('id')
-        .eq('employee_id', details.employee_id);
+        .eq('employee_id', formattedDetails.employee_id);
       
       let result;
       
@@ -269,7 +290,7 @@ class EmployeeService {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_identity_addresses')
-          .update(details)
+          .update(formattedDetails)
           .eq('id', existingDetails[0].id)
           .select()
           .single();
@@ -280,7 +301,7 @@ class EmployeeService {
         // Create new record
         const { data, error } = await supabase
           .from('employee_identity_addresses')
-          .insert(details)
+          .insert(formattedDetails)
           .select()
           .single();
           
@@ -318,10 +339,13 @@ class EmployeeService {
   
   async saveEmployment(details: EmployeeEmployment): Promise<EmployeeEmployment | null> {
     try {
+      // Format date fields
+      const formattedDetails = formatDateFields(details);
+      
       const { data: existingDetails } = await supabase
         .from('employee_employment')
         .select('id')
-        .eq('employee_id', details.employee_id);
+        .eq('employee_id', formattedDetails.employee_id);
       
       let result;
       
@@ -329,7 +353,7 @@ class EmployeeService {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_employment')
-          .update(details)
+          .update(formattedDetails)
           .eq('id', existingDetails[0].id)
           .select()
           .single();
@@ -340,7 +364,7 @@ class EmployeeService {
         // Create new record
         const { data, error } = await supabase
           .from('employee_employment')
-          .insert(details)
+          .insert(formattedDetails)
           .select()
           .single();
           

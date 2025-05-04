@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +8,6 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormDescription,
-  FormMessage
 } from "@/components/ui/form";
 import { 
   Select,
@@ -22,10 +19,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useEmployees } from "@/hooks/useEmployees";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
+import { useEmployees, convertFromLegacyFormat } from "@/hooks/useEmployees";
 
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,51 +32,55 @@ const EmployeePersonal = () => {
   // Find the employee with the matching ID
   const employee = employees.find(emp => emp.id === id);
 
-  const [activeTab, setActiveTab] = useState("basic-info");
-
   // Setup form with default values from employee data
   const form = useForm({
     defaultValues: {
       firstName: employee?.name?.split(' ')[0] || '',
       lastName: employee?.name?.split(' ').slice(1).join(' ') || '',
-      mobilePhone: employee?.personalDetails?.mobile_phone || '',
       email: employee?.email || '',
+      mobilePhone: employee?.personalDetails?.mobile_phone || '',
       phone: employee?.personalDetails?.mobile_phone || '',
       birthPlace: employee?.personalDetails?.birth_place || '',
       birthDate: employee?.personalDetails?.birth_date || '',
-      gender: employee?.personalDetails?.gender || 'Male',
+      gender: employee?.personalDetails?.gender || '',
       maritalStatus: employee?.personalDetails?.marital_status || '',
-      bloodType: 'O',
+      bloodType: employee?.personalDetails?.blood_type || '',
       religion: employee?.personalDetails?.religion || '',
-      nik: '',
-      passport: '',
-      passportExpiry: '',
-      postalCode: '',
-      citizenAddress: '',
+      nik: employee?.identityAddress?.nik || '',
+      passportNumber: employee?.identityAddress?.passport_number || '',
+      passportExpiry: employee?.identityAddress?.passport_expiry || '',
+      postalCode: employee?.identityAddress?.postal_code || '',
+      citizenAddress: employee?.identityAddress?.citizen_address || '',
       residentialAddress: employee?.identityAddress?.residential_address || '',
+      useResidentialAddress: false
     }
   });
 
   // Handle save changes
   const onSubmit = (data: any) => {
-    // Construct full name from first name and last name
-    const fullName = `${data.firstName} ${data.lastName}`.trim();
-    
     // Update employee data
     if (employee && id) {
       updateEmployee({
         id: id,
-        name: fullName,
+        name: `${data.firstName} ${data.lastName}`.trim(),
         email: data.email,
         personalDetails: {
+          employee_id: id,
           mobile_phone: data.mobilePhone,
           birth_place: data.birthPlace,
           birth_date: data.birthDate,
           gender: data.gender,
           marital_status: data.maritalStatus,
+          blood_type: data.bloodType,
           religion: data.religion
         },
         identityAddress: {
+          employee_id: id,
+          nik: data.nik,
+          passport_number: data.passportNumber,
+          passport_expiry: data.passportExpiry,
+          postal_code: data.postalCode,
+          citizen_address: data.citizenAddress,
           residential_address: data.residentialAddress
         }
       });
@@ -366,7 +367,7 @@ const EmployeePersonal = () => {
                     
                     <FormField
                       control={form.control}
-                      name="passport"
+                      name="passportNumber"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Passport number</FormLabel>
