@@ -8,12 +8,16 @@ interface StepNavigationProps {
   currentStep: FormStep;
   handlePreviousStep: () => void;
   handleNextStep: () => void;
+  handleSubmit?: () => void;
+  isSubmitting?: boolean;
 }
 
 export const StepNavigation: React.FC<StepNavigationProps> = ({
   currentStep,
   handlePreviousStep,
   handleNextStep,
+  handleSubmit,
+  isSubmitting = false,
 }) => {
   return (
     <div className="flex justify-end gap-2 mt-8">
@@ -27,9 +31,15 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
           <Link to="/hr/data">Cancel</Link>
         </Button>
       )}
-      <Button onClick={handleNextStep}>
-        {currentStep === FormStep.INVITE ? 'Submit' : 'Next'}
-      </Button>
+      {currentStep === FormStep.INVITE ? (
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Submit"}
+        </Button>
+      ) : (
+        <Button onClick={handleNextStep}>
+          Next
+        </Button>
+      )}
     </div>
   );
 };

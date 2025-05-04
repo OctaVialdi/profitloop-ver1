@@ -1,20 +1,23 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { FormValues } from "../../types";
 
 interface IdentityAddressSectionProps {
+  formValues: FormValues;
+  setFormValues: React.Dispatch<React.SetStateAction<FormValues>>;
   passportExpiry: Date | undefined;
   setPassportExpiry: React.Dispatch<React.SetStateAction<Date | undefined>>;
   useResidentialAddress: boolean;
@@ -22,60 +25,61 @@ interface IdentityAddressSectionProps {
 }
 
 export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
+  formValues,
+  setFormValues,
   passportExpiry,
   setPassportExpiry,
   useResidentialAddress,
   setUseResidentialAddress,
 }) => {
-  const [nikValue, setNikValue] = useState<string>('');
-  const [nikError, setNikError] = useState<string | null>(null);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormValues(prev => ({ ...prev, [id]: value }));
+  };
   
-  // Format and validate NPWP as it's entered
-  const handleNikChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Remove all non-digit characters
-    const value = e.target.value.replace(/\D/g, '');
-    
-    // Just use the digits without formatting
-    let formattedValue = value.substring(0, 16);
-    
-    setNikValue(formattedValue);
-    
-    // Validate: NPWP must be exactly 16 digits
-    if (value.length > 0 && value.length !== 16) {
-      setNikError('NIK (NPWP 16 digit) must be 16 digit');
-    } else {
-      setNikError(null);
+  const handlePassportExpiryChange = (date: Date | undefined) => {
+    setPassportExpiry(date);
+    if (date) {
+      setFormValues(prev => ({ ...prev, passportExpiry: date }));
+    }
+  };
+
+  const handleUseResidentialAddress = (checked: boolean) => {
+    setUseResidentialAddress(checked);
+    if (checked && formValues.citizenAddress) {
+      setFormValues(prev => ({ ...prev, residentialAddress: formValues.citizenAddress }));
     }
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold mb-1">Identity & address</h3>
-      <p className="text-sm text-gray-500 mb-4">Employee identity address information</p>
-      
-      {/* NIK & Passport */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <Label htmlFor="nik">NIK (NPWP 16 digit)</Label>
-          <Input 
-            id="nik" 
-            placeholder="1234123412341234" 
-            value={nikValue}
-            onChange={handleNikChange}
-            className={nikError ? "border-red-500" : ""}
-          />
-          {nikError && (
-            <p className="text-sm text-red-500">{nikError}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="passportNumber">Passport number</Label>
-          <Input id="passportNumber" />
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Identity and address</h3>
+        <p className="text-sm text-gray-500">Information related to identity documents and addresses</p>
       </div>
       
-      {/* Passport expiry & Postal code */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Identity */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="nik">NIK</Label>
+          <Input 
+            id="nik"
+            placeholder="National Identity Number" 
+            value={formValues.nik || ''}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="passportNumber">Passport number</Label>
+          <Input 
+            id="passportNumber" 
+            placeholder="Passport number"
+            value={formValues.passportNumber || ''}
+            onChange={handleChange}
+          />
+        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="passportExpiry">Passport expiry date</Label>
           <Popover>
@@ -96,47 +100,59 @@ export const IdentityAddressSection: React.FC<IdentityAddressSectionProps> = ({
               <Calendar
                 mode="single"
                 selected={passportExpiry}
-                onSelect={setPassportExpiry}
+                onSelect={handlePassportExpiryChange}
                 initialFocus
-                className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
           </Popover>
         </div>
+      </div>
+      
+      {/* Address */}
+      <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="postalCode">Postal code</Label>
-          <Input id="postalCode" placeholder="0" />
+          <Input 
+            id="postalCode" 
+            placeholder="Postal code" 
+            value={formValues.postalCode || ''}
+            onChange={handleChange}
+          />
         </div>
-      </div>
-      
-      {/* Citizen ID Address */}
-      <div className="space-y-2">
-        <Label htmlFor="citizenAddress">Citizen ID address</Label>
-        <Input id="citizenAddress" className="h-24" />
-      </div>
-      
-      {/* Use as residential address checkbox */}
-      <div className="flex items-start space-x-2">
-        <Checkbox 
-          id="useAsResidential" 
-          checked={useResidentialAddress}
-          onCheckedChange={(checked) => setUseResidentialAddress(checked as boolean)}
-        />
-        <Label 
-          htmlFor="useAsResidential" 
-          className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        >
-          Use as residential address
-        </Label>
-      </div>
-      
-      {/* Residential Address */}
-      {!useResidentialAddress && (
+        
         <div className="space-y-2">
-          <Label htmlFor="residentialAddress">Residential address</Label>
-          <Input id="residentialAddress" className="h-24" />
+          <Label htmlFor="citizenAddress">Citizen ID address</Label>
+          <Input 
+            id="citizenAddress" 
+            placeholder="Address as shown on identity card"
+            value={formValues.citizenAddress || ''}
+            onChange={handleChange}
+          />
         </div>
-      )}
+        
+        <div className="flex items-start space-x-2 mt-2">
+          <Checkbox 
+            id="useResidentialAddress" 
+            checked={useResidentialAddress} 
+            onCheckedChange={handleUseResidentialAddress} 
+          />
+          <Label htmlFor="useResidentialAddress" className="font-normal cursor-pointer">
+            Use citizen ID address as residential address
+          </Label>
+        </div>
+        
+        {!useResidentialAddress && (
+          <div className="space-y-2">
+            <Label htmlFor="residentialAddress">Residential address</Label>
+            <Input 
+              id="residentialAddress" 
+              placeholder="Current residential address"
+              value={formValues.residentialAddress || ''} 
+              onChange={handleChange}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

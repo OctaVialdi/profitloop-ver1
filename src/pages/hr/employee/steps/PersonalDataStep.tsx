@@ -43,6 +43,8 @@ export const PersonalDataStep: React.FC<PersonalDataStepProps> = ({
       {/* Identity and address section */}
       <div className="pt-4 border-t">
         <IdentityAddressSection 
+          formValues={formValues}
+          setFormValues={setFormValues}
           passportExpiry={passportExpiry}
           setPassportExpiry={setPassportExpiry}
           useResidentialAddress={useResidentialAddress}

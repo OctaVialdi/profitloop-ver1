@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,16 @@ import { toast } from "@/components/ui/sonner";
 import { Copy, Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmailTips } from "@/components/auth/EmailTips";
+import { FormValues } from "../types";
+import { employeeService } from "@/services/employeeService";
 
-export const InviteStep: React.FC = () => {
+interface InviteStepProps {
+  formValues: FormValues;
+  onSubmitEmployee: (withInvite: boolean) => Promise<string | null>;
+  submitting: boolean;
+}
+
+export const InviteStep: React.FC<InviteStepProps> = ({ formValues, onSubmitEmployee, submitting }) => {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("employee");
   const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +28,15 @@ export const InviteStep: React.FC = () => {
   const [showEmailTips, setShowEmailTips] = useState(false);
   const [magicLinkError, setMagicLinkError] = useState<string | null>(null);
   const [invitationHistory, setInvitationHistory] = useState<Array<{email: string, sent: boolean, date: Date}>>([]);
+  const [employeeCreated, setEmployeeCreated] = useState(false);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
+
+  // Set email from form values if available
+  useEffect(() => {
+    if (formValues.email && !email) {
+      setEmail(formValues.email);
+    }
+  }, [formValues.email]);
 
   const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,11 +45,26 @@ export const InviteStep: React.FC = () => {
       toast.error("Email is required");
       return;
     }
-    
+
     setIsLoading(true);
     setMagicLinkError(null);
     
     try {
+      // Create the employee first if not created
+      if (!employeeCreated) {
+        const newEmployeeId = await onSubmitEmployee(false);
+        
+        if (!newEmployeeId) {
+          toast.error("Failed to create employee record");
+          setIsLoading(false);
+          return;
+        }
+        
+        setEmployeeId(newEmployeeId);
+        setEmployeeCreated(true);
+        toast.success("Employee record created successfully");
+      }
+      
       // Get user's organization ID
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -104,8 +136,6 @@ export const InviteStep: React.FC = () => {
         toast.warning("Email couldn't be sent, but you can copy the Magic Link manually");
       }
       
-      setEmail("");
-      
     } catch (error: any) {
       console.error("Magic Link error:", error);
       toast.error(error.message || "Failed to send Magic Link. Please try again.");
@@ -136,6 +166,15 @@ export const InviteStep: React.FC = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold">Invite employee</h2>
+
+      {!employeeCreated && (
+        <Alert className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            When you click "Submit" or "Send Magic Link", the employee record will be created first.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <Card>
         <CardHeader>
@@ -174,7 +213,7 @@ export const InviteStep: React.FC = () => {
             </div>
             <Button 
               type="submit" 
-              disabled={isLoading}
+              disabled={isLoading || submitting}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
               {isLoading ? (

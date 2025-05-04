@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { FormStep } from "./employee/FormSteps";
 import { ProgressSteps } from "./employee/ProgressSteps";
@@ -13,10 +14,16 @@ import { NewOrganizationDialog } from "./employee/dialogs/NewOrganizationDialog"
 import { NewPositionDialog } from "./employee/dialogs/NewPositionDialog";
 import { NewLevelDialog } from "./employee/dialogs/NewLevelDialog";
 import { FormValues, SBUItem } from "./employee/types";
+import { employeeService } from "@/services/employeeService";
+import { toast } from "sonner";
+import { validateEmployeeData } from "./employee/utils/validation";
 
 export default function AddEmployee() {
+  const navigate = useNavigate();
+  
   // Step state
   const [currentStep, setCurrentStep] = useState<FormStep>(FormStep.PERSONAL_DATA);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Date states
   const [birthdate, setBirthdate] = useState<Date | undefined>(undefined);
@@ -87,6 +94,23 @@ export default function AddEmployee() {
   };
 
   const handleNextStep = () => {
+    // Validate current step before proceeding
+    if (currentStep === FormStep.PERSONAL_DATA) {
+      // Validate personal data
+      const personalErrors = validateEmployeeData(formValues, "personal");
+      if (personalErrors.length > 0) {
+        toast.error(personalErrors[0]);
+        return;
+      }
+    } else if (currentStep === FormStep.EMPLOYMENT_DATA) {
+      // Validate employment data
+      const employmentErrors = validateEmployeeData(formValues, "employment");
+      if (employmentErrors.length > 0) {
+        toast.error(employmentErrors[0]);
+        return;
+      }
+    }
+    
     if (currentStep < FormStep.INVITE) {
       setCurrentStep(currentStep + 1);
     }
@@ -153,6 +177,108 @@ export default function AddEmployee() {
     // Here you would typically add the new level to a list of available levels
   };
 
+  // Handle submit employee data
+  const handleSubmitEmployee = async (withInvite: boolean = true): Promise<string | null> => {
+    try {
+      setIsSubmitting(true);
+      
+      // Validate all required fields
+      const allErrors = validateEmployeeData(formValues, "all");
+      if (allErrors.length > 0) {
+        toast.error(allErrors[0]);
+        return null;
+      }
+
+      // Format the name from firstName and lastName
+      const fullName = [formValues.firstName, formValues.lastName]
+        .filter(Boolean)
+        .join(" ");
+        
+      if (!fullName) {
+        toast.error("Employee name is required");
+        return null;
+      }
+
+      // Prepare employee data
+      const employeeData = {
+        name: fullName,
+        email: formValues.email,
+        employee_id: formValues.employeeId,
+        status: "Active"
+      };
+
+      // Prepare personal details data
+      const personalDetails = {
+        mobile_phone: formValues.mobilePhone,
+        birth_place: formValues.birthPlace,
+        birth_date: birthdate ? birthdate.toISOString() : undefined,
+        gender: formValues.gender,
+        marital_status: formValues.maritalStatus,
+        religion: formValues.religion,
+        blood_type: formValues.bloodType
+      };
+
+      // Prepare identity address data
+      const identityAddress = {
+        nik: formValues.nik,
+        passport_number: formValues.passportNumber,
+        passport_expiry: passportExpiry ? passportExpiry.toISOString() : undefined,
+        postal_code: formValues.postalCode,
+        citizen_address: formValues.citizenAddress,
+        residential_address: useResidentialAddress && formValues.citizenAddress 
+          ? formValues.citizenAddress 
+          : formValues.residentialAddress
+      };
+
+      // Prepare employment data
+      const employment = {
+        barcode: formValues.barcode,
+        organization: formValues.organization,
+        job_position: formValues.jobPosition,
+        job_level: formValues.jobLevel,
+        employment_status: formValues.employmentStatus,
+        branch: formValues.branch,
+        join_date: joinDate ? joinDate.toISOString() : undefined,
+        sign_date: signDate ? signDate.toISOString() : undefined,
+        grade: formValues.grade,
+        class: formValues.class,
+        schedule: formValues.schedule,
+        approval_line: formValues.approvalLine,
+        manager_id: formValues.manager !== "No manager" ? formValues.manager : undefined,
+      };
+
+      console.log("Creating employee with data:", { employeeData, personalDetails, identityAddress, employment });
+      
+      // Create employee with all details
+      const result = await employeeService.createEmployee(
+        employeeData,
+        personalDetails,
+        identityAddress,
+        employment
+      );
+      
+      if (!result) {
+        toast.error("Failed to create employee");
+        return null;
+      }
+      
+      toast.success("Employee created successfully");
+      
+      // If not sending invite, navigate back to employee list
+      if (!withInvite) {
+        navigate(`/hr/data/employee/${result.id}`);
+      }
+      
+      return result.id;
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      toast.error("Failed to create employee");
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-blue-600">
@@ -204,13 +330,21 @@ export default function AddEmployee() {
         
         {currentStep === FormStep.PAYROLL && <PayrollStep />}
         
-        {currentStep === FormStep.INVITE && <InviteStep />}
+        {currentStep === FormStep.INVITE && (
+          <InviteStep 
+            formValues={formValues} 
+            onSubmitEmployee={handleSubmitEmployee} 
+            submitting={isSubmitting}
+          />
+        )}
         
         {/* Navigation buttons */}
         <StepNavigation
           currentStep={currentStep}
           handlePreviousStep={handlePreviousStep}
           handleNextStep={handleNextStep}
+          handleSubmit={() => handleSubmitEmployee(true)}
+          isSubmitting={isSubmitting}
         />
       </Card>
 

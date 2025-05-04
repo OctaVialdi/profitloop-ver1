@@ -35,21 +35,57 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
   birthdate,
   setBirthdate,
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormValues(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (field: string, value: string) => {
+    setFormValues(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleGenderChange = (value: string) => {
+    setFormValues(prev => ({ ...prev, gender: value }));
+  };
+
+  const handleBirthdateChange = (date: Date | undefined) => {
+    setBirthdate(date);
+    if (date) {
+      setFormValues(prev => ({ ...prev, birthdate: date }));
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Name */}
       <div className="space-y-2">
         <Label htmlFor="firstName">Name<span className="text-red-500">*</span></Label>
         <div className="flex gap-4">
-          <Input id="firstName" placeholder="First name" />
-          <Input id="lastName" placeholder="Last name" />
+          <Input 
+            id="firstName" 
+            placeholder="First name"
+            value={formValues.firstName || ''} 
+            onChange={handleChange}
+          />
+          <Input 
+            id="lastName" 
+            placeholder="Last name"
+            value={formValues.lastName || ''} 
+            onChange={handleChange}
+          />
         </div>
       </div>
       
       {/* Email */}
       <div className="space-y-2">
         <Label htmlFor="email">Email<span className="text-red-500">*</span></Label>
-        <Input id="email" type="email" placeholder="example@company.com" />
+        <Input 
+          id="email" 
+          type="email" 
+          placeholder="example@company.com"
+          value={formValues.email || ''} 
+          onChange={handleChange}
+        />
         <p className="text-xs text-gray-500">This email is use for log in</p>
       </div>
       
@@ -57,11 +93,21 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="mobilePhone">Mobile phone</Label>
-          <Input id="mobilePhone" placeholder="Mobile phone number" />
+          <Input 
+            id="mobilePhone" 
+            placeholder="Mobile phone number"
+            value={formValues.mobilePhone || ''} 
+            onChange={handleChange}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" placeholder="0" />
+          <Input 
+            id="phone" 
+            placeholder="0"
+            value={formValues.phone || ''} 
+            onChange={handleChange}
+          />
         </div>
       </div>
       
@@ -69,18 +115,30 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="birthPlace">Place of birth</Label>
-          <Input id="birthPlace" placeholder="City of birth" />
+          <Input 
+            id="birthPlace" 
+            placeholder="City of birth"
+            value={formValues.birthPlace || ''} 
+            onChange={handleChange}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="birthdate">Birthdate<span className="text-red-500">*</span></Label>
-          <BirthdateSelector birthdate={birthdate} setBirthdate={setBirthdate} />
+          <BirthdateSelector 
+            birthdate={birthdate} 
+            setBirthdate={handleBirthdateChange} 
+          />
         </div>
       </div>
       
       {/* Gender */}
       <div className="space-y-2">
         <Label>Gender</Label>
-        <RadioGroup defaultValue="male" className="flex gap-4">
+        <RadioGroup 
+          value={formValues.gender || "male"} 
+          onValueChange={handleGenderChange}
+          className="flex gap-4"
+        >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="male" id="male" />
             <Label htmlFor="male">Male</Label>
@@ -95,7 +153,10 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
       {/* Marital Status */}
       <div className="space-y-2">
         <Label htmlFor="maritalStatus">Marital status<span className="text-red-500">*</span></Label>
-        <Select>
+        <Select 
+          value={formValues.maritalStatus || ""} 
+          onValueChange={(value) => handleSelectChange("maritalStatus", value)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
@@ -112,7 +173,10 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="bloodType">Blood type</Label>
-          <Select>
+          <Select
+            value={formValues.bloodType || ""}
+            onValueChange={(value) => handleSelectChange("bloodType", value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select blood type" />
             </SelectTrigger>
@@ -126,7 +190,10 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
         </div>
         <div className="space-y-2">
           <Label htmlFor="religion">Religion<span className="text-red-500">*</span></Label>
-          <Select>
+          <Select
+            value={formValues.religion || ""}
+            onValueChange={(value) => handleSelectChange("religion", value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select religion" />
             </SelectTrigger>
@@ -148,7 +215,7 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 
 const BirthdateSelector: React.FC<{
   birthdate: Date | undefined;
-  setBirthdate: React.Dispatch<React.SetStateAction<Date | undefined>>;
+  setBirthdate: (date: Date | undefined) => void;
 }> = ({ birthdate, setBirthdate }) => {
   return (
     <Popover>
