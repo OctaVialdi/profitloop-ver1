@@ -30,7 +30,7 @@ export function useAuth() {
           setTimeout(async () => {
             try {
               // Handle SIGNED_UP event specifically
-              if (event === 'SIGNED_UP') {
+              if (event === AuthChangeEvent.SIGNED_UP) {
                 console.log("New signup detected, creating profile");
               }
               
