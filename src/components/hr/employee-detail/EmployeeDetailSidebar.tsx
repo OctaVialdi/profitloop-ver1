@@ -10,12 +10,16 @@ import {
   Boxes, 
   BarChart2,
   ChevronDown,
-  ChevronRight 
+  ChevronRight,
+  Camera,
+  Loader2
 } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { LegacyEmployee } from "@/hooks/useEmployees";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { updateEmployeeProfileImage } from "@/services/employeeService";
+import { toast } from "sonner";
 
 interface EmployeeDetailSidebarProps {
   employee: LegacyEmployee;
@@ -28,6 +32,9 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
   activeTab,
   handleEdit
 }) => {
+  // Profile photo upload state
+  const [isUploading, setIsUploading] = useState(false);
+  
   // Determine which sections should be initially open based on activeTab
   const isTimeManagementTab = ['attendance', 'schedule', 'time-off'].includes(activeTab);
   const isPayrollTab = ['payroll-info'].includes(activeTab);
@@ -85,17 +92,77 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
     handleEdit(section);
   };
 
+  // Handle profile photo upload
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size should be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const imageUrl = await updateEmployeeProfileImage(employee.id, file);
+      if (imageUrl) {
+        toast.success('Profile photo updated successfully');
+        // Update UI - Here we'll rely on the handleEdit function to refresh data
+        handleEdit('refresh');
+      } else {
+        throw new Error('Failed to update profile photo');
+      }
+    } catch (error) {
+      console.error('Error uploading profile photo:', error);
+      toast.error('Failed to upload profile photo');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="w-full md:w-64 space-y-4">
       <Card className="p-6 flex flex-col items-center">
-        <Avatar className="w-24 h-24 mb-2">
-          <div className="bg-gray-200 h-full w-full rounded-full flex items-center justify-center text-xl font-medium relative">
-            {employee.name.charAt(0)}
-            <div className="absolute bottom-0 right-0 bg-black text-white rounded-full p-1">
-              <FileText size={14} />
-            </div>
-          </div>
-        </Avatar>
+        <div className="relative w-24 h-24 mb-2 group">
+          <Avatar className="w-24 h-24 border-2 border-border">
+            {employee.profile_image ? (
+              <AvatarImage src={employee.profile_image} alt={employee.name} />
+            ) : (
+              <AvatarFallback className="text-xl font-medium bg-gray-200">
+                {employee.name.charAt(0)}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          
+          {/* Photo upload overlay */}
+          <label 
+            className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full 
+                      opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+            htmlFor="profile-photo-upload"
+          >
+            {isUploading ? (
+              <Loader2 className="h-6 w-6 text-white animate-spin" />
+            ) : (
+              <Camera className="h-6 w-6 text-white" />
+            )}
+            <span className="sr-only">Upload photo</span>
+          </label>
+          <input 
+            type="file" 
+            id="profile-photo-upload" 
+            className="hidden" 
+            accept="image/*"
+            onChange={handleProfilePhotoUpload}
+            disabled={isUploading}
+          />
+        </div>
         <h3 className="text-lg font-semibold">{employee.name}</h3>
         <p className="text-sm text-gray-500">{employee.jobPosition || "-"}</p>
       </Card>
