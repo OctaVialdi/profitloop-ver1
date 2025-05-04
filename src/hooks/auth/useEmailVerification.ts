@@ -30,37 +30,40 @@ export function useEmailVerification() {
       // Try to create a profile for this email if possible
       try {
         // Get user by email
-        const { data: { users }, error: userError } = await supabase.auth.admin.listUsers({
-          filter: {
-            email: email
-          }
-        });
+        // Note: The admin.listUsers() doesn't support a filter parameter directly
+        // Let's query for users and filter manually
+        const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
         
-        if (!userError && users && users.length > 0) {
-          const userId = users[0].id;
-          console.log("Found user ID for email:", userId);
+        if (!userError && users) {
+          // Find the user with matching email
+          const user = users.find(u => u.email === email);
           
-          // Check if profile exists
-          const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', userId)
-            .maybeSingle();
+          if (user) {
+            const userId = user.id;
+            console.log("Found user ID for email:", userId);
             
-          // Create profile if it doesn't exist
-          if (!existingProfile) {
-            const { error: profileError } = await supabase
+            // Check if profile exists
+            const { data: existingProfile } = await supabase
               .from('profiles')
-              .insert({
-                id: userId,
-                email: email.toLowerCase(),
-                email_verified: false
-              });
+              .select('id')
+              .eq('id', userId)
+              .maybeSingle();
               
-            if (profileError) {
-              console.error("Error creating profile during resend:", profileError);
-            } else {
-              console.log("Profile created during resend verification");
+            // Create profile if it doesn't exist
+            if (!existingProfile) {
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: userId,
+                  email: email.toLowerCase(),
+                  email_verified: false
+                });
+                
+              if (profileError) {
+                console.error("Error creating profile during resend:", profileError);
+              } else {
+                console.log("Profile created during resend verification");
+              }
             }
           }
         }
