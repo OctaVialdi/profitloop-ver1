@@ -445,6 +445,7 @@ export type Database = {
           id: string
           name: string
           organization_id: string
+          profile_image: string | null
           role: string | null
           status: string | null
           updated_at: string
@@ -456,6 +457,7 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
+          profile_image?: string | null
           role?: string | null
           status?: string | null
           updated_at?: string
@@ -467,6 +469,7 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
+          profile_image?: string | null
           role?: string | null
           status?: string | null
           updated_at?: string
