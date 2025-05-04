@@ -1,15 +1,21 @@
 
-import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  User, 
+  Clock, 
+  CircleDollarSign, 
+  Wallet, 
+  FileText, 
+  Boxes, 
+  BarChart2,
+  ChevronDown,
+  ChevronRight 
+} from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 import { LegacyEmployee } from "@/hooks/useEmployees";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { FileUpload } from "@/components/ui/file-upload";
-import { updateEmployeeProfileImage } from "@/services/employeeService";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface EmployeeDetailSidebarProps {
   employee: LegacyEmployee;
@@ -22,192 +28,252 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
   activeTab,
   handleEdit
 }) => {
-  const location = useLocation();
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  // Determine which sections should be initially open based on activeTab
+  const isTimeManagementTab = ['attendance', 'schedule', 'time-off'].includes(activeTab);
+  const isPayrollTab = ['payroll-info'].includes(activeTab);
+  const isFinanceTab = ['reimbursement', 'cash-advance', 'loan'].includes(activeTab);
+  const isHistoryTab = ['adjustment', 'transfer', 'npp', 'reprimand'].includes(activeTab);
+  const isGeneralTab = ['personal', 'employment', 'education'].includes(activeTab);
   
-  const navigation = [
-    { name: "Personal", href: `/my-info/personal?id=${employee.id}`, tab: "personal" },
-    { name: "Employment", href: `/my-info/employment?id=${employee.id}`, tab: "employment" },
-    { name: "Education", href: `/my-info/education?id=${employee.id}`, tab: "education" },
-    { name: "Files", href: `/my-info/files?id=${employee.id}`, tab: "files" },
-    { name: "Assets", href: `/my-info/assets?id=${employee.id}`, tab: "assets" },
-  ];
-
-  const attendanceItems = [
-    { name: "Attendance", href: `/my-info/attendance?id=${employee.id}`, tab: "attendance" },
-    { name: "Schedule", href: `/my-info/schedule?id=${employee.id}`, tab: "schedule" },
-    { name: "Time off", href: `/my-info/time-off?id=${employee.id}`, tab: "time-off" },
-  ];
-
-  const financeItems = [
-    { name: "Payroll info", href: `/my-info/payroll-info?id=${employee.id}`, tab: "payroll-info" },
-    { name: "Reimbursement", href: `/my-info/reimbursement?id=${employee.id}`, tab: "reimbursement" },
-    { name: "Cash advance", href: `/my-info/cash-advance?id=${employee.id}`, tab: "cash-advance" },
-    { name: "Loan", href: `/my-info/loan?id=${employee.id}`, tab: "loan" },
-  ];
-
-  const employeeHistoryItems = [
-    { name: "Adjustment", href: `/my-info/adjustment?id=${employee.id}`, tab: "adjustment" },
-    { name: "Transfer", href: `/my-info/transfer?id=${employee.id}`, tab: "transfer" },
-    { name: "NPP", href: `/my-info/npp?id=${employee.id}`, tab: "npp" },
-    { name: "Reprimand", href: `/my-info/reprimand?id=${employee.id}`, tab: "reprimand" },
-  ];
+  // General section state - open if activeTab is related to general
+  const [openGeneral, setOpenGeneral] = useState(isGeneralTab);
   
-  // Get initials for avatar fallback
-  const getInitials = () => {
-    return employee.name ? employee.name.charAt(0).toUpperCase() : "?";
+  // Other sections state - open based on activeTab
+  const [openTimeManagement, setOpenTimeManagement] = useState(isTimeManagementTab);
+  const [openPayroll, setOpenPayroll] = useState(isPayrollTab);
+  const [openFinance, setOpenFinance] = useState(isFinanceTab);
+  const [openHistory, setOpenHistory] = useState(isHistoryTab);
+
+  // Keep dropdown sections open when navigating between tabs
+  useEffect(() => {
+    if (isTimeManagementTab) setOpenTimeManagement(true);
+    if (isPayrollTab) setOpenPayroll(true);
+    if (isFinanceTab) setOpenFinance(true);
+    if (isHistoryTab) setOpenHistory(true);
+    if (isGeneralTab) setOpenGeneral(true);
+  }, [activeTab, isTimeManagementTab, isPayrollTab, isFinanceTab, isHistoryTab, isGeneralTab]);
+
+  // Toggle functions that don't automatically close dropdowns when clicking items inside
+  const toggleGeneral = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenGeneral(!openGeneral);
   };
 
-  const handleProfilePhotoUpload = async (file: File) => {
-    try {
-      setUploadingPhoto(true);
-      
-      const url = await updateEmployeeProfileImage(employee.id, file);
-      
-      if (url) {
-        toast.success("Profile photo updated successfully");
-        // Refresh data to show the new photo
-        handleEdit("refresh");
-      } else {
-        throw new Error("Failed to update profile photo");
-      }
-    } catch (error) {
-      console.error("Failed to update profile photo:", error);
-      toast.error("Failed to update profile photo");
-    } finally {
-      setUploadingPhoto(false);
-    }
+  const toggleTimeManagement = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenTimeManagement(!openTimeManagement);
+  };
+
+  const togglePayroll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenPayroll(!openPayroll);
+  };
+
+  const toggleFinance = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenFinance(!openFinance);
+  };
+
+  const toggleHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenHistory(!openHistory);
+  };
+
+  // Navigation handler that prevents event bubbling
+  const handleNavigation = (e: React.MouseEvent, section: string) => {
+    e.stopPropagation();
+    handleEdit(section);
   };
 
   return (
-    <aside className="w-full md:w-64 shrink-0 space-y-6">
-      {/* Profile summary with avatar */}
-      <div className="flex flex-col items-center space-y-4">
-        <div className="relative group">
-          {uploadingPhoto ? (
-            <div className="h-32 w-32 rounded-full flex items-center justify-center bg-gray-100">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="w-full md:w-64 space-y-4">
+      <Card className="p-6 flex flex-col items-center">
+        <Avatar className="w-24 h-24 mb-2">
+          <div className="bg-gray-200 h-full w-full rounded-full flex items-center justify-center text-xl font-medium relative">
+            {employee.name.charAt(0)}
+            <div className="absolute bottom-0 right-0 bg-black text-white rounded-full p-1">
+              <FileText size={14} />
             </div>
-          ) : (
-            <Avatar className="h-32 w-32 border">
-              <AvatarImage src={employee.profile_image || undefined} alt={employee.name} />
-              <AvatarFallback className="bg-gray-200 h-full w-full rounded-full flex items-center justify-center text-xl font-medium relative">
-                {getInitials()}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-opacity">
-                  <FileUpload
-                    onUpload={handleProfilePhotoUpload}
-                    accept="image/png,image/jpeg,image/jpg"
-                    buttonText="Change Photo"
-                    maxSizeMB={2}
-                    variant="ghost"
-                    className="text-white"
-                  />
-                </div>
-              </AvatarFallback>
-            </Avatar>
-          )}
-        </div>
-        <div className="text-center">
-          <h3 className="font-medium">{employee.name}</h3>
-          <p className="text-sm text-gray-500">{employee.jobPosition || "No position"}</p>
-        </div>
-        <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">
-          ID: {employee.employee_id || "N/A"}
-        </div>
-      </div>
+          </div>
+        </Avatar>
+        <h3 className="text-lg font-semibold">{employee.name}</h3>
+        <p className="text-sm text-gray-500">{employee.jobPosition || "-"}</p>
+      </Card>
 
-      {/* Navigation items */}
-      <div className="mt-4 space-y-1">
-        {/* Main navigation */}
-        <nav className="space-y-1">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "block px-3 py-2 rounded-md text-sm font-medium",
-                activeTab === item.tab
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              )}
-            >
-              {item.name}
-            </NavLink>
-          ))}
-        </nav>
-        
-        {/* Attendance section */}
-        <div>
-          <Separator className="my-2" />
-          <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Attendance
-          </h4>
-          <nav className="mt-1 space-y-1">
-            {attendanceItems.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "block px-3 py-2 rounded-md text-sm font-medium",
-                  activeTab === item.tab
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                )}
+      <Card>
+        <div className="py-2">
+          {/* General with dropdown */}
+          <Collapsible open={openGeneral}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={toggleGeneral}>
+              <div className="flex items-center">
+                <User size={16} className="mr-2" />
+                <span>General</span>
+              </div>
+              {openGeneral ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
+            <CollapsibleContent>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'personal' ? 'text-blue-600 font-medium' : 'text-gray-700'}`} 
+                onClick={(e) => handleNavigation(e, 'personal')}
               >
-                {item.name}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
+                Personal
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'employment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'employment')}
+              >
+                Employment
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'education' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'education')}
+              >
+                Education & Experience
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
-        {/* Finance section */}
-        <div>
-          <Separator className="my-2" />
-          <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Finance
-          </h4>
-          <nav className="mt-1 space-y-1">
-            {financeItems.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "block px-3 py-2 rounded-md text-sm font-medium",
-                  activeTab === item.tab
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                )}
+          {/* Time Management with dropdown */}
+          <Collapsible open={openTimeManagement}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={toggleTimeManagement}>
+              <div className="flex items-center">
+                <Clock size={16} className="mr-2" />
+                <span>Time Management</span>
+              </div>
+              {openTimeManagement ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
+            <CollapsibleContent>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'attendance' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'attendance')}
               >
-                {item.name}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
+                Attendance
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'schedule' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'schedule')}
+              >
+                Schedule
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'time-off' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'time-off')}
+              >
+                Time Off
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
-        {/* History section */}
-        <div>
-          <Separator className="my-2" />
-          <h4 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Employee history
-          </h4>
-          <nav className="mt-1 space-y-1">
-            {employeeHistoryItems.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "block px-3 py-2 rounded-md text-sm font-medium",
-                  activeTab === item.tab
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                )}
+          {/* Payroll with dropdown */}
+          <Collapsible open={openPayroll}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={togglePayroll}>
+              <div className="flex items-center">
+                <CircleDollarSign size={16} className="mr-2" />
+                <span>Payroll</span>
+              </div>
+              {openPayroll ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
+            <CollapsibleContent>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'payroll-info' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'payroll-info')}
               >
-                {item.name}
-              </NavLink>
-            ))}
-          </nav>
+                Payroll Info
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Finance with dropdown */}
+          <Collapsible open={openFinance}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={toggleFinance}>
+              <div className="flex items-center">
+                <Wallet size={16} className="mr-2" />
+                <span>Finance</span>
+              </div>
+              {openFinance ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
+            <CollapsibleContent>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'reimbursement' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'reimbursement')}
+              >
+                Reimbursement
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'cash-advance' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'cash-advance')}
+              >
+                Cash Advance
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'loan' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'loan')}
+              >
+                Loan
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Files link */}
+          <div 
+            className={`px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between ${activeTab === 'files' ? 'bg-gray-50' : ''}`}
+            onClick={(e) => handleNavigation(e, 'files')}
+          >
+            <div className="flex items-center">
+              <FileText size={16} className="mr-2" />
+              <span className={activeTab === 'files' ? 'text-blue-600 font-medium' : ''}>Files</span>
+            </div>
+          </div>
+
+          {/* Assets link */}
+          <div 
+            className={`px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between ${activeTab === 'assets' ? 'bg-gray-50' : ''}`}
+            onClick={(e) => handleNavigation(e, 'assets')}
+          >
+            <div className="flex items-center">
+              <Boxes size={16} className="mr-2" />
+              <span className={activeTab === 'assets' ? 'text-blue-600 font-medium' : ''}>Assets</span>
+            </div>
+          </div>
+
+          {/* History with dropdown */}
+          <Collapsible open={openHistory}>
+            <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between" onClick={toggleHistory}>
+              <div className="flex items-center">
+                <BarChart2 size={16} className="mr-2" />
+                <span>History</span>
+              </div>
+              {openHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </div>
+            <CollapsibleContent>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'adjustment' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'adjustment')}
+              >
+                Adjustment
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'transfer' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'transfer')}
+              >
+                Transfer
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'npp' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'npp')}
+              >
+                NPP
+              </div>
+              <div 
+                className={`pl-10 py-1.5 hover:bg-gray-100 cursor-pointer ${activeTab === 'reprimand' ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                onClick={(e) => handleNavigation(e, 'reprimand')}
+              >
+                Reprimand
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
-      </div>
-    </aside>
+      </Card>
+    </div>
   );
 };
