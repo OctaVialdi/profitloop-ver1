@@ -20,7 +20,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -32,6 +31,7 @@ const EmployeePersonal = () => {
   const navigate = useNavigate();
   const { employees, updateEmployee } = useEmployees();
   const [activeTab, setActiveTab] = useState("basic-info");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Find the employee with the matching ID
   const employee = employees.find(emp => emp.id === id);
@@ -61,9 +61,17 @@ const EmployeePersonal = () => {
   });
 
   // Handle save changes
-  const onSubmit = (data: any) => {
-    // Update employee data
-    if (employee && id) {
+  const onSubmit = async (data: any) => {
+    if (!employee || !id) {
+      toast.error("Employee not found");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      console.log("Updating employee with data:", data);
+      
       // Update base employee data
       const baseUpdate = {
         id: id,
@@ -94,24 +102,26 @@ const EmployeePersonal = () => {
         residential_address: data.residentialAddress
       };
       
+      console.log("Updating base employee data:", baseUpdate);
+      console.log("Updating personal details:", personalDetailsData);
+      console.log("Updating identity address:", identityAddressData);
+      
       // First update the base employee data
-      updateEmployee(baseUpdate)
-        .then(() => {
-          // Then update the personal details data
-          return updateEmployeePersonalDetails(id, personalDetailsData);
-        })
-        .then(() => {
-          // Then update the identity address data
-          return updateEmployeeIdentityAddress(id, identityAddressData);
-        })
-        .then(() => {
-          toast.success("Personal data updated successfully");
-          navigate(`/hr/data/employee/${id}`);
-        })
-        .catch(error => {
-          console.error("Error updating employee:", error);
-          toast.error("Failed to update personal data");
-        });
+      await updateEmployee(baseUpdate);
+      
+      // Then update the personal details data
+      await updateEmployeePersonalDetails(id, personalDetailsData);
+      
+      // Then update the identity address data
+      await updateEmployeeIdentityAddress(id, identityAddressData);
+      
+      toast.success("Personal data updated successfully");
+      navigate(`/hr/data/employee/${id}`);
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      toast.error("Failed to update personal data");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

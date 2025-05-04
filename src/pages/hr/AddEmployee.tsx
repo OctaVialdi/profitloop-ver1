@@ -160,7 +160,7 @@ export default function AddEmployee() {
         organization_id: userProfile.organization_id
       };
 
-      // Prepare personal details data
+      // Prepare personal details data - ensure all collected fields are included
       const personalDetails = {
         mobile_phone: formValues.mobilePhone,
         birth_place: formValues.birthPlace,

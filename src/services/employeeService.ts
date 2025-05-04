@@ -215,6 +215,7 @@ class EmployeeService {
     try {
       // Format date fields
       const formattedDetails = formatDateFields(details);
+      console.log("Saving personal details:", formattedDetails);
       
       const { data: existingDetails } = await supabase
         .from('employee_personal_details')
@@ -232,7 +233,10 @@ class EmployeeService {
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating personal details:", error);
+          throw error;
+        }
         result = data;
       } else {
         // Create new record
@@ -242,10 +246,14 @@ class EmployeeService {
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error inserting personal details:", error);
+          throw error;
+        }
         result = data;
       }
       
+      console.log("Personal details saved successfully:", result);
       return result;
     } catch (error) {
       console.error('Failed to save personal details:', error);
@@ -412,6 +420,8 @@ class EmployeeService {
         organization_id: profileResult.organization_id
       };
       
+      console.log("Creating employee with data:", employeeToCreate);
+      
       // Create base employee record
       const { data: employee, error: employeeError } = await supabase
         .from('employees')
@@ -419,39 +429,45 @@ class EmployeeService {
         .select()
         .single();
         
-      if (employeeError) throw employeeError;
+      if (employeeError) {
+        console.error("Error creating employee:", employeeError);
+        throw employeeError;
+      }
+      
+      console.log("Base employee created:", employee);
       
       // Create related records
       const promises = [];
       
       if (personalDetails) {
-        promises.push(
-          this.savePersonalDetails({
-            ...personalDetails,
-            employee_id: employee.id
-          })
-        );
+        const personalDetailsWithEmployeeId = {
+          ...personalDetails,
+          employee_id: employee.id
+        };
+        console.log("Saving personal details:", personalDetailsWithEmployeeId);
+        promises.push(this.savePersonalDetails(personalDetailsWithEmployeeId));
       }
       
       if (identityAddress) {
-        promises.push(
-          this.saveIdentityAddress({
-            ...identityAddress,
-            employee_id: employee.id
-          })
-        );
+        const identityAddressWithEmployeeId = {
+          ...identityAddress,
+          employee_id: employee.id
+        };
+        console.log("Saving identity address:", identityAddressWithEmployeeId);
+        promises.push(this.saveIdentityAddress(identityAddressWithEmployeeId));
       }
       
       if (employment) {
-        promises.push(
-          this.saveEmployment({
-            ...employment,
-            employee_id: employee.id
-          })
-        );
+        const employmentWithEmployeeId = {
+          ...employment,
+          employee_id: employee.id
+        };
+        console.log("Saving employment details:", employmentWithEmployeeId);
+        promises.push(this.saveEmployment(employmentWithEmployeeId));
       }
       
-      await Promise.all(promises);
+      const results = await Promise.all(promises);
+      console.log("Related records created:", results);
       
       // Return the newly created employee with details
       return this.fetchEmployeeById(employee.id);

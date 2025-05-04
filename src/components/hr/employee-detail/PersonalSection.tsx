@@ -15,6 +15,38 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   employee,
   handleEdit
 }) => {
+  // Helper function to format date strings for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
+  // Calculate age if birth date is available
+  const calculateAge = (birthDateString?: string) => {
+    if (!birthDateString) return null;
+    try {
+      const birthDate = new Date(birthDateString);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    } catch (error) {
+      console.error("Error calculating age:", error);
+      return null;
+    }
+  };
+
+  const age = calculateAge(employee.birthDate);
+
   return (
     <Card>
       <div className="p-6">
@@ -79,8 +111,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                       <div>
                         <p className="text-sm text-gray-500">Birthdate</p>
                         <p className="font-medium">
-                          {employee.birthDate || "-"} 
-                          {employee.birthDate && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">30 years old</span>}
+                          {formatDate(employee.birthDate)} 
+                          {age !== null && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">{age} years old</span>}
                         </p>
                       </div>
                       <div>
@@ -93,7 +125,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Blood type</p>
-                        <p className="font-medium">O</p>
+                        <p className="font-medium">{employee.bloodType || "-"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Religion</p>
@@ -123,23 +155,23 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                       <div>
                         <p className="text-sm text-gray-500">NIK (NPWP 16 digit)</p>
-                        <p className="font-medium">-</p>
+                        <p className="font-medium">{employee.nik || "-"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Passport number</p>
-                        <p className="font-medium">-</p>
+                        <p className="font-medium">{employee.passportNumber || "-"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Passport expiration date</p>
-                        <p className="font-medium">-</p>
+                        <p className="font-medium">{formatDate(employee.passportExpiry) || "-"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Postal code</p>
-                        <p className="font-medium">-</p>
+                        <p className="font-medium">{employee.postalCode || "-"}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-sm text-gray-500">Citizen ID address</p>
-                        <p className="font-medium">-</p>
+                        <p className="font-medium">{employee.citizenAddress || "-"}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-sm text-gray-500">Residential address</p>

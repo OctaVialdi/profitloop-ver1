@@ -24,6 +24,12 @@ export interface LegacyEmployee {
   religion: string;
   gender: string;
   maritalStatus: string;
+  bloodType: string;
+  nik: string;
+  passportNumber: string;
+  passportExpiry: string;
+  postalCode: string;
+  citizenAddress: string;
   status: string;
   role: string;
   organization_id: string; // Required field
@@ -62,6 +68,12 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     religion: employee.personalDetails?.religion || "",
     gender: employee.personalDetails?.gender || "",
     maritalStatus: employee.personalDetails?.marital_status || "",
+    bloodType: employee.personalDetails?.blood_type || "",
+    nik: employee.identityAddress?.nik || "",
+    passportNumber: employee.identityAddress?.passport_number || "",
+    passportExpiry: employee.identityAddress?.passport_expiry || "",
+    postalCode: employee.identityAddress?.postal_code || "",
+    citizenAddress: employee.identityAddress?.citizen_address || "",
     status: employee.status || "Active",
     role: employee.role || "employee",
     organization_id: employee.organization_id,
