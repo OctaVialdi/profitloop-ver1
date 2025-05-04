@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase, updateUserOrgMetadata } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
+import { updateUserOrgMetadata } from "@/integrations/supabase/auth/userMetadata";
 import { getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
 import { getUserProfile } from "@/services/profileService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
@@ -185,28 +186,5 @@ export async function fetchOrganizationData(
       error: err as Error
     }));
     toast.error("Gagal memuat data organisasi");
-  }
-}
-
-// Helper function moved from supabase client for direct access
-async function updateUserOrgMetadata(organizationId: string, role: string) {
-  try {
-    // Update user metadata with organization_id and role
-    const { error } = await supabase.auth.updateUser({
-      data: { 
-        organization_id: organizationId,
-        role: role
-      }
-    });
-    
-    if (error) {
-      console.error("Error updating user metadata:", error);
-      return false;
-    }
-    
-    return true;
-  } catch (err) {
-    console.error("Exception updating user metadata:", err);
-    return false;
   }
 }
