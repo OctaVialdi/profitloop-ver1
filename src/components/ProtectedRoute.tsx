@@ -17,6 +17,11 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const [profile, setProfile] = useState<{
+    organization_id?: string | null;
+    email_verified?: boolean;
+    has_seen_welcome?: boolean;
+  } | null>(null);
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -40,14 +45,29 @@ export const ProtectedRoute = ({
         if (session && isMounted) {
           console.log("User is authenticated via session check");
           setAuthenticated(true);
+          
+          // Get user profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('organization_id, email_verified, has_seen_welcome')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+          } else {
+            setProfile(profileData);
+          }
         } else if (isMounted) {
           console.log("No active session found");
           setAuthenticated(false);
+          setProfile(null);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
         if (isMounted) {
           setAuthenticated(false);
+          setProfile(null);
           // Show friendly error message
           toast.error("Terjadi kesalahan saat memeriksa autentikasi");
         }
@@ -70,7 +90,28 @@ export const ProtectedRoute = ({
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
           console.log("Auth state changed:", event);
           setAuthenticated(!!session);
-          setLoading(false);
+          
+          // If signed in, check profile
+          if (session) {
+            // Use setTimeout to prevent potential auth state deadlocks
+            setTimeout(async () => {
+              if (!isMounted) return;
+              
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('organization_id, email_verified, has_seen_welcome')
+                .eq('id', session.user.id)
+                .maybeSingle();
+                
+              if (isMounted) {
+                setProfile(profileData);
+                setLoading(false);
+              }
+            }, 0);
+          } else {
+            setProfile(null);
+            setLoading(false);
+          }
         }
       }
     );
@@ -90,6 +131,60 @@ export const ProtectedRoute = ({
     );
   }
 
+  // Handle specific redirections based on the flowchart
+  if (authenticated) {
+    // If user is not on login/register page
+    if (!currentPath.startsWith('/auth/')) {
+      // Check if email is verified
+      if (!profile?.email_verified && !isPublicRoute) {
+        toast.error("Email Anda belum diverifikasi. Silakan verifikasi email terlebih dahulu.");
+        return <Navigate to="/auth/login" state={{ from: location, requireVerification: true }} replace />;
+      }
+      
+      // Check if on organizations page
+      if (currentPath.startsWith('/organizations') || currentPath === '/onboarding') {
+        // If already has organization, redirect to welcome page if not seen
+        if (profile?.organization_id) {
+          if (!profile.has_seen_welcome) {
+            return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
+          } else {
+            return <Navigate to="/dashboard" state={{ from: location }} replace />;
+          }
+        }
+      }
+      
+      // Check if on employee welcome page
+      if (currentPath === '/employee-welcome') {
+        // If no organization, redirect to organization setup
+        if (!profile?.organization_id) {
+          return <Navigate to="/organizations" state={{ from: location }} replace />;
+        }
+        // If already seen welcome page, go to dashboard
+        if (profile.has_seen_welcome) {
+          return <Navigate to="/dashboard" state={{ from: location }} replace />;
+        }
+      }
+      
+      // Check if on dashboard or other protected pages
+      if (currentPath.startsWith('/dashboard') || 
+          currentPath.startsWith('/hr/') ||
+          currentPath.startsWith('/finance/')) {
+        // If no organization, redirect to organization setup
+        if (!profile?.organization_id) {
+          return <Navigate to="/organizations" state={{ from: location }} replace />;
+        }
+        // If hasn't seen welcome page, redirect there first
+        if (!profile.has_seen_welcome) {
+          return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
+        }
+      }
+    }
+    
+    // User is authenticated and passed all checks, render children
+    return children ? <>{children}</> : <Outlet />;
+  }
+
+  // If not authenticated and not on a public route, redirect to login
   if (!authenticated && !isPublicRoute) {
     console.log("Not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} state={{ from: location }} replace />;

@@ -403,7 +403,9 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string
+          email_verified: boolean | null
           full_name: string | null
+          has_seen_welcome: boolean | null
           id: string
           invited_by: string | null
           last_active: string | null
@@ -415,7 +417,9 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email: string
+          email_verified?: boolean | null
           full_name?: string | null
+          has_seen_welcome?: boolean | null
           id: string
           invited_by?: string | null
           last_active?: string | null
@@ -427,7 +431,9 @@ export type Database = {
         Update: {
           created_at?: string | null
           email?: string
+          email_verified?: boolean | null
           full_name?: string | null
+          has_seen_welcome?: boolean | null
           id?: string
           invited_by?: string | null
           last_active?: string | null

@@ -41,6 +41,7 @@ const EmployeeWelcome = () => {
           .select(`
             full_name,
             role,
+            has_seen_welcome,
             organizations:organization_id (
               name
             )
@@ -55,6 +56,12 @@ const EmployeeWelcome = () => {
         if (!profileData?.organizations?.name) {
           toast.error("Anda belum tergabung dengan organisasi manapun");
           navigate("/onboarding");
+          return;
+        }
+
+        // If user has already seen welcome page, redirect to dashboard
+        if (profileData.has_seen_welcome) {
+          navigate("/dashboard", { replace: true });
           return;
         }
 
@@ -75,8 +82,31 @@ const EmployeeWelcome = () => {
     fetchUserData();
   }, [navigate, organizationNameFromLocation, roleFromLocation]);
 
-  const goToDashboard = () => {
-    navigate("/dashboard");
+  const markWelcomeAsSeen = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Sesi login tidak ditemukan");
+        return;
+      }
+      
+      // Mark welcome page as seen
+      const { error } = await supabase
+        .from('profiles')
+        .update({ has_seen_welcome: true })
+        .eq('id', user.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Navigate to dashboard
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Error marking welcome page as seen:", error);
+      toast.error("Terjadi kesalahan, mohon coba lagi");
+    }
   };
 
   if (isLoading) {
@@ -127,7 +157,7 @@ const EmployeeWelcome = () => {
           </div>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button className="w-full max-w-xs" onClick={goToDashboard}>
+          <Button className="w-full max-w-xs" onClick={markWelcomeAsSeen}>
             <Home className="mr-2 h-4 w-4" />
             Mulai Menggunakan Aplikasi
           </Button>

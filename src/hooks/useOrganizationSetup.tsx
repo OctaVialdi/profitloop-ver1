@@ -38,20 +38,33 @@ export function useOrganizationSetup() {
       
       console.log("User is authenticated:", session.user.id);
       
-      // Check if user already has an organization, either in their profile or created by them
+      // Check if user's email is verified
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('organization_id')
+        .select('organization_id, email_verified')
         .eq('id', session.user.id)
         .maybeSingle();
       
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        // Continue with organization setup even if profile check fails
-      } else if (profileData?.organization_id) {
+        toast.error("Terjadi kesalahan saat memeriksa profil");
+        navigate("/auth/login", { replace: true });
+        return;
+      }
+      
+      // Check if email is verified
+      if (!profileData?.email_verified) {
+        console.log("Email not verified, redirecting to login");
+        toast.error("Anda harus memverifikasi email terlebih dahulu. Silakan cek email Anda.");
+        navigate("/auth/login", { state: { requireVerification: true } });
+        return;
+      }
+      
+      // Check if user already has an organization
+      if (profileData?.organization_id) {
         console.log("User already has an organization:", profileData.organization_id);
         toast.info("Anda sudah memiliki organisasi.");
-        navigate("/dashboard", { replace: true });
+        navigate("/employee-welcome", { replace: true });
         return;
       }
 
@@ -70,26 +83,22 @@ export function useOrganizationSetup() {
           } else if (orgCreatorData) {
             console.log("This email has already created an organization:", orgCreatorData.id);
             
-            // If user has created an org but profile doesn't have org_id, update the profile
-            if (!profileData?.organization_id) {
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ 
-                  organization_id: orgCreatorData.id,
-                  role: 'super_admin'
-                })
-                .eq('id', session.user.id);
+            // Update profile with the found organization
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ 
+                organization_id: orgCreatorData.id,
+                role: 'super_admin'
+              })
+              .eq('id', session.user.id);
               
-              if (updateError) {
-                console.error("Error updating profile with organization:", updateError);
-              } else {
-                console.log("Profile updated with existing organization");
-              }
+            if (updateError) {
+              console.error("Error updating profile with organization:", updateError);
+            } else {
+              toast.info("Email ini sudah digunakan untuk membuat organisasi.");
+              navigate("/employee-welcome", { replace: true });
+              return;
             }
-            
-            toast.info("Email ini sudah digunakan untuk membuat organisasi.");
-            navigate("/dashboard", { replace: true });
-            return;
           }
         } catch (error) {
           console.error("Error checking organization by email:", error);

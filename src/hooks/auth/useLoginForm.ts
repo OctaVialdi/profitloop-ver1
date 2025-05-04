@@ -7,6 +7,7 @@ import { useEmailVerification } from "./useEmailVerification";
 import { useMagicLinkHandler } from "./useMagicLinkHandler";
 import { useUserProfile } from "./useUserProfile";
 import { useEmailCheck } from "./useEmailCheck";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -93,10 +94,20 @@ export function useLoginForm() {
           if (success) return;
         }
         
-        // Check if user has organization
-        const organizationId = await getUserOrganization(data.user.id);
-        if (organizationId) {
-          navigate("/dashboard");
+        // Check if user's profile is marked as email_verified
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('email_verified, organization_id, has_seen_welcome')
+          .eq('id', data.user.id)
+          .maybeSingle();
+          
+        // Check if user has organization and follow the flow chart
+        if (profileData?.organization_id) {
+          if (!profileData.has_seen_welcome) {
+            navigate("/employee-welcome");
+          } else {
+            navigate("/dashboard");
+          }
         } else {
           // Always redirect to organizations if user doesn't have organization
           navigate("/organizations");

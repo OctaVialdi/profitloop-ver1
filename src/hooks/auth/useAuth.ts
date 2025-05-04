@@ -51,14 +51,25 @@ export function useAuth() {
         throw error;
       }
       
-      // After successful login, make sure profile exists
+      // After successful login, make sure profile exists and set email as verified
       if (data.user) {
         const fullName = data.user.user_metadata?.full_name || null;
         
+        // First ensure profile exists
         await ensureUserProfileExists(data.user.id, {
           email: data.user.email || '',
           full_name: fullName
         });
+        
+        // Then mark email as verified
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ email_verified: true })
+          .eq('id', data.user.id);
+          
+        if (updateError) {
+          console.error("Error marking email as verified:", updateError);
+        }
       }
       
       return { data, error: null };
