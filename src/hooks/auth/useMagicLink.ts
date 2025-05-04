@@ -14,24 +14,19 @@ export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
   const [organizationName, setOrganizationName] = useState<string>("");
 
   useEffect(() => {
-    console.log("useMagicLink hook running");
-    console.log("URL parameters:", { 
-      token: params.token, 
-      email: params.email, 
-      errorCode: params.errorCode, 
-      errorDescription: params.errorDescription 
-    });
+    console.log("useMagicLink hook running with params:", params);
     
     const handleMagicLinkProcess = async () => {
       // Check if there's an error in the URL
       if (params.errorCode || params.errorDescription || window.location.hash.includes('error=access_denied')) {
-        console.error("Error from Supabase auth:", params.errorCode, params.errorDescription);
-        setError(params.errorDescription?.replace(/\+/g, ' ') || "Link undangan tidak valid atau sudah kadaluarsa");
+        const errorMsg = params.errorDescription?.replace(/\+/g, ' ') || "Link undangan tidak valid atau sudah kadaluarsa";
+        console.error("Error from Supabase auth:", params.errorCode, errorMsg);
+        setError(errorMsg);
         setIsLoading(false);
         return;
       }
       
-      // IMPORTANT: Process the access token if present (from Supabase magic link)
+      // Process the access token if present (from Supabase magic link)
       if (params.accessToken && params.refreshToken) {
         try {
           console.log("Setting session from URL hash tokens");
@@ -48,7 +43,7 @@ export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
           
           if (!data || !data.session) {
             console.error("No session returned when setting session");
-            throw new Error("Failed to set session from magic link");
+            throw new Error("Gagal mengatur sesi dari magic link");
           }
           
           console.log("Auth session set successfully:", data.session.user.id);

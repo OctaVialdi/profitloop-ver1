@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import { Copy, Sparkles, Mail } from "lucide-react";
+import { Copy, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmailTips } from "@/components/auth/EmailTips";
 
 export const InviteStep: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -15,6 +17,9 @@ export const InviteStep: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [magicLinkUrl, setMagicLinkUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [showEmailTips, setShowEmailTips] = useState(false);
+  const [magicLinkError, setMagicLinkError] = useState<string | null>(null);
+  const [invitationHistory, setInvitationHistory] = useState<Array<{email: string, sent: boolean, date: Date}>>([]);
 
   const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +30,7 @@ export const InviteStep: React.FC = () => {
     }
     
     setIsLoading(true);
+    setMagicLinkError(null);
     
     try {
       // Get user's organization ID
@@ -49,6 +55,20 @@ export const InviteStep: React.FC = () => {
         return;
       }
       
+      // Check if user is already in the same organization
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .eq('organization_id', profileData.organization_id)
+        .maybeSingle();
+        
+      if (existingUser) {
+        toast.error("Pengguna dengan email ini sudah ada di organisasi Anda");
+        setIsLoading(false);
+        return;
+      }
+      
       // Generate magic link using edge function
       const response = await supabase.functions.invoke('send-magic-link', {
         body: { 
@@ -69,10 +89,18 @@ export const InviteStep: React.FC = () => {
         setMagicLinkUrl(data.invitation_url);
       }
 
+      // Add to invitation history
+      setInvitationHistory(prev => [
+        { email, sent: data.email_sent, date: new Date() },
+        ...prev
+      ]);
+
       // Show appropriate message based on email sending result
       if (data.email_sent) {
         toast.success(`Magic Link has been sent to ${email}`);
       } else {
+        setShowEmailTips(true);
+        setMagicLinkError(data.email_error || "Email couldn't be sent, but you can copy the Magic Link manually");
         toast.warning("Email couldn't be sent, but you can copy the Magic Link manually");
       }
       
@@ -81,6 +109,7 @@ export const InviteStep: React.FC = () => {
     } catch (error: any) {
       console.error("Magic Link error:", error);
       toast.error(error.message || "Failed to send Magic Link. Please try again.");
+      setMagicLinkError(error.message || "Failed to send Magic Link");
     } finally {
       setIsLoading(false);
     }
@@ -148,7 +177,12 @@ export const InviteStep: React.FC = () => {
               disabled={isLoading}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
-              {isLoading ? "Sending..." : (
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
                   Send Magic Link
@@ -157,11 +191,13 @@ export const InviteStep: React.FC = () => {
             </Button>
           </form>
           
+          {magicLinkError && <EmailTips showTip={showEmailTips} />}
+          
           {magicLinkUrl && (
             <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
               <p className="font-medium text-blue-700 mb-2">Magic Link Ready</p>
               <div className="p-3 bg-white rounded border border-blue-100 flex items-start">
-                <div className="flex-1 overflow-auto text-sm">
+                <div className="flex-1 overflow-auto text-sm break-all">
                   {magicLinkUrl}
                 </div>
                 <Button
@@ -176,6 +212,29 @@ export const InviteStep: React.FC = () => {
               <p className="text-sm text-blue-700 mt-2">
                 Copy this link to share with {email} or check if the email was sent successfully.
               </p>
+            </div>
+          )}
+          
+          {invitationHistory.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-medium mb-2">Recent Invitations</h3>
+              <div className="border rounded-md">
+                {invitationHistory.map((inv, idx) => (
+                  <div key={idx} className={`p-2 text-sm ${idx !== invitationHistory.length - 1 ? 'border-b' : ''}`}>
+                    <div className="flex justify-between">
+                      <span>{inv.email}</span>
+                      {inv.sent ? (
+                        <span className="text-green-600 text-xs bg-green-50 px-2 py-0.5 rounded-full">Sent</span>
+                      ) : (
+                        <span className="text-amber-600 text-xs bg-amber-50 px-2 py-0.5 rounded-full">Manual</span>
+                      )}
+                    </div>
+                    <div className="text-gray-500 text-xs mt-0.5">
+                      {inv.date.toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>

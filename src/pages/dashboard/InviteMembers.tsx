@@ -5,12 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Mail, Check, X, Clock, Send, Copy, RefreshCw, LinkIcon, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { UserPlus, Mail, Check, X, Clock, Send, Copy, RefreshCw, LinkIcon, Sparkles, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmailTips } from "@/components/auth/EmailTips";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
+// Define invitation types
 interface Invitation {
   id: string;
   email: string;
@@ -34,11 +43,15 @@ interface MagicLinkInvitation {
 }
 
 const InviteMembers = () => {
+  // State variables
   const [email, setEmail] = useState("");
+  const [emails, setEmails] = useState<string[]>([]);
+  const [emailInput, setEmailInput] = useState("");
   const [role, setRole] = useState("employee");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState<{[key: string]: boolean}>({});
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
+  const [isResending, setIsResending] = useState<{[key: string]: boolean}>({});
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [magicLinkInvitations, setMagicLinkInvitations] = useState<MagicLinkInvitation[]>([]);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
@@ -46,270 +59,116 @@ const InviteMembers = () => {
   const [invitationLink, setInvitationLink] = useState<string>("");
   const [magicLinkUrl, setMagicLinkUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState("email");
+  const [activeTab, setActiveTab] = useState("magiclink");
   const [showEmailTips, setShowEmailTips] = useState(false);
   const [magicLinkError, setMagicLinkError] = useState<string | null>(null);
+  const [inviteFilter, setInviteFilter] = useState("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch user's organization id and existing invitations
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Get user's organization
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('organization_id')
-          .eq('id', user.id)
-          .single();
+      setIsRefreshing(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (profileData && profileData.organization_id) {
-          setOrganizationId(profileData.organization_id);
-          
-          // Get organization name
-          const { data: orgData } = await supabase
-            .from('organizations')
-            .select('name')
-            .eq('id', profileData.organization_id)
+        if (user) {
+          // Get user's organization
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', user.id)
             .single();
-            
-          if (orgData) {
-            setOrgName(orgData.name);
-          }
           
-          // Fetch existing email invitations
-          const { data: invitationsData, error } = await supabase
-            .from('invitations')
-            .select('id, email, status, created_at, expires_at, token, role')
-            .eq('organization_id', profileData.organization_id)
-            .order('created_at', { ascending: false });
+          if (profileData && profileData.organization_id) {
+            setOrganizationId(profileData.organization_id);
             
-          if (error) {
-            console.error("Error fetching invitations:", error);
-            toast.error("Gagal memuat undangan yang ada.");
-          } else {
-            // Cast the status to the correct type
-            const typedInvitations: Invitation[] = invitationsData?.map(inv => ({
-              ...inv,
-              status: (inv.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending'
-            })) || [];
+            // Get organization name
+            const { data: orgData } = await supabase
+              .from('organizations')
+              .select('name')
+              .eq('id', profileData.organization_id)
+              .single();
+              
+            if (orgData) {
+              setOrgName(orgData.name);
+            }
             
-            setInvitations(typedInvitations);
-          }
-          
-          // Fetch existing magic link invitations
-          const { data: magicLinkData, error: magicLinkError } = await supabase
-            .from('magic_link_invitations')
-            .select('id, email, status, created_at, expires_at, token, role')
-            .eq('organization_id', profileData.organization_id)
-            .order('created_at', { ascending: false });
+            // Fetch existing email invitations
+            const { data: invitationsData, error } = await supabase
+              .from('invitations')
+              .select('id, email, status, created_at, expires_at, token, role')
+              .eq('organization_id', profileData.organization_id)
+              .order('created_at', { ascending: false });
+              
+            if (error) {
+              console.error("Error fetching invitations:", error);
+              toast.error("Gagal memuat undangan yang ada.");
+            } else {
+              // Cast the status to the correct type
+              const typedInvitations: Invitation[] = invitationsData?.map(inv => ({
+                ...inv,
+                status: (inv.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending'
+              })) || [];
+              
+              setInvitations(typedInvitations);
+            }
             
-          if (magicLinkError) {
-            console.error("Error fetching magic link invitations:", magicLinkError);
-          } else {
-            // Cast the status to the correct type
-            const typedMagicLinks: MagicLinkInvitation[] = magicLinkData?.map(inv => ({
-              ...inv,
-              status: (inv.status as 'pending' | 'accepted' | 'rejected') || 'pending'
-            })) || [];
-            
-            setMagicLinkInvitations(typedMagicLinks);
+            // Fetch existing magic link invitations
+            const { data: magicLinkData, error: magicLinkError } = await supabase
+              .from('magic_link_invitations')
+              .select('id, email, status, created_at, expires_at, token, role')
+              .eq('organization_id', profileData.organization_id)
+              .order('created_at', { ascending: false });
+              
+            if (magicLinkError) {
+              console.error("Error fetching magic link invitations:", magicLinkError);
+            } else {
+              // Cast the status to the correct type
+              const typedMagicLinks: MagicLinkInvitation[] = magicLinkData?.map(inv => ({
+                ...inv,
+                status: (inv.status as 'pending' | 'accepted' | 'rejected') || 'pending'
+              })) || [];
+              
+              setMagicLinkInvitations(typedMagicLinks);
+            }
           }
         }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Gagal memuat data");
+      } finally {
+        setIsRefreshing(false);
       }
     };
     
     fetchUserData();
   }, []);
 
-  const generateToken = () => {
-    // Generate a random token for the invitation
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
-  };
-
-  const handleGenerateLink = async () => {
-    if (!organizationId) {
-      toast.error("Tidak dapat menemukan organisasi Anda.");
-      return;
-    }
-
-    if (!email.trim()) {
-      toast.error("Masukkan email untuk menghasilkan tautan undangan");
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      // Check if user is already invited
-      const { data: existingInvite } = await supabase
-        .from('invitations')
-        .select('id, token')
-        .eq('email', email)
-        .eq('organization_id', organizationId)
-        .eq('status', 'pending')
-        .maybeSingle();
-      
-      let token;
-      
-      if (existingInvite) {
-        // Use existing token
-        token = existingInvite.token;
+  // Add email to the list
+  const addEmail = () => {
+    if (emailInput && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
+      if (!emails.includes(emailInput)) {
+        setEmails([...emails, emailInput]);
+        setEmailInput("");
       } else {
-        // Check if user already exists in same organization
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email)
-          .eq('organization_id', organizationId)
-          .maybeSingle();
-          
-        if (existingUser) {
-          toast.error("Pengguna dengan email ini sudah ada di organisasi Anda.");
-          setIsLoading(false);
-          return;
-        }
-        
-        // Create new invitation
-        token = generateToken();
-        
-        const { error } = await supabase
-          .from('invitations')
-          .insert({
-            organization_id: organizationId,
-            email: email,
-            token: token,
-            role: role,
-          });
-        
-        if (error) {
-          throw error;
-        }
+        toast.error("Email ini sudah ada dalam daftar");
       }
-      
-      // Generate invitation link
-      const baseUrl = window.location.origin;
-      const inviteUrl = `${baseUrl}/accept-invitation?token=${token}&email=${encodeURIComponent(email)}`;
-      
-      setInvitationLink(inviteUrl);
-    } catch (error: any) {
-      console.error("Error generating invitation link:", error);
-      toast.error(error.message || "Gagal membuat tautan undangan.");
-    } finally {
-      setIsLoading(false);
+    } else if (emailInput) {
+      toast.error("Format email tidak valid");
     }
   };
 
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!organizationId) {
-      toast.error("Tidak dapat menemukan organisasi Anda.");
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // Check if user is already invited
-      const { data: existingInvite } = await supabase
-        .from('invitations')
-        .select('id')
-        .eq('email', email)
-        .eq('organization_id', organizationId)
-        .eq('status', 'pending')
-        .maybeSingle();
-      
-      if (existingInvite) {
-        toast.error("Email ini sudah memiliki undangan yang tertunda.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // Check if user already exists in same organization
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .eq('organization_id', organizationId)
-        .maybeSingle();
-        
-      if (existingUser) {
-        toast.error("Pengguna dengan email ini sudah ada di organisasi Anda.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // Create invitation
-      const token = generateToken();
-      
-      const { data: invitation, error } = await supabase
-        .from('invitations')
-        .insert({
-          organization_id: organizationId,
-          email: email,
-          token: token,
-          role: role,
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast.success(`Undangan telah dibuat untuk ${email}`);
-      setEmail("");
-      
-      // Add the new invitation to the list with proper type casting
-      if (invitation) {
-        const typedInvitation: Invitation = {
-          ...invitation,
-          status: (invitation.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending',
-          role: invitation.role || 'employee'
-        };
-        
-        setInvitations([typedInvitation, ...invitations]);
-        
-        // Automatically send the invitation email
-        await sendInvitationEmail(typedInvitation.id);
-      }
-    } catch (error: any) {
-      console.error("Invitation error:", error);
-      toast.error(error.message || "Gagal mengirim undangan. Silakan coba lagi.");
-    } finally {
-      setIsLoading(false);
-    }
+  // Remove email from the list
+  const removeEmail = (emailToRemove: string) => {
+    setEmails(emails.filter((e) => e !== emailToRemove));
   };
 
-  const sendInvitationEmail = async (invitationId: string) => {
-    // Set loading state for this specific invitation
-    setIsSending(prev => ({ ...prev, [invitationId]: true }));
-    
-    try {
-      // Call the edge function to send the invitation email
-      const response = await supabase.functions.invoke('send-invitation', {
-        body: { invitationId }
-      });
-      
-      if (response.error) {
-        throw new Error(response.error.message || "Gagal mengirim email undangan");
-      }
-      
-      console.log("Invitation email sent response:", response);
-      
-      // Update the local state to reflect that the invitation was sent
-      setInvitations(invitations.map(inv => 
-        inv.id === invitationId ? { ...inv, status: 'sent' as const } : inv
-      ));
-      
-      toast.success("Email undangan telah dikirim");
-    } catch (error: any) {
-      console.error("Error sending invitation email:", error);
-      toast.error(error.message || "Gagal mengirim email undangan. Silakan coba lagi.");
-    } finally {
-      setIsSending(prev => ({ ...prev, [invitationId]: false }));
+  // Handle Enter key in email input
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addEmail();
     }
   };
 
@@ -321,8 +180,11 @@ const InviteMembers = () => {
       return;
     }
     
-    if (!email) {
-      toast.error("Masukkan email untuk mengirim magic link");
+    // Check if we have emails to process
+    const emailsToProcess = emails.length > 0 ? emails : (email ? [email] : []);
+    
+    if (emailsToProcess.length === 0) {
+      toast.error("Masukkan minimal satu email untuk mengirim magic link");
       return;
     }
     
@@ -330,47 +192,76 @@ const InviteMembers = () => {
     setMagicLinkError(null);
     
     try {
-      // Check if user already exists in same organization
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .eq('organization_id', organizationId)
-        .maybeSingle();
-        
-      if (existingUser) {
-        toast.error("Pengguna dengan email ini sudah ada di organisasi Anda.");
-        setIsSendingMagicLink(false);
-        return;
-      }
+      const successfulEmails: string[] = [];
+      const failedEmails: string[] = [];
+      let lastMagicLinkUrl = "";
       
-      // Generate magic link using edge function
-      const response = await supabase.functions.invoke('send-magic-link', {
-        body: { 
-          email, 
-          organizationId,
-          role 
+      // Process each email
+      for (const emailAddress of emailsToProcess) {
+        try {
+          // Check if user already exists in same organization
+          const { data: existingUser } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', emailAddress)
+            .eq('organization_id', organizationId)
+            .maybeSingle();
+            
+          if (existingUser) {
+            failedEmails.push(`${emailAddress} (sudah ada di organisasi)`);
+            continue;
+          }
+          
+          // Generate magic link using edge function
+          const response = await supabase.functions.invoke('send-magic-link', {
+            body: { 
+              email: emailAddress, 
+              organizationId,
+              role 
+            }
+          });
+          
+          if (response.error) {
+            throw new Error(response.error.message || "Gagal membuat magic link");
+          }
+          
+          const data = response.data;
+          
+          // Store the magic link URL for the last email
+          if (data.invitation_url) {
+            lastMagicLinkUrl = data.invitation_url;
+          }
+  
+          // Track success/failure
+          if (data.email_sent) {
+            successfulEmails.push(emailAddress);
+          } else {
+            failedEmails.push(emailAddress);
+            setShowEmailTips(true);
+            setMagicLinkError(data.email_error || "Gagal mengirim email, tetapi tautan Magic Link telah dibuat");
+          }
+        } catch (error) {
+          console.error(`Error processing ${emailAddress}:`, error);
+          failedEmails.push(emailAddress);
         }
-      });
-      
-      if (response.error) {
-        throw new Error(response.error.message || "Gagal membuat magic link");
       }
       
-      const data = response.data;
-      
-      // Set the magic link URL for display
-      if (data.invitation_url) {
-        setMagicLinkUrl(data.invitation_url);
+      // Set the last magic link URL for display
+      if (lastMagicLinkUrl) {
+        setMagicLinkUrl(lastMagicLinkUrl);
       }
 
-      // Tampilkan pesan yang sesuai berdasarkan hasil pengiriman email
-      if (data.email_sent) {
-        toast.success(`Magic Link telah dikirim ke ${email}`);
-      } else {
-        setShowEmailTips(true);
-        setMagicLinkError(data.email_error || "Gagal mengirim email, tetapi tautan Magic Link telah dibuat");
-        toast.warning("Email tidak dapat dikirim, tapi Anda dapat menyalin Magic Link secara manual");
+      // Show results
+      if (successfulEmails.length > 0) {
+        if (successfulEmails.length === 1) {
+          toast.success(`Magic Link telah dikirim ke ${successfulEmails[0]}`);
+        } else {
+          toast.success(`${successfulEmails.length} Magic Link berhasil dikirim`);
+        }
+      }
+      
+      if (failedEmails.length > 0) {
+        toast.error(`Gagal mengirim ke: ${failedEmails.join(", ")}`);
       }
       
       // Refresh the list of magic link invitations
@@ -389,7 +280,9 @@ const InviteMembers = () => {
         setMagicLinkInvitations(typedMagicLinks);
       }
       
+      // Clear inputs
       setEmail("");
+      setEmails([]);
       
     } catch (error: any) {
       console.error("Magic Link error:", error);
@@ -399,7 +292,48 @@ const InviteMembers = () => {
     }
   };
 
-  const copyToClipboard = (text: string, type: 'invitation' | 'magiclink') => {
+  // Resend magic link invitation
+  const handleResendMagicLink = async (invitationId: string, emailAddress: string) => {
+    if (!organizationId) {
+      toast.error("Tidak dapat menemukan organisasi Anda.");
+      return;
+    }
+    
+    setIsResending(prev => ({ ...prev, [invitationId]: true }));
+    
+    try {
+      // Generate magic link using edge function
+      const response = await supabase.functions.invoke('send-magic-link', {
+        body: { 
+          email: emailAddress, 
+          organizationId,
+          role: 'employee' // Default role for resends
+        }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || "Gagal mengirim ulang magic link");
+      }
+      
+      const data = response.data;
+      
+      if (data.email_sent) {
+        toast.success(`Magic Link telah dikirim ulang ke ${emailAddress}`);
+      } else {
+        toast.warning("Email tidak dapat dikirim, tetapi Magic Link telah diperbarui");
+        setMagicLinkUrl(data.invitation_url);
+        setShowEmailTips(true);
+      }
+    } catch (error: any) {
+      console.error("Resend error:", error);
+      toast.error(error.message || "Gagal mengirim ulang Magic Link");
+    } finally {
+      setIsResending(prev => ({ ...prev, [invitationId]: false }));
+    }
+  };
+
+  // Copy to clipboard
+  const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(
       () => {
         setCopied(true);
@@ -417,6 +351,7 @@ const InviteMembers = () => {
     );
   };
 
+  // Format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
@@ -425,6 +360,7 @@ const InviteMembers = () => {
     });
   };
 
+  // Status display component
   const getStatusDisplay = (status: Invitation['status']) => {
     switch(status) {
       case 'pending':
@@ -460,8 +396,10 @@ const InviteMembers = () => {
     }
   };
 
+  // Refresh invitations
   const handleRefresh = async () => {
     if (!organizationId) return;
+    setIsRefreshing(true);
     
     try {
       // Refresh email invitations
@@ -506,18 +444,28 @@ const InviteMembers = () => {
     } catch (error) {
       console.error("Error refreshing invitations:", error);
       toast.error("Gagal memperbarui daftar undangan");
+    } finally {
+      setIsRefreshing(false);
     }
   };
+
+  // Filter invitations by status
+  const getFilteredInvitations = () => {
+    if (inviteFilter === "all") return magicLinkInvitations;
+    return magicLinkInvitations.filter(inv => inv.status === inviteFilter);
+  };
+
+  const filteredInvitations = getFilteredInvitations();
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Undang Anggota</h1>
         
-        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="mb-6">
-            <TabsTrigger value="email">Kirim via Email</TabsTrigger>
-            <TabsTrigger value="link">Bagikan Tautan</TabsTrigger>
+            <TabsTrigger value="email">Via Email</TabsTrigger>
+            <TabsTrigger value="link">Via Tautan</TabsTrigger>
             <TabsTrigger value="magiclink">
               <span className="flex items-center">
                 <Sparkles className="h-4 w-4 mr-1 text-yellow-500" />
@@ -527,7 +475,7 @@ const InviteMembers = () => {
           </TabsList>
           
           <TabsContent value="email">
-            <Card className="mb-8">
+            <Card>
               <CardHeader>
                 <div className="flex items-center gap-2 mb-2">
                   <Mail className="h-5 w-5 text-blue-600" />
@@ -571,7 +519,7 @@ const InviteMembers = () => {
           </TabsContent>
           
           <TabsContent value="link">
-            <Card className="mb-8">
+            <Card>
               <CardHeader>
                 <div className="flex items-center gap-2 mb-2">
                   <LinkIcon className="h-5 w-5 text-blue-600" />
@@ -629,7 +577,7 @@ const InviteMembers = () => {
                                 variant="ghost" 
                                 size="icon" 
                                 className="ml-2 flex-shrink-0" 
-                                onClick={() => copyToClipboard(invitationLink, 'invitation')}
+                                onClick={() => copyToClipboard(invitationLink)}
                               >
                                 <Copy className={`h-4 w-4 ${copied ? "text-green-500" : ""}`} />
                               </Button>
@@ -647,32 +595,21 @@ const InviteMembers = () => {
             </Card>
           </TabsContent>
           
-          <TabsContent value="magiclink">
-            <Card className="mb-8">
+          <TabsContent value="magiclink" className="space-y-6">
+            <Card>
               <CardHeader>
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="h-5 w-5 text-yellow-500" />
                   <CardTitle>Undang via Magic Link</CardTitle>
                 </div>
                 <CardDescription>
-                  Kirim undangan dengan Magic Link yang memungkinkan anggota bergabung tanpa perlu membuat password
+                  Kirim undangan Magic Link yang memungkinkan anggota bergabung tanpa perlu membuat password
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSendMagicLink} className="space-y-4">
+                <form onSubmit={handleSendMagicLink} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="magicLinkEmail">Email</Label>
-                    <Input
-                      id="magicLinkEmail"
-                      type="email"
-                      placeholder="nama@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="magicLinkRole">Peran</Label>
+                    <Label htmlFor="role">Peran</Label>
                     <Select value={role} onValueChange={setRole}>
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih peran" />
@@ -682,21 +619,85 @@ const InviteMembers = () => {
                         <SelectItem value="employee">Karyawan</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-sm text-gray-500">Peran untuk semua undangan yang akan dikirim</p>
                   </div>
+                  
+                  {/* Single email input */}
+                  {emails.length === 0 && (
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="nama@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Multiple emails input */}
+                  <div className="space-y-2">
+                    <Label htmlFor="multi-email">
+                      {emails.length === 0 ? "Atau undang beberapa orang sekaligus" : "Daftar Email"}
+                    </Label>
+                    
+                    {/* Email chips */}
+                    {emails.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {emails.map((email) => (
+                          <div key={email} className="flex items-center bg-blue-100 text-blue-800 text-sm rounded-full px-3 py-1">
+                            <span>{email}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeEmail(email)}
+                              className="ml-2 text-blue-500 hover:text-blue-700"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Email input with add button */}
+                    <div className="flex gap-2">
+                      <Input
+                        id="multi-email"
+                        type="email"
+                        placeholder="Masukkan email dan tekan Enter"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="flex-1"
+                      />
+                      <Button 
+                        type="button" 
+                        onClick={addEmail} 
+                        variant="outline"
+                      >
+                        Tambah
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Tekan Enter atau klik Tambah untuk menambahkan email ke daftar
+                    </p>
+                  </div>
+                  
                   <Button 
                     type="submit" 
-                    disabled={isSendingMagicLink || !organizationId}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                    disabled={isSendingMagicLink || (!email && emails.length === 0) || !organizationId}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   >
                     {isSendingMagicLink ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Mengirim...
+                        {emails.length > 1 ? `Mengirim ke ${emails.length} orang...` : "Mengirim..."}
                       </>
                     ) : (
                       <>
                         <Sparkles className="mr-2 h-4 w-4" />
-                        Kirim Magic Link
+                        {emails.length > 1 ? `Kirim ${emails.length} Magic Link` : "Kirim Magic Link"}
                       </>
                     )}
                   </Button>
@@ -723,22 +724,22 @@ const InviteMembers = () => {
                       <AlertDescription>
                         <div className="mt-2 space-y-3">
                           <div className="p-3 bg-white rounded border border-indigo-100 flex items-start">
-                            <div className="flex-1 overflow-auto text-sm">
+                            <div className="flex-1 overflow-auto text-sm break-all">
                               {magicLinkUrl}
                             </div>
                             <Button
                               variant="ghost" 
                               size="icon" 
                               className="ml-2 flex-shrink-0" 
-                              onClick={() => copyToClipboard(magicLinkUrl, 'magiclink')}
+                              onClick={() => copyToClipboard(magicLinkUrl)}
                             >
                               <Copy className={`h-4 w-4 ${copied ? "text-green-500" : ""}`} />
                             </Button>
                           </div>
                           <p className="text-sm text-indigo-700">
                             {magicLinkError 
-                              ? "Salin tautan di atas dan kirim secara manual ke " + email
-                              : "Magic Link telah dikirim ke " + email + ". Mereka dapat bergabung dengan organisasi tanpa perlu membuat password."}
+                              ? "Salin tautan di atas dan kirim secara manual"
+                              : "Magic Link telah dikirim melalui email. Penerima dapat bergabung dengan organisasi tanpa perlu membuat password."}
                           </p>
                         </div>
                       </AlertDescription>
@@ -747,124 +748,100 @@ const InviteMembers = () => {
                 )}
               </CardContent>
             </Card>
+
+            <div className="bg-white rounded-lg border shadow overflow-hidden">
+              <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Riwayat Magic Link</h2>
+                <div className="flex space-x-2">
+                  <Select 
+                    value={inviteFilter} 
+                    onValueChange={setInviteFilter}
+                  >
+                    <SelectTrigger className="w-[140px] h-8 text-xs">
+                      <SelectValue placeholder="Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="pending">Menunggu</SelectItem>
+                      <SelectItem value="accepted">Diterima</SelectItem>
+                      <SelectItem value="rejected">Ditolak</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                  >
+                    {isRefreshing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Peran</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Dibuat</TableHead>
+                      <TableHead>Kadaluarsa</TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInvitations.length > 0 ? (
+                      filteredInvitations.map((invitation) => (
+                        <TableRow key={invitation.id}>
+                          <TableCell className="font-medium">{invitation.email}</TableCell>
+                          <TableCell className="capitalize">
+                            {invitation.role || 'karyawan'}
+                          </TableCell>
+                          <TableCell>{getStatusDisplay(invitation.status)}</TableCell>
+                          <TableCell className="text-sm text-gray-500">
+                            {formatDate(invitation.created_at)}
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-500">
+                            {invitation.expires_at ? formatDate(invitation.expires_at) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {invitation.status === 'pending' && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleResendMagicLink(invitation.id, invitation.email)}
+                                disabled={isResending[invitation.id]}
+                              >
+                                {isResending[invitation.id] ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RotateCw className="h-4 w-4" />
+                                )}
+                                <span className="ml-2">Kirim Ulang</span>
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          Tidak ada data undangan
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
-        
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Undangan yang Dikirim</h2>
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-          
-          <Tabs defaultValue="email-invites">
-            <TabsList className="mb-4">
-              <TabsTrigger value="email-invites">Undangan Email</TabsTrigger>
-              <TabsTrigger value="magic-link-invites">
-                <span className="flex items-center">
-                  <Sparkles className="h-3 w-3 mr-1 text-yellow-500" />
-                  Magic Link
-                </span>
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="email-invites">
-              <div className="bg-white rounded-lg border">
-                {invitations.length > 0 ? (
-                  <div className="divide-y">
-                    {invitations.map((invitation) => (
-                      <div key={invitation.id} className="p-4 flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-gray-400" />
-                            <span className="font-medium">{invitation.email}</span>
-                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded capitalize">
-                              {invitation.role || 'karyawan'}
-                            </span>
-                          </div>
-                          <div className="text-sm text-gray-500 mt-1">
-                            Dikirim pada {formatDate(invitation.created_at)}
-                            {invitation.expires_at && (
-                              <span className="ml-2">
-                                • Kedaluwarsa pada {formatDate(invitation.expires_at)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusDisplay(invitation.status)}
-                          
-                          {invitation.status === 'pending' && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => sendInvitationEmail(invitation.id)}
-                              disabled={isSending[invitation.id]}
-                            >
-                              {isSending[invitation.id] ? (
-                                <>Mengirim...</>
-                              ) : (
-                                <>
-                                  <Send className="h-3 w-3 mr-1" />
-                                  Kirim Email
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Mail className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                    <p>Belum ada undangan email yang dikirim</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="magic-link-invites">
-              <div className="bg-white rounded-lg border">
-                {magicLinkInvitations.length > 0 ? (
-                  <div className="divide-y">
-                    {magicLinkInvitations.map((invitation) => (
-                      <div key={invitation.id} className="p-4 flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-yellow-500" />
-                            <span className="font-medium">{invitation.email}</span>
-                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded capitalize">
-                              {invitation.role || 'karyawan'}
-                            </span>
-                          </div>
-                          <div className="text-sm text-gray-500 mt-1">
-                            Dibuat pada {formatDate(invitation.created_at)}
-                            {invitation.expires_at && (
-                              <span className="ml-2">
-                                • Kedaluwarsa pada {formatDate(invitation.expires_at)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusDisplay(invitation.status)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Sparkles className="mx-auto h-12 w-12 text-yellow-500 mb-3" />
-                    <p>Belum ada magic link yang dikirim</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
       </div>
     </div>
   );
