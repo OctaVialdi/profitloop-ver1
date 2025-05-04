@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { employeeService, Employee, EmployeeWithDetails } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -25,8 +26,8 @@ export interface LegacyEmployee {
   maritalStatus: string;
   status: string;
   role: string;
-  organization_id: string; // Changed from optional to required
-  employee_id?: string;
+  organization_id: string; // Required field
+  employee_id: string;     // Making it required to match Employee type
 }
 
 export interface UseEmployeesResult {
@@ -63,7 +64,7 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     maritalStatus: employee.personalDetails?.marital_status || "",
     status: employee.status || "Active",
     role: employee.role || "employee",
-    organization_id: employee.organization_id || "", // Ensure we always have a value
+    organization_id: employee.organization_id,
     employee_id: employee.employee_id
   };
 }
@@ -83,6 +84,9 @@ export function convertFromLegacyFormat(legacyEmployee: Partial<LegacyEmployee>)
 
   return employeeData;
 }
+
+// Re-export the employeeService from the service for convenience
+export { employeeService } from "@/services/employeeService";
 
 export function useEmployees(): UseEmployeesResult {
   const [employees, setEmployees] = useState<EmployeeWithDetails[]>([]);

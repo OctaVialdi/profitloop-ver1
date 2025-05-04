@@ -24,7 +24,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
-import { useEmployees, employeeService } from "@/hooks/useEmployees";
+import { useEmployees } from "@/hooks/useEmployees";
+import { employeeService } from "@/services/employeeService";
 
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
