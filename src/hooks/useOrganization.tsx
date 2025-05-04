@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { OrganizationData } from "@/types/organization";
 import { getUserProfile, getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
+import { formatTimestampToUserTimezone } from "@/utils/dateUtils";
 
 export function useOrganization(): OrganizationData {
   const [organizationData, setOrganizationData] = useState<OrganizationData>({
@@ -142,6 +143,19 @@ export function useOrganization(): OrganizationData {
       if (!organization) {
         console.error("Organization not found even though profile has organization_id");
         throw new Error("Organisasi tidak ditemukan");
+      }
+      
+      // Format timestamps according to user's timezone
+      if (profile.created_at) {
+        // Use the user's timezone preference or default to Asia/Jakarta
+        const userTimezone = profile.timezone || 'Asia/Jakarta';
+        
+        // Format the created_at timestamp with the user's timezone
+        profile.created_at_formatted = formatTimestampToUserTimezone(
+          profile.created_at,
+          userTimezone,
+          'EEE dd MMM yyyy HH:mm:ss'
+        );
       }
       
       // Get subscription plan data if available

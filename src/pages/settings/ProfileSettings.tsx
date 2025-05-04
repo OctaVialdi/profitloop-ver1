@@ -1,496 +1,208 @@
-
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
-import { Loader2, Save, Key, Bell, Cookie } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { timezones } from "@/lib/timezones";
-import { useTheme } from "@/hooks/useTheme";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Profile form schema
-const profileFormSchema = z.object({
-  fullName: z.string().min(2, { message: "Nama harus minimal 2 karakter" }),
-  timezone: z.string(),
-});
-
-// Password form schema with validation
-const passwordFormSchema = z.object({
-  currentPassword: z.string().min(6, { message: "Password minimal 6 karakter" }),
-  newPassword: z.string().min(8, { message: "Password baru minimal 8 karakter" })
-    .regex(/[A-Z]/, { message: "Password harus mengandung huruf besar" })
-    .regex(/[0-9]/, { message: "Password harus mengandung angka" }),
-  confirmPassword: z.string().min(1, { message: "Konfirmasi password wajib diisi" }),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Password tidak cocok",
-  path: ["confirmPassword"],
-});
-
-// Preferences schema
-const preferencesSchema = z.object({
-  marketingEmails: z.boolean(),
-  notificationEmails: z.boolean(),
-  darkMode: z.boolean(),
-});
+interface ProfileFormData {
+  fullName: string;
+  email: string;
+  timezone: string;
+  darkMode: boolean;
+}
 
 const ProfileSettings = () => {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const { userProfile, refreshData } = useOrganization();
-  const { setDarkMode } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-  const [preferences, setPreferences] = useState({
-    marketingEmails: false,
-    notificationEmails: true,
-    darkMode: false,
+  const [formData, setFormData] = useState<ProfileFormData>({
+    fullName: userProfile?.full_name || "",
+    email: userProfile?.email || "",
+    timezone: userProfile?.timezone || "Asia/Jakarta",
+    darkMode: userProfile?.preferences?.dark_mode || false,
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Profile form
-  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      fullName: "",
-      timezone: "Asia/Jakarta",
-    },
-  });
-
-  // Password form
-  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
-    resolver: zodResolver(passwordFormSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
-
-  // Preferences form
-  const preferencesForm = useForm<z.infer<typeof preferencesSchema>>({
-    resolver: zodResolver(preferencesSchema),
-    defaultValues: {
-      marketingEmails: false,
-      notificationEmails: true,
-      darkMode: false,
-    },
-  });
-
-  // Load user data
   useEffect(() => {
     if (userProfile) {
-      // Load profile data
-      profileForm.reset({
+      setFormData({
         fullName: userProfile.full_name || "",
+        email: userProfile.email || "",
         timezone: userProfile.timezone || "Asia/Jakarta",
+        darkMode: userProfile.preferences?.dark_mode || false,
       });
-
-      // Load preferences
-      if (userProfile.preferences) {
-        const userPrefs = userProfile.preferences as any;
-        setPreferences({
-          marketingEmails: userPrefs.marketing_emails || false,
-          notificationEmails: userPrefs.notification_emails || true,
-          darkMode: userPrefs.dark_mode || false,
-        });
-
-        preferencesForm.reset({
-          marketingEmails: userPrefs.marketing_emails || false,
-          notificationEmails: userPrefs.notification_emails || true,
-          darkMode: userPrefs.dark_mode || false,
-        });
-        
-        // Apply dark mode setting from database
-        if (userPrefs.dark_mode) {
-          setDarkMode(true);
-        }
-      }
     }
-  }, [userProfile, setDarkMode]);
+  }, [userProfile]);
 
-  // Update profile handler
-  const onProfileSubmit = async (values: z.infer<typeof profileFormSchema>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateUserProfile(formData);
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
     try {
-      setIsLoading(true);
-      
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: values.fullName,
-          timezone: values.timezone
-        })
-        .eq("id", userProfile?.id);
+      if (!user) {
+        toast.error("Tidak ada pengguna yang terautentikasi.");
+        return;
+      }
 
+      const { error } = await supabase.auth.admin.deleteUser(user.id);
+
+      if (error) {
+        console.error("Error deleting user:", error);
+        toast.error("Gagal menghapus akun. Silakan coba lagi.");
+      } else {
+        toast.success("Akun berhasil dihapus.");
+        await signOut();
+        navigate("/auth/login");
+      }
+    } catch (err: any) {
+      console.error("Error deleting account:", err);
+      toast.error(err.message || "Terjadi kesalahan saat menghapus akun.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Update the timezone handling in the updateUserProfile function
+  const updateUserProfile = async (formData: ProfileFormData) => {
+    setIsSaving(true);
+    
+    try {
+      // Convert timezone to Asia/Jakarta format if needed
+      let timezone = formData.timezone || 'Asia/Jakarta';
+      
+      // Make sure the timezone is properly formatted
+      if (!timezone.includes('/') && timezone.includes('+')) {
+        // Convert from GMT+0700 format to IANA timezone
+        // This is a simplified example - you'd need more comprehensive mapping
+        timezone = 'Asia/Jakarta'; // Default for Indonesia/GMT+7
+      }
+      
+      const { data, error } = await supabase.rpc('update_user_profile_with_password', {
+        user_id: user?.id,
+        full_name: formData.fullName,
+        timezone: timezone,
+        preferences: {
+          ...(userProfile?.preferences || {}),
+          dark_mode: formData.darkMode
+        },
+        current_password: null,  // Not updating password
+        new_password: null       // Not updating password
+      });
+      
       if (error) throw error;
       
       toast.success("Profil berhasil diperbarui");
-      refreshData(); // Refresh user data after update
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      toast.error(error.message || "Gagal memperbarui profil");
+      refreshData();
+    } catch (err: any) {
+      console.error("Error updating profile:", err);
+      toast.error(err.message || "Gagal memperbarui profil");
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  // Update password handler
-  const onPasswordSubmit = async (values: z.infer<typeof passwordFormSchema>) => {
-    try {
-      setIsPasswordLoading(true);
-      
-      // First verify current password by attempting a sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: userProfile?.email || "",
-        password: values.currentPassword
-      });
-
-      if (signInError) {
-        toast.error("Password saat ini tidak valid");
-        setIsPasswordLoading(false);
-        return;
-      }
-      
-      // If current password is valid, update to new password
-      const { error } = await supabase.auth.updateUser({
-        password: values.newPassword
-      });
-
-      if (error) throw error;
-      
-      toast.success("Password berhasil diperbarui");
-      passwordForm.reset({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (error: any) {
-      console.error("Error updating password:", error);
-      toast.error(error.message || "Gagal memperbarui password");
-    } finally {
-      setIsPasswordLoading(false);
-    }
-  };
-
-  // Update preferences handler with automatic saving
-  const onPreferenceChange = async (field: keyof typeof preferences, value: boolean) => {
-    try {
-      setIsLoading(true);
-      
-      // Update local state first for responsive UI
-      const newPreferences = {
-        ...preferences,
-        [field]: value
-      };
-      
-      setPreferences(newPreferences);
-      
-      // Format for database
-      const dbPreferences = {
-        marketing_emails: newPreferences.marketingEmails,
-        notification_emails: newPreferences.notificationEmails,
-        dark_mode: newPreferences.darkMode
-      };
-      
-      // Save to database
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          preferences: dbPreferences
-        })
-        .eq("id", userProfile?.id);
-
-      if (error) throw error;
-      
-      // Apply dark mode immediately if changed
-      if (field === 'darkMode') {
-        setDarkMode(value);
-      }
-      
-      // Update form values too
-      preferencesForm.setValue(field, value);
-      
-      toast.success("Preferensi berhasil diperbarui");
-      refreshData(); // Refresh user data after update
-    } catch (error: any) {
-      console.error("Error updating preferences:", error);
-      toast.error(error.message || "Gagal memperbarui preferensi");
-      
-      // Revert local state on error
-      setPreferences(prev => ({...prev, [field]: !value}));
-      preferencesForm.setValue(field, !value);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Update all preferences at once handler
-  const onPreferencesSubmit = async (values: z.infer<typeof preferencesSchema>) => {
-    try {
-      setIsLoading(true);
-      
-      const newPreferences = {
-        marketing_emails: values.marketingEmails,
-        notification_emails: values.notificationEmails,
-        dark_mode: values.darkMode
-      };
-      
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          preferences: newPreferences
-        })
-        .eq("id", userProfile?.id);
-
-      if (error) throw error;
-      
-      // Apply dark mode setting
-      setDarkMode(values.darkMode);
-      setPreferences({
-        marketingEmails: values.marketingEmails,
-        notificationEmails: values.notificationEmails,
-        darkMode: values.darkMode
-      });
-      
-      toast.success("Preferensi berhasil diperbarui");
-      refreshData(); // Refresh user data after update
-    } catch (error: any) {
-      console.error("Error updating preferences:", error);
-      toast.error(error.message || "Gagal memperbarui preferensi");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const timezones = [
+    { value: "Asia/Jakarta", label: "Jakarta (GMT+7)" },
+    { value: "Asia/Makassar", label: "Makassar (GMT+8)" },
+    { value: "Asia/Jayapura", label: "Jayapura (GMT+9)" },
+  ];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Pengaturan Profil</h1>
-      
-      {/* Personal Information Section */}
+    <div className="container mx-auto py-10">
       <Card>
         <CardHeader>
-          <CardTitle>Informasi Pribadi</CardTitle>
-          <CardDescription>
-            Kelola informasi akun dan profil Anda.
-          </CardDescription>
+          <CardTitle>Pengaturan Profil</CardTitle>
+          <CardDescription>Atur informasi profil Anda.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-              <FormField
-                control={profileForm.control}
+        <CardContent className="grid gap-6">
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="fullName">Nama Lengkap</Label>
+              <Input
+                type="text"
+                id="fullName"
                 name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nama Lengkap</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Masukkan nama lengkap" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={profileForm.control}
-                name="timezone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Zona Waktu</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih zona waktu" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[200px]">
-                        {timezones.map((timezone) => (
-                          <SelectItem key={timezone.value} value={timezone.value}>
-                            {timezone.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Zona waktu akan digunakan untuk menampilkan waktu yang relevan.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Menyimpan...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Simpan Perubahan
-                  </>
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      {/* Password Change Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Keamanan</CardTitle>
-          <CardDescription>
-            Kelola keamanan akun Anda.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...passwordForm}>
-            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-              <FormField
-                control={passwordForm.control}
-                name="currentPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password Saat Ini</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={passwordForm.control}
-                name="newPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password Baru</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Minimal 8 karakter, termasuk satu huruf besar dan satu angka.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={passwordForm.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Konfirmasi Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Button type="submit" disabled={isPasswordLoading} className="w-full sm:w-auto">
-                {isPasswordLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memperbarui...
-                  </>
-                ) : (
-                  <>
-                    <Key className="mr-2 h-4 w-4" />
-                    Perbarui Password
-                  </>
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      {/* Preferences Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Preferensi</CardTitle>
-          <CardDescription>
-            Atur preferensi penggunaan aplikasi.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...preferencesForm}>
-            <div className="space-y-4">
-              <FormField
-                control={preferencesForm.control}
-                name="notificationEmails"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Pemberitahuan Email</FormLabel>
-                      <FormDescription>
-                        Terima email untuk aksi penting dan pemberitahuan.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch 
-                        checked={field.value}
-                        onCheckedChange={(value) => onPreferenceChange('notificationEmails', value)}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={preferencesForm.control}
-                name="marketingEmails"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Email Marketing</FormLabel>
-                      <FormDescription>
-                        Terima email tentang produk baru dan penawaran.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch 
-                        checked={field.value}
-                        onCheckedChange={(value) => onPreferenceChange('marketingEmails', value)}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={preferencesForm.control}
-                name="darkMode"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Mode Gelap</FormLabel>
-                      <FormDescription>
-                        Gunakan tema gelap untuk aplikasi.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch 
-                        checked={field.value}
-                        onCheckedChange={(value) => onPreferenceChange('darkMode', value)}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                value={formData.fullName}
+                onChange={handleChange}
               />
             </div>
-          </Form>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                disabled
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="timezone">Zona Waktu</Label>
+              <Select value={formData.timezone} onValueChange={(value) => setFormData(prev => ({ ...prev, timezone: value }))}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih zona waktu" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timezones.map((timezone) => (
+                    <SelectItem key={timezone.value} value={timezone.value}>
+                      {timezone.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="darkMode">Mode Gelap</Label>
+              <Switch
+                id="darkMode"
+                name="darkMode"
+                checked={formData.darkMode}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, darkMode: checked }))}
+              />
+            </div>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Hapus Akun</CardTitle>
+          <CardDescription>
+            Setelah Anda menghapus akun, tidak ada jalan untuk kembali. Harap
+            dipastikan.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={handleDeleteAccount}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Menghapus..." : "Hapus Akun"}
+          </Button>
         </CardContent>
       </Card>
     </div>

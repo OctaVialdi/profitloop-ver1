@@ -1,3 +1,16 @@
+export interface UserProfile {
+  id: string;
+  organization_id?: string;
+  role?: string;
+  email?: string;
+  full_name?: string;
+  timezone?: string;
+  preferences?: UserPreferences;
+  created_at?: string;
+  last_active?: string;
+  // Newly added formatted timestamp field
+  created_at_formatted?: string;
+}
 
 export interface Organization {
   id: string;
@@ -8,31 +21,25 @@ export interface Organization {
   phone: string | null;
   subscription_plan_id: string | null;
   trial_end_date: string | null;
-  trial_expired: boolean | null;
-  theme_settings: Record<string, any> | null;
+  trial_expired: boolean;
   logo_path: string | null;
+  theme_settings: any;
 }
 
 export interface SubscriptionPlan {
   id: string;
   name: string;
-  max_members: number | null;
-  price: number | null;
-  features: Record<string, any> | null;
+  max_members: number;
+  price: number;
+  features: any;
 }
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  full_name: string | null;
-  organization_id: string | null;
-  role: 'super_admin' | 'admin' | 'employee' | null;
-  invited_by: string | null;
-  timezone: string | null; // Added timezone property
-  preferences: Record<string, any> | null; // Added preferences property
+export interface UserPreferences {
+  dark_mode?: boolean;
+  [key: string]: any;
 }
 
-export interface OrganizationData {
+export type OrganizationData = {
   organization: Organization | null;
   subscriptionPlan: SubscriptionPlan | null;
   userProfile: UserProfile | null;
@@ -45,4 +52,4 @@ export interface OrganizationData {
   daysLeftInTrial: number;
   hasPaidSubscription: boolean;
   refreshData: () => Promise<void>;
-}
+};
