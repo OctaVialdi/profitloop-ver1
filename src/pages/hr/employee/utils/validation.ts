@@ -9,8 +9,8 @@ export const validateEmployeeData = (
 
   // Personal section validations
   if (section === "personal" || section === "all") {
-    if (!formValues.firstName && !formValues.lastName) {
-      errors.push("Employee name is required");
+    if (!formValues.firstName) {
+      errors.push("First name is required");
     }
     
     if (!formValues.email) {
@@ -19,15 +19,15 @@ export const validateEmployeeData = (
       errors.push("Please enter a valid email address");
     }
     
-    if (section === "all" && !formValues.gender) {
+    if (!formValues.gender) {
       errors.push("Gender is required");
     }
     
-    if (section === "all" && !formValues.maritalStatus) {
+    if (!formValues.maritalStatus) {
       errors.push("Marital status is required");
     }
     
-    if (section === "all" && !formValues.religion) {
+    if (!formValues.religion) {
       errors.push("Religion is required");
     }
   }

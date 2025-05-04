@@ -12,6 +12,8 @@ interface StepNavigationProps {
   handleSubmit?: () => Promise<string | null>;
   isSubmitting?: boolean;
   validationErrors?: string[];
+  handleCancel?: () => void; // Added for single-page form
+  handleSaveEmployee?: () => void; // Added for single-page form
 }
 
 export const StepNavigation: React.FC<StepNavigationProps> = ({
@@ -21,6 +23,8 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
   handleSubmit,
   isSubmitting = false,
   validationErrors = [],
+  handleCancel,
+  handleSaveEmployee
 }) => {
   const onSubmitClick = async () => {
     if (!handleSubmit) return;
@@ -42,6 +46,23 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
     }
   };
 
+  // For simplified one-page form
+  if (handleSaveEmployee) {
+    return (
+      <div className="flex justify-end gap-2 mt-8">
+        {handleCancel && (
+          <Button variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+        )}
+        <Button onClick={handleSaveEmployee} disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save Employee"}
+        </Button>
+      </div>
+    );
+  }
+
+  // For multi-step form (original)
   return (
     <div className="flex justify-end gap-2 mt-8">
       {currentStep > FormStep.PERSONAL_DATA && (

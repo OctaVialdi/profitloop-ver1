@@ -2,28 +2,22 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { FormStep } from "./employee/FormSteps";
-import { ProgressSteps } from "./employee/ProgressSteps";
-import { StepNavigation } from "./employee/StepNavigation";
-import { PersonalDataStep } from "./employee/steps/PersonalDataStep";
-import { EmploymentDataStep } from "./employee/steps/EmploymentDataStep";
-import { PayrollStep } from "./employee/steps/PayrollStep";
-import { InviteStep } from "./employee/steps/InviteStep";
-import { NewStatusDialog } from "./employee/dialogs/NewStatusDialog";
-import { NewOrganizationDialog } from "./employee/dialogs/NewOrganizationDialog";
-import { NewPositionDialog } from "./employee/dialogs/NewPositionDialog";
-import { NewLevelDialog } from "./employee/dialogs/NewLevelDialog";
-import { FormValues, SBUItem } from "./employee/types";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, ChevronDown } from "lucide-react";
+import { FormValues } from "./employee/types";
 import { employeeService } from "@/services/employeeService";
 import { toast } from "sonner";
 import { validateEmployeeData } from "./employee/utils/validation";
+import { SimplePersonalSection } from "./employee/components/simple/SimplePersonalSection";
+import { SimpleEmploymentSection } from "./employee/components/simple/SimpleEmploymentSection";
 
 export default function AddEmployee() {
   const navigate = useNavigate();
   
-  // Step state
-  const [currentStep, setCurrentStep] = useState<FormStep>(FormStep.PERSONAL_DATA);
+  // State
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
   // Date states
@@ -32,58 +26,27 @@ export default function AddEmployee() {
   const [joinDate, setJoinDate] = useState<Date | undefined>(new Date());
   const [signDate, setSignDate] = useState<Date | undefined>(new Date());
   
-  // Personal data states
-  const [useResidentialAddress, setUseResidentialAddress] = useState(false);
-  
-  // SBU management state
-  const [sbuList, setSBUList] = useState<SBUItem[]>([]);
-  
-  // Dialog states
-  const [newStatusDialogOpen, setNewStatusDialogOpen] = useState(false);
-  const [newOrgDialogOpen, setNewOrgDialogOpen] = useState(false);
-  const [newPositionDialogOpen, setNewPositionDialogOpen] = useState(false);
-  const [newLevelDialogOpen, setNewLevelDialogOpen] = useState(false);
-  
   // Form values state
   const [formValues, setFormValues] = useState<FormValues>({
+    firstName: "",
+    lastName: "",
+    email: "",
     employeeId: "",
-    barcode: "",
-    groupStructure: "",
+    gender: "male", // Set default value
+    maritalStatus: "single", // Set default value
+    religion: "islam", // Set default value
     employmentStatus: "Permanent",
     branch: "Pusat",
     organization: "",
     jobPosition: "",
     jobLevel: "",
-    grade: "",
-    class: "",
-    schedule: "",
-    approvalLine: "",
-    manager: "",
-    statusName: "",
-    statusHasEndDate: false,
-    orgCode: "",
-    orgName: "",
-    parentOrg: "",
-    positionCode: "",
-    positionName: "",
-    parentPosition: "",
-    levelCode: "",
-    levelName: "",
   });
 
-  // Event handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { id, value } = e.target;
     setFormValues({
       ...formValues,
-      [name]: value
-    });
-  };
-
-  const handleCheckboxChange = (checked: boolean, name: string) => {
-    setFormValues({
-      ...formValues,
-      [name]: checked
+      [id]: value
     });
   };
 
@@ -94,109 +57,36 @@ export default function AddEmployee() {
     });
   };
 
-  const validateCurrentStep = () => {
-    let errors: string[] = [];
-    
-    if (currentStep === FormStep.PERSONAL_DATA) {
-      errors = validateEmployeeData(formValues, "personal");
-    } else if (currentStep === FormStep.EMPLOYMENT_DATA) {
-      errors = validateEmployeeData(formValues, "employment");
-    } else if (currentStep === FormStep.INVITE) {
-      errors = validateEmployeeData(formValues, "all");
-    }
-    
+  const validateForm = (): boolean => {
+    const errors = validateEmployeeData(formValues, "all");
     setValidationErrors(errors);
-    return errors.length === 0;
-  };
-
-  const handleNextStep = () => {
-    // Validate current step before proceeding
-    if (!validateCurrentStep()) {
-      // Show the first error
-      if (validationErrors.length > 0) {
-        toast.error(validationErrors[0]);
-      }
-      return;
+    
+    if (errors.length > 0) {
+      toast.error(errors[0]);
+      return false;
     }
     
-    if (currentStep < FormStep.INVITE) {
-      setCurrentStep(currentStep + 1);
-    }
+    return true;
   };
 
-  const handlePreviousStep = () => {
-    if (currentStep > FormStep.PERSONAL_DATA) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  // SBU handlers
-  const handleAddSBU = () => {
-    setSBUList([...sbuList, { group: "", name: "" }]);
-  };
-
-  const handleRemoveSBU = (index: number) => {
-    const newList = [...sbuList];
-    newList.splice(index, 1);
-    setSBUList(newList);
-  };
-
-  const handleSaveSBU = (index: number, group: string, name: string) => {
-    const newList = [...sbuList];
-    newList[index] = { group, name };
-    setSBUList(newList);
-  };
-
-  // Dialog handlers
-  const handleCreateNewStatus = () => {
-    setNewStatusDialogOpen(false);
-  };
-
-  const handleCreateNewOrg = () => {
-    setNewOrgDialogOpen(false);
-  };
-  
-  const handleCreateNewPosition = () => {
-    setNewPositionDialogOpen(false);
-  };
-
-  const handleCreateNewPositionAndAddAnother = () => {
-    setFormValues({
-      ...formValues,
-      positionCode: "",
-      positionName: "",
-      parentPosition: ""
-    });
-  };
-  
-  const handleCreateNewLevel = () => {
-    setNewLevelDialogOpen(false);
-  };
-
-  // Handle submit employee data
-  const handleSubmitEmployee = async (withInvite: boolean = true): Promise<string | null> => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     try {
       setIsSubmitting(true);
-      console.log("Starting employee submission process...");
+      console.log("Submitting employee data...");
       
-      // Validate all required fields
-      const allErrors = validateEmployeeData(formValues, "all");
-      if (allErrors.length > 0) {
-        console.error("Validation errors:", allErrors);
-        toast.error(allErrors[0]);
-        setValidationErrors(allErrors);
-        return null;
-      }
-
       // Format the name from firstName and lastName
       const fullName = [formValues.firstName, formValues.lastName]
         .filter(Boolean)
         .join(" ");
         
       if (!fullName) {
-        console.error("Employee name is required");
         toast.error("Employee name is required");
-        return null;
+        setIsSubmitting(false);
+        return;
       }
 
       // Prepare employee data
@@ -225,9 +115,7 @@ export default function AddEmployee() {
         passport_expiry: passportExpiry ? passportExpiry.toISOString() : undefined,
         postal_code: formValues.postalCode,
         citizen_address: formValues.citizenAddress,
-        residential_address: useResidentialAddress && formValues.citizenAddress 
-          ? formValues.citizenAddress 
-          : formValues.residentialAddress
+        residential_address: formValues.residentialAddress
       };
 
       // Prepare employment data
@@ -240,19 +128,9 @@ export default function AddEmployee() {
         branch: formValues.branch,
         join_date: joinDate ? joinDate.toISOString() : undefined,
         sign_date: signDate ? signDate.toISOString() : undefined,
-        grade: formValues.grade,
-        class: formValues.class,
-        schedule: formValues.schedule,
-        approval_line: formValues.approvalLine,
-        manager_id: formValues.manager !== "No manager" ? formValues.manager : undefined,
       };
 
-      console.log("Creating employee with data:", { 
-        employeeData, 
-        personalDetails, 
-        identityAddress, 
-        employment 
-      });
+      console.log("Creating employee...");
       
       // Create employee with all details
       const result = await employeeService.createEmployee(
@@ -263,135 +141,119 @@ export default function AddEmployee() {
       );
       
       if (!result) {
-        console.error("Failed to create employee: No result returned");
         toast.error("Failed to create employee");
-        return null;
+        return;
       }
       
       console.log("Employee created successfully with ID:", result.id);
       toast.success("Employee created successfully");
       
-      // If not sending invite, navigate back to employee list
-      if (!withInvite) {
-        navigate(`/hr/data/employee/${result.id}`);
-      }
+      // Navigate back to employee list
+      navigate(`/hr/data`);
       
-      return result.id;
     } catch (error) {
       console.error("Error creating employee:", error);
       toast.error("Failed to create employee");
-      return null;
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-4xl mx-auto">
       <div className="flex items-center gap-2 text-sm text-blue-600">
-        <Link to="/hr/data" className="hover:underline">
-          Employee list
+        <Link to="/hr/data" className="flex items-center hover:underline">
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back to employee list
         </Link>
       </div>
       
-      <h1 className="text-2xl font-bold">Add employee</h1>
-      
-      {/* Progress Steps */}
-      <ProgressSteps currentStep={currentStep} />
+      <h1 className="text-2xl font-bold">Add Employee</h1>
       
       <Card className="p-6">
-        {/* Step content */}
-        {currentStep === FormStep.PERSONAL_DATA && (
-          <PersonalDataStep
-            formValues={formValues}
-            setFormValues={setFormValues}
-            birthdate={birthdate}
-            setBirthdate={setBirthdate}
-            passportExpiry={passportExpiry}
-            setPassportExpiry={setPassportExpiry}
-            useResidentialAddress={useResidentialAddress}
-            setUseResidentialAddress={setUseResidentialAddress}
-          />
-        )}
-        
-        {currentStep === FormStep.EMPLOYMENT_DATA && (
-          <EmploymentDataStep
-            formValues={formValues}
-            handleInputChange={handleInputChange}
-            handleSelectChange={handleSelectChange}
-            joinDate={joinDate}
-            setJoinDate={setJoinDate}
-            signDate={signDate}
-            setSignDate={setSignDate}
-            sbuList={sbuList}
-            setSBUList={setSBUList}
-            handleAddSBU={handleAddSBU}
-            handleRemoveSBU={handleRemoveSBU}
-            handleSaveSBU={handleSaveSBU}
-            setNewStatusDialogOpen={setNewStatusDialogOpen}
-            setNewOrgDialogOpen={setNewOrgDialogOpen}
-            setNewPositionDialogOpen={setNewPositionDialogOpen}
-            setNewLevelDialogOpen={setNewLevelDialogOpen}
-          />
-        )}
-        
-        {currentStep === FormStep.PAYROLL && <PayrollStep />}
-        
-        {currentStep === FormStep.INVITE && (
-          <InviteStep 
-            formValues={formValues} 
-            onSubmitEmployee={handleSubmitEmployee} 
-            submitting={isSubmitting}
-          />
-        )}
-        
-        {/* Navigation buttons */}
-        <StepNavigation
-          currentStep={currentStep}
-          handlePreviousStep={handlePreviousStep}
-          handleNextStep={handleNextStep}
-          handleSubmit={() => handleSubmitEmployee(true)}
-          isSubmitting={isSubmitting}
-          validationErrors={validationErrors}
-        />
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Personal Data Section */}
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Personal Data</h2>
+            <p className="text-sm text-gray-500 mb-4">Basic employee personal information</p>
+            
+            <SimplePersonalSection 
+              formValues={formValues}
+              setFormValues={setFormValues}
+              birthdate={birthdate}
+              setBirthdate={setBirthdate}
+              handleSelectChange={handleSelectChange}
+            />
+          </div>
+          
+          <div className="border-t pt-6">
+            <h2 className="text-lg font-semibold mb-1">Employment Data</h2>
+            <p className="text-sm text-gray-500 mb-4">Basic employment information</p>
+            
+            <SimpleEmploymentSection 
+              formValues={formValues}
+              handleInputChange={handleInputChange}
+              handleSelectChange={handleSelectChange}
+              joinDate={joinDate}
+              setJoinDate={setJoinDate}
+            />
+          </div>
+          
+          {/* Advanced Options */}
+          <Collapsible
+            open={advancedOpen}
+            onOpenChange={setAdvancedOpen}
+            className="border-t pt-4"
+          >
+            <CollapsibleTrigger asChild>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="flex w-full justify-between items-center"
+              >
+                <span className="text-left font-medium">Advanced Options</span>
+                <ChevronDown 
+                  className={`h-4 w-4 transition-transform ${advancedOpen ? "transform rotate-180" : ""}`} 
+                />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2 space-y-4">
+              <p className="text-sm text-gray-500">
+                Additional information can be added later in the employee details page.
+              </p>
+            </CollapsibleContent>
+          </Collapsible>
+          
+          {/* Validation errors */}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded p-3">
+              <p className="text-red-800 font-medium text-sm mb-1">Please correct the following errors:</p>
+              <ul className="text-red-700 text-sm list-disc pl-5">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {/* Form Actions */}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => navigate('/hr/data')}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save Employee"}
+            </Button>
+          </div>
+        </form>
       </Card>
-
-      {/* Dialogs */}
-      <NewStatusDialog
-        open={newStatusDialogOpen}
-        setOpen={setNewStatusDialogOpen}
-        formValues={formValues}
-        handleInputChange={handleInputChange}
-        handleCheckboxChange={handleCheckboxChange}
-        handleSubmit={handleCreateNewStatus}
-      />
-      
-      <NewOrganizationDialog
-        open={newOrgDialogOpen}
-        setOpen={setNewOrgDialogOpen}
-        formValues={formValues}
-        handleInputChange={handleInputChange}
-        handleSelectChange={handleSelectChange}
-        handleSubmit={handleCreateNewOrg}
-      />
-      
-      <NewPositionDialog
-        open={newPositionDialogOpen}
-        setOpen={setNewPositionDialogOpen}
-        formValues={formValues}
-        handleInputChange={handleInputChange}
-        handleSelectChange={handleSelectChange}
-        handleSubmit={handleCreateNewPosition}
-        handleSubmitAndAddAnother={handleCreateNewPositionAndAddAnother}
-      />
-      
-      <NewLevelDialog
-        open={newLevelDialogOpen}
-        setOpen={setNewLevelDialogOpen}
-        formValues={formValues}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleCreateNewLevel}
-      />
     </div>
   );
 }
