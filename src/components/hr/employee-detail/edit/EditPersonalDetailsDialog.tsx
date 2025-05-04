@@ -24,7 +24,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { LegacyEmployee, EmployeePersonalDetails } from "@/hooks/useEmployees";
-import { updateEmployeePersonalDetails, updateEmployee } from "@/services/employeeService";
+import { updateEmployeePersonalDetails } from "@/services/employeeService";
 
 interface EditPersonalDetailsDialogProps {
   open: boolean;
@@ -40,8 +40,6 @@ export const EditPersonalDetailsDialog = ({
   onSave
 }: EditPersonalDetailsDialogProps) => {
   const [formValues, setFormValues] = useState({
-    name: employee.name || "",
-    email: employee.email || "",
     mobilePhone: employee.mobilePhone || "",
     birthPlace: employee.birthPlace || "",
     gender: employee.gender || "",
@@ -69,14 +67,6 @@ export const EditPersonalDetailsDialog = ({
     setIsLoading(true);
     
     try {
-      // First update the base employee data (name and email)
-      await updateEmployee({
-        id: employee.id,
-        name: formValues.name,
-        email: formValues.email
-      });
-      
-      // Then update the personal details
       const updatedData: Partial<EmployeePersonalDetails> = {
         mobile_phone: formValues.mobilePhone,
         birth_place: formValues.birthPlace,
@@ -108,27 +98,6 @@ export const EditPersonalDetailsDialog = ({
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full name</Label>
-              <Input
-                id="name"
-                value={formValues.name}
-                onChange={handleInputChange}
-                placeholder="Enter full name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formValues.email}
-                onChange={handleInputChange}
-                placeholder="Enter email"
-              />
-            </div>
-            
             <div className="space-y-2">
               <Label htmlFor="mobilePhone">Mobile phone</Label>
               <Input

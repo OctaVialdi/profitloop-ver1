@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -10,8 +11,7 @@ export interface Employee {
   status?: string;
   employee_id?: string;
   profile_image?: string;
-  organization_id: string; 
-  user_id?: string; // Add user_id field to link employees with users
+  organization_id: string; // Adding organization_id field
 }
 
 export interface EmployeeBasic {
@@ -64,8 +64,7 @@ export interface EmployeeWithDetails extends EmployeeBasic {
   personalDetails?: EmployeePersonalDetails;
   identityAddress?: EmployeeIdentityAddress;
   employment?: EmployeeEmployment;
-  organization_id: string; 
-  user_id?: string; // Add user_id field to link employees with users
+  organization_id: string; // Adding organization_id field
 }
 
 // Additional types needed based on the errors
@@ -198,8 +197,7 @@ export const employeeService = {
         status: employeeData.status,
         employee_id: employeeData.employee_id,
         profile_image: employeeData.profile_image,
-        organization_id: employeeData.organization_id, 
-        user_id: employeeData.user_id, // Add user_id field to link employees with users
+        organization_id: employeeData.organization_id, // Include organization_id
         personalDetails: personalData || undefined,
         identityAddress: identityData || undefined,
         employment: employmentData || undefined
