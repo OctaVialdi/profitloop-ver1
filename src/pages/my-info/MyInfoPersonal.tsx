@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { updateEmployeePersonalDetails } from "@/services/employeeService";
+import type { EmployeePersonalDetails } from "@/services/employeeService";
 
 const MyInfoPersonal = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +62,7 @@ const MyInfoPersonal = () => {
           .eq("email", user.email)
           .single();
           
-        if (employeeError || !employeeData) {
+        if (employeeError) {
           console.error("Error fetching employee data:", employeeError);
           toast.error("Failed to fetch your information");
           return;
@@ -132,25 +134,19 @@ const MyInfoPersonal = () => {
     setIsSaving(true);
     
     try {
-      // Update employee data
-      const { error } = await supabase
-        .from("employees")
-        .update({
-          mobile_phone: formValues.mobilePhone,
-          birth_place: formValues.birthPlace,
-          birth_date: birthDate ? format(birthDate, 'yyyy-MM-dd') : null,
-          gender: formValues.gender,
-          marital_status: formValues.maritalStatus,
-          religion: formValues.religion,
-          blood_type: formValues.bloodType
-        })
-        .eq("id", employee.id);
-      
-      if (error) {
-        console.error("Failed to update personal details:", error);
-        toast.error("Failed to update personal details");
-        return;
-      }
+      // Prepare the update data in the format expected by the service
+      const updatedPersonalDetails: Partial<EmployeePersonalDetails> = {
+        mobile_phone: formValues.mobilePhone,
+        birth_place: formValues.birthPlace,
+        birth_date: birthDate ? format(birthDate, 'yyyy-MM-dd') : null,
+        gender: formValues.gender,
+        marital_status: formValues.maritalStatus,
+        religion: formValues.religion,
+        blood_type: formValues.bloodType
+      };
+
+      // Update employee data using the service function
+      await updateEmployeePersonalDetails(employee.id, updatedPersonalDetails);
       
       // Update the local employee state with new values
       setEmployee({
