@@ -57,30 +57,7 @@ export const ProtectedRoute = ({
           // If user has a profile, set hasProfile to true
           setHasProfile(!!profileData);
           
-          // If no profile, create one - preserve their role if in metadata
-          if (!profileData) {
-            const role = data.session.user.user_metadata?.role || 'employee';
-            
-            try {
-              const { error: insertError } = await supabase
-                .from('profiles')
-                .insert({
-                  id: data.session.user.id,
-                  email: data.session.user.email,
-                  full_name: data.session.user.user_metadata?.full_name || null,
-                  role: role // Use role from metadata or default
-                });
-                
-              if (insertError) {
-                console.error("Error creating profile:", insertError);
-              } else {
-                console.log("Profile created during protected route check with role:", role);
-                setHasProfile(true);
-              }
-            } catch (err) {
-              console.error("Failed to create profile:", err);
-            }
-          }
+          // We don't create a profile here anymore - profile should be created during login
         } else if (isMounted) {
           console.log("No active session found");
           setAuthenticated(false);
