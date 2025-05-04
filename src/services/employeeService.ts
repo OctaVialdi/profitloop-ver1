@@ -205,9 +205,12 @@ class EmployeeService {
         
       // Update employee record with profile image URL
       if (urlData) {
+        // IMPORTANT: This is where the error occurs. We need to make sure the update matches the table structure
         const { error: updateError } = await supabase
           .from('employees')
-          .update({ profile_image: urlData.publicUrl })
+          .update({ 
+            profile_image: urlData.publicUrl
+          })
           .eq('id', employeeId);
           
         if (updateError) throw updateError;
