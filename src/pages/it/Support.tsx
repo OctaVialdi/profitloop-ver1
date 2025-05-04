@@ -25,7 +25,7 @@ export interface Ticket {
     icon: string;
   };
   priority: "High" | "Medium" | "Low";
-  status: "In Progress" | "Resolved" | "Pending" | "Received" | "Open" | "Maintenance" | "Retired";
+  status: "In Progress" | "Resolved" | "Pending" | "Received" | "Open" | "Maintenance" | "Retired" | "Rejected";
   createdAt: string;
   response: {
     time: string;
@@ -61,7 +61,7 @@ export default function ITSupport() {
       status: "In Progress",
       createdAt: "Mar 15, 08:30 AM",
       response: { time: "25m", type: "medium" },
-      resolution: { time: null, type: "pending" },
+      resolution: { time: null, type: null },
       assignee: "John Doe"
     },
     {
@@ -87,7 +87,7 @@ export default function ITSupport() {
       status: "In Progress",
       createdAt: "Mar 16, 11:00 AM",
       response: { time: "15m", type: "fast" },
-      resolution: { time: null, type: "pending" },
+      resolution: { time: null, type: null },
       assignee: "John Doe"
     },
     {
@@ -113,7 +113,7 @@ export default function ITSupport() {
       status: "In Progress",
       createdAt: "Apr 20, 09:30 AM",
       response: { time: "15m", type: "fast" },
-      resolution: { time: null, type: "pending" },
+      resolution: { time: null, type: null },
       assignee: "Michael Brown"
     },
   ]);
@@ -149,6 +149,8 @@ export default function ITSupport() {
         return "bg-cyan-100 text-cyan-800 hover:bg-cyan-100";
       case "Retired":
         return "bg-gray-100 text-gray-500 hover:bg-gray-100";
+      case "Rejected":
+        return "bg-red-100 text-red-800 hover:bg-red-100";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -224,9 +226,9 @@ export default function ITSupport() {
     if (!selectedTicket) return;
     
     // Update ticket status
-    const updatedTicket = { 
+    const updatedTicket: Ticket = { 
       ...selectedTicket, 
-      status: "In Progress" as const,
+      status: "In Progress",
     };
     
     // Update tickets list
@@ -248,9 +250,9 @@ export default function ITSupport() {
     if (!selectedTicket) return;
     
     // Update ticket status
-    const updatedTicket = { 
+    const updatedTicket: Ticket = { 
       ...selectedTicket, 
-      status: "Rejected" as any, 
+      status: "Rejected", 
     };
     
     // Update tickets list
@@ -272,9 +274,9 @@ export default function ITSupport() {
     if (!selectedTicket) return;
     
     // Update ticket status
-    const updatedTicket = { 
+    const updatedTicket: Ticket = { 
       ...selectedTicket, 
-      status: "Retired" as const,
+      status: "Retired",
     };
     
     // Update tickets list
@@ -296,9 +298,9 @@ export default function ITSupport() {
     if (!selectedTicket) return;
     
     // Update ticket status and resolution
-    const updatedTicket = { 
+    const updatedTicket: Ticket = { 
       ...selectedTicket, 
-      status: "Resolved" as const,
+      status: "Resolved",
       resolution: { 
         time: "2h 30m", 
         type: "completed" 
@@ -315,7 +317,7 @@ export default function ITSupport() {
     toast({
       title: "Ticket Resolved",
       description: `Ticket ${selectedTicket.id} has been marked as resolved.`,
-      variant: "success",
+      variant: "default",
     });
   };
 
@@ -351,7 +353,7 @@ export default function ITSupport() {
       status: newTicket.status || "Received",
       createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }),
       response: { time: "0m", type: "fast" },
-      resolution: { time: null, type: "pending" },
+      resolution: { time: null, type: null },
       assignee: newTicket.assignee || "Unassigned",
     };
     
@@ -365,7 +367,7 @@ export default function ITSupport() {
     toast({
       title: "Ticket Created",
       description: `Ticket ${ticketId} has been created.`,
-      variant: "success",
+      variant: "default",
     });
   };
 
@@ -378,7 +380,7 @@ export default function ITSupport() {
     toast({
       title: "Files Uploaded",
       description: `${files.length} file(s) have been uploaded${uploadingForTicket ? ` for ticket ${uploadingForTicket}` : ''}.`,
-      variant: "success",
+      variant: "default",
     });
     
     // Close dialog
