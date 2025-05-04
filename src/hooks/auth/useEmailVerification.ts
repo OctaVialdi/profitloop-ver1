@@ -37,7 +37,13 @@ export function useEmailVerification() {
       });
     } catch (error: any) {
       console.error("Resend verification error:", error);
-      toast.error(error.message || "Gagal mengirim ulang email verifikasi.");
+      
+      // Handle rate limiting errors specifically
+      if (error.message && error.message.includes("rate limit")) {
+        toast.error("Terlalu banyak permintaan. Harap tunggu beberapa saat sebelum mengirim ulang.");
+      } else {
+        toast.error(error.message || "Gagal mengirim ulang email verifikasi.");
+      }
     } finally {
       setResendingVerification(false);
     }

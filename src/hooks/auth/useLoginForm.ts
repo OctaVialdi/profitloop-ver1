@@ -69,7 +69,11 @@ export function useLoginForm() {
       const { data, error } = await signInWithEmailPassword(credentials);
 
       if (error) {
-        if (error.message.includes("Email not confirmed")) {
+        // Check specifically for email verification errors
+        if (error.message && 
+            (error.message.includes("Email not confirmed") || 
+             error.message.includes("not confirmed") || 
+             error.message.toLowerCase().includes("email") && error.message.toLowerCase().includes("confirm"))) {
           setIsEmailUnverified(true);
           throw new Error("Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.");
         }
@@ -77,6 +81,13 @@ export function useLoginForm() {
       }
       
       if (data?.user) {
+        // Check email verification status directly before proceeding
+        if (!data.user.email_confirmed_at) {
+          setIsEmailUnverified(true);
+          setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda atau kirim ulang email verifikasi.");
+          return;
+        }
+        
         toast.success("Login berhasil!");
         
         // Handle magic link token if present
@@ -103,10 +114,15 @@ export function useLoginForm() {
           
         // Follow the authentication flow according to the flowchart
         if (!profileData?.email_verified) {
-          // Email not verified, show verification required message
-          setIsEmailUnverified(true);
-          setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda atau kirim ulang email verifikasi.");
-          return;
+          // Email not verified in our database, update the flag
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ email_verified: true })
+            .eq('id', data.user.id);
+          
+          if (updateError) {
+            console.error("Error updating email verification status:", updateError);
+          }
         }
           
         // Check if user has organization and follow the flow chart
@@ -124,7 +140,9 @@ export function useLoginForm() {
     } catch (error: any) {
       console.error("Login error:", error);
       
-      if (error.message.includes("Email not confirmed") || error.message.includes("Email belum dikonfirmasi")) {
+      if (error.message.includes("Email not confirmed") || 
+          error.message.includes("Email belum dikonfirmasi") ||
+          error.message.toLowerCase().includes("email") && error.message.toLowerCase().includes("konfirmasi")) {
         setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda atau kirim ulang email verifikasi.");
         setIsEmailUnverified(true);
       }

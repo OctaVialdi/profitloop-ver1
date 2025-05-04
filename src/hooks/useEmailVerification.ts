@@ -39,30 +39,24 @@ export function useEmailVerification({
       });
     }, 1000);
 
-    // Check verification status every 10 seconds if we have both email and password
+    // Check verification status every 10 seconds ONLY if we have both email and password
     let verificationChecker: NodeJS.Timeout | null = null;
     if (email && password) {
       verificationChecker = setInterval(async () => {
         try {
           setCheckingVerification(true);
           
-          // Instead of signing in, just check if the email is verified
-          const { data, error } = await supabase.auth.signInWithOtp({
-            email,
-            options: {
-              shouldCreateUser: false // Just check, don't create
-            }
-          });
+          // Instead of using signInWithOtp, use a more reliable method to check email verification
+          // This avoids creating false verification states
+          const { data: { user } } = await supabase.auth.getUser();
           
-          if (error && error.message.includes("Email not confirmed")) {
-            // Email still not verified
-            console.log("Verification check: email not yet verified");
-          } else {
-            // Email is verified, always redirect to login page first
+          // Only consider verified if we have a confirmed user with matching email
+          if (user && user.email === email && user.email_confirmed_at) {
+            // Email is verified
             clearInterval(verificationChecker!);
             toast.success("Email berhasil diverifikasi! Silakan login untuk melanjutkan.");
             
-            // Always redirect to login after verification
+            // Navigate to login with verified flag explicitly set
             navigate("/auth/login?verified=true", { 
               state: { 
                 email, 
@@ -70,9 +64,10 @@ export function useEmailVerification({
                 ...(invitationToken && { invitationToken })
               } 
             });
+          } else {
+            console.log("Verification check: email not yet verified");
           }
         } catch (err) {
-          // Ignore errors, just keep checking
           console.log("Verification check error:", err);
         } finally {
           setCheckingVerification(false);

@@ -8,6 +8,8 @@ import { useLoginForm } from "@/hooks/auth/useLoginForm";
 import LoginForm from "@/components/auth/LoginForm";
 
 const Login = () => {
+  // Only set justVerified to true if the URL parameter explicitly says so
+  // and we're coming from a verification flow
   const [justVerified, setJustVerified] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,7 +43,8 @@ const Login = () => {
     }
   }, [invitationEmail, verifiedEmail, setEmail]);
 
-  // Check URL parameters for verification status
+  // Check URL parameters for verification status - 
+  // ONLY trust the verified=true param if it's explicitly set
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const verified = params.get('verified') === 'true';
@@ -77,6 +80,7 @@ const Login = () => {
             )}
           </CardDescription>
           
+          {/* Only show this verified message when explicitly set by a proper verification */}
           {justVerified && (
             <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md flex items-start">
               <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-2" />
