@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { updateUserOrgMetadata } from "@/integrations/supabase/auth/userMetadata";
-import { getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
+import { getOrganization, getSubscriptionPlan } from "@/services/organizationService";
 import { getUserProfile } from "@/services/profileService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
 import { formatTimestampToUserTimezone } from "@/utils/dateUtils";
@@ -151,18 +151,10 @@ export async function fetchOrganizationData(
       subscriptionPlan = await getSubscriptionPlan(organization.subscription_plan_id);
     }
     
-    // Calculate derived state
+    // Calculate derived state - we'll always set trial status to inactive
     const { isTrialActive, daysLeftInTrial } = calculateTrialStatus(organization);
     const hasPaidSubscription = calculateSubscriptionStatus(organization, subscriptionPlan);
     const { isSuperAdmin, isAdmin, isEmployee } = calculateUserRoles(profile);
-    
-    // Check if trial has expired but not marked as expired
-    if (organization.trial_end_date && 
-        new Date(organization.trial_end_date) < new Date() && 
-        !organization.trial_expired) {
-      // Trigger the edge function to check trial expiration
-      checkTrialExpiration();
-    }
     
     setOrganizationData({
       organization,

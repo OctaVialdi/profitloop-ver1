@@ -50,11 +50,3 @@ export async function getSubscriptionPlan(planId: string): Promise<SubscriptionP
     return null;
   }
 }
-
-export async function checkTrialExpiration(): Promise<void> {
-  try {
-    await supabase.functions.invoke('check-trial-expiration');
-  } catch (err) {
-    console.error("Failed to invoke check-trial-expiration:", err);
-  }
-}

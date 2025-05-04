@@ -10,18 +10,17 @@ interface TrialProtectionProps {
 const TrialProtection = ({ children }: TrialProtectionProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [checkedOnce, setCheckedOnce] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Paths that should always be accessible, even with expired trial
+  // Paths that should always be accessible
   const allowedPaths = [
     "/auth",
     "/subscription",
     "/profile",
   ];
   
-  // Paths that need authentication but are not under trial protection
+  // Paths that need authentication but are not under protection
   const authPaths = [
     "/organizations",
     "/employee-welcome"
@@ -36,14 +35,9 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
   };
   
   useEffect(() => {
-    // Avoid duplicate checks
-    if (checkedOnce && (isPathAllowed() || isAuthPath())) {
-      return;
-    }
-    
     let isMounted = true;
     
-    const checkTrialStatus = async () => {
+    const checkAuthStatus = async () => {
       // Skip check on auth paths
       if (location.pathname.startsWith('/auth/')) {
         if (isMounted) {
@@ -72,22 +66,7 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
       
       if (isMounted) {
         setIsAuthenticated(true);
-      }
-      
-      // If on auth path but authenticated, handle separately (e.g., onboarding)
-      if (isAuthPath()) {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-        return;
-      }
-      
-      // Skip on other allowed paths
-      if (isPathAllowed()) {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-        return;
+        setIsLoading(false);
       }
       
       // Get current user organization
@@ -97,54 +76,17 @@ const TrialProtection = ({ children }: TrialProtectionProps) => {
         .eq('id', session.user.id)
         .maybeSingle();
         
-      if (!profileData?.organization_id) {
+      if (!profileData?.organization_id && !isPathAllowed() && !isAuthPath()) {
         // No organization, redirect to organizations
         console.log("User has no organization, redirecting to organizations");
         if (isMounted) {
-          setIsLoading(false);
           navigate("/organizations", { replace: true });
         }
         return;
       }
-      
-      // Check organization trial status
-      const { data: orgData } = await supabase
-        .from('organizations')
-        .select('trial_expired, subscription_plan_id, trial_end_date')
-        .eq('id', profileData.organization_id)
-        .single();
-      
-      // Check if trial has expired based on date comparison
-      const trialEndDate = orgData?.trial_end_date ? new Date(orgData.trial_end_date) : null;
-      const now = new Date();
-      const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
-      
-      console.log("Trial status check:", {
-        trialEndDate,
-        currentDate: now,
-        isTrialExpiredByDate,
-        flagValue: orgData?.trial_expired
-      });
-      
-      // Instead of redirecting for expired trials, we'll let the TrialBanner component
-      // handle showing the modal, so we just need to set the expired flag in the database
-      if (isTrialExpiredByDate && !orgData?.trial_expired) {
-        console.log("Updating trial_expired flag in database");
-        if (isMounted) {
-          await supabase
-            .from('organizations')
-            .update({ trial_expired: true })
-            .eq('id', profileData.organization_id);
-        }
-      }
-      
-      if (isMounted) {
-        setIsLoading(false);
-        setCheckedOnce(true);
-      }
     };
     
-    checkTrialStatus();
+    checkAuthStatus();
     
     return () => {
       isMounted = false;

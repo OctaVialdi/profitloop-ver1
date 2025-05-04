@@ -2,53 +2,12 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Calendar, Home, UserPlus, Building, Shield, CreditCard, Timer } from "lucide-react";
+import { User, Settings, Home, UserPlus, Building, Shield, CreditCard } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 
 const WelcomePage = () => {
-  const { organization, isLoading, daysLeftInTrial, isTrialActive, hasPaidSubscription, subscriptionPlan } = useOrganization();
-  const [countdownString, setCountdownString] = useState<string>('');
-  const navigate = useNavigate();
-  
-  // Calculate the countdown string when the organization data is loaded
-  useEffect(() => {
-    if (isLoading || !organization?.trial_end_date) return;
-    
-    const updateCountdown = () => {
-      const trialEndDate = new Date(organization.trial_end_date!);
-      const now = new Date();
-      const diffTime = trialEndDate.getTime() - now.getTime();
-      
-      if (diffTime <= 0) {
-        setCountdownString('0 hari 00:00:00');
-        return;
-      }
-      
-      // Calculate days, hours, minutes, seconds
-      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
-      
-      // Format as "X hari HH:MM:SS"
-      const formattedTime = `${days} hari ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      setCountdownString(formattedTime);
-    };
-    
-    // Initial update
-    updateCountdown();
-    
-    // Set up interval for updating the countdown
-    const interval = setInterval(updateCountdown, 1000);
-    
-    // Clean up on unmount
-    return () => clearInterval(interval);
-  }, [isLoading, organization?.trial_end_date]);
+  const { organization, isLoading, hasPaidSubscription, subscriptionPlan } = useOrganization();
   
   const features = [
     {
@@ -64,11 +23,11 @@ const WelcomePage = () => {
       path: "/collaborations",
     },
     {
-      name: hasPaidSubscription ? "Paket Premium Aktif" : "Masa Trial",
+      name: "Paket Berlangganan",
       description: hasPaidSubscription 
         ? `Paket ${subscriptionPlan?.name} aktif`
-        : `Akses semua fitur premium selama ${countdownString || `${daysLeftInTrial} hari`}`,
-      icon: hasPaidSubscription ? CreditCard : Timer,
+        : "Pilih paket berlangganan yang sesuai",
+      icon: CreditCard,
       path: "/subscription",
     },
     {
@@ -118,30 +77,13 @@ const WelcomePage = () => {
           </CardDescription>
         </CardHeader>
         
-        {isTrialActive && !hasPaidSubscription && (
-          <div className="px-6 pb-2">
-            <Alert className="bg-blue-50 border-blue-200">
-              <Timer className="h-4 w-4 text-blue-600" />
-              <AlertTitle>Masa Trial Aktif</AlertTitle>
-              <AlertDescription>
-                <div className="mt-2 space-y-2">
-                  <Progress value={(daysLeftInTrial / 30) * 100} className="h-2" />
-                  <p className="text-sm text-blue-700">
-                    Anda memiliki <span className="font-medium">{countdownString || `${daysLeftInTrial} hari`}</span> lagi untuk menikmati semua fitur premium.
-                  </p>
-                </div>
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
-        
         <CardContent>
           <div className="grid md:grid-cols-2 gap-6 mt-4">
             {features.map((feature) => (
               <div 
                 key={feature.name} 
                 className="flex items-start space-x-4 p-4 border rounded-lg bg-white hover:shadow-md transition-all cursor-pointer"
-                onClick={() => navigate(feature.path)}
+                onClick={() => window.location.href = feature.path}
               >
                 <div className="bg-blue-100 p-2 rounded-full">
                   <feature.icon className="h-6 w-6 text-blue-600" />
@@ -178,7 +120,7 @@ const WelcomePage = () => {
           <p className="text-center text-sm text-gray-500 mt-4">
             {hasPaidSubscription 
               ? `Anda menggunakan paket ${subscriptionPlan?.name || "Premium"}. Nikmati semua fitur tanpa batasan.`
-              : `Anda memiliki masa trial ${countdownString || `${daysLeftInTrial} hari`} lagi. Berlangganan untuk menikmati semua fitur premium.`}
+              : "Berlangganan untuk menikmati semua fitur premium."}
           </p>
         </CardFooter>
       </Card>

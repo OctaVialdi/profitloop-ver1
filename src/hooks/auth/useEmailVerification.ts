@@ -3,7 +3,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
-import { User } from "@supabase/supabase-js";
 
 export function useEmailVerification() {
   const [isEmailUnverified, setIsEmailUnverified] = useState(false);

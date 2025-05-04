@@ -1,9 +1,6 @@
 
 import { ReactNode, memo } from "react";
-import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { useOrganization } from "@/hooks/useOrganization";
 import { NotificationSystem } from "@/components/NotificationSystem";
 import { useAppTheme } from "@/components/ThemeProvider";
