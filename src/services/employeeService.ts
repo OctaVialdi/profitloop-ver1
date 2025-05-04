@@ -315,16 +315,22 @@ class EmployeeService {
     }
   }
 
-  async createEmployee(employee: Partial<Employee>): Promise<EmployeeWithDetails | null> {
+  async createEmployee(
+    employeeData: Partial<Employee>, 
+    personalDetails?: any, 
+    identityAddress?: any, 
+    employment?: any
+  ): Promise<EmployeeWithDetails | null> {
     try {
       // Ensure required fields are present
-      if (!employee.name || !employee.email || !employee.employee_id || !employee.organization_id) {
+      if (!employeeData.name || !employeeData.email || !employeeData.employee_id || !employeeData.organization_id) {
         throw new Error("Name, email, employee_id, and organization_id are required");
       }
 
+      // Insert employee data
       const { data, error } = await supabase
         .from('employees')
-        .insert([employee])
+        .insert(employeeData)
         .select()
         .single();
 
@@ -335,6 +341,22 @@ class EmployeeService {
       if (!data) {
         console.error("Failed to create employee");
         return null;
+      }
+
+      // If additional details are provided, save them
+      if (personalDetails && data.id) {
+        personalDetails.employee_id = data.id;
+        await this.savePersonalDetails(personalDetails);
+      }
+
+      if (identityAddress && data.id) {
+        identityAddress.employee_id = data.id;
+        await this.saveIdentityAddress(identityAddress);
+      }
+
+      if (employment && data.id) {
+        employment.employee_id = data.id;
+        await this.saveEmploymentDetails(employment);
       }
 
       return data as EmployeeWithDetails;
@@ -408,7 +430,12 @@ class EmployeeService {
         throw error;
       }
 
-      const imageUrl = `${supabase.storageUrl}/avatars/${filePath}`;
+      // Get public URL instead of using protected storageUrl property
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+      
+      const imageUrl = publicUrlData.publicUrl;
       
       // Update the employee record with the profile_image URL
       await this.updateEmployee(employeeId, { profile_image: imageUrl });
@@ -421,7 +448,75 @@ class EmployeeService {
     }
   }
 
-  async updatePersonalDetails(employeeId: string, details: any): Promise<any> {
+  // Add the missing family member methods
+  async fetchFamilyMembers(employeeId: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('employee_family')
+        .select('*')
+        .eq('employee_id', employeeId);
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    } catch (error: any) {
+      console.error("Error fetching family members:", error);
+      handleError(error, "Failed to fetch family members");
+      return [];
+    }
+  }
+
+  async saveFamilyMember(familyMember: any): Promise<any> {
+    try {
+      // If id exists, it's an update; otherwise, it's an insert
+      const { id, ...familyData } = familyMember;
+      
+      const { data, error } = await supabase
+        .from('employee_family')
+        .upsert({ 
+          ...(id ? { id } : {}), 
+          ...familyData 
+        }, {
+          onConflict: 'id', 
+          ignoreDuplicates: false
+        })
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      return data?.[0] || null;
+    } catch (error: any) {
+      console.error("Error saving family member:", error);
+      handleError(error, "Failed to save family member");
+      return null;
+    }
+  }
+
+  async deleteFamilyMember(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('employee_family')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting family member:", error);
+      handleError(error, "Failed to delete family member");
+      return false;
+    }
+  }
+
+  // Renamed methods to match function calls in PersonalSection and other components
+  async updateEmployeePersonalDetails(employeeId: string, details: any): Promise<any> {
     try {
       const personalDetails = {
         employee_id: employeeId,
@@ -435,7 +530,7 @@ class EmployeeService {
     }
   }
 
-  async updateEmploymentDetails(employeeId: string, details: any): Promise<any> {
+  async updateEmployeeEmployment(employeeId: string, details: any): Promise<any> {
     try {
       const employmentDetails = {
         employee_id: employeeId,
@@ -449,7 +544,7 @@ class EmployeeService {
     }
   }
 
-  async updateIdentityAddress(employeeId: string, details: any): Promise<any> {
+  async updateEmployeeIdentityAddress(employeeId: string, details: any): Promise<any> {
     try {
       console.log("Updating identity address for employee:", employeeId, details);
       const identityAddress = {
@@ -611,6 +706,7 @@ class EmployeeService {
   // Error handling method
   handleError(error: any, message: string): void {
     console.error(`${message}:`, error);
+    handleError(error, message);
   }
 
   // Additional methods would follow...

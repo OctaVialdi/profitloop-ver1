@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -127,6 +128,7 @@ export default function AddEmployee() {
         name: fullName,
         email: formValues.email,
         employee_id: formValues.employeeId,
+        organization_id: "00000000-0000-0000-0000-000000000000", // This should be set to the actual organization ID
         status: "Active"
       };
 
@@ -134,7 +136,7 @@ export default function AddEmployee() {
       const personalDetails = {
         mobile_phone: formValues.mobilePhone,
         birth_place: formValues.birthPlace,
-        birth_date: birthdate ? birthdate.toISOString() : undefined,
+        birth_date: birthdate ? birthdate.toISOString().split('T')[0] : undefined,
         gender: formValues.gender,
         marital_status: formValues.maritalStatus,
         religion: formValues.religion,
@@ -145,7 +147,7 @@ export default function AddEmployee() {
       const identityAddress = {
         nik: formValues.nik,
         passport_number: formValues.passportNumber,
-        passport_expiry: passportExpiry ? passportExpiry.toISOString() : undefined,
+        passport_expiry: passportExpiry ? passportExpiry.toISOString().split('T')[0] : undefined,
         postal_code: formValues.postalCode,
         citizen_address: formValues.citizenAddress,
         residential_address: formValues.residentialAddress
@@ -159,8 +161,8 @@ export default function AddEmployee() {
         job_level: formValues.jobLevel,
         employment_status: formValues.employmentStatus,
         branch: formValues.branch,
-        join_date: joinDate ? joinDate.toISOString() : undefined,
-        sign_date: signDate ? signDate.toISOString() : undefined,
+        join_date: joinDate ? joinDate.toISOString().split('T')[0] : undefined,
+        sign_date: signDate ? signDate.toISOString().split('T')[0] : undefined,
       };
 
       console.log("Creating employee...");

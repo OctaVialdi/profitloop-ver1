@@ -219,7 +219,7 @@ export function useEmployees(): UseEmployeesResult {
   const updatePersonalDetails = async (employeeId: string, details: any) => {
     try {
       console.log("useEmployees: Updating personal details for employee:", employeeId, details);
-      const result = await employeeService.updatePersonalDetails(employeeId, details);
+      const result = await employeeService.updateEmployeePersonalDetails(employeeId, details);
       
       if (result) {
         // Refresh the employee data to get the updated details
@@ -239,7 +239,7 @@ export function useEmployees(): UseEmployeesResult {
   const updateEmploymentDetails = async (employeeId: string, details: any) => {
     try {
       console.log("Updating employment details for employee:", employeeId, details);
-      const result = await employeeService.updateEmploymentDetails(employeeId, details);
+      const result = await employeeService.updateEmployeeEmployment(employeeId, details);
       
       if (result) {
         // Refresh the employee data to get the updated details
@@ -259,7 +259,7 @@ export function useEmployees(): UseEmployeesResult {
   const updateIdentityAddress = async (employeeId: string, details: any) => {
     try {
       console.log("Updating identity address for employee:", employeeId, details);
-      const result = await employeeService.updateIdentityAddress(employeeId, details);
+      const result = await employeeService.updateEmployeeIdentityAddress(employeeId, details);
       
       if (result) {
         // Refresh the employee data to get the updated details
