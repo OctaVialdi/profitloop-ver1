@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -235,7 +234,15 @@ class EmployeeService {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_personal_details')
-          .update(formattedDetails)
+          .update({
+            mobile_phone: formattedDetails.mobile_phone,
+            birth_place: formattedDetails.birth_place,
+            birth_date: formattedDetails.birth_date,
+            gender: formattedDetails.gender,
+            marital_status: formattedDetails.marital_status,
+            religion: formattedDetails.religion,
+            blood_type: formattedDetails.blood_type
+          })
           .eq('id', existingDetails[0].id)
           .select('*')
           .single();
@@ -250,7 +257,16 @@ class EmployeeService {
         console.log("Inserting new personal details:", formattedDetails);
         const { data, error } = await supabase
           .from('employee_personal_details')
-          .insert(formattedDetails)
+          .insert({
+            employee_id: formattedDetails.employee_id,
+            mobile_phone: formattedDetails.mobile_phone,
+            birth_place: formattedDetails.birth_place,
+            birth_date: formattedDetails.birth_date,
+            gender: formattedDetails.gender,
+            marital_status: formattedDetails.marital_status,
+            religion: formattedDetails.religion,
+            blood_type: formattedDetails.blood_type
+          })
           .select('*')
           .single();
           
@@ -271,25 +287,6 @@ class EmployeeService {
   }
   
   // Identity & Address
-  async fetchIdentityAddress(employeeId: string): Promise<EmployeeIdentityAddress[]> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_identity_addresses')
-        .select('*')
-        .eq('employee_id', employeeId);
-        
-      if (error) {
-        console.error('Error fetching identity & address:', error);
-        throw error;
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error('Failed to fetch identity & address:', error);
-      return [];
-    }
-  }
-  
   async saveIdentityAddress(details: EmployeeIdentityAddress): Promise<EmployeeIdentityAddress | null> {
     try {
       // Format date fields
@@ -313,7 +310,14 @@ class EmployeeService {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_identity_addresses')
-          .update(formattedDetails)
+          .update({
+            nik: formattedDetails.nik,
+            passport_number: formattedDetails.passport_number,
+            passport_expiry: formattedDetails.passport_expiry,
+            postal_code: formattedDetails.postal_code,
+            citizen_address: formattedDetails.citizen_address,
+            residential_address: formattedDetails.residential_address
+          })
           .eq('id', existingDetails[0].id)
           .select('*')
           .single();
@@ -328,7 +332,15 @@ class EmployeeService {
         console.log("Inserting new identity address:", formattedDetails);
         const { data, error } = await supabase
           .from('employee_identity_addresses')
-          .insert(formattedDetails)
+          .insert({
+            employee_id: formattedDetails.employee_id,
+            nik: formattedDetails.nik,
+            passport_number: formattedDetails.passport_number,
+            passport_expiry: formattedDetails.passport_expiry,
+            postal_code: formattedDetails.postal_code,
+            citizen_address: formattedDetails.citizen_address,
+            residential_address: formattedDetails.residential_address
+          })
           .select('*')
           .single();
           
@@ -349,25 +361,6 @@ class EmployeeService {
   }
   
   // Employment
-  async fetchEmployment(employeeId: string): Promise<EmployeeEmployment[]> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_employment')
-        .select('*')
-        .eq('employee_id', employeeId);
-        
-      if (error) {
-        console.error('Error fetching employment:', error);
-        throw error;
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error('Failed to fetch employment:', error);
-      return [];
-    }
-  }
-  
   async saveEmployment(details: EmployeeEmployment): Promise<EmployeeEmployment | null> {
     try {
       // Format date fields
@@ -391,7 +384,21 @@ class EmployeeService {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_employment')
-          .update(formattedDetails)
+          .update({
+            barcode: formattedDetails.barcode,
+            organization: formattedDetails.organization,
+            job_position: formattedDetails.job_position,
+            job_level: formattedDetails.job_level,
+            employment_status: formattedDetails.employment_status,
+            branch: formattedDetails.branch,
+            join_date: formattedDetails.join_date,
+            sign_date: formattedDetails.sign_date,
+            grade: formattedDetails.grade,
+            class: formattedDetails.class,
+            schedule: formattedDetails.schedule,
+            approval_line: formattedDetails.approval_line,
+            manager_id: formattedDetails.manager_id
+          })
           .eq('id', existingDetails[0].id)
           .select('*')
           .single();
@@ -406,7 +413,22 @@ class EmployeeService {
         console.log("Inserting new employment details:", formattedDetails);
         const { data, error } = await supabase
           .from('employee_employment')
-          .insert(formattedDetails)
+          .insert({
+            employee_id: formattedDetails.employee_id,
+            barcode: formattedDetails.barcode,
+            organization: formattedDetails.organization,
+            job_position: formattedDetails.job_position,
+            job_level: formattedDetails.job_level,
+            employment_status: formattedDetails.employment_status,
+            branch: formattedDetails.branch,
+            join_date: formattedDetails.join_date,
+            sign_date: formattedDetails.sign_date,
+            grade: formattedDetails.grade,
+            class: formattedDetails.class,
+            schedule: formattedDetails.schedule,
+            approval_line: formattedDetails.approval_line,
+            manager_id: formattedDetails.manager_id
+          })
           .select('*')
           .single();
           
@@ -449,6 +471,23 @@ class EmployeeService {
         
       if (!profileResult?.organization_id) {
         throw new Error('User has no organization');
+      }
+      
+      // Check if employee with same employee_id exists
+      if (employeeData.employee_id) {
+        const { data: existingEmployee } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('organization_id', profileResult.organization_id)
+          .eq('employee_id', employeeData.employee_id)
+          .maybeSingle();
+        
+        if (existingEmployee) {
+          // Generate a unique employee_id with random suffix
+          const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+          employeeData.employee_id = `${employeeData.employee_id}-${randomSuffix}`;
+          console.log(`Employee ID already exists, using new ID: ${employeeData.employee_id}`);
+        }
       }
       
       // Generate employee ID if not provided
@@ -536,11 +575,10 @@ class EmployeeService {
       
     } catch (error) {
       console.error('Failed to create employee:', error);
-      toast.error('Failed to create employee: ' + (error instanceof Error ? error.message : 'Unknown error'));
-      return null;
+      throw new Error('Failed to create employee: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   }
-  
+
   // Update employee
   async updateEmployee(
     id: string,
@@ -1040,37 +1078,4 @@ export async function updateEmployeeIdentityAddress(employeeId: string, data: Pa
           nik: data.nik,
           passport_number: data.passport_number,
           passport_expiry: data.passport_expiry ? String(data.passport_expiry) : null,
-          postal_code: data.postal_code,
-          citizen_address: data.citizen_address,
-          residential_address: data.residential_address
-        })
-        .eq('employee_id', employeeId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return updated;
-    } else {
-      // Create new record
-      const { data: created, error } = await supabase
-        .from('employee_identity_addresses')
-        .insert({
-          employee_id: employeeId,
-          nik: data.nik,
-          passport_number: data.passport_number,
-          passport_expiry: data.passport_expiry ? String(data.passport_expiry) : null,
-          postal_code: data.postal_code,
-          citizen_address: data.citizen_address,
-          residential_address: data.residential_address
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return created;
-    }
-  } catch (error) {
-    console.error('Error updating employee identity address:', error);
-    throw error;
-  }
-}
+          postal_code: data.

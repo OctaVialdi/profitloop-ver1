@@ -14,7 +14,7 @@ export const EmployeeActions: React.FC<EmployeeActionsProps> = ({ employeeId, em
   const navigate = useNavigate();
   
   const handleViewInfo = () => {
-    navigate(`/my-info/personal?id=${employeeId}`);
+    navigate(`/hr/my-info/personal/${employeeId}`);
   };
   
   const handleResign = () => {
@@ -41,7 +41,7 @@ export const EmployeeActions: React.FC<EmployeeActionsProps> = ({ employeeId, em
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={handleDelete}
-          className="text-gray-400"
+          className="text-red-500 hover:text-red-600"
         >
           Delete
         </DropdownMenuItem>

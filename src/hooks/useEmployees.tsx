@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { employeeService, Employee, EmployeeWithDetails, EmployeePersonalDetails, EmployeeIdentityAddress, EmployeeEmployment, EmployeeFamily } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -69,7 +68,7 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     barcode: employee.employment?.barcode || "",
     birthDate: employee.personalDetails?.birth_date || "",
     birthPlace: employee.personalDetails?.birth_place || "",
-    address: employee.identityAddress?.residential_address || "", // Fixed to use residential_address
+    address: employee.identityAddress?.residential_address || "", 
     mobilePhone: employee.personalDetails?.mobile_phone || "",
     religion: employee.personalDetails?.religion || "",
     gender: employee.personalDetails?.gender || "",
@@ -126,6 +125,23 @@ export function useEmployees(): UseEmployeesResult {
   useEffect(() => {
     fetchEmployees();
   }, []);
+
+  // Helper to generate a unique employee ID
+  const generateUniqueEmployeeId = async (baseId: string): Promise<string> => {
+    // Check if employee_id exists
+    const { data } = await supabase
+      .from('employees')
+      .select('employee_id')
+      .eq('employee_id', baseId);
+      
+    if (!data || data.length === 0) {
+      return baseId; // If not exists, use the original
+    }
+    
+    // If exists, append a random number
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    return `${baseId}-${randomSuffix}`;
+  };
 
   // Function to create and add dummy employees to the database
   const addDummyEmployees = async () => {
@@ -379,42 +395,61 @@ export function useEmployees(): UseEmployeesResult {
     ];
 
     try {
+      const existingEmployees = await employeeService.fetchEmployees();
+      
+      // Create a map of existing employee_ids for quick lookup
+      const existingEmployeeIds = new Map();
+      existingEmployees.forEach(emp => {
+        if (emp.employee_id) {
+          existingEmployeeIds.set(emp.employee_id, true);
+        }
+      });
+      
+      // Process each dummy employee, modifying IDs to avoid conflicts
       for (const dummyEmployee of dummyEmployees) {
-        // First create the employee
+        // Skip if employee with this ID already exists
+        if (existingEmployeeIds.has(dummyEmployee.employee_id)) {
+          console.log(`Employee with ID ${dummyEmployee.employee_id} already exists, skipping`);
+          continue;
+        }
+        
         const { personalDetails, identityAddress, employment, familyMembers, ...employeeData } = dummyEmployee;
         
         console.log("Adding dummy employee:", employeeData.name);
         
-        const newEmployee = await employeeService.createEmployee(
-          employeeData,
-          personalDetails,
-          identityAddress,
-          employment
-        );
-        
-        if (newEmployee) {
-          // Add family members if any
-          if (familyMembers && familyMembers.length > 0) {
-            for (const familyMember of familyMembers) {
-              await employeeService.saveFamilyMember({
-                ...familyMember,
-                employee_id: newEmployee.id
-              });
+        try {
+          const newEmployee = await employeeService.createEmployee(
+            employeeData,
+            personalDetails,
+            identityAddress,
+            employment
+          );
+          
+          if (newEmployee) {
+            console.log(`Added base data for employee: ${employeeData.name} with ID: ${newEmployee.id}`);
+            
+            // Add family members if any
+            if (familyMembers && familyMembers.length > 0) {
+              for (const familyMember of familyMembers) {
+                await employeeService.saveFamilyMember({
+                  ...familyMember,
+                  employee_id: newEmployee.id
+                });
+              }
+              console.log(`Added ${familyMembers.length} family members for ${employeeData.name}`);
             }
           }
-          
-          console.log(`Added dummy employee: ${employeeData.name} with ID: ${newEmployee.id}`);
+        } catch (error) {
+          console.error(`Error adding dummy employee ${employeeData.name}:`, error);
         }
       }
       
-      toast.success("Dummy employees created successfully");
-      
-      // Refresh the employees list
+      // Refresh the employees list to show the new data
       await fetchEmployees();
       
     } catch (error) {
       console.error("Error adding dummy employees:", error);
-      toast.error("Failed to add dummy employees: " + (error instanceof Error ? error.message : "Unknown error"));
+      throw new Error("Failed to add dummy employees: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsLoading(false);
     }

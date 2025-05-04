@@ -1,14 +1,18 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { EmployeeList } from "@/components/hr/EmployeeList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { convertToLegacyFormat, LegacyEmployee, useEmployees } from "@/hooks/useEmployees";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function HRDataKaryawan() {
   const { employees, isLoading, addDummyEmployees } = useEmployees();
+  const [isDummyLoading, setIsDummyLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Convert to the format expected by EmployeeList component
   const convertToExpectedFormat = (data: any[]): LegacyEmployee[] => {
@@ -16,7 +20,18 @@ export default function HRDataKaryawan() {
   };
 
   const handleAddDummyEmployees = async () => {
-    await addDummyEmployees();
+    setError(null);
+    setIsDummyLoading(true);
+    try {
+      await addDummyEmployees();
+      toast.success("Dummy employees added successfully");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to add dummy employees";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsDummyLoading(false);
+    }
   };
 
   // Add dummy employees automatically if none exist
@@ -28,9 +43,26 @@ export default function HRDataKaryawan() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={handleAddDummyEmployees} variant="outline">
-          Add Dummy Employees
+      <div className="flex justify-between items-center">
+        <div>
+          {error && (
+            <Alert variant="destructive" className="max-w-md">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+        <Button 
+          onClick={handleAddDummyEmployees} 
+          variant="outline" 
+          disabled={isDummyLoading}
+        >
+          {isDummyLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Adding Dummy Employees...
+            </>
+          ) : "Add Dummy Employees"}
         </Button>
       </div>
 
