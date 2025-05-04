@@ -78,8 +78,7 @@ export function useOrganizationSetup() {
       if (orgResult) {
         toast.success("Organisasi berhasil dibuat!");
         
-        // Fix: TypeScript error - properly handle the returned object 
-        // by checking its type and safely accessing the 'id' property
+        // Fix: Properly handle the returned object by safely accessing the 'id' property
         let organizationId: string | undefined;
         
         if (typeof orgResult === 'object' && orgResult !== null && 'id' in orgResult) {

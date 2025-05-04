@@ -30,26 +30,41 @@ serve(async (req) => {
       )
     }
 
-    // Check if profile exists for this user
-    const { data: existingProfile } = await supabaseClient
+    // Check if profile exists using a direct query with service role
+    // This bypasses any RLS policies that might cause infinite recursion
+    const { data: existingProfile, error: queryError } = await supabaseClient
       .from('profiles')
       .select('id')
       .eq('id', user_id)
       .maybeSingle()
+
+    if (queryError) {
+      console.error("Error checking existing profile:", queryError)
+      return new Response(
+        JSON.stringify({ success: false, error: queryError.message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
 
     if (existingProfile) {
       // Profile exists, update it
       const { data: updatedProfile, error: updateError } = await supabaseClient
         .from('profiles')
         .update({
-          email: user_email,
+          email: user_email.toLowerCase(),
           full_name: user_full_name,
           email_verified: is_email_verified
         })
         .eq('id', user_id)
         .select()
 
-      if (updateError) throw updateError
+      if (updateError) {
+        console.error("Error updating profile:", updateError)
+        return new Response(
+          JSON.stringify({ success: false, error: updateError.message }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        )
+      }
 
       return new Response(
         JSON.stringify({ success: true, action: 'updated', profile: updatedProfile }),
@@ -62,13 +77,36 @@ serve(async (req) => {
         .from('profiles')
         .insert([{
           id: user_id,
-          email: user_email,
+          email: user_email.toLowerCase(),
           full_name: user_full_name,
           email_verified: is_email_verified
         }])
         .select()
 
-      if (insertError) throw insertError
+      if (insertError) {
+        console.error("Error creating profile:", insertError)
+        // Check for unique violation - conflict
+        if (insertError.code === '23505') {
+          // Profile was likely created in a race condition - try to retrieve it
+          const { data: existingData } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user_id)
+            .maybeSingle()
+            
+          if (existingData) {
+            return new Response(
+              JSON.stringify({ success: true, action: 'retrieved', profile: existingData }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ success: false, error: insertError.message }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        )
+      }
 
       return new Response(
         JSON.stringify({ success: true, action: 'created', profile: newProfile }),
@@ -76,6 +114,7 @@ serve(async (req) => {
       )
     }
   } catch (error) {
+    console.error("Unhandled error:", error)
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }

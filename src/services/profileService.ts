@@ -36,7 +36,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
         if (Array.isArray(profileData) && profileData.length > 0) {
           // Convert the first array item to UserProfile
           return profileData[0] as unknown as UserProfile;
-        } else {
+        } else if (typeof profileData === 'object') {
           // If not an array, just return as is
           return profileData as unknown as UserProfile;
         }
@@ -78,19 +78,9 @@ export async function ensureProfileExists(userId: string, userData: { email: str
   try {
     console.log("Ensuring profile exists for:", userId, userData);
     
-    // DO NOT query the profiles table directly - this is what causes recursion
-    // Instead, check if the user exists in auth.users (which won't trigger profiles RLS)
-    const { data: authUser } = await supabase.auth.getUser();
-    
-    if (!authUser || !authUser.user) {
-      console.error("No authenticated user found");
-      return false;
-    }
-    
-    // Try the security definer function first - this bypasses RLS
+    // Skip profile querying - it often causes infinite recursion
+    // Instead, call the edge function directly 
     try {
-      // Fixed: Type error in RPC function name by using proper type handling
-      // Call custom function using proper approach to bypass type checking issues
       const { data: rpcResult, error: rpcError } = await supabase.functions.invoke(
         'create-profile-if-not-exists',
         {
