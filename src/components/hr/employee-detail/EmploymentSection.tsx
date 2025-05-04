@@ -1,10 +1,17 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Edit } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Edit, CalendarIcon, Loader2, Check, X } from "lucide-react";
 import { LegacyEmployee } from "@/hooks/useEmployees";
-import { EditEmploymentDialog } from "./edit/EditEmploymentDialog";
+import { updateEmployeeEmployment } from "@/services/employeeService";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface EmploymentSectionProps {
   employee: LegacyEmployee;
@@ -15,16 +22,86 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   employee,
   handleEdit
 }) => {
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  // State for inline editing
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const openEditDialog = () => {
-    setEditDialogOpen(true);
+  // Form state
+  const [formValues, setFormValues] = useState({
+    employeeId: employee.employeeId || "",
+    barcode: employee.barcode || "",
+    organization: employee.organization || "",
+    jobPosition: employee.jobPosition || "",
+    jobLevel: employee.jobLevel || "",
+    employmentStatus: employee.employmentStatus || "",
+    branch: employee.branch || "",
+  });
+
+  const [joinDate, setJoinDate] = useState<Date | undefined>(
+    employee.joinDate ? new Date(employee.joinDate) : undefined
+  );
+
+  const [signDate, setSignDate] = useState<Date | undefined>(
+    employee.signDate ? new Date(employee.signDate) : undefined
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormValues(prev => ({ ...prev, [id]: value }));
   };
-  
-  const handleSave = () => {
-    setEditDialogOpen(false);
-    // Refresh data
-    handleEdit("refresh");
+
+  const handleSelectChange = (field: string, value: string) => {
+    setFormValues(prev => ({ ...prev, [field]: value }));
+  };
+
+  const toggleEditMode = () => {
+    if (isEditing) {
+      // Cancel editing - reset form values
+      setFormValues({
+        employeeId: employee.employeeId || "",
+        barcode: employee.barcode || "",
+        organization: employee.organization || "",
+        jobPosition: employee.jobPosition || "",
+        jobLevel: employee.jobLevel || "",
+        employmentStatus: employee.employmentStatus || "",
+        branch: employee.branch || "",
+      });
+      setJoinDate(employee.joinDate ? new Date(employee.joinDate) : undefined);
+      setSignDate(employee.signDate ? new Date(employee.signDate) : undefined);
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Prepare data for API call
+      const updatedData = {
+        employee_id: formValues.employeeId,
+        barcode: formValues.barcode,
+        organization: formValues.organization,
+        job_position: formValues.jobPosition,
+        job_level: formValues.jobLevel,
+        employment_status: formValues.employmentStatus,
+        branch: formValues.branch,
+        join_date: joinDate ? format(joinDate, 'yyyy-MM-dd') : null,
+        sign_date: signDate ? format(signDate, 'yyyy-MM-dd') : null
+      };
+      
+      // Use our service function to update employment data
+      await updateEmployeeEmployment(employee.id, updatedData);
+      
+      toast.success("Employment data updated successfully");
+      setIsEditing(false);
+      // Refresh data
+      handleEdit("refresh");
+    } catch (error) {
+      console.error("Failed to update employment data:", error);
+      toast.error("Failed to update employment data");
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -41,73 +118,234 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
           <div className="border rounded-md">
             <div className="flex justify-between items-center p-3 border-b">
               <div></div>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="gap-2 flex items-center"
-                onClick={openEditDialog}
-              >
-                <Edit size={14} /> Edit
-              </Button>
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="gap-1 flex items-center"
+                    onClick={toggleEditMode}
+                    disabled={isLoading}
+                  >
+                    <X size={14} /> Cancel
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="default" 
+                    className="gap-1 flex items-center"
+                    onClick={handleSave}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={14} /> Save
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="gap-2 flex items-center"
+                  onClick={toggleEditMode}
+                >
+                  <Edit size={14} /> Edit
+                </Button>
+              )}
             </div>
             
-            <div className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                <div>
-                  <p className="text-sm text-gray-500">Company name</p>
-                  <p className="font-medium">PT CHEMISTRY BEAUTY INDONESIA</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Employee ID</p>
-                  <p className="font-medium">{employee.employeeId || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Barcode</p>
-                  <p className="font-medium">{employee.barcode || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Organization name</p>
-                  <p className="font-medium">{employee.organization || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Job position</p>
-                  <p className="font-medium">{employee.jobPosition || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Job level</p>
-                  <p className="font-medium">{employee.jobLevel || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Employment status</p>
-                  <p className="font-medium">{employee.employmentStatus || "Permanent"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Branch</p>
-                  <p className="font-medium">{employee.branch || "Pusat"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Join date</p>
-                  <p className="font-medium">
-                    {employee.joinDate || "-"}
-                    {employee.joinDate && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">14 Year 5 Month 24 Day</span>}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Sign date</p>
-                  <p className="font-medium">{employee.signDate || "-"}</p>
+            {isEditing ? (
+              <div className="p-4 space-y-5">
+                {/* Editing Form */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="employeeId">Employee ID</Label>
+                    <Input
+                      id="employeeId"
+                      value={formValues.employeeId}
+                      onChange={handleInputChange}
+                      placeholder="Enter employee ID"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="barcode">Barcode</Label>
+                    <Input
+                      id="barcode"
+                      value={formValues.barcode}
+                      onChange={handleInputChange}
+                      placeholder="Enter barcode"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="organization">Organization name</Label>
+                    <Input
+                      id="organization"
+                      value={formValues.organization}
+                      onChange={handleInputChange}
+                      placeholder="Enter organization name"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="jobPosition">Job position</Label>
+                    <Input
+                      id="jobPosition"
+                      value={formValues.jobPosition}
+                      onChange={handleInputChange}
+                      placeholder="Enter job position"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="jobLevel">Job level</Label>
+                    <Input
+                      id="jobLevel"
+                      value={formValues.jobLevel}
+                      onChange={handleInputChange}
+                      placeholder="Enter job level"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Employment status</Label>
+                    <Select
+                      value={formValues.employmentStatus}
+                      onValueChange={(value) => handleSelectChange("employmentStatus", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select employment status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Permanent">Permanent</SelectItem>
+                        <SelectItem value="Contract">Contract</SelectItem>
+                        <SelectItem value="Probation">Probation</SelectItem>
+                        <SelectItem value="Intern">Intern</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="branch">Branch</Label>
+                    <Input
+                      id="branch"
+                      value={formValues.branch}
+                      onChange={handleInputChange}
+                      placeholder="Enter branch"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Join date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left",
+                            !joinDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {joinDate ? format(joinDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={joinDate}
+                          onSelect={setJoinDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Sign date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left",
+                            !signDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {signDate ? format(signDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={signDate}
+                          onSelect={setSignDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Company name</p>
+                    <p className="font-medium">PT CHEMISTRY BEAUTY INDONESIA</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Employee ID</p>
+                    <p className="font-medium">{employee.employeeId || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Barcode</p>
+                    <p className="font-medium">{employee.barcode || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Organization name</p>
+                    <p className="font-medium">{employee.organization || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Job position</p>
+                    <p className="font-medium">{employee.jobPosition || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Job level</p>
+                    <p className="font-medium">{employee.jobLevel || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Employment status</p>
+                    <p className="font-medium">{employee.employmentStatus || "Permanent"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Branch</p>
+                    <p className="font-medium">{employee.branch || "Pusat"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Join date</p>
+                    <p className="font-medium">
+                      {employee.joinDate || "-"}
+                      {employee.joinDate && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">14 Year 5 Month 24 Day</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Sign date</p>
+                    <p className="font-medium">{employee.signDate || "-"}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-      
-      <EditEmploymentDialog 
-        open={editDialogOpen}
-        employee={employee}
-        onClose={() => setEditDialogOpen(false)}
-        onSave={handleSave}
-      />
     </Card>
   );
 };
