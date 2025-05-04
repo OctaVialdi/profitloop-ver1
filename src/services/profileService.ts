@@ -82,18 +82,27 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   }
 }
 
-export async function ensureProfileExists(userId: string, userData: { email: string, full_name?: string, email_verified?: boolean }) {
+export async function ensureProfileExists(userId: string, userData: { email: string, full_name?: string, email_verified?: boolean }): Promise<boolean> {
   try {
+    console.log("Ensuring profile exists for:", userId, userData);
+    
     // Check if profile already exists
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', userId)
       .maybeSingle();
+    
+    if (checkError) {
+      console.error("Error checking existing profile:", checkError);
+      // Try to create profile anyway as fallback
+    }
       
-    // If profile doesn't exist, create it
+    // If profile doesn't exist or we couldn't check, create it
     if (!existingProfile) {
-      const { error: insertError } = await supabase
+      console.log("Creating new profile for user:", userId);
+
+      const { data, error: insertError } = await supabase
         .from('profiles')
         .insert({
           id: userId,
@@ -103,7 +112,8 @@ export async function ensureProfileExists(userId: string, userData: { email: str
           organization_id: null,
           has_seen_welcome: false,
           role: 'employee' // Default role
-        });
+        })
+        .select();
         
       if (insertError) {
         console.error("Error creating profile:", insertError);
@@ -112,11 +122,13 @@ export async function ensureProfileExists(userId: string, userData: { email: str
       
       console.log("Profile created successfully for:", userId);
       return true;
+    } else {
+      console.log("Profile already exists for:", userId);
     }
     
-    return true; // Profile already exists
+    return true; // Profile exists
   } catch (err) {
-    console.error("Error ensuring profile exists:", err);
+    console.error("Exception ensuring profile exists:", err);
     return false;
   }
 }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -104,12 +105,30 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
-        // Create profile entry
-        await ensureProfileExists(data.user.id, {
+        // Create profile entry - make sure this works!
+        const profileCreated = await ensureProfileExists(data.user.id, {
           email: email,
           full_name: fullName,
           email_verified: false // Mark as unverified initially
         });
+        
+        if (!profileCreated) {
+          console.error("Failed to create profile, attempting direct insert");
+          // Direct fallback if the helper function fails
+          try {
+            await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                email: email.toLowerCase(),
+                full_name: fullName,
+                email_verified: false,
+                role: role
+              });
+          } catch (profileErr) {
+            console.error("Direct profile creation also failed:", profileErr);
+          }
+        }
         
         // Always redirect to verification page, never skip this step
         toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");

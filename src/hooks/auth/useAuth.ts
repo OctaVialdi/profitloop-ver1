@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -18,19 +19,31 @@ export function useAuth() {
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
-        // If user is logged in, ensure profile exists
+        // If user is logged in or just signed up, ensure profile exists
         if (session?.user) {
           // Use setTimeout to avoid potential auth state deadlocks
-          setTimeout(() => {
-            ensureProfileExists(session.user.id, {
-              email: session.user.email || '',
-              full_name: session.user.user_metadata?.full_name || null,
-              email_verified: session.user.email_confirmed_at !== null
-            });
+          setTimeout(async () => {
+            try {
+              // Handle SIGNED_UP event specifically
+              if (event === 'SIGNED_UP') {
+                console.log("New signup detected, creating profile");
+              }
+              
+              const profileCreated = await ensureProfileExists(session.user.id, {
+                email: session.user.email || '',
+                full_name: session.user.user_metadata?.full_name || null,
+                email_verified: session.user.email_confirmed_at !== null
+              });
+              
+              console.log("Profile ensure result:", profileCreated);
+            } catch (err) {
+              console.error("Error in auth listener profile creation:", err);
+            }
           }, 0);
         }
       }
