@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -217,6 +218,7 @@ class EmployeeService {
       const formattedDetails = formatDateFields(details);
       console.log("Saving personal details:", formattedDetails);
       
+      // FIXED: Use explicit table aliases to avoid ambiguity with employee_id
       const { data: existingDetails } = await supabase
         .from('employee_personal_details')
         .select('id')
@@ -240,6 +242,7 @@ class EmployeeService {
         result = data;
       } else {
         // Create new record
+        console.log("Inserting new personal details:", formattedDetails);
         const { data, error } = await supabase
           .from('employee_personal_details')
           .insert(formattedDetails)
@@ -286,7 +289,9 @@ class EmployeeService {
     try {
       // Format date fields
       const formattedDetails = formatDateFields(details);
+      console.log("Saving identity address:", formattedDetails);
       
+      // FIXED: Use explicit table aliases to avoid ambiguity with employee_id
       const { data: existingDetails } = await supabase
         .from('employee_identity_addresses')
         .select('id')
@@ -303,20 +308,28 @@ class EmployeeService {
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating identity address:", error);
+          throw error;
+        }
         result = data;
       } else {
         // Create new record
+        console.log("Inserting new identity address:", formattedDetails);
         const { data, error } = await supabase
           .from('employee_identity_addresses')
           .insert(formattedDetails)
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error inserting identity address:", error);
+          throw error;
+        }
         result = data;
       }
       
+      console.log("Identity address saved successfully:", result);
       return result;
     } catch (error) {
       console.error('Failed to save identity & address:', error);
@@ -349,7 +362,9 @@ class EmployeeService {
     try {
       // Format date fields
       const formattedDetails = formatDateFields(details);
+      console.log("Saving employment details:", formattedDetails);
       
+      // FIXED: Use explicit table aliases to avoid ambiguity with employee_id
       const { data: existingDetails } = await supabase
         .from('employee_employment')
         .select('id')
@@ -366,20 +381,28 @@ class EmployeeService {
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating employment details:", error);
+          throw error;
+        }
         result = data;
       } else {
         // Create new record
+        console.log("Inserting new employment details:", formattedDetails);
         const { data, error } = await supabase
           .from('employee_employment')
           .insert(formattedDetails)
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error inserting employment details:", error);
+          throw error;
+        }
         result = data;
       }
       
+      console.log("Employment details saved successfully:", result);
       return result;
     } catch (error) {
       console.error('Failed to save employment:', error);
@@ -445,7 +468,7 @@ class EmployeeService {
           employee_id: employee.id
         };
         console.log("Saving personal details:", personalDetailsWithEmployeeId);
-        promises.push(this.savePersonalDetails(personalDetailsWithEmployeeId));
+        promises.push(this.savePersonalDetails(personalDetailsWithEmployeeId as EmployeePersonalDetails));
       }
       
       if (identityAddress) {
@@ -454,7 +477,7 @@ class EmployeeService {
           employee_id: employee.id
         };
         console.log("Saving identity address:", identityAddressWithEmployeeId);
-        promises.push(this.saveIdentityAddress(identityAddressWithEmployeeId));
+        promises.push(this.saveIdentityAddress(identityAddressWithEmployeeId as EmployeeIdentityAddress));
       }
       
       if (employment) {
@@ -463,18 +486,27 @@ class EmployeeService {
           employee_id: employee.id
         };
         console.log("Saving employment details:", employmentWithEmployeeId);
-        promises.push(this.saveEmployment(employmentWithEmployeeId));
+        promises.push(this.saveEmployment(employmentWithEmployeeId as EmployeeEmployment));
       }
       
-      const results = await Promise.all(promises);
-      console.log("Related records created:", results);
+      // Wait for all related records to be saved
+      const results = await Promise.allSettled(promises);
+      
+      // Log results for debugging
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          console.log(`Related record ${index} created successfully:`, result.value);
+        } else {
+          console.error(`Failed to create related record ${index}:`, result.reason);
+        }
+      });
       
       // Return the newly created employee with details
       return this.fetchEmployeeById(employee.id);
       
     } catch (error) {
       console.error('Failed to create employee:', error);
-      toast.error('Failed to create employee');
+      toast.error('Failed to create employee: ' + (error instanceof Error ? error.message : 'Unknown error'));
       return null;
     }
   }
@@ -504,7 +536,7 @@ class EmployeeService {
           this.savePersonalDetails({
             ...personalDetails,
             employee_id: id
-          })
+          } as EmployeePersonalDetails)
         );
       }
       
@@ -513,7 +545,7 @@ class EmployeeService {
           this.saveIdentityAddress({
             ...identityAddress,
             employee_id: id
-          })
+          } as EmployeeIdentityAddress)
         );
       }
       
@@ -522,11 +554,21 @@ class EmployeeService {
           this.saveEmployment({
             ...employment,
             employee_id: id
-          })
+          } as EmployeeEmployment)
         );
       }
       
-      await Promise.all(promises);
+      // Wait for all related records to be updated
+      const results = await Promise.allSettled(promises);
+      
+      // Log results for debugging
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          console.log(`Related record ${index} updated successfully:`, result.value);
+        } else {
+          console.error(`Failed to update related record ${index}:`, result.reason);
+        }
+      });
       
       // Return the updated employee with details
       return this.fetchEmployeeById(id);

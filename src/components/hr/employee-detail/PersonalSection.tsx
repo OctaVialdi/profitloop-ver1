@@ -27,6 +27,24 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
     }
   };
 
+  // Format NIK with dashes for display
+  const formatNik = (nikString?: string) => {
+    if (!nikString) return "-";
+    
+    // If NIK already has dashes, return as is
+    if (nikString.includes('-')) return nikString;
+    
+    // Add dashes after every 4 digits
+    let formattedNik = '';
+    for (let i = 0; i < nikString.length; i++) {
+      if (i > 0 && i % 4 === 0) {
+        formattedNik += '-';
+      }
+      formattedNik += nikString[i];
+    }
+    return formattedNik;
+  };
+
   // Calculate age if birth date is available
   const calculateAge = (birthDateString?: string) => {
     if (!birthDateString) return null;
@@ -101,10 +119,6 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                         <p className="font-medium">{employee.email}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Phone</p>
-                        <p className="font-medium">{employee.mobilePhone || "-"}</p>
-                      </div>
-                      <div>
                         <p className="text-sm text-gray-500">Place of birth</p>
                         <p className="font-medium">{employee.birthPlace || "-"}</p>
                       </div>
@@ -154,8 +168,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                   <div className="p-4 space-y-4">
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                       <div>
-                        <p className="text-sm text-gray-500">NIK (NPWP 16 digit)</p>
-                        <p className="font-medium">{employee.nik || "-"}</p>
+                        <p className="text-sm text-gray-500">NIK (16 digit)</p>
+                        <p className="font-medium">{formatNik(employee.nik) || "-"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Passport number</p>

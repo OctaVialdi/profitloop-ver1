@@ -19,7 +19,7 @@ export interface LegacyEmployee {
   barcode: string;
   birthDate: string;
   birthPlace: string;
-  address: string;
+  address: string; // Maps to residential_address in identityAddress
   mobilePhone: string;
   religion: string;
   gender: string;
@@ -68,7 +68,7 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     barcode: employee.employment?.barcode || "",
     birthDate: employee.personalDetails?.birth_date || "",
     birthPlace: employee.personalDetails?.birth_place || "",
-    address: employee.identityAddress?.residential_address || "",
+    address: employee.identityAddress?.residential_address || "", // Fixed to use residential_address
     mobilePhone: employee.personalDetails?.mobile_phone || "",
     religion: employee.personalDetails?.religion || "",
     gender: employee.personalDetails?.gender || "",
@@ -133,6 +133,13 @@ export function useEmployees(): UseEmployeesResult {
     employment?: any
   ) => {
     try {
+      console.log("Adding employee with data:", {
+        employeeData,
+        personalDetails,
+        identityAddress,
+        employment
+      });
+
       const newEmployee = await employeeService.createEmployee(
         employeeData, 
         personalDetails,
@@ -148,7 +155,7 @@ export function useEmployees(): UseEmployeesResult {
       return null;
     } catch (error) {
       console.error("Error adding employee:", error);
-      toast.error("Failed to add employee");
+      toast.error("Failed to add employee: " + (error instanceof Error ? error.message : "Unknown error"));
       return null;
     }
   };

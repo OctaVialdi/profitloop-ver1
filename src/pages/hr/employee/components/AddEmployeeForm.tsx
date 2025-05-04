@@ -84,7 +84,7 @@ const AddEmployeeForm = () => {
     }
   });
 
-  // Auto-generate employee ID
+  // Auto-generate employee ID on component mount
   useEffect(() => {
     generateEmployeeId();
   }, [employees]);
@@ -185,7 +185,7 @@ const AddEmployeeForm = () => {
         organization_id: userProfile.organization_id
       });
       
-      // Create employee using the hook method rather than direct service call
+      // Create employee using the hook method
       const result = await addEmployee(
         employeeData,
         personalDetails,
@@ -238,6 +238,7 @@ const AddEmployeeForm = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} id="employeeForm" className="space-y-6">
             <TabsContent value="basic-info" className="pt-6">
+              {/* Added fixed height with vertical scrolling */}
               <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
                 <div>
                   <h3 className="text-lg font-medium mb-3">Personal data</h3>
@@ -461,13 +462,13 @@ const AddEmployeeForm = () => {
                       name="nik"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>NIK (NPWP 16 digit)</FormLabel>
+                          <FormLabel>NIK (16 digit)</FormLabel>
                           <FormControl>
                             <Input 
                               value={field.value} 
                               onChange={(e) => handleNikChange(e)}
-                              placeholder="1234-5678-9012-3456-7890"
-                              maxLength={24} // 20 digits plus 4 dashes
+                              placeholder="1234-5678-9012-3456"
+                              maxLength={19} // 16 digits plus 3 dashes
                             />
                           </FormControl>
                           <FormMessage />
@@ -552,7 +553,7 @@ const AddEmployeeForm = () => {
             </TabsContent>
 
             <TabsContent value="employment" className="pt-6">
-              <div className="space-y-6">
+              <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
                 <div>
                   <h3 className="text-lg font-medium mb-3">Employment details</h3>
                   <p className="text-sm text-gray-500 mb-4">Job position and organizational information.</p>
@@ -682,7 +683,7 @@ const AddEmployeeForm = () => {
               </div>
             </TabsContent>
 
-            {/* Save button outside of tab content, visible for both tabs */}
+            {/* Save button moved outside of tab content, visible for both tabs */}
             <div className="flex justify-end gap-3 pt-4 border-t mt-4">
               <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting}>
