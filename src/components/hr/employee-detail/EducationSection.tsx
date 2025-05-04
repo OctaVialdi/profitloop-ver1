@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,6 +46,7 @@ import {
   EmployeeWorkExperience 
 } from "@/hooks/useEmployees";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EducationSectionProps {
   employee: LegacyEmployee;

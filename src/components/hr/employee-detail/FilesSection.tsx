@@ -107,8 +107,8 @@ export const FilesSection: React.FC<FilesSectionProps> = ({
         <div className="mb-8">
           <div className="flex flex-col items-center">
             <Avatar className="h-40 w-40">
-              {employee.profileImage ? (
-                <AvatarImage src={employee.profileImage} alt={employee.name} />
+              {employee.profile_image ? (
+                <AvatarImage src={employee.profile_image} alt={employee.name} />
               ) : null}
               <AvatarFallback className="text-3xl">{getInitials(employee.name)}</AvatarFallback>
             </Avatar>
