@@ -103,9 +103,16 @@ export class EmployeeService {
         }
       }
       
+      // Make sure we have required fields for Supabase insert
+      const employeeToInsert = {
+        ...employee,
+        name: employee.name || 'New Employee', // Default name if not provided
+        organization_id: employee.organization_id // This is now guaranteed to exist
+      };
+      
       const { data, error } = await supabase
         .from('employees')
-        .insert(employee)
+        .insert(employeeToInsert)
         .select('*')
         .single();
 
@@ -219,6 +226,11 @@ export class EmployeeService {
     }
   }
 
+  // Save personal details directly, used in PersonalSection
+  async savePersonalDetails(personalDetails: any): Promise<any> {
+    return this.updateEmployeePersonalDetails(personalDetails.employee_id, personalDetails);
+  }
+
   // Update employee identity address
   async updateEmployeeIdentityAddress(employeeId: string, addressDetails: any): Promise<any> {
     try {
@@ -242,6 +254,11 @@ export class EmployeeService {
       this.handleError(error, 'Failed to save identity address');
       return null;
     }
+  }
+
+  // Save identity address directly, used in PersonalSection
+  async saveIdentityAddress(addressDetails: any): Promise<any> {
+    return this.updateEmployeeIdentityAddress(addressDetails.employee_id, addressDetails);
   }
 
   // Fetch family members

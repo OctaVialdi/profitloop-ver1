@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -167,9 +166,14 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   // Handle form submission for education
   const handleEducationSubmit = async (data: z.infer<typeof educationSchema>) => {
     try {
-      const educationData = {
-        ...data,
+      const educationData: EmployeeEducation = {
         employee_id: employee.id,
+        institution: data.institution, // This is required
+        degree: data.degree,
+        field_of_study: data.field_of_study,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        education_type: data.education_type
       };
 
       if (editingItem) {
@@ -191,9 +195,13 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   // Handle form submission for work experience
   const handleWorkExperienceSubmit = async (data: z.infer<typeof workExperienceSchema>) => {
     try {
-      const experienceData = {
-        ...data,
+      const experienceData: EmployeeWorkExperience = {
         employee_id: employee.id,
+        company: data.company || "", // This is required
+        position: data.position,
+        start_date: data.start_date || "", // This is required
+        end_date: data.end_date,
+        description: data.description
       };
 
       if (editingItem) {

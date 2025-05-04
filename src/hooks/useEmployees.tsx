@@ -37,8 +37,8 @@ export type { Employee } from '@/services/employeeService';
 export interface EmployeeEducation {
   id?: string;
   employee_id: string;
-  institution: string;
-  degree: string;
+  institution: string; // Making this required to match error message
+  degree?: string;
   field?: string; // Used as field_of_study in database
   field_of_study?: string; // Database field
   start_year?: string;
@@ -55,10 +55,10 @@ export interface EmployeeEducation {
 export interface EmployeeWorkExperience {
   id?: string;
   employee_id: string;
-  company: string;
-  position: string;
+  company: string; // Making this required to match error message
+  position?: string;
   start_date: string;
-  end_date: string;
+  end_date?: string;
   description?: string;
   created_at?: string;
   updated_at?: string;
