@@ -40,7 +40,12 @@ export interface UseEmployeesResult {
   employees: EmployeeWithDetails[];
   isLoading: boolean;
   refetch: () => Promise<void>;
-  addEmployee: (employee: Partial<Employee>) => Promise<EmployeeWithDetails | null>;
+  addEmployee: (
+    employee: Partial<Employee>, 
+    personalDetails?: any, 
+    identityAddress?: any, 
+    employment?: any
+  ) => Promise<EmployeeWithDetails | null>;
   updateEmployee: (employee: Partial<Employee> & { id: string }) => Promise<EmployeeWithDetails | null>;
   removeEmployee: (id: string) => Promise<boolean>;
   getEmployee: (id: string) => Promise<EmployeeWithDetails | null>;
@@ -121,9 +126,20 @@ export function useEmployees(): UseEmployeesResult {
     fetchEmployees();
   }, []);
 
-  const addEmployee = async (employeeData: Partial<Employee>) => {
+  const addEmployee = async (
+    employeeData: Partial<Employee>, 
+    personalDetails?: any, 
+    identityAddress?: any, 
+    employment?: any
+  ) => {
     try {
-      const newEmployee = await employeeService.createEmployee(employeeData);
+      const newEmployee = await employeeService.createEmployee(
+        employeeData, 
+        personalDetails,
+        identityAddress,
+        employment
+      );
+      
       if (newEmployee) {
         setEmployees([...employees, newEmployee]);
         toast.success("Employee added successfully");
