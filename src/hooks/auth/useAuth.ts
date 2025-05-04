@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { ensureProfileExists } from "@/services/profileService";
+import { toast } from "@/components/ui/sonner";
 
 export interface AuthCredentials {
   email: string;
@@ -29,11 +30,43 @@ export function useAuth() {
           // Use setTimeout to avoid potential auth state deadlocks
           setTimeout(async () => {
             try {
-              // Handle SIGNED_UP event specifically - using string comparison
+              // Handle SIGNED_UP event specifically - using proper string type comparison
               if (event.toString() === "SIGNED_UP") {
                 console.log("New signup detected, creating profile");
+                
+                // Force create profile for new signup
+                const profileCreated = await ensureProfileExists(session.user.id, {
+                  email: session.user.email || '',
+                  full_name: session.user.user_metadata?.full_name || null,
+                  email_verified: session.user.email_confirmed_at !== null
+                });
+                
+                console.log("Profile created on signup:", profileCreated);
+                
+                if (!profileCreated) {
+                  // Direct fallback if the helper function fails
+                  try {
+                    const { error: insertError } = await supabase
+                      .from('profiles')
+                      .insert({
+                        id: session.user.id,
+                        email: session.user.email || '',
+                        full_name: session.user.user_metadata?.full_name || null,
+                        email_verified: session.user.email_confirmed_at !== null
+                      });
+                      
+                    if (insertError) {
+                      console.error("Direct profile creation error:", insertError);
+                    } else {
+                      console.log("Direct profile creation success");
+                    }
+                  } catch (directErr) {
+                    console.error("Direct insert attempt failed:", directErr);
+                  }
+                }
               }
               
+              // For all auth events, ensure profile exists
               const profileCreated = await ensureProfileExists(session.user.id, {
                 email: session.user.email || '',
                 full_name: session.user.user_metadata?.full_name || null,
@@ -135,9 +168,11 @@ export function useAuth() {
     setIsLoading(true);
     try {
       await supabase.auth.signOut();
+      toast.success("Berhasil keluar dari akun");
       return { error: null };
     } catch (error) {
       console.error("Error signing out:", error);
+      toast.error("Gagal keluar dari akun");
       return { error };
     } finally {
       setIsLoading(false);
