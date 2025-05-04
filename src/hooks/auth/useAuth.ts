@@ -33,7 +33,7 @@ export function useAuth() {
               // Check if user's email is verified in auth system
               const isEmailVerified = session.user.email_confirmed_at !== null;
               
-              // Handle auth events - using proper string type instead of enum comparison
+              // Handle auth events - using string type for comparison
               if (event === 'SIGNED_UP' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                 console.log(`${event} detected, ensuring profile and verification status`);
                 

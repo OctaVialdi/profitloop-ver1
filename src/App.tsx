@@ -2,7 +2,6 @@
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppRoutes } from "./routes";
-import TrialBanner from "./components/TrialBanner";
 import TrialProtection from "./components/TrialProtection";
 
 function App() {
@@ -10,7 +9,6 @@ function App() {
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
         <TrialProtection>
-          <TrialBanner />
           <AppRoutes />
         </TrialProtection>
       </ThemeProvider>
