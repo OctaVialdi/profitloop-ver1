@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useEmployees, convertFromLegacyFormat } from "@/hooks/useEmployees";
@@ -28,6 +29,7 @@ const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { employees, updateEmployee } = useEmployees();
+  const [activeTab, setActiveTab] = useState("basic-info");
 
   // Find the employee with the matching ID
   const employee = employees.find(emp => emp.id === id);
@@ -120,26 +122,23 @@ const EmployeePersonal = () => {
 
       <h1 className="text-2xl font-bold">Personal</h1>
       
-      <Tabs defaultValue="basic-info">
+      <Tabs defaultValue="basic-info" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="border-b w-full justify-start rounded-none space-x-6 px-0">
           <TabsTrigger 
             value="basic-info" 
             className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none pb-2"
-            onClick={() => setActiveTab("basic-info")}
           >
             Basic info
           </TabsTrigger>
           <TabsTrigger 
             value="family" 
             className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none pb-2"
-            onClick={() => setActiveTab("family")}
           >
             Family
           </TabsTrigger>
           <TabsTrigger 
             value="emergency" 
             className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none pb-2"
-            onClick={() => setActiveTab("emergency")}
           >
             Emergency contact
           </TabsTrigger>

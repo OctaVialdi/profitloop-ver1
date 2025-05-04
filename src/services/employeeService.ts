@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -405,13 +406,17 @@ class EmployeeService {
         throw new Error('User has no organization');
       }
       
+      // Create base employee record with required name
+      const employeeToCreate = {
+        ...employeeData,
+        name: employeeData.name || 'New Employee', // Ensure name is always provided
+        organization_id: profileResult.organization_id
+      };
+      
       // Create base employee record
       const { data: employee, error: employeeError } = await supabase
         .from('employees')
-        .insert({
-          ...employeeData,
-          organization_id: profileResult.organization_id
-        })
+        .insert(employeeToCreate)
         .select()
         .single();
         
