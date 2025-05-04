@@ -30,38 +30,44 @@ export function useAuth() {
           // Use setTimeout to avoid potential auth state deadlocks
           setTimeout(async () => {
             try {
-              // Handle SIGNED_UP event specifically - using proper string type comparison
+              // Handle SIGNED_UP event specifically - using string comparison
               if (event.toString() === "SIGNED_UP") {
                 console.log("New signup detected, creating profile");
                 
                 // Force create profile for new signup
-                const profileCreated = await ensureProfileExists(session.user.id, {
-                  email: session.user.email || '',
-                  full_name: session.user.user_metadata?.full_name || null,
-                  email_verified: session.user.email_confirmed_at !== null
-                });
-                
-                console.log("Profile created on signup:", profileCreated);
-                
-                if (!profileCreated) {
-                  // Direct fallback if the helper function fails
-                  try {
-                    const { error: insertError } = await supabase
-                      .from('profiles')
-                      .insert({
-                        id: session.user.id,
-                        email: session.user.email || '',
-                        full_name: session.user.user_metadata?.full_name || null,
-                        email_verified: session.user.email_confirmed_at !== null
-                      });
-                      
-                    if (insertError) {
-                      console.error("Direct profile creation error:", insertError);
-                    } else {
-                      console.log("Direct profile creation success");
-                    }
-                  } catch (directErr) {
-                    console.error("Direct insert attempt failed:", directErr);
+                try {
+                  // Direct insert for new signups - most reliable method
+                  const { error: directError } = await supabase
+                    .from('profiles')
+                    .insert({
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      full_name: session.user.user_metadata?.full_name || null,
+                      email_verified: session.user.email_confirmed_at !== null,
+                      role: session.user.user_metadata?.role || 'employee'
+                    });
+                    
+                  if (directError) {
+                    console.error("Direct profile creation error:", directError);
+                    throw directError;
+                  } else {
+                    console.log("Direct profile creation success on SIGNED_UP event");
+                    toast.success("Profile berhasil dibuat");
+                  }
+                } catch (insertErr) {
+                  console.error("Direct insert failed, trying fallback:", insertErr);
+                  
+                  // Fallback to helper function
+                  const profileCreated = await ensureProfileExists(session.user.id, {
+                    email: session.user.email || '',
+                    full_name: session.user.user_metadata?.full_name || null,
+                    email_verified: session.user.email_confirmed_at !== null
+                  });
+                  
+                  console.log("Fallback profile creation result:", profileCreated);
+                  
+                  if (!profileCreated) {
+                    console.error("Both direct and fallback profile creation failed");
                   }
                 }
               }

@@ -82,11 +82,11 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   }
 }
 
-export async function ensureProfileExists(userId: string, userData: { email: string, full_name?: string, email_verified?: boolean }): Promise<boolean> {
+export async function ensureProfileExists(userId: string, userData: { email: string, full_name?: string | null, email_verified?: boolean }): Promise<boolean> {
   try {
     console.log("Ensuring profile exists for:", userId, userData);
     
-    // Check if profile already exists
+    // Check if profile already exists first
     const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
       .select('id')
@@ -95,38 +95,63 @@ export async function ensureProfileExists(userId: string, userData: { email: str
     
     if (checkError) {
       console.error("Error checking existing profile:", checkError);
-      // Try to create profile anyway as fallback
+      // Continue to try to create profile anyway
     }
       
-    // If profile doesn't exist or we couldn't check, create it
+    // If profile doesn't exist or we couldn't check, attempt to create it
     if (!existingProfile) {
       console.log("Creating new profile for user:", userId);
 
-      const { data, error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: userData.email.toLowerCase(),
-          full_name: userData.full_name || null,
-          email_verified: userData.email_verified || false,
-          organization_id: null,
-          has_seen_welcome: false,
-          role: 'employee' // Default role
-        })
-        .select();
+      // Try different methods to create the profile, starting with the most direct
+      try {
+        // Method 1: Direct insert with all fields
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: userData.email.toLowerCase(),
+            full_name: userData.full_name || null,
+            email_verified: userData.email_verified || false,
+            organization_id: null,
+            has_seen_welcome: false,
+            role: 'employee' // Default role
+          });
+          
+        if (insertError) {
+          console.error("Error creating profile with method 1:", insertError);
+          throw insertError; // Try next method
+        }
         
-      if (insertError) {
-        console.error("Error creating profile:", insertError);
-        return false;
+        console.log("Profile created successfully using method 1");
+        return true;
+      } catch (err1) {
+        console.error("Method 1 failed, trying method 2:", err1);
+        
+        try {
+          // Method 2: Minimal insert with only required fields
+          const { error: minimalInsertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: userData.email.toLowerCase()
+            });
+            
+          if (minimalInsertError) {
+            console.error("Error creating profile with method 2:", minimalInsertError);
+            throw minimalInsertError; // Try next method
+          }
+          
+          console.log("Profile created successfully using method 2");
+          return true;
+        } catch (err2) {
+          console.error("All methods failed to create profile:", err2);
+          return false;
+        }
       }
-      
-      console.log("Profile created successfully for:", userId);
-      return true;
     } else {
       console.log("Profile already exists for:", userId);
+      return true;
     }
-    
-    return true; // Profile exists
   } catch (err) {
     console.error("Exception ensuring profile exists:", err);
     return false;

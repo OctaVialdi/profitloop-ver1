@@ -27,6 +27,47 @@ export function useEmailVerification() {
       
       toast.success("Email verifikasi berhasil dikirim ulang. Silakan cek kotak masuk email Anda.");
       
+      // Try to create a profile for this email if possible
+      try {
+        // Get user by email
+        const { data: { users }, error: userError } = await supabase.auth.admin.listUsers({
+          filter: {
+            email: email
+          }
+        });
+        
+        if (!userError && users && users.length > 0) {
+          const userId = users[0].id;
+          console.log("Found user ID for email:", userId);
+          
+          // Check if profile exists
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', userId)
+            .maybeSingle();
+            
+          // Create profile if it doesn't exist
+          if (!existingProfile) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: userId,
+                email: email.toLowerCase(),
+                email_verified: false
+              });
+              
+            if (profileError) {
+              console.error("Error creating profile during resend:", profileError);
+            } else {
+              console.log("Profile created during resend verification");
+            }
+          }
+        }
+      } catch (profileError) {
+        console.error("Error checking/creating profile during resend:", profileError);
+      }
+      
       // Navigate to verification sent page with needed state
       navigate("/auth/verification-sent", { 
         state: { 

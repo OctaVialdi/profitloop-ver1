@@ -105,29 +105,33 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
-        // Create profile entry - make sure this works!
-        const profileCreated = await ensureProfileExists(data.user.id, {
-          email: email,
-          full_name: fullName,
-          email_verified: false // Mark as unverified initially
-        });
-        
-        if (!profileCreated) {
-          console.error("Failed to create profile, attempting direct insert");
-          // Direct fallback if the helper function fails
-          try {
-            await supabase
-              .from('profiles')
-              .insert({
-                id: data.user.id,
-                email: email.toLowerCase(),
-                full_name: fullName,
-                email_verified: false,
-                role: role
-              });
-          } catch (profileErr) {
-            console.error("Direct profile creation also failed:", profileErr);
+        // Directly create profile entry - CRITICAL FIX
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: email.toLowerCase(),
+              full_name: fullName,
+              email_verified: false,
+              role: role
+            });
+            
+          if (profileError) {
+            console.error("Failed to create profile directly:", profileError);
+            // Try fallback method
+            const profileCreated = await ensureProfileExists(data.user.id, {
+              email: email,
+              full_name: fullName,
+              email_verified: false
+            });
+            
+            console.log("Profile creation via helper function:", profileCreated);
+          } else {
+            console.log("Profile created successfully via direct insert");
           }
+        } catch (profileErr) {
+          console.error("Error creating profile:", profileErr);
         }
         
         // Always redirect to verification page, never skip this step
