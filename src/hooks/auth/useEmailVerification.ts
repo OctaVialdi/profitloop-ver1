@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
+import { User } from "@supabase/supabase-js";
 
 export function useEmailVerification() {
   const [isEmailUnverified, setIsEmailUnverified] = useState(false);
@@ -35,8 +36,8 @@ export function useEmailVerification() {
         const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
         
         if (!userError && users) {
-          // Find the user with matching email
-          const user = users.find(u => u.email === email);
+          // Find the user with matching email - explicitly type the users array
+          const user = (users as User[]).find(u => u.email === email);
           
           if (user) {
             const userId = user.id;
