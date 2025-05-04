@@ -1,11 +1,11 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Employee } from "@/hooks/useEmployees";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
 
 interface HistorySectionProps {
-  employee: Employee;
+  employee: LegacyEmployee;
   activeTab: string;
   handleEdit: (section: string) => void;
 }

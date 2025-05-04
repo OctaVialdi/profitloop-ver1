@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -83,9 +84,9 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   
   // State for employee data
-  const [formalEducation, setFormalEducation] = useState<EmployeeEducation[]>([]);
-  const [informalEducation, setInformalEducation] = useState<EmployeeEducation[]>([]);
-  const [workExperience, setWorkExperience] = useState<EmployeeWorkExperience[]>([]);
+  const [formalEducation, setFormalEducation] = useState<any[]>([]);
+  const [informalEducation, setInformalEducation] = useState<any[]>([]);
+  const [workExperience, setWorkExperience] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Get employee methods from hook
@@ -517,7 +518,58 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
               <div className="flex justify-center p-4">
                 <div className="animate-pulse">Loading...</div>
               </div>
-            ) : renderFormalEducationTable()}
+            ) : formalEducation.length === 0 ? (
+              <EmptyDataDisplay 
+                title="No formal education data available"
+                description="Add your formal education information here."
+                section="formal-education"
+                handleEdit={() => handleAddClick('formal-education')}
+              />
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Institution</TableHead>
+                      <TableHead>Degree</TableHead>
+                      <TableHead>Field of Study</TableHead>
+                      <TableHead>Period</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {formalEducation.map((education) => (
+                      <TableRow key={education.id}>
+                        <TableCell className="font-medium">{education.institution || '-'}</TableCell>
+                        <TableCell>{education.degree || '-'}</TableCell>
+                        <TableCell>{education.field_of_study || '-'}</TableCell>
+                        <TableCell>
+                          {formatDate(education.start_date)} - {formatDate(education.end_date)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditItem(education, 'formal-education')}
+                            >
+                              <Edit size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleDeleteClick(education.id, 'formal-education')}
+                            >
+                              <Trash size={16} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="informal-education" className="pt-2">
@@ -525,7 +577,58 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
               <div className="flex justify-center p-4">
                 <div className="animate-pulse">Loading...</div>
               </div>
-            ) : renderInformalEducationTable()}
+            ) : informalEducation.length === 0 ? (
+              <EmptyDataDisplay 
+                title="No informal education data available"
+                description="Add your certifications, courses, or workshops information here."
+                section="informal-education"
+                handleEdit={() => handleAddClick('informal-education')}
+              />
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Institution</TableHead>
+                      <TableHead>Certificate/Course</TableHead>
+                      <TableHead>Field of Study</TableHead>
+                      <TableHead>Period</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {informalEducation.map((education) => (
+                      <TableRow key={education.id}>
+                        <TableCell className="font-medium">{education.institution || '-'}</TableCell>
+                        <TableCell>{education.degree || '-'}</TableCell>
+                        <TableCell>{education.field_of_study || '-'}</TableCell>
+                        <TableCell>
+                          {formatDate(education.start_date)} - {formatDate(education.end_date)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditItem(education, 'informal-education')}
+                            >
+                              <Edit size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleDeleteClick(education.id, 'informal-education')}
+                            >
+                              <Trash size={16} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="working-experience" className="pt-2">
@@ -533,7 +636,58 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
               <div className="flex justify-center p-4">
                 <div className="animate-pulse">Loading...</div>
               </div>
-            ) : renderWorkExperienceTable()}
+            ) : workExperience.length === 0 ? (
+              <EmptyDataDisplay 
+                title="No work experience data available"
+                description="Add your previous work experience information here."
+                section="working-experience"
+                handleEdit={() => handleAddClick('working-experience')}
+              />
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Position</TableHead>
+                      <TableHead>Period</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {workExperience.map((experience) => (
+                      <TableRow key={experience.id}>
+                        <TableCell className="font-medium">{experience.company || '-'}</TableCell>
+                        <TableCell>{experience.position || '-'}</TableCell>
+                        <TableCell>
+                          {formatDate(experience.start_date)} - {formatDate(experience.end_date)}
+                        </TableCell>
+                        <TableCell>{experience.description || '-'}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditItem(experience, 'working-experience')}
+                            >
+                              <Edit size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleDeleteClick(experience.id, 'working-experience')}
+                            >
+                              <Trash size={16} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

@@ -1,6 +1,54 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+export interface Employee {
+  id: string;
+  employee_id: string;
+  name?: string;
+  email?: string;
+  profile_image?: string;
+  organization_id?: string;
+  [key: string]: any;
+}
+
+export interface EmployeeWithDetails extends Employee {
+  employment?: {
+    barcode?: string;
+    organization?: string;
+    job_position?: string;
+    job_level?: string;
+    employment_status?: string;
+    branch?: string;
+    join_date?: string;
+    sign_date?: string;
+    grade?: string;
+    class?: string;
+    approval_line?: string;
+    manager_id?: string | null;
+    [key: string]: any;
+  };
+  personalDetails?: {
+    mobile_phone?: string;
+    birth_place?: string;
+    birth_date?: string;
+    gender?: string;
+    marital_status?: string;
+    blood_type?: string;
+    religion?: string;
+    [key: string]: any;
+  };
+  identityAddress?: {
+    nik?: string;
+    passport_number?: string;
+    passport_expiry?: string;
+    postal_code?: string;
+    citizen_address?: string;
+    residential_address?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export class EmployeeService {
   // Fetch all employees
   async fetchEmployees(): Promise<EmployeeWithDetails[]> {
@@ -39,9 +87,25 @@ export class EmployeeService {
   // Create a new employee
   async createEmployee(employee: Partial<Employee>): Promise<Employee | null> {
     try {
+      // Ensure organization_id is set for the new employee
+      if (!employee.organization_id) {
+        const { data: orgData } = await supabase.auth.getUser();
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', orgData?.user?.id)
+          .single();
+          
+        if (profileData?.organization_id) {
+          employee.organization_id = profileData.organization_id;
+        } else {
+          throw new Error('Unable to determine organization ID for new employee');
+        }
+      }
+      
       const { data, error } = await supabase
         .from('employees')
-        .insert([employee])
+        .insert(employee)
         .select('*')
         .single();
 
@@ -164,7 +228,7 @@ export class EmployeeService {
       };
       
       const { data, error } = await supabase
-        .from('employee_identity_address')
+        .from('employee_identity_addresses')
         .upsert(details, {
           onConflict: 'employee_id',
           ignoreDuplicates: false
@@ -253,7 +317,7 @@ export class EmployeeService {
     }
   }
 
-  // Add the handleError method that's referenced in saveEmploymentDetails
+  // Handle error method used throughout the class
   private handleError(error: any, message: string): void {
     console.error(message, error);
     // Additional error handling logic if needed
@@ -262,50 +326,3 @@ export class EmployeeService {
 
 // Singleton instance
 export const employeeService = new EmployeeService();
-
-// Define the Employee and EmployeeWithDetails types
-export interface Employee {
-  id: string;
-  employee_id: string;
-  name?: string;
-  email?: string;
-  [key: string]: any;
-}
-
-export interface EmployeeWithDetails extends Employee {
-  employment?: {
-    barcode?: string;
-    organization?: string;
-    job_position?: string;
-    job_level?: string;
-    employment_status?: string;
-    branch?: string;
-    join_date?: string;
-    sign_date?: string;
-    grade?: string;
-    class?: string;
-    approval_line?: string;
-    manager_id?: string | null;
-    [key: string]: any;
-  };
-  personalDetails?: {
-    mobile_phone?: string;
-    birth_place?: string;
-    birth_date?: string;
-    gender?: string;
-    marital_status?: string;
-    blood_type?: string;
-    religion?: string;
-    [key: string]: any;
-  };
-  identityAddress?: {
-    nik?: string;
-    passport_number?: string;
-    passport_expiry?: string;
-    postal_code?: string;
-    citizen_address?: string;
-    residential_address?: string;
-    [key: string]: any;
-  };
-  [key: string]: any;
-}

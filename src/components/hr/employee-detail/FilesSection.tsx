@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Employee } from "@/hooks/useEmployees";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
 import { Upload, Image as ImageIcon, X } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 
 interface FilesSectionProps {
-  employee: Employee;
+  employee: LegacyEmployee;
   handleEdit: (section: string) => void;
 }
 

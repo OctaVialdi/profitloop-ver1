@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -149,7 +148,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         email: personalInfo.email,
       };
       
-      const personalDetails = {
+      const personalData = {
         employee_id: employee.id,
         mobile_phone: personalInfo.mobilePhone,
         birth_place: personalInfo.birthPlace,
@@ -162,7 +161,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       
       // Update employee data
       await employeeService.updateEmployee(employee.id, baseUpdate);
-      await employeeService.savePersonalDetails(personalDetails);
+      const result = await employeeService.updateEmployeePersonalDetails(employee.id, personalData);
       
       toast.success("Personal information updated successfully");
       setEditMode(null);
@@ -181,7 +180,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       setIsSubmitting(true);
       
       // Prepare data for update
-      const identityAddress = {
+      const addressData = {
         employee_id: employee.id,
         nik: identityInfo.nik,
         passport_number: identityInfo.passportNumber,
@@ -192,7 +191,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       };
       
       // Update identity address data
-      await employeeService.saveIdentityAddress(identityAddress);
+      const result = await employeeService.updateEmployeeIdentityAddress(employee.id, addressData);
       
       toast.success("Identity information updated successfully");
       setEditMode(null);

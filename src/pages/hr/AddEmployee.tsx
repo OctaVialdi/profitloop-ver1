@@ -1,294 +1,389 @@
-
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, ChevronDown } from "lucide-react";
-import { FormValues } from "./employee/types";
-import { employeeService } from "@/services/employeeService";
+import { Input } from "@/components/ui/input";
+import { 
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { toast } from "sonner";
-import { validateEmployeeData } from "./employee/utils/validation";
-import { SimplePersonalSection } from "./employee/components/simple/SimplePersonalSection";
-import { SimpleEmploymentSection } from "./employee/components/simple/SimpleEmploymentSection";
+import { useEmployees } from "@/hooks/useEmployees";
+import { SBUItem } from "./employee/types";
 
-export default function AddEmployee() {
+// Define form schema using Zod
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Full name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  employeeId: z.string().min(3, {
+    message: "Employee ID must be at least 3 characters.",
+  }),
+  groupStructure: z.string().optional(),
+  employmentStatus: z.string().optional(),
+  branch: z.string().optional(),
+  organization: z.string().optional(),
+  jobPosition: z.string().optional(),
+  jobLevel: z.string().optional(),
+  grade: z.string().optional(),
+  class: z.string().optional(),
+  schedule: z.string().optional(),
+  approvalLine: z.string().optional(),
+  manager: z.string().optional(),
+});
+
+const AddEmployee = () => {
   const navigate = useNavigate();
-  
-  // State
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  
-  // Date states
-  const [birthdate, setBirthdate] = useState<Date | undefined>(undefined);
-  const [passportExpiry, setPassportExpiry] = useState<Date | undefined>(undefined);
-  const [joinDate, setJoinDate] = useState<Date | undefined>(new Date());
-  const [signDate, setSignDate] = useState<Date | undefined>(new Date());
-  
-  // Initialize formValues with all required properties from FormValues type
-  const [formValues, setFormValues] = useState<FormValues>({
-    // Personal information
-    firstName: "",
-    lastName: "",
-    email: "",
-    mobilePhone: "",
-    phone: "",
-    birthPlace: "",
-    gender: "male", // Set default value
-    maritalStatus: "single", // Set default value
-    bloodType: "",
-    religion: "islam", // Set default value
-    
-    // Identity information
-    nik: "",
-    passportNumber: "",
-    postalCode: "",
-    citizenAddress: "",
-    residentialAddress: "",
-    useResidentialAddress: false,
-    
-    // Employment information
-    employeeId: "",
-    barcode: "",
-    groupStructure: "",
-    employmentStatus: "Permanent",
-    branch: "Pusat",
-    organization: "",
-    jobPosition: "",
-    jobLevel: "",
-    grade: "",
-    class: "",
-    schedule: "",
-    approvalLine: "",
-    manager: "",
-    
-    // Dialog form fields
-    statusName: "",
-    statusHasEndDate: false,
-    orgCode: "",
-    orgName: "",
-    parentOrg: "",
-    positionCode: "",
-    positionName: "",
-    parentPosition: "",
-    levelCode: "",
-    levelName: ""
+  const [activeTab, setActiveTab] = useState("general");
+  const { addEmployee } = useEmployees();
+
+  // Initialize form
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      employeeId: "",
+      groupStructure: "",
+      employmentStatus: "",
+      branch: "",
+      organization: "",
+      jobPosition: "",
+      jobLevel: "",
+      grade: "",
+      class: "",
+      schedule: "",
+      approvalLine: "",
+      manager: "",
+    },
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormValues({
-      ...formValues,
-      [id]: value
-    });
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormValues({
-      ...formValues,
-      [name]: value
-    });
-  };
-
-  const validateForm = (): boolean => {
-    const errors = validateEmployeeData(formValues, "all");
-    setValidationErrors(errors);
-    
-    if (errors.length > 0) {
-      toast.error(errors[0]);
-      return false;
-    }
-    
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
+  // Handle form submission
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      setIsSubmitting(true);
-      console.log("Submitting employee data...");
-      
-      // Format the name from firstName and lastName
-      const fullName = [formValues.firstName, formValues.lastName]
-        .filter(Boolean)
-        .join(" ");
-        
-      if (!fullName) {
-        toast.error("Employee name is required");
-        setIsSubmitting(false);
-        return;
+      const { name, email, employeeId } = data;
+      const newEmployee = await addEmployee({ 
+        name, 
+        email, 
+        employee_id: employeeId,
+        ...data 
+      });
+
+      if (newEmployee) {
+        toast.success("Employee created successfully!");
+        navigate("/hr/data");
+      } else {
+        toast.error("Failed to create employee.");
       }
-
-      // Prepare employee data
-      const employeeData = {
-        name: fullName,
-        email: formValues.email,
-        employee_id: formValues.employeeId,
-        organization_id: "00000000-0000-0000-0000-000000000000", // This should be set to the actual organization ID
-        status: "Active"
-      };
-
-      // Prepare personal details data
-      const personalDetails = {
-        mobile_phone: formValues.mobilePhone,
-        birth_place: formValues.birthPlace,
-        birth_date: birthdate ? birthdate.toISOString().split('T')[0] : undefined,
-        gender: formValues.gender,
-        marital_status: formValues.maritalStatus,
-        religion: formValues.religion,
-        blood_type: formValues.bloodType
-      };
-
-      // Prepare identity address data
-      const identityAddress = {
-        nik: formValues.nik,
-        passport_number: formValues.passportNumber,
-        passport_expiry: passportExpiry ? passportExpiry.toISOString().split('T')[0] : undefined,
-        postal_code: formValues.postalCode,
-        citizen_address: formValues.citizenAddress,
-        residential_address: formValues.residentialAddress
-      };
-
-      // Prepare employment data
-      const employment = {
-        barcode: formValues.barcode,
-        organization: formValues.organization,
-        job_position: formValues.jobPosition,
-        job_level: formValues.jobLevel,
-        employment_status: formValues.employmentStatus,
-        branch: formValues.branch,
-        join_date: joinDate ? joinDate.toISOString().split('T')[0] : undefined,
-        sign_date: signDate ? signDate.toISOString().split('T')[0] : undefined,
-      };
-
-      console.log("Creating employee...");
-      
-      // Create employee with all details
-      const result = await employeeService.createEmployee(
-        employeeData,
-        personalDetails,
-        identityAddress,
-        employment
-      );
-      
-      if (!result) {
-        toast.error("Failed to create employee");
-        return;
-      }
-      
-      console.log("Employee created successfully with ID:", result.id);
-      toast.success("Employee created successfully");
-      
-      // Navigate back to employee list
-      navigate(`/hr/data`);
-      
     } catch (error) {
       console.error("Error creating employee:", error);
-      toast.error("Failed to create employee");
-    } finally {
-      setIsSubmitting(false);
+      toast.error("Failed to create employee.");
     }
   };
 
+  const handleCancel = () => {
+    navigate("/hr/data");
+  };
+
+  const sbuItems: SBUItem[] = [
+    { group: "Group 1", name: "SBU 1" },
+    { group: "Group 1", name: "SBU 2" },
+    { group: "Group 2", name: "SBU 3" },
+    { group: "Group 2", name: "SBU 4" },
+  ];
+
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
-      <div className="flex items-center gap-2 text-sm text-blue-600">
-        <Link to="/hr/data" className="flex items-center hover:underline">
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to employee list
-        </Link>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Button 
+          variant="ghost" 
+          className="flex items-center gap-2" 
+          onClick={() => navigate("/hr/data")}
+        >
+          <ArrowLeft size={16} />
+          <span>Back to Employee List</span>
+        </Button>
       </div>
-      
+
       <h1 className="text-2xl font-bold">Add Employee</h1>
       
-      <Card className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Personal Data Section */}
-          <div>
-            <h2 className="text-lg font-semibold mb-1">Personal Data</h2>
-            <p className="text-sm text-gray-500 mb-4">Basic employee personal information</p>
-            
-            <SimplePersonalSection 
-              formValues={formValues}
-              setFormValues={setFormValues}
-              birthdate={birthdate}
-              setBirthdate={setBirthdate}
-              handleSelectChange={handleSelectChange}
-            />
-          </div>
-          
-          <div className="border-t pt-6">
-            <h2 className="text-lg font-semibold mb-1">Employment Data</h2>
-            <p className="text-sm text-gray-500 mb-4">Basic employment information</p>
-            
-            <SimpleEmploymentSection 
-              formValues={formValues}
-              handleInputChange={handleInputChange}
-              handleSelectChange={handleSelectChange}
-              joinDate={joinDate}
-              setJoinDate={setJoinDate}
-            />
-          </div>
-          
-          {/* Advanced Options */}
-          <Collapsible
-            open={advancedOpen}
-            onOpenChange={setAdvancedOpen}
-            className="border-t pt-4"
+      <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="border-b w-full justify-start rounded-none space-x-6 px-0">
+          <TabsTrigger 
+            value="general" 
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none pb-2"
           >
-            <CollapsibleTrigger asChild>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                className="flex w-full justify-between items-center"
-              >
-                <span className="text-left font-medium">Advanced Options</span>
-                <ChevronDown 
-                  className={`h-4 w-4 transition-transform ${advancedOpen ? "transform rotate-180" : ""}`} 
-                />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2 space-y-4">
-              <p className="text-sm text-gray-500">
-                Additional information can be added later in the employee details page.
-              </p>
-            </CollapsibleContent>
-          </Collapsible>
-          
-          {/* Validation errors */}
-          {validationErrors.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded p-3">
-              <p className="text-red-800 font-medium text-sm mb-1">Please correct the following errors:</p>
-              <ul className="text-red-700 text-sm list-disc pl-5">
-                {validationErrors.map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          {/* Form Actions */}
-          <div className="flex justify-end gap-3 pt-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => navigate('/hr/data')}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Saving..." : "Save Employee"}
-            </Button>
-          </div>
-        </form>
-      </Card>
+            General
+          </TabsTrigger>
+          <TabsTrigger 
+            value="employment" 
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none pb-2"
+          >
+            Employment
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="pt-6">
+          <Card className="p-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter employee's full name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter employee's email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="employeeId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Employee ID *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter employee's ID" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" type="button" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Create Employee</Button>
+                </div>
+              </form>
+            </Form>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="employment" className="pt-6">
+          <Card className="p-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="groupStructure"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Group Structure</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select group structure" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {sbuItems.map((item, index) => (
+                              <SelectItem key={index} value={item.name}>
+                                {item.name} ({item.group})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="employmentStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Employment Status</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter employment status" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="branch"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Branch</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter branch" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="organization"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Organization</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter organization" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="jobPosition"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Job Position</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter job position" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="jobLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Job Level</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter job level" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="grade"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grade</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter grade" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="class"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Class</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter class" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="schedule"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Schedule</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter schedule" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="approvalLine"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Approval Line</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter approval line" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="manager"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Manager</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter manager" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" type="button" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Create Employee</Button>
+                </div>
+              </form>
+            </Form>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default AddEmployee;

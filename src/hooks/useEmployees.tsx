@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { employeeService, EmployeeWithDetails, Employee } from '@/services/employeeService';
+import { employeeService, EmployeeWithDetails } from '@/services/employeeService';
 
 // Define the LegacyEmployee interface that many components are looking for
 export interface LegacyEmployee {
@@ -26,30 +26,42 @@ export interface LegacyEmployee {
   religion?: string;
   gender?: string;
   maritalStatus?: string;
+  profile_image?: string; // Added for profile image support
   [key: string]: any;
 }
 
+// Export the Employee interface from employeeService
+export type { Employee } from '@/services/employeeService';
+
 // Define education and work experience interfaces
 export interface EmployeeEducation {
-  id: string;
+  id?: string;
   employee_id: string;
   institution: string;
   degree: string;
-  field: string;
-  start_year: string;
-  end_year: string;
+  field?: string; // Used as field_of_study in database
+  field_of_study?: string; // Database field
+  start_year?: string;
+  end_year?: string;
+  start_date?: string; // Database field
+  end_date?: string; // Database field
   description?: string;
+  education_type?: string;
+  created_at?: string;
+  updated_at?: string;
   [key: string]: any;
 }
 
 export interface EmployeeWorkExperience {
-  id: string;
+  id?: string;
   employee_id: string;
   company: string;
   position: string;
   start_date: string;
   end_date: string;
   description?: string;
+  created_at?: string;
+  updated_at?: string;
   [key: string]: any;
 }
 
@@ -74,6 +86,7 @@ export const convertToLegacyFormat = (employee: EmployeeWithDetails): LegacyEmpl
     religion: employee.personalDetails?.religion,
     gender: employee.personalDetails?.gender,
     maritalStatus: employee.personalDetails?.marital_status,
+    profile_image: employee.profile_image,
     // Include any additional fields that might be needed
   };
 };
@@ -104,7 +117,7 @@ export const useEmployees = () => {
   }, [fetchEmployees]);
 
   // Add a new employee
-  const addEmployee = async (employee: Partial<Employee>) => {
+  const addEmployee = async (employee: Partial<EmployeeWithDetails>) => {
     try {
       const newEmployee = await employeeService.createEmployee(employee);
       if (newEmployee) {
@@ -119,7 +132,7 @@ export const useEmployees = () => {
   };
 
   // Update an employee
-  const updateEmployee = async (updates: Partial<Employee>) => {
+  const updateEmployee = async (updates: Partial<EmployeeWithDetails>) => {
     try {
       if (!updates.id) throw new Error('Employee ID is required for update');
       
@@ -233,23 +246,44 @@ export const useEmployees = () => {
     }
   };
 
-  // Education functions
-  const addEducation = async (employeeId: string, educationData: any) => {
+  // Upload profile image
+  const uploadProfileImage = async (employeeId: string, file: File) => {
     try {
-      // Implement when needed
-      console.log('Add education function called with:', employeeId, educationData);
+      const imageUrl = await employeeService.uploadProfileImage(employeeId, file);
+      if (imageUrl) {
+        // Update employee with new profile image
+        const updatedEmployee = await employeeService.updateEmployee(employeeId, { profile_image: imageUrl });
+        if (updatedEmployee) {
+          // Update local state
+          setEmployees(employees.map(emp => 
+            emp.id === employeeId ? { ...emp, profile_image: imageUrl } : emp
+          ));
+        }
+        return imageUrl;
+      }
       return null;
+    } catch (err) {
+      console.error('Error uploading profile image:', err);
+      throw err;
+    }
+  };
+
+  // Education functions
+  const addEducation = async (educationData: EmployeeEducation) => {
+    try {
+      const result = await employeeService.saveFamilyMember(educationData);
+      return result;
     } catch (err) {
       console.error('Error adding education:', err);
       throw err;
     }
   };
 
-  const updateEducation = async (id: string, updates: any) => {
+  const updateEducation = async (id: string, updates: EmployeeEducation) => {
     try {
-      // Implement when needed
-      console.log('Update education function called with:', id, updates);
-      return null;
+      const updatedData = { ...updates, id };
+      const result = await employeeService.saveFamilyMember(updatedData);
+      return result;
     } catch (err) {
       console.error('Error updating education:', err);
       throw err;
@@ -258,9 +292,8 @@ export const useEmployees = () => {
 
   const deleteEducation = async (id: string) => {
     try {
-      // Implement when needed
-      console.log('Delete education function called with:', id);
-      return true;
+      const success = await employeeService.deleteFamilyMember(id);
+      return success;
     } catch (err) {
       console.error('Error deleting education:', err);
       throw err;
@@ -268,22 +301,21 @@ export const useEmployees = () => {
   };
 
   // Work experience functions
-  const addWorkExperience = async (employeeId: string, experienceData: any) => {
+  const addWorkExperience = async (experienceData: EmployeeWorkExperience) => {
     try {
-      // Implement when needed
-      console.log('Add work experience function called with:', employeeId, experienceData);
-      return null;
+      const result = await employeeService.saveFamilyMember(experienceData);
+      return result;
     } catch (err) {
       console.error('Error adding work experience:', err);
       throw err;
     }
   };
 
-  const updateWorkExperience = async (id: string, updates: any) => {
+  const updateWorkExperience = async (id: string, updates: EmployeeWorkExperience) => {
     try {
-      // Implement when needed
-      console.log('Update work experience function called with:', id, updates);
-      return null;
+      const updatedData = { ...updates, id };
+      const result = await employeeService.saveFamilyMember(updatedData);
+      return result;
     } catch (err) {
       console.error('Error updating work experience:', err);
       throw err;
@@ -292,9 +324,8 @@ export const useEmployees = () => {
 
   const deleteWorkExperience = async (id: string) => {
     try {
-      // Implement when needed
-      console.log('Delete work experience function called with:', id);
-      return true;
+      const success = await employeeService.deleteFamilyMember(id);
+      return success;
     } catch (err) {
       console.error('Error deleting work experience:', err);
       throw err;
@@ -312,6 +343,7 @@ export const useEmployees = () => {
     updateEmploymentDetails,
     updatePersonalDetails,
     updateIdentityAddress,
+    uploadProfileImage,
     // Education-related functions
     addEducation,
     updateEducation,

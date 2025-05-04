@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useEmployees } from "@/hooks/useEmployees";
+import { employeeService } from "@/services/employeeService";
 
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
@@ -97,11 +97,11 @@ const EmployeePersonal = () => {
       updateEmployee(baseUpdate)
         .then(() => {
           // Then update the personal details data
-          return updatePersonalDetails(id, personalDetailsData);
+          return employeeService.updateEmployeePersonalDetails(id, personalDetailsData);
         })
         .then(() => {
           // Then update the identity address data
-          return updateIdentityAddress(id, identityAddressData);
+          return employeeService.updateEmployeeIdentityAddress(id, identityAddressData);
         })
         .then(() => {
           toast.success("Personal data updated successfully");
