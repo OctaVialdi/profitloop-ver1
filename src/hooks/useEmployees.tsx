@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { employeeService, Employee, EmployeeWithDetails } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -26,7 +25,7 @@ export interface LegacyEmployee {
   maritalStatus: string;
   status: string;
   role: string;
-  organization_id?: string;
+  organization_id: string; // Changed from optional to required
   employee_id?: string;
 }
 
@@ -64,47 +63,25 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     maritalStatus: employee.personalDetails?.marital_status || "",
     status: employee.status || "Active",
     role: employee.role || "employee",
-    organization_id: employee.organization_id,
+    organization_id: employee.organization_id || "", // Ensure we always have a value
     employee_id: employee.employee_id
   };
 }
 
 // Helper function to convert from legacy format to new database format
-export function convertFromLegacyFormat(legacyEmployee: Partial<LegacyEmployee>): Partial<Employee> & Partial<{
-  personalDetails: any;
-  identityAddress: any;
-  employment: any;
-}> {
-  return {
+export function convertFromLegacyFormat(legacyEmployee: Partial<LegacyEmployee>): Partial<Employee> {
+  // Basic employee data
+  const employeeData: Partial<Employee> = {
     id: legacyEmployee.id,
     name: legacyEmployee.name,
     email: legacyEmployee.email,
     employee_id: legacyEmployee.employeeId || legacyEmployee.employee_id,
     organization_id: legacyEmployee.organization_id,
     status: legacyEmployee.status,
-    role: legacyEmployee.role,
-    personalDetails: {
-      mobile_phone: legacyEmployee.mobilePhone,
-      birth_place: legacyEmployee.birthPlace,
-      birth_date: legacyEmployee.birthDate,
-      gender: legacyEmployee.gender,
-      marital_status: legacyEmployee.maritalStatus,
-      religion: legacyEmployee.religion
-    },
-    identityAddress: {
-      residential_address: legacyEmployee.address
-    },
-    employment: {
-      barcode: legacyEmployee.barcode,
-      organization: legacyEmployee.organization,
-      job_position: legacyEmployee.jobPosition,
-      job_level: legacyEmployee.jobLevel,
-      employment_status: legacyEmployee.employmentStatus,
-      branch: legacyEmployee.branch,
-      join_date: legacyEmployee.joinDate,
-      sign_date: legacyEmployee.signDate
-    }
+    role: legacyEmployee.role
   };
+
+  return employeeData;
 }
 
 export function useEmployees(): UseEmployeesResult {

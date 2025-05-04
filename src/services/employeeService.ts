@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -823,3 +822,168 @@ class EmployeeService {
 }
 
 export const employeeService = new EmployeeService();
+
+// Update employee personal details
+export async function updateEmployeePersonalDetails(employeeId: string, data: Partial<EmployeePersonalDetails>): Promise<EmployeePersonalDetails | null> {
+  try {
+    // Check if the personal details record exists
+    const { data: existing } = await supabase
+      .from('employee_personal_details')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .single();
+
+    if (existing) {
+      // Update existing record
+      const { data: updated, error } = await supabase
+        .from('employee_personal_details')
+        .update({
+          mobile_phone: data.mobile_phone,
+          birth_place: data.birth_place,
+          birth_date: data.birth_date ? String(data.birth_date) : null,
+          gender: data.gender,
+          marital_status: data.marital_status,
+          blood_type: data.blood_type,
+          religion: data.religion
+        })
+        .eq('employee_id', employeeId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return updated;
+    } else {
+      // Create new record
+      const { data: created, error } = await supabase
+        .from('employee_personal_details')
+        .insert({
+          employee_id: employeeId,
+          mobile_phone: data.mobile_phone,
+          birth_place: data.birth_place,
+          birth_date: data.birth_date ? String(data.birth_date) : null,
+          gender: data.gender,
+          marital_status: data.marital_status,
+          blood_type: data.blood_type,
+          religion: data.religion
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return created;
+    }
+  } catch (error) {
+    console.error('Error updating employee personal details:', error);
+    throw error;
+  }
+}
+
+// Update employee employment details
+export async function updateEmployeeEmployment(employeeId: string, data: Partial<EmployeeEmployment>): Promise<EmployeeEmployment | null> {
+  try {
+    // Check if the employment record exists
+    const { data: existing } = await supabase
+      .from('employee_employment')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .single();
+
+    if (existing) {
+      // Update existing record
+      const { data: updated, error } = await supabase
+        .from('employee_employment')
+        .update({
+          barcode: data.barcode,
+          organization: data.organization,
+          job_position: data.job_position,
+          job_level: data.job_level,
+          employment_status: data.employment_status,
+          branch: data.branch,
+          join_date: data.join_date ? String(data.join_date) : null,
+          sign_date: data.sign_date ? String(data.sign_date) : null
+        })
+        .eq('employee_id', employeeId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return updated;
+    } else {
+      // Create new record
+      const { data: created, error } = await supabase
+        .from('employee_employment')
+        .insert({
+          employee_id: employeeId,
+          barcode: data.barcode,
+          organization: data.organization,
+          job_position: data.job_position,
+          job_level: data.job_level,
+          employment_status: data.employment_status,
+          branch: data.branch,
+          join_date: data.join_date ? String(data.join_date) : null,
+          sign_date: data.sign_date ? String(data.sign_date) : null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return created;
+    }
+  } catch (error) {
+    console.error('Error updating employee employment details:', error);
+    throw error;
+  }
+}
+
+// Update employee identity address
+export async function updateEmployeeIdentityAddress(employeeId: string, data: Partial<EmployeeIdentityAddress>): Promise<EmployeeIdentityAddress | null> {
+  try {
+    // Check if the identity address record exists
+    const { data: existing } = await supabase
+      .from('employee_identity_addresses')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .single();
+
+    if (existing) {
+      // Update existing record
+      const { data: updated, error } = await supabase
+        .from('employee_identity_addresses')
+        .update({
+          nik: data.nik,
+          passport_number: data.passport_number,
+          passport_expiry: data.passport_expiry ? String(data.passport_expiry) : null,
+          postal_code: data.postal_code,
+          citizen_address: data.citizen_address,
+          residential_address: data.residential_address
+        })
+        .eq('employee_id', employeeId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return updated;
+    } else {
+      // Create new record
+      const { data: created, error } = await supabase
+        .from('employee_identity_addresses')
+        .insert({
+          employee_id: employeeId,
+          nik: data.nik,
+          passport_number: data.passport_number,
+          passport_expiry: data.passport_expiry ? String(data.passport_expiry) : null,
+          postal_code: data.postal_code,
+          citizen_address: data.citizen_address,
+          residential_address: data.residential_address
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return created;
+    }
+  } catch (error) {
+    console.error('Error updating employee identity address:', error);
+    throw error;
+  }
+}

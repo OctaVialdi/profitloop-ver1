@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
-import { useEmployees, convertFromLegacyFormat } from "@/hooks/useEmployees";
+import { useEmployees, employeeService } from "@/hooks/useEmployees";
 
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
@@ -62,33 +63,54 @@ const EmployeePersonal = () => {
   const onSubmit = (data: any) => {
     // Update employee data
     if (employee && id) {
-      updateEmployee({
+      // Update base employee data
+      const baseUpdate = {
         id: id,
         name: `${data.firstName} ${data.lastName}`.trim(),
         email: data.email,
-        personalDetails: {
-          employee_id: id,
-          mobile_phone: data.mobilePhone,
-          birth_place: data.birthPlace,
-          birth_date: data.birthDate,
-          gender: data.gender,
-          marital_status: data.maritalStatus,
-          blood_type: data.bloodType,
-          religion: data.religion
-        },
-        identityAddress: {
-          employee_id: id,
-          nik: data.nik,
-          passport_number: data.passportNumber,
-          passport_expiry: data.passportExpiry,
-          postal_code: data.postalCode,
-          citizen_address: data.citizenAddress,
-          residential_address: data.residentialAddress
-        }
-      });
+      };
+
+      // Update personal details data separately
+      const personalDetailsData = {
+        employee_id: id,
+        mobile_phone: data.mobilePhone,
+        birth_place: data.birthPlace,
+        birth_date: data.birthDate,
+        gender: data.gender,
+        marital_status: data.maritalStatus,
+        blood_type: data.bloodType,
+        religion: data.religion
+      };
+
+      // Update identity address data separately
+      const identityAddressData = {
+        employee_id: id,
+        nik: data.nik,
+        passport_number: data.passportNumber,
+        passport_expiry: data.passportExpiry,
+        postal_code: data.postalCode,
+        citizen_address: data.citizenAddress,
+        residential_address: data.residentialAddress
+      };
       
-      toast.success("Personal data updated successfully");
-      navigate(`/hr/data/employee/${id}`);
+      // First update the base employee data
+      updateEmployee(baseUpdate)
+        .then(() => {
+          // Then update the personal details data
+          return employeeService.updateEmployeePersonalDetails(id, personalDetailsData);
+        })
+        .then(() => {
+          // Then update the identity address data
+          return employeeService.updateEmployeeIdentityAddress(id, identityAddressData);
+        })
+        .then(() => {
+          toast.success("Personal data updated successfully");
+          navigate(`/hr/data/employee/${id}`);
+        })
+        .catch(error => {
+          console.error("Error updating employee:", error);
+          toast.error("Failed to update personal data");
+        });
     }
   };
 
