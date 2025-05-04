@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, updateUserOrgMetadata } from "@/integrations/supabase/client";
 import { getOrganization, getSubscriptionPlan, checkTrialExpiration } from "@/services/organizationService";
 import { getUserProfile } from "@/services/profileService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
