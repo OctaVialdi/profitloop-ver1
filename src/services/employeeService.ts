@@ -9,7 +9,9 @@ export interface Employee {
   email: string;
   status: string;
   role: string;
-  profile_image?: string; // Add profile image field
+  profile_image?: string; // Profile image field properly defined here
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface EmployeePersonalDetails {
@@ -61,7 +63,7 @@ export interface EmployeeWithDetails {
   email: string;
   status: string;
   role: string;
-  profile_image?: string; // Add profile image field
+  profile_image?: string; // Add profile image field here as well
   personalDetails?: EmployeePersonalDetails;
   identityAddress?: EmployeeIdentityAddress;
   employment?: EmployeeEmployment;
