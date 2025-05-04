@@ -82,7 +82,8 @@ const EmployeeEmployment = () => {
           sign_date: data.signDate,
           grade: data.grade,
           class: data.class,
-          approval_line: data.approvalLine
+          approval_line: data.approvalLine,
+          manager_id: data.isManager ? null : data.manager
         };
         
         // First update the base employee data
