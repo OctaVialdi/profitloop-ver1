@@ -1,18 +1,20 @@
-
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, RotateCw, Filter, FileDown, CheckCircle2, AlertCircle, FilePlus, Upload } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, RotateCw, Filter, FileDown, CheckCircle2, AlertCircle, FilePlus, Upload, ArrowDown, ArrowUp, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import TicketDetailDialog from "@/components/it/TicketDetailDialog";
 import TicketEditDialog from "@/components/it/TicketEditDialog";
 import NewTicketDialog from "@/components/it/NewTicketDialog";
 import FileUploadDialog from "@/components/it/FileUploadDialog";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { Progress } from "@/components/ui/progress";
 
 // Type definition for ticket
 export interface Ticket {
@@ -394,6 +396,59 @@ export default function ITSupport() {
     setShowFileUploadDialog(true);
   };
 
+  // Calculate dashboard metrics
+  const dashboardMetrics = useMemo(() => {
+    const openTickets = tickets.filter(t => 
+      t.status === "Open" || t.status === "In Progress" || t.status === "Received").length;
+    
+    // Calculate average response time in minutes (simplified for demo)
+    let totalResponseTime = 0;
+    tickets.forEach(ticket => {
+      const time = ticket.response.time;
+      if (time.includes('m')) {
+        totalResponseTime += parseInt(time.replace('m', ''));
+      } else if (time.includes('h')) {
+        const parts = time.split('h ');
+        const hours = parseInt(parts[0]);
+        const minutes = parts[1] ? parseInt(parts[1].replace('m', '')) : 0;
+        totalResponseTime += (hours * 60) + minutes;
+      }
+    });
+    const avgResponseTime = Math.round(totalResponseTime / tickets.length);
+    
+    // Calculate SLA compliance (simplified for demo)
+    const slaCompliant = tickets.filter(t => t.response.type === "fast" || t.response.type === "medium").length;
+    const slaComplianceRate = Math.round((slaCompliant / tickets.length) * 100);
+    
+    // Calculate resolution rate
+    const resolved = tickets.filter(t => t.status === "Resolved").length;
+    const resolutionRate = Math.round((resolved / tickets.length) * 100);
+
+    return {
+      openTickets,
+      avgResponseTime,
+      slaComplianceRate,
+      resolutionRate
+    };
+  }, [tickets]);
+  
+  // Prepare chart data
+  const responseTimeByCategory = [
+    { name: "Software", value: 32 },
+    { name: "Network", value: 9 },
+    { name: "Hardware", value: 15 }
+  ];
+  
+  const resolutionByDepartment = [
+    { name: "Finance", value: 20 },
+    { name: "HR", value: 15 }
+  ];
+  
+  const slaComplianceOverTime = [
+    { name: "3/24", value: 75 },
+    { name: "4/24", value: 100 }
+  ];
+
   return (
     <div className="space-y-4">
       <Card>
@@ -415,6 +470,7 @@ export default function ITSupport() {
             <div className="flex items-center gap-2">
               <Button
                 variant={viewMode === "dashboard" ? "default" : "outline"}
+                className={viewMode === "dashboard" ? "bg-purple-700 hover:bg-purple-800" : ""}
                 onClick={() => setViewMode("dashboard")}
               >
                 Dashboard
@@ -454,185 +510,395 @@ export default function ITSupport() {
               </TabsList>
 
               <TabsContent value="userRequests" className="pt-4 px-4 pb-6">
-                <div className="flex flex-wrap justify-between mb-4 gap-4">
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      className="bg-purple-700 hover:bg-purple-800 flex items-center gap-1"
-                      onClick={() => setShowNewTicketDialog(true)}
-                    >
-                      <FilePlus size={16} /> New Ticket
-                    </Button>
-                    <Button
-                      variant="outline" 
-                      className="flex items-center gap-1"
-                      onClick={() => setShowFileUploadDialog(true)}
-                    >
-                      <Upload size={16} /> Upload
-                    </Button>
-                    <Button variant="outline" className="flex items-center gap-1">
-                      <RotateCw size={16} />
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2 flex-1 max-w-md">
-                    <div className="relative flex-1">
-                      <Input
-                        placeholder="Search tickets..."
-                        className="pl-10"
-                      />
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
-                        </svg>
+                {viewMode === "dashboard" ? (
+                  <div className="space-y-6">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-semibold">IT Support Overview</h2>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            <span>Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" className="flex items-center gap-1">
+                              <RefreshCw size={14} />
+                              Refresh
+                            </Button>
+                            <Button variant="outline" size="sm" className="flex items-center gap-1">
+                              <FileDown size={14} />
+                              Export
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {/* Open Tickets Card */}
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="font-medium text-sm text-gray-500">Open Tickets</div>
+                            <div className="flex items-end justify-between mt-1">
+                              <div className="text-3xl font-semibold">{dashboardMetrics.openTickets}</div>
+                              <div className="flex items-center text-red-500 text-sm">
+                                <ArrowDown size={14} className="mr-1" />
+                                <span>60%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Avg Response Time Card */}
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="font-medium text-sm text-gray-500">Avg. Response Time</div>
+                            <div className="flex items-end justify-between mt-1">
+                              <div className="text-3xl font-semibold">{dashboardMetrics.avgResponseTime}m</div>
+                              <div className="flex items-center text-green-500 text-sm">
+                                <ArrowUp size={14} className="mr-1" />
+                                <span>12%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* SLA Compliance Card */}
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="font-medium text-sm text-gray-500">SLA Compliance</div>
+                            <div className="flex items-end justify-between mt-1">
+                              <div className="text-3xl font-semibold">{dashboardMetrics.slaComplianceRate}%</div>
+                              <div className="flex items-center text-green-500 text-sm">
+                                <ArrowUp size={14} className="mr-1" />
+                                <span>3%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Resolution Rate Card */}
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="font-medium text-sm text-gray-500">Resolution Rate</div>
+                            <div className="flex items-end justify-between mt-1">
+                              <div className="text-3xl font-semibold">{dashboardMetrics.resolutionRate}%</div>
+                              <div className="flex items-center text-green-500 text-sm">
+                                <ArrowUp size={14} className="mr-1" />
+                                <span>5%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" className="flex items-center gap-1">
-                        <Filter size={16} /> Filter
-                      </Button>
-                      <Button variant="outline" className="flex items-center gap-1">
-                        <FileDown size={16} /> Export
-                      </Button>
+
+                    {/* Charts Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      {/* Response Time by Category */}
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="mb-2">
+                            <div className="font-medium text-sm text-gray-500">Response Time by Category</div>
+                            <div className="text-2xl font-semibold">22m</div>
+                          </div>
+                          <div className="h-[250px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart
+                                layout="vertical"
+                                data={responseTimeByCategory}
+                                margin={{ top: 5, right: 30, left: 30, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                <XAxis type="number" domain={[0, 36]} />
+                                <YAxis type="category" dataKey="name" width={80} />
+                                <Tooltip />
+                                <Bar dataKey="value" fill="#9b87f5" barSize={24} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Resolution Time by Department */}
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="mb-2">
+                            <div className="font-medium text-sm text-gray-500">Resolution Time by Department</div>
+                            <div className="text-2xl font-semibold">18m</div>
+                          </div>
+                          <div className="h-[250px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart
+                                data={resolutionByDepartment}
+                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" />
+                                <YAxis domain={[0, 20]} />
+                                <Tooltip />
+                                <Bar dataKey="value" fill="#9b87f5" barSize={40} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* SLA Compliance Over Time */}
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="mb-2">
+                            <div className="font-medium text-sm text-gray-500">SLA Compliance Over Time</div>
+                            <div className="text-2xl font-semibold">80%</div>
+                          </div>
+                          <div className="h-[250px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={slaComplianceOverTime}
+                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis domain={[0, 100]} />
+                                <Tooltip />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="value" 
+                                  stroke="#9b87f5" 
+                                  strokeWidth={3} 
+                                  dot={{ r: 5, fill: "#9b87f5" }} 
+                                  activeDot={{ r: 8 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Recent Tickets Overview */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Recent Tickets</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="hover:bg-transparent">
+                                <TableHead>ID</TableHead>
+                                <TableHead>Title</TableHead>
+                                <TableHead>Priority</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Assignee</TableHead>
+                                <TableHead>Created</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {tickets.slice(0, 5).map(ticket => (
+                                <TableRow key={`recent-${ticket.id}`}>
+                                  <TableCell className="font-medium">{ticket.id}</TableCell>
+                                  <TableCell>{ticket.title}</TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className={getPriorityBadgeClass(ticket.priority)}>
+                                      {ticket.priority}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className={getStatusBadgeClass(ticket.status)}>
+                                      {ticket.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>{ticket.assignee}</TableCell>
+                                  <TableCell>{ticket.createdAt}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex flex-wrap justify-between mb-4 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          className="bg-purple-700 hover:bg-purple-800 flex items-center gap-1"
+                          onClick={() => setShowNewTicketDialog(true)}
+                        >
+                          <FilePlus size={16} /> New Ticket
+                        </Button>
+                        <Button
+                          variant="outline" 
+                          className="flex items-center gap-1"
+                          onClick={() => setShowFileUploadDialog(true)}
+                        >
+                          <Upload size={16} /> Upload
+                        </Button>
+                        <Button variant="outline" className="flex items-center gap-1">
+                          <RotateCw size={16} />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 flex-1 max-w-md">
+                        <div className="relative flex-1">
+                          <Input
+                            placeholder="Search tickets..."
+                            className="pl-10"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" className="flex items-center gap-1">
+                            <Filter size={16} /> Filter
+                          </Button>
+                          <Button variant="outline" className="flex items-center gap-1">
+                            <FileDown size={16} /> Export
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-md overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-gray-50 hover:bg-gray-50">
+                              <TableHead className="w-[80px]">ID</TableHead>
+                              <TableHead>Title</TableHead>
+                              <TableHead>Department</TableHead>
+                              <TableHead>Category</TableHead>
+                              <TableHead>Priority</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Created At</TableHead>
+                              <TableHead>Response</TableHead>
+                              <TableHead>Resolution</TableHead>
+                              <TableHead>Assignee</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {tickets.map((ticket) => (
+                              <TableRow key={ticket.id} className="hover:bg-gray-50">
+                                <TableCell className="font-medium">{ticket.id}</TableCell>
+                                <TableCell>{ticket.title}</TableCell>
+                                <TableCell>{ticket.department}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1">
+                                    <span>{ticket.category.icon}</span> {ticket.category.name}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getPriorityBadgeClass(ticket.priority)} variant="outline">
+                                    {ticket.priority}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getStatusBadgeClass(ticket.status)} variant="outline">
+                                    {ticket.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>{ticket.createdAt}</TableCell>
+                                <TableCell>
+                                  <span className={getResponseTimeClass(ticket.response.type).className}>
+                                    {getResponseTimeClass(ticket.response.type).icon} {ticket.response.time}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <span className={getResolutionInfo(ticket.resolution).className}>
+                                    {getResolutionInfo(ticket.resolution).icon} {getResolutionInfo(ticket.resolution).time}
+                                  </span>
+                                </TableCell>
+                                <TableCell>{ticket.assignee}</TableCell>
+                                <TableCell>
+                                  <div className="flex justify-end gap-2">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      title="View Details"
+                                      onClick={() => handleViewTicket(ticket)}
+                                    >
+                                      <Eye size={16} />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      title="Edit"
+                                      onClick={() => handleEditTicket(ticket)}
+                                    >
+                                      <Edit size={16} />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="text-red-500 hover:text-red-700"
+                                      title="Delete"
+                                      onClick={() => handleDeleteTicket(ticket)}
+                                    >
+                                      <Trash2 size={16} />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="text-purple-500 hover:text-purple-700"
+                                      title="Upload Files"
+                                      onClick={() => handleUploadForTicket(ticket.id)}
+                                    >
+                                      <Upload size={16} />
+                                    </Button>
+                                    {ticket.status !== "Resolved" && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="text-green-500 hover:text-green-700" 
+                                        title="Mark as Resolved"
+                                        onClick={() => {
+                                          setSelectedTicket(ticket);
+                                          handleMarkAsResolved();
+                                        }}
+                                      >
+                                        <CheckCircle2 size={16} />
+                                      </Button>
+                                    )}
+                                    {ticket.status !== "In Progress" && ticket.status !== "Resolved" && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="text-amber-500 hover:text-amber-700" 
+                                        title="Approve"
+                                        onClick={() => {
+                                          setSelectedTicket(ticket);
+                                          handleApproveTicket();
+                                        }}
+                                      >
+                                        <CheckCircle2 size={16} />
+                                      </Button>
+                                    )}
+                                    {ticket.status !== "Rejected" && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="text-red-500 hover:text-red-700" 
+                                        title="Reject"
+                                        onClick={() => {
+                                          setSelectedTicket(ticket);
+                                          handleRejectTicket();
+                                        }}
+                                      >
+                                        <AlertCircle size={16} />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="border rounded-md overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50 hover:bg-gray-50">
-                          <TableHead className="w-[80px]">ID</TableHead>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Department</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Priority</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Created At</TableHead>
-                          <TableHead>Response</TableHead>
-                          <TableHead>Resolution</TableHead>
-                          <TableHead>Assignee</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tickets.map((ticket) => (
-                          <TableRow key={ticket.id} className="hover:bg-gray-50">
-                            <TableCell className="font-medium">{ticket.id}</TableCell>
-                            <TableCell>{ticket.title}</TableCell>
-                            <TableCell>{ticket.department}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <span>{ticket.category.icon}</span> {ticket.category.name}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getPriorityBadgeClass(ticket.priority)} variant="outline">
-                                {ticket.priority}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusBadgeClass(ticket.status)} variant="outline">
-                                {ticket.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{ticket.createdAt}</TableCell>
-                            <TableCell>
-                              <span className={getResponseTimeClass(ticket.response.type).className}>
-                                {getResponseTimeClass(ticket.response.type).icon} {ticket.response.time}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <span className={getResolutionInfo(ticket.resolution).className}>
-                                {getResolutionInfo(ticket.resolution).icon} {getResolutionInfo(ticket.resolution).time}
-                              </span>
-                            </TableCell>
-                            <TableCell>{ticket.assignee}</TableCell>
-                            <TableCell>
-                              <div className="flex justify-end gap-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  title="View Details"
-                                  onClick={() => handleViewTicket(ticket)}
-                                >
-                                  <Eye size={16} />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  title="Edit"
-                                  onClick={() => handleEditTicket(ticket)}
-                                >
-                                  <Edit size={16} />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
-                                  onClick={() => handleDeleteTicket(ticket)}
-                                >
-                                  <Trash2 size={16} />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="text-purple-500 hover:text-purple-700"
-                                  title="Upload Files"
-                                  onClick={() => handleUploadForTicket(ticket.id)}
-                                >
-                                  <Upload size={16} />
-                                </Button>
-                                {ticket.status !== "Resolved" && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    className="text-green-500 hover:text-green-700" 
-                                    title="Mark as Resolved"
-                                    onClick={() => {
-                                      setSelectedTicket(ticket);
-                                      handleMarkAsResolved();
-                                    }}
-                                  >
-                                    <CheckCircle2 size={16} />
-                                  </Button>
-                                )}
-                                {ticket.status !== "In Progress" && ticket.status !== "Resolved" && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    className="text-amber-500 hover:text-amber-700" 
-                                    title="Approve"
-                                    onClick={() => {
-                                      setSelectedTicket(ticket);
-                                      handleApproveTicket();
-                                    }}
-                                  >
-                                    <CheckCircle2 size={16} />
-                                  </Button>
-                                )}
-                                {ticket.status !== "Rejected" && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    className="text-red-500 hover:text-red-700" 
-                                    title="Reject"
-                                    onClick={() => {
-                                      setSelectedTicket(ticket);
-                                      handleRejectTicket();
-                                    }}
-                                  >
-                                    <AlertCircle size={16} />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
+                )}
               </TabsContent>
 
               <TabsContent value="hardwareIssues" className="p-4">
