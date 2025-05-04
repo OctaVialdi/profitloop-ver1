@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -24,9 +23,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
     { name: "Dashboard", href: "/settings/dashboard" },
     { name: "Invite Members", href: "/settings/invite", requiredRole: "admin" },
     { name: "Team Members", href: "/settings/members" },
-    { name: "Collaborations", href: "/settings/collaborations", requiredRole: "admin" },
     { name: "Subscription", href: "/settings/subscription", requiredRole: "admin" },
-    { name: "Organization", href: "/settings/organization", requiredRole: "admin" },
     { name: "Profile", href: "/settings/profile" },
   ];
   
