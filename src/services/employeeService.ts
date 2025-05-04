@@ -1078,4 +1078,4 @@ export async function updateEmployeeIdentityAddress(employeeId: string, data: Pa
           nik: data.nik,
           passport_number: data.passport_number,
           passport_expiry: data.passport_expiry ? String(data.passport_expiry) : null,
-          postal_code: data.
+          postal_code
