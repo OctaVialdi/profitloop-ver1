@@ -41,23 +41,26 @@ export const checkExistingOrganization = async (userId: string, userEmail?: stri
       return { hasOrganization: false, emailVerified: false, organizationId: null };
     }
     
-    if (!profileData) {
+    if (!profileData || profileData.length === 0) {
       console.log("No profile data returned");
       return { hasOrganization: false, emailVerified: false, organizationId: null };
     }
     
+    // The RPC function returns an array, so take the first item
+    const profile = profileData[0];
+    
     // Check if email is verified
-    if (!profileData.email_verified) {
+    if (!profile.email_verified) {
       console.log("Email not verified");
       return { hasOrganization: false, emailVerified: false, organizationId: null };
     }
 
     // If user already has an organization in their profile
-    if (profileData.organization_id) {
+    if (profile.organization_id) {
       return { 
         hasOrganization: true, 
         emailVerified: true, 
-        organizationId: profileData.organization_id 
+        organizationId: profile.organization_id 
       };
     }
 

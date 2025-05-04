@@ -9,6 +9,12 @@ interface ProtectedRouteProps {
   publicRoutes?: string[];
 }
 
+interface ProfileData {
+  organization_id?: string | null;
+  email_verified?: boolean;
+  has_seen_welcome?: boolean;
+}
+
 export const ProtectedRoute = ({
   children,
   redirectTo = "/auth/login",
@@ -16,11 +22,7 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
-  const [profile, setProfile] = useState<{
-    organization_id?: string | null;
-    email_verified?: boolean;
-    has_seen_welcome?: boolean;
-  } | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -55,8 +57,9 @@ export const ProtectedRoute = ({
               
             if (profileError) {
               console.error("Error fetching profile:", profileError);
-            } else {
-              setProfile(profileData);
+            } else if (profileData && profileData.length > 0) {
+              // Take the first item from the array
+              setProfile(profileData[0]);
             }
           } catch (error) {
             console.error("Error checking profile:", error);
@@ -110,8 +113,8 @@ export const ProtectedRoute = ({
                   });
                   
                 if (isMounted) {
-                  if (!profileError) {
-                    setProfile(profileData);
+                  if (!profileError && profileData && profileData.length > 0) {
+                    setProfile(profileData[0]);
                   }
                   setLoading(false);
                 }
