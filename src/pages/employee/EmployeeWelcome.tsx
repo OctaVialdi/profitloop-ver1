@@ -11,6 +11,7 @@ const EmployeeWelcome = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [userData, setUserData] = useState<{
     fullName: string;
     organizationName: string;
@@ -55,7 +56,7 @@ const EmployeeWelcome = () => {
 
         if (!profileData?.organizations?.name) {
           toast.error("Anda belum tergabung dengan organisasi manapun");
-          navigate("/onboarding");
+          navigate("/organizations");
           return;
         }
 
@@ -84,6 +85,7 @@ const EmployeeWelcome = () => {
 
   const markWelcomeAsSeen = async () => {
     try {
+      setIsSubmitting(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -102,10 +104,13 @@ const EmployeeWelcome = () => {
       }
       
       // Navigate to dashboard
-      navigate("/dashboard");
+      toast.success("Selamat datang di dashboard!");
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("Error marking welcome page as seen:", error);
       toast.error("Terjadi kesalahan, mohon coba lagi");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -157,9 +162,22 @@ const EmployeeWelcome = () => {
           </div>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button className="w-full max-w-xs" onClick={markWelcomeAsSeen}>
-            <Home className="mr-2 h-4 w-4" />
-            Mulai Menggunakan Aplikasi
+          <Button 
+            className="w-full max-w-xs" 
+            onClick={markWelcomeAsSeen} 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Memproses...
+              </>
+            ) : (
+              <>
+                <Home className="mr-2 h-4 w-4" />
+                Mulai Menggunakan Aplikasi
+              </>
+            )}
           </Button>
         </CardFooter>
       </Card>

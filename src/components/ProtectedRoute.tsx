@@ -27,6 +27,7 @@ export const ProtectedRoute = ({
 
   // Check if current path is in public routes
   const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
+  const isAuthRoute = currentPath.startsWith('/auth/');
 
   useEffect(() => {
     // Skip authentication check for public routes
@@ -131,52 +132,76 @@ export const ProtectedRoute = ({
     );
   }
 
+  // Authentication routes handling (login, register)
+  if (isAuthRoute) {
+    // If already authenticated, redirect based on profile status
+    if (authenticated) {
+      // Check email verification first
+      if (!profile?.email_verified) {
+        // If on login page already, no need to redirect
+        return children ? <>{children}</> : <Outlet />;
+      }
+      
+      // Check organization status
+      if (profile?.organization_id) {
+        // Check if has seen welcome page
+        if (!profile.has_seen_welcome) {
+          return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
+        } else {
+          return <Navigate to="/dashboard" state={{ from: location }} replace />;
+        }
+      } else {
+        return <Navigate to="/organizations" state={{ from: location }} replace />;
+      }
+    }
+    
+    // Not authenticated and on auth route, show the auth page
+    return children ? <>{children}</> : <Outlet />;
+  }
+
   // Handle specific redirections based on the flowchart
   if (authenticated) {
-    // If user is not on login/register page
-    if (!currentPath.startsWith('/auth/')) {
-      // Check if email is verified
-      if (!profile?.email_verified && !isPublicRoute) {
-        toast.error("Email Anda belum diverifikasi. Silakan verifikasi email terlebih dahulu.");
-        return <Navigate to="/auth/login" state={{ from: location, requireVerification: true }} replace />;
-      }
-      
-      // Check if on organizations page
-      if (currentPath.startsWith('/organizations') || currentPath === '/onboarding') {
-        // If already has organization, redirect to welcome page if not seen
-        if (profile?.organization_id) {
-          if (!profile.has_seen_welcome) {
-            return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
-          } else {
-            return <Navigate to="/dashboard" state={{ from: location }} replace />;
-          }
-        }
-      }
-      
-      // Check if on employee welcome page
-      if (currentPath === '/employee-welcome') {
-        // If no organization, redirect to organization setup
-        if (!profile?.organization_id) {
-          return <Navigate to="/organizations" state={{ from: location }} replace />;
-        }
-        // If already seen welcome page, go to dashboard
-        if (profile.has_seen_welcome) {
+    // Check if email is verified for non-auth pages
+    if (!profile?.email_verified && !isPublicRoute) {
+      toast.error("Email Anda belum diverifikasi. Silakan verifikasi email terlebih dahulu.");
+      return <Navigate to="/auth/login" state={{ from: location, requireVerification: true }} replace />;
+    }
+    
+    // Specific route handling for organizations page
+    if (currentPath.startsWith('/organizations') || currentPath === '/onboarding') {
+      // If already has organization, redirect to welcome page if not seen
+      if (profile?.organization_id) {
+        if (!profile.has_seen_welcome) {
+          return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
+        } else {
           return <Navigate to="/dashboard" state={{ from: location }} replace />;
         }
       }
-      
-      // Check if on dashboard or other protected pages
-      if (currentPath.startsWith('/dashboard') || 
-          currentPath.startsWith('/hr/') ||
-          currentPath.startsWith('/finance/')) {
-        // If no organization, redirect to organization setup
-        if (!profile?.organization_id) {
-          return <Navigate to="/organizations" state={{ from: location }} replace />;
-        }
-        // If hasn't seen welcome page, redirect there first
-        if (!profile.has_seen_welcome) {
-          return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
-        }
+    }
+    
+    // Check if on employee welcome page
+    if (currentPath === '/employee-welcome') {
+      // If no organization, redirect to organization setup
+      if (!profile?.organization_id) {
+        return <Navigate to="/organizations" state={{ from: location }} replace />;
+      }
+      // If already seen welcome page, go to dashboard
+      if (profile.has_seen_welcome) {
+        return <Navigate to="/dashboard" state={{ from: location }} replace />;
+      }
+    }
+    
+    // Check if on dashboard or other protected pages
+    if (currentPath.startsWith('/dashboard') || 
+        currentPath.startsWith('/hr/') ||
+        currentPath.startsWith('/finance/')) {
+      // If no organization, redirect to organization setup
+      if (!profile?.organization_id) {
+        return <Navigate to="/organizations" state={{ from: location }} replace />;
+      }
+      // If hasn't seen welcome page, redirect there first
+      if (!profile.has_seen_welcome) {
+        return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
       }
     }
     

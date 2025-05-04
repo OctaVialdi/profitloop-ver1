@@ -61,7 +61,7 @@ export function useAuth() {
           full_name: fullName
         });
         
-        // Then mark email as verified
+        // Then mark email as verified - this is crucial for the authentication flow
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ email_verified: true })

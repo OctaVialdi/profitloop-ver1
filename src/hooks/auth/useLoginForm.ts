@@ -94,23 +94,31 @@ export function useLoginForm() {
           if (success) return;
         }
         
-        // Check if user's profile is marked as email_verified
+        // Check if user's profile exists and get relevant data
         const { data: profileData } = await supabase
           .from('profiles')
           .select('email_verified, organization_id, has_seen_welcome')
           .eq('id', data.user.id)
           .maybeSingle();
           
+        // Follow the authentication flow according to the flowchart
+        if (!profileData?.email_verified) {
+          // Email not verified, show verification required message
+          setIsEmailUnverified(true);
+          setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda atau kirim ulang email verifikasi.");
+          return;
+        }
+          
         // Check if user has organization and follow the flow chart
         if (profileData?.organization_id) {
           if (!profileData.has_seen_welcome) {
-            navigate("/employee-welcome");
+            navigate("/employee-welcome", { replace: true });
           } else {
-            navigate("/dashboard");
+            navigate("/dashboard", { replace: true });
           }
         } else {
           // Always redirect to organizations if user doesn't have organization
-          navigate("/organizations");
+          navigate("/organizations", { replace: true });
         }
       }
     } catch (error: any) {
