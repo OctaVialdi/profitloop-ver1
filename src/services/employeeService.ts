@@ -1078,4 +1078,37 @@ export async function updateEmployeeIdentityAddress(employeeId: string, data: Pa
           nik: data.nik,
           passport_number: data.passport_number,
           passport_expiry: data.passport_expiry ? String(data.passport_expiry) : null,
-          postal_code
+          postal_code: data.postal_code,
+          citizen_address: data.citizen_address,
+          residential_address: data.residential_address
+        })
+        .eq('employee_id', employeeId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return updated;
+    } else {
+      // Create new record
+      const { data: created, error } = await supabase
+        .from('employee_identity_addresses')
+        .insert({
+          employee_id: employeeId,
+          nik: data.nik,
+          passport_number: data.passport_number,
+          passport_expiry: data.passport_expiry ? String(data.passport_expiry) : null,
+          postal_code: data.postal_code,
+          citizen_address: data.citizen_address,
+          residential_address: data.residential_address
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return created;
+    }
+  } catch (error) {
+    console.error('Error updating employee identity address:', error);
+    throw error;
+  }
+}
