@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
-import { ensureUserProfileExists } from "@/integrations/supabase/profiles/profileManagement";
+import { ensureProfileExists } from "@/services/profileService";
 
 export interface AuthCredentials {
   email: string;
@@ -22,6 +21,18 @@ export function useAuth() {
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // If user is logged in, ensure profile exists
+        if (session?.user) {
+          // Use setTimeout to avoid potential auth state deadlocks
+          setTimeout(() => {
+            ensureProfileExists(session.user.id, {
+              email: session.user.email || '',
+              full_name: session.user.user_metadata?.full_name || null,
+              email_verified: session.user.email_confirmed_at !== null
+            });
+          }, 0);
+        }
       }
     );
 
@@ -29,6 +40,15 @@ export function useAuth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // If user is logged in, ensure profile exists
+      if (session?.user) {
+        ensureProfileExists(session.user.id, {
+          email: session.user.email || '',
+          full_name: session.user.user_metadata?.full_name || null,
+          email_verified: session.user.email_confirmed_at !== null
+        });
+      }
     });
 
     return () => {
@@ -54,21 +74,25 @@ export function useAuth() {
       // After successful login, make sure profile exists and set email as verified
       if (data.user) {
         const fullName = data.user.user_metadata?.full_name || null;
+        const emailVerified = data.user.email_confirmed_at !== null;
         
-        // First ensure profile exists
-        await ensureUserProfileExists(data.user.id, {
+        // Create or update profile
+        await ensureProfileExists(data.user.id, {
           email: data.user.email || '',
-          full_name: fullName
+          full_name: fullName,
+          email_verified: emailVerified
         });
         
-        // Then mark email as verified - this is crucial for the authentication flow
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ email_verified: true })
-          .eq('id', data.user.id);
-          
-        if (updateError) {
-          console.error("Error marking email as verified:", updateError);
+        // Then update email_verified flag if needed
+        if (emailVerified) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ email_verified: true })
+            .eq('id', data.user.id);
+            
+          if (updateError) {
+            console.error("Error marking email as verified:", updateError);
+          }
         }
       }
       
@@ -83,6 +107,8 @@ export function useAuth() {
         errorMessage = "Email atau password salah. Mohon periksa kembali.";
       } else if (error.message.includes("Database error")) {
         errorMessage = "Terjadi masalah server saat login. Mohon coba lagi dalam beberapa saat.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Email belum diverifikasi. Mohon verifikasi email terlebih dahulu.";
       }
       
       setLoginError(errorMessage);

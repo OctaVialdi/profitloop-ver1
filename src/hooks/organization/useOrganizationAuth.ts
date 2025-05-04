@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useOrganizationNavigation } from "./useOrganizationNavigation";
 import { checkExistingOrganization, updateUserWithOrganization } from "@/services/api/organizationApi";
+import { ensureProfileExists } from "@/services/profileService";
 
 /**
  * Hook for handling organization auth-related checks
@@ -24,6 +25,13 @@ export const useOrganizationAuth = () => {
       } 
       
       console.log("User is authenticated:", session.user.id);
+      
+      // Ensure profile exists (creates if it doesn't)
+      await ensureProfileExists(session.user.id, {
+        email: session.user.email || '',
+        full_name: session.user.user_metadata?.full_name || null,
+        email_verified: session.user.email_confirmed_at !== null
+      });
       
       // Check if user has an organization directly from session metadata first
       // This avoids the infinite recursion issue with profile policies

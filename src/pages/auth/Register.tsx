@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { ensureProfileExists } from "@/services/profileService";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -104,7 +104,12 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
-        // We don't create a profile here anymore - it will be created at first login
+        // Create profile entry
+        await ensureProfileExists(data.user.id, {
+          email: email,
+          full_name: fullName,
+          email_verified: false // Mark as unverified initially
+        });
         
         // Always redirect to verification page, never skip this step
         toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");

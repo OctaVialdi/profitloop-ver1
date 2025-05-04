@@ -35,7 +35,26 @@ export const checkExistingOrganization = async (userId: string, userEmail?: stri
       }
     }
     
-    // Approach 2: Try using our security definer function
+    // Direct query on profiles table - simpler and less prone to recursion
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('organization_id, email_verified')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (!profileError && profileData) {
+        return {
+          hasOrganization: !!profileData.organization_id,
+          emailVerified: !!profileData.email_verified,
+          organizationId: profileData.organization_id || null
+        };
+      }
+    } catch (directError) {
+      console.error("Direct profile query failed:", directError);
+    }
+    
+    // Approach 2: Try using our security definer function as fallback
     try {
       const { data: profileData, error: profileError } = await supabase
         .rpc('check_user_has_organization', {

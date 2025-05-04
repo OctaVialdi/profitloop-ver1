@@ -23,7 +23,22 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       }
     }
     
-    // Use our security definer function to avoid recursion
+    // Try a direct profiles query first - simpler and less prone to recursion issues
+    try {
+      const { data: directProfileData, error: directProfileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (!directProfileError && directProfileData) {
+        return directProfileData as UserProfile;
+      }
+    } catch (directError) {
+      console.log("Direct profile query failed, trying RPC function");
+    }
+    
+    // Use our security definer function as fallback
     const { data: profileData, error: profileError } = await supabase
       .rpc('get_user_profile_by_id', {
         user_id: userId
@@ -64,5 +79,44 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     return {
       id: userId,
     } as UserProfile;
+  }
+}
+
+export async function ensureProfileExists(userId: string, userData: { email: string, full_name?: string, email_verified?: boolean }) {
+  try {
+    // Check if profile already exists
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+      
+    // If profile doesn't exist, create it
+    if (!existingProfile) {
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: userData.email.toLowerCase(),
+          full_name: userData.full_name || null,
+          email_verified: userData.email_verified || false,
+          organization_id: null,
+          has_seen_welcome: false,
+          role: 'employee' // Default role
+        });
+        
+      if (insertError) {
+        console.error("Error creating profile:", insertError);
+        return false;
+      }
+      
+      console.log("Profile created successfully for:", userId);
+      return true;
+    }
+    
+    return true; // Profile already exists
+  } catch (err) {
+    console.error("Error ensuring profile exists:", err);
+    return false;
   }
 }
