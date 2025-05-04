@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Edit, CalendarIcon, Loader2, Check, X } from "lucide-react";
+import { Edit, CalendarIcon, Loader2, Check, X, Upload } from "lucide-react";
 import { LegacyEmployee, EmployeePersonalDetails } from "@/hooks/useEmployees";
-import { updateEmployeePersonalDetails } from "@/services/employeeService";
+import { updateEmployeePersonalDetails, updateEmployeeProfileImage } from "@/services/employeeService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FileUpload } from "@/components/ui/file-upload";
 
 interface PersonalSectionProps {
   employee: LegacyEmployee;
@@ -26,6 +27,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   // State for inline editing
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
   // Form state
   const [formValues, setFormValues] = useState({
@@ -93,12 +95,62 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       setIsLoading(false);
     }
   };
+
+  const handleProfilePhotoUpload = async (file: File) => {
+    try {
+      setUploadingPhoto(true);
+      
+      const url = await updateEmployeeProfileImage(employee.id, file);
+      
+      if (url) {
+        toast.success("Profile photo updated successfully");
+        // Refresh data to show the new photo
+        handleEdit("refresh");
+      } else {
+        throw new Error("Failed to update profile photo");
+      }
+    } catch (error) {
+      console.error("Failed to update profile photo:", error);
+      toast.error("Failed to update profile photo");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+  
+  // Get first name initial for avatar fallback
+  const getInitials = () => {
+    return employee.name ? employee.name.charAt(0).toUpperCase() : "?";
+  };
   
   return (
     <Card>
       <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold">Personal Data</h2>
+        </div>
+        
+        {/* Profile Photo Section */}
+        <div className="mb-6 flex flex-col items-center sm:items-start">
+          <div className="mb-3">
+            <h3 className="font-medium text-gray-900">Profile Photo</h3>
+            <p className="text-sm text-gray-500">Upload a photo of this employee</p>
+          </div>
+          
+          <div className="flex flex-col items-center sm:flex-row sm:items-end gap-4">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={employee.profile_image || undefined} alt={employee.name} />
+              <AvatarFallback className="text-3xl">{getInitials()}</AvatarFallback>
+            </Avatar>
+            
+            <FileUpload
+              onUpload={handleProfilePhotoUpload}
+              accept="image/png,image/jpeg,image/jpg"
+              buttonText="Upload Photo"
+              maxSizeMB={2}
+              variant="outline"
+              className="mt-2"
+            />
+          </div>
         </div>
         
         <div>
