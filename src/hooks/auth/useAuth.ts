@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User, AuthChangeEvent } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { ensureProfileExists } from "@/services/profileService";
 import { toast } from "@/components/ui/sonner";
 
@@ -33,7 +33,7 @@ export function useAuth() {
               // Check if user's email is verified in auth system
               const isEmailVerified = session.user.email_confirmed_at !== null;
               
-              // Handle auth events - using proper type comparison
+              // Handle auth events - using proper string type instead of enum comparison
               if (event === 'SIGNED_UP' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                 console.log(`${event} detected, ensuring profile and verification status`);
                 

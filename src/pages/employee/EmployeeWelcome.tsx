@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -139,25 +140,36 @@ const EmployeeWelcome = () => {
         return;
       }
       
-      // Mark welcome page as seen
-      const { error } = await supabase
-        .from('profiles')
-        .update({ has_seen_welcome: true })
-        .eq('id', user.id);
-        
-      if (error) {
-        // If update fails, try to update auth metadata as fallback
-        await supabase.auth.updateUser({
-          data: { has_seen_welcome: true }
-        });
+      // First update auth metadata as the most reliable method
+      await supabase.auth.updateUser({
+        data: { has_seen_welcome: true }
+      });
+      
+      // Then try to update profile in database as well
+      try {
+        // Mark welcome page as seen in profile table
+        const { error } = await supabase
+          .from('profiles')
+          .update({ has_seen_welcome: true })
+          .eq('id', user.id);
+          
+        if (error) {
+          console.error("Failed to update profile:", error);
+          // Continue anyway since we updated auth metadata
+        }
+      } catch (err) {
+        console.error("Error updating profile:", err);
       }
       
-      // Navigate to dashboard
+      // Navigate to dashboard regardless of profile update success
       toast.success("Selamat datang di dashboard!");
       navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("Error marking welcome page as seen:", error);
       toast.error("Terjadi kesalahan, mohon coba lagi");
+      
+      // Attempt navigation anyway
+      navigate("/dashboard", { replace: true });
     } finally {
       setIsSubmitting(false);
     }
