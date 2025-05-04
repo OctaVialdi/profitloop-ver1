@@ -109,7 +109,7 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
         </div>
         <div className="text-center">
           <h3 className="font-medium">{employee.name}</h3>
-          <p className="text-sm text-gray-500">{employee.position || "No position"}</p>
+          <p className="text-sm text-gray-500">{employee.jobPosition || "No position"}</p>
         </div>
         <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">
           ID: {employee.employee_id || "N/A"}
