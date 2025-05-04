@@ -4,39 +4,26 @@ import { UserProfile } from "@/types/organization";
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    // Get user profile using direct query by ID
+    // Use our security definer function to avoid recursion
     const { data: profileData, error: profileError } = await supabase
       .rpc('get_user_profile_by_id', {
         user_id: userId
-      })
-      .maybeSingle();
+      });
     
     if (profileError) {
       console.error("Profile fetch error:", profileError);
       throw profileError;
     }
     
-    if (!profileData) {
+    // If no profile data was returned, return null
+    if (!profileData || (Array.isArray(profileData) && profileData.length === 0)) {
       return null;
     }
     
-    // Get full profile data to have complete information
-    const { data: fullProfileData, error: fullProfileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-      
-    if (fullProfileError) {
-      console.error("Full profile fetch error:", fullProfileError);
-      // Don't throw, continue with limited profile data
-    }
+    // The function returns a set, so we need to handle both single object and array
+    const profile = Array.isArray(profileData) ? profileData[0] : profileData;
     
-    // Use full profile if available, otherwise use limited data
-    return {
-      ...profileData,
-      ...(fullProfileData || {})
-    } as UserProfile;
+    return profile as UserProfile;
   } catch (error) {
     console.error("Error fetching user profile:", error);
     throw error;

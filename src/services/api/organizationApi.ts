@@ -18,12 +18,11 @@ export const checkExistingOrganization = async (userId: string, userEmail?: stri
       };
     }
     
-    // Check if user's profile has an organization
+    // Use security definer function instead of direct query to avoid recursion
     const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('organization_id, email_verified')
-      .eq('id', userId)
-      .maybeSingle();
+      .rpc('check_user_has_organization', {
+        user_id: userId
+      });
     
     if (profileError) {
       console.error("Error checking profile:", profileError);
@@ -42,15 +41,24 @@ export const checkExistingOrganization = async (userId: string, userEmail?: stri
       return { hasOrganization: false, emailVerified: false, organizationId: null };
     }
     
+    if (!profileData) {
+      console.log("No profile data returned");
+      return { hasOrganization: false, emailVerified: false, organizationId: null };
+    }
+    
     // Check if email is verified
-    if (!profileData?.email_verified) {
+    if (!profileData.email_verified) {
       console.log("Email not verified");
       return { hasOrganization: false, emailVerified: false, organizationId: null };
     }
 
     // If user already has an organization in their profile
-    if (profileData?.organization_id) {
-      return { hasOrganization: true, emailVerified: true, organizationId: profileData.organization_id };
+    if (profileData.organization_id) {
+      return { 
+        hasOrganization: true, 
+        emailVerified: true, 
+        organizationId: profileData.organization_id 
+      };
     }
 
     // Also check if this email has already created an organization

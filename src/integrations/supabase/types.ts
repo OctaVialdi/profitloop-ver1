@@ -491,6 +491,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_has_organization: {
+        Args: { user_id: string }
+        Returns: {
+          organization_id: string
+          email_verified: boolean
+          has_seen_welcome: boolean
+        }[]
+      }
       create_organization_with_profile: {
         Args:
           | {
@@ -530,9 +538,18 @@ export type Database = {
       get_user_profile_by_id: {
         Args: { user_id: string }
         Returns: {
+          created_at: string | null
+          email: string
+          email_verified: boolean | null
+          full_name: string | null
+          has_seen_welcome: boolean | null
           id: string
-          role: string
-          organization_id: string
+          invited_by: string | null
+          last_active: string | null
+          organization_id: string | null
+          preferences: Json | null
+          role: string | null
+          timezone: string | null
         }[]
       }
       is_in_same_organization: {

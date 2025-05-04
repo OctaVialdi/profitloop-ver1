@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,17 +46,22 @@ export const ProtectedRoute = ({
           console.log("User is authenticated via session check");
           setAuthenticated(true);
           
-          // Get user profile
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('organization_id, email_verified, has_seen_welcome')
-            .eq('id', session.user.id)
-            .maybeSingle();
-            
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-          } else {
-            setProfile(profileData);
+          try {
+            // Use RPC function to avoid recursion
+            const { data: profileData, error: profileError } = await supabase
+              .rpc('check_user_has_organization', {
+                user_id: session.user.id
+              });
+              
+            if (profileError) {
+              console.error("Error fetching profile:", profileError);
+            } else {
+              setProfile(profileData);
+            }
+          } catch (error) {
+            console.error("Error checking profile:", error);
+            // If there's an error, we still want to continue with authentication
+            // Just without organization info
           }
         } else if (isMounted) {
           console.log("No active session found");
@@ -98,15 +102,25 @@ export const ProtectedRoute = ({
             setTimeout(async () => {
               if (!isMounted) return;
               
-              const { data: profileData } = await supabase
-                .from('profiles')
-                .select('organization_id, email_verified, has_seen_welcome')
-                .eq('id', session.user.id)
-                .maybeSingle();
-                
-              if (isMounted) {
-                setProfile(profileData);
-                setLoading(false);
+              try {
+                // Use RPC function to avoid recursion
+                const { data: profileData, error: profileError } = await supabase
+                  .rpc('check_user_has_organization', {
+                    user_id: session.user.id
+                  });
+                  
+                if (isMounted) {
+                  if (!profileError) {
+                    setProfile(profileData);
+                  }
+                  setLoading(false);
+                }
+              } catch (error) {
+                console.error("Error checking profile in auth change:", error);
+                // Still set loading to false to avoid UI being stuck
+                if (isMounted) {
+                  setLoading(false);
+                }
               }
             }, 0);
           } else {

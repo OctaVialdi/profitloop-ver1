@@ -60,16 +60,23 @@ export function useOrganizationSetup() {
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
         
+        // Ensure organization ID is available
+        const orgId = (result as any).id;
+        if (!orgId) {
+          toast.error("ID Organisasi tidak tersedia. Mohon coba refresh halaman.");
+          return;
+        }
+        
         // Update user metadata directly
         await supabase.auth.updateUser({
           data: {
-            organization_id: (result as any).id,
+            organization_id: orgId,
             role: 'super_admin'
           }
         });
         
         // Also ensure profile is updated
-        await updateUserWithOrganization(session.user.id, (result as any).id);
+        await updateUserWithOrganization(session.user.id, orgId);
         
         // Following the specific flowchart - redirect to employee-welcome after org creation
         redirectToEmployeeWelcome();
@@ -81,12 +88,16 @@ export function useOrganizationSetup() {
       toast.dismiss();
       
       // Provide more specific error messages
-      if (error.message?.includes("violates row-level security policy")) {
-        toast.error("Akses ditolak. Coba logout dan login kembali.");
-      } else if (error.message?.includes("infinite recursion")) {
-        toast.error("Terjadi kesalahan internal. Tim kami sedang memperbaikinya.");
+      if (typeof error === 'object' && error !== null) {
+        if (error.message?.includes("violates row-level security policy")) {
+          toast.error("Akses ditolak. Coba logout dan login kembali.");
+        } else if (error.message?.includes("infinite recursion")) {
+          toast.error("Terjadi kesalahan internal. Tim kami sedang memperbaikinya.");
+        } else {
+          toast.error(error.message || "Gagal membuat organisasi. Silakan coba lagi.");
+        }
       } else {
-        toast.error(error.message || "Gagal membuat organisasi. Silakan coba lagi.");
+        toast.error("Gagal membuat organisasi. Silakan coba lagi.");
       }
     } finally {
       setIsLoading(false);
