@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
@@ -57,13 +58,16 @@ export function useEmailVerification({
             // Email still not verified
             console.log("Verification check: email not yet verified");
           } else {
-            // Email is verified, redirect to login page
+            // Email is verified, always redirect to login page first
             clearInterval(verificationChecker!);
             toast.success("Email berhasil diverifikasi! Silakan login untuk melanjutkan.");
+            
+            // Always redirect to login after verification
             navigate("/auth/login?verified=true", { 
               state: { 
                 email, 
-                verifiedEmail: email
+                verifiedEmail: email,
+                ...(invitationToken && { invitationToken })
               } 
             });
           }
@@ -83,7 +87,7 @@ export function useEmailVerification({
         clearInterval(verificationChecker);
       }
     };
-  }, [email, password, navigate]);
+  }, [email, password, navigate, invitationToken]);
 
   const handleResendVerification = async () => {
     if (!email || !allowResend) return;

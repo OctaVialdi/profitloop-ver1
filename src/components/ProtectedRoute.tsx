@@ -32,7 +32,6 @@ export const ProtectedRoute = ({
     }
 
     let isMounted = true;
-    let realtimeSubscription: { unsubscribe: () => void } | null = null;
     
     const checkAuth = async () => {
       try {
@@ -104,13 +103,8 @@ export const ProtectedRoute = ({
 
     return () => {
       isMounted = false;
-      // Clean up subscriptions
+      // Clean up subscription
       subscription.unsubscribe();
-      
-      // Clean up any realtime subscriptions
-      if (realtimeSubscription) {
-        realtimeSubscription.unsubscribe();
-      }
     };
   }, [isPublicRoute]);
 
