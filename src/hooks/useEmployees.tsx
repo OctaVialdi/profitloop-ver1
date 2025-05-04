@@ -67,7 +67,7 @@ export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmpl
     role: employee.role || "employee",
     organization_id: employee.organization_id,
     employee_id: employee.employee_id,
-    phone: employee.personalDetails?.phone || "",
+    phone: employee.personalDetails?.mobile_phone || "",
     bloodType: employee.personalDetails?.blood_type || ""
   };
 }
