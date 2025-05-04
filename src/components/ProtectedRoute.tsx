@@ -32,6 +32,8 @@ export const ProtectedRoute = ({
     }
 
     let isMounted = true;
+    let realtimeSubscription: { unsubscribe: () => void } | null = null;
+    
     const checkAuth = async () => {
       try {
         // First get the current session directly
@@ -59,20 +61,24 @@ export const ProtectedRoute = ({
           if (!profileData) {
             const role = data.session.user.user_metadata?.role || 'employee';
             
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert({
-                id: data.session.user.id,
-                email: data.session.user.email,
-                full_name: data.session.user.user_metadata?.full_name || null,
-                role: role // Use role from metadata or default
-              });
-              
-            if (insertError) {
-              console.error("Error creating profile:", insertError);
-            } else {
-              console.log("Profile created during protected route check with role:", role);
-              setHasProfile(true);
+            try {
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: data.session.user.id,
+                  email: data.session.user.email,
+                  full_name: data.session.user.user_metadata?.full_name || null,
+                  role: role // Use role from metadata or default
+                });
+                
+              if (insertError) {
+                console.error("Error creating profile:", insertError);
+              } else {
+                console.log("Profile created during protected route check with role:", role);
+                setHasProfile(true);
+              }
+            } catch (err) {
+              console.error("Failed to create profile:", err);
             }
           }
         } else if (isMounted) {
@@ -123,7 +129,13 @@ export const ProtectedRoute = ({
 
     return () => {
       isMounted = false;
+      // Clean up subscriptions
       subscription.unsubscribe();
+      
+      // Clean up any realtime subscriptions
+      if (realtimeSubscription) {
+        realtimeSubscription.unsubscribe();
+      }
     };
   }, [isPublicRoute]);
 
