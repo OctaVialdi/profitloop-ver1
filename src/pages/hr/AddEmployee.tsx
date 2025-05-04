@@ -24,6 +24,7 @@ export default function AddEmployee() {
   // Step state
   const [currentStep, setCurrentStep] = useState<FormStep>(FormStep.PERSONAL_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
   // Date states
   const [birthdate, setBirthdate] = useState<Date | undefined>(undefined);
@@ -93,22 +94,29 @@ export default function AddEmployee() {
     });
   };
 
+  const validateCurrentStep = () => {
+    let errors: string[] = [];
+    
+    if (currentStep === FormStep.PERSONAL_DATA) {
+      errors = validateEmployeeData(formValues, "personal");
+    } else if (currentStep === FormStep.EMPLOYMENT_DATA) {
+      errors = validateEmployeeData(formValues, "employment");
+    } else if (currentStep === FormStep.INVITE) {
+      errors = validateEmployeeData(formValues, "all");
+    }
+    
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
   const handleNextStep = () => {
     // Validate current step before proceeding
-    if (currentStep === FormStep.PERSONAL_DATA) {
-      // Validate personal data
-      const personalErrors = validateEmployeeData(formValues, "personal");
-      if (personalErrors.length > 0) {
-        toast.error(personalErrors[0]);
-        return;
+    if (!validateCurrentStep()) {
+      // Show the first error
+      if (validationErrors.length > 0) {
+        toast.error(validationErrors[0]);
       }
-    } else if (currentStep === FormStep.EMPLOYMENT_DATA) {
-      // Validate employment data
-      const employmentErrors = validateEmployeeData(formValues, "employment");
-      if (employmentErrors.length > 0) {
-        toast.error(employmentErrors[0]);
-        return;
-      }
+      return;
     }
     
     if (currentStep < FormStep.INVITE) {
@@ -124,7 +132,6 @@ export default function AddEmployee() {
 
   // SBU handlers
   const handleAddSBU = () => {
-    // Add a new SBU placeholder to the list
     setSBUList([...sbuList, { group: "", name: "" }]);
   };
 
@@ -142,27 +149,18 @@ export default function AddEmployee() {
 
   // Dialog handlers
   const handleCreateNewStatus = () => {
-    // Handle creating new employment status
     setNewStatusDialogOpen(false);
-    // Here you would typically add the new status to a list of available statuses
   };
 
   const handleCreateNewOrg = () => {
-    // Handle creating new organization
     setNewOrgDialogOpen(false);
-    // Here you would typically add the new organization to a list of available organizations
   };
   
   const handleCreateNewPosition = () => {
-    // Handle creating new job position
     setNewPositionDialogOpen(false);
-    // Here you would typically add the new position to a list of available positions
   };
 
   const handleCreateNewPositionAndAddAnother = () => {
-    // Handle creating new job position and keep the dialog open
-    // Here you would typically add the new position to a list of available positions
-    // and clear the form for a new entry
     setFormValues({
       ...formValues,
       positionCode: "",
@@ -172,20 +170,21 @@ export default function AddEmployee() {
   };
   
   const handleCreateNewLevel = () => {
-    // Handle creating new job level
     setNewLevelDialogOpen(false);
-    // Here you would typically add the new level to a list of available levels
   };
 
   // Handle submit employee data
   const handleSubmitEmployee = async (withInvite: boolean = true): Promise<string | null> => {
     try {
       setIsSubmitting(true);
+      console.log("Starting employee submission process...");
       
       // Validate all required fields
       const allErrors = validateEmployeeData(formValues, "all");
       if (allErrors.length > 0) {
+        console.error("Validation errors:", allErrors);
         toast.error(allErrors[0]);
+        setValidationErrors(allErrors);
         return null;
       }
 
@@ -195,6 +194,7 @@ export default function AddEmployee() {
         .join(" ");
         
       if (!fullName) {
+        console.error("Employee name is required");
         toast.error("Employee name is required");
         return null;
       }
@@ -247,7 +247,12 @@ export default function AddEmployee() {
         manager_id: formValues.manager !== "No manager" ? formValues.manager : undefined,
       };
 
-      console.log("Creating employee with data:", { employeeData, personalDetails, identityAddress, employment });
+      console.log("Creating employee with data:", { 
+        employeeData, 
+        personalDetails, 
+        identityAddress, 
+        employment 
+      });
       
       // Create employee with all details
       const result = await employeeService.createEmployee(
@@ -258,10 +263,12 @@ export default function AddEmployee() {
       );
       
       if (!result) {
+        console.error("Failed to create employee: No result returned");
         toast.error("Failed to create employee");
         return null;
       }
       
+      console.log("Employee created successfully with ID:", result.id);
       toast.success("Employee created successfully");
       
       // If not sending invite, navigate back to employee list
@@ -345,6 +352,7 @@ export default function AddEmployee() {
           handleNextStep={handleNextStep}
           handleSubmit={() => handleSubmitEmployee(true)}
           isSubmitting={isSubmitting}
+          validationErrors={validationErrors}
         />
       </Card>
 

@@ -50,56 +50,86 @@ export const InviteStep: React.FC<InviteStepProps> = ({ formValues, onSubmitEmpl
     setMagicLinkError(null);
     
     try {
+      console.log("Starting magic link process with email:", email);
+      
       // Create the employee first if not created
       if (!employeeCreated) {
+        console.log("Employee not yet created, creating employee record first...");
         const newEmployeeId = await onSubmitEmployee(false);
         
         if (!newEmployeeId) {
+          console.error("Failed to create employee record");
           toast.error("Failed to create employee record");
           setIsLoading(false);
           return;
         }
         
+        console.log("Employee created successfully with ID:", newEmployeeId);
         setEmployeeId(newEmployeeId);
         setEmployeeCreated(true);
         toast.success("Employee record created successfully");
+      } else {
+        console.log("Employee already created with ID:", employeeId);
       }
       
       // Get user's organization ID
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error("Auth error:", userError);
+        throw new Error(userError.message);
+      }
       
       if (!user) {
+        console.error("No authenticated user found");
         toast.error("You need to be logged in to send invitations");
         setIsLoading(false);
         return;
       }
       
+      console.log("Current user ID:", user.id);
+      
       // Get user's profile to find organization ID
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('organization_id')
         .eq('id', user.id)
         .single();
         
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        throw new Error(profileError.message);
+      }
+        
       if (!profileData?.organization_id) {
+        console.error("No organization ID found for user");
         toast.error("You are not associated with an organization");
         setIsLoading(false);
         return;
       }
       
+      console.log("User's organization ID:", profileData.organization_id);
+      
       // Check if user is already in the same organization
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: existingUserError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
         .eq('organization_id', profileData.organization_id)
         .maybeSingle();
+      
+      if (existingUserError) {
+        console.error("Error checking existing user:", existingUserError);
+      }
         
       if (existingUser) {
+        console.error("User already exists in organization:", existingUser);
         toast.error("Pengguna dengan email ini sudah ada di organisasi Anda");
         setIsLoading(false);
         return;
       }
+      
+      console.log("Generating magic link via edge function...");
       
       // Generate magic link using edge function
       const response = await supabase.functions.invoke('send-magic-link', {
@@ -110,15 +140,20 @@ export const InviteStep: React.FC<InviteStepProps> = ({ formValues, onSubmitEmpl
         }
       });
       
+      console.log("Edge function response:", response);
+      
       if (response.error) {
+        console.error("Edge function error:", response.error);
         throw new Error(response.error.message || "Failed to create magic link");
       }
       
       const data = response.data;
+      console.log("Magic link data:", data);
       
       // Set the magic link URL for display
       if (data.invitation_url) {
         setMagicLinkUrl(data.invitation_url);
+        console.log("Magic link URL set:", data.invitation_url);
       }
 
       // Add to invitation history
@@ -129,8 +164,10 @@ export const InviteStep: React.FC<InviteStepProps> = ({ formValues, onSubmitEmpl
 
       // Show appropriate message based on email sending result
       if (data.email_sent) {
+        console.log("Email sent successfully");
         toast.success(`Magic Link has been sent to ${email}`);
       } else {
+        console.warn("Email could not be sent:", data.email_error);
         setShowEmailTips(true);
         setMagicLinkError(data.email_error || "Email couldn't be sent, but you can copy the Magic Link manually");
         toast.warning("Email couldn't be sent, but you can copy the Magic Link manually");

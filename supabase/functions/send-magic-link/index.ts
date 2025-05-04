@@ -18,7 +18,20 @@ serve(async (req) => {
   }
 
   try {
-    const { email, organizationId, role } = await req.json();
+    console.log("Magic Link function started");
+    const requestData = await req.json();
+    const { email, organizationId, role } = requestData;
+    
+    if (!email) {
+      console.error("Email is missing in request");
+      throw new Error("Email is required");
+    }
+
+    if (!organizationId) {
+      console.error("Organization ID is missing in request");
+      throw new Error("Organization ID is required");
+    }
+
     console.log("Processing Magic Link invitation for:", email, "to organization:", organizationId);
 
     // Create Supabase client with service role key
@@ -33,22 +46,27 @@ serve(async (req) => {
       });
 
     console.log("Invitation generation result:", result);
-    console.log("Invitation error:", invitationError);
-
+    
     if (invitationError) {
+      console.error("Invitation error:", invitationError);
       throw invitationError;
     }
 
     if (!result || !result.token) {
+      console.error("Failed to generate invitation token");
       throw new Error("Failed to generate invitation token");
     }
 
     // Get organization details
-    const { data: orgData } = await supabase
+    const { data: orgData, error: orgError } = await supabase
       .from('organizations')
       .select('name')
       .eq('id', organizationId)
       .single();
+      
+    if (orgError) {
+      console.error("Error fetching organization details:", orgError);
+    }
 
     // Always use the production domain for magic links
     const baseUrl = "https://app.profitloop.id";
@@ -77,6 +95,7 @@ serve(async (req) => {
       
       if (!error) {
         emailSent = true;
+        console.log("Email sent successfully via Supabase auth");
       } else {
         emailError = error;
         console.error("Error sending email with Supabase auth:", error);
@@ -89,6 +108,7 @@ serve(async (req) => {
     // Alternative approach for users who are already registered
     if (!emailSent && emailError?.message?.includes("already been registered")) {
       try {
+        console.log("User already registered, trying alternative notification approach");
         // Find the existing user
         const { data: userData, error: userError } = await supabase
           .from('profiles')
@@ -152,7 +172,10 @@ serve(async (req) => {
     console.error("Error sending Magic Link invitation:", error);
     
     return new Response(
-      JSON.stringify({ error: "Gagal mengirim Magic Link" }),
+      JSON.stringify({ 
+        error: error.message || "Gagal mengirim Magic Link",
+        details: typeof error === 'object' ? JSON.stringify(error) : 'Unknown error'
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 

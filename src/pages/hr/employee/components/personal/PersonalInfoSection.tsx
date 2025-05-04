@@ -66,6 +66,8 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             placeholder="First name"
             value={formValues.firstName || ''} 
             onChange={handleChange}
+            required
+            autoFocus
           />
           <Input 
             id="lastName" 
@@ -85,8 +87,9 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
           placeholder="example@company.com"
           value={formValues.email || ''} 
           onChange={handleChange}
+          required
         />
-        <p className="text-xs text-gray-500">This email is use for log in</p>
+        <p className="text-xs text-gray-500">This email is used for login</p>
       </div>
       
       {/* Phone numbers */}
@@ -133,7 +136,7 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
       
       {/* Gender */}
       <div className="space-y-2">
-        <Label>Gender</Label>
+        <Label>Gender<span className="text-red-500">*</span></Label>
         <RadioGroup 
           value={formValues.gender || "male"} 
           onValueChange={handleGenderChange}
