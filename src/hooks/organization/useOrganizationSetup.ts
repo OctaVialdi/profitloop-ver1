@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrganizationNavigation } from "./useOrganizationNavigation";
 import { useOrganizationAuth } from "./useOrganizationAuth";
 import { validateOrganizationForm } from "@/utils/formValidation";
-import { updateUserWithOrganization } from "@/services/api/organizationApi";
 
 export function useOrganizationSetup() {
   const [formData, setFormData] = useState<OrganizationFormData>({
@@ -78,11 +77,24 @@ export function useOrganizationSetup() {
       if (orgResult) {
         toast.success("Organisasi berhasil dibuat!");
         
-        // Fix: Properly handle the returned object by safely accessing the 'id' property
+        // Safely access the organization ID
         let organizationId: string | undefined;
         
-        if (typeof orgResult === 'object' && orgResult !== null && 'id' in orgResult) {
-          organizationId = orgResult.id as string;
+        if (typeof orgResult === 'object' && orgResult !== null) {
+          // Check if 'id' exists in the object
+          if ('id' in orgResult) {
+            organizationId = orgResult.id as string;
+          } 
+          // Handle case where response might be wrapped in another object
+          else if (orgResult && typeof orgResult === 'object') {
+            for (const key in orgResult) {
+              const value = orgResult[key];
+              if (value && typeof value === 'object' && 'id' in value) {
+                organizationId = value.id as string;
+                break;
+              }
+            }
+          }
         }
         
         if (organizationId) {

@@ -28,7 +28,7 @@ const TrialBanner = () => {
   
   // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
-  const isOnboardingPage = location.pathname === '/onboarding';
+  const isOnboardingPage = location.pathname === '/onboarding' || location.pathname === '/organizations';
   const isSubscriptionPage = location.pathname === '/subscription';
   
   // Update countdown every second when we have a trial end date
@@ -62,8 +62,8 @@ const TrialBanner = () => {
     // Initial update
     updateCountdown();
     
-    // Set up interval for updating the countdown
-    const interval = setInterval(updateCountdown, 1000);
+    // Set up interval for updating the countdown (update every 60 seconds instead of every second)
+    const interval = setInterval(updateCountdown, 60000);
     
     // Clean up on unmount
     return () => clearInterval(interval);
@@ -74,40 +74,70 @@ const TrialBanner = () => {
     if (isAuthPage || isDismissed || isOnboardingPage) return;
     
     const fetchTrialInfo = async () => {
-      // Check authentication first
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        setIsAuthenticated(false);
-        return;
-      }
-      
-      setIsAuthenticated(true);
-      
-      // Get current user organization
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('id', session.user.id)
-        .maybeSingle();
+      try {
+        // Check authentication first
+        const { data: { session } } = await supabase.auth.getSession();
         
-      if (!profileData?.organization_id) {
-        return;
-      }
-      
-      setOrganizationId(profileData.organization_id);
-      
-      // Get organization trial information
-      const { data: orgData } = await supabase
-        .from('organizations')
-        .select('trial_end_date, trial_expired')
-        .eq('id', profileData.organization_id)
-        .maybeSingle();
+        if (!session?.user) {
+          setIsAuthenticated(false);
+          return;
+        }
         
-      if (!orgData) {
-        return;
+        setIsAuthenticated(true);
+        
+        // Get organization ID from user metadata (faster than querying profile)
+        const orgId = session.user.user_metadata?.organization_id;
+        
+        if (!orgId) {
+          // Try to get from profile as fallback
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+          if (!profileData?.organization_id) {
+            return;
+          }
+          
+          setOrganizationId(profileData.organization_id);
+          
+          // Get organization trial information
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('trial_end_date, trial_expired')
+            .eq('id', profileData.organization_id)
+            .maybeSingle();
+            
+          if (!orgData) {
+            return;
+          }
+          
+          handleTrialData(orgData);
+        } else {
+          // Use organization ID from metadata
+          setOrganizationId(orgId);
+          
+          // Get organization trial information
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('trial_end_date, trial_expired')
+            .eq('id', orgId)
+            .maybeSingle();
+            
+          if (!orgData) {
+            return;
+          }
+          
+          handleTrialData(orgData);
+        }
+      } catch (error) {
+        console.error("Error fetching trial info:", error);
       }
-      
+    };
+    
+    // Function to handle trial data processing
+    const handleTrialData = (orgData: any) => {
       // Check if trial has expired based on date
       const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
       const now = new Date();
@@ -128,12 +158,18 @@ const TrialBanner = () => {
         }
         
         // If the trial is expired by date but not flagged as expired, update the flag
-        if (isTrialExpiredByDate && !orgData.trial_expired) {
+        if (isTrialExpiredByDate && !orgData.trial_expired && organizationId) {
           console.log("Updating trial_expired flag to true");
-          await supabase
+          supabase
             .from('organizations')
             .update({ trial_expired: true })
-            .eq('id', profileData.organization_id);
+            .eq('id', organizationId)
+            .then(() => {
+              console.log("Trial expired flag updated");
+            })
+            .catch(err => {
+              console.error("Error updating trial expired flag:", err);
+            });
         }
         
         return;
@@ -152,15 +188,24 @@ const TrialBanner = () => {
           document.body.classList.add('trial-expired');
           
           // Update the trial_expired flag
-          console.log("Trial has ended, updating trial_expired flag");
-          await supabase
-            .from('organizations')
-            .update({ trial_expired: true })
-            .eq('id', profileData.organization_id);
+          if (organizationId) {
+            console.log("Trial has ended, updating trial_expired flag");
+            supabase
+              .from('organizations')
+              .update({ trial_expired: true })
+              .eq('id', organizationId)
+              .then(() => {
+                console.log("Trial expired flag updated");
+              })
+              .catch(err => {
+                console.error("Error updating trial expired flag:", err);
+              });
+          }
         }
       }
     };
     
+    // Only fetch trial info once, not on every render
     fetchTrialInfo();
     
     // Cleanup function
@@ -169,7 +214,7 @@ const TrialBanner = () => {
         document.body.classList.remove('trial-expired');
       }
     };
-  }, [isAuthPage, isDismissed, isOnboardingPage, isSubscriptionPage, isTrialExpired]);
+  }, [isAuthPage, isDismissed, isOnboardingPage, isSubscriptionPage]);
   
   // Handle subscription navigation
   const handleSubscribe = () => {
@@ -252,42 +297,6 @@ const TrialBanner = () => {
           </div>
         </SheetContent>
       </Sheet>
-      
-      {/* Legacy Dialog - keep as fallback if Sheet doesn't work */}
-      <Dialog open={false && isTrialExpired && showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Masa trial Anda telah berakhir</DialogTitle>
-            <DialogDescription>
-              Terima kasih telah mencoba layanan kami. Untuk terus menikmati semua fitur, silakan berlangganan.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <p className="text-sm text-gray-600 mb-4">
-              Berlangganan sekarang untuk mendapatkan:
-            </p>
-            <ul className="list-disc pl-5 space-y-1 text-sm">
-              <li>Akses penuh ke semua fitur</li>
-              <li>Dukungan premium</li>
-              <li>Pembaruan dan perbaikan rutin</li>
-              <li>Tidak ada gangguan pada alur kerja Anda</li>
-            </ul>
-          </div>
-          
-          <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-            >
-              Keluar
-            </Button>
-            <Button onClick={handleSubscribe}>
-              Lihat Paket Langganan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };

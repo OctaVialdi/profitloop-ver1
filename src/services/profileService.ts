@@ -32,12 +32,10 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
         });
       
       if (!profileError && profileData) {
-        // Fix: properly handle array result from get_user_profile_by_id
+        // Handle array result from get_user_profile_by_id
         if (Array.isArray(profileData) && profileData.length > 0) {
-          // Convert the first array item to UserProfile
           return profileData[0] as unknown as UserProfile;
         } else if (typeof profileData === 'object') {
-          // If not an array, just return as is
           return profileData as unknown as UserProfile;
         }
       }
@@ -78,8 +76,8 @@ export async function ensureProfileExists(userId: string, userData: { email: str
   try {
     console.log("Ensuring profile exists for:", userId, userData);
     
-    // Skip profile querying - it often causes infinite recursion
-    // Instead, call the edge function directly 
+    // Call the edge function directly to create/update profile
+    // This avoids the recursive RLS issues with direct table queries
     try {
       const { data: rpcResult, error: rpcError } = await supabase.functions.invoke(
         'create-profile-if-not-exists',
@@ -95,16 +93,16 @@ export async function ensureProfileExists(userId: string, userData: { email: str
       );
         
       if (rpcError) {
-        console.log("Edge function profile creation error, trying admin API:", rpcError);
+        console.log("Edge function profile creation error:", rpcError);
       } else {
         console.log("Profile created/updated via edge function");
         return true;
       }
     } catch (err) {
-      console.log("Edge function creation failed, trying Service Role API:", err);
+      console.log("Edge function creation failed:", err);
     }
     
-    // Use auth metadata as a temporary workaround - this won't fix the profile 
+    // Use auth metadata as a fallback - this won't fix the profile 
     // but will at least let the user proceed past organization creation
     try {
       const { error: metadataError } = await supabase.auth.updateUser({

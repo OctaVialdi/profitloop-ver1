@@ -30,89 +30,186 @@ serve(async (req) => {
       )
     }
 
-    // Check if profile exists using a direct query with service role
-    // This bypasses any RLS policies that might cause infinite recursion
-    const { data: existingProfile, error: queryError } = await supabaseClient
-      .from('profiles')
-      .select('id')
-      .eq('id', user_id)
-      .maybeSingle()
+    // Check if profile exists using a security definer function
+    // This avoids the RLS policies that might cause recursion
+    const { data: profileResult, error: rpcError } = await supabaseClient
+      .rpc('get_user_profile_by_id', {
+        user_id: user_id
+      })
 
-    if (queryError) {
-      console.error("Error checking existing profile:", queryError)
-      return new Response(
-        JSON.stringify({ success: false, error: queryError.message }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
-
-    if (existingProfile) {
-      // Profile exists, update it
-      const { data: updatedProfile, error: updateError } = await supabaseClient
+    if (rpcError) {
+      console.error("Error checking profile with RPC:", rpcError)
+      
+      // Try with direct query as backup
+      const { data: existingProfile, error: queryError } = await supabaseClient
         .from('profiles')
-        .update({
-          email: user_email.toLowerCase(),
-          full_name: user_full_name,
-          email_verified: is_email_verified
-        })
+        .select('id')
         .eq('id', user_id)
-        .select()
+        .maybeSingle()
 
-      if (updateError) {
-        console.error("Error updating profile:", updateError)
+      if (queryError) {
+        console.error("Error checking existing profile:", queryError)
+        
+        if (queryError.message.includes('infinite recursion')) {
+          // If there's a recursion error, try using the create_profile_if_not_exists function
+          const { data: profileData, error: funcError } = await supabaseClient
+            .rpc('create_profile_if_not_exists', {
+              user_id: user_id,
+              user_email: user_email.toLowerCase(),
+              user_full_name: user_full_name || null,
+              is_email_verified: is_email_verified || false
+            })
+            
+          if (funcError) {
+            console.error("Error with create_profile_if_not_exists:", funcError)
+            return new Response(
+              JSON.stringify({ success: false, error: funcError.message }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+            )
+          }
+          
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              action: 'created_with_function', 
+              message: 'Profile created with RPC function' 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
         return new Response(
-          JSON.stringify({ success: false, error: updateError.message }),
+          JSON.stringify({ success: false, error: queryError.message }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         )
       }
 
-      return new Response(
-        JSON.stringify({ success: true, action: 'updated', profile: updatedProfile }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      // Handle the profile result
+      if (existingProfile) {
+        // Update existing profile
+        const { data: updatedProfile, error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({
+            email: user_email.toLowerCase(),
+            full_name: user_full_name,
+            email_verified: is_email_verified
+          })
+          .eq('id', user_id)
+          .select()
 
-    } else {
-      // Create new profile
-      const { data: newProfile, error: insertError } = await supabaseClient
-        .from('profiles')
-        .insert([{
-          id: user_id,
-          email: user_email.toLowerCase(),
-          full_name: user_full_name,
-          email_verified: is_email_verified
-        }])
-        .select()
-
-      if (insertError) {
-        console.error("Error creating profile:", insertError)
-        // Check for unique violation - conflict
-        if (insertError.code === '23505') {
-          // Profile was likely created in a race condition - try to retrieve it
-          const { data: existingData } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', user_id)
-            .maybeSingle()
-            
-          if (existingData) {
-            return new Response(
-              JSON.stringify({ success: true, action: 'retrieved', profile: existingData }),
-              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-          }
+        if (updateError) {
+          console.error("Error updating profile:", updateError)
+          return new Response(
+            JSON.stringify({ success: false, error: updateError.message }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+          )
         }
 
+        return new Response(
+          JSON.stringify({ success: true, action: 'updated', profile: updatedProfile }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    } else {
+      // We got a result from the RPC function
+      let existingProfile = null
+      
+      // Check if we got an array (some RPC functions return arrays)
+      if (Array.isArray(profileResult) && profileResult.length > 0) {
+        existingProfile = profileResult[0]
+      } else if (profileResult) {
+        existingProfile = profileResult
+      }
+      
+      if (existingProfile) {
+        // Update existing profile
+        const { data: updatedProfile, error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({
+            email: user_email.toLowerCase(),
+            full_name: user_full_name,
+            email_verified: is_email_verified
+          })
+          .eq('id', user_id)
+          .select()
+
+        if (updateError) {
+          console.error("Error updating profile:", updateError)
+          return new Response(
+            JSON.stringify({ success: false, error: updateError.message }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+          )
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, action: 'updated', profile: updatedProfile }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+      
+    // If we get here, we need to create a new profile
+    console.log(`Creating new profile for user ${user_id}`)
+    const { data: newProfile, error: insertError } = await supabaseClient
+      .from('profiles')
+      .insert([{
+        id: user_id,
+        email: user_email.toLowerCase(),
+        full_name: user_full_name,
+        email_verified: is_email_verified
+      }])
+      .select()
+
+    if (insertError) {
+      console.error("Error creating profile:", insertError)
+      
+      // Check for unique violation - conflict
+      if (insertError.code === '23505') {
+        // Profile was likely created in a race condition - try to retrieve it
+        const { data: existingData } = await supabaseClient
+          .from('profiles')
+          .select('*')
+          .eq('id', user_id)
+          .maybeSingle()
+          
+        if (existingData) {
+          return new Response(
+            JSON.stringify({ success: true, action: 'retrieved', profile: existingData }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      }
+
+      // Last resort - try the RPC function
+      const { data: profileData, error: funcError } = await supabaseClient
+        .rpc('create_profile_if_not_exists', {
+          user_id: user_id,
+          user_email: user_email.toLowerCase(),
+          user_full_name: user_full_name || null,
+          is_email_verified: is_email_verified || false
+        })
+        
+      if (funcError) {
         return new Response(
           JSON.stringify({ success: false, error: insertError.message }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         )
       }
-
+      
       return new Response(
-        JSON.stringify({ success: true, action: 'created', profile: newProfile }),
+        JSON.stringify({ 
+          success: true, 
+          action: 'created_with_function', 
+          message: 'Profile created with RPC function' 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    return new Response(
+      JSON.stringify({ success: true, action: 'created', profile: newProfile }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   } catch (error) {
     console.error("Unhandled error:", error)
     return new Response(
