@@ -1,6 +1,6 @@
 
 import { format, parseISO } from "date-fns";
-import { utcToZonedTime, format as formatTz } from "date-fns-tz";
+import { toZonedTime, format as formatTz } from "date-fns-tz";
 
 /**
  * Convert a UTC timestamp to the user's timezone and format it
@@ -20,7 +20,7 @@ export function formatTimestampToUserTimezone(
     const date = parseISO(isoString);
     
     // Convert to the user's timezone
-    const zonedDate = utcToZonedTime(date, timezone);
+    const zonedDate = toZonedTime(date, timezone);
     
     // Format with timezone
     return formatTz(zonedDate, formatPattern + " 'GMT'XXX", { timeZone: timezone });
@@ -42,7 +42,7 @@ export function formatTimestampForDisplay(
   
   try {
     const date = parseISO(isoString);
-    const zonedDate = utcToZonedTime(date, timezone);
+    const zonedDate = toZonedTime(date, timezone);
     
     // Format as "Sun 04 May 2025 10:28:27 GMT+0700"
     return formatTz(zonedDate, "EEE dd MMM yyyy HH:mm:ss 'GMT'XXX", { timeZone: timezone });
@@ -61,7 +61,7 @@ export function convertToUTC(
 ): string {
   try {
     // Note: fromZonedTime (formerly zonedTimeToUtc) would be used here in date-fns-tz v3
-    // But we're using the current API as imported above
+    // But for now we'll use a simplified approach
     const utcDate = new Date(localDate);
     return utcDate.toISOString();
   } catch (error) {
