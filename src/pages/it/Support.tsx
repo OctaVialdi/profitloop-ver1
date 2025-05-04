@@ -6,20 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, RotateCw, Filter, FileDown } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, RotateCw, Filter, FileDown, CheckCircle2, AlertCircle, FilePlus, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import TicketDetailDialog from "@/components/it/TicketDetailDialog";
+import TicketEditDialog from "@/components/it/TicketEditDialog";
+import NewTicketDialog from "@/components/it/NewTicketDialog";
+import FileUploadDialog from "@/components/it/FileUploadDialog";
 
-// Tipe data untuk tiket
-interface Ticket {
+// Type definition for ticket
+export interface Ticket {
   id: string;
   title: string;
+  description?: string;
   department: string;
   category: {
     name: string;
     icon: string;
   };
   priority: "High" | "Medium" | "Low";
-  status: "In Progress" | "Resolved" | "Pending";
+  status: "In Progress" | "Resolved" | "Pending" | "Received" | "Open" | "Maintenance" | "Retired";
   createdAt: string;
   response: {
     time: string;
@@ -33,14 +39,22 @@ interface Ticket {
 }
 
 export default function ITSupport() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"userRequests" | "hardwareIssues">("userRequests");
   const [viewMode, setViewMode] = useState<"dashboard" | "table">("table");
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showNewTicketDialog, setShowNewTicketDialog] = useState(false);
+  const [showFileUploadDialog, setShowFileUploadDialog] = useState(false);
+  const [uploadingForTicket, setUploadingForTicket] = useState<string | undefined>(undefined);
 
-  // Data tiket contoh
-  const tickets: Ticket[] = [
+  // Sample data for tickets
+  const [tickets, setTickets] = useState<Ticket[]>([
     {
       id: "T-001",
       title: "Software Installation",
+      description: "Need to install Adobe Creative Suite on new marketing laptop.",
       department: "Marketing",
       category: { name: "Software", icon: "💻" },
       priority: "Medium",
@@ -53,6 +67,7 @@ export default function ITSupport() {
     {
       id: "T-002",
       title: "Network Access Issue",
+      description: "Can't connect to the finance shared drive after password reset.",
       department: "Finance",
       category: { name: "Network", icon: "🔌" },
       priority: "High",
@@ -65,6 +80,7 @@ export default function ITSupport() {
     {
       id: "T-003",
       title: "Hardware Upgrade Request",
+      description: "Need more RAM for development workstation to run virtual machines.",
       department: "Engineering",
       category: { name: "Hardware", icon: "🖥️" },
       priority: "High",
@@ -77,6 +93,7 @@ export default function ITSupport() {
     {
       id: "T-004",
       title: "Email Configuration",
+      description: "Need to set up email signature for new HR staff.",
       department: "HR",
       category: { name: "Software", icon: "💻" },
       priority: "Low",
@@ -89,6 +106,7 @@ export default function ITSupport() {
     {
       id: "T-005",
       title: "Cisco Router RV340 Maintenance",
+      description: "Scheduled firmware update and security patch installation.",
       department: "IT Infrastructure",
       category: { name: "Hardware", icon: "🖥️" },
       priority: "Medium",
@@ -98,9 +116,9 @@ export default function ITSupport() {
       resolution: { time: null, type: "pending" },
       assignee: "Michael Brown"
     },
-  ];
+  ]);
 
-  // Fungsi untuk mendapatkan warna badge berdasarkan prioritas
+  // Function to get priority badge class
   const getPriorityBadgeClass = (priority: Ticket["priority"]) => {
     switch (priority) {
       case "High":
@@ -114,7 +132,7 @@ export default function ITSupport() {
     }
   };
 
-  // Fungsi untuk mendapatkan warna badge berdasarkan status
+  // Function to get status badge class
   const getStatusBadgeClass = (status: Ticket["status"]) => {
     switch (status) {
       case "In Progress":
@@ -123,12 +141,20 @@ export default function ITSupport() {
         return "bg-green-100 text-green-800 hover:bg-green-100";
       case "Pending":
         return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+      case "Open":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
+      case "Received":
+        return "bg-purple-100 text-purple-800 hover:bg-purple-100";
+      case "Maintenance":
+        return "bg-cyan-100 text-cyan-800 hover:bg-cyan-100";
+      case "Retired":
+        return "bg-gray-100 text-gray-500 hover:bg-gray-100";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
-  // Fungsi untuk mendapatkan warna dan ikon response time
+  // Function to get response time class and icon
   const getResponseTimeClass = (type: Ticket["response"]["type"]) => {
     switch (type) {
       case "fast":
@@ -149,7 +175,7 @@ export default function ITSupport() {
     }
   };
 
-  // Fungsi untuk mendapatkan informasi resolusi
+  // Function to get resolution info
   const getResolutionInfo = (resolution: Ticket["resolution"]) => {
     if (resolution.time) {
       return {
@@ -163,6 +189,207 @@ export default function ITSupport() {
       time: "Pending",
       className: "text-gray-500",
     };
+  };
+
+  // Function to handle viewing a ticket
+  const handleViewTicket = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setShowDetailDialog(true);
+  };
+
+  // Function to handle editing a ticket
+  const handleEditTicket = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setShowEditDialog(true);
+  };
+
+  // Function to handle deleting a ticket
+  const handleDeleteTicket = (ticket: Ticket) => {
+    // Show confirm dialog
+    if (window.confirm(`Are you sure you want to delete ticket ${ticket.id}?`)) {
+      // Remove ticket from list
+      setTickets(tickets.filter((t) => t.id !== ticket.id));
+      
+      // Show notification
+      toast({
+        title: "Ticket Deleted",
+        description: `Ticket ${ticket.id} has been deleted.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to handle approving a ticket
+  const handleApproveTicket = () => {
+    if (!selectedTicket) return;
+    
+    // Update ticket status
+    const updatedTicket = { 
+      ...selectedTicket, 
+      status: "In Progress" as const,
+    };
+    
+    // Update tickets list
+    setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
+    
+    // Close dialog
+    setShowDetailDialog(false);
+    
+    // Show notification
+    toast({
+      title: "Ticket Approved",
+      description: `Ticket ${selectedTicket.id} has been approved.`,
+      variant: "default",
+    });
+  };
+
+  // Function to handle rejecting a ticket
+  const handleRejectTicket = () => {
+    if (!selectedTicket) return;
+    
+    // Update ticket status
+    const updatedTicket = { 
+      ...selectedTicket, 
+      status: "Rejected" as any, 
+    };
+    
+    // Update tickets list
+    setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
+    
+    // Close dialog
+    setShowDetailDialog(false);
+    
+    // Show notification
+    toast({
+      title: "Ticket Rejected",
+      description: `Ticket ${selectedTicket.id} has been rejected.`,
+      variant: "destructive",
+    });
+  };
+
+  // Function to handle closing a ticket
+  const handleCloseTicket = () => {
+    if (!selectedTicket) return;
+    
+    // Update ticket status
+    const updatedTicket = { 
+      ...selectedTicket, 
+      status: "Retired" as const,
+    };
+    
+    // Update tickets list
+    setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
+    
+    // Close dialog
+    setShowDetailDialog(false);
+    
+    // Show notification
+    toast({
+      title: "Ticket Closed",
+      description: `Ticket ${selectedTicket.id} has been closed.`,
+      variant: "default",
+    });
+  };
+
+  // Function to handle marking a ticket as resolved
+  const handleMarkAsResolved = () => {
+    if (!selectedTicket) return;
+    
+    // Update ticket status and resolution
+    const updatedTicket = { 
+      ...selectedTicket, 
+      status: "Resolved" as const,
+      resolution: { 
+        time: "2h 30m", 
+        type: "completed" 
+      }
+    };
+    
+    // Update tickets list
+    setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
+    
+    // Close dialog
+    setShowDetailDialog(false);
+    
+    // Show notification
+    toast({
+      title: "Ticket Resolved",
+      description: `Ticket ${selectedTicket.id} has been marked as resolved.`,
+      variant: "success",
+    });
+  };
+
+  // Function to handle updating a ticket
+  const handleUpdateTicket = (updatedTicket: Ticket) => {
+    // Update tickets list
+    setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
+    
+    // Close dialog
+    setShowEditDialog(false);
+    
+    // Show notification
+    toast({
+      title: "Ticket Updated",
+      description: `Ticket ${updatedTicket.id} has been updated.`,
+      variant: "default",
+    });
+  };
+
+  // Function to handle creating a new ticket
+  const handleCreateTicket = (newTicket: Partial<Ticket>) => {
+    // Generate ticket ID
+    const ticketId = `T-${String(tickets.length + 1).padStart(3, '0')}`;
+    
+    // Create new ticket object
+    const ticket: Ticket = {
+      id: ticketId,
+      title: newTicket.title || "Untitled Ticket",
+      description: newTicket.description,
+      department: newTicket.department || "IT",
+      category: newTicket.category || { name: "Software", icon: "💻" },
+      priority: newTicket.priority || "Medium",
+      status: newTicket.status || "Received",
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }),
+      response: { time: "0m", type: "fast" },
+      resolution: { time: null, type: "pending" },
+      assignee: newTicket.assignee || "Unassigned",
+    };
+    
+    // Add ticket to list
+    setTickets([ticket, ...tickets]);
+    
+    // Close dialog
+    setShowNewTicketDialog(false);
+    
+    // Show notification
+    toast({
+      title: "Ticket Created",
+      description: `Ticket ${ticketId} has been created.`,
+      variant: "success",
+    });
+  };
+
+  // Function to handle file uploads
+  const handleFileUpload = (files: File[]) => {
+    // Handle file uploads here (in a real app, you would upload to a server)
+    console.log("Files to upload:", files);
+    
+    // Show notification
+    toast({
+      title: "Files Uploaded",
+      description: `${files.length} file(s) have been uploaded${uploadingForTicket ? ` for ticket ${uploadingForTicket}` : ''}.`,
+      variant: "success",
+    });
+    
+    // Close dialog
+    setShowFileUploadDialog(false);
+    setUploadingForTicket(undefined);
+  };
+
+  // Function to handle uploading files for a specific ticket
+  const handleUploadForTicket = (ticketId: string) => {
+    setUploadingForTicket(ticketId);
+    setShowFileUploadDialog(true);
   };
 
   return (
@@ -227,8 +454,18 @@ export default function ITSupport() {
               <TabsContent value="userRequests" className="pt-4 px-4 pb-6">
                 <div className="flex flex-wrap justify-between mb-4 gap-4">
                   <div className="flex items-center gap-2">
-                    <Button className="bg-purple-700 hover:bg-purple-800 flex items-center gap-1">
-                      <Plus size={16} /> New Ticket
+                    <Button 
+                      className="bg-purple-700 hover:bg-purple-800 flex items-center gap-1"
+                      onClick={() => setShowNewTicketDialog(true)}
+                    >
+                      <FilePlus size={16} /> New Ticket
+                    </Button>
+                    <Button
+                      variant="outline" 
+                      className="flex items-center gap-1"
+                      onClick={() => setShowFileUploadDialog(true)}
+                    >
+                      <Upload size={16} /> Upload
                     </Button>
                     <Button variant="outline" className="flex items-center gap-1">
                       <RotateCw size={16} />
@@ -310,15 +547,82 @@ export default function ITSupport() {
                             <TableCell>{ticket.assignee}</TableCell>
                             <TableCell>
                               <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="icon">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  title="View Details"
+                                  onClick={() => handleViewTicket(ticket)}
+                                >
                                   <Eye size={16} />
                                 </Button>
-                                <Button variant="ghost" size="icon">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  title="Edit"
+                                  onClick={() => handleEditTicket(ticket)}
+                                >
                                   <Edit size={16} />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="text-red-500 hover:text-red-700"
+                                  title="Delete"
+                                  onClick={() => handleDeleteTicket(ticket)}
+                                >
                                   <Trash2 size={16} />
                                 </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="text-purple-500 hover:text-purple-700"
+                                  title="Upload Files"
+                                  onClick={() => handleUploadForTicket(ticket.id)}
+                                >
+                                  <Upload size={16} />
+                                </Button>
+                                {ticket.status !== "Resolved" && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="text-green-500 hover:text-green-700" 
+                                    title="Mark as Resolved"
+                                    onClick={() => {
+                                      setSelectedTicket(ticket);
+                                      handleMarkAsResolved();
+                                    }}
+                                  >
+                                    <CheckCircle2 size={16} />
+                                  </Button>
+                                )}
+                                {ticket.status !== "In Progress" && ticket.status !== "Resolved" && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="text-amber-500 hover:text-amber-700" 
+                                    title="Approve"
+                                    onClick={() => {
+                                      setSelectedTicket(ticket);
+                                      handleApproveTicket();
+                                    }}
+                                  >
+                                    <CheckCircle2 size={16} />
+                                  </Button>
+                                )}
+                                {ticket.status !== "Rejected" && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="text-red-500 hover:text-red-700" 
+                                    title="Reject"
+                                    onClick={() => {
+                                      setSelectedTicket(ticket);
+                                      handleRejectTicket();
+                                    }}
+                                  >
+                                    <AlertCircle size={16} />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -341,6 +645,46 @@ export default function ITSupport() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Ticket Detail Dialog */}
+      <TicketDetailDialog
+        ticket={selectedTicket}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+        onApprove={handleApproveTicket}
+        onReject={handleRejectTicket}
+        onClose={handleCloseTicket}
+        onMarkAsResolved={handleMarkAsResolved}
+        onEdit={() => {
+          setShowDetailDialog(false);
+          setShowEditDialog(true);
+        }}
+      />
+
+      {/* Ticket Edit Dialog */}
+      <TicketEditDialog
+        ticket={selectedTicket}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSave={handleUpdateTicket}
+        onCancel={() => setShowEditDialog(false)}
+      />
+
+      {/* New Ticket Dialog */}
+      <NewTicketDialog
+        open={showNewTicketDialog}
+        onOpenChange={setShowNewTicketDialog}
+        onSave={handleCreateTicket}
+        onCancel={() => setShowNewTicketDialog(false)}
+      />
+
+      {/* File Upload Dialog */}
+      <FileUploadDialog
+        open={showFileUploadDialog}
+        onOpenChange={setShowFileUploadDialog}
+        onUpload={handleFileUpload}
+        ticketId={uploadingForTicket}
+      />
     </div>
   );
 }
