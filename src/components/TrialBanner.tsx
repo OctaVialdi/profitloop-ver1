@@ -24,6 +24,7 @@ const TrialBanner = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   
   // Skip on auth pages
@@ -31,7 +32,7 @@ const TrialBanner = () => {
   const isOnboardingPage = location.pathname === '/onboarding' || location.pathname === '/organizations';
   const isSubscriptionPage = location.pathname === '/subscription';
   
-  // Update countdown every second when we have a trial end date
+  // Update countdown every minute when we have a trial end date
   useEffect(() => {
     if (!trialEndDate || isDismissed || isAuthPage || isOnboardingPage) return;
 
@@ -71,15 +72,20 @@ const TrialBanner = () => {
   
   // Get trial information
   useEffect(() => {
-    if (isAuthPage || isDismissed || isOnboardingPage) return;
+    if (isAuthPage || isDismissed || isOnboardingPage) {
+      setIsLoading(false);
+      return;
+    }
     
     const fetchTrialInfo = async () => {
       try {
+        setIsLoading(true);
         // Check authentication first
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
           setIsAuthenticated(false);
+          setIsLoading(false);
           return;
         }
         
@@ -90,49 +96,68 @@ const TrialBanner = () => {
         
         if (!orgId) {
           // Try to get from profile as fallback
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('organization_id')
-            .eq('id', session.user.id)
-            .maybeSingle();
+          try {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('organization_id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (!profileData?.organization_id) {
+              setIsLoading(false);
+              return;
+            }
             
-          if (!profileData?.organization_id) {
-            return;
-          }
-          
-          setOrganizationId(profileData.organization_id);
-          
-          // Get organization trial information
-          const { data: orgData } = await supabase
-            .from('organizations')
-            .select('trial_end_date, trial_expired')
-            .eq('id', profileData.organization_id)
-            .maybeSingle();
+            setOrganizationId(profileData.organization_id);
             
-          if (!orgData) {
-            return;
+            // Get organization trial information
+            try {
+              const { data: orgData } = await supabase
+                .from('organizations')
+                .select('trial_end_date, trial_expired')
+                .eq('id', profileData.organization_id)
+                .maybeSingle();
+                
+              if (!orgData) {
+                setIsLoading(false);
+                return;
+              }
+              
+              handleTrialData(orgData);
+            } catch (error) {
+              console.error("Error fetching organization data:", error);
+              setIsLoading(false);
+            }
+          } catch (error) {
+            console.error("Error fetching profile data:", error);
+            setIsLoading(false);
           }
-          
-          handleTrialData(orgData);
         } else {
           // Use organization ID from metadata
           setOrganizationId(orgId);
           
           // Get organization trial information
-          const { data: orgData } = await supabase
-            .from('organizations')
-            .select('trial_end_date, trial_expired')
-            .eq('id', orgId)
-            .maybeSingle();
+          try {
+            const { data: orgData } = await supabase
+              .from('organizations')
+              .select('trial_end_date, trial_expired')
+              .eq('id', orgId)
+              .maybeSingle();
+              
+            if (!orgData) {
+              setIsLoading(false);
+              return;
+            }
             
-          if (!orgData) {
-            return;
+            handleTrialData(orgData);
+          } catch (error) {
+            console.error("Error fetching organization data:", error);
+            setIsLoading(false);
           }
-          
-          handleTrialData(orgData);
         }
       } catch (error) {
         console.error("Error fetching trial info:", error);
+        setIsLoading(false);
       }
     };
     
@@ -148,6 +173,7 @@ const TrialBanner = () => {
         setDaysLeft(0);
         setCountdownString('0 hari 00:00:00');
         setIsTrialExpired(true);
+        setIsLoading(false);
         
         // Show subscription dialog on non-subscription pages when trial has expired
         if (!isSubscriptionPage) {
@@ -160,16 +186,25 @@ const TrialBanner = () => {
         // If the trial is expired by date but not flagged as expired, update the flag
         if (isTrialExpiredByDate && !orgData.trial_expired && organizationId) {
           console.log("Updating trial_expired flag to true");
-          supabase
-            .from('organizations')
-            .update({ trial_expired: true })
-            .eq('id', organizationId)
-            .then(() => {
-              console.log("Trial expired flag updated");
-            })
-            .catch(err => {
-              console.error("Error updating trial expired flag:", err);
-            });
+          
+          try {
+            const updatePromise = supabase
+              .from('organizations')
+              .update({ trial_expired: true })
+              .eq('id', organizationId);
+              
+            // Use await instead of .then().catch()
+            (async () => {
+              try {
+                await updatePromise;
+                console.log("Trial expired flag updated");
+              } catch (err) {
+                console.error("Error updating trial expired flag:", err);
+              }
+            })();
+          } catch (err) {
+            console.error("Error setting up update promise:", err);
+          }
         }
         
         return;
@@ -181,6 +216,7 @@ const TrialBanner = () => {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         setDaysLeft(diffDays > 0 ? diffDays : 0);
         setIsTrialExpired(diffDays <= 0);
+        setIsLoading(false);
         
         // Trial has ended but not marked as expired yet
         if (diffDays <= 0 && !isSubscriptionPage) {
@@ -190,18 +226,29 @@ const TrialBanner = () => {
           // Update the trial_expired flag
           if (organizationId) {
             console.log("Trial has ended, updating trial_expired flag");
-            supabase
-              .from('organizations')
-              .update({ trial_expired: true })
-              .eq('id', organizationId)
-              .then(() => {
-                console.log("Trial expired flag updated");
-              })
-              .catch(err => {
-                console.error("Error updating trial expired flag:", err);
-              });
+            
+            try {
+              const updatePromise = supabase
+                .from('organizations')
+                .update({ trial_expired: true })
+                .eq('id', organizationId);
+                
+              // Use await instead of .then().catch()
+              (async () => {
+                try {
+                  await updatePromise;
+                  console.log("Trial expired flag updated");
+                } catch (err) {
+                  console.error("Error updating trial expired flag:", err);
+                }
+              })();
+            } catch (err) {
+              console.error("Error setting up update promise:", err);
+            }
           }
         }
+      } else {
+        setIsLoading(false);
       }
     };
     
@@ -214,7 +261,7 @@ const TrialBanner = () => {
         document.body.classList.remove('trial-expired');
       }
     };
-  }, [isAuthPage, isDismissed, isOnboardingPage, isSubscriptionPage]);
+  }, [isAuthPage, isDismissed, isOnboardingPage, isSubscriptionPage, organizationId, isTrialExpired]);
   
   // Handle subscription navigation
   const handleSubscribe = () => {
@@ -231,8 +278,8 @@ const TrialBanner = () => {
     document.body.classList.remove('trial-expired');
   };
   
-  // Don't show anything if not authenticated or on auth pages
-  if (!isAuthenticated || isAuthPage || isOnboardingPage || isDismissed || daysLeft === null) return null;
+  // Don't show anything if not authenticated or on auth pages or if still loading
+  if (!isAuthenticated || isAuthPage || isOnboardingPage || isDismissed || daysLeft === null || isLoading) return null;
   
   return (
     <>
@@ -306,3 +353,4 @@ export default TrialBanner;
 function navigate(path: string): void {
   window.location.href = path;
 }
+
