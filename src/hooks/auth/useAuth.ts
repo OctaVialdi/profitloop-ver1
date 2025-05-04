@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User, AuthChangeEvent } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { ensureProfileExists } from "@/services/profileService";
 
 export interface AuthCredentials {
@@ -30,7 +30,7 @@ export function useAuth() {
           setTimeout(async () => {
             try {
               // Handle SIGNED_UP event specifically
-              if (event === AuthChangeEvent.SIGNED_UP) {
+              if (event === 'SIGNED_UP') {
                 console.log("New signup detected, creating profile");
               }
               
