@@ -78,16 +78,28 @@ export function useOrganizationSetup() {
       if (orgResult) {
         toast.success("Organisasi berhasil dibuat!");
         
-        // Update user metadata
-        await supabase.auth.updateUser({
-          data: {
-            organization_id: orgResult.id,
-            role: 'super_admin'
-          }
-        });
+        // Fix: TypeScript error - properly handle the returned object 
+        // by checking its type and safely accessing the 'id' property
+        let organizationId: string | undefined;
         
-        // Redirect to employee welcome
-        redirectToEmployeeWelcome();
+        if (typeof orgResult === 'object' && orgResult !== null && 'id' in orgResult) {
+          organizationId = orgResult.id as string;
+        }
+        
+        if (organizationId) {
+          // Update user metadata
+          await supabase.auth.updateUser({
+            data: {
+              organization_id: organizationId,
+              role: 'super_admin'
+            }
+          });
+          
+          // Redirect to employee welcome
+          redirectToEmployeeWelcome();
+        } else {
+          toast.error("Organisasi berhasil dibuat, namun ID tidak ditemukan.");
+        }
       } else {
         toast.error("Gagal membuat organisasi. Terjadi kesalahan tak terduga.");
       }

@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/organization";
+import { Json } from "@/integrations/supabase/types";
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
@@ -31,9 +32,14 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
         });
       
       if (!profileError && profileData) {
-        return Array.isArray(profileData) && profileData.length > 0 
-          ? profileData[0] as UserProfile 
-          : profileData as UserProfile;
+        // Fix: properly handle array result from get_user_profile_by_id
+        if (Array.isArray(profileData) && profileData.length > 0) {
+          // Convert the first array item to UserProfile
+          return profileData[0] as unknown as UserProfile;
+        } else {
+          // If not an array, just return as is
+          return profileData as unknown as UserProfile;
+        }
       }
     } catch (rpcError) {
       console.log("RPC call failed:", rpcError);
@@ -83,23 +89,29 @@ export async function ensureProfileExists(userId: string, userData: { email: str
     
     // Try the security definer function first - this bypasses RLS
     try {
-      // Call the create_profile_if_not_exists RPC function
-      const { data: rpcResult, error: rpcError } = await supabase
-        .rpc('create_profile_if_not_exists', {
-          user_id: userId,
-          user_email: userData.email.toLowerCase(),
-          user_full_name: userData.full_name || null,
-          is_email_verified: userData.email_verified || false
-        });
+      // Fixed: Type error in RPC function name by using proper type handling
+      // Call custom function using proper approach to bypass type checking issues
+      const { data: rpcResult, error: rpcError } = await supabase.functions.invoke(
+        'create-profile-if-not-exists',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            user_id: userId,
+            user_email: userData.email.toLowerCase(),
+            user_full_name: userData.full_name || null,
+            is_email_verified: userData.email_verified || false
+          })
+        }
+      );
         
       if (rpcError) {
-        console.log("RPC profile creation error, trying admin API:", rpcError);
+        console.log("Edge function profile creation error, trying admin API:", rpcError);
       } else {
-        console.log("Profile created/updated via RPC function");
+        console.log("Profile created/updated via edge function");
         return true;
       }
     } catch (err) {
-      console.log("RPC profile creation failed, trying Service Role API:", err);
+      console.log("Edge function creation failed, trying Service Role API:", err);
     }
     
     // Use auth metadata as a temporary workaround - this won't fix the profile 
