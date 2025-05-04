@@ -44,21 +44,32 @@ export function useEmailVerification({
       verificationChecker = setInterval(async () => {
         try {
           setCheckingVerification(true);
-          // Try to sign in - if it works, the email has been verified
-          const { data, error } = await supabase.auth.signInWithPassword({
+          
+          // Instead of signing in, just check if the email is verified
+          const { data, error } = await supabase.auth.signInWithOtp({
             email,
-            password
+            options: {
+              shouldCreateUser: false // Just check, don't create
+            }
           });
           
-          if (!error && data.user) {
-            // Email is verified, clear interval and redirect to login
+          if (error && error.message.includes("Email not confirmed")) {
+            // Email still not verified
+            console.log("Verification check: email not yet verified");
+          } else {
+            // Email is verified, redirect to login page
             clearInterval(verificationChecker!);
-            toast.success("Email berhasil diverifikasi! Mengalihkan ke halaman login...");
-            navigate("/auth/login?verified=true");
+            toast.success("Email berhasil diverifikasi! Silakan login untuk melanjutkan.");
+            navigate("/auth/login?verified=true", { 
+              state: { 
+                email, 
+                verifiedEmail: email
+              } 
+            });
           }
         } catch (err) {
           // Ignore errors, just keep checking
-          console.log("Verification check: email not yet verified");
+          console.log("Verification check error:", err);
         } finally {
           setCheckingVerification(false);
         }

@@ -7,6 +7,7 @@ import { useEmailVerification } from "./auth/useEmailVerification";
 import { useMagicLinkHandler } from "./auth/useMagicLinkHandler";
 import { useUserProfile } from "./auth/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureUserProfileExists } from "@/integrations/supabase/profiles/profileManagement";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -25,8 +26,10 @@ export function useLoginForm() {
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
+    } else if (location.state?.verifiedEmail) {
+      setEmail(location.state.verifiedEmail);
     }
-  }, [location.state?.email]);
+  }, [location.state?.email, location.state?.verifiedEmail]);
 
   // Check if email exists in the database before attempting login
   const checkEmailExists = async (email: string): Promise<boolean> => {
@@ -96,6 +99,12 @@ export function useLoginForm() {
       }
       
       if (data?.user) {
+        // Ensure user profile exists after successful login
+        await ensureUserProfileExists(data.user.id, { 
+          email: data.user.email || '',
+          full_name: data.user.user_metadata?.full_name
+        });
+        
         toast.success("Login berhasil!");
         
         // Handle magic link token if present

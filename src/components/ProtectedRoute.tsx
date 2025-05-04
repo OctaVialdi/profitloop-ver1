@@ -56,8 +56,6 @@ export const ProtectedRoute = ({
           
           // If user has a profile, set hasProfile to true
           setHasProfile(!!profileData);
-          
-          // We don't create a profile here anymore - profile should be created during login
         } else if (isMounted) {
           console.log("No active session found");
           setAuthenticated(false);
