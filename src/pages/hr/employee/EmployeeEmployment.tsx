@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useEmployees } from "@/hooks/useEmployees";
-import { employeeService, updateEmployeeEmployment } from "@/services/employeeService";
+import { employeeService } from "@/services/employeeService";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 const EmployeeEmployment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { employees, updateEmployee } = useEmployees();
+  const { employees, updateEmployee, updateEmploymentDetails } = useEmployees();
 
   // Find the employee with the matching ID
   const employee = employees.find(emp => emp.id === id);

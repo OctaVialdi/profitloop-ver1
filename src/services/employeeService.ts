@@ -327,10 +327,18 @@ class EmployeeService {
         throw new Error("Name, email, employee_id, and organization_id are required");
       }
 
-      // Insert employee data
+      // Insert employee data - Fix the overload issue by ensuring name and organization_id are present
       const { data, error } = await supabase
         .from('employees')
-        .insert(employeeData)
+        .insert({
+          name: employeeData.name, 
+          email: employeeData.email,
+          employee_id: employeeData.employee_id,
+          organization_id: employeeData.organization_id,
+          role: employeeData.role || 'employee',
+          status: employeeData.status || 'Active',
+          profile_image: employeeData.profile_image
+        })
         .select()
         .single();
 
@@ -712,6 +720,7 @@ class EmployeeService {
   // Additional methods would follow...
 }
 
+// Create a singleton instance of the service
 export const employeeService = new EmployeeService();
 
 // Export the update methods from the service instance
@@ -719,15 +728,4 @@ export const updateEmployeePersonalDetails = employeeService.updateEmployeePerso
 export const updateEmployeeIdentityAddress = employeeService.updateEmployeeIdentityAddress.bind(employeeService);
 export const updateEmployeeEmployment = employeeService.updateEmployeeEmployment.bind(employeeService);
 
-// Re-export types for convenience
-export type { 
-  Employee,
-  EmployeeWithDetails, 
-  EmployeePersonalDetails,
-  EmployeeIdentityAddress,
-  EmployeeEmployment,
-  EmployeeFamily,
-  EmployeeEmergencyContact,
-  EmployeeEducation,
-  EmployeeWorkExperience
-};
+// No need to re-export types that have already been exported above
