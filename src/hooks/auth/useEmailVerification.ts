@@ -28,48 +28,31 @@ export function useEmailVerification() {
       
       toast.success("Email verifikasi berhasil dikirim ulang. Silakan cek kotak masuk email Anda.");
       
-      // Try to create a profile for this email if possible
+      // Try to update the profile's email verification status
       try {
-        // Get user by email
-        // Note: The admin.listUsers() doesn't support a filter parameter directly
-        // Let's query for users and filter manually
-        const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
+        // Get the current user
+        const { data: authData } = await supabase.auth.getUser();
         
-        if (!userError && users) {
-          // Find the user with matching email - explicitly type the users array
-          const user = (users as User[]).find(u => u.email === email);
+        if (authData?.user) {
+          // Check if email is verified in auth
+          const isVerified = authData.user.email_confirmed_at !== null;
           
-          if (user) {
-            const userId = user.id;
-            console.log("Found user ID for email:", userId);
-            
-            // Check if profile exists
-            const { data: existingProfile } = await supabase
+          if (isVerified) {
+            // If email is verified in auth, ensure it's reflected in the profile
+            const { error: profileError } = await supabase
               .from('profiles')
-              .select('id')
-              .eq('id', userId)
-              .maybeSingle();
+              .update({ email_verified: true })
+              .eq('id', authData.user.id);
               
-            // Create profile if it doesn't exist
-            if (!existingProfile) {
-              const { error: profileError } = await supabase
-                .from('profiles')
-                .insert({
-                  id: userId,
-                  email: email.toLowerCase(),
-                  email_verified: false
-                });
-                
-              if (profileError) {
-                console.error("Error creating profile during resend:", profileError);
-              } else {
-                console.log("Profile created during resend verification");
-              }
+            if (profileError) {
+              console.error("Error updating profile during verification check:", profileError);
+            } else {
+              console.log("Profile updated to reflect email verification");
             }
           }
         }
       } catch (profileError) {
-        console.error("Error checking/creating profile during resend:", profileError);
+        console.error("Error checking/updating profile during resend:", profileError);
       }
       
       // Navigate to verification sent page with needed state

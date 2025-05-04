@@ -24,11 +24,12 @@ pop3_port = 54326
 file_size_limit = "50MiB"
 
 [auth]
-site_url = "https://example.com"
-additional_redirect_urls = ["https://localhost:3000"]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000", "https://app.profitloop.id"]
 jwt_expiry = 3600
 enable_signup = true
 
 [functions]
 [functions.create-profile-if-not-exists]
 verify_jwt = false
+

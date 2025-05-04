@@ -1,220 +1,175 @@
 
-// Follow Deno deployment model for edge functions
-import { serve } from 'https://deno.land/std@0.131.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.0'
+// Create a new file for the edge function
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 }
 
-// Get Supabase client using environment variables
-const supabaseClient = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-)
+interface RequestBody {
+  user_id: string;
+  user_email: string;
+  user_full_name?: string | null;
+  is_email_verified?: boolean;
+}
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
-
+  
   try {
-    const { user_id, user_email, user_full_name, is_email_verified } = await req.json()
-
-    if (!user_id || !user_email) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Missing required parameters' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
-
-    // Check if profile exists using a security definer function
-    // This avoids the RLS policies that might cause recursion
-    const { data: profileResult, error: rpcError } = await supabaseClient
-      .rpc('get_user_profile_by_id', {
-        user_id: user_id
-      })
-
-    if (rpcError) {
-      console.error("Error checking profile with RPC:", rpcError)
-      
-      // Try with direct query as backup
-      const { data: existingProfile, error: queryError } = await supabaseClient
-        .from('profiles')
-        .select('id')
-        .eq('id', user_id)
-        .maybeSingle()
-
-      if (queryError) {
-        console.error("Error checking existing profile:", queryError)
-        
-        if (queryError.message.includes('infinite recursion')) {
-          // If there's a recursion error, try using the create_profile_if_not_exists function
-          const { data: profileData, error: funcError } = await supabaseClient
-            .rpc('create_profile_if_not_exists', {
-              user_id: user_id,
-              user_email: user_email.toLowerCase(),
-              user_full_name: user_full_name || null,
-              is_email_verified: is_email_verified || false
-            })
-            
-          if (funcError) {
-            console.error("Error with create_profile_if_not_exists:", funcError)
-            return new Response(
-              JSON.stringify({ success: false, error: funcError.message }),
-              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-            )
-          }
-          
-          return new Response(
-            JSON.stringify({ 
-              success: true, 
-              action: 'created_with_function', 
-              message: 'Profile created with RPC function' 
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-        
-        return new Response(
-          JSON.stringify({ success: false, error: queryError.message }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-        )
-      }
-
-      // Handle the profile result
-      if (existingProfile) {
-        // Update existing profile
-        const { data: updatedProfile, error: updateError } = await supabaseClient
-          .from('profiles')
-          .update({
-            email: user_email.toLowerCase(),
-            full_name: user_full_name,
-            email_verified: is_email_verified
-          })
-          .eq('id', user_id)
-          .select()
-
-        if (updateError) {
-          console.error("Error updating profile:", updateError)
-          return new Response(
-            JSON.stringify({ success: false, error: updateError.message }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-          )
-        }
-
-        return new Response(
-          JSON.stringify({ success: true, action: 'updated', profile: updatedProfile }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-    } else {
-      // We got a result from the RPC function
-      let existingProfile = null
-      
-      // Check if we got an array (some RPC functions return arrays)
-      if (Array.isArray(profileResult) && profileResult.length > 0) {
-        existingProfile = profileResult[0]
-      } else if (profileResult) {
-        existingProfile = profileResult
-      }
-      
-      if (existingProfile) {
-        // Update existing profile
-        const { data: updatedProfile, error: updateError } = await supabaseClient
-          .from('profiles')
-          .update({
-            email: user_email.toLowerCase(),
-            full_name: user_full_name,
-            email_verified: is_email_verified
-          })
-          .eq('id', user_id)
-          .select()
-
-        if (updateError) {
-          console.error("Error updating profile:", updateError)
-          return new Response(
-            JSON.stringify({ success: false, error: updateError.message }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-          )
-        }
-
-        return new Response(
-          JSON.stringify({ success: true, action: 'updated', profile: updatedProfile }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-    }
-      
-    // If we get here, we need to create a new profile
-    console.log(`Creating new profile for user ${user_id}`)
-    const { data: newProfile, error: insertError } = await supabaseClient
-      .from('profiles')
-      .insert([{
-        id: user_id,
-        email: user_email.toLowerCase(),
-        full_name: user_full_name,
-        email_verified: is_email_verified
-      }])
-      .select()
-
-    if (insertError) {
-      console.error("Error creating profile:", insertError)
-      
-      // Check for unique violation - conflict
-      if (insertError.code === '23505') {
-        // Profile was likely created in a race condition - try to retrieve it
-        const { data: existingData } = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('id', user_id)
-          .maybeSingle()
-          
-        if (existingData) {
-          return new Response(
-            JSON.stringify({ success: true, action: 'retrieved', profile: existingData }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-      }
-
-      // Last resort - try the RPC function
-      const { data: profileData, error: funcError } = await supabaseClient
-        .rpc('create_profile_if_not_exists', {
-          user_id: user_id,
-          user_email: user_email.toLowerCase(),
-          user_full_name: user_full_name || null,
-          is_email_verified: is_email_verified || false
-        })
-        
-      if (funcError) {
-        return new Response(
-          JSON.stringify({ success: false, error: insertError.message }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-        )
-      }
-      
+    // Get request body
+    const requestData: RequestBody = await req.json();
+    
+    // Validate required fields
+    if (!requestData.user_id || !requestData.user_email) {
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          action: 'created_with_function', 
-          message: 'Profile created with RPC function' 
+          error: 'user_id and user_email are required' 
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
-
+    
+    // Get Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        }
+      }
+    );
+    
+    // First check if profile already exists
+    const { data: existingProfile, error: checkError } = await supabaseClient
+      .from('profiles')
+      .select('id, email_verified')
+      .eq('id', requestData.user_id)
+      .maybeSingle();
+      
+    // If profile exists, check if we need to update email verification
+    if (existingProfile) {
+      // Update email_verified if needed
+      if (requestData.is_email_verified && !existingProfile.email_verified) {
+        const { data: updateData, error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({ 
+            email_verified: true,
+            email: requestData.user_email.toLowerCase(),
+            full_name: requestData.user_full_name || null
+          })
+          .eq('id', requestData.user_id);
+          
+        if (updateError) {
+          throw new Error(`Failed to update profile: ${updateError.message}`);
+        }
+        
+        // Also update auth metadata to ensure it's synced
+        await updateAuthMetadata(supabaseClient, requestData);
+        
+        return new Response(
+          JSON.stringify({ 
+            message: 'Profile verification status updated successfully',
+            profile_id: requestData.user_id,
+            status: 'updated'
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      // Profile exists but no update needed
+      return new Response(
+        JSON.stringify({ 
+          message: 'Profile already exists, no update needed',
+          profile_id: requestData.user_id,
+          status: 'exists'
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Profile doesn't exist, create it
+    const { data: insertData, error: insertError } = await supabaseClient
+      .from('profiles')
+      .insert({
+        id: requestData.user_id,
+        email: requestData.user_email.toLowerCase(),
+        full_name: requestData.user_full_name || null,
+        email_verified: requestData.is_email_verified || false,
+      });
+      
+    if (insertError) {
+      throw new Error(`Failed to create profile: ${insertError.message}`);
+    }
+    
+    // Also update auth metadata to ensure it's synced
+    await updateAuthMetadata(supabaseClient, requestData);
+    
+    // Return success response
     return new Response(
-      JSON.stringify({ success: true, action: 'created', profile: newProfile }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify({ 
+        message: 'Profile created successfully',
+        profile_id: requestData.user_id,
+        status: 'created' 
+      }),
+      { 
+        status: 201, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
-    console.error("Unhandled error:", error)
+    // Return error response
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred' 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
-})
+});
+
+// Helper function to update auth metadata for consistency
+async function updateAuthMetadata(supabase: any, userData: RequestBody) {
+  try {
+    // Get current auth user data to check email verification status
+    const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userData.user_id);
+    
+    if (authError) {
+      console.error("Error getting auth user data:", authError);
+      return;
+    }
+    
+    // Get actual email verification status from auth
+    const isVerified = authData?.user?.email_confirmed_at !== null;
+    
+    // Update user metadata with consistent values
+    await supabase.auth.admin.updateUserById(userData.user_id, {
+      user_metadata: {
+        full_name: userData.user_full_name,
+        email_verified: isVerified
+      }
+    });
+  } catch (metadataError) {
+    console.error("Error updating auth metadata:", metadataError);
+  }
+}

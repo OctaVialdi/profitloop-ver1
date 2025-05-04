@@ -46,13 +46,27 @@ export function useEmailVerification({
         try {
           setCheckingVerification(true);
           
-          // Instead of using signInWithOtp, use a more reliable method to check email verification
-          // This avoids creating false verification states
+          // Check auth status first
           const { data: { user } } = await supabase.auth.getUser();
           
           // Only consider verified if we have a confirmed user with matching email
           if (user && user.email === email && user.email_confirmed_at) {
-            // Email is verified
+            // Email is verified in auth - now ensure it's updated in the profile
+            try {
+              // First try to update the profile directly
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .update({ email_verified: true })
+                .eq('id', user.id);
+                
+              if (profileError) {
+                console.error("Error updating profile verification status:", profileError);
+              }
+            } catch (updateError) {
+              console.error("Failed to update profile verification status:", updateError);
+            }
+            
+            // Clear interval and show success message
             clearInterval(verificationChecker!);
             toast.success("Email berhasil diverifikasi! Silakan login untuk melanjutkan.");
             

@@ -12,12 +12,14 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       // Extract from auth metadata if available
       if (session.user.user_metadata) {
         const metadata = session.user.user_metadata;
+        const isEmailVerified = session.user.email_confirmed_at !== null;
         
         return {
           id: userId,
           organization_id: metadata.organization_id,
           role: metadata.role,
           email: session.user.email,
+          email_verified: isEmailVerified,
           full_name: metadata.full_name || null,
           // Add other fields with defaults
         } as UserProfile;
@@ -44,14 +46,32 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       // Continue to fallback approaches
     }
     
+    // If we still don't have a profile, try a direct query
+    try {
+      const { data: directProfile, error: directError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (!directError && directProfile) {
+        return directProfile as UserProfile;
+      }
+    } catch (directError) {
+      console.error("Direct profile query failed:", directError);
+    }
+    
     // If we still don't have a profile, construct a minimal one from auth
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
+        const isEmailVerified = userData.user.email_confirmed_at !== null;
+        
         // Create a minimal profile from auth data
         return {
           id: userId,
           email: userData.user.email,
+          email_verified: isEmailVerified,
           full_name: userData.user.user_metadata?.full_name,
           role: userData.user.user_metadata?.role || 'employee',
           organization_id: userData.user.user_metadata?.organization_id
@@ -76,8 +96,34 @@ export async function ensureProfileExists(userId: string, userData: { email: str
   try {
     console.log("Ensuring profile exists for:", userId, userData);
     
-    // Call the edge function directly to create/update profile
-    // This avoids the recursive RLS issues with direct table queries
+    // First, check if a profile already exists
+    const { data: existingProfile, error: checkError } = await supabase
+      .from('profiles')
+      .select('id, email_verified')
+      .eq('id', userId)
+      .maybeSingle();
+      
+    if (!checkError && existingProfile) {
+      // Profile exists - check if we need to update email verification status
+      if (userData.email_verified && !existingProfile.email_verified) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ email_verified: true })
+          .eq('id', userId);
+          
+        if (updateError) {
+          console.error("Error updating email verification status:", updateError);
+        } else {
+          console.log("Updated email_verified to true for existing profile");
+          return true;
+        }
+      }
+      
+      // Profile exists and no updates needed
+      return true;
+    }
+    
+    // Call the edge function to create/update profile
     try {
       const { data: rpcResult, error: rpcError } = await supabase.functions.invoke(
         'create-profile-if-not-exists',
@@ -100,6 +146,27 @@ export async function ensureProfileExists(userId: string, userData: { email: str
       }
     } catch (err) {
       console.log("Edge function creation failed:", err);
+    }
+    
+    // Direct insert as fallback
+    try {
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: userData.email.toLowerCase(),
+          full_name: userData.full_name || null,
+          email_verified: userData.email_verified || false,
+        });
+        
+      if (!insertError) {
+        console.log("Profile created via direct insert");
+        return true;
+      } else {
+        console.error("Direct insert failed:", insertError);
+      }
+    } catch (insertErr) {
+      console.error("Direct insert exception:", insertErr);
     }
     
     // Use auth metadata as a fallback - this won't fix the profile 

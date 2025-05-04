@@ -25,63 +25,88 @@ export function useAuth() {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // If user is logged in or just signed up, ensure profile exists
+        // If user is logged in or just signed up, ensure profile exists and email verification is synced
         if (session?.user) {
           // Use setTimeout to avoid potential auth state deadlocks
           setTimeout(async () => {
             try {
-              // Handle SIGNED_UP event specifically - using string comparison
-              if (event.toString() === "SIGNED_UP") {
-                console.log("New signup detected, creating profile");
+              // Check if user's email is verified in auth system
+              const isEmailVerified = session.user.email_confirmed_at !== null;
+              
+              // Handle SIGNED_UP or SIGNED_IN events specifically
+              if (event === "SIGNED_UP" || event === "SIGNED_IN" || event === "USER_UPDATED") {
+                console.log(`${event} detected, ensuring profile and verification status`);
                 
-                // Force create profile for new signup
                 try {
-                  // Direct insert for new signups - most reliable method
-                  const { error: directError } = await supabase
+                  // First check if profile exists
+                  const { data: profileData } = await supabase
                     .from('profiles')
-                    .insert({
-                      id: session.user.id,
-                      email: session.user.email || '',
-                      full_name: session.user.user_metadata?.full_name || null,
-                      email_verified: session.user.email_confirmed_at !== null,
-                      role: session.user.user_metadata?.role || 'employee'
-                    });
+                    .select('id, email_verified')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
                     
-                  if (directError) {
-                    console.error("Direct profile creation error:", directError);
-                    throw directError;
+                  if (profileData) {
+                    // Profile exists, update email verification if needed
+                    if (isEmailVerified && !profileData.email_verified) {
+                      const { error: updateError } = await supabase
+                        .from('profiles')
+                        .update({ email_verified: true })
+                        .eq('id', session.user.id);
+                        
+                      if (updateError) {
+                        console.error("Error updating email verification status:", updateError);
+                      } else {
+                        console.log("Profile email_verified set to true");
+                      }
+                    }
                   } else {
-                    console.log("Direct profile creation success on SIGNED_UP event");
-                    toast.success("Profile berhasil dibuat");
+                    // Profile doesn't exist, create it
+                    console.log("Profile not found, creating new profile");
+                    
+                    // Direct insert for new signups - most reliable method
+                    try {
+                      const { error: directError } = await supabase
+                        .from('profiles')
+                        .insert({
+                          id: session.user.id,
+                          email: session.user.email || '',
+                          full_name: session.user.user_metadata?.full_name || null,
+                          email_verified: isEmailVerified,
+                          role: session.user.user_metadata?.role || 'employee'
+                        });
+                        
+                      if (directError) {
+                        console.error("Direct profile creation error:", directError);
+                        throw directError;
+                      } else {
+                        console.log("Direct profile creation success on auth event");
+                      }
+                    } catch (insertErr) {
+                      console.error("Direct insert failed, trying fallback:", insertErr);
+                      
+                      // Fallback to helper function
+                      const profileCreated = await ensureProfileExists(session.user.id, {
+                        email: session.user.email || '',
+                        full_name: session.user.user_metadata?.full_name || null,
+                        email_verified: isEmailVerified
+                      });
+                      
+                      console.log("Fallback profile creation result:", profileCreated);
+                    }
                   }
-                } catch (insertErr) {
-                  console.error("Direct insert failed, trying fallback:", insertErr);
-                  
-                  // Fallback to helper function
-                  const profileCreated = await ensureProfileExists(session.user.id, {
-                    email: session.user.email || '',
-                    full_name: session.user.user_metadata?.full_name || null,
-                    email_verified: session.user.email_confirmed_at !== null
-                  });
-                  
-                  console.log("Fallback profile creation result:", profileCreated);
-                  
-                  if (!profileCreated) {
-                    console.error("Both direct and fallback profile creation failed");
-                  }
+                } catch (err) {
+                  console.error("Error in profile verification check:", err);
                 }
               }
               
-              // For all auth events, ensure profile exists
-              const profileCreated = await ensureProfileExists(session.user.id, {
+              // Always ensure profile exists regardless of auth event
+              await ensureProfileExists(session.user.id, {
                 email: session.user.email || '',
                 full_name: session.user.user_metadata?.full_name || null,
-                email_verified: session.user.email_confirmed_at !== null
+                email_verified: isEmailVerified
               });
-              
-              console.log("Profile ensure result:", profileCreated);
             } catch (err) {
-              console.error("Error in auth listener profile creation:", err);
+              console.error("Error in auth listener profile creation/update:", err);
             }
           }, 0);
         }
@@ -95,10 +120,12 @@ export function useAuth() {
       
       // If user is logged in, ensure profile exists
       if (session?.user) {
+        const isEmailVerified = session.user.email_confirmed_at !== null;
+        
         ensureProfileExists(session.user.id, {
           email: session.user.email || '',
           full_name: session.user.user_metadata?.full_name || null,
-          email_verified: session.user.email_confirmed_at !== null
+          email_verified: isEmailVerified
         });
       }
     });

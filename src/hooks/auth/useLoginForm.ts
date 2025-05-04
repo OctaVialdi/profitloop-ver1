@@ -33,6 +33,36 @@ export function useLoginForm() {
     }
   }, [location.state?.email, location.state?.verifiedEmail]);
 
+  // Automatically check email verification status on mount if coming from verification
+  useEffect(() => {
+    const checkVerificationStatus = async () => {
+      if (location.search === "?verified=true" && email) {
+        try {
+          // Check if user exists and is verified
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (user && user.email === email && user.email_confirmed_at) {
+            // Ensure profile reflects verification
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ email_verified: true })
+              .eq('id', user.id);
+              
+            if (updateError) {
+              console.error("Error updating profile verification:", updateError);
+            } else {
+              toast.success("Email telah terverifikasi. Silakan login.");
+            }
+          }
+        } catch (error) {
+          console.error("Error checking verification status:", error);
+        }
+      }
+    };
+    
+    checkVerificationStatus();
+  }, [email, location.search]);
+
   // Handle resend verification function
   const handleResendVerification = () => {
     // Prepare additional state for navigation
@@ -90,6 +120,20 @@ export function useLoginForm() {
         
         toast.success("Login berhasil!");
         
+        // Ensure profile reflects verified status
+        try {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ email_verified: true })
+            .eq('id', data.user.id);
+            
+          if (updateError) {
+            console.error("Error updating profile verification on login:", updateError);
+          }
+        } catch (updateError) {
+          console.error("Failed to update verification status on login:", updateError);
+        }
+        
         // Handle magic link token if present
         const magicLinkToken = location.state?.magicLinkToken;
         if (magicLinkToken) {
@@ -113,7 +157,7 @@ export function useLoginForm() {
           .maybeSingle();
           
         // Follow the authentication flow according to the flowchart
-        if (!profileData?.email_verified) {
+        if (profileData && !profileData.email_verified) {
           // Email not verified in our database, update the flag
           const { error: updateError } = await supabase
             .from('profiles')
