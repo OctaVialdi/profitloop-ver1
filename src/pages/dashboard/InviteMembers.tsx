@@ -457,6 +457,182 @@ const InviteMembers = () => {
 
   const filteredInvitations = getFilteredInvitations();
 
+  // Handle regular email invitations
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!organizationId) {
+      toast.error("Tidak dapat menemukan organisasi Anda.");
+      return;
+    }
+    
+    if (!email) {
+      toast.error("Email tidak boleh kosong");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Check if user already exists in the same organization
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .eq('organization_id', organizationId)
+        .maybeSingle();
+        
+      if (existingUser) {
+        toast.error("Pengguna dengan email ini sudah ada di organisasi Anda");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Create an invitation record
+      const { data: invitation, error } = await supabase
+        .from('invitations')
+        .insert({
+          email,
+          organization_id: organizationId,
+          role,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+          token: crypto.randomUUID()
+        })
+        .select('id, email, token')
+        .single();
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Send the invitation email using edge function
+      setIsSending({...isSending, [invitation.id]: true });
+      
+      const { error: sendError } = await supabase.functions.invoke('send-invitation', {
+        body: { 
+          email,
+          organizationId, 
+          invitationId: invitation.id,
+          token: invitation.token
+        }
+      });
+      
+      if (sendError) {
+        throw sendError;
+      }
+      
+      toast.success(`Undangan telah dikirim ke ${email}`);
+      
+      // Update status to 'sent'
+      await supabase
+        .from('invitations')
+        .update({ status: 'sent' })
+        .eq('id', invitation.id);
+        
+      // Refresh the invitations list
+      const { data: updatedInvitations } = await supabase
+        .from('invitations')
+        .select('id, email, status, created_at, expires_at, token, role')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false });
+        
+      if (updatedInvitations) {
+        const typedInvitations: Invitation[] = updatedInvitations.map(inv => ({
+          ...inv,
+          status: (inv.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending'
+        }));
+        
+        setInvitations(typedInvitations);
+      }
+      
+      // Clear the form
+      setEmail("");
+      
+    } catch (error: any) {
+      console.error("Error sending invitation:", error);
+      toast.error(error.message || "Gagal mengirim undangan");
+    } finally {
+      setIsLoading(false);
+      setIsSending({});
+    }
+  };
+
+  // Handle generating invitation link
+  const handleGenerateLink = async () => {
+    if (!organizationId) {
+      toast.error("Tidak dapat menemukan organisasi Anda.");
+      return;
+    }
+    
+    if (!email) {
+      toast.error("Email tidak boleh kosong");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Check if user already exists in same organization
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .eq('organization_id', organizationId)
+        .maybeSingle();
+        
+      if (existingUser) {
+        toast.error("Pengguna dengan email ini sudah ada di organisasi Anda");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Create an invitation record
+      const { data: invitation, error } = await supabase
+        .from('invitations')
+        .insert({
+          email,
+          organization_id: organizationId,
+          role,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+          token: crypto.randomUUID()
+        })
+        .select('id, email, token')
+        .single();
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Generate the invitation link
+      const baseUrl = window.location.origin;
+      const link = `${baseUrl}/join-organization?token=${invitation.token}&email=${encodeURIComponent(email)}`;
+      
+      setInvitationLink(link);
+      
+      // Update the invitations list
+      const { data: updatedInvitations } = await supabase
+        .from('invitations')
+        .select('id, email, status, created_at, expires_at, token, role')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false });
+        
+      if (updatedInvitations) {
+        const typedInvitations: Invitation[] = updatedInvitations.map(inv => ({
+          ...inv,
+          status: (inv.status as 'pending' | 'accepted' | 'rejected' | 'sent') || 'pending'
+        }));
+        
+        setInvitations(typedInvitations);
+      }
+      
+    } catch (error: any) {
+      console.error("Error generating invitation link:", error);
+      toast.error(error.message || "Gagal membuat tautan undangan");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto">
@@ -736,115 +912,4 @@ const InviteMembers = () => {
                               <Copy className={`h-4 w-4 ${copied ? "text-green-500" : ""}`} />
                             </Button>
                           </div>
-                          <p className="text-sm text-indigo-700">
-                            {magicLinkError 
-                              ? "Salin tautan di atas dan kirim secara manual"
-                              : "Magic Link telah dikirim melalui email. Penerima dapat bergabung dengan organisasi tanpa perlu membuat password."}
-                          </p>
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="bg-white rounded-lg border shadow overflow-hidden">
-              <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Riwayat Magic Link</h2>
-                <div className="flex space-x-2">
-                  <Select 
-                    value={inviteFilter} 
-                    onValueChange={setInviteFilter}
-                  >
-                    <SelectTrigger className="w-[140px] h-8 text-xs">
-                      <SelectValue placeholder="Filter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Semua</SelectItem>
-                      <SelectItem value="pending">Menunggu</SelectItem>
-                      <SelectItem value="accepted">Diterima</SelectItem>
-                      <SelectItem value="rejected">Ditolak</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                  >
-                    {isRefreshing ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Peran</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Dibuat</TableHead>
-                      <TableHead>Kadaluarsa</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredInvitations.length > 0 ? (
-                      filteredInvitations.map((invitation) => (
-                        <TableRow key={invitation.id}>
-                          <TableCell className="font-medium">{invitation.email}</TableCell>
-                          <TableCell className="capitalize">
-                            {invitation.role || 'karyawan'}
-                          </TableCell>
-                          <TableCell>{getStatusDisplay(invitation.status)}</TableCell>
-                          <TableCell className="text-sm text-gray-500">
-                            {formatDate(invitation.created_at)}
-                          </TableCell>
-                          <TableCell className="text-sm text-gray-500">
-                            {invitation.expires_at ? formatDate(invitation.expires_at) : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {invitation.status === 'pending' && (
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => handleResendMagicLink(invitation.id, invitation.email)}
-                                disabled={isResending[invitation.id]}
-                              >
-                                {isResending[invitation.id] ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <RotateCw className="h-4 w-4" />
-                                )}
-                                <span className="ml-2">Kirim Ulang</span>
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          Tidak ada data undangan
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
-};
-
-export default InviteMembers;
+                          <p className="text-sm text-indigo-700
