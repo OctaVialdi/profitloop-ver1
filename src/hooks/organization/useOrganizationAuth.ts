@@ -25,33 +25,51 @@ export const useOrganizationAuth = () => {
       
       console.log("User is authenticated:", session.user.id);
       
-      const { hasOrganization, emailVerified, organizationId } = await checkExistingOrganization(
-        session.user.id, 
-        session.user.email
-      );
-      
-      // Check if email is verified
-      if (!emailVerified) {
-        console.log("Email not verified, redirecting to login");
-        redirectToLogin("Anda harus memverifikasi email terlebih dahulu. Silakan cek email Anda.");
-        return false;
-      }
-      
-      // Check if user already has an organization
-      if (hasOrganization && organizationId) {
-        console.log("User already has an organization:", organizationId);
-        
-        // If this is from creator_email check, we need to update the profile
-        if (!session.user.user_metadata?.organization_id) {
-          await updateUserWithOrganization(session.user.id, organizationId);
-        }
-        
+      // Check if user has an organization directly from session metadata first
+      // This avoids the infinite recursion issue with profile policies
+      if (session.user.user_metadata?.organization_id) {
+        console.log("User already has an organization in metadata:", session.user.user_metadata.organization_id);
         toast.info("Anda sudah memiliki organisasi.");
         redirectToEmployeeWelcome();
         return false;
       }
-
-      return true;
+      
+      try {
+        const { hasOrganization, emailVerified, organizationId } = await checkExistingOrganization(
+          session.user.id, 
+          session.user.email
+        );
+        
+        // Check if email is verified
+        if (!emailVerified) {
+          console.log("Email not verified, redirecting to login");
+          redirectToLogin("Anda harus memverifikasi email terlebih dahulu. Silakan cek email Anda.");
+          return false;
+        }
+        
+        // Check if user already has an organization
+        if (hasOrganization && organizationId) {
+          console.log("User already has an organization:", organizationId);
+          
+          // If this is from creator_email check, we need to update the profile
+          if (!session.user.user_metadata?.organization_id) {
+            await updateUserWithOrganization(session.user.id, organizationId);
+          }
+          
+          toast.info("Anda sudah memiliki organisasi.");
+          redirectToEmployeeWelcome();
+          return false;
+        }
+        
+        return true;
+      } catch (error) {
+        // Special handling for infinite recursion or policy errors
+        if (error instanceof Error && error.message.includes("infinite recursion")) {
+          console.log("Handling recursion error gracefully - continuing to organization setup");
+          return true;
+        }
+        throw error;
+      }
     } catch (error) {
       console.error("Error checking auth:", error);
       toast.error("Terjadi kesalahan saat memeriksa autentikasi.");

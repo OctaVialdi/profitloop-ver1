@@ -60,18 +60,16 @@ export function useOrganizationSetup() {
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
         
-        // Verify profile has been updated with organization_id
-        const { data: profileCheck } = await supabase
-          .from('profiles')
-          .select('organization_id')
-          .eq('id', session.user.id)
-          .single();
+        // Update user metadata directly
+        await supabase.auth.updateUser({
+          data: {
+            organization_id: (result as any).id,
+            role: 'super_admin'
+          }
+        });
         
-        if (!profileCheck?.organization_id) {
-          console.warn("Profile still doesn't have organization_id after creation. Trying one more update...");
-          // Try one more time to update profile directly
-          await updateUserWithOrganization(session.user.id, (result as any).id);
-        }
+        // Also ensure profile is updated
+        await updateUserWithOrganization(session.user.id, (result as any).id);
         
         // Following the specific flowchart - redirect to employee-welcome after org creation
         redirectToEmployeeWelcome();

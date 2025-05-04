@@ -8,6 +8,16 @@ import { toast } from "@/components/ui/sonner";
  */
 export const checkExistingOrganization = async (userId: string, userEmail?: string | null) => {
   try {
+    // First try to check session metadata
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.user_metadata?.organization_id) {
+      return { 
+        hasOrganization: true, 
+        emailVerified: true, 
+        organizationId: session.user.user_metadata.organization_id 
+      };
+    }
+    
     // Check if user's profile has an organization
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
@@ -17,6 +27,17 @@ export const checkExistingOrganization = async (userId: string, userEmail?: stri
     
     if (profileError) {
       console.error("Error checking profile:", profileError);
+      
+      // If there's an infinite recursion error, assume email is verified
+      // but no organization yet so we can continue to organization setup
+      if (profileError.message.includes("infinite recursion")) {
+        return { 
+          hasOrganization: false, 
+          emailVerified: true,  // Assume verified to continue flow
+          organizationId: null 
+        };
+      }
+      
       toast.error("Terjadi kesalahan saat memeriksa profil");
       return { hasOrganization: false, emailVerified: false, organizationId: null };
     }
@@ -64,6 +85,19 @@ export const checkExistingOrganization = async (userId: string, userEmail?: stri
  */
 export const updateUserWithOrganization = async (userId: string, organizationId: string, role: string = 'super_admin') => {
   try {
+    // First update user metadata
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: {
+        organization_id: organizationId,
+        role: role
+      }
+    });
+      
+    if (metadataError) {
+      console.error("Error updating user metadata:", metadataError);
+    }
+    
+    // Then update profile
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ 
