@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -82,7 +81,7 @@ const EmployeeEmployment = () => {
       updateEmployee(baseUpdate)
         .then(() => {
           // Then update the employment data
-          return updateEmployeeEmployment(id, employmentData);
+          return updateEmploymentDetails(id, employmentData);
         })
         .then(() => {
           toast.success("Employment data updated successfully");

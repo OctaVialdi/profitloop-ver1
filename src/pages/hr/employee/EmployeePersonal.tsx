@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ import { employeeService, updateEmployeePersonalDetails, updateEmployeeIdentityA
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { employees, updateEmployee } = useEmployees();
+  const { employees, updateEmployee, updatePersonalDetails, updateIdentityAddress } = useEmployees();
   const [activeTab, setActiveTab] = useState("basic-info");
 
   // Find the employee with the matching ID
@@ -98,11 +97,11 @@ const EmployeePersonal = () => {
       updateEmployee(baseUpdate)
         .then(() => {
           // Then update the personal details data
-          return updateEmployeePersonalDetails(id, personalDetailsData);
+          return updatePersonalDetails(id, personalDetailsData);
         })
         .then(() => {
           // Then update the identity address data
-          return updateEmployeeIdentityAddress(id, identityAddressData);
+          return updateIdentityAddress(id, identityAddressData);
         })
         .then(() => {
           toast.success("Personal data updated successfully");

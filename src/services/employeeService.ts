@@ -713,3 +713,21 @@ class EmployeeService {
 }
 
 export const employeeService = new EmployeeService();
+
+// Export the update methods from the service instance
+export const updateEmployeePersonalDetails = employeeService.updateEmployeePersonalDetails.bind(employeeService);
+export const updateEmployeeIdentityAddress = employeeService.updateEmployeeIdentityAddress.bind(employeeService);
+export const updateEmployeeEmployment = employeeService.updateEmployeeEmployment.bind(employeeService);
+
+// Re-export types for convenience
+export type { 
+  Employee,
+  EmployeeWithDetails, 
+  EmployeePersonalDetails,
+  EmployeeIdentityAddress,
+  EmployeeEmployment,
+  EmployeeFamily,
+  EmployeeEmergencyContact,
+  EmployeeEducation,
+  EmployeeWorkExperience
+};
