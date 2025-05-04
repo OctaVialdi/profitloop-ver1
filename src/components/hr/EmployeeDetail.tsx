@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { EmployeeWithDetails } from "@/services/employeeService";
+import { convertToLegacyFormat, LegacyEmployee } from "@/hooks/useEmployees";
 import {
   EmployeeDetailSidebar,
   PersonalSection,
@@ -42,46 +43,19 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
   };
 
   // Convert to legacy employee object format for backward compatibility
-  const convertToLegacyFormat = () => {
-    return {
-      id: employee.id,
-      name: employee.name,
-      email: employee.email,
-      mobilePhone: employee.personalDetails?.mobile_phone || "",
-      birthPlace: employee.personalDetails?.birth_place || "",
-      birthDate: employee.personalDetails?.birth_date || "",
-      gender: employee.personalDetails?.gender || "",
-      maritalStatus: employee.personalDetails?.marital_status || "",
-      religion: employee.personalDetails?.religion || "",
-      address: employee.identityAddress?.residential_address || "",
-      jobPosition: employee.employment?.job_position || "",
-      jobLevel: employee.employment?.job_level || "",
-      organization: employee.employment?.organization || "",
-      employeeId: employee.employee_id || "",
-      barcode: employee.employment?.barcode || "",
-      employmentStatus: employee.employment?.employment_status || "",
-      branch: employee.employment?.branch || "",
-      joinDate: employee.employment?.join_date || "",
-      signDate: employee.employment?.sign_date || "",
-      status: employee.status,
-      role: employee.role
-    };
-  };
+  const legacyEmployee: LegacyEmployee = convertToLegacyFormat(employee);
 
   // Render content for each section
   const renderSectionContent = () => {
-    // Use legacy format for backward compatibility
-    const legacyFormat = convertToLegacyFormat();
-    
     switch (activeTab) {
       case 'personal':
-        return <PersonalSection employee={legacyFormat} handleEdit={handleEdit} />;
+        return <PersonalSection employee={legacyEmployee} handleEdit={handleEdit} />;
         
       case 'employment':
-        return <EmploymentSection employee={legacyFormat} handleEdit={handleEdit} />;
+        return <EmploymentSection employee={legacyEmployee} handleEdit={handleEdit} />;
         
       case 'education':
-        return <EducationSection employee={legacyFormat} handleEdit={handleEdit} />;
+        return <EducationSection employee={legacyEmployee} handleEdit={handleEdit} />;
 
       // Attendance section in Time Management
       case 'attendance':
@@ -89,7 +63,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
       case 'time-off':
         return (
           <TimeManagementSection 
-            employee={legacyFormat} 
+            employee={legacyEmployee} 
             activeTab={activeTab} 
             handleEdit={handleEdit} 
           />
@@ -97,7 +71,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 
       // Payroll section  
       case 'payroll-info':
-        return <PayrollSection employee={legacyFormat} handleEdit={handleEdit} />;
+        return <PayrollSection employee={legacyEmployee} handleEdit={handleEdit} />;
 
       // Finance sections
       case 'reimbursement':
@@ -105,7 +79,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
       case 'loan':
         return (
           <FinanceSection 
-            employee={legacyFormat} 
+            employee={legacyEmployee} 
             activeTab={activeTab} 
             handleEdit={handleEdit} 
           />
@@ -113,11 +87,11 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 
       // Files section
       case 'files':
-        return <FilesSection employee={legacyFormat} handleEdit={handleEdit} />;
+        return <FilesSection employee={legacyEmployee} handleEdit={handleEdit} />;
 
       // Assets section
       case 'assets':
-        return <AssetsSection employee={legacyFormat} handleEdit={handleEdit} />;
+        return <AssetsSection employee={legacyEmployee} handleEdit={handleEdit} />;
 
       // History sections
       case 'adjustment':
@@ -126,7 +100,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
       case 'reprimand':
         return (
           <HistorySection 
-            employee={legacyFormat} 
+            employee={legacyEmployee} 
             activeTab={activeTab} 
             handleEdit={handleEdit} 
           />
@@ -142,7 +116,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     <div className="flex flex-col md:flex-row gap-6">
       {/* Left sidebar with profile picture and navigation */}
       <EmployeeDetailSidebar 
-        employee={convertToLegacyFormat()} 
+        employee={legacyEmployee} 
         activeTab={activeTab} 
         handleEdit={handleEdit} 
       />

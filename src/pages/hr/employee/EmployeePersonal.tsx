@@ -42,21 +42,21 @@ const EmployeePersonal = () => {
     defaultValues: {
       firstName: employee?.name?.split(' ')[0] || '',
       lastName: employee?.name?.split(' ').slice(1).join(' ') || '',
-      mobilePhone: employee?.mobilePhone || '',
+      mobilePhone: employee?.personalDetails?.mobile_phone || '',
       email: employee?.email || '',
-      phone: employee?.mobilePhone || '',
-      birthPlace: employee?.birthPlace || '',
-      birthDate: employee?.birthDate || '',
-      gender: employee?.gender || 'Male',
-      maritalStatus: employee?.maritalStatus || '',
+      phone: employee?.personalDetails?.mobile_phone || '',
+      birthPlace: employee?.personalDetails?.birth_place || '',
+      birthDate: employee?.personalDetails?.birth_date || '',
+      gender: employee?.personalDetails?.gender || 'Male',
+      maritalStatus: employee?.personalDetails?.marital_status || '',
       bloodType: 'O',
-      religion: employee?.religion || '',
+      religion: employee?.personalDetails?.religion || '',
       nik: '',
       passport: '',
       passportExpiry: '',
       postalCode: '',
       citizenAddress: '',
-      residentialAddress: employee?.address || '',
+      residentialAddress: employee?.identityAddress?.residential_address || '',
     }
   });
 
@@ -68,16 +68,20 @@ const EmployeePersonal = () => {
     // Update employee data
     if (employee && id) {
       updateEmployee({
-        ...employee,
+        id: id,
         name: fullName,
-        mobilePhone: data.mobilePhone,
         email: data.email,
-        birthPlace: data.birthPlace,
-        birthDate: data.birthDate,
-        gender: data.gender,
-        maritalStatus: data.maritalStatus,
-        religion: data.religion,
-        address: data.residentialAddress
+        personalDetails: {
+          mobile_phone: data.mobilePhone,
+          birth_place: data.birthPlace,
+          birth_date: data.birthDate,
+          gender: data.gender,
+          marital_status: data.maritalStatus,
+          religion: data.religion
+        },
+        identityAddress: {
+          residential_address: data.residentialAddress
+        }
       });
       
       toast.success("Personal data updated successfully");

@@ -3,6 +3,33 @@ import { useState, useEffect } from "react";
 import { employeeService, Employee, EmployeeWithDetails } from "@/services/employeeService";
 import { toast } from "sonner";
 
+// Define the legacy employee interface that our components expect
+export interface LegacyEmployee {
+  id: string;
+  name: string;
+  email: string;
+  employeeId: string;
+  organization: string;
+  jobPosition: string;
+  jobLevel: string;
+  employmentStatus: string;
+  branch: string;
+  joinDate: string;
+  signDate: string;
+  barcode: string;
+  birthDate: string;
+  birthPlace: string;
+  address: string;
+  mobilePhone: string;
+  religion: string;
+  gender: string;
+  maritalStatus: string;
+  status: string;
+  role: string;
+  organization_id?: string;
+  employee_id?: string;
+}
+
 export interface UseEmployeesResult {
   employees: EmployeeWithDetails[];
   isLoading: boolean;
@@ -11,6 +38,73 @@ export interface UseEmployeesResult {
   updateEmployee: (employee: Partial<Employee> & { id: string }) => Promise<EmployeeWithDetails | null>;
   removeEmployee: (id: string) => Promise<boolean>;
   getEmployee: (id: string) => Promise<EmployeeWithDetails | null>;
+}
+
+// Helper function to convert from new database format to legacy format
+export function convertToLegacyFormat(employee: EmployeeWithDetails): LegacyEmployee {
+  return {
+    id: employee.id,
+    name: employee.name,
+    email: employee.email || "",
+    employeeId: employee.employee_id || "",
+    organization: employee.employment?.organization || "",
+    jobPosition: employee.employment?.job_position || "",
+    jobLevel: employee.employment?.job_level || "",
+    employmentStatus: employee.employment?.employment_status || "",
+    branch: employee.employment?.branch || "",
+    joinDate: employee.employment?.join_date || "",
+    signDate: employee.employment?.sign_date || "",
+    barcode: employee.employment?.barcode || "",
+    birthDate: employee.personalDetails?.birth_date || "",
+    birthPlace: employee.personalDetails?.birth_place || "",
+    address: employee.identityAddress?.residential_address || "",
+    mobilePhone: employee.personalDetails?.mobile_phone || "",
+    religion: employee.personalDetails?.religion || "",
+    gender: employee.personalDetails?.gender || "",
+    maritalStatus: employee.personalDetails?.marital_status || "",
+    status: employee.status || "Active",
+    role: employee.role || "employee",
+    organization_id: employee.organization_id,
+    employee_id: employee.employee_id
+  };
+}
+
+// Helper function to convert from legacy format to new database format
+export function convertFromLegacyFormat(legacyEmployee: Partial<LegacyEmployee>): Partial<Employee> & Partial<{
+  personalDetails: any;
+  identityAddress: any;
+  employment: any;
+}> {
+  return {
+    id: legacyEmployee.id,
+    name: legacyEmployee.name,
+    email: legacyEmployee.email,
+    employee_id: legacyEmployee.employeeId || legacyEmployee.employee_id,
+    organization_id: legacyEmployee.organization_id,
+    status: legacyEmployee.status,
+    role: legacyEmployee.role,
+    personalDetails: {
+      mobile_phone: legacyEmployee.mobilePhone,
+      birth_place: legacyEmployee.birthPlace,
+      birth_date: legacyEmployee.birthDate,
+      gender: legacyEmployee.gender,
+      marital_status: legacyEmployee.maritalStatus,
+      religion: legacyEmployee.religion
+    },
+    identityAddress: {
+      residential_address: legacyEmployee.address
+    },
+    employment: {
+      barcode: legacyEmployee.barcode,
+      organization: legacyEmployee.organization,
+      job_position: legacyEmployee.jobPosition,
+      job_level: legacyEmployee.jobLevel,
+      employment_status: legacyEmployee.employmentStatus,
+      branch: legacyEmployee.branch,
+      join_date: legacyEmployee.joinDate,
+      sign_date: legacyEmployee.signDate
+    }
+  };
 }
 
 export function useEmployees(): UseEmployeesResult {

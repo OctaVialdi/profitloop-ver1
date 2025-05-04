@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -13,11 +14,11 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { Employee } from "@/hooks/useEmployees";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface EmployeeDetailSidebarProps {
-  employee: Employee;
+  employee: LegacyEmployee;
   activeTab: string;
   handleEdit: (section: string) => void;
 }

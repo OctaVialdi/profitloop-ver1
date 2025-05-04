@@ -3,10 +3,10 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Edit } from "lucide-react";
-import { Employee } from "@/hooks/useEmployees";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 
 interface EmploymentSectionProps {
-  employee: Employee;
+  employee: LegacyEmployee;
   handleEdit: (section: string) => void;
 }
 

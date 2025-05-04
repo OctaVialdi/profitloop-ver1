@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Employee } from './employee-list/types';
+import { LegacyEmployee } from '@/hooks/useEmployees';
 import { EmployeeColumnState, ColumnOrder } from './EmployeeColumnManager';
 import { EmployeeHeader } from './employee-list/EmployeeHeader';
 import { EmployeeFilters } from './employee-list/EmployeeFilters';
@@ -10,7 +10,7 @@ import { EmployeeTableView } from './employee-list/EmployeeTableView';
 import { EmployeePagination } from './employee-list/EmployeePagination';
 
 interface EmployeeListProps {
-  data: Employee[];
+  data: LegacyEmployee[];
 }
 
 export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
@@ -21,7 +21,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   // Update with the proper type
   const [visibleColumns, setVisibleColumns] = useState<EmployeeColumnState>({
     name: true,
-    employeeId: true, // Added employeeId column
+    employeeId: true,
     email: true,
     branch: true,
     organization: true,
@@ -45,7 +45,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   // Define the default column order
   const [columnOrder, setColumnOrder] = useState<ColumnOrder>([
     'name',
-    'employeeId', // Added employeeId column
+    'employeeId',
     'email',
     'branch',
     'organization',

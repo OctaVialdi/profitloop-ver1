@@ -20,7 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { useEmployees } from "@/hooks/useEmployees";
+import { useEmployees, convertFromLegacyFormat } from "@/hooks/useEmployees";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,15 +37,15 @@ const EmployeeEmployment = () => {
   const form = useForm({
     defaultValues: {
       companyName: "PT CHEMISTRY BEAUTY INDONESIA",
-      employeeId: employee?.employeeId || '',
-      barcode: employee?.barcode || '',
-      organization: employee?.organization || '',
-      jobPosition: employee?.jobPosition || '',
-      jobLevel: employee?.jobLevel || '',
-      employmentStatus: employee?.employmentStatus || 'Permanent',
-      branch: employee?.branch || 'Pusat',
-      joinDate: employee?.joinDate || '',
-      signDate: employee?.signDate || '',
+      employeeId: employee?.employee_id || '',
+      barcode: employee?.employment?.barcode || '',
+      organization: employee?.employment?.organization || '',
+      jobPosition: employee?.employment?.job_position || '',
+      jobLevel: employee?.employment?.job_level || '',
+      employmentStatus: employee?.employment?.employment_status || 'Permanent',
+      branch: employee?.employment?.branch || 'Pusat',
+      joinDate: employee?.employment?.join_date || '',
+      signDate: employee?.employment?.sign_date || '',
       grade: '',
       class: '',
       approvalLine: 'No approval line',
@@ -58,9 +58,10 @@ const EmployeeEmployment = () => {
   const onSubmit = (data: any) => {
     // Update employee data
     if (employee && id) {
-      updateEmployee({
-        ...employee,
-        employeeId: data.employeeId,
+      // Use our helper function to convert to the correct format
+      const updatedEmployee = convertFromLegacyFormat({
+        id: id,
+        employeeId: data.employeeId, 
         barcode: data.barcode,
         organization: data.organization,
         jobPosition: data.jobPosition,
@@ -69,6 +70,21 @@ const EmployeeEmployment = () => {
         branch: data.branch,
         joinDate: data.joinDate,
         signDate: data.signDate
+      });
+
+      updateEmployee({
+        id: id,
+        employee_id: data.employeeId,
+        employment: {
+          barcode: data.barcode,
+          organization: data.organization,
+          job_position: data.jobPosition,
+          job_level: data.jobLevel,
+          employment_status: data.employmentStatus,
+          branch: data.branch,
+          join_date: data.joinDate,
+          sign_date: data.signDate
+        }
       });
       
       toast.success("Employment data updated successfully");

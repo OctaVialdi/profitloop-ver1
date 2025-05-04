@@ -5,6 +5,7 @@ import { EmployeeList } from "@/components/hr/EmployeeList";
 import { employeeService, EmployeeWithDetails } from "@/services/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { convertToLegacyFormat, LegacyEmployee } from "@/hooks/useEmployees";
 
 export default function HRDataKaryawan() {
   const [employees, setEmployees] = useState<EmployeeWithDetails[]>([]);
@@ -28,30 +29,8 @@ export default function HRDataKaryawan() {
   }, []);
 
   // Convert to the format expected by EmployeeList component
-  const convertToExpectedFormat = (data: EmployeeWithDetails[]) => {
-    return data.map(emp => ({
-      id: emp.id,
-      name: emp.name,
-      email: emp.email,
-      employeeId: emp.employee_id,
-      organization: emp.employment?.organization,
-      jobPosition: emp.employment?.job_position,
-      jobLevel: emp.employment?.job_level,
-      employmentStatus: emp.employment?.employment_status,
-      branch: emp.employment?.branch,
-      joinDate: emp.employment?.join_date,
-      signDate: emp.employment?.sign_date,
-      barcode: emp.employment?.barcode,
-      birthDate: emp.personalDetails?.birth_date,
-      birthPlace: emp.personalDetails?.birth_place,
-      address: emp.identityAddress?.residential_address,
-      mobilePhone: emp.personalDetails?.mobile_phone,
-      religion: emp.personalDetails?.religion,
-      gender: emp.personalDetails?.gender,
-      maritalStatus: emp.personalDetails?.marital_status,
-      status: emp.status,
-      role: emp.role
-    }));
+  const convertToExpectedFormat = (data: EmployeeWithDetails[]): LegacyEmployee[] => {
+    return data.map(emp => convertToLegacyFormat(emp));
   };
 
   return (
