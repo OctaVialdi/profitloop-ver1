@@ -72,7 +72,10 @@ const OrganizationSetup = () => {
               if (!profileData?.organization_id) {
                 const { error: updateError } = await supabase
                   .from('profiles')
-                  .update({ organization_id: orgCreatorData.id })
+                  .update({ 
+                    organization_id: orgCreatorData.id,
+                    role: 'super_admin'
+                  })
                   .eq('id', session.user.id);
                 
                 if (updateError) {
@@ -148,6 +151,25 @@ const OrganizationSetup = () => {
       
       if (result) {
         toast.success("Organisasi berhasil dibuat!");
+        
+        // Verify profile has been updated with organization_id
+        const { data: profileCheck } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (!profileCheck?.organization_id) {
+          console.warn("Profile still doesn't have organization_id after creation. Trying one more update...");
+          // Try one more time to update profile directly
+          await supabase
+            .from('profiles')
+            .update({ 
+              organization_id: (result as any).id,
+              role: 'super_admin'
+            })
+            .eq('id', session.user.id);
+        }
         
         // Add a small delay before redirecting and only do it once
         setTimeout(() => {

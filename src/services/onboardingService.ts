@@ -136,7 +136,6 @@ export async function createOrganization(formData: OrganizationFormData & { crea
     if (orgData) {
       console.log("Organization created successfully:", orgData);
       
-      // We need to properly handle the return type from the RPC function
       // The result is a JSON object, so we need to cast it properly
       const organizationData = orgData as { id: string };
       
@@ -153,12 +152,39 @@ export async function createOrganization(formData: OrganizationFormData & { crea
       }
       
       // Update user metadata with organization ID
-      await supabase.auth.updateUser({
+      const { error: metadataError } = await supabase.auth.updateUser({
         data: {
           organization_id: organizationData.id,
           role: 'super_admin'
         }
       });
+      
+      if (metadataError) {
+        console.error("Error updating user metadata:", metadataError);
+      }
+      
+      // Double check that the profile has been updated with organization_id
+      // If not, update it directly as a fallback mechanism
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (!profileData?.organization_id) {
+        console.log("Profile not updated with organization_id, applying direct update");
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            organization_id: organizationData.id,
+            role: 'super_admin'
+          })
+          .eq('id', session.user.id);
+          
+        if (profileError) {
+          console.error("Error updating profile with organization_id:", profileError);
+        }
+      }
       
       return orgData;
     }
