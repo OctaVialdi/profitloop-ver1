@@ -61,3 +61,33 @@ export const validateEmployeeData = (
 
   return errors;
 };
+
+export interface FamilyMemberValues {
+  id?: string;
+  name: string;
+  relationship?: string;
+  birthDate?: string | null;
+  phone?: string;
+  occupation?: string;
+}
+
+export const validateFamilyMember = (
+  formValues: FamilyMemberValues
+): string[] => {
+  const errors: string[] = [];
+
+  if (!formValues.name) {
+    errors.push("Name is required");
+  }
+  
+  if (!formValues.relationship) {
+    errors.push("Relationship is required");
+  }
+  
+  // Phone validation (optional but if provided, should be valid)
+  if (formValues.phone && !/^[0-9+\-\s()]*$/.test(formValues.phone)) {
+    errors.push("Please enter a valid phone number");
+  }
+
+  return errors;
+};
