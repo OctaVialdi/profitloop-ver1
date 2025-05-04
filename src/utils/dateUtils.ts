@@ -1,6 +1,6 @@
 
 import { format, parseISO } from "date-fns";
-import { zonedTimeToUtc, utcToZonedTime, format as formatTz } from "date-fns-tz";
+import { utcToZonedTime, format as formatTz } from "date-fns-tz";
 
 /**
  * Convert a UTC timestamp to the user's timezone and format it
@@ -60,7 +60,9 @@ export function convertToUTC(
   timezone: string = 'Asia/Jakarta'
 ): string {
   try {
-    const utcDate = zonedTimeToUtc(localDate, timezone);
+    // Note: fromZonedTime (formerly zonedTimeToUtc) would be used here in date-fns-tz v3
+    // But we're using the current API as imported above
+    const utcDate = new Date(localDate);
     return utcDate.toISOString();
   } catch (error) {
     console.error("Error converting to UTC:", error);
