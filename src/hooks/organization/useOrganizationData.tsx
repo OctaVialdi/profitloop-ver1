@@ -1,9 +1,34 @@
+
 import { Dispatch, SetStateAction } from "react";
 import { NavigateFunction } from "react-router-dom";
-import { OrganizationData, UserProfile } from "@/types/organization";
+import { OrganizationData, UserProfile, UserPreferences } from "@/types/organization";
 import { supabase } from "@/integrations/supabase/client";
 import { getOrganization, getSubscriptionPlan } from "@/services/organizationService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
+
+// Helper function to safely parse preferences
+const parseUserPreferences = (rawPreferences: any): UserPreferences => {
+  if (!rawPreferences) {
+    return { dark_mode: false };
+  }
+  
+  // If it's already an object, return it
+  if (typeof rawPreferences === 'object' && rawPreferences !== null) {
+    return rawPreferences as UserPreferences;
+  }
+  
+  // If it's a JSON string, try to parse it
+  if (typeof rawPreferences === 'string') {
+    try {
+      return JSON.parse(rawPreferences) as UserPreferences;
+    } catch (e) {
+      console.error("Error parsing preferences:", e);
+    }
+  }
+  
+  // Default preferences if parsing fails
+  return { dark_mode: false };
+};
 
 export async function fetchOrganizationData(
   setOrganizationData: Dispatch<SetStateAction<OrganizationData>>,
@@ -23,16 +48,16 @@ export async function fetchOrganizationData(
     }
     
     // Get user profile to find organization
-    const { data: userProfile } = await supabase
+    const { data: userProfileData } = await supabase
       .from('profiles')
       .select('*, organizations:organization_id (*)')
       .eq('id', user.id)
       .maybeSingle();
       
     // If user doesn't have an organization, redirect to organization setup
-    if (!userProfile?.organization_id) {
+    if (!userProfileData?.organization_id) {
       // Check if user has seen welcome page
-      const hasSeenWelcome = userProfile?.has_seen_welcome || false;
+      const hasSeenWelcome = userProfileData?.has_seen_welcome || false;
       
       if (!hasSeenWelcome) {
         // If user hasn't seen welcome, redirect to employee welcome
@@ -45,6 +70,12 @@ export async function fetchOrganizationData(
       }
       return;
     }
+    
+    // Transform the raw profile data to ensure it matches the UserProfile type
+    const userProfile: UserProfile = {
+      ...userProfileData,
+      preferences: parseUserPreferences(userProfileData.preferences)
+    };
     
     // Get organization and subscription plan details
     try {
