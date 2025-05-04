@@ -1,5 +1,18 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// Core employee types
+export interface Employee {
+  id: string;
+  name: string;
+  email?: string;
+  role?: string;
+  status?: string;
+  employee_id?: string;
+  profile_image?: string;
+  organization_id: string; // Adding organization_id field
+}
 
 export interface EmployeeBasic {
   id: string;
@@ -51,10 +64,97 @@ export interface EmployeeWithDetails extends EmployeeBasic {
   personalDetails?: EmployeePersonalDetails;
   identityAddress?: EmployeeIdentityAddress;
   employment?: EmployeeEmployment;
-  // Other sections can be added here as needed
+  organization_id: string; // Adding organization_id field
+}
+
+// Additional types needed based on the errors
+export interface EmployeeFamily {
+  id?: string;
+  employee_id: string;
+  name: string;
+  relationship?: string | null;
+  birth_date?: string | null;
+  occupation?: string | null;
+}
+
+export interface EmployeeEmergencyContact {
+  id?: string;
+  employee_id: string;
+  name: string;
+  relationship?: string | null;
+  phone?: string | null;
+  address?: string | null;
+}
+
+export interface EmployeeEducation {
+  id?: string;
+  employee_id: string;
+  institution: string;
+  degree?: string | null;
+  field_of_study?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  education_type?: string | null;
+}
+
+export interface EmployeeWorkExperience {
+  id?: string;
+  employee_id: string;
+  company: string;
+  position?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  description?: string | null;
 }
 
 export const employeeService = {
+  async fetchEmployees(): Promise<EmployeeWithDetails[]> {
+    try {
+      // Fetch basic employee data
+      const { data: employeesData, error: employeesError } = await supabase
+        .from("employees")
+        .select("*");
+
+      if (employeesError) throw employeesError;
+      if (!employeesData) return [];
+
+      // For each employee, fetch their related data
+      const employeesWithDetails = await Promise.all(
+        employeesData.map(async (employee) => {
+          const { data: personalData } = await supabase
+            .from("employee_personal_details")
+            .select("*")
+            .eq("employee_id", employee.id)
+            .single();
+
+          const { data: identityData } = await supabase
+            .from("employee_identity_addresses")
+            .select("*")
+            .eq("employee_id", employee.id)
+            .single();
+
+          const { data: employmentData } = await supabase
+            .from("employee_employment")
+            .select("*")
+            .eq("employee_id", employee.id)
+            .single();
+
+          return {
+            ...employee,
+            personalDetails: personalData || undefined,
+            identityAddress: identityData || undefined,
+            employment: employmentData || undefined
+          } as EmployeeWithDetails;
+        })
+      );
+
+      return employeesWithDetails;
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      return [];
+    }
+  },
+  
   async fetchEmployeeById(id: string): Promise<EmployeeWithDetails | null> {
     try {
       // Fetch the basic employee data
@@ -97,6 +197,7 @@ export const employeeService = {
         status: employeeData.status,
         employee_id: employeeData.employee_id,
         profile_image: employeeData.profile_image,
+        organization_id: employeeData.organization_id, // Include organization_id
         personalDetails: personalData || undefined,
         identityAddress: identityData || undefined,
         employment: employmentData || undefined
@@ -105,6 +206,113 @@ export const employeeService = {
       return employee;
     } catch (error) {
       console.error("Error fetching employee:", error);
+      return null;
+    }
+  },
+
+  // Add createEmployee function
+  async createEmployee(
+    employeeData: Partial<Employee>,
+    personalDetails?: Partial<EmployeePersonalDetails>,
+    identityAddress?: Partial<EmployeeIdentityAddress>,
+    employment?: Partial<EmployeeEmployment>
+  ): Promise<EmployeeWithDetails | null> {
+    try {
+      // Insert basic employee data
+      const { data: newEmployee, error: employeeError } = await supabase
+        .from("employees")
+        .insert([employeeData])
+        .select()
+        .single();
+
+      if (employeeError) throw employeeError;
+      if (!newEmployee) return null;
+
+      // Insert personal details if provided
+      if (personalDetails) {
+        const { error: personalError } = await supabase
+          .from("employee_personal_details")
+          .insert([{ employee_id: newEmployee.id, ...personalDetails }]);
+
+        if (personalError) throw personalError;
+      }
+
+      // Insert identity address if provided
+      if (identityAddress) {
+        const { error: identityError } = await supabase
+          .from("employee_identity_addresses")
+          .insert([{ employee_id: newEmployee.id, ...identityAddress }]);
+
+        if (identityError) throw identityError;
+      }
+
+      // Insert employment data if provided
+      if (employment) {
+        const { error: employmentError } = await supabase
+          .from("employee_employment")
+          .insert([{ employee_id: newEmployee.id, ...employment }]);
+
+        if (employmentError) throw employmentError;
+      }
+
+      // Fetch the newly created employee with all its details
+      return await this.fetchEmployeeById(newEmployee.id);
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      return null;
+    }
+  },
+
+  // Add updateEmployee function
+  async updateEmployee(
+    id: string,
+    data: Partial<Employee>
+  ): Promise<EmployeeWithDetails | null> {
+    try {
+      const { error } = await supabase
+        .from("employees")
+        .update(data)
+        .eq("id", id);
+
+      if (error) throw error;
+      return await this.fetchEmployeeById(id);
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      return null;
+    }
+  },
+
+  // Add deleteEmployee function
+  async deleteEmployee(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from("employees")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      return false;
+    }
+  },
+
+  // Add saveFamilyMember function
+  async saveFamilyMember(
+    familyMember: Partial<EmployeeFamily> & { employee_id: string }
+  ): Promise<EmployeeFamily | null> {
+    try {
+      const { data, error } = await supabase
+        .from("employee_family")
+        .insert([familyMember])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error saving family member:", error);
       return null;
     }
   }
