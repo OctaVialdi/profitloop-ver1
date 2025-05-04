@@ -218,11 +218,16 @@ class EmployeeService {
       const formattedDetails = formatDateFields(details);
       console.log("Saving personal details:", formattedDetails);
       
-      // FIXED: Use explicit table aliases to avoid ambiguity with employee_id
-      const { data: existingDetails } = await supabase
+      // Check if there's an existing record using table name alias
+      const { data: existingDetails, error: queryError } = await supabase
         .from('employee_personal_details')
         .select('id')
         .eq('employee_id', formattedDetails.employee_id);
+      
+      if (queryError) {
+        console.error("Error querying personal details:", queryError);
+        throw queryError;
+      }
       
       let result;
       
@@ -232,7 +237,7 @@ class EmployeeService {
           .from('employee_personal_details')
           .update(formattedDetails)
           .eq('id', existingDetails[0].id)
-          .select()
+          .select('*')
           .single();
           
         if (error) {
@@ -246,7 +251,7 @@ class EmployeeService {
         const { data, error } = await supabase
           .from('employee_personal_details')
           .insert(formattedDetails)
-          .select()
+          .select('*')
           .single();
           
         if (error) {
@@ -291,11 +296,16 @@ class EmployeeService {
       const formattedDetails = formatDateFields(details);
       console.log("Saving identity address:", formattedDetails);
       
-      // FIXED: Use explicit table aliases to avoid ambiguity with employee_id
-      const { data: existingDetails } = await supabase
+      // Check if there's an existing record
+      const { data: existingDetails, error: queryError } = await supabase
         .from('employee_identity_addresses')
         .select('id')
         .eq('employee_id', formattedDetails.employee_id);
+      
+      if (queryError) {
+        console.error("Error querying identity address:", queryError);
+        throw queryError;
+      }
       
       let result;
       
@@ -305,7 +315,7 @@ class EmployeeService {
           .from('employee_identity_addresses')
           .update(formattedDetails)
           .eq('id', existingDetails[0].id)
-          .select()
+          .select('*')
           .single();
           
         if (error) {
@@ -319,7 +329,7 @@ class EmployeeService {
         const { data, error } = await supabase
           .from('employee_identity_addresses')
           .insert(formattedDetails)
-          .select()
+          .select('*')
           .single();
           
         if (error) {
@@ -364,11 +374,16 @@ class EmployeeService {
       const formattedDetails = formatDateFields(details);
       console.log("Saving employment details:", formattedDetails);
       
-      // FIXED: Use explicit table aliases to avoid ambiguity with employee_id
-      const { data: existingDetails } = await supabase
+      // Check if there's an existing record
+      const { data: existingDetails, error: queryError } = await supabase
         .from('employee_employment')
         .select('id')
         .eq('employee_id', formattedDetails.employee_id);
+      
+      if (queryError) {
+        console.error("Error querying employment details:", queryError);
+        throw queryError;
+      }
       
       let result;
       
@@ -378,7 +393,7 @@ class EmployeeService {
           .from('employee_employment')
           .update(formattedDetails)
           .eq('id', existingDetails[0].id)
-          .select()
+          .select('*')
           .single();
           
         if (error) {
@@ -392,7 +407,7 @@ class EmployeeService {
         const { data, error } = await supabase
           .from('employee_employment')
           .insert(formattedDetails)
-          .select()
+          .select('*')
           .single();
           
         if (error) {
@@ -436,6 +451,11 @@ class EmployeeService {
         throw new Error('User has no organization');
       }
       
+      // Generate employee ID if not provided
+      if (!employeeData.employee_id) {
+        employeeData.employee_id = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+      
       // Create base employee record with required name
       const employeeToCreate = {
         ...employeeData,
@@ -449,7 +469,7 @@ class EmployeeService {
       const { data: employee, error: employeeError } = await supabase
         .from('employees')
         .insert(employeeToCreate)
-        .select()
+        .select('*')
         .single();
         
       if (employeeError) {
@@ -459,50 +479,60 @@ class EmployeeService {
       
       console.log("Base employee created:", employee);
       
-      // Create related records
-      const promises = [];
+      // Create related records one by one with proper error handling
+      let savedPersonalDetails = null;
+      let savedIdentityAddress = null;
+      let savedEmployment = null;
       
+      // Save personal details if provided
       if (personalDetails) {
-        const personalDetailsWithEmployeeId = {
-          ...personalDetails,
-          employee_id: employee.id
-        };
-        console.log("Saving personal details:", personalDetailsWithEmployeeId);
-        promises.push(this.savePersonalDetails(personalDetailsWithEmployeeId as EmployeePersonalDetails));
-      }
-      
-      if (identityAddress) {
-        const identityAddressWithEmployeeId = {
-          ...identityAddress,
-          employee_id: employee.id
-        };
-        console.log("Saving identity address:", identityAddressWithEmployeeId);
-        promises.push(this.saveIdentityAddress(identityAddressWithEmployeeId as EmployeeIdentityAddress));
-      }
-      
-      if (employment) {
-        const employmentWithEmployeeId = {
-          ...employment,
-          employee_id: employee.id
-        };
-        console.log("Saving employment details:", employmentWithEmployeeId);
-        promises.push(this.saveEmployment(employmentWithEmployeeId as EmployeeEmployment));
-      }
-      
-      // Wait for all related records to be saved
-      const results = await Promise.allSettled(promises);
-      
-      // Log results for debugging
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          console.log(`Related record ${index} created successfully:`, result.value);
-        } else {
-          console.error(`Failed to create related record ${index}:`, result.reason);
+        try {
+          const personalDetailsWithEmployeeId = {
+            ...personalDetails,
+            employee_id: employee.id
+          };
+          console.log("Saving personal details:", personalDetailsWithEmployeeId);
+          savedPersonalDetails = await this.savePersonalDetails(personalDetailsWithEmployeeId as EmployeePersonalDetails);
+        } catch (error) {
+          console.error("Error saving personal details:", error);
         }
-      });
+      }
       
-      // Return the newly created employee with details
-      return this.fetchEmployeeById(employee.id);
+      // Save identity address if provided
+      if (identityAddress) {
+        try {
+          const identityAddressWithEmployeeId = {
+            ...identityAddress,
+            employee_id: employee.id
+          };
+          console.log("Saving identity address:", identityAddressWithEmployeeId);
+          savedIdentityAddress = await this.saveIdentityAddress(identityAddressWithEmployeeId as EmployeeIdentityAddress);
+        } catch (error) {
+          console.error("Error saving identity address:", error);
+        }
+      }
+      
+      // Save employment details if provided
+      if (employment) {
+        try {
+          const employmentWithEmployeeId = {
+            ...employment,
+            employee_id: employee.id
+          };
+          console.log("Saving employment details:", employmentWithEmployeeId);
+          savedEmployment = await this.saveEmployment(employmentWithEmployeeId as EmployeeEmployment);
+        } catch (error) {
+          console.error("Error saving employment details:", error);
+        }
+      }
+      
+      // Return the complete employee object
+      return {
+        ...employee,
+        personalDetails: savedPersonalDetails || undefined,
+        identityAddress: savedIdentityAddress || undefined,
+        employment: savedEmployment || undefined
+      };
       
     } catch (error) {
       console.error('Failed to create employee:', error);
@@ -529,46 +559,42 @@ class EmployeeService {
       if (employeeError) throw employeeError;
       
       // Update related records
-      const promises = [];
+      let savedPersonalDetails = null;
+      let savedIdentityAddress = null;
+      let savedEmployment = null;
       
       if (personalDetails) {
-        promises.push(
-          this.savePersonalDetails({
+        try {
+          savedPersonalDetails = await this.savePersonalDetails({
             ...personalDetails,
             employee_id: id
-          } as EmployeePersonalDetails)
-        );
+          } as EmployeePersonalDetails);
+        } catch (error) {
+          console.error("Error updating personal details:", error);
+        }
       }
       
       if (identityAddress) {
-        promises.push(
-          this.saveIdentityAddress({
+        try {
+          savedIdentityAddress = await this.saveIdentityAddress({
             ...identityAddress,
             employee_id: id
-          } as EmployeeIdentityAddress)
-        );
+          } as EmployeeIdentityAddress);
+        } catch (error) {
+          console.error("Error updating identity address:", error);
+        }
       }
       
       if (employment) {
-        promises.push(
-          this.saveEmployment({
+        try {
+          savedEmployment = await this.saveEmployment({
             ...employment,
             employee_id: id
-          } as EmployeeEmployment)
-        );
-      }
-      
-      // Wait for all related records to be updated
-      const results = await Promise.allSettled(promises);
-      
-      // Log results for debugging
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          console.log(`Related record ${index} updated successfully:`, result.value);
-        } else {
-          console.error(`Failed to update related record ${index}:`, result.reason);
+          } as EmployeeEmployment);
+        } catch (error) {
+          console.error("Error updating employment details:", error);
         }
-      });
+      }
       
       // Return the updated employee with details
       return this.fetchEmployeeById(id);
@@ -618,15 +644,18 @@ class EmployeeService {
   
   async saveFamilyMember(member: EmployeeFamily): Promise<EmployeeFamily | null> {
     try {
+      // Format date fields
+      const formattedMember = formatDateFields(member);
+      
       let result;
       
-      if (member.id) {
+      if (formattedMember.id) {
         // Update existing record
         const { data, error } = await supabase
           .from('employee_family')
-          .update(member)
-          .eq('id', member.id)
-          .select()
+          .update(formattedMember)
+          .eq('id', formattedMember.id)
+          .select('*')
           .single();
           
         if (error) throw error;
@@ -635,8 +664,8 @@ class EmployeeService {
         // Create new record
         const { data, error } = await supabase
           .from('employee_family')
-          .insert(member)
-          .select()
+          .insert(formattedMember)
+          .select('*')
           .single();
           
         if (error) throw error;

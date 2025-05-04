@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 import { LegacyEmployee } from "@/hooks/useEmployees";
+import { employeeService, EmployeeFamily } from "@/services/employeeService";
 
 interface PersonalSectionProps {
   employee: LegacyEmployee;
@@ -15,6 +16,26 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   employee,
   handleEdit
 }) => {
+  const [familyMembers, setFamilyMembers] = useState<EmployeeFamily[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch family members when the component mounts
+  useEffect(() => {
+    if (employee && employee.id) {
+      setLoading(true);
+      employeeService.fetchFamilyMembers(employee.id)
+        .then(data => {
+          setFamilyMembers(data);
+        })
+        .catch(error => {
+          console.error("Error fetching family members:", error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [employee]);
+
   // Helper function to format date strings for display
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
@@ -199,12 +220,59 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </TabsContent>
 
           <TabsContent value="family" className="pt-6">
-            <EmptyDataDisplay 
-              title="There is no data to display"
-              description="Your family information data will be displayed here."
-              section="family"
-              handleEdit={handleEdit}
-            />
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <p>Loading family data...</p>
+              </div>
+            ) : familyMembers && familyMembers.length > 0 ? (
+              <div className="border rounded-md">
+                <div className="flex justify-between items-center p-3 border-b">
+                  <h3 className="font-medium">Family Members</h3>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="gap-2 flex items-center"
+                    onClick={() => handleEdit("family")}
+                  >
+                    <Plus size={14} /> Add member
+                  </Button>
+                </div>
+                
+                <div className="p-4">
+                  <div className="divide-y">
+                    {familyMembers.map((member) => (
+                      <div key={member.id} className="py-4 first:pt-0 last:pb-0">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Name</p>
+                            <p className="font-medium">{member.name}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Relationship</p>
+                            <p className="font-medium">{member.relationship || "-"}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Birth Date</p>
+                            <p className="font-medium">{formatDate(member.birth_date?.toString()) || "-"}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Occupation</p>
+                            <p className="font-medium">{member.occupation || "-"}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <EmptyDataDisplay 
+                title="There is no data to display"
+                description="Your family information data will be displayed here."
+                section="family"
+                handleEdit={handleEdit}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="emergency" className="pt-6">

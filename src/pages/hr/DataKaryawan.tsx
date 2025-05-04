@@ -2,39 +2,31 @@
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { EmployeeList } from "@/components/hr/EmployeeList";
-import { employeeService, EmployeeWithDetails } from "@/services/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { convertToLegacyFormat, LegacyEmployee } from "@/hooks/useEmployees";
+import { Button } from "@/components/ui/button";
+import { convertToLegacyFormat, LegacyEmployee, useEmployees } from "@/hooks/useEmployees";
 
 export default function HRDataKaryawan() {
-  const [employees, setEmployees] = useState<EmployeeWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      setIsLoading(true);
-      try {
-        const data = await employeeService.fetchEmployees();
-        setEmployees(data);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-        toast.error("Failed to load employee data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchEmployees();
-  }, []);
+  const { employees, isLoading, addDummyEmployees } = useEmployees();
 
   // Convert to the format expected by EmployeeList component
-  const convertToExpectedFormat = (data: EmployeeWithDetails[]): LegacyEmployee[] => {
+  const convertToExpectedFormat = (data: any[]): LegacyEmployee[] => {
     return data.map(emp => convertToLegacyFormat(emp));
+  };
+
+  const handleAddDummyEmployees = async () => {
+    await addDummyEmployees();
   };
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={handleAddDummyEmployees} variant="outline">
+          Add Dummy Employees
+        </Button>
+      </div>
+
       <Card className="p-6">
         {isLoading ? (
           <div className="space-y-4">

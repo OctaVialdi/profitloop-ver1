@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { employeeService, Employee, EmployeeWithDetails } from "@/services/employeeService";
+import { employeeService, Employee, EmployeeWithDetails, EmployeePersonalDetails, EmployeeIdentityAddress, EmployeeEmployment, EmployeeFamily } from "@/services/employeeService";
 import { toast } from "sonner";
 
 // Define the legacy employee interface that our components expect
@@ -46,6 +46,7 @@ export interface UseEmployeesResult {
     identityAddress?: any, 
     employment?: any
   ) => Promise<EmployeeWithDetails | null>;
+  addDummyEmployees: () => Promise<void>;
   updateEmployee: (employee: Partial<Employee> & { id: string }) => Promise<EmployeeWithDetails | null>;
   removeEmployee: (id: string) => Promise<boolean>;
   getEmployee: (id: string) => Promise<EmployeeWithDetails | null>;
@@ -125,6 +126,180 @@ export function useEmployees(): UseEmployeesResult {
   useEffect(() => {
     fetchEmployees();
   }, []);
+
+  // Function to create and add dummy employees to the database
+  const addDummyEmployees = async () => {
+    setIsLoading(true);
+    
+    const dummyEmployees = [
+      {
+        name: "John Doe",
+        email: "john.doe@example.com",
+        employee_id: "EMP-001",
+        role: "employee",
+        status: "Active",
+        personalDetails: {
+          mobile_phone: "+62 812-3456-7890",
+          birth_place: "Jakarta",
+          birth_date: "1990-05-15",
+          gender: "Male",
+          marital_status: "Married",
+          religion: "Islam",
+          blood_type: "B+"
+        },
+        identityAddress: {
+          nik: "3301236789012345",
+          passport_number: "B1234567",
+          passport_expiry: "2027-10-20",
+          postal_code: "10110",
+          citizen_address: "Jl. Sudirman No. 123, Jakarta Pusat",
+          residential_address: "Apartment Green View No. 45, Jakarta Selatan"
+        },
+        employment: {
+          barcode: "EMP001BARCODE",
+          organization: "Sales",
+          job_position: "Sales Manager",
+          job_level: "Manager",
+          employment_status: "Permanent",
+          branch: "Jakarta HQ",
+          join_date: "2018-06-01",
+          sign_date: "2018-05-20"
+        },
+        familyMembers: [
+          {
+            name: "Jane Doe",
+            relationship: "Spouse",
+            birth_date: "1992-08-12",
+            occupation: "Teacher"
+          },
+          {
+            name: "James Doe",
+            relationship: "Child",
+            birth_date: "2015-03-25",
+            occupation: "Student"
+          }
+        ]
+      },
+      {
+        name: "Sarah Williams",
+        email: "sarah.williams@example.com",
+        employee_id: "EMP-002",
+        role: "employee",
+        status: "Active",
+        personalDetails: {
+          mobile_phone: "+62 813-9876-5432",
+          birth_place: "Surabaya",
+          birth_date: "1988-11-23",
+          gender: "Female",
+          marital_status: "Single",
+          religion: "Christian",
+          blood_type: "O-"
+        },
+        identityAddress: {
+          nik: "3275046709123456",
+          passport_number: "C7654321",
+          passport_expiry: "2028-03-15",
+          postal_code: "60111",
+          citizen_address: "Jl. Pemuda No. 56, Surabaya",
+          residential_address: "Jl. Pemuda No. 56, Surabaya"
+        },
+        employment: {
+          barcode: "EMP002BARCODE",
+          organization: "Marketing",
+          job_position: "Digital Marketing Lead",
+          job_level: "Senior",
+          employment_status: "Contract",
+          branch: "Surabaya Branch",
+          join_date: "2020-02-15",
+          sign_date: "2020-01-30"
+        },
+        familyMembers: []
+      },
+      {
+        name: "Ahmad Fauzi",
+        email: "ahmad.fauzi@example.com",
+        employee_id: "EMP-003",
+        role: "employee",
+        status: "Active",
+        personalDetails: {
+          mobile_phone: "+62 857-1122-3344",
+          birth_place: "Bandung",
+          birth_date: "1995-08-10",
+          gender: "Male",
+          marital_status: "Married",
+          religion: "Islam",
+          blood_type: "A+"
+        },
+        identityAddress: {
+          nik: "3273042208950006",
+          passport_number: "D5566778",
+          passport_expiry: "2026-12-10",
+          postal_code: "40112",
+          citizen_address: "Jl. Asia Afrika No. 78, Bandung",
+          residential_address: "Jl. Dago No. 145, Bandung"
+        },
+        employment: {
+          barcode: "EMP003BARCODE",
+          organization: "Engineering",
+          job_position: "Software Engineer",
+          job_level: "Junior",
+          employment_status: "Permanent",
+          branch: "Bandung Branch",
+          join_date: "2022-01-10",
+          sign_date: "2021-12-20"
+        },
+        familyMembers: [
+          {
+            name: "Siti Nuraini",
+            relationship: "Spouse",
+            birth_date: "1996-05-17",
+            occupation: "Graphic Designer"
+          }
+        ]
+      }
+    ];
+
+    try {
+      for (const dummyEmployee of dummyEmployees) {
+        // First create the employee
+        const { personalDetails, identityAddress, employment, familyMembers, ...employeeData } = dummyEmployee;
+        
+        console.log("Adding dummy employee:", employeeData.name);
+        
+        const newEmployee = await employeeService.createEmployee(
+          employeeData,
+          personalDetails,
+          identityAddress,
+          employment
+        );
+        
+        if (newEmployee) {
+          // Add family members if any
+          if (familyMembers && familyMembers.length > 0) {
+            for (const familyMember of familyMembers) {
+              await employeeService.saveFamilyMember({
+                ...familyMember,
+                employee_id: newEmployee.id
+              });
+            }
+          }
+          
+          console.log(`Added dummy employee: ${employeeData.name} with ID: ${newEmployee.id}`);
+        }
+      }
+      
+      toast.success("Dummy employees created successfully");
+      
+      // Refresh the employees list
+      await fetchEmployees();
+      
+    } catch (error) {
+      console.error("Error adding dummy employees:", error);
+      toast.error("Failed to add dummy employees: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const addEmployee = async (
     employeeData: Partial<Employee>, 
@@ -213,6 +388,7 @@ export function useEmployees(): UseEmployeesResult {
     isLoading,
     refetch: fetchEmployees,
     addEmployee,
+    addDummyEmployees,
     updateEmployee,
     removeEmployee,
     getEmployee

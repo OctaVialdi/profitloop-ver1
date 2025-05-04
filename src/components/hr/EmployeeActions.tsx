@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface EmployeeActionsProps {
   employeeId: string;
@@ -10,12 +11,10 @@ interface EmployeeActionsProps {
 }
 
 export const EmployeeActions: React.FC<EmployeeActionsProps> = ({ employeeId, employeeName }) => {
-  const handleViewInfo = () => {
-    console.log(`View employee info: ${employeeId}`);
-  };
+  const navigate = useNavigate();
   
-  const handleTransfer = () => {
-    console.log(`Transfer employee: ${employeeId}`);
+  const handleViewInfo = () => {
+    navigate(`/my-info/personal?id=${employeeId}`);
   };
   
   const handleResign = () => {
@@ -36,9 +35,6 @@ export const EmployeeActions: React.FC<EmployeeActionsProps> = ({ employeeId, em
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem onClick={handleViewInfo}>
           View employee's info
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleTransfer}>
-          Transfer employee
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleResign}>
           Resign

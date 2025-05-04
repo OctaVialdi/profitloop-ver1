@@ -6,11 +6,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { EmployeeActions } from "../EmployeeActions";
-import { Employee } from './types';
+import { LegacyEmployee } from "@/hooks/useEmployees";
 import { EmployeeColumnState, ColumnOrder } from '../EmployeeColumnManager';
 
 interface EmployeeTableViewProps {
-  data: Employee[];
+  data: LegacyEmployee[];
   visibleColumns: EmployeeColumnState;
   columnOrder: ColumnOrder;
 }
@@ -74,12 +74,24 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   const needsHorizontalScroll = visibleColumnsOrder.length > limitedVisibleColumnsOrder.length;
 
   // Handle click on employee name to navigate to employee detail with new route pattern
-  const handleEmployeeClick = (employee: Employee) => {
-    navigate(`/my-info/index?id=${employee.id}`);
+  const handleEmployeeClick = (employee: LegacyEmployee) => {
+    navigate(`/my-info/personal?id=${employee.id}`);
+  };
+  
+  // Format date for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (error) {
+      return dateString;
+    }
   };
   
   // Render cell content based on column key
-  const renderCellContent = (employee: Employee, columnKey: keyof EmployeeColumnState) => {
+  const renderCellContent = (employee: LegacyEmployee, columnKey: keyof EmployeeColumnState) => {
     if (columnKey === 'name') {
       return (
         <div 
@@ -96,8 +108,13 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
       );
     }
     
+    // Special handling for date fields
+    if (columnKey === 'birthDate' || columnKey === 'joinDate' || columnKey === 'signDate') {
+      return formatDate(employee[columnKey]);
+    }
+    
     // For all other columns, render the value or a dash if not available
-    return employee[columnKey as keyof Employee] || '-';
+    return employee[columnKey as keyof LegacyEmployee] || '-';
   };
 
   // Calculate width for columns to ensure alignment
@@ -115,9 +132,9 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
         <ScrollArea className="w-full" type={needsHorizontalScroll ? "always" : "auto"}>
           <div className={needsHorizontalScroll ? "min-w-max" : "w-full"}>
             <Table>
-              <TableHeader className="sticky top-0 z-20 bg-background">
+              <TableHeader className="sticky top-0 z-20 bg-white">
                 <TableRow>
-                  <TableHead className="w-[40px] sticky left-0 z-30 bg-background">
+                  <TableHead className="w-[40px] sticky left-0 z-30 bg-white">
                     <Checkbox />
                   </TableHead>
                   
@@ -127,14 +144,14 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                     return (
                       <TableHead 
                         key={colKey}
-                        className={`${isNameColumn ? "sticky left-[40px] z-30 bg-background" : ""} ${columnWidth}`}
+                        className={`${isNameColumn ? "sticky left-[40px] z-30 bg-white" : ""} ${columnWidth}`}
                       >
                         {columnLabels[colKey]}
                       </TableHead>
                     );
                   })}
                   
-                  <TableHead className="text-right sticky right-0 z-30 bg-background w-[100px]">
+                  <TableHead className="text-right sticky right-0 z-30 bg-white w-[100px]">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -142,7 +159,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
               <TableBody className="relative">
                 {data.map(employee => (
                   <TableRow key={employee.id}>
-                    <TableCell className="sticky left-0 z-20 bg-background">
+                    <TableCell className="sticky left-0 z-20 bg-white">
                       <Checkbox />
                     </TableCell>
                     
@@ -152,14 +169,14 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
                       return (
                         <TableCell 
                           key={colKey}
-                          className={`${isNameColumn ? "sticky left-[40px] z-20 bg-background" : ""} ${columnWidth}`}
+                          className={`${isNameColumn ? "sticky left-[40px] z-20 bg-white" : ""} ${columnWidth}`}
                         >
                           {renderCellContent(employee, colKey)}
                         </TableCell>
                       );
                     })}
                     
-                    <TableCell className="text-right sticky right-0 z-20 bg-background w-[100px]">
+                    <TableCell className="text-right sticky right-0 z-20 bg-white w-[100px]">
                       <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
                     </TableCell>
                   </TableRow>
