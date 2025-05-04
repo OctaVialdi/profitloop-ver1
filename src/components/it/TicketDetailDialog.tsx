@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Ticket } from "@/pages/it/Support";
+import { Ticket } from "@/components/it/support/types";
 
 interface TicketDetailDialogProps {
   ticket: Ticket | null;
