@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useEmployees } from "@/hooks/useEmployees";
-import { employeeService } from "@/services/employeeService";
+import { employeeService, updateEmployeeEmployment } from "@/services/employeeService";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -82,7 +82,7 @@ const EmployeeEmployment = () => {
       updateEmployee(baseUpdate)
         .then(() => {
           // Then update the employment data
-          return employeeService.updateEmployeeEmployment(id, employmentData);
+          return updateEmployeeEmployment(id, employmentData);
         })
         .then(() => {
           toast.success("Employment data updated successfully");
