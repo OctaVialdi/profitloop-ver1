@@ -37,9 +37,9 @@ export const ProtectedRoute = ({
     const checkAuth = async () => {
       try {
         // First get the current session directly
-        const { data } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (data.session && isMounted) {
+        if (session && isMounted) {
           console.log("User is authenticated via session check");
           setAuthenticated(true);
           
@@ -47,7 +47,7 @@ export const ProtectedRoute = ({
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.session.user.id)
+            .eq('id', session.user.id)
             .maybeSingle();
             
           if (profileError) {
