@@ -47,51 +47,60 @@ const EmployeeEmployment = () => {
       branch: employee?.employment?.branch || 'Pusat',
       joinDate: employee?.employment?.join_date || '',
       signDate: employee?.employment?.sign_date || '',
-      grade: '',
-      class: '',
-      approvalLine: 'No approval line',
+      grade: employee?.employment?.grade || '',
+      class: employee?.employment?.class || '',
+      approvalLine: employee?.employment?.approval_line || 'No approval line',
       isManager: false,
-      manager: 'No manager',
+      manager: employee?.employment?.manager_id || 'No manager',
     }
   });
 
   // Handle save changes
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     // Update employee data
     if (employee && id) {
-      // Update base employee data
-      const baseUpdate = {
-        id: id,
-        employee_id: data.employeeId
-      };
+      try {
+        // Show loading toast
+        const loadingToastId = toast.loading("Menyimpan data karyawan...");
+        
+        // Update base employee data
+        const baseUpdate = {
+          id: id,
+          employee_id: data.employeeId
+        };
 
-      // Update employment data separately
-      const employmentData = {
-        employee_id: id,
-        barcode: data.barcode,
-        organization: data.organization,
-        job_position: data.jobPosition,
-        job_level: data.jobLevel,
-        employment_status: data.employmentStatus,
-        branch: data.branch,
-        join_date: data.joinDate,
-        sign_date: data.signDate
-      };
-      
-      // First update the base employee data
-      updateEmployee(baseUpdate)
-        .then(() => {
-          // Then update the employment data
-          return updateEmploymentDetails(id, employmentData);
-        })
-        .then(() => {
-          toast.success("Employment data updated successfully");
-          navigate(`/hr/data/employee/${id}`);
-        })
-        .catch(error => {
-          console.error("Error updating employee:", error);
-          toast.error("Failed to update employment data");
-        });
+        // Update employment data separately
+        const employmentData = {
+          employee_id: id,
+          barcode: data.barcode,
+          organization: data.organization,
+          job_position: data.jobPosition,
+          job_level: data.jobLevel,
+          employment_status: data.employmentStatus,
+          branch: data.branch,
+          join_date: data.joinDate,
+          sign_date: data.signDate,
+          grade: data.grade,
+          class: data.class,
+          approval_line: data.approvalLine
+        };
+        
+        // First update the base employee data
+        await updateEmployee(baseUpdate);
+        
+        // Then update the employment data
+        await updateEmploymentDetails(id, employmentData);
+        
+        // Dismiss loading toast and show success toast
+        toast.dismiss(loadingToastId);
+        toast.success("Data karyawan berhasil diperbarui");
+        navigate(`/hr/data/employee/${id}`);
+      } catch (error) {
+        console.error("Error updating employee:", error);
+        toast.error("Gagal menyimpan data: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"));
+      }
+    } else {
+      toast.error("Data karyawan tidak ditemukan");
     }
   };
 
