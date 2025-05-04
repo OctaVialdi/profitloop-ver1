@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -26,20 +25,54 @@ export default function AddEmployee() {
   const [joinDate, setJoinDate] = useState<Date | undefined>(new Date());
   const [signDate, setSignDate] = useState<Date | undefined>(new Date());
   
-  // Form values state
+  // Initialize formValues with all required properties from FormValues type
   const [formValues, setFormValues] = useState<FormValues>({
+    // Personal information
     firstName: "",
     lastName: "",
     email: "",
-    employeeId: "",
+    mobilePhone: "",
+    phone: "",
+    birthPlace: "",
     gender: "male", // Set default value
     maritalStatus: "single", // Set default value
+    bloodType: "",
     religion: "islam", // Set default value
+    
+    // Identity information
+    nik: "",
+    passportNumber: "",
+    postalCode: "",
+    citizenAddress: "",
+    residentialAddress: "",
+    useResidentialAddress: false,
+    
+    // Employment information
+    employeeId: "",
+    barcode: "",
+    groupStructure: "",
     employmentStatus: "Permanent",
     branch: "Pusat",
     organization: "",
     jobPosition: "",
     jobLevel: "",
+    grade: "",
+    class: "",
+    schedule: "",
+    approvalLine: "",
+    manager: "",
+    
+    // Dialog form fields
+    statusName: "",
+    statusHasEndDate: false,
+    orgCode: "",
+    orgName: "",
+    parentOrg: "",
+    positionCode: "",
+    positionName: "",
+    parentPosition: "",
+    levelCode: "",
+    levelName: ""
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
