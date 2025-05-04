@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -10,9 +11,12 @@ import { toast } from "sonner";
 import { validateEmployeeData } from "./employee/utils/validation";
 import { SimplePersonalSection } from "./employee/components/simple/SimplePersonalSection";
 import { SimpleEmploymentSection } from "./employee/components/simple/SimpleEmploymentSection";
+import { useOrganization } from "@/hooks/useOrganization";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AddEmployee() {
   const navigate = useNavigate();
+  const { userProfile } = useOrganization();
   
   // State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,13 +125,39 @@ export default function AddEmployee() {
         setIsSubmitting(false);
         return;
       }
+      
+      // Make sure we have an organization_id
+      if (!userProfile?.organization_id) {
+        toast.error("No organization found. Please refresh the page or contact support.");
+        setIsSubmitting(false);
+        return;
+      }
 
-      // Prepare employee data
+      // Check if employee ID is unique for this organization
+      const { data: existingEmployee, error: checkError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('employee_id', formValues.employeeId)
+        .eq('organization_id', userProfile.organization_id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking employee ID uniqueness:", checkError);
+      }
+
+      if (existingEmployee) {
+        toast.error("Employee ID already exists in your organization. Please use a different ID.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare employee data with explicit organization_id
       const employeeData = {
         name: fullName,
         email: formValues.email,
         employee_id: formValues.employeeId,
-        status: "Active"
+        status: "Active",
+        organization_id: userProfile.organization_id
       };
 
       // Prepare personal details data
@@ -161,9 +191,20 @@ export default function AddEmployee() {
         branch: formValues.branch,
         join_date: joinDate ? joinDate.toISOString() : undefined,
         sign_date: signDate ? signDate.toISOString() : undefined,
+        grade: formValues.grade,
+        class: formValues.class,
+        schedule: formValues.schedule,
+        approval_line: formValues.approvalLine,
+        manager_id: formValues.manager || undefined
       };
 
-      console.log("Creating employee...");
+      console.log("Creating employee with data:", { 
+        employeeData, 
+        personalDetails, 
+        identityAddress, 
+        employment,
+        organization_id: userProfile.organization_id
+      });
       
       // Create employee with all details
       const result = await employeeService.createEmployee(
@@ -175,6 +216,7 @@ export default function AddEmployee() {
       
       if (!result) {
         toast.error("Failed to create employee");
+        console.error("Employee creation returned null result");
         return;
       }
       
@@ -186,7 +228,7 @@ export default function AddEmployee() {
       
     } catch (error) {
       console.error("Error creating employee:", error);
-      toast.error("Failed to create employee");
+      toast.error("Failed to create employee: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsSubmitting(false);
     }
