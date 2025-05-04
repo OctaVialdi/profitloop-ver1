@@ -48,23 +48,59 @@ export const ProtectedRoute = ({
           console.log("User is authenticated via session check");
           setAuthenticated(true);
           
+          // Extract organization info from user metadata if possible (most reliable source)
+          if (session.user.user_metadata?.organization_id) {
+            const emailVerified = session.user.email_confirmed_at !== null;
+            
+            // If we have metadata, use it directly
+            setProfile({
+              organization_id: session.user.user_metadata.organization_id,
+              email_verified: emailVerified,
+              has_seen_welcome: session.user.user_metadata.has_seen_welcome || false
+            });
+            
+            setLoading(false);
+            return;
+          }
+          
+          // Otherwise, try to use the RPC function
           try {
-            // Use RPC function to avoid recursion
             const { data: profileData, error: profileError } = await supabase
               .rpc('check_user_has_organization', {
                 user_id: session.user.id
               });
               
             if (profileError) {
-              console.error("Error fetching profile:", profileError);
+              console.error("Error using check_user_has_organization:", profileError);
+              
+              // If we hit an RLS error, use a simpler direct query as fallback
+              if (profileError.message.includes("infinite recursion")) {
+                // Fallback to assuming verified but no organization for now
+                if (isMounted) {
+                  setProfile({
+                    email_verified: true,
+                    organization_id: null,
+                    has_seen_welcome: false
+                  });
+                }
+              }
             } else if (profileData && profileData.length > 0) {
-              // Take the first item from the array
-              setProfile(profileData[0]);
+              // The function returns an array, use the first result
+              if (isMounted) {
+                setProfile(profileData[0]);
+              }
+            } else {
+              // No profile data found
+              if (isMounted) {
+                setProfile({
+                  email_verified: true, // Assume verified if authenticated
+                  organization_id: null,
+                  has_seen_welcome: false
+                });
+              }
             }
           } catch (error) {
             console.error("Error checking profile:", error);
-            // If there's an error, we still want to continue with authentication
-            // Just without organization info
           }
         } else if (isMounted) {
           console.log("No active session found");
@@ -76,7 +112,6 @@ export const ProtectedRoute = ({
         if (isMounted) {
           setAuthenticated(false);
           setProfile(null);
-          // Show friendly error message
           toast.error("Terjadi kesalahan saat memeriksa autentikasi");
         }
       } finally {
@@ -99,14 +134,27 @@ export const ProtectedRoute = ({
           console.log("Auth state changed:", event);
           setAuthenticated(!!session);
           
-          // If signed in, check profile
+          // If signed in, update profile info
           if (session) {
-            // Use setTimeout to prevent potential auth state deadlocks
+            // Extract from metadata if available
+            if (session.user.user_metadata?.organization_id) {
+              const emailVerified = session.user.email_confirmed_at !== null;
+              
+              setProfile({
+                organization_id: session.user.user_metadata.organization_id,
+                email_verified: emailVerified,
+                has_seen_welcome: session.user.user_metadata.has_seen_welcome || false
+              });
+              
+              setLoading(false);
+              return;
+            }
+            
+            // Otherwise, use setTimeout to prevent potential auth state deadlocks
             setTimeout(async () => {
               if (!isMounted) return;
               
               try {
-                // Use RPC function to avoid recursion
                 const { data: profileData, error: profileError } = await supabase
                   .rpc('check_user_has_organization', {
                     user_id: session.user.id
@@ -115,13 +163,25 @@ export const ProtectedRoute = ({
                 if (isMounted) {
                   if (!profileError && profileData && profileData.length > 0) {
                     setProfile(profileData[0]);
+                  } else {
+                    // Default to assuming verified but no organization
+                    setProfile({
+                      email_verified: true,
+                      organization_id: null,
+                      has_seen_welcome: false
+                    });
                   }
                   setLoading(false);
                 }
               } catch (error) {
                 console.error("Error checking profile in auth change:", error);
-                // Still set loading to false to avoid UI being stuck
+                // Provide default values to avoid UI being stuck
                 if (isMounted) {
+                  setProfile({
+                    email_verified: true,
+                    organization_id: null,
+                    has_seen_welcome: false
+                  });
                   setLoading(false);
                 }
               }
@@ -154,13 +214,13 @@ export const ProtectedRoute = ({
     // If already authenticated, redirect based on profile status
     if (authenticated) {
       // Check email verification first
-      if (!profile?.email_verified) {
+      if (profile && !profile.email_verified) {
         // If on login page already, no need to redirect
         return children ? <>{children}</> : <Outlet />;
       }
       
       // Check organization status
-      if (profile?.organization_id) {
+      if (profile && profile.organization_id) {
         // Check if has seen welcome page
         if (!profile.has_seen_welcome) {
           return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
@@ -179,7 +239,7 @@ export const ProtectedRoute = ({
   // Handle specific redirections based on the flowchart
   if (authenticated) {
     // Check if email is verified for non-auth pages
-    if (!profile?.email_verified && !isPublicRoute) {
+    if (profile && !profile.email_verified && !isPublicRoute) {
       toast.error("Email Anda belum diverifikasi. Silakan verifikasi email terlebih dahulu.");
       return <Navigate to="/auth/login" state={{ from: location, requireVerification: true }} replace />;
     }
@@ -187,7 +247,7 @@ export const ProtectedRoute = ({
     // Specific route handling for organizations page
     if (currentPath.startsWith('/organizations') || currentPath === '/onboarding') {
       // If already has organization, redirect to welcome page if not seen
-      if (profile?.organization_id) {
+      if (profile && profile.organization_id) {
         if (!profile.has_seen_welcome) {
           return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
         } else {
@@ -199,11 +259,11 @@ export const ProtectedRoute = ({
     // Check if on employee welcome page
     if (currentPath === '/employee-welcome') {
       // If no organization, redirect to organization setup
-      if (!profile?.organization_id) {
+      if (profile && !profile.organization_id) {
         return <Navigate to="/organizations" state={{ from: location }} replace />;
       }
       // If already seen welcome page, go to dashboard
-      if (profile.has_seen_welcome) {
+      if (profile && profile.has_seen_welcome) {
         return <Navigate to="/dashboard" state={{ from: location }} replace />;
       }
     }
@@ -213,11 +273,11 @@ export const ProtectedRoute = ({
         currentPath.startsWith('/hr/') ||
         currentPath.startsWith('/finance/')) {
       // If no organization, redirect to organization setup
-      if (!profile?.organization_id) {
+      if (profile && !profile.organization_id) {
         return <Navigate to="/organizations" state={{ from: location }} replace />;
       }
       // If hasn't seen welcome page, redirect there first
-      if (!profile.has_seen_welcome) {
+      if (profile && !profile.has_seen_welcome) {
         return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
       }
     }

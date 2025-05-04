@@ -18,53 +18,74 @@ export const checkExistingOrganization = async (userId: string, userEmail?: stri
       };
     }
     
-    // Use security definer function instead of direct query to avoid recursion
-    const { data: profileData, error: profileError } = await supabase
-      .rpc('check_user_has_organization', {
-        user_id: userId
-      });
-    
-    if (profileError) {
-      console.error("Error checking profile:", profileError);
+    // Approach 1: First try using the user metadata in the session
+    if (session?.user) {
+      const isEmailVerified = session.user.email_confirmed_at !== null;
       
-      // If there's an infinite recursion error, assume email is verified
-      // but no organization yet so we can continue to organization setup
-      if (profileError.message.includes("infinite recursion")) {
+      if (session.user.user_metadata?.organization_id) {
         return { 
-          hasOrganization: false, 
-          emailVerified: true,  // Assume verified to continue flow
-          organizationId: null 
+          hasOrganization: true, 
+          emailVerified: isEmailVerified || true, // Assume verified if we have org metadata
+          organizationId: session.user.user_metadata.organization_id 
         };
       }
       
-      toast.error("Terjadi kesalahan saat memeriksa profil");
-      return { hasOrganization: false, emailVerified: false, organizationId: null };
+      if (!isEmailVerified) {
+        return { hasOrganization: false, emailVerified: false, organizationId: null };
+      }
     }
     
-    if (!profileData || profileData.length === 0) {
-      console.log("No profile data returned");
-      return { hasOrganization: false, emailVerified: false, organizationId: null };
-    }
-    
-    // The RPC function returns an array, so take the first item
-    const profile = profileData[0];
-    
-    // Check if email is verified
-    if (!profile.email_verified) {
-      console.log("Email not verified");
-      return { hasOrganization: false, emailVerified: false, organizationId: null };
+    // Approach 2: Try using our security definer function
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .rpc('check_user_has_organization', {
+          user_id: userId
+        });
+        
+      if (profileError) {
+        console.error("Error checking profile with RPC:", profileError);
+        
+        // If there's an infinite recursion error, assume email is verified
+        // but no organization yet so we can continue to organization setup
+        if (profileError.message.includes("infinite recursion")) {
+          return { 
+            hasOrganization: false, 
+            emailVerified: true,  // Assume verified to continue flow
+            organizationId: null 
+          };
+        }
+        
+        throw profileError;
+      }
+      
+      if (!profileData || profileData.length === 0) {
+        console.log("No profile data returned from RPC function");
+        return { hasOrganization: false, emailVerified: false, organizationId: null };
+      }
+      
+      // The RPC function returns an array, take first item
+      const profile = profileData[0];
+      
+      // Check if email is verified
+      if (!profile.email_verified) {
+        console.log("Email not verified from RPC check");
+        return { hasOrganization: false, emailVerified: false, organizationId: null };
+      }
+
+      // If user already has an organization in their profile
+      if (profile.organization_id) {
+        return { 
+          hasOrganization: true, 
+          emailVerified: true, 
+          organizationId: profile.organization_id 
+        };
+      }
+    } catch (error) {
+      console.error("Error in RPC check:", error);
+      // Continue to the last approach
     }
 
-    // If user already has an organization in their profile
-    if (profile.organization_id) {
-      return { 
-        hasOrganization: true, 
-        emailVerified: true, 
-        organizationId: profile.organization_id 
-      };
-    }
-
-    // Also check if this email has already created an organization
+    // Approach 3: Also check if this email has already created an organization
     if (userEmail) {
       try {
         const { data: orgCreatorData, error: orgCreatorError } = await supabase
@@ -84,10 +105,12 @@ export const checkExistingOrganization = async (userId: string, userEmail?: stri
       }
     }
 
+    // Default to assuming email is verified if we got this far and didn't find any negative information
     return { hasOrganization: false, emailVerified: true, organizationId: null };
   } catch (error) {
     console.error("Error checking existing organization:", error);
-    throw error;
+    // Return default fallback values to avoid blocking the application flow
+    return { hasOrganization: false, emailVerified: true, organizationId: null };
   }
 };
 

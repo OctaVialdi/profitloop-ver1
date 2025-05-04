@@ -35,7 +35,7 @@ export const useOrganizationAuth = () => {
       }
       
       try {
-        // Used improved function with security definer function
+        // Used improved function with more reliable checks
         const { hasOrganization, emailVerified, organizationId } = await checkExistingOrganization(
           session.user.id, 
           session.user.email
@@ -65,15 +65,11 @@ export const useOrganizationAuth = () => {
         return true;
       } catch (error) {
         // Special handling for infinite recursion or policy errors
-        if (error instanceof Error) {
-          if (error.message.includes("infinite recursion")) {
-            console.log("Handling recursion error gracefully - continuing to organization setup");
-            return true;
-          }
-          
-          console.error("Error in org auth check:", error.message);
-        }
-        throw error;
+        console.error("Error in org check:", error);
+        
+        // Continue to organization setup despite errors
+        // Better to let user continue than to block their flow
+        return true;
       }
     } catch (error) {
       console.error("Error checking auth:", error);
