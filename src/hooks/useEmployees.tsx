@@ -149,6 +149,26 @@ export function useEmployees(): UseEmployeesResult {
   const addDummyEmployees = async () => {
     setIsLoading(true);
     
+    // Get current user's organization ID before creating any employees
+    const { data: userProfile } = await supabase.auth.getUser();
+    if (!userProfile?.user?.id) {
+      setIsLoading(false);
+      throw new Error("User not authenticated");
+    }
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', userProfile.user.id)
+      .single();
+    
+    if (!profile?.organization_id) {
+      setIsLoading(false);
+      throw new Error("User doesn't belong to an organization");
+    }
+    
+    const organizationId = profile.organization_id;
+    
     const dummyEmployees = [
       {
         name: "John Doe",
@@ -156,7 +176,7 @@ export function useEmployees(): UseEmployeesResult {
         employee_id: "EMP-001",
         role: "employee",
         status: "Active",
-        organization_id: "", // Will be set before creating
+        organization_id: organizationId, // Set organization_id for all employees
         personalDetails: {
           mobile_phone: "+62 812-3456-7890",
           birth_place: "Jakarta",
@@ -207,6 +227,7 @@ export function useEmployees(): UseEmployeesResult {
         employee_id: "EMP-002",
         role: "employee",
         status: "Active",
+        organization_id: organizationId, // Set organization_id for all employees
         personalDetails: {
           mobile_phone: "+62 813-9876-5432",
           birth_place: "Surabaya",
@@ -408,24 +429,6 @@ export function useEmployees(): UseEmployeesResult {
         }
       });
       
-      // Get current user's organization ID
-      const { data: userProfile } = await supabase.auth.getUser();
-      if (!userProfile?.user?.id) {
-        throw new Error("User not authenticated");
-      }
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('id', userProfile.user.id)
-        .single();
-      
-      if (!profile?.organization_id) {
-        throw new Error("User doesn't belong to an organization");
-      }
-      
-      const organizationId = profile.organization_id;
-      
       // Process each dummy employee, modifying IDs to avoid conflicts
       for (const dummyEmployee of dummyEmployees) {
         // Skip if employee with this ID already exists
@@ -436,14 +439,16 @@ export function useEmployees(): UseEmployeesResult {
         
         const { personalDetails, identityAddress, employment, familyMembers, ...employeeData } = dummyEmployee;
         
-        // Set organization_id for the employee
-        employeeData.organization_id = organizationId;
+        // Ensure organization_id is set for the employee (TypeScript requires this)
+        if (!employeeData.organization_id) {
+          employeeData.organization_id = organizationId;
+        }
         
         console.log("Adding dummy employee:", employeeData.name);
         
         try {
           const newEmployee = await employeeService.createEmployee(
-            employeeData,
+            employeeData as { name: string; organization_id: string; email?: string; role?: string; status?: string; employee_id?: string; profile_image?: string; },
             personalDetails,
             identityAddress,
             employment
