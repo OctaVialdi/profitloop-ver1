@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User, AuthChangeEvent } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { ensureProfileExists } from "@/services/profileService";
 import { toast } from "@/components/ui/sonner";
 
