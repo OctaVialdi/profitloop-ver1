@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,6 +24,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormalEducation, educationService } from "@/services/educationService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const formSchema = z.object({
   institution_name: z.string().min(1, "Institution name is required"),
@@ -48,6 +50,7 @@ export function AddFormalEducationDialog({
   onOpenChange,
   onSuccess,
 }: AddFormalEducationDialogProps) {
+  const [error, setError] = useState<string | null>(null);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -64,7 +67,12 @@ export function AddFormalEducationDialog({
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    // Clear any previous errors
+    setError(null);
+    
     try {
+      console.log("Adding formal education with employee ID:", employeeId);
+      
       // Create a properly typed FormalEducation object
       const educationData: FormalEducation = {
         employee_id: employeeId,
@@ -77,17 +85,38 @@ export function AddFormalEducationDialog({
         description: values.description,
       };
 
-      await educationService.addFormalEducation(educationData);
+      const result = await educationService.addFormalEducation(educationData);
+      console.log("Formal education added successfully:", result);
       
       toast.success("Formal education added successfully");
       form.reset();
       onSuccess();
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding formal education:", error);
-      toast.error("Failed to add formal education");
+      
+      // Set a detailed error message
+      if (error.message) {
+        setError(`Failed to add formal education: ${error.message}`);
+      } else if (error.error?.message) {
+        setError(`Failed to add formal education: ${error.error.message}`);
+      } else {
+        setError("Failed to add formal education. Please check your permissions and try again.");
+      }
+      
+      toast.error("Failed to add formal education", {
+        description: "Please check the error details in the form",
+      });
     }
   };
+
+  // Clear error when dialog closes
+  React.useEffect(() => {
+    if (!open) {
+      setError(null);
+      form.reset();
+    }
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,6 +124,14 @@ export function AddFormalEducationDialog({
         <DialogHeader>
           <DialogTitle>Add Formal Education</DialogTitle>
         </DialogHeader>
+        
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -29,6 +29,8 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   employee,
   handleEdit
 }) => {
+  console.log("EducationSection rendering with employee:", employee);
+  
   const [formalEducation, setFormalEducation] = useState<FormalEducation[]>([]);
   const [informalEducation, setInformalEducation] = useState<InformalEducation[]>([]);
   const [workExperience, setWorkExperience] = useState<WorkExperience[]>([]);
@@ -40,11 +42,16 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   const [addWorkExperienceDialogOpen, setAddWorkExperienceDialogOpen] = useState(false);
 
   const fetchFormalEducation = async () => {
-    if (!employee?.id) return;
+    if (!employee?.id) {
+      console.error("Cannot fetch formal education: No employee ID provided");
+      return;
+    }
     
     setIsLoading(true);
     try {
+      console.log("Fetching formal education for employee ID:", employee.id);
       const educationData = await educationService.getFormalEducation(employee.id);
+      console.log("Fetched formal education data:", educationData);
       setFormalEducation(educationData);
     } catch (error) {
       console.error("Failed to fetch formal education:", error);
@@ -55,11 +62,16 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   };
 
   const fetchInformalEducation = async () => {
-    if (!employee?.id) return;
+    if (!employee?.id) {
+      console.error("Cannot fetch informal education: No employee ID provided");
+      return;
+    }
     
     setIsLoading(true);
     try {
+      console.log("Fetching informal education for employee ID:", employee.id);
       const educationData = await educationService.getInformalEducation(employee.id);
+      console.log("Fetched informal education data:", educationData);
       setInformalEducation(educationData);
     } catch (error) {
       console.error("Failed to fetch informal education:", error);
@@ -70,11 +82,16 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   };
 
   const fetchWorkExperience = async () => {
-    if (!employee?.id) return;
+    if (!employee?.id) {
+      console.error("Cannot fetch work experience: No employee ID provided");
+      return;
+    }
     
     setIsLoading(true);
     try {
+      console.log("Fetching work experience for employee ID:", employee.id);
       const experienceData = await educationService.getWorkExperience(employee.id);
+      console.log("Fetched work experience data:", experienceData);
       setWorkExperience(experienceData);
     } catch (error) {
       console.error("Failed to fetch work experience:", error);
@@ -87,6 +104,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   // Initial data fetch
   useEffect(() => {
     if (employee?.id) {
+      console.log(`Initializing EducationSection with employee ID: ${employee.id} and active tab: ${activeTab}`);
       if (activeTab === "formal-education") {
         fetchFormalEducation();
       } else if (activeTab === "informal-education") {
@@ -94,6 +112,8 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
       } else if (activeTab === "working-experience") {
         fetchWorkExperience();
       }
+    } else {
+      console.warn("EducationSection initialized without a valid employee ID");
     }
   }, [employee?.id, activeTab]);
 
@@ -121,6 +141,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   };
 
   const handleAddButtonClick = () => {
+    console.log(`Add button clicked for tab: ${activeTab}, employee ID: ${employee.id}`);
     if (activeTab === "formal-education") {
       setAddFormalDialogOpen(true);
     } else if (activeTab === "informal-education") {

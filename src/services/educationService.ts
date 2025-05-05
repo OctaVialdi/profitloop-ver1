@@ -46,6 +46,8 @@ export const educationService = {
   // Formal Education Methods
   async getFormalEducation(employeeId: string): Promise<FormalEducation[]> {
     try {
+      console.log("Fetching formal education for employee ID:", employeeId);
+      
       const { data, error } = await supabase
         .from('employee_formal_education')
         .select('*')
@@ -53,9 +55,11 @@ export const educationService = {
         .order('created_at', { ascending: false });
         
       if (error) {
+        console.error("Error in getFormalEducation:", error);
         throw error;
       }
       
+      console.log("Fetched formal education data:", data);
       return data || [];
     } catch (error) {
       console.error('Error fetching formal education:', error);
@@ -65,6 +69,8 @@ export const educationService = {
   
   async addFormalEducation(educationData: FormalEducation): Promise<FormalEducation> {
     try {
+      console.log("Adding formal education:", educationData);
+      
       const { data, error } = await supabase
         .from('employee_formal_education')
         .insert(educationData)
@@ -72,9 +78,11 @@ export const educationService = {
         .single();
         
       if (error) {
+        console.error("Error in addFormalEducation:", error);
         throw error;
       }
       
+      console.log("Added formal education successfully:", data);
       return data;
     } catch (error) {
       console.error('Error adding formal education:', error);
@@ -123,6 +131,8 @@ export const educationService = {
   // Informal Education Methods
   async getInformalEducation(employeeId: string): Promise<InformalEducation[]> {
     try {
+      console.log("Fetching informal education for employee ID:", employeeId);
+      
       const { data, error } = await supabase
         .from('employee_informal_education')
         .select('*')
@@ -130,9 +140,11 @@ export const educationService = {
         .order('created_at', { ascending: false });
         
       if (error) {
+        console.error("Error in getInformalEducation:", error);
         throw error;
       }
       
+      console.log("Fetched informal education data:", data);
       return data || [];
     } catch (error) {
       console.error('Error fetching informal education:', error);
@@ -142,6 +154,8 @@ export const educationService = {
   
   async addInformalEducation(educationData: InformalEducation): Promise<InformalEducation> {
     try {
+      console.log("Adding informal education:", educationData);
+      
       const { data, error } = await supabase
         .from('employee_informal_education')
         .insert(educationData)
@@ -149,9 +163,11 @@ export const educationService = {
         .single();
         
       if (error) {
+        console.error("Error in addInformalEducation:", error);
         throw error;
       }
       
+      console.log("Added informal education successfully:", data);
       return data;
     } catch (error) {
       console.error('Error adding informal education:', error);
@@ -200,6 +216,8 @@ export const educationService = {
   // Work Experience Methods
   async getWorkExperience(employeeId: string): Promise<WorkExperience[]> {
     try {
+      console.log("Fetching work experience for employee ID:", employeeId);
+      
       const { data, error } = await supabase
         .from('employee_working_experience')
         .select('*')
@@ -207,9 +225,11 @@ export const educationService = {
         .order('created_at', { ascending: false });
         
       if (error) {
+        console.error("Error in getWorkExperience:", error);
         throw error;
       }
       
+      console.log("Fetched work experience data:", data);
       return data || [];
     } catch (error) {
       console.error('Error fetching work experience:', error);
@@ -219,6 +239,8 @@ export const educationService = {
   
   async addWorkExperience(experienceData: WorkExperience): Promise<WorkExperience> {
     try {
+      console.log("Adding work experience:", experienceData);
+      
       const { data, error } = await supabase
         .from('employee_working_experience')
         .insert(experienceData)
@@ -226,9 +248,11 @@ export const educationService = {
         .single();
         
       if (error) {
+        console.error("Error in addWorkExperience:", error);
         throw error;
       }
       
+      console.log("Added work experience successfully:", data);
       return data;
     } catch (error) {
       console.error('Error adding work experience:', error);

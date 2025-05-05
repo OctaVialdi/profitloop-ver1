@@ -54,7 +54,9 @@ export default function MyInfoIndex() {
     
     setLoading(true);
     try {
+      console.log("Fetching employee with ID:", employeeId);
       const data = await employeeService.fetchEmployeeById(employeeId);
+      console.log("Fetched employee data:", data);
       setEmployee(data);
       if (!data) {
         toast.error("Employee not found");
@@ -110,6 +112,8 @@ export default function MyInfoIndex() {
       </div>
     );
   }
+
+  console.log("Rendering MyInfoIndex with employee:", employee, "and activeTab:", activeTab);
 
   return (
     <div className="space-y-6">
