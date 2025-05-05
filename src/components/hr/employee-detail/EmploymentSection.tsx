@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Edit, CalendarIcon, Loader2, Check, X } from "lucide-react";
 import { LegacyEmployee } from "@/hooks/useEmployees";
-import { updateEmployeeEmployment } from "@/services/employeeService";
+import { updateEmployeeEmployment, getEmployeeEmploymentData, EmployeeEmploymentData } from "@/services/employeeService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,21 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   // State for inline editing
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [employmentData, setEmploymentData] = useState<EmployeeEmploymentData | null>(null);
+  
+  // Fetch employment data
+  useEffect(() => {
+    const fetchEmploymentData = async () => {
+      try {
+        const data = await getEmployeeEmploymentData(employee.id);
+        setEmploymentData(data);
+      } catch (error) {
+        console.error("Error fetching employment data:", error);
+      }
+    };
+    
+    fetchEmploymentData();
+  }, [employee.id]);
   
   // Form state
   const [formValues, setFormValues] = useState({
@@ -45,6 +61,29 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     employee.signDate ? new Date(employee.signDate) : undefined
   );
 
+  // Update form values when employment data is loaded
+  useEffect(() => {
+    if (employmentData) {
+      setFormValues({
+        employeeId: employee.employeeId || "",
+        barcode: employmentData.barcode || "",
+        organization: employmentData.organization_name || "",
+        jobPosition: employmentData.job_position || "",
+        jobLevel: employmentData.job_level || "",
+        employmentStatus: employmentData.employment_status || "",
+        branch: employmentData.branch || "",
+      });
+      
+      if (employmentData.join_date) {
+        setJoinDate(new Date(employmentData.join_date));
+      }
+      
+      if (employmentData.sign_date) {
+        setSignDate(new Date(employmentData.sign_date));
+      }
+    }
+  }, [employmentData, employee]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormValues(prev => ({ ...prev, [id]: value }));
@@ -57,17 +96,38 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   const toggleEditMode = () => {
     if (isEditing) {
       // Cancel editing - reset form values
-      setFormValues({
-        employeeId: employee.employeeId || "",
-        barcode: employee.barcode || "",
-        organization: employee.organization || "",
-        jobPosition: employee.jobPosition || "",
-        jobLevel: employee.jobLevel || "",
-        employmentStatus: employee.employmentStatus || "",
-        branch: employee.branch || "",
-      });
-      setJoinDate(employee.joinDate ? new Date(employee.joinDate) : undefined);
-      setSignDate(employee.signDate ? new Date(employee.signDate) : undefined);
+      if (employmentData) {
+        setFormValues({
+          employeeId: employee.employeeId || "",
+          barcode: employmentData.barcode || "",
+          organization: employmentData.organization_name || "",
+          jobPosition: employmentData.job_position || "",
+          jobLevel: employmentData.job_level || "",
+          employmentStatus: employmentData.employment_status || "",
+          branch: employmentData.branch || "",
+        });
+        
+        if (employmentData.join_date) {
+          setJoinDate(new Date(employmentData.join_date));
+        }
+        
+        if (employmentData.sign_date) {
+          setSignDate(new Date(employmentData.sign_date));
+        }
+      } else {
+        // Fallback to employee data
+        setFormValues({
+          employeeId: employee.employeeId || "",
+          barcode: employee.barcode || "",
+          organization: employee.organization || "",
+          jobPosition: employee.jobPosition || "",
+          jobLevel: employee.jobLevel || "",
+          employmentStatus: employee.employmentStatus || "",
+          branch: employee.branch || "",
+        });
+        setJoinDate(employee.joinDate ? new Date(employee.joinDate) : undefined);
+        setSignDate(employee.signDate ? new Date(employee.signDate) : undefined);
+      }
     }
     setIsEditing(!isEditing);
   };
@@ -78,7 +138,7 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     try {
       // Prepare data for API call
       const updatedData = {
-        employee_id: formValues.employeeId,
+        employee_id: employee.id,
         barcode: formValues.barcode,
         organization: formValues.organization,
         job_position: formValues.jobPosition,
@@ -103,6 +163,39 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
       setIsLoading(false);
     }
   };
+  
+  // Get display values
+  const getDisplayData = () => {
+    if (employmentData) {
+      return {
+        companyName: "PT CHEMISTRY BEAUTY INDONESIA",
+        employeeId: employee.employeeId || "-",
+        barcode: employmentData.barcode || "-",
+        organization: employmentData.organization_name || "-",
+        jobPosition: employmentData.job_position || "-",
+        jobLevel: employmentData.job_level || "-",
+        employmentStatus: employmentData.employment_status || "Permanent",
+        branch: employmentData.branch || "Pusat",
+        joinDate: employmentData.join_date || "-",
+        signDate: employmentData.sign_date || "-"
+      };
+    } else {
+      return {
+        companyName: "PT CHEMISTRY BEAUTY INDONESIA",
+        employeeId: employee.employeeId || "-",
+        barcode: employee.barcode || "-",
+        organization: employee.organization || "-",
+        jobPosition: employee.jobPosition || "-",
+        jobLevel: employee.jobLevel || "-",
+        employmentStatus: employee.employmentStatus || "Permanent",
+        branch: employee.branch || "Pusat",
+        joinDate: employee.joinDate || "-",
+        signDate: employee.signDate || "-"
+      };
+    }
+  };
+  
+  const displayData = getDisplayData();
   
   return (
     <Card>
@@ -299,46 +392,46 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                   <div>
                     <p className="text-sm text-gray-500">Company name</p>
-                    <p className="font-medium">PT CHEMISTRY BEAUTY INDONESIA</p>
+                    <p className="font-medium">{displayData.companyName}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Employee ID</p>
-                    <p className="font-medium">{employee.employeeId || "-"}</p>
+                    <p className="font-medium">{displayData.employeeId}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Barcode</p>
-                    <p className="font-medium">{employee.barcode || "-"}</p>
+                    <p className="font-medium">{displayData.barcode}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Organization name</p>
-                    <p className="font-medium">{employee.organization || "-"}</p>
+                    <p className="font-medium">{displayData.organization}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Job position</p>
-                    <p className="font-medium">{employee.jobPosition || "-"}</p>
+                    <p className="font-medium">{displayData.jobPosition}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Job level</p>
-                    <p className="font-medium">{employee.jobLevel || "-"}</p>
+                    <p className="font-medium">{displayData.jobLevel}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Employment status</p>
-                    <p className="font-medium">{employee.employmentStatus || "Permanent"}</p>
+                    <p className="font-medium">{displayData.employmentStatus}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Branch</p>
-                    <p className="font-medium">{employee.branch || "Pusat"}</p>
+                    <p className="font-medium">{displayData.branch}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Join date</p>
                     <p className="font-medium">
-                      {employee.joinDate || "-"}
-                      {employee.joinDate && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">14 Year 5 Month 24 Day</span>}
+                      {displayData.joinDate}
+                      {displayData.joinDate && displayData.joinDate !== "-" && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">14 Year 5 Month 24 Day</span>}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Sign date</p>
-                    <p className="font-medium">{employee.signDate || "-"}</p>
+                    <p className="font-medium">{displayData.signDate}</p>
                   </div>
                 </div>
               </div>

@@ -75,6 +75,20 @@ export interface EmployeeEmployment {
   sign_date?: string | null;
 }
 
+export interface EmployeeEmploymentData {
+  id?: string;
+  employee_id: string;
+  company_name?: string | null;
+  barcode?: string | null;
+  job_position?: string | null;
+  job_level?: string | null;
+  employment_status?: string | null;
+  branch?: string | null;
+  join_date?: string | null;
+  sign_date?: string | null;
+  organization_name?: string | null;
+}
+
 export interface EmployeeBasic {
   id: string;
   name: string;
@@ -429,20 +443,36 @@ export const updateEmployeeEmployment = async (
   data: Partial<EmployeeEmployment>
 ): Promise<boolean> => {
   try {
-    // Map data from EmployeeEmployment to Employee
-    const employeeData: Partial<Employee> = {
-      employee_id: data.employee_id,
-      barcode: data.barcode,
-      job_position: data.job_position,
-      job_level: data.job_level,
-      employment_status: data.employment_status,
-      branch: data.branch,
-      join_date: data.join_date,
-      sign_date: data.sign_date
+    // Create employment data object
+    const employmentData: EmployeeEmploymentData = {
+      employee_id: employeeId,
+      barcode: data.barcode || null,
+      organization_name: data.organization || null,
+      job_position: data.job_position || null,
+      job_level: data.job_level || null,
+      employment_status: data.employment_status || null,
+      branch: data.branch || null,
+      join_date: data.join_date || null,
+      sign_date: data.sign_date || null
     };
     
-    const result = await employeeService.updateEmployee(employeeId, employeeData);
-    return !!result;
+    // Save to new employment table
+    await createOrUpdateEmployeeEmployment(employmentData);
+    
+    // Also update relevant fields in the employee table for backwards compatibility
+    const employeeUpdate: Partial<Employee> = {
+      barcode: data.barcode || null,
+      job_position: data.job_position || null,
+      job_level: data.job_level || null,
+      employment_status: data.employment_status || null,
+      branch: data.branch || null,
+      join_date: data.join_date || null,
+      sign_date: data.sign_date || null
+    };
+    
+    await employeeService.updateEmployee(employeeId, employeeUpdate);
+    
+    return true;
   } catch (error) {
     console.error("Error updating employee employment:", error);
     return false;
@@ -575,5 +605,86 @@ export const deleteFamilyMember = async (id: string): Promise<boolean> => {
   } catch (error) {
     console.error('Error deleting family member:', error);
     return false;
+  }
+};
+
+// Add functions to interact with the new employee_employment table
+export const getEmployeeEmploymentData = async (employeeId: string): Promise<EmployeeEmploymentData | null> => {
+  try {
+    console.log("Fetching employment data for employee:", employeeId);
+    
+    const { data, error } = await supabase
+      .from('employee_employment')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching employee employment data:', error);
+      throw error;
+    }
+    
+    console.log("Retrieved employment data:", data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching employee employment data:', error);
+    return null;
+  }
+};
+
+export const createOrUpdateEmployeeEmployment = async (
+  employmentData: EmployeeEmploymentData
+): Promise<EmployeeEmploymentData | null> => {
+  try {
+    console.log("Creating/updating employment data:", employmentData);
+    
+    // Check if employment data already exists for this employee
+    const existingData = await getEmployeeEmploymentData(employmentData.employee_id);
+    
+    if (existingData) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('employee_employment')
+        .update({
+          company_name: employmentData.company_name,
+          barcode: employmentData.barcode,
+          job_position: employmentData.job_position,
+          job_level: employmentData.job_level,
+          employment_status: employmentData.employment_status,
+          branch: employmentData.branch,
+          join_date: employmentData.join_date,
+          sign_date: employmentData.sign_date,
+          organization_name: employmentData.organization_name
+        })
+        .eq('id', existingData.id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error updating employee employment data:', error);
+        throw error;
+      }
+      
+      console.log("Employment data updated successfully:", data);
+      return data;
+    } else {
+      // Insert new record
+      const { data, error } = await supabase
+        .from('employee_employment')
+        .insert([employmentData])
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error creating employee employment data:', error);
+        throw error;
+      }
+      
+      console.log("Employment data created successfully:", data);
+      return data;
+    }
+  } catch (error) {
+    console.error('Error managing employee employment data:', error);
+    throw error;
   }
 };
