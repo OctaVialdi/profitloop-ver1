@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
-import { EmploymentSection } from "@/components/hr/employee-detail/EmploymentSection";
+import { EmployeeDetail } from "@/components/hr/EmployeeDetail";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,12 +33,6 @@ export default function MyEmploymentPage() {
       toast.error("Failed to load employee data");
     } finally {
       setLoading(false);
-    }
-  };
-  
-  const handleEdit = (section: string) => {
-    if (section === "refresh") {
-      fetchEmployee();
     }
   };
   
@@ -92,9 +86,9 @@ export default function MyEmploymentPage() {
         </Button>
       </div>
 
-      <EmploymentSection 
+      <EmployeeDetail 
         employee={employee} 
-        handleEdit={handleEdit} 
+        activeTab="employment" 
       />
     </div>
   );
