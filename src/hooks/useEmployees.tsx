@@ -76,7 +76,7 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
     organization: employee.organization_id || '',
     jobPosition: employee.job_position || '',
     jobLevel: employee.job_level || '',
-    employmentStatus: employee.status || 'Active',
+    employmentStatus: employee.employment_status || 'Active',
     joinDate: employee.join_date || '',
     endDate: '', // No field in new model
     signDate: employee.sign_date || '',
@@ -92,7 +92,7 @@ export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> 
     email: employee.email,
     role: employee.role,
     status: employee.status,
-    employee_id: employee.employee_id,
+    employee_id: employee.employee_id || employee.employeeId,
     profile_image: employee.profile_image,
     mobile_phone: employee.mobilePhone || null,
     birth_place: employee.birthPlace || null,
@@ -107,7 +107,7 @@ export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> 
     postal_code: employee.postalCode || null,
     citizen_address: employee.citizenAddress || null,
     address: employee.address || null,
-    organization_id: employee.organization_id,
+    organization_id: employee.organization_id || employee.organization,
     // Employment fields
     barcode: employee.barcode || null,
     job_position: employee.jobPosition || null,

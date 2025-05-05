@@ -38,13 +38,13 @@ export interface Employee {
 
 // For backward compatibility with existing components
 export interface EmployeeWithDetails extends Employee {
-  personalDetails?: any;
-  identityAddress?: any;
-  employment?: any;
+  personalDetails?: EmployeePersonalDetails;
+  identityAddress?: EmployeeIdentityAddress;
+  employment?: EmployeeEmployment;
 }
 
 export interface EmployeePersonalDetails {
-  employee_id: string;
+  employee_id?: string;
   mobile_phone?: string | null;
   birth_place?: string | null;
   birth_date?: string | null;
@@ -55,7 +55,7 @@ export interface EmployeePersonalDetails {
 }
 
 export interface EmployeeIdentityAddress {
-  employee_id: string;
+  employee_id?: string;
   nik?: string | null;
   passport_number?: string | null;
   passport_expiry?: string | null;
@@ -65,7 +65,7 @@ export interface EmployeeIdentityAddress {
 }
 
 export interface EmployeeEmployment {
-  employee_id: string;
+  employee_id?: string;
   barcode?: string | null;
   organization?: string | null;
   job_position?: string | null;
@@ -156,35 +156,38 @@ export const employeeService = {
       if (employeeError) throw employeeError;
       if (!employeeData) return null;
       
+      // Ensure we treat it as the correct type with all the fields we need
+      const employeeWithAllFields = employeeData as unknown as Employee;
+      
       // For backward compatibility, create an EmployeeWithDetails structure
       const employeeWithDetails: EmployeeWithDetails = {
-        ...employeeData as Employee,
+        ...employeeWithAllFields,
         personalDetails: {
-          mobile_phone: employeeData.mobile_phone,
-          birth_place: employeeData.birth_place,
-          birth_date: employeeData.birth_date,
-          gender: employeeData.gender,
-          marital_status: employeeData.marital_status,
-          blood_type: employeeData.blood_type,
-          religion: employeeData.religion
+          mobile_phone: employeeWithAllFields.mobile_phone,
+          birth_place: employeeWithAllFields.birth_place,
+          birth_date: employeeWithAllFields.birth_date,
+          gender: employeeWithAllFields.gender,
+          marital_status: employeeWithAllFields.marital_status,
+          blood_type: employeeWithAllFields.blood_type,
+          religion: employeeWithAllFields.religion
         },
         identityAddress: {
-          nik: employeeData.nik,
-          passport_number: employeeData.passport_number,
-          passport_expiry: employeeData.passport_expiry,
-          postal_code: employeeData.postal_code,
-          citizen_address: employeeData.citizen_address,
-          residential_address: employeeData.address
+          nik: employeeWithAllFields.nik,
+          passport_number: employeeWithAllFields.passport_number,
+          passport_expiry: employeeWithAllFields.passport_expiry,
+          postal_code: employeeWithAllFields.postal_code,
+          citizen_address: employeeWithAllFields.citizen_address,
+          residential_address: employeeWithAllFields.address
         },
         employment: {
-          employee_id: employeeData.employee_id,
-          barcode: employeeData.barcode,
-          job_position: employeeData.job_position,
-          job_level: employeeData.job_level,
-          employment_status: employeeData.employment_status,
-          branch: employeeData.branch,
-          join_date: employeeData.join_date,
-          sign_date: employeeData.sign_date
+          employee_id: employeeWithAllFields.employee_id,
+          barcode: employeeWithAllFields.barcode,
+          job_position: employeeWithAllFields.job_position,
+          job_level: employeeWithAllFields.job_level,
+          employment_status: employeeWithAllFields.employment_status,
+          branch: employeeWithAllFields.branch,
+          join_date: employeeWithAllFields.join_date,
+          sign_date: employeeWithAllFields.sign_date
         }
       };
       
