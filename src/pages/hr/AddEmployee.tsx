@@ -474,7 +474,7 @@ export default function AddEmployee() {
             </Button>
             <Button 
               variant="default" 
-              className="px-6"
+              className="px-6 bg-blue-600 hover:bg-blue-700"
               onClick={handleSubmit}
               disabled={isSubmitting}
             >
