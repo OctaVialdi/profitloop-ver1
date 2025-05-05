@@ -6,10 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Employee } from "@/hooks/useEmployees";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
 import { Loader2, Plus } from "lucide-react";
-import { FormalEducation, educationService } from "@/services/educationService";
+import { 
+  FormalEducation, 
+  InformalEducation, 
+  WorkExperience, 
+  educationService 
+} from "@/services/educationService";
 import { FormalEducationList } from "./education/FormalEducationList";
+import { InformalEducationList } from "./education/InformalEducationList";
+import { WorkExperienceList } from "./education/WorkExperienceList";
 import { toast } from "sonner";
 import { AddFormalEducationDialog } from "./edit/AddFormalEducationDialog";
+import { AddInformalEducationDialog } from "./edit/AddInformalEducationDialog";
+import { AddWorkExperienceDialog } from "./edit/AddWorkExperienceDialog";
 
 interface EducationSectionProps {
   employee: Employee;
@@ -21,10 +30,14 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   handleEdit
 }) => {
   const [formalEducation, setFormalEducation] = useState<FormalEducation[]>([]);
+  const [informalEducation, setInformalEducation] = useState<InformalEducation[]>([]);
+  const [workExperience, setWorkExperience] = useState<WorkExperience[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("formal-education");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addFormalDialogOpen, setAddFormalDialogOpen] = useState(false);
+  const [addInformalDialogOpen, setAddInformalDialogOpen] = useState(false);
+  const [addWorkExperienceDialogOpen, setAddWorkExperienceDialogOpen] = useState(false);
 
   const fetchFormalEducation = async () => {
     if (!employee?.id) return;
@@ -41,21 +54,67 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
     }
   };
 
+  const fetchInformalEducation = async () => {
+    if (!employee?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const educationData = await educationService.getInformalEducation(employee.id);
+      setInformalEducation(educationData);
+    } catch (error) {
+      console.error("Failed to fetch informal education:", error);
+      toast.error("Failed to load education data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchWorkExperience = async () => {
+    if (!employee?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const experienceData = await educationService.getWorkExperience(employee.id);
+      setWorkExperience(experienceData);
+    } catch (error) {
+      console.error("Failed to fetch work experience:", error);
+      toast.error("Failed to load experience data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Initial data fetch
   useEffect(() => {
-    fetchFormalEducation();
-  }, [employee?.id]);
+    if (employee?.id) {
+      if (activeTab === "formal-education") {
+        fetchFormalEducation();
+      } else if (activeTab === "informal-education") {
+        fetchInformalEducation();
+      } else if (activeTab === "working-experience") {
+        fetchWorkExperience();
+      }
+    }
+  }, [employee?.id, activeTab]);
 
   const refreshEducationData = async () => {
     if (!employee?.id) return;
 
     setIsRefreshing(true);
     try {
-      const educationData = await educationService.getFormalEducation(employee.id);
-      setFormalEducation(educationData);
+      if (activeTab === "formal-education") {
+        const educationData = await educationService.getFormalEducation(employee.id);
+        setFormalEducation(educationData);
+      } else if (activeTab === "informal-education") {
+        const educationData = await educationService.getInformalEducation(employee.id);
+        setInformalEducation(educationData);
+      } else if (activeTab === "working-experience") {
+        const experienceData = await educationService.getWorkExperience(employee.id);
+        setWorkExperience(experienceData);
+      }
     } catch (error) {
-      console.error("Failed to refresh formal education:", error);
-      toast.error("Failed to refresh education data");
+      console.error(`Failed to refresh ${activeTab}:`, error);
+      toast.error("Failed to refresh data");
     } finally {
       setIsRefreshing(false);
     }
@@ -63,7 +122,11 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
 
   const handleAddButtonClick = () => {
     if (activeTab === "formal-education") {
-      setAddDialogOpen(true);
+      setAddFormalDialogOpen(true);
+    } else if (activeTab === "informal-education") {
+      setAddInformalDialogOpen(true);
+    } else if (activeTab === "working-experience") {
+      setAddWorkExperienceDialogOpen(true);
     } else {
       handleEdit(activeTab);
     }
@@ -82,7 +145,10 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
               onClick={handleAddButtonClick}
               className="gap-1"
             >
-              <Plus className="h-4 w-4" /> Add Education
+              <Plus className="h-4 w-4" /> 
+              {activeTab === "formal-education" && "Add Formal Education"}
+              {activeTab === "informal-education" && "Add Informal Education"}
+              {activeTab === "working-experience" && "Add Work Experience"}
             </Button>
             
             <Button 
@@ -131,26 +197,54 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                 description="Your formal education data will be displayed here."
                 section="formal-education"
                 handleEdit={handleEdit}
+                buttonText="Add Formal Education"
+                onClick={() => setAddFormalDialogOpen(true)}
               />
             )}
           </TabsContent>
 
           <TabsContent value="informal-education" className="pt-6">
-            <EmptyDataDisplay 
-              title="There is no data to display"
-              description="Your informal education data will be displayed here."
-              section="informal-education"
-              handleEdit={handleEdit}
-            />
+            {isLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : informalEducation.length > 0 ? (
+              <InformalEducationList 
+                educationList={informalEducation} 
+                onEducationUpdated={refreshEducationData} 
+              />
+            ) : (
+              <EmptyDataDisplay 
+                title="There is no data to display"
+                description="Your informal education data will be displayed here."
+                section="informal-education"
+                handleEdit={handleEdit}
+                buttonText="Add Informal Education"
+                onClick={() => setAddInformalDialogOpen(true)}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="working-experience" className="pt-6">
-            <EmptyDataDisplay 
-              title="There is no data to display"
-              description="Your working experience data will be displayed here."
-              section="working-experience"
-              handleEdit={handleEdit}
-            />
+            {isLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : workExperience.length > 0 ? (
+              <WorkExperienceList 
+                experienceList={workExperience} 
+                onExperienceUpdated={refreshEducationData} 
+              />
+            ) : (
+              <EmptyDataDisplay 
+                title="There is no data to display"
+                description="Your working experience data will be displayed here."
+                section="working-experience"
+                handleEdit={handleEdit}
+                buttonText="Add Work Experience"
+                onClick={() => setAddWorkExperienceDialogOpen(true)}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -158,9 +252,33 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
       {/* Add Formal Education Dialog */}
       {employee?.id && (
         <AddFormalEducationDialog
-          open={addDialogOpen}
+          open={addFormalDialogOpen}
           employeeId={employee.id}
-          onOpenChange={setAddDialogOpen}
+          onOpenChange={setAddFormalDialogOpen}
+          onSuccess={() => {
+            refreshEducationData();
+          }}
+        />
+      )}
+
+      {/* Add Informal Education Dialog */}
+      {employee?.id && (
+        <AddInformalEducationDialog
+          open={addInformalDialogOpen}
+          employeeId={employee.id}
+          onOpenChange={setAddInformalDialogOpen}
+          onSuccess={() => {
+            refreshEducationData();
+          }}
+        />
+      )}
+
+      {/* Add Work Experience Dialog */}
+      {employee?.id && (
+        <AddWorkExperienceDialog
+          open={addWorkExperienceDialogOpen}
+          employeeId={employee.id}
+          onOpenChange={setAddWorkExperienceDialogOpen}
           onSuccess={() => {
             refreshEducationData();
           }}

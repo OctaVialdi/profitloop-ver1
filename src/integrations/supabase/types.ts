@@ -210,6 +210,103 @@ export type Database = {
           },
         ]
       }
+      employee_informal_education: {
+        Row: {
+          certificate_number: string | null
+          certification_field: string
+          course_name: string
+          created_at: string
+          description: string | null
+          employee_id: string
+          end_date: string | null
+          id: string
+          provider: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          certificate_number?: string | null
+          certification_field: string
+          course_name: string
+          created_at?: string
+          description?: string | null
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          provider: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          certificate_number?: string | null
+          certification_field?: string
+          course_name?: string
+          created_at?: string
+          description?: string | null
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          provider?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_informal_education_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_working_experience: {
+        Row: {
+          company_name: string
+          created_at: string
+          employee_id: string
+          end_date: string | null
+          id: string
+          job_description: string | null
+          location: string | null
+          position: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          job_description?: string | null
+          location?: string | null
+          position: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          job_description?: string | null
+          location?: string | null
+          position?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_working_experience_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address: string | null

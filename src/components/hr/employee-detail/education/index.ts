@@ -1,4 +1,4 @@
 
 export { FormalEducationList } from "./FormalEducationList";
-export { EditFormalEducationDialog } from "../edit/EditFormalEducationDialog";
-export { DeleteFormalEducationDialog } from "../edit/DeleteFormalEducationDialog";
+export { InformalEducationList } from "./InformalEducationList";
+export { WorkExperienceList } from "./WorkExperienceList";
