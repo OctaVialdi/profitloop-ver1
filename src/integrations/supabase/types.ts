@@ -51,62 +51,6 @@ export type Database = {
           },
         ]
       }
-      employee_employment: {
-        Row: {
-          barcode: string | null
-          branch: string | null
-          company_name: string | null
-          created_at: string
-          employee_id: string
-          employment_status: string | null
-          id: string
-          job_level: string | null
-          job_position: string | null
-          join_date: string | null
-          organization_name: string | null
-          sign_date: string | null
-          updated_at: string
-        }
-        Insert: {
-          barcode?: string | null
-          branch?: string | null
-          company_name?: string | null
-          created_at?: string
-          employee_id: string
-          employment_status?: string | null
-          id?: string
-          job_level?: string | null
-          job_position?: string | null
-          join_date?: string | null
-          organization_name?: string | null
-          sign_date?: string | null
-          updated_at?: string
-        }
-        Update: {
-          barcode?: string | null
-          branch?: string | null
-          company_name?: string | null
-          created_at?: string
-          employee_id?: string
-          employment_status?: string | null
-          id?: string
-          job_level?: string | null
-          job_position?: string | null
-          join_date?: string | null
-          organization_name?: string | null
-          sign_date?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "employee_employment_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       employee_family_members: {
         Row: {
           address: string | null
