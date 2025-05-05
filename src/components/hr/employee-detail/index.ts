@@ -12,6 +12,7 @@ export { HistorySection } from './HistorySection';
 export { DefaultSection } from './DefaultSection';
 export { IdentityAddressSection } from './IdentityAddressSection';
 export { EmployeeDetailSidebar } from './EmployeeDetailSidebar';
+export { FamilySection } from './FamilySection';
 
 // Export edit dialog components for convenience
 export { EditPersonalDetailsDialog } from './edit/EditPersonalDetailsDialog';

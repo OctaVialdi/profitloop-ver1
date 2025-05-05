@@ -304,7 +304,7 @@ export const employeeService = {
       birth_date?: string | null;
       occupation?: string | null;
     }
-  ): Promise<any | null> {
+  ): Promise<EmployeeFamily | null> {
     try {
       // This is just a placeholder until we have a proper family table
       // For now, it just returns the data as if it was saved
@@ -312,6 +312,18 @@ export const employeeService = {
     } catch (error) {
       console.error("Error saving family member:", error);
       return null;
+    }
+  },
+  
+  // Get family members for an employee - placeholder implementation
+  async getFamilyMembers(employeeId: string): Promise<EmployeeFamily[]> {
+    try {
+      // This is just a placeholder until we have a proper family table
+      // For now, it returns an empty array
+      return [];
+    } catch (error) {
+      console.error("Error fetching family members:", error);
+      return [];
     }
   }
 };

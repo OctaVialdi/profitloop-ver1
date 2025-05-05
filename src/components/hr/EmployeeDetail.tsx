@@ -1,8 +1,10 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { employeeService, Employee } from "@/services/employeeService";
 import { convertToLegacyFormat, LegacyEmployee } from "@/hooks/useEmployees";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   EmployeeDetailSidebar,
   PersonalSection,
@@ -15,7 +17,8 @@ import {
   FilesSection,
   AssetsSection,
   HistorySection,
-  DefaultSection
+  DefaultSection,
+  FamilySection
 } from "./employee-detail";
 
 interface EmployeeDetailProps {
@@ -29,6 +32,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const [activeTab] = useState(initialActiveTab);
+  const [activePersonalTab, setActivePersonalTab] = useState("basic-info");
   const [employeeData, setEmployeeData] = useState<Employee>(employee);
 
   // Convert to legacy employee object format for backward compatibility
@@ -65,10 +69,26 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     switch (activeTab) {
       case 'personal':
         return (
-          <>
-            <PersonalSection employee={legacyEmployee} handleEdit={handleEdit} />
-            <IdentityAddressSection employee={legacyEmployee} handleEdit={handleEdit} />
-          </>
+          <Tabs
+            defaultValue="basic-info"
+            value={activePersonalTab}
+            onValueChange={setActivePersonalTab}
+            className="w-full"
+          >
+            <TabsList>
+              <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
+              <TabsTrigger value="family">Family</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="basic-info" className="mt-6 space-y-6">
+              <PersonalSection employee={legacyEmployee} handleEdit={handleEdit} />
+              <IdentityAddressSection employee={legacyEmployee} handleEdit={handleEdit} />
+            </TabsContent>
+            
+            <TabsContent value="family" className="mt-6">
+              <FamilySection employee={legacyEmployee} handleEdit={handleEdit} />
+            </TabsContent>
+          </Tabs>
         );
         
       case 'employment':
