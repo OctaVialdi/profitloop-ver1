@@ -494,10 +494,21 @@ export const getFamilyMembers = async (employeeId: string): Promise<EmployeeFami
 
 export const addFamilyMember = async (familyMember: EmployeeFamily): Promise<EmployeeFamily | null> => {
   try {
+    // Use explicit table name for the employee_id column to avoid ambiguity
     const { data, error } = await supabase
       .from('employee_family_members')
-      .insert([familyMember])
-      .select()
+      .insert([{
+        employee_id: familyMember.employee_id,
+        name: familyMember.name,
+        relationship: familyMember.relationship,
+        age: familyMember.age,
+        occupation: familyMember.occupation,
+        phone: familyMember.phone,
+        address: familyMember.address,
+        gender: familyMember.gender,
+        is_emergency_contact: familyMember.is_emergency_contact
+      }])
+      .select('*')
       .single();
 
     if (error) throw error;
