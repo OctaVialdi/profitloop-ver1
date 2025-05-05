@@ -160,6 +160,56 @@ export type Database = {
           },
         ]
       }
+      employee_formal_education: {
+        Row: {
+          created_at: string
+          degree: string
+          description: string | null
+          employee_id: string
+          end_date: string | null
+          field_of_study: string
+          grade: string | null
+          id: string
+          institution_name: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          degree: string
+          description?: string | null
+          employee_id: string
+          end_date?: string | null
+          field_of_study: string
+          grade?: string | null
+          id?: string
+          institution_name: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          degree?: string
+          description?: string | null
+          employee_id?: string
+          end_date?: string | null
+          field_of_study?: string
+          grade?: string | null
+          id?: string
+          institution_name?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_formal_education_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address: string | null

@@ -1,0 +1,2 @@
+
+export { FormalEducationList } from "./FormalEducationList";

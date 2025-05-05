@@ -18,6 +18,7 @@ export { FamilySection } from './FamilySection';
 export { EditPersonalDetailsDialog } from './edit/EditPersonalDetailsDialog';
 export { EditIdentityAddressDialog } from './edit/EditIdentityAddressDialog';
 export { EditEmploymentDialog } from './edit/EditEmploymentDialog';
+export { AddFormalEducationDialog } from './edit/AddFormalEducationDialog';
 
 // Export utility components
 export { EmptyDataDisplay } from './EmptyDataDisplay';
