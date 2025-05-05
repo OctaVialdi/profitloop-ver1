@@ -1,30 +1,49 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Employee } from "@/hooks/useEmployees";
 import { Button } from "@/components/ui/button";
-import { Plus, FileIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
+import { useQuery } from "@tanstack/react-query";
+import { fileService } from "@/services/fileService";
+import { FilesList } from "./files/FilesList";
+import { AddFileDialog } from "./files/AddFileDialog";
+import { toast } from "sonner";
 
 interface FilesSectionProps {
   employee: Employee;
   handleEdit: (section: string) => void;
 }
 
-interface EmployeeFile {
-  id: string;
-  name: string;
-  type: string;
-  size: string;
-  date: string;
-}
-
 export const FilesSection: React.FC<FilesSectionProps> = ({
   employee,
   handleEdit
 }) => {
-  // This would be replaced with actual file data from the API
-  const [files, setFiles] = useState<EmployeeFile[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  
+  const { 
+    data: files = [], 
+    isLoading,
+    error,
+    refetch: refetchFiles
+  } = useQuery({
+    queryKey: ['employeeFiles', employee.id],
+    queryFn: () => fileService.getEmployeeFiles(employee.id),
+    enabled: !!employee.id
+  });
+
+  // Log errors if any
+  useEffect(() => {
+    if (error) {
+      console.error("Error fetching employee files:", error);
+      toast.error("Failed to load files");
+    }
+  }, [error]);
+
+  const handleFileUploaded = () => {
+    refetchFiles();
+  };
   
   return (
     <Card>
@@ -33,42 +52,26 @@ export const FilesSection: React.FC<FilesSectionProps> = ({
           <h2 className="text-2xl font-bold">Files</h2>
           <Button 
             size="sm"
-            onClick={() => handleEdit("files")}
+            onClick={() => setIsAddDialogOpen(true)}
             className="flex items-center gap-1"
           >
-            <Plus className="h-4 w-4" /> Add Files
+            <Plus className="h-4 w-4" /> Add File
           </Button>
         </div>
         
-        {files.length === 0 ? (
-          <EmptyDataDisplay 
-            title="There is no data to display"
-            description="Your files will be displayed here."
-            section="files"
-            handleEdit={handleEdit}
-          />
-        ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-12 text-sm font-medium text-gray-500 border-b pb-2">
-              <div className="col-span-5">Name</div>
-              <div className="col-span-2">Type</div>
-              <div className="col-span-2">Size</div>
-              <div className="col-span-3">Date</div>
-            </div>
-            
-            {files.map(file => (
-              <div key={file.id} className="grid grid-cols-12 text-sm py-2 hover:bg-gray-50 rounded">
-                <div className="col-span-5 flex items-center">
-                  <FileIcon className="h-4 w-4 mr-2 text-blue-500" />
-                  {file.name}
-                </div>
-                <div className="col-span-2">{file.type}</div>
-                <div className="col-span-2">{file.size}</div>
-                <div className="col-span-3">{file.date}</div>
-              </div>
-            ))}
-          </div>
-        )}
+        <FilesList 
+          files={files} 
+          employeeId={employee.id}
+          onFilesUpdated={refetchFiles}
+          isLoading={isLoading}
+        />
+
+        <AddFileDialog
+          employeeId={employee.id}
+          isOpen={isAddDialogOpen}
+          onClose={() => setIsAddDialogOpen(false)}
+          onUploaded={handleFileUploaded}
+        />
       </div>
     </Card>
   );
