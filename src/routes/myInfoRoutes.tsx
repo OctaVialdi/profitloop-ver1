@@ -6,6 +6,7 @@ import MyInfoLayout from "@/components/layout/MyInfoLayout";
 import MyInfoIndex from "@/pages/my-info/MyInfoIndex";
 import MyEmploymentPage from "@/pages/my-info/MyEmploymentPage";
 import MyFilesPage from "@/pages/my-info/MyFilesPage";
+import MyAssetsPage from "@/pages/my-info/MyAssetsPage";
 import { Outlet } from "react-router-dom";
 
 export const myInfoRoutes = (
@@ -27,7 +28,7 @@ export const myInfoRoutes = (
     <Route path="employment" element={<MyEmploymentPage />} />
     <Route path="education" element={<MyInfoIndex />} />
     <Route path="files" element={<MyFilesPage />} />
-    <Route path="assets" element={<MyInfoIndex />} />
+    <Route path="assets" element={<MyAssetsPage />} />
     <Route path="attendance" element={<MyInfoIndex />} />
     <Route path="schedule" element={<MyInfoIndex />} />
     <Route path="time-off" element={<MyInfoIndex />} />

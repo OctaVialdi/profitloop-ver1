@@ -51,6 +51,77 @@ export type Database = {
           },
         ]
       }
+      employee_assets: {
+        Row: {
+          asset_tag: string | null
+          asset_type: string
+          assigned_date: string | null
+          brand: string | null
+          condition: string | null
+          created_at: string
+          employee_id: string
+          expected_return_date: string | null
+          id: string
+          model: string | null
+          name: string
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          serial_number: string | null
+          specifications: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          asset_tag?: string | null
+          asset_type: string
+          assigned_date?: string | null
+          brand?: string | null
+          condition?: string | null
+          created_at?: string
+          employee_id: string
+          expected_return_date?: string | null
+          id?: string
+          model?: string | null
+          name: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          serial_number?: string | null
+          specifications?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          asset_tag?: string | null
+          asset_type?: string
+          assigned_date?: string | null
+          brand?: string | null
+          condition?: string | null
+          created_at?: string
+          employee_id?: string
+          expected_return_date?: string | null
+          id?: string
+          model?: string | null
+          name?: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          serial_number?: string | null
+          specifications?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_assets_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_employment: {
         Row: {
           barcode: string | null
