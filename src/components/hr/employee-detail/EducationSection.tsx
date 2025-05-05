@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Employee } from "@/hooks/useEmployees";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { FormalEducation, educationService } from "@/services/educationService";
 import { FormalEducationList } from "./education/FormalEducationList";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("formal-education");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const fetchFormalEducation = async () => {
     if (!employee?.id) return;
@@ -59,24 +60,43 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
     }
   };
 
+  const handleAddButtonClick = () => {
+    if (activeTab === "formal-education") {
+      setAddDialogOpen(true);
+    } else {
+      handleEdit(activeTab);
+    }
+  };
+
   return (
     <Card>
       <div className="p-6">
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-2xl font-bold">Education & experience</h2>
           
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={refreshEducationData}
-            disabled={isLoading || isRefreshing}
-          >
-            {isRefreshing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Refresh"
-            )}
-          </Button>
+          <div className="flex gap-4">
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={handleAddButtonClick}
+              className="gap-1"
+            >
+              <Plus className="h-4 w-4" /> Add Education
+            </Button>
+            
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={refreshEducationData}
+              disabled={isLoading || isRefreshing}
+            >
+              {isRefreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Refresh"
+              )}
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="formal-education">
@@ -133,6 +153,18 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Add Formal Education Dialog */}
+      {employee?.id && (
+        <AddFormalEducationDialog
+          open={addDialogOpen}
+          employeeId={employee.id}
+          onOpenChange={setAddDialogOpen}
+          onSuccess={() => {
+            refreshEducationData();
+          }}
+        />
+      )}
     </Card>
   );
 };

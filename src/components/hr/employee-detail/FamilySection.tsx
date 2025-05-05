@@ -375,6 +375,8 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
             <EmptyDataDisplay 
               title="No family members found" 
               description="Add family members to see them here" 
+              section="family"  // Add this required prop
+              handleEdit={handleEdit}  // Add this required prop
               buttonText="Add family member" 
               onClick={openAddDialog}
             />
