@@ -95,28 +95,22 @@ export const EducationSection: React.FC<EducationSectionProps> = ({ employee, ha
 
           <TabsContent value="formal">
             <FormalEducationList 
-              items={formalEducations} 
-              isLoading={isFormalLoading}
-              employeeId={employeeId}
-              onDataChanged={refetchFormalEducation}
+              educationList={formalEducations} 
+              onEducationUpdated={refetchFormalEducation}
             />
           </TabsContent>
 
           <TabsContent value="informal">
             <InformalEducationList 
-              items={informalEducations} 
-              isLoading={isInformalLoading}
-              employeeId={employeeId}
-              onDataChanged={refetchInformalEducation}
+              educationList={informalEducations}
+              onEducationUpdated={refetchInformalEducation} 
             />
           </TabsContent>
 
           <TabsContent value="experience">
             <WorkExperienceList 
-              items={workExperiences} 
-              isLoading={isWorkExpLoading}
-              employeeId={employeeId}
-              onDataChanged={refetchWorkExperience}
+              experienceList={workExperiences}
+              onExperienceUpdated={refetchWorkExperience}
             />
           </TabsContent>
         </Tabs>
