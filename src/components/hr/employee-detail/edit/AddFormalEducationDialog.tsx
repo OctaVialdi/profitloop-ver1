@@ -65,9 +65,16 @@ export function AddFormalEducationDialog({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Create a properly typed FormalEducation object
       const educationData: FormalEducation = {
         employee_id: employeeId,
-        ...values,
+        institution_name: values.institution_name,
+        degree: values.degree,
+        field_of_study: values.field_of_study,
+        start_date: values.start_date,
+        end_date: values.end_date,
+        grade: values.grade,
+        description: values.description,
       };
 
       await educationService.addFormalEducation(educationData);
