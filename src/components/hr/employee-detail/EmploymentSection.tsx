@@ -158,6 +158,9 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     );
   }
   
+  // Get the formatted employee ID to display (with the EMP- prefix if present)
+  const displayEmployeeId = employee.employee_id || employee.employeeId || "-";
+  
   return (
     <Card>
       <div className="p-6">
@@ -221,7 +224,7 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                     <Label htmlFor="employeeId">Member ID</Label>
                     <Input
                       id="employeeId"
-                      value={employee.employee_id || employee.employeeId || "-"}
+                      value={displayEmployeeId}
                       readOnly
                       disabled
                       className="bg-gray-100"
@@ -368,7 +371,7 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Member ID</p>
-                    <p className="font-medium">{employee.employee_id || employee.employeeId || "-"}</p>
+                    <p className="font-medium">{displayEmployeeId}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Barcode</p>
@@ -414,3 +417,4 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     </Card>
   );
 };
+
