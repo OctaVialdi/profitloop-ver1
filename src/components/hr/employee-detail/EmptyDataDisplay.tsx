@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, School } from 'lucide-react';
+import { Plus, School, GraduationCap, BookPlus } from 'lucide-react';
 import { AddFormalEducationDialog } from './edit/AddFormalEducationDialog';
 
 interface EmptyDataDisplayProps {
@@ -9,6 +8,8 @@ interface EmptyDataDisplayProps {
   description: string;
   section: string;
   handleEdit: (section: string) => void;
+  buttonText?: string;  // Make buttonText optional
+  onClick?: () => void; // Add optional onClick handler
 }
 
 export const EmptyDataDisplay: React.FC<EmptyDataDisplayProps> = ({
@@ -16,6 +17,8 @@ export const EmptyDataDisplay: React.FC<EmptyDataDisplayProps> = ({
   description,
   section,
   handleEdit,
+  buttonText, // Include the new prop
+  onClick,   // Include the new prop
 }) => {
   const [addDialogOpen, setAddDialogOpen] = React.useState(false);
   const [employeeId, setEmployeeId] = React.useState<string | undefined>();
@@ -33,12 +36,23 @@ export const EmptyDataDisplay: React.FC<EmptyDataDisplayProps> = ({
     switch (section) {
       case 'formal-education':
         return <School className="h-12 w-12 text-muted-foreground/50" />;
+      case 'informal-education':
+        return <BookPlus className="h-12 w-12 text-muted-foreground/50" />;
+      case 'working-experience':
+        return <GraduationCap className="h-12 w-12 text-muted-foreground/50" />;
       default:
         return <School className="h-12 w-12 text-muted-foreground/50" />;
     }
   };
 
   const handleAddButtonClick = () => {
+    // If there's an onClick handler passed as a prop, use it
+    if (onClick) {
+      onClick();
+      return;
+    }
+
+    // Otherwise use the default behavior
     if (section === 'formal-education' && employeeId) {
       setAddDialogOpen(true);
     } else {
@@ -59,14 +73,14 @@ export const EmptyDataDisplay: React.FC<EmptyDataDisplayProps> = ({
           <h3 className="text-lg font-medium">{title}</h3>
           <p className="text-sm text-muted-foreground mt-1">{description}</p>
         </div>
-        <div className="mt-4 pt-2">
+        <div className="mt-6 pt-2">
           <Button 
             variant="outline" 
             size="sm" 
             className="gap-1"
             onClick={handleAddButtonClick}
           >
-            <Plus className="h-4 w-4" /> Add Education
+            <Plus className="h-4 w-4" /> {buttonText || "Add Education"}
           </Button>
         </div>
       </div>
