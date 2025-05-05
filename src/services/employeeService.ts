@@ -347,7 +347,7 @@ export const updateEmployeeProfileImage = async (
     // Create a unique file name
     const fileExt = imageFile.name.split('.').pop();
     const fileName = `${employeeId}-${Date.now()}.${fileExt}`;
-    const filePath = `profile-images/${fileName}`;
+    const filePath = `${employeeId}/${fileName}`;
     
     // Upload the file to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase

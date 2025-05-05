@@ -18,6 +18,7 @@ export { FamilySection } from './FamilySection';
 export { EditPersonalDetailsDialog } from './edit/EditPersonalDetailsDialog';
 export { EditIdentityAddressDialog } from './edit/EditIdentityAddressDialog';
 export { EditEmploymentDialog } from './edit/EditEmploymentDialog';
+export { EditProfilePhotoDialog } from './edit/EditProfilePhotoDialog';
 export { AddFormalEducationDialog } from './edit/AddFormalEducationDialog';
 export { EditFormalEducationDialog } from './edit/EditFormalEducationDialog';
 export { DeleteFormalEducationDialog } from './edit/DeleteFormalEducationDialog';
@@ -30,3 +31,4 @@ export { DeleteWorkExperienceDialog } from './edit/DeleteWorkExperienceDialog';
 
 // Export utility components
 export { EmptyDataDisplay } from './EmptyDataDisplay';
+export { ProfilePhotoUploader } from './edit/ProfilePhotoUploader';

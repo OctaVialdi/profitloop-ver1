@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -12,14 +11,14 @@ import {
   ChevronDown,
   ChevronRight,
   Camera,
-  Loader2
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { LegacyEmployee } from "@/hooks/useEmployees";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
-import { updateEmployeeProfileImage } from "@/services/employeeService";
+import { EditProfilePhotoDialog } from "./edit/EditProfilePhotoDialog";
 import { toast } from "sonner";
+import { Employee } from "@/services/employeeService";
 
 interface EmployeeDetailSidebarProps {
   employee: LegacyEmployee;
@@ -32,8 +31,8 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
   activeTab,
   handleEdit
 }) => {
-  // Profile photo upload state
-  const [isUploading, setIsUploading] = useState(false);
+  // Profile photo dialog state
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
   
   // Determine which sections should be initially open based on activeTab
   const isTimeManagementTab = ['attendance', 'schedule', 'time-off'].includes(activeTab);
@@ -92,39 +91,25 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
     handleEdit(section);
   };
 
-  // Handle profile photo upload
-  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Open the photo dialog
+  const openPhotoDialog = () => {
+    setIsPhotoDialogOpen(true);
+  };
 
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
-      return;
-    }
+  // Handle profile photo update
+  const handlePhotoUpdated = (newPhotoUrl: string) => {
+    handleEdit('refresh');
+    toast.success('Profile photo updated successfully');
+  };
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size should be less than 5MB');
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const imageUrl = await updateEmployeeProfileImage(employee.id, file);
-      if (imageUrl) {
-        toast.success('Profile photo updated successfully');
-        // Update UI - Here we'll rely on the handleEdit function to refresh data
-        handleEdit('refresh');
-      } else {
-        throw new Error('Failed to update profile photo');
-      }
-    } catch (error) {
-      console.error('Error uploading profile photo:', error);
-      toast.error('Failed to upload profile photo');
-    } finally {
-      setIsUploading(false);
-    }
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   return (
@@ -136,36 +121,32 @@ export const EmployeeDetailSidebar: React.FC<EmployeeDetailSidebarProps> = ({
               <AvatarImage src={employee.profile_image} alt={employee.name} />
             ) : (
               <AvatarFallback className="text-xl font-medium bg-gray-200">
-                {employee.name.charAt(0)}
+                {getInitials(employee.name)}
               </AvatarFallback>
             )}
           </Avatar>
           
           {/* Photo upload overlay */}
-          <label 
+          <div
             className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full 
                       opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
-            htmlFor="profile-photo-upload"
+            onClick={openPhotoDialog}
           >
-            {isUploading ? (
-              <Loader2 className="h-6 w-6 text-white animate-spin" />
-            ) : (
-              <Camera className="h-6 w-6 text-white" />
-            )}
-            <span className="sr-only">Upload photo</span>
-          </label>
-          <input 
-            type="file" 
-            id="profile-photo-upload" 
-            className="hidden" 
-            accept="image/*"
-            onChange={handleProfilePhotoUpload}
-            disabled={isUploading}
-          />
+            <Camera className="h-6 w-6 text-white" />
+            <span className="sr-only">Change photo</span>
+          </div>
         </div>
         <h3 className="text-lg font-semibold">{employee.name}</h3>
         <p className="text-sm text-gray-500">{employee.jobPosition || "-"}</p>
       </Card>
+
+      {/* Photo upload dialog */}
+      <EditProfilePhotoDialog
+        isOpen={isPhotoDialogOpen}
+        onClose={() => setIsPhotoDialogOpen(false)}
+        employee={employee as unknown as Employee}
+        onPhotoUpdated={handlePhotoUpdated}
+      />
 
       <Card>
         <div className="py-2">
