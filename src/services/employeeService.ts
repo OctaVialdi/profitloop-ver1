@@ -482,7 +482,7 @@ export const getFamilyMembers = async (employeeId: string): Promise<EmployeeFami
     
     const { data, error } = await supabase
       .from('employee_family_members')
-      .select('*')
+      .select('employee_family_members.*')  // Fix: Use explicit table name in select
       .eq('employee_id', employeeId)
       .order('created_at', { ascending: false });
 
@@ -517,7 +517,7 @@ export const addFamilyMember = async (familyMember: EmployeeFamily): Promise<Emp
         gender: familyMember.gender,
         is_emergency_contact: familyMember.is_emergency_contact
       }])
-      .select('*')
+      .select('employee_family_members.*')  // Fix: Use explicit table name in select
       .single();
 
     if (error) {
@@ -541,7 +541,7 @@ export const updateFamilyMember = async (id: string, updates: Partial<EmployeeFa
       .from('employee_family_members')
       .update(updates)
       .eq('id', id)
-      .select('*')
+      .select('employee_family_members.*')  // Fix: Use explicit table name in select
       .single();
 
     if (error) {
