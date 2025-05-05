@@ -9,6 +9,7 @@ import { Loader2, Plus } from "lucide-react";
 import { FormalEducation, educationService } from "@/services/educationService";
 import { FormalEducationList } from "./education/FormalEducationList";
 import { toast } from "sonner";
+import { AddFormalEducationDialog } from "./edit/AddFormalEducationDialog";
 
 interface EducationSectionProps {
   employee: Employee;
