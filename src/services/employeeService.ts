@@ -482,8 +482,8 @@ export const getFamilyMembers = async (employeeId: string): Promise<EmployeeFami
     
     const { data, error } = await supabase
       .from('employee_family_members')
-      .select()  // Fix: Remove the dot notation that was causing TypeScript errors
-      .eq('employee_id', employeeId)
+      .select()
+      .eq('employee_family_members.employee_id', employeeId)  // Fix: Explicitly specify the table name
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -517,7 +517,7 @@ export const addFamilyMember = async (familyMember: EmployeeFamily): Promise<Emp
         gender: familyMember.gender,
         is_emergency_contact: familyMember.is_emergency_contact
       }])
-      .select()  // Fix: Remove the dot notation that was causing TypeScript errors
+      .select()
       .single();
 
     if (error) {
@@ -540,8 +540,8 @@ export const updateFamilyMember = async (id: string, updates: Partial<EmployeeFa
     const { data, error } = await supabase
       .from('employee_family_members')
       .update(updates)
-      .eq('id', id)
-      .select()  // Fix: Remove the dot notation that was causing TypeScript errors
+      .eq('employee_family_members.id', id)  // Fix: Explicitly specify the table name
+      .select()
       .single();
 
     if (error) {
@@ -564,7 +564,7 @@ export const deleteFamilyMember = async (id: string): Promise<boolean> => {
     const { error } = await supabase
       .from('employee_family_members')
       .delete()
-      .eq('id', id);
+      .eq('employee_family_members.id', id);  // Fix: Explicitly specify the table name
 
     if (error) {
       console.error('Error deleting family member:', error);
