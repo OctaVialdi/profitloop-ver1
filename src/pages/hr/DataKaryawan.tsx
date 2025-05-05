@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { convertToLegacyFormat, LegacyEmployee, useEmployees } from "@/hooks/useEmployees";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { employeeService } from "@/services/employeeService";
 
 export default function HRDataKaryawan() {
   const { employees, isLoading, addDummyEmployees } = useEmployees();
@@ -16,7 +17,26 @@ export default function HRDataKaryawan() {
 
   // Convert to the format expected by EmployeeList component
   const convertToExpectedFormat = (data: any[]): LegacyEmployee[] => {
-    return data.map(emp => convertToLegacyFormat(emp));
+    const convertedData = data.map(emp => convertToLegacyFormat(emp));
+    
+    // Ensure each employee has a valid employee_id saved to the database
+    convertedData.forEach(async (emp) => {
+      if (!emp.employee_id && !emp.employeeId) {
+        // Generate a new employee ID with EMP- prefix
+        const newId = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+        
+        // Update the local object
+        emp.employee_id = newId;
+        emp.employeeId = newId;
+        
+        // Save to database
+        await employeeService.updateEmployee(emp.id, {
+          employee_id: newId
+        });
+      }
+    });
+    
+    return convertedData;
   };
 
   const handleAddDummyEmployees = async () => {

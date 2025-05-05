@@ -74,10 +74,37 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
     leaving: 0
   };
 
-  // Use the employee_id directly without generating new ones
-  const processedData = data.map(employee => ({
-    ...employee
-  }));
+  // Ensure each employee has a valid employee_id
+  const processedData = data.map(employee => {
+    // If there's no employee_id, generate one with the EMP- prefix
+    if (!employee.employee_id && !employee.employeeId) {
+      const randomId = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+      return {
+        ...employee,
+        employee_id: randomId,
+        employeeId: randomId
+      };
+    }
+    
+    // If there's only employee_id but no employeeId, copy it
+    if (employee.employee_id && !employee.employeeId) {
+      return {
+        ...employee,
+        employeeId: employee.employee_id
+      };
+    }
+    
+    // If there's only employeeId but no employee_id, copy it
+    if (!employee.employee_id && employee.employeeId) {
+      return {
+        ...employee,
+        employee_id: employee.employeeId
+      };
+    }
+    
+    // Both exist, return as is
+    return employee;
+  });
 
   return (
     <div className="space-y-4">

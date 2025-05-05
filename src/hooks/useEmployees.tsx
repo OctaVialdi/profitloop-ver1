@@ -47,13 +47,16 @@ export type { EmployeePersonalDetails, EmployeeIdentityAddress, EmployeeEmployme
 
 // Converts a backend Employee to a LegacyEmployee format for frontend components
 export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
+  // Generate an employee_id if one doesn't exist
+  const empId = employee.employee_id || `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+  
   return {
     id: employee.id,
     name: employee.name,
     email: employee.email || '',
     role: employee.role || '',
     status: employee.status || 'Active',
-    employee_id: employee.employee_id || '',
+    employee_id: empId,
     profile_image: employee.profile_image || '',
     mobilePhone: employee.mobile_phone || '',
     birthPlace: employee.birth_place || '',
@@ -70,7 +73,7 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
     address: employee.address || '',
     organization_id: employee.organization_id,
     // Legacy properties
-    employeeId: employee.employee_id || '',
+    employeeId: empId,
     barcode: employee.barcode || '',
     branch: employee.branch || '',
     organization: employee.organization_id || '',
@@ -202,6 +205,9 @@ export const useEmployees = () => {
 
   const addDummyEmployees = useCallback(async () => {
     try {
+      // Generate unique employee IDs for new employees
+      const generateUniqueId = () => `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+      
       const dummyEmployeesData = [
         {
           name: "John Doe",
@@ -215,7 +221,8 @@ export const useEmployees = () => {
           blood_type: "O",
           nik: "1234567890123456",
           address: "Jl. Sudirman No. 123, Jakarta",
-          organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500" // Replace with actual org ID
+          organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
+          employee_id: generateUniqueId() // Add employee_id with proper format
         },
         {
           name: "Jane Smith",
@@ -229,7 +236,8 @@ export const useEmployees = () => {
           blood_type: "A",
           nik: "6543210987654321",
           address: "Jl. Gatot Subroto No. 456, Jakarta",
-          organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500" // Replace with actual org ID
+          organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
+          employee_id: generateUniqueId() // Add employee_id with proper format
         }
       ];
   
