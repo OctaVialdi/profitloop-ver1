@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, Edit, Loader2, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,7 +149,7 @@ export default function AddEmployee() {
   };
   
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto pb-12">
       <div className="flex items-center gap-2 text-sm text-blue-600">
         <Link to="/hr/data" className="flex items-center hover:underline">
           <ArrowLeft className="h-4 w-4 mr-1" />
@@ -157,31 +157,33 @@ export default function AddEmployee() {
         </Link>
       </div>
       
-      <h1 className="text-2xl font-bold">Add Employee</h1>
+      <h1 className="text-2xl font-bold mb-4">Add Employee</h1>
       
       {/* Personal Data Card */}
-      <Card>
+      <Card className="shadow-sm">
         <div className="p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">Personal Data</h2>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold">Personal Data</h2>
+            <p className="text-sm text-gray-500 mt-1">Fill all employee personal basic information data</p>
           </div>
           
           <div className="border rounded-md">
-            <div className="flex justify-between items-center p-3 border-b">
-              <div></div>
-              <div></div> {/* Empty div to maintain layout consistency */}
+            <div className="p-4 bg-gray-50 border-b">
+              <h3 className="font-medium">Basic Information</h3>
             </div>
             
-            <div className="p-4 space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-6 space-y-6">
+              {/* Name and Email */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First name<span className="text-red-500">*</span></Label>
+                  <Label htmlFor="firstName">First name<span className="text-red-500 ml-1">*</span></Label>
                   <Input
                     id="firstName"
                     value={personalInfo.firstName}
                     onChange={handlePersonalInfoChange}
                     placeholder="Enter first name"
                     required
+                    className="h-10"
                   />
                 </div>
                 
@@ -192,11 +194,12 @@ export default function AddEmployee() {
                     value={personalInfo.lastName}
                     onChange={handlePersonalInfoChange}
                     placeholder="Enter last name"
+                    className="h-10"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email<span className="text-red-500">*</span></Label>
+                  <Label htmlFor="email">Email<span className="text-red-500 ml-1">*</span></Label>
                   <Input
                     id="email"
                     value={personalInfo.email}
@@ -204,6 +207,7 @@ export default function AddEmployee() {
                     placeholder="Enter email"
                     type="email"
                     required
+                    className="h-10"
                   />
                 </div>
                 
@@ -214,9 +218,13 @@ export default function AddEmployee() {
                     value={personalInfo.mobilePhone}
                     onChange={handlePersonalInfoChange}
                     placeholder="Enter mobile phone"
+                    className="h-10"
                   />
                 </div>
+              </div>
               
+              {/* Personal Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="birthPlace">Place of birth</Label>
                   <Input
@@ -224,6 +232,7 @@ export default function AddEmployee() {
                     value={personalInfo.birthPlace}
                     onChange={handlePersonalInfoChange}
                     placeholder="Enter birth place"
+                    className="h-10"
                   />
                 </div>
                 
@@ -234,15 +243,14 @@ export default function AddEmployee() {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left",
+                          "w-full justify-start text-left h-10",
                           !birthdate && "text-muted-foreground"
                         )}
                       >
-                        <Calendar className="mr-2 h-4 w-4" />
                         {birthdate ? format(birthdate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 z-50" align="start">
                       <Calendar
                         mode="single"
                         selected={birthdate}
@@ -261,7 +269,7 @@ export default function AddEmployee() {
                     value={personalInfo.gender}
                     onValueChange={(value) => handleSelectChange("gender", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -277,7 +285,7 @@ export default function AddEmployee() {
                     value={personalInfo.maritalStatus}
                     onValueChange={(value) => handleSelectChange("maritalStatus", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Select marital status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -295,7 +303,7 @@ export default function AddEmployee() {
                     value={personalInfo.religion}
                     onValueChange={(value) => handleSelectChange("religion", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Select religion" />
                     </SelectTrigger>
                     <SelectContent>
@@ -316,7 +324,7 @@ export default function AddEmployee() {
                     value={personalInfo.bloodType}
                     onValueChange={(value) => handleSelectChange("bloodType", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Select blood type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -342,20 +350,20 @@ export default function AddEmployee() {
       </Card>
       
       {/* Identity & Address Card */}
-      <Card className="mt-6">
+      <Card className="shadow-sm">
         <div className="p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">Identity & Address</h2>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold">Identity & Address</h2>
+            <p className="text-sm text-gray-500 mt-1">Information related to identity documents and addresses</p>
           </div>
           
           <div className="border rounded-md">
-            <div className="flex justify-between items-center p-3 border-b">
-              <div></div>
-              <div></div> {/* Empty div to maintain layout consistency */}
+            <div className="p-4 bg-gray-50 border-b">
+              <h3 className="font-medium">Identity Documents</h3>
             </div>
             
-            <div className="p-4 space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="nik">NIK (16 digit)</Label>
                   <Input
@@ -363,6 +371,7 @@ export default function AddEmployee() {
                     value={identityAddress.nik}
                     onChange={handleIdentityAddressChange}
                     placeholder="Enter NIK"
+                    className="h-10"
                   />
                 </div>
                 
@@ -373,6 +382,7 @@ export default function AddEmployee() {
                     value={identityAddress.passportNumber}
                     onChange={handleIdentityAddressChange}
                     placeholder="Enter passport number"
+                    className="h-10"
                   />
                 </div>
               
@@ -383,15 +393,14 @@ export default function AddEmployee() {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left",
+                          "w-full justify-start text-left h-10",
                           !passportExpiry && "text-muted-foreground"
                         )}
                       >
-                        <Calendar className="mr-2 h-4 w-4" />
                         {passportExpiry ? format(passportExpiry, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 z-50" align="start">
                       <Calendar
                         mode="single"
                         selected={passportExpiry}
@@ -411,6 +420,7 @@ export default function AddEmployee() {
                     value={identityAddress.postalCode}
                     onChange={handleIdentityAddressChange}
                     placeholder="Enter postal code"
+                    className="h-10"
                   />
                 </div>
               </div>
@@ -422,10 +432,11 @@ export default function AddEmployee() {
                   value={identityAddress.citizenAddress}
                   onChange={handleIdentityAddressChange}
                   placeholder="Enter citizen ID address"
+                  className="h-10"
                 />
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 py-2">
                 <Checkbox 
                   id="useResidentialAddress" 
                   checked={useResidentialAddress} 
@@ -444,6 +455,7 @@ export default function AddEmployee() {
                     value={identityAddress.residentialAddress}
                     onChange={handleIdentityAddressChange}
                     placeholder="Enter residential address"
+                    className="h-10"
                   />
                 </div>
               )}
@@ -454,26 +466,25 @@ export default function AddEmployee() {
           <div className="flex justify-end gap-3 mt-6">
             <Button 
               variant="outline" 
-              className="gap-1 flex items-center"
+              className="px-6"
               onClick={handleCancel}
               disabled={isSubmitting}
             >
-              <X size={14} /> Cancel
+              Cancel
             </Button>
             <Button 
               variant="default" 
-              className="gap-1 flex items-center"
+              className="px-6"
               onClick={handleSubmit}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-3 w-3 animate-spin" /> Saving...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
                 </>
               ) : (
-                <>
-                  <Check size={14} /> Save
-                </>
+                'Save'
               )}
             </Button>
           </div>
