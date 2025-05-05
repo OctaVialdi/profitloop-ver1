@@ -662,7 +662,9 @@ export type Database = {
         Returns: Json
       }
       employee_belongs_to_users_org: {
-        Args: { employee_row: Database["public"]["Tables"]["employees"]["Row"] }
+        Args:
+          | { employee_row: Database["public"]["Tables"]["employees"]["Row"] }
+          | { employee_uuid: string }
         Returns: boolean
       }
       employee_id_belongs_to_users_org: {

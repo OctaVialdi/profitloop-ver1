@@ -482,8 +482,8 @@ export const getFamilyMembers = async (employeeId: string): Promise<EmployeeFami
     
     const { data, error } = await supabase
       .from('employee_family_members')
-      .select()
-      .eq('employee_family_members.employee_id', employeeId)  // Fix: Explicitly specify the table name
+      .select('*')
+      .eq('employee_id', employeeId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -503,7 +503,6 @@ export const addFamilyMember = async (familyMember: EmployeeFamily): Promise<Emp
   try {
     console.log("Adding family member:", familyMember);
     
-    // Use explicit table name for the employee_id column to avoid ambiguity
     const { data, error } = await supabase
       .from('employee_family_members')
       .insert([{
@@ -540,7 +539,7 @@ export const updateFamilyMember = async (id: string, updates: Partial<EmployeeFa
     const { data, error } = await supabase
       .from('employee_family_members')
       .update(updates)
-      .eq('employee_family_members.id', id)  // Fix: Explicitly specify the table name
+      .eq('id', id)
       .select()
       .single();
 
@@ -564,7 +563,7 @@ export const deleteFamilyMember = async (id: string): Promise<boolean> => {
     const { error } = await supabase
       .from('employee_family_members')
       .delete()
-      .eq('employee_family_members.id', id);  // Fix: Explicitly specify the table name
+      .eq('id', id);
 
     if (error) {
       console.error('Error deleting family member:', error);
