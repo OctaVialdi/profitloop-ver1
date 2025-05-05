@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Employee, employeeService } from "@/services/employeeService";
 import { toast } from "sonner";
 
+// Export the Employee type from the service
+export type { Employee } from "@/services/employeeService";
+
 export interface LegacyEmployee {
   id: string;
   name: string;
@@ -25,7 +28,22 @@ export interface LegacyEmployee {
   citizenAddress?: string;
   address?: string; // residential address
   organization_id?: string;
+  // Legacy properties for backward compatibility
+  employeeId?: string;
+  barcode?: string;
+  branch?: string;
+  organization?: string;
+  jobPosition?: string;
+  jobLevel?: string;
+  employmentStatus?: string;
+  joinDate?: string;
+  endDate?: string;
+  signDate?: string;
+  resignDate?: string;
 }
+
+// Export these types from employeeService for backward compatibility
+export type { EmployeePersonalDetails, EmployeeIdentityAddress, EmployeeEmployment } from "@/services/employeeService";
 
 // Converts a backend Employee to a LegacyEmployee format for frontend components
 export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
@@ -50,7 +68,20 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
     postalCode: employee.postal_code || '',
     citizenAddress: employee.citizen_address || '',
     address: employee.address || '',
-    organization_id: employee.organization_id
+    organization_id: employee.organization_id,
+    // Legacy properties
+    employeeId: employee.employee_id || '',
+    // These are not in the current Employee type, but included for backward compatibility
+    barcode: '',
+    branch: '',
+    organization: employee.organization_id || '',
+    jobPosition: '',
+    jobLevel: '',
+    employmentStatus: employee.status || 'Active',
+    joinDate: '',
+    endDate: '',
+    signDate: '',
+    resignDate: ''
   };
 };
 
@@ -103,30 +134,13 @@ export const useEmployees = () => {
   }, [fetchEmployees]);
 
   const addEmployee = useCallback(
-    async (
-      employeeData: {
-        name: string;
-        email?: string;
-        employee_id?: string;
-        status?: string;
-        organization_id: string;
-        mobile_phone?: string | null;
-        birth_place?: string | null;
-        birth_date?: string | null;
-        gender?: string | null;
-        marital_status?: string | null;
-        religion?: string | null;
-        blood_type?: string | null;
-        nik?: string | null;
-        passport_number?: string | null;
-        passport_expiry?: string | null;
-        postal_code?: string | null;
-        citizen_address?: string | null;
-        address?: string | null;
-      }
-    ) => {
+    async (employeeData: Partial<Employee>) => {
       try {
-        const newEmployee = await employeeService.createEmployee(employeeData);
+        if (!employeeData.organization_id) {
+          throw new Error("Organization ID is required");
+        }
+        
+        const newEmployee = await employeeService.createEmployee(employeeData as any);
         
         if (newEmployee) {
           setEmployees((prev) => [...prev, newEmployee]);

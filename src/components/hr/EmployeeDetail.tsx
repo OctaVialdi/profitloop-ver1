@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
+import { employeeService, Employee } from "@/services/employeeService";
 import { convertToLegacyFormat, LegacyEmployee } from "@/hooks/useEmployees";
 import {
   EmployeeDetailSidebar,
@@ -20,7 +19,7 @@ import {
 } from "./employee-detail";
 
 interface EmployeeDetailProps {
-  employee: EmployeeWithDetails;
+  employee: Employee;
   activeTab: string;
 }
 
@@ -30,7 +29,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const [activeTab] = useState(initialActiveTab);
-  const [employeeData, setEmployeeData] = useState<EmployeeWithDetails>(employee);
+  const [employeeData, setEmployeeData] = useState<Employee>(employee);
 
   // Convert to legacy employee object format for backward compatibility
   const legacyEmployee: LegacyEmployee = convertToLegacyFormat(employeeData);

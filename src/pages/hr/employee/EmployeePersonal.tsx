@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useEmployees } from "@/hooks/useEmployees";
-import { employeeService, updateEmployeePersonalDetails, updateEmployeeIdentityAddress } from "@/services/employeeService";
+import { 
+  employeeService, 
+  updateEmployeePersonalDetails, 
+  updateEmployeeIdentityAddress 
+} from "@/services/employeeService";
 
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,20 +45,20 @@ const EmployeePersonal = () => {
       firstName: employee?.name?.split(' ')[0] || '',
       lastName: employee?.name?.split(' ').slice(1).join(' ') || '',
       email: employee?.email || '',
-      mobilePhone: employee?.personalDetails?.mobile_phone || '',
-      phone: employee?.personalDetails?.mobile_phone || '',
-      birthPlace: employee?.personalDetails?.birth_place || '',
-      birthDate: employee?.personalDetails?.birth_date || '',
-      gender: employee?.personalDetails?.gender || '',
-      maritalStatus: employee?.personalDetails?.marital_status || '',
-      bloodType: employee?.personalDetails?.blood_type || '',
-      religion: employee?.personalDetails?.religion || '',
-      nik: employee?.identityAddress?.nik || '',
-      passportNumber: employee?.identityAddress?.passport_number || '',
-      passportExpiry: employee?.identityAddress?.passport_expiry || '',
-      postalCode: employee?.identityAddress?.postal_code || '',
-      citizenAddress: employee?.identityAddress?.citizen_address || '',
-      residentialAddress: employee?.identityAddress?.residential_address || '',
+      mobilePhone: employee?.mobile_phone || '',
+      phone: employee?.mobile_phone || '',
+      birthPlace: employee?.birth_place || '',
+      birthDate: employee?.birth_date || '',
+      gender: employee?.gender || '',
+      maritalStatus: employee?.marital_status || '',
+      bloodType: employee?.blood_type || '',
+      religion: employee?.religion || '',
+      nik: employee?.nik || '',
+      passportNumber: employee?.passport_number || '',
+      passportExpiry: employee?.passport_expiry || '',
+      postalCode: employee?.postal_code || '',
+      citizenAddress: employee?.citizen_address || '',
+      residentialAddress: employee?.address || '',
       useResidentialAddress: false
     }
   });
@@ -107,7 +110,7 @@ const EmployeePersonal = () => {
       console.log("Updating identity address:", identityAddressData);
       
       // First update the base employee data
-      await updateEmployee(baseUpdate);
+      await updateEmployee(id, baseUpdate);
       
       // Then update the personal details data
       await updateEmployeePersonalDetails(id, personalDetailsData);

@@ -27,6 +27,46 @@ export interface Employee {
   address?: string | null; // residential address
 }
 
+// For backward compatibility with existing components
+export interface EmployeeWithDetails extends Employee {
+  personalDetails?: any;
+  identityAddress?: any;
+  employment?: any;
+}
+
+export interface EmployeePersonalDetails {
+  employee_id: string;
+  mobile_phone?: string | null;
+  birth_place?: string | null;
+  birth_date?: string | null;
+  gender?: string | null;
+  marital_status?: string | null;
+  blood_type?: string | null;
+  religion?: string | null;
+}
+
+export interface EmployeeIdentityAddress {
+  employee_id: string;
+  nik?: string | null;
+  passport_number?: string | null;
+  passport_expiry?: string | null;
+  postal_code?: string | null;
+  citizen_address?: string | null;
+  residential_address?: string | null;
+}
+
+export interface EmployeeEmployment {
+  employee_id: string;
+  barcode?: string | null;
+  organization?: string | null;
+  job_position?: string | null;
+  job_level?: string | null;
+  employment_status?: string | null;
+  branch?: string | null;
+  join_date?: string | null;
+  sign_date?: string | null;
+}
+
 export interface EmployeeBasic {
   id: string;
   name: string;
@@ -95,7 +135,7 @@ export const employeeService = {
     }
   },
   
-  async fetchEmployeeById(id: string): Promise<Employee | null> {
+  async fetchEmployeeById(id: string): Promise<EmployeeWithDetails | null> {
     try {
       // Fetch the employee data
       const { data: employeeData, error: employeeError } = await supabase
@@ -107,7 +147,33 @@ export const employeeService = {
       if (employeeError) throw employeeError;
       if (!employeeData) return null;
       
-      return employeeData as Employee;
+      // For backward compatibility, create an EmployeeWithDetails structure
+      const employeeWithDetails: EmployeeWithDetails = {
+        ...employeeData as Employee,
+        personalDetails: {
+          mobile_phone: employeeData.mobile_phone,
+          birth_place: employeeData.birth_place,
+          birth_date: employeeData.birth_date,
+          gender: employeeData.gender,
+          marital_status: employeeData.marital_status,
+          blood_type: employeeData.blood_type,
+          religion: employeeData.religion
+        },
+        identityAddress: {
+          nik: employeeData.nik,
+          passport_number: employeeData.passport_number,
+          passport_expiry: employeeData.passport_expiry,
+          postal_code: employeeData.postal_code,
+          citizen_address: employeeData.citizen_address,
+          residential_address: employeeData.address
+        },
+        employment: {
+          employee_id: employeeData.employee_id,
+          // Additional employment fields would be here
+        }
+      };
+      
+      return employeeWithDetails;
     } catch (error) {
       console.error("Error fetching employee:", error);
       return null;
@@ -256,5 +322,72 @@ export const updateEmployeeProfileImage = async (
   } catch (error) {
     console.error('Error updating employee profile image:', error);
     return null;
+  }
+};
+
+// Add these wrapper functions to handle updating specific parts of employee data
+export const updateEmployeePersonalDetails = async (
+  employeeId: string,
+  data: Partial<EmployeePersonalDetails>
+): Promise<boolean> => {
+  try {
+    // Map data from EmployeePersonalDetails to Employee
+    const employeeData: Partial<Employee> = {
+      mobile_phone: data.mobile_phone,
+      birth_place: data.birth_place,
+      birth_date: data.birth_date,
+      gender: data.gender,
+      marital_status: data.marital_status,
+      blood_type: data.blood_type,
+      religion: data.religion
+    };
+    
+    const result = await employeeService.updateEmployee(employeeId, employeeData);
+    return !!result;
+  } catch (error) {
+    console.error("Error updating employee personal details:", error);
+    return false;
+  }
+};
+
+export const updateEmployeeIdentityAddress = async (
+  employeeId: string,
+  data: Partial<EmployeeIdentityAddress>
+): Promise<boolean> => {
+  try {
+    // Map data from EmployeeIdentityAddress to Employee
+    const employeeData: Partial<Employee> = {
+      nik: data.nik,
+      passport_number: data.passport_number,
+      passport_expiry: data.passport_expiry,
+      postal_code: data.postal_code,
+      citizen_address: data.citizen_address,
+      address: data.residential_address
+    };
+    
+    const result = await employeeService.updateEmployee(employeeId, employeeData);
+    return !!result;
+  } catch (error) {
+    console.error("Error updating employee identity address:", error);
+    return false;
+  }
+};
+
+export const updateEmployeeEmployment = async (
+  employeeId: string,
+  data: Partial<EmployeeEmployment>
+): Promise<boolean> => {
+  try {
+    // Map data from EmployeeEmployment to Employee
+    const employeeData: Partial<Employee> = {
+      employee_id: data.employee_id
+      // Add other employment fields when they are added to the Employee interface
+    };
+    
+    const result = await employeeService.updateEmployee(employeeId, employeeData);
+    return !!result;
+  } catch (error) {
+    console.error("Error updating employee employment:", error);
+    return false;
   }
 };

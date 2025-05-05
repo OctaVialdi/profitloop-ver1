@@ -11,8 +11,8 @@ import { format } from "date-fns";
 import { Edit, CalendarIcon, Loader2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { LegacyEmployee, EmployeeIdentityAddress } from "@/hooks/useEmployees";
-import { updateEmployeeIdentityAddress } from "@/services/employeeService";
+import { LegacyEmployee } from "@/hooks/useEmployees";
+import { EmployeeIdentityAddress, updateEmployeeIdentityAddress } from "@/services/employeeService";
 
 interface IdentityAddressSectionProps {
   employee: LegacyEmployee;
