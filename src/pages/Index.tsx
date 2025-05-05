@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogIn, UserPlus } from "lucide-react";
@@ -7,7 +6,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
       <div className="text-center px-4">
-        <h1 className="text-4xl font-bold mb-4">Multi-Tenant Application</h1>
+        <h1 className="text-4xl font-bold mb-4">ProfitLoop</h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl">
           Platform untuk mengelola dan berkolaborasi antar organisasi dengan sistem multi-tenant 
           yang aman dan terpisah.
@@ -54,7 +53,7 @@ const Index = () => {
       
       <footer className="mt-auto w-full bg-white border-t py-4">
         <div className="container mx-auto px-4 text-center text-gray-500">
-          <p>Multi-Tenant App &copy; 2023</p>
+          <p>ProfitLoop &copy; 2023</p>
         </div>
       </footer>
     </div>
