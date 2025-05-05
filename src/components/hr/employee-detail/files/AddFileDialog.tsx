@@ -18,7 +18,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Upload, X } from "lucide-react";
+import { Upload, X, FileText } from "lucide-react";
 import { fileService, fileTypes } from "@/services/fileService";
 import { toast } from "sonner";
 

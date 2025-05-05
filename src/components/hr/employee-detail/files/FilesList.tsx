@@ -83,6 +83,12 @@ export const FilesList = ({
     onFilesUpdated();
   };
 
+  // Dummy function for EmptyDataDisplay
+  const handleEdit = () => {
+    // This is just a placeholder to satisfy the prop requirement
+    // The actual action will be handled by the AddFile button in FilesSection
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4 my-4">
@@ -100,6 +106,7 @@ export const FilesList = ({
         title="No files uploaded yet"
         description="Upload files for this employee using the 'Add File' button above."
         section="files"
+        handleEdit={handleEdit}
       />
     );
   }

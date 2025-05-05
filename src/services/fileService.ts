@@ -70,9 +70,9 @@ export const fileService = {
     }
   },
 
-  async uploadEmployeeFile(uploadData: FileUploadData): Promise<EmployeeFile | null> {
+  async uploadEmployeeFile(fileUploadData: FileUploadData): Promise<EmployeeFile | null> {
     try {
-      const { employeeId, name, fileType, description, status, tags, file } = uploadData;
+      const { employeeId, name, fileType, description, status, tags, file } = fileUploadData;
       
       // Create a unique file path
       const fileExt = file.name.split('.').pop();
@@ -80,7 +80,7 @@ export const fileService = {
       const filePath = `${employeeId}/${fileName}`;
       
       // Upload file to storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { data: uploadResult, error: uploadError } = await supabase.storage
         .from('employee_files')
         .upload(filePath, file, {
           cacheControl: '3600',
