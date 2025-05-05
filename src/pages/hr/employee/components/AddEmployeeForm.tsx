@@ -93,7 +93,7 @@ const AddEmployeeForm = () => {
     const prefix = "EMP";
     const existingIds = employees
       .map(emp => emp.employee_id || '')
-      .filter(id => id.startsWith(prefix))
+      .filter(id => id && id.startsWith(prefix))
       .map(id => {
         const numPart = id.replace(prefix, '');
         return isNaN(parseInt(numPart)) ? 0 : parseInt(numPart);
@@ -138,7 +138,7 @@ const AddEmployeeForm = () => {
       const employeeData = {
         name: fullName,
         email: data.email,
-        employee_id: data.employeeId,
+        employee_id: data.employeeId, // Make sure we save the generated employee ID
         status: "Active",
         organization_id: userProfile.organization_id,
         // Personal details fields

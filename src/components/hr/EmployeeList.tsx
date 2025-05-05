@@ -74,10 +74,9 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
     leaving: 0
   };
 
-  // We need to generate employee IDs for the data
+  // Use the employee_id directly without generating new ones
   const processedData = data.map(employee => ({
-    ...employee,
-    employeeId: employee.employee_id || `EMP-${Math.floor(1000 + Math.random() * 9000)}`
+    ...employee
   }));
 
   return (

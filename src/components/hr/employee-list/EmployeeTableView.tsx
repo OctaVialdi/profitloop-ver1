@@ -108,6 +108,11 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
       );
     }
     
+    // Special handling for employeeId field - use stored employee_id
+    if (columnKey === 'employeeId') {
+      return employee.employee_id || employee.employeeId || '-';
+    }
+    
     // Special handling for date fields
     if (columnKey === 'birthDate' || columnKey === 'joinDate' || columnKey === 'signDate') {
       return formatDate(employee[columnKey]);

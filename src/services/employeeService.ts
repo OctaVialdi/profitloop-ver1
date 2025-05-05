@@ -166,6 +166,7 @@ export const employeeService = {
       const employeeWithDetails: EmployeeWithDetails = {
         ...employeeWithAllFields,
         personalDetails: {
+          employee_id: employeeWithAllFields.employee_id, // Include employee_id in personalDetails
           mobile_phone: employeeWithAllFields.mobile_phone,
           birth_place: employeeWithAllFields.birth_place,
           birth_date: employeeWithAllFields.birth_date,
@@ -206,18 +207,18 @@ export const employeeService = {
     employeeData: {
       name: string;
       organization_id: string;
+      employee_id?: string; // Make sure we can save the employee_id
       email?: string;
       role?: string;
       status?: string;
-      employee_id?: string;
       profile_image?: string;
       mobile_phone?: string | null;
       birth_place?: string | null;
       birth_date?: string | null;
       gender?: string | null;
       marital_status?: string | null;
-      religion?: string | null;
       blood_type?: string | null;
+      religion?: string | null;
       nik?: string | null;
       passport_number?: string | null;
       passport_expiry?: string | null;
@@ -236,6 +237,11 @@ export const employeeService = {
   ): Promise<Employee | null> {
     try {
       console.log("Creating employee with data:", employeeData);
+      
+      // If no employee_id is provided, generate one
+      if (!employeeData.employee_id) {
+        employeeData.employee_id = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+      }
       
       // Insert all employee data at once
       const { data: newEmployee, error: employeeError } = await supabase
@@ -602,7 +608,6 @@ export const getEmployeeEmploymentData = async (employeeId: string): Promise<any
 export const createOrUpdateEmployeeEmployment = async (
   employeeId: string,
   data: {
-    member_id?: string;
     barcode?: string | null;
     company_name?: string | null;
     organization_name?: string | null;
