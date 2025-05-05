@@ -5,9 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Employee } from "@/hooks/useEmployees";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
-import { Loader2, Plus, School } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { FormalEducation, educationService } from "@/services/educationService";
-import { AddFormalEducationDialog } from "./edit/AddFormalEducationDialog";
 import { FormalEducationList } from "./education/FormalEducationList";
 import { toast } from "sonner";
 
@@ -22,7 +21,6 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
 }) => {
   const [formalEducation, setFormalEducation] = useState<FormalEducation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("formal-education");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -46,10 +44,6 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
     fetchFormalEducation();
   }, [employee?.id]);
 
-  const handleAddSuccess = () => {
-    refreshEducationData();
-  };
-
   const refreshEducationData = async () => {
     if (!employee?.id) return;
 
@@ -63,13 +57,6 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
     } finally {
       setIsRefreshing(false);
     }
-  };
-
-  const getAddButtonText = () => {
-    if (activeTab === "formal-education") return "Add Education";
-    if (activeTab === "informal-education") return "Add Training";
-    if (activeTab === "working-experience") return "Add Experience";
-    return "Add";
   };
 
   return (
@@ -105,15 +92,6 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                 Working experience
               </TabsTrigger>
             </TabsList>
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-1"
-              onClick={() => setAddDialogOpen(true)}
-            >
-              <Plus className="h-4 w-4" /> {getAddButtonText()}
-            </Button>
           </div>
 
           <TabsContent value="formal-education" className="pt-6">
@@ -154,13 +132,6 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
             />
           </TabsContent>
         </Tabs>
-
-        <AddFormalEducationDialog
-          open={addDialogOpen}
-          employeeId={employee?.id}
-          onOpenChange={setAddDialogOpen}
-          onSuccess={handleAddSuccess}
-        />
       </div>
     </Card>
   );
