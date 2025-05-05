@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { QueryProvider } from "@/components/QueryProvider";
 
 export default function MyFilesPage() {
   const navigate = useNavigate();
@@ -74,22 +75,24 @@ export default function MyFilesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button 
-          variant="ghost" 
-          className="flex items-center gap-2" 
-          onClick={() => navigate("/hr/data")}
-        >
-          <ArrowLeft size={16} />
-          <span>Back to Employee List</span>
-        </Button>
-      </div>
+    <QueryProvider>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            className="flex items-center gap-2" 
+            onClick={() => navigate("/hr/data")}
+          >
+            <ArrowLeft size={16} />
+            <span>Back to Employee List</span>
+          </Button>
+        </div>
 
-      <EmployeeDetail 
-        employee={employee} 
-        activeTab="files" 
-      />
-    </div>
+        <EmployeeDetail 
+          employee={employee} 
+          activeTab="files" 
+        />
+      </div>
+    </QueryProvider>
   );
 }

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Table, 
@@ -30,6 +31,7 @@ import { EmptyDataDisplay } from "../EmptyDataDisplay";
 import { formatFileSize } from "@/utils/formatUtils";
 import { EditFileDialog } from "./EditFileDialog";
 import { DeleteFileDialog } from "./DeleteFileDialog";
+import { AddFileDialog } from "./AddFileDialog";
 
 interface FilesListProps {
   files: EmployeeFile[];
@@ -48,6 +50,7 @@ export const FilesList = ({
   const [fileTypeFilter, setFileTypeFilter] = useState<string | null>(null);
   const [editingFile, setEditingFile] = useState<EmployeeFile | null>(null);
   const [deletingFile, setDeletingFile] = useState<EmployeeFile | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,8 +87,8 @@ export const FilesList = ({
 
   // Dummy function for EmptyDataDisplay
   const handleEdit = () => {
-    // This is just a placeholder to satisfy the prop requirement
-    // The actual action will be handled by the AddFile button in FilesSection
+    // Open the add file dialog when the button in EmptyDataDisplay is clicked
+    setIsAddDialogOpen(true);
   };
 
   if (isLoading) {
@@ -101,13 +104,23 @@ export const FilesList = ({
 
   if (files.length === 0) {
     return (
-      <EmptyDataDisplay
-        title="No files uploaded yet"
-        description="Upload files for this employee using the 'Add File' button above."
-        section="files"
-        handleEdit={handleEdit}
-        buttonText="Add File"
-      />
+      <>
+        <EmptyDataDisplay
+          title="No files uploaded yet"
+          description="Upload files for this employee using the 'Add File' button above."
+          section="files"
+          handleEdit={handleEdit}
+          buttonText="Add File"
+          onClick={handleEdit} // Add onClick handler to open add dialog directly
+        />
+        
+        <AddFileDialog
+          employeeId={employeeId}
+          isOpen={isAddDialogOpen}
+          onClose={() => setIsAddDialogOpen(false)}
+          onUploaded={onFilesUpdated}
+        />
+      </>
     );
   }
 
@@ -217,6 +230,7 @@ export const FilesList = ({
         </Table>
       </div>
 
+      {/* Dialog components */}
       {editingFile && (
         <EditFileDialog
           file={editingFile}
@@ -234,6 +248,13 @@ export const FilesList = ({
           onDeleted={handleDeleteComplete}
         />
       )}
+      
+      <AddFileDialog
+        employeeId={employeeId}
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onUploaded={onFilesUpdated}
+      />
     </div>
   );
 };
