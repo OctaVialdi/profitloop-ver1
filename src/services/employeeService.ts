@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -10,15 +11,7 @@ export interface Employee {
   status?: string;
   employee_id?: string;
   profile_image?: string;
-  organization_id: string;
-  // Added personal fields
-  mobile_phone?: string | null;
-  birth_place?: string | null;
-  birth_date?: string | null;
-  gender?: string | null;
-  marital_status?: string | null;
-  blood_type?: string | null;
-  religion?: string | null;
+  organization_id: string; // Adding organization_id field
 }
 
 export interface EmployeeBasic {
@@ -71,7 +64,7 @@ export interface EmployeeWithDetails extends EmployeeBasic {
   personalDetails?: EmployeePersonalDetails;
   identityAddress?: EmployeeIdentityAddress;
   employment?: EmployeeEmployment;
-  organization_id: string;
+  organization_id: string; // Adding organization_id field
 }
 
 // Additional types needed based on the errors
@@ -117,7 +110,7 @@ export interface EmployeeWorkExperience {
 export const employeeService = {
   async fetchEmployees(): Promise<EmployeeWithDetails[]> {
     try {
-      // Fetch employee data including personal details directly from employees table
+      // Fetch basic employee data
       const { data: employeesData, error: employeesError } = await supabase
         .from("employees")
         .select("*");
@@ -125,35 +118,35 @@ export const employeeService = {
       if (employeesError) throw employeesError;
       if (!employeesData) return [];
 
-      // Map the employees to the expected format
-      const employeesWithDetails = employeesData.map(employee => {
-        // Extract personal details from employee record
-        const personalDetails: EmployeePersonalDetails = {
-          mobile_phone: employee.mobile_phone,
-          birth_place: employee.birth_place,
-          birth_date: employee.birth_date,
-          gender: employee.gender,
-          marital_status: employee.marital_status,
-          religion: employee.religion,
-          blood_type: employee.blood_type
-        };
+      // For each employee, fetch their related data
+      const employeesWithDetails = await Promise.all(
+        employeesData.map(async (employee) => {
+          const { data: personalData } = await supabase
+            .from("employee_personal_details")
+            .select("*")
+            .eq("employee_id", employee.id)
+            .single();
 
-        // Return employee with format expected by the UI
-        return {
-          id: employee.id,
-          name: employee.name,
-          email: employee.email || '',
-          role: employee.role,
-          status: employee.status,
-          employee_id: employee.employee_id,
-          profile_image: employee.profile_image,
-          organization_id: employee.organization_id,
-          personalDetails: personalDetails,
-          // These would be empty since we aren't storing this data in any table yet
-          identityAddress: {} as EmployeeIdentityAddress,
-          employment: {} as EmployeeEmployment
-        } as EmployeeWithDetails;
-      });
+          const { data: identityData } = await supabase
+            .from("employee_identity_addresses")
+            .select("*")
+            .eq("employee_id", employee.id)
+            .single();
+
+          const { data: employmentData } = await supabase
+            .from("employee_employment")
+            .select("*")
+            .eq("employee_id", employee.id)
+            .single();
+
+          return {
+            ...employee,
+            personalDetails: personalData || undefined,
+            identityAddress: identityData || undefined,
+            employment: employmentData || undefined
+          } as EmployeeWithDetails;
+        })
+      );
 
       return employeesWithDetails;
     } catch (error) {
@@ -164,7 +157,7 @@ export const employeeService = {
   
   async fetchEmployeeById(id: string): Promise<EmployeeWithDetails | null> {
     try {
-      // Fetch the employee data directly from employees table
+      // Fetch the basic employee data
       const { data: employeeData, error: employeeError } = await supabase
         .from("employees")
         .select("*")
@@ -174,31 +167,40 @@ export const employeeService = {
       if (employeeError) throw employeeError;
       if (!employeeData) return null;
       
-      // Extract personal details from employee record
-      const personalDetails: EmployeePersonalDetails = {
-        mobile_phone: employeeData.mobile_phone,
-        birth_place: employeeData.birth_place,
-        birth_date: employeeData.birth_date,
-        gender: employeeData.gender,
-        marital_status: employeeData.marital_status,
-        religion: employeeData.religion,
-        blood_type: employeeData.blood_type
-      };
+      // Fetch personal details
+      const { data: personalData, error: personalError } = await supabase
+        .from("employee_personal_details")
+        .select("*")
+        .eq("employee_id", id)
+        .single();
+        
+      // Fetch identity and address
+      const { data: identityData, error: identityError } = await supabase
+        .from("employee_identity_addresses")
+        .select("*")
+        .eq("employee_id", id)
+        .single();
+        
+      // Fetch employment data
+      const { data: employmentData, error: employmentError } = await supabase
+        .from("employee_employment")
+        .select("*")
+        .eq("employee_id", id)
+        .single();
       
       // Construct the employee with details
       const employee: EmployeeWithDetails = {
         id: employeeData.id,
         name: employeeData.name,
-        email: employeeData.email || '',
+        email: employeeData.email,
         role: employeeData.role,
         status: employeeData.status,
         employee_id: employeeData.employee_id,
         profile_image: employeeData.profile_image,
-        organization_id: employeeData.organization_id,
-        personalDetails: personalDetails,
-        // Empty objects for these since we don't have this data yet
-        identityAddress: {} as EmployeeIdentityAddress,
-        employment: {} as EmployeeEmployment
+        organization_id: employeeData.organization_id, // Include organization_id
+        personalDetails: personalData || undefined,
+        identityAddress: identityData || undefined,
+        employment: employmentData || undefined
       };
       
       return employee;
@@ -219,30 +221,47 @@ export const employeeService = {
       employee_id?: string;
       profile_image?: string;
     },
-    personalDetails?: Partial<EmployeePersonalDetails>
+    personalDetails?: Partial<EmployeePersonalDetails>,
+    identityAddress?: Partial<EmployeeIdentityAddress>,
+    employment?: Partial<EmployeeEmployment>
   ): Promise<EmployeeWithDetails | null> {
     try {
-      // Merge personal details with the employee data for direct insertion
-      const mergedEmployeeData = {
-        ...employeeData,
-        mobile_phone: personalDetails?.mobile_phone,
-        birth_place: personalDetails?.birth_place,
-        birth_date: personalDetails?.birth_date,
-        gender: personalDetails?.gender,
-        marital_status: personalDetails?.marital_status,
-        religion: personalDetails?.religion,
-        blood_type: personalDetails?.blood_type
-      };
-
-      // Insert employee data with personal details
+      // Insert basic employee data - FIX: ensure name and organization_id are present
       const { data: newEmployee, error: employeeError } = await supabase
         .from("employees")
-        .insert([mergedEmployeeData])
+        .insert([employeeData]) // Changed from employeeData (Partial<Employee>) to ensure required fields
         .select()
         .single();
 
       if (employeeError) throw employeeError;
       if (!newEmployee) return null;
+
+      // Insert personal details if provided
+      if (personalDetails) {
+        const { error: personalError } = await supabase
+          .from("employee_personal_details")
+          .insert([{ employee_id: newEmployee.id, ...personalDetails }]);
+
+        if (personalError) throw personalError;
+      }
+
+      // Insert identity address if provided
+      if (identityAddress) {
+        const { error: identityError } = await supabase
+          .from("employee_identity_addresses")
+          .insert([{ employee_id: newEmployee.id, ...identityAddress }]);
+
+        if (identityError) throw identityError;
+      }
+
+      // Insert employment data if provided
+      if (employment) {
+        const { error: employmentError } = await supabase
+          .from("employee_employment")
+          .insert([{ employee_id: newEmployee.id, ...employment }]);
+
+        if (employmentError) throw employmentError;
+      }
 
       // Fetch the newly created employee with all its details
       return await this.fetchEmployeeById(newEmployee.id);
@@ -287,7 +306,7 @@ export const employeeService = {
     }
   },
 
-  // Add saveFamilyMember function
+  // Add saveFamilyMember function - FIX: ensure required fields are present
   async saveFamilyMember(
     familyMember: {
       employee_id: string;
@@ -298,15 +317,14 @@ export const employeeService = {
     }
   ): Promise<EmployeeFamily | null> {
     try {
-      // For now, we'll just return the data without saving it to the database
-      // since there's no employee_family table yet.
-      console.log("Family member data would be saved:", familyMember);
-      
-      // Return the family member object with a generated ID
-      return {
-        id: crypto.randomUUID(), // Generate a random ID
-        ...familyMember
-      };
+      const { data, error } = await supabase
+        .from("employee_family")
+        .insert([familyMember]) // Changed from array to ensure proper structure
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error("Error saving family member:", error);
       return null;
@@ -319,21 +337,37 @@ export const updateEmployeePersonalDetails = async (
   data: Partial<EmployeePersonalDetails>
 ) => {
   try {
-    // Update personal details directly in the employees table
-    const { error } = await supabase
-      .from("employees")
-      .update({
-        mobile_phone: data.mobile_phone,
-        birth_place: data.birth_place,
-        birth_date: data.birth_date,
-        gender: data.gender,
-        marital_status: data.marital_status,
-        religion: data.religion,
-        blood_type: data.blood_type
-      })
-      .eq("id", employeeId);
+    // Check if the record exists first
+    const { data: existingData, error: existingError } = await supabase
+      .from("employee_personal_details")
+      .select("*")
+      .eq("employee_id", employeeId)
+      .single();
     
-    if (error) throw error;
+    if (existingError && existingError.code !== 'PGRST116') {
+      // Real error, not just "no rows returned"
+      throw existingError;
+    }
+    
+    if (!existingData) {
+      // Record doesn't exist, insert new one
+      const { error: insertError } = await supabase
+        .from("employee_personal_details")
+        .insert([{ 
+          employee_id: employeeId,
+          ...data
+        }]);
+      
+      if (insertError) throw insertError;
+    } else {
+      // Record exists, update it
+      const { error: updateError } = await supabase
+        .from("employee_personal_details")
+        .update(data)
+        .eq("employee_id", employeeId);
+      
+      if (updateError) throw updateError;
+    }
     
     return true;
   } catch (error) {
@@ -347,8 +381,38 @@ export const updateEmployeeIdentityAddress = async (
   data: Partial<EmployeeIdentityAddress>
 ) => {
   try {
-    // For now we'll just log the request since we don't have these fields in the database yet
-    console.log("Update employee identity address request:", employeeId, data);
+    // Check if the record exists first
+    const { data: existingData, error: existingError } = await supabase
+      .from("employee_identity_addresses")
+      .select("*")
+      .eq("employee_id", employeeId)
+      .single();
+    
+    if (existingError && existingError.code !== 'PGRST116') {
+      // Real error, not just "no rows returned"
+      throw existingError;
+    }
+    
+    if (!existingData) {
+      // Record doesn't exist, insert new one
+      const { error: insertError } = await supabase
+        .from("employee_identity_addresses")
+        .insert([{ 
+          employee_id: employeeId,
+          ...data
+        }]);
+      
+      if (insertError) throw insertError;
+    } else {
+      // Record exists, update it
+      const { error: updateError } = await supabase
+        .from("employee_identity_addresses")
+        .update(data)
+        .eq("employee_id", employeeId);
+      
+      if (updateError) throw updateError;
+    }
+    
     return true;
   } catch (error) {
     console.error("Error updating employee identity address:", error);
@@ -361,8 +425,38 @@ export const updateEmployeeEmployment = async (
   data: Partial<EmployeeEmployment>
 ) => {
   try {
-    // For now we'll just log the request since we don't have these fields in the database yet
-    console.log("Update employee employment request:", employeeId, data);
+    // Check if the record exists first
+    const { data: existingData, error: existingError } = await supabase
+      .from("employee_employment")
+      .select("*")
+      .eq("employee_id", employeeId)
+      .single();
+    
+    if (existingError && existingError.code !== 'PGRST116') {
+      // Real error, not just "no rows returned"
+      throw existingError;
+    }
+    
+    if (!existingData) {
+      // Record doesn't exist, insert new one
+      const { error: insertError } = await supabase
+        .from("employee_employment")
+        .insert([{ 
+          employee_id: employeeId,
+          ...data
+        }]);
+      
+      if (insertError) throw insertError;
+    } else {
+      // Record exists, update it
+      const { error: updateError } = await supabase
+        .from("employee_employment")
+        .update(data)
+        .eq("employee_id", employeeId);
+      
+      if (updateError) throw updateError;
+    }
+    
     return true;
   } catch (error) {
     console.error("Error updating employee employment:", error);

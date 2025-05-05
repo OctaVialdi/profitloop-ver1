@@ -448,10 +448,11 @@ export function useEmployees(): UseEmployeesResult {
         console.log("Adding dummy employee:", employeeData.name);
         
         try {
-          // Updated to match the new function signature with just two parameters
           const newEmployee = await employeeService.createEmployee(
             employeeData as { name: string; organization_id: string; email?: string; role?: string; status?: string; employee_id?: string; profile_image?: string; },
-            personalDetails
+            personalDetails,
+            identityAddress,
+            employment
           );
           
           if (newEmployee) {
@@ -487,12 +488,16 @@ export function useEmployees(): UseEmployeesResult {
 
   const addEmployee = async (
     employeeData: Partial<Employee>, 
-    personalDetails?: Partial<EmployeePersonalDetails>
+    personalDetails?: any, 
+    identityAddress?: any, 
+    employment?: any
   ) => {
     try {
       console.log("Adding employee with data:", {
         employeeData,
-        personalDetails
+        personalDetails,
+        identityAddress,
+        employment
       });
 
       // Get current user's organization ID
@@ -522,10 +527,11 @@ export function useEmployees(): UseEmployeesResult {
         profile_image: employeeData.profile_image
       };
 
-      // Updated to match the new function signature in employeeService
       const newEmployee = await employeeService.createEmployee(
         completeEmployeeData, 
-        personalDetails
+        personalDetails,
+        identityAddress,
+        employment
       );
       
       if (newEmployee) {
