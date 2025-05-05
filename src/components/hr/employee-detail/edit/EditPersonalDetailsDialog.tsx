@@ -24,7 +24,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { LegacyEmployee, EmployeePersonalDetails } from "@/hooks/useEmployees";
-import { updateEmployeePersonalDetails } from "@/services/employeeService";
+import { updateEmployeePersonalDetails, updateEmployeeBasicInfo } from "@/services/employeeService";
 
 interface EditPersonalDetailsDialogProps {
   open: boolean;
@@ -40,6 +40,8 @@ export const EditPersonalDetailsDialog = ({
   onSave
 }: EditPersonalDetailsDialogProps) => {
   const [formValues, setFormValues] = useState({
+    name: employee.name || "",
+    email: employee.email || "",
     mobilePhone: employee.mobilePhone || "",
     birthPlace: employee.birthPlace || "",
     gender: employee.gender || "",
@@ -67,6 +69,13 @@ export const EditPersonalDetailsDialog = ({
     setIsLoading(true);
     
     try {
+      // First update basic info (name, email)
+      await updateEmployeeBasicInfo(employee.id, {
+        name: formValues.name,
+        email: formValues.email
+      });
+      
+      // Then update personal details
       const updatedData: Partial<EmployeePersonalDetails> = {
         mobile_phone: formValues.mobilePhone,
         birth_place: formValues.birthPlace,
@@ -97,6 +106,30 @@ export const EditPersonalDetailsDialog = ({
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
+          {/* Name and Email fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full name</Label>
+              <Input
+                id="name"
+                value={formValues.name}
+                onChange={handleInputChange}
+                placeholder="Enter full name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formValues.email}
+                onChange={handleInputChange}
+                placeholder="Enter email address"
+              />
+            </div>
+          </div>
+          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="mobilePhone">Mobile phone</Label>

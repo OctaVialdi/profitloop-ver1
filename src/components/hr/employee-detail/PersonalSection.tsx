@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Edit, CalendarIcon, Loader2, Check, X } from "lucide-react";
 import { LegacyEmployee, EmployeePersonalDetails } from "@/hooks/useEmployees";
-import { updateEmployeePersonalDetails } from "@/services/employeeService";
+import { updateEmployeePersonalDetails, updateEmployeeBasicInfo } from "@/services/employeeService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +29,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   
   // Form state
   const [formValues, setFormValues] = useState({
+    name: employee.name || "",
+    email: employee.email || "",
     mobilePhone: employee.mobilePhone || "",
     birthPlace: employee.birthPlace || "",
     gender: employee.gender || "",
@@ -54,6 +56,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
     if (isEditing) {
       // Cancel editing - reset form values
       setFormValues({
+        name: employee.name || "",
+        email: employee.email || "",
         mobilePhone: employee.mobilePhone || "",
         birthPlace: employee.birthPlace || "",
         gender: employee.gender || "",
@@ -70,6 +74,13 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
     setIsLoading(true);
     
     try {
+      // First update basic info (name, email)
+      await updateEmployeeBasicInfo(employee.id, {
+        name: formValues.name,
+        email: formValues.email
+      });
+      
+      // Then update personal details
       const updatedData: Partial<EmployeePersonalDetails> = {
         mobile_phone: formValues.mobilePhone,
         birth_place: formValues.birthPlace,
@@ -150,6 +161,28 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
               <div className="p-4 space-y-5">
                 {/* Editing Form */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Name and Email fields */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full name</Label>
+                    <Input
+                      id="name"
+                      value={formValues.name}
+                      onChange={handleInputChange}
+                      placeholder="Enter full name"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formValues.email}
+                      onChange={handleInputChange}
+                      placeholder="Enter email address"
+                    />
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="mobilePhone">Mobile phone</Label>
                     <Input

@@ -444,3 +444,29 @@ export const updateEmployeeEmployment = async (
     return false;
   }
 };
+
+// Add function to update employee basic information (name, email)
+export const updateEmployeeBasicInfo = async (
+  employeeId: string,
+  data: { name?: string; email?: string }
+): Promise<boolean> => {
+  try {
+    console.log("Updating employee basic info:", data);
+    
+    // Update the employee record with the new basic info
+    const { error } = await supabase
+      .from('employees')
+      .update({
+        name: data.name,
+        email: data.email
+      })
+      .eq('id', employeeId);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating employee basic info:', error);
+    return false;
+  }
+};
