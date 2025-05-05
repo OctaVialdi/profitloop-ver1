@@ -91,8 +91,12 @@ export interface EmployeeFamily {
   employee_id: string;
   name: string;
   relationship?: string | null;
-  birth_date?: string | null;
+  age?: number | null;
   occupation?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  gender?: string | null;
+  is_emergency_contact?: boolean;
 }
 
 export interface EmployeeEmergencyContact {
@@ -467,6 +471,71 @@ export const updateEmployeeBasicInfo = async (
     return true;
   } catch (error) {
     console.error('Error updating employee basic info:', error);
+    return false;
+  }
+};
+
+// Add these functions for the family members CRUD operations
+export const getFamilyMembers = async (employeeId: string): Promise<EmployeeFamily[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('employee_family_members')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching family members:', error);
+    return [];
+  }
+};
+
+export const addFamilyMember = async (familyMember: EmployeeFamily): Promise<EmployeeFamily | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('employee_family_members')
+      .insert([familyMember])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error adding family member:', error);
+    throw error;
+  }
+};
+
+export const updateFamilyMember = async (id: string, updates: Partial<EmployeeFamily>): Promise<EmployeeFamily | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('employee_family_members')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating family member:', error);
+    throw error;
+  }
+};
+
+export const deleteFamilyMember = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('employee_family_members')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting family member:', error);
     return false;
   }
 };

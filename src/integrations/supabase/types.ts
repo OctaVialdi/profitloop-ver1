@@ -51,6 +51,59 @@ export type Database = {
           },
         ]
       }
+      employee_family_members: {
+        Row: {
+          address: string | null
+          age: number | null
+          created_at: string
+          employee_id: string
+          gender: string | null
+          id: string
+          is_emergency_contact: boolean | null
+          name: string
+          occupation: string | null
+          phone: string | null
+          relationship: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          created_at?: string
+          employee_id: string
+          gender?: string | null
+          id?: string
+          is_emergency_contact?: boolean | null
+          name: string
+          occupation?: string | null
+          phone?: string | null
+          relationship?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          created_at?: string
+          employee_id?: string
+          gender?: string | null
+          id?: string
+          is_emergency_contact?: boolean | null
+          name?: string
+          occupation?: string | null
+          phone?: string | null
+          relationship?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_family_members_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address: string | null
