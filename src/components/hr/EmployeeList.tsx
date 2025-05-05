@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { LegacyEmployee } from '@/hooks/useEmployees';
 import { EmployeeColumnState, ColumnOrder } from './EmployeeColumnManager';

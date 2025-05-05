@@ -25,6 +25,15 @@ export interface Employee {
   postal_code?: string | null;
   citizen_address?: string | null;
   address?: string | null; // residential address
+
+  // Employment fields (these would be in the database eventually)
+  barcode?: string | null;
+  job_position?: string | null;
+  job_level?: string | null;
+  employment_status?: string | null;
+  branch?: string | null;
+  join_date?: string | null;
+  sign_date?: string | null;
 }
 
 // For backward compatibility with existing components
@@ -169,7 +178,13 @@ export const employeeService = {
         },
         employment: {
           employee_id: employeeData.employee_id,
-          // Additional employment fields would be here
+          barcode: employeeData.barcode,
+          job_position: employeeData.job_position,
+          job_level: employeeData.job_level,
+          employment_status: employeeData.employment_status,
+          branch: employeeData.branch,
+          join_date: employeeData.join_date,
+          sign_date: employeeData.sign_date
         }
       };
       
@@ -203,6 +218,14 @@ export const employeeService = {
       postal_code?: string | null;
       citizen_address?: string | null;
       address?: string | null;
+      // Employment fields
+      barcode?: string | null;
+      job_position?: string | null;
+      job_level?: string | null;
+      employment_status?: string | null;
+      branch?: string | null;
+      join_date?: string | null;
+      sign_date?: string | null;
     }
   ): Promise<Employee | null> {
     try {
@@ -380,8 +403,14 @@ export const updateEmployeeEmployment = async (
   try {
     // Map data from EmployeeEmployment to Employee
     const employeeData: Partial<Employee> = {
-      employee_id: data.employee_id
-      // Add other employment fields when they are added to the Employee interface
+      employee_id: data.employee_id,
+      barcode: data.barcode,
+      job_position: data.job_position,
+      job_level: data.job_level,
+      employment_status: data.employment_status,
+      branch: data.branch,
+      join_date: data.join_date,
+      sign_date: data.sign_date
     };
     
     const result = await employeeService.updateEmployee(employeeId, employeeData);

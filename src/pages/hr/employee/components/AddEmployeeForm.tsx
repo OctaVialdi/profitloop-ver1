@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -113,7 +112,7 @@ const AddEmployeeForm = () => {
   };
 
   // Handle save changes
-  const onSubmit = async (data: any) => {
+  const handleSave = async (data: any) => {
     if (!userProfile?.organization_id) {
       toast.error("No organization found. Please refresh the page or contact support.");
       return;
@@ -135,40 +134,30 @@ const AddEmployeeForm = () => {
         return;
       }
 
-      // Prepare employee data with explicit organization_id
+      // Prepare employee data with all fields combined into a single object
       const employeeData = {
         name: fullName,
         email: data.email,
         employee_id: data.employeeId,
         status: "Active",
-        organization_id: userProfile.organization_id
-      };
-
-      // Prepare personal details data
-      const personalDetails = {
+        organization_id: userProfile.organization_id,
+        // Personal details fields
         mobile_phone: data.mobilePhone,
         birth_place: data.birthPlace,
         birth_date: data.birthDate || undefined,
         gender: data.gender,
         marital_status: data.maritalStatus,
         religion: data.religion,
-        blood_type: data.bloodType
-      };
-
-      // Prepare identity address data - remove dashes from NIK for storage
-      const identityAddress = {
+        blood_type: data.bloodType,
+        // Identity address fields
         nik: data.nik ? data.nik.replace(/-/g, '') : '',
         passport_number: data.passportNumber,
         passport_expiry: data.passportExpiry || undefined,
         postal_code: data.postalCode,
         citizen_address: data.citizenAddress,
-        residential_address: data.residentialAddress
-      };
-
-      // Prepare employment data
-      const employment = {
+        address: data.residentialAddress,
+        // Employment fields
         barcode: data.barcode,
-        organization: data.organization,
         job_position: data.jobPosition,
         job_level: data.jobLevel,
         employment_status: data.employmentStatus,
@@ -177,21 +166,10 @@ const AddEmployeeForm = () => {
         sign_date: data.signDate || undefined
       };
 
-      console.log("Creating employee with data:", { 
-        employeeData, 
-        personalDetails, 
-        identityAddress, 
-        employment,
-        organization_id: userProfile.organization_id
-      });
+      console.log("Creating employee with data:", employeeData);
       
-      // Create employee using the hook method
-      const result = await addEmployee(
-        employeeData,
-        personalDetails,
-        identityAddress,
-        employment
-      );
+      // Create employee using the hook method with the combined object
+      const result = await addEmployee(employeeData);
       
       if (!result) {
         toast.error("Failed to create employee");
@@ -236,7 +214,7 @@ const AddEmployeeForm = () => {
         </TabsList>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} id="employeeForm" className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSave)} id="employeeForm" className="space-y-6">
             <TabsContent value="basic-info" className="pt-6">
               {/* Added fixed height with vertical scrolling */}
               <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">

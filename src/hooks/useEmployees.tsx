@@ -27,7 +27,7 @@ export interface LegacyEmployee {
   postalCode?: string;
   citizenAddress?: string;
   address?: string; // residential address
-  organization_id?: string;
+  organization_id: string; // Make this required to match Employee type
   // Legacy properties for backward compatibility
   employeeId?: string;
   barcode?: string;
@@ -71,17 +71,16 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
     organization_id: employee.organization_id,
     // Legacy properties
     employeeId: employee.employee_id || '',
-    // These are not in the current Employee type, but included for backward compatibility
-    barcode: '',
-    branch: '',
+    barcode: employee.barcode || '',
+    branch: employee.branch || '',
     organization: employee.organization_id || '',
-    jobPosition: '',
-    jobLevel: '',
+    jobPosition: employee.job_position || '',
+    jobLevel: employee.job_level || '',
     employmentStatus: employee.status || 'Active',
-    joinDate: '',
-    endDate: '',
-    signDate: '',
-    resignDate: ''
+    joinDate: employee.join_date || '',
+    endDate: '', // No field in new model
+    signDate: employee.sign_date || '',
+    resignDate: '' // No field in new model
   };
 };
 
@@ -108,7 +107,15 @@ export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> 
     postal_code: employee.postalCode || null,
     citizen_address: employee.citizenAddress || null,
     address: employee.address || null,
-    organization_id: employee.organization_id || ''
+    organization_id: employee.organization_id,
+    // Employment fields
+    barcode: employee.barcode || null,
+    job_position: employee.jobPosition || null,
+    job_level: employee.jobLevel || null,
+    employment_status: employee.employmentStatus || null,
+    branch: employee.branch || null,
+    join_date: employee.joinDate || null,
+    sign_date: employee.signDate || null
   };
 };
 
