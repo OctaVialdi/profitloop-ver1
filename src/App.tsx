@@ -3,14 +3,17 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppRoutes } from "./routes";
 import TrialProtection from "./components/TrialProtection";
+import { QueryProvider } from "./components/QueryProvider";
 
 function App() {
   return (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        <TrialProtection>
-          <AppRoutes />
-        </TrialProtection>
+        <QueryProvider>
+          <TrialProtection>
+            <AppRoutes />
+          </TrialProtection>
+        </QueryProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
