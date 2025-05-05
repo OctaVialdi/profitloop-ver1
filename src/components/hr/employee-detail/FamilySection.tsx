@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { EmployeeFamily, getFamilyMembers, addFamilyMember, updateFamilyMember, deleteFamilyMember } from "@/services/employeeService";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface FamilySectionProps {
   employee: LegacyEmployee;
@@ -44,6 +46,7 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
   const [selectedMember, setSelectedMember] = useState<EmployeeFamily | null>(null);
   const [familyMembers, setFamilyMembers] = useState<EmployeeFamily[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Form state
   const [formValues, setFormValues] = useState({
@@ -63,11 +66,14 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
 
   const loadFamilyMembers = async () => {
     setIsDataLoading(true);
+    setErrorMessage(null);
     try {
+      console.log("Loading family members for employee ID:", employee.id);
       const data = await getFamilyMembers(employee.id);
       setFamilyMembers(data);
     } catch (error) {
       console.error("Failed to load family members:", error);
+      setErrorMessage("Failed to load family members. Please try again later.");
       toast.error("Failed to load family members");
     } finally {
       setIsDataLoading(false);
@@ -99,6 +105,7 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
       isEmergencyContact: false
     });
     setSelectedMember(null);
+    setErrorMessage(null);
   };
 
   const openAddDialog = () => {
@@ -133,6 +140,7 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
     }
 
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const familyData: EmployeeFamily = {
         employee_id: employee.id,
@@ -146,6 +154,7 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
         is_emergency_contact: formValues.isEmergencyContact
       };
 
+      console.log("Saving family member data:", familyData);
       const result = await addFamilyMember(familyData);
       
       if (result) {
@@ -154,9 +163,11 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
         setIsAddDialogOpen(false);
         resetForm();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to add family member:", error);
-      toast.error("Failed to add family member");
+      const errorMsg = error.message || "Failed to add family member";
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +180,7 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
     }
 
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const updatedData: Partial<EmployeeFamily> = {
         name: formValues.name,
@@ -181,6 +193,7 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
         is_emergency_contact: formValues.isEmergencyContact
       };
 
+      console.log("Updating family member data:", updatedData);
       const result = await updateFamilyMember(selectedMember.id!, updatedData);
       
       if (result) {
@@ -191,9 +204,11 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
         setIsEditDialogOpen(false);
         resetForm();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update family member:", error);
-      toast.error("Failed to update family member");
+      const errorMsg = error.message || "Failed to update family member";
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -203,6 +218,7 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
     if (!selectedMember) return;
 
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const success = await deleteFamilyMember(selectedMember.id!);
       
@@ -211,9 +227,11 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
         toast.success("Family member deleted successfully");
         setIsDeleteDialogOpen(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete family member:", error);
-      toast.error("Failed to delete family member");
+      const errorMsg = error.message || "Failed to delete family member";
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -222,6 +240,13 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
   // Common dialog form for both add and edit
   const renderDialogForm = () => (
     <div className="grid gap-4 py-4">
+      {errorMessage && (
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Full name *</Label>

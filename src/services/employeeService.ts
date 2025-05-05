@@ -475,16 +475,23 @@ export const updateEmployeeBasicInfo = async (
   }
 };
 
-// Add these functions for the family members CRUD operations
+// Add these functions for the family members CRUD operations with improved error handling
 export const getFamilyMembers = async (employeeId: string): Promise<EmployeeFamily[]> => {
   try {
+    console.log("Fetching family members for employee:", employeeId);
+    
     const { data, error } = await supabase
       .from('employee_family_members')
-      .select('id, employee_id, name, relationship, age, occupation, phone, address, gender, is_emergency_contact, created_at, updated_at')
+      .select('*')
       .eq('employee_id', employeeId)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching family members:', error);
+      throw error;
+    }
+    
+    console.log("Retrieved family members:", data);
     return data || [];
   } catch (error) {
     console.error('Error fetching family members:', error);
@@ -494,6 +501,8 @@ export const getFamilyMembers = async (employeeId: string): Promise<EmployeeFami
 
 export const addFamilyMember = async (familyMember: EmployeeFamily): Promise<EmployeeFamily | null> => {
   try {
+    console.log("Adding family member:", familyMember);
+    
     // Use explicit table name for the employee_id column to avoid ambiguity
     const { data, error } = await supabase
       .from('employee_family_members')
@@ -508,10 +517,15 @@ export const addFamilyMember = async (familyMember: EmployeeFamily): Promise<Emp
         gender: familyMember.gender,
         is_emergency_contact: familyMember.is_emergency_contact
       }])
-      .select('id, employee_id, name, relationship, age, occupation, phone, address, gender, is_emergency_contact, created_at, updated_at')
+      .select('*')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error adding family member:', error);
+      throw error;
+    }
+    
+    console.log("Family member added successfully:", data);
     return data;
   } catch (error) {
     console.error('Error adding family member:', error);
@@ -521,14 +535,21 @@ export const addFamilyMember = async (familyMember: EmployeeFamily): Promise<Emp
 
 export const updateFamilyMember = async (id: string, updates: Partial<EmployeeFamily>): Promise<EmployeeFamily | null> => {
   try {
+    console.log("Updating family member:", id, updates);
+    
     const { data, error } = await supabase
       .from('employee_family_members')
       .update(updates)
       .eq('id', id)
-      .select('id, employee_id, name, relationship, age, occupation, phone, address, gender, is_emergency_contact, created_at, updated_at')
+      .select('*')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating family member:', error);
+      throw error;
+    }
+    
+    console.log("Family member updated successfully:", data);
     return data;
   } catch (error) {
     console.error('Error updating family member:', error);
@@ -538,12 +559,19 @@ export const updateFamilyMember = async (id: string, updates: Partial<EmployeeFa
 
 export const deleteFamilyMember = async (id: string): Promise<boolean> => {
   try {
+    console.log("Deleting family member:", id);
+    
     const { error } = await supabase
       .from('employee_family_members')
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting family member:', error);
+      throw error;
+    }
+    
+    console.log("Family member deleted successfully");
     return true;
   } catch (error) {
     console.error('Error deleting family member:', error);
