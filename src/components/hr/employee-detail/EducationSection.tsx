@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Employee } from "@/hooks/useEmployees";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
-import { Plus, School } from "lucide-react";
+import { Loader2, Plus, School } from "lucide-react";
 import { FormalEducation, educationService } from "@/services/educationService";
 import { AddFormalEducationDialog } from "./edit/AddFormalEducationDialog";
 import { FormalEducationList } from "./education/FormalEducationList";
@@ -23,6 +23,8 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   const [formalEducation, setFormalEducation] = useState<FormalEducation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("formal-education");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchFormalEducation = async () => {
     if (!employee?.id) return;
@@ -39,22 +41,58 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
     }
   };
 
+  // Initial data fetch
   useEffect(() => {
     fetchFormalEducation();
   }, [employee?.id]);
 
   const handleAddSuccess = () => {
-    fetchFormalEducation();
+    refreshEducationData();
+  };
+
+  const refreshEducationData = async () => {
+    if (!employee?.id) return;
+
+    setIsRefreshing(true);
+    try {
+      const educationData = await educationService.getFormalEducation(employee.id);
+      setFormalEducation(educationData);
+    } catch (error) {
+      console.error("Failed to refresh formal education:", error);
+      toast.error("Failed to refresh education data");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const getAddButtonText = () => {
+    if (activeTab === "formal-education") return "Add Education";
+    if (activeTab === "informal-education") return "Add Training";
+    if (activeTab === "working-experience") return "Add Experience";
+    return "Add";
   };
 
   return (
     <Card>
       <div className="p-6">
-        <div className="mb-6">
+        <div className="mb-6 flex justify-between items-center">
           <h2 className="text-2xl font-bold">Education & experience</h2>
+          
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={refreshEducationData}
+            disabled={isLoading || isRefreshing}
+          >
+            {isRefreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Refresh"
+            )}
+          </Button>
         </div>
 
-        <Tabs defaultValue="formal-education">
+        <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="formal-education">
           <div className="flex justify-between items-center mb-2">
             <TabsList className="border-b w-full justify-start rounded-none space-x-6 px-0">
               <TabsTrigger value="formal-education" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none pb-2">
@@ -74,13 +112,20 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
               className="gap-1"
               onClick={() => setAddDialogOpen(true)}
             >
-              <Plus className="h-4 w-4" /> Add
+              <Plus className="h-4 w-4" /> {getAddButtonText()}
             </Button>
           </div>
 
           <TabsContent value="formal-education" className="pt-6">
-            {formalEducation.length > 0 ? (
-              <FormalEducationList educationList={formalEducation} />
+            {isLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : formalEducation.length > 0 ? (
+              <FormalEducationList 
+                educationList={formalEducation} 
+                onEducationUpdated={refreshEducationData} 
+              />
             ) : (
               <EmptyDataDisplay 
                 title="There is no data to display"

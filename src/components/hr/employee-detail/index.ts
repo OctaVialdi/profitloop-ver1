@@ -19,6 +19,8 @@ export { EditPersonalDetailsDialog } from './edit/EditPersonalDetailsDialog';
 export { EditIdentityAddressDialog } from './edit/EditIdentityAddressDialog';
 export { EditEmploymentDialog } from './edit/EditEmploymentDialog';
 export { AddFormalEducationDialog } from './edit/AddFormalEducationDialog';
+export { EditFormalEducationDialog } from './edit/EditFormalEducationDialog';
+export { DeleteFormalEducationDialog } from './edit/DeleteFormalEducationDialog';
 
 // Export utility components
 export { EmptyDataDisplay } from './EmptyDataDisplay';
