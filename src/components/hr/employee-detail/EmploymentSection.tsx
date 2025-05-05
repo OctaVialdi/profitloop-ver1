@@ -31,14 +31,13 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   
   // Form state
   const [formValues, setFormValues] = useState({
-    member_id: "",
-    barcode: "",
     company_name: "PT CHEMISTRY BEAUTY INDONESIA",
     organization_name: "",
     jobPosition: "",
     jobLevel: "",
     employmentStatus: "",
     branch: "",
+    barcode: "",
   });
 
   const [joinDate, setJoinDate] = useState<Date | undefined>(undefined);
@@ -53,14 +52,13 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
         if (data) {
           setEmploymentData(data);
           setFormValues({
-            member_id: data.member_id || "",
-            barcode: data.barcode || "",
             company_name: data.company_name || "PT CHEMISTRY BEAUTY INDONESIA",
             organization_name: data.organization_name || "",
             jobPosition: data.job_position || "",
             jobLevel: data.job_level || "",
             employmentStatus: data.employment_status || "",
             branch: data.branch || "",
+            barcode: data.barcode || "",
           });
           setJoinDate(data.join_date ? new Date(data.join_date) : undefined);
           setSignDate(data.sign_date ? new Date(data.sign_date) : undefined);
@@ -91,14 +89,13 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
       // Cancel editing - reset form values
       if (employmentData) {
         setFormValues({
-          member_id: employmentData.member_id || "",
-          barcode: employmentData.barcode || "",
           company_name: employmentData.company_name || "PT CHEMISTRY BEAUTY INDONESIA",
           organization_name: employmentData.organization_name || "",
           jobPosition: employmentData.job_position || "",
           jobLevel: employmentData.job_level || "",
           employmentStatus: employmentData.employment_status || "",
           branch: employmentData.branch || "",
+          barcode: employmentData.barcode || "",
         });
         setJoinDate(employmentData.join_date ? new Date(employmentData.join_date) : undefined);
         setSignDate(employmentData.sign_date ? new Date(employmentData.sign_date) : undefined);
@@ -221,14 +218,13 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                 {/* Editing Form */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="member_id">Member ID</Label>
+                    <Label htmlFor="employeeId">Member ID</Label>
                     <Input
-                      id="member_id"
-                      value={formValues.member_id}
+                      id="employeeId"
+                      value={employee.employee_id || employee.employeeId || "-"}
                       readOnly
                       disabled
                       className="bg-gray-100"
-                      placeholder="Auto-generated"
                     />
                   </div>
                   
@@ -372,7 +368,7 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Member ID</p>
-                    <p className="font-medium">{employmentData?.member_id || "-"}</p>
+                    <p className="font-medium">{employee.employee_id || employee.employeeId || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Barcode</p>
