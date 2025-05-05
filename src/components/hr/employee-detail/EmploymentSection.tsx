@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Edit, CalendarIcon, Loader2, Check, X } from "lucide-react";
 import { LegacyEmployee } from "@/hooks/useEmployees";
-import { updateEmployeeEmployment } from "@/services/employeeService";
+import { updateEmployeeEmployment, getEmployeeEmploymentData, createOrUpdateEmployeeEmployment } from "@/services/employeeService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -25,25 +26,56 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   // State for inline editing
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [employmentData, setEmploymentData] = useState<any>(null);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   
   // Form state
   const [formValues, setFormValues] = useState({
-    employeeId: employee.employeeId || "",
-    barcode: employee.barcode || "",
-    organization: employee.organization || "",
-    jobPosition: employee.jobPosition || "",
-    jobLevel: employee.jobLevel || "",
-    employmentStatus: employee.employmentStatus || "",
-    branch: employee.branch || "",
+    member_id: "",
+    barcode: "",
+    company_name: "PT CHEMISTRY BEAUTY INDONESIA",
+    organization_name: "",
+    jobPosition: "",
+    jobLevel: "",
+    employmentStatus: "",
+    branch: "",
   });
 
-  const [joinDate, setJoinDate] = useState<Date | undefined>(
-    employee.joinDate ? new Date(employee.joinDate) : undefined
-  );
+  const [joinDate, setJoinDate] = useState<Date | undefined>(undefined);
+  const [signDate, setSignDate] = useState<Date | undefined>(undefined);
 
-  const [signDate, setSignDate] = useState<Date | undefined>(
-    employee.signDate ? new Date(employee.signDate) : undefined
-  );
+  // Fetch employment data
+  useEffect(() => {
+    const fetchEmploymentData = async () => {
+      setIsLoadingData(true);
+      try {
+        const data = await getEmployeeEmploymentData(employee.id);
+        if (data) {
+          setEmploymentData(data);
+          setFormValues({
+            member_id: data.member_id || "",
+            barcode: data.barcode || "",
+            company_name: data.company_name || "PT CHEMISTRY BEAUTY INDONESIA",
+            organization_name: data.organization_name || "",
+            jobPosition: data.job_position || "",
+            jobLevel: data.job_level || "",
+            employmentStatus: data.employment_status || "",
+            branch: data.branch || "",
+          });
+          setJoinDate(data.join_date ? new Date(data.join_date) : undefined);
+          setSignDate(data.sign_date ? new Date(data.sign_date) : undefined);
+        }
+      } catch (error) {
+        console.error("Error fetching employment data:", error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    if (employee && employee.id) {
+      fetchEmploymentData();
+    }
+  }, [employee]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -57,17 +89,20 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   const toggleEditMode = () => {
     if (isEditing) {
       // Cancel editing - reset form values
-      setFormValues({
-        employeeId: employee.employeeId || "",
-        barcode: employee.barcode || "",
-        organization: employee.organization || "",
-        jobPosition: employee.jobPosition || "",
-        jobLevel: employee.jobLevel || "",
-        employmentStatus: employee.employmentStatus || "",
-        branch: employee.branch || "",
-      });
-      setJoinDate(employee.joinDate ? new Date(employee.joinDate) : undefined);
-      setSignDate(employee.signDate ? new Date(employee.signDate) : undefined);
+      if (employmentData) {
+        setFormValues({
+          member_id: employmentData.member_id || "",
+          barcode: employmentData.barcode || "",
+          company_name: employmentData.company_name || "PT CHEMISTRY BEAUTY INDONESIA",
+          organization_name: employmentData.organization_name || "",
+          jobPosition: employmentData.job_position || "",
+          jobLevel: employmentData.job_level || "",
+          employmentStatus: employmentData.employment_status || "",
+          branch: employmentData.branch || "",
+        });
+        setJoinDate(employmentData.join_date ? new Date(employmentData.join_date) : undefined);
+        setSignDate(employmentData.sign_date ? new Date(employmentData.sign_date) : undefined);
+      }
     }
     setIsEditing(!isEditing);
   };
@@ -78,9 +113,9 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     try {
       // Prepare data for API call
       const updatedData = {
-        employee_id: formValues.employeeId,
         barcode: formValues.barcode,
-        organization: formValues.organization,
+        company_name: formValues.company_name,
+        organization_name: formValues.organization_name,
         job_position: formValues.jobPosition,
         job_level: formValues.jobLevel,
         employment_status: formValues.employmentStatus,
@@ -90,12 +125,19 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
       };
       
       // Use our service function to update employment data
-      await updateEmployeeEmployment(employee.id, updatedData);
+      const success = await createOrUpdateEmployeeEmployment(employee.id, updatedData);
       
-      toast.success("Employment data updated successfully");
-      setIsEditing(false);
-      // Refresh data
-      handleEdit("refresh");
+      if (success) {
+        toast.success("Employment data updated successfully");
+        setIsEditing(false);
+        // Refresh data
+        const updatedData = await getEmployeeEmploymentData(employee.id);
+        if (updatedData) {
+          setEmploymentData(updatedData);
+        }
+      } else {
+        toast.error("Failed to update employment data");
+      }
     } catch (error) {
       console.error("Failed to update employment data:", error);
       toast.error("Failed to update employment data");
@@ -103,6 +145,21 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
       setIsLoading(false);
     }
   };
+  
+  if (isLoadingData) {
+    return (
+      <Card>
+        <div className="p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold">Employment</h2>
+          </div>
+          <div className="flex items-center justify-center h-40">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        </div>
+      </Card>
+    );
+  }
   
   return (
     <Card>
@@ -164,12 +221,14 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                 {/* Editing Form */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="employeeId">Employee ID</Label>
+                    <Label htmlFor="member_id">Member ID</Label>
                     <Input
-                      id="employeeId"
-                      value={formValues.employeeId}
-                      onChange={handleInputChange}
-                      placeholder="Enter employee ID"
+                      id="member_id"
+                      value={formValues.member_id}
+                      readOnly
+                      disabled
+                      className="bg-gray-100"
+                      placeholder="Auto-generated"
                     />
                   </div>
                   
@@ -184,10 +243,20 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="organization">Organization name</Label>
+                    <Label htmlFor="company_name">Company name</Label>
                     <Input
-                      id="organization"
-                      value={formValues.organization}
+                      id="company_name"
+                      value={formValues.company_name}
+                      onChange={handleInputChange}
+                      placeholder="Enter company name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="organization_name">Organization name</Label>
+                    <Input
+                      id="organization_name"
+                      value={formValues.organization_name}
                       onChange={handleInputChange}
                       placeholder="Enter organization name"
                     />
@@ -299,46 +368,46 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                   <div>
                     <p className="text-sm text-gray-500">Company name</p>
-                    <p className="font-medium">PT CHEMISTRY BEAUTY INDONESIA</p>
+                    <p className="font-medium">{employmentData?.company_name || "PT CHEMISTRY BEAUTY INDONESIA"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Employee ID</p>
-                    <p className="font-medium">{employee.employeeId || "-"}</p>
+                    <p className="text-sm text-gray-500">Member ID</p>
+                    <p className="font-medium">{employmentData?.member_id || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Barcode</p>
-                    <p className="font-medium">{employee.barcode || "-"}</p>
+                    <p className="font-medium">{employmentData?.barcode || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Organization name</p>
-                    <p className="font-medium">{employee.organization || "-"}</p>
+                    <p className="font-medium">{employmentData?.organization_name || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Job position</p>
-                    <p className="font-medium">{employee.jobPosition || "-"}</p>
+                    <p className="font-medium">{employmentData?.job_position || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Job level</p>
-                    <p className="font-medium">{employee.jobLevel || "-"}</p>
+                    <p className="font-medium">{employmentData?.job_level || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Employment status</p>
-                    <p className="font-medium">{employee.employmentStatus || "Permanent"}</p>
+                    <p className="font-medium">{employmentData?.employment_status || "Permanent"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Branch</p>
-                    <p className="font-medium">{employee.branch || "Pusat"}</p>
+                    <p className="font-medium">{employmentData?.branch || "Pusat"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Join date</p>
                     <p className="font-medium">
-                      {employee.joinDate || "-"}
-                      {employee.joinDate && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">14 Year 5 Month 24 Day</span>}
+                      {employmentData?.join_date || "-"}
+                      {employmentData?.join_date && <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full">14 Year 5 Month 24 Day</span>}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Sign date</p>
-                    <p className="font-medium">{employee.signDate || "-"}</p>
+                    <p className="font-medium">{employmentData?.sign_date || "-"}</p>
                   </div>
                 </div>
               </div>

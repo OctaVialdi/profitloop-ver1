@@ -577,3 +577,87 @@ export const deleteFamilyMember = async (id: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Add these functions to work with the employee_employment table
+export const getEmployeeEmploymentData = async (employeeId: string): Promise<any> => {
+  try {
+    const { data, error } = await supabase
+      .from('employee_employment')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching employee employment data:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch employee employment data:", error);
+    return null;
+  }
+};
+
+export const createOrUpdateEmployeeEmployment = async (
+  employeeId: string,
+  data: {
+    member_id?: string;
+    barcode?: string | null;
+    company_name?: string | null;
+    organization_name?: string | null;
+    job_position?: string | null;
+    job_level?: string | null;
+    employment_status?: string | null;
+    branch?: string | null;
+    join_date?: string | null;
+    sign_date?: string | null;
+  }
+): Promise<boolean> => {
+  try {
+    console.log("Updating employee employment data:", employeeId, data);
+    
+    // Check if employment record already exists
+    const { data: existingData, error: fetchError } = await supabase
+      .from('employee_employment')
+      .select('id')
+      .eq('employee_id', employeeId)
+      .maybeSingle();
+    
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      console.error("Error checking for existing employment record:", fetchError);
+      throw fetchError;
+    }
+    
+    if (existingData) {
+      // Update existing record
+      const { error: updateError } = await supabase
+        .from('employee_employment')
+        .update(data)
+        .eq('employee_id', employeeId);
+      
+      if (updateError) {
+        console.error("Error updating employment data:", updateError);
+        throw updateError;
+      }
+    } else {
+      // Create new record with employee_id
+      const { error: insertError } = await supabase
+        .from('employee_employment')
+        .insert([{ 
+          employee_id: employeeId,
+          ...data 
+        }]);
+      
+      if (insertError) {
+        console.error("Error creating employment data:", insertError);
+        throw insertError;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error saving employee employment data:", error);
+    return false;
+  }
+};

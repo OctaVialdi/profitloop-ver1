@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import MyInfoLayout from "@/components/layout/MyInfoLayout";
 import MyInfoIndex from "@/pages/my-info/MyInfoIndex";
+import MyEmploymentPage from "@/pages/my-info/MyEmploymentPage";
 import { Outlet } from "react-router-dom";
 
 export const myInfoRoutes = (
@@ -22,7 +23,7 @@ export const myInfoRoutes = (
   >
     <Route path="index" element={<MyInfoIndex />} />
     <Route path="personal" element={<MyInfoIndex />} />
-    <Route path="employment" element={<MyInfoIndex />} />
+    <Route path="employment" element={<MyEmploymentPage />} />
     <Route path="education" element={<MyInfoIndex />} />
     <Route path="files" element={<MyInfoIndex />} />
     <Route path="assets" element={<MyInfoIndex />} />
