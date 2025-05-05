@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -232,6 +231,8 @@ export const employeeService = {
     }
   ): Promise<Employee | null> {
     try {
+      console.log("Creating employee with data:", employeeData);
+      
       // Insert all employee data at once
       const { data: newEmployee, error: employeeError } = await supabase
         .from("employees")
@@ -239,13 +240,21 @@ export const employeeService = {
         .select()
         .single();
 
-      if (employeeError) throw employeeError;
-      if (!newEmployee) return null;
+      if (employeeError) {
+        console.error("Supabase error during employee creation:", employeeError);
+        throw new Error(`Database error: ${employeeError.message}`);
+      }
+      
+      if (!newEmployee) {
+        console.error("No employee data returned after insertion");
+        throw new Error("Failed to create employee: No data returned");
+      }
 
+      console.log("Employee created successfully:", newEmployee);
       return newEmployee as Employee;
     } catch (error) {
-      console.error("Error creating employee:", error);
-      return null;
+      console.error("Error creating employee in service:", error);
+      throw error; // Re-throw to handle in the component
     }
   },
 

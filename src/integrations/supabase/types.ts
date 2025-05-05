@@ -53,9 +53,11 @@ export type Database = {
       }
       employees: {
         Row: {
+          address: string | null
           birth_date: string | null
           birth_place: string | null
           blood_type: string | null
+          citizen_address: string | null
           created_at: string
           email: string | null
           employee_id: string | null
@@ -64,7 +66,11 @@ export type Database = {
           marital_status: string | null
           mobile_phone: string | null
           name: string
+          nik: string | null
           organization_id: string
+          passport_expiry: string | null
+          passport_number: string | null
+          postal_code: string | null
           profile_image: string | null
           religion: string | null
           role: string | null
@@ -72,9 +78,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           birth_date?: string | null
           birth_place?: string | null
           blood_type?: string | null
+          citizen_address?: string | null
           created_at?: string
           email?: string | null
           employee_id?: string | null
@@ -83,7 +91,11 @@ export type Database = {
           marital_status?: string | null
           mobile_phone?: string | null
           name: string
+          nik?: string | null
           organization_id: string
+          passport_expiry?: string | null
+          passport_number?: string | null
+          postal_code?: string | null
           profile_image?: string | null
           religion?: string | null
           role?: string | null
@@ -91,9 +103,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           birth_date?: string | null
           birth_place?: string | null
           blood_type?: string | null
+          citizen_address?: string | null
           created_at?: string
           email?: string | null
           employee_id?: string | null
@@ -102,7 +116,11 @@ export type Database = {
           marital_status?: string | null
           mobile_phone?: string | null
           name?: string
+          nik?: string | null
           organization_id?: string
+          passport_expiry?: string | null
+          passport_number?: string | null
+          postal_code?: string | null
           profile_image?: string | null
           religion?: string | null
           role?: string | null

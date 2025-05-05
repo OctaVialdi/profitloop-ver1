@@ -120,17 +120,18 @@ export default function AddEmployee() {
         address: identityAddress.residentialAddress || null
       };
       
-      console.log("Creating employee with data:", employeeData);
+      console.log("Creating employee with data:", JSON.stringify(employeeData, null, 2));
       
       // Create employee using the service method
       const result = await employeeService.createEmployee(employeeData);
       
       if (!result) {
-        toast.error("Failed to create employee");
+        console.error("Failed to create employee: Result is null or undefined");
+        toast.error("Failed to create employee: No data returned from server");
         return;
       }
       
-      console.log("Employee created successfully with ID:", result.id);
+      console.log("Employee created successfully:", result);
       toast.success("Employee created successfully");
       
       // Navigate back to employee list
@@ -138,7 +139,18 @@ export default function AddEmployee() {
       
     } catch (error) {
       console.error("Error creating employee:", error);
-      toast.error("Failed to create employee: " + (error instanceof Error ? error.message : "Unknown error"));
+      
+      // Improved error handling with more specific messages
+      let errorMessage = "Unknown error occurred";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as any).message);
+      }
+      
+      toast.error("Failed to create employee: " + errorMessage);
     } finally {
       setIsSubmitting(false);
     }
