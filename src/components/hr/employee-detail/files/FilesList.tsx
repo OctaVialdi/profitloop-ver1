@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Table, 
@@ -107,6 +106,7 @@ export const FilesList = ({
         description="Upload files for this employee using the 'Add File' button above."
         section="files"
         handleEdit={handleEdit}
+        buttonText="Add File"
       />
     );
   }
