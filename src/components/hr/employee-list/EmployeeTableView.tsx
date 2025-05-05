@@ -73,7 +73,7 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   // Check if we need horizontal scrolling (more columns exist than are shown)
   const needsHorizontalScroll = visibleColumnsOrder.length > limitedVisibleColumnsOrder.length;
 
-  // Handle click on employee name to navigate to employee detail with new route pattern
+  // Handle click on employee name to navigate to employee detail
   const handleEmployeeClick = (employee: LegacyEmployee) => {
     navigate(`/my-info/personal?id=${employee.id}`);
   };

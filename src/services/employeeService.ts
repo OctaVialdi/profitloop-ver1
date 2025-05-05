@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -219,47 +220,30 @@ export const employeeService = {
       employee_id?: string;
       profile_image?: string;
     },
-    personalDetails?: Partial<EmployeePersonalDetails>,
-    identityAddress?: Partial<EmployeeIdentityAddress>,
-    employment?: Partial<EmployeeEmployment>
+    personalDetails?: Partial<EmployeePersonalDetails>
   ): Promise<EmployeeWithDetails | null> {
     try {
-      // Insert basic employee data - FIX: ensure name and organization_id are present
+      // Merge personal details with the employee data for direct insertion
+      const mergedEmployeeData = {
+        ...employeeData,
+        mobile_phone: personalDetails?.mobile_phone,
+        birth_place: personalDetails?.birth_place,
+        birth_date: personalDetails?.birth_date,
+        gender: personalDetails?.gender,
+        marital_status: personalDetails?.marital_status,
+        religion: personalDetails?.religion,
+        blood_type: personalDetails?.blood_type
+      };
+
+      // Insert employee data with personal details
       const { data: newEmployee, error: employeeError } = await supabase
         .from("employees")
-        .insert([employeeData]) // Changed from employeeData (Partial<Employee>) to ensure required fields
+        .insert([mergedEmployeeData])
         .select()
         .single();
 
       if (employeeError) throw employeeError;
       if (!newEmployee) return null;
-
-      // Insert personal details if provided
-      if (personalDetails) {
-        const { error: personalError } = await supabase
-          .from("employee_personal_details")
-          .insert([{ employee_id: newEmployee.id, ...personalDetails }]);
-
-        if (personalError) throw personalError;
-      }
-
-      // Insert identity address if provided
-      if (identityAddress) {
-        const { error: identityError } = await supabase
-          .from("employee_identity_addresses")
-          .insert([{ employee_id: newEmployee.id, ...identityAddress }]);
-
-        if (identityError) throw identityError;
-      }
-
-      // Insert employment data if provided
-      if (employment) {
-        const { error: employmentError } = await supabase
-          .from("employee_employment")
-          .insert([{ employee_id: newEmployee.id, ...employment }]);
-
-        if (employmentError) throw employmentError;
-      }
 
       // Fetch the newly created employee with all its details
       return await this.fetchEmployeeById(newEmployee.id);
@@ -304,7 +288,7 @@ export const employeeService = {
     }
   },
 
-  // Add saveFamilyMember function - FIX: ensure required fields are present
+  // Add saveFamilyMember function
   async saveFamilyMember(
     familyMember: {
       employee_id: string;
@@ -317,7 +301,7 @@ export const employeeService = {
     try {
       const { data, error } = await supabase
         .from("employee_family")
-        .insert([familyMember]) // Changed from array to ensure proper structure
+        .insert([familyMember])
         .select()
         .single();
 
