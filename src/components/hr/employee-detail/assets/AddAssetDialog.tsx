@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,10 +22,11 @@ import {
   FormLabel, 
   FormMessage 
 } from "@/components/ui/form";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Image, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
 
 interface AddAssetDialogProps {
   employeeId: string;
@@ -36,6 +37,9 @@ interface AddAssetDialogProps {
 
 export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAssetDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<AssetFormData>({
     defaultValues: {
@@ -52,12 +56,62 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
     }
   });
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Please select a valid image file (JPEG, PNG, GIF, or WEBP)');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      
+      setImageFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setImagePreview(objectUrl);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const onSubmit = async (data: AssetFormData) => {
     setIsSubmitting(true);
     try {
-      await assetService.addAsset(employeeId, data);
+      let imageUrl = null;
+      
+      // Upload image if one was selected
+      if (imageFile) {
+        imageUrl = await assetService.uploadAssetImage(imageFile);
+        if (!imageUrl) {
+          toast.error('Failed to upload asset image');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // Add image URL to asset data
+      await assetService.addAsset(employeeId, {
+        ...data,
+        asset_image: imageUrl
+      });
+      
       onAdded();
       onClose();
+    } catch (error) {
+      console.error('Error creating asset:', error);
+      toast.error('Failed to create asset');
     } finally {
       setIsSubmitting(false);
     }
@@ -72,6 +126,53 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Image Upload Section */}
+            <div className="space-y-2">
+              <Label>Asset Image</Label>
+              <div className="border-2 border-dashed rounded-md p-4 text-center">
+                {imagePreview ? (
+                  <div className="relative w-full">
+                    <img 
+                      src={imagePreview} 
+                      alt="Asset preview" 
+                      className="mx-auto max-h-[200px] object-contain rounded-md"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-0 right-0 h-6 w-6 rounded-full"
+                      onClick={removeImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <Image className="h-10 w-10 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500">Upload an image of this asset</p>
+                    <p className="text-xs text-gray-400 mt-1">Max size: 5MB (JPEG, PNG, GIF, WEBP)</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-4"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose Image
+                    </Button>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleImageChange}
+                />
+              </div>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

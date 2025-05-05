@@ -21,6 +21,7 @@ export interface EmployeeAsset {
   notes?: string;
   created_at: string;
   updated_at: string;
+  asset_image?: string; // New field for asset image
 }
 
 export interface AssetFormData {
@@ -38,6 +39,7 @@ export interface AssetFormData {
   purchase_date?: string;
   purchase_price?: number;
   notes?: string;
+  asset_image?: string; // New field for asset image
 }
 
 export const assetTypes = [
@@ -126,6 +128,24 @@ export const assetService = {
 
   async deleteAsset(assetId: string): Promise<boolean> {
     try {
+      // First get the asset to check if it has an image
+      const { data: asset } = await supabase
+        .from('employee_assets')
+        .select('asset_image')
+        .eq('id', assetId)
+        .single();
+      
+      // If there's an image, delete it from storage
+      if (asset?.asset_image) {
+        const imagePath = asset.asset_image.split('/').pop();
+        if (imagePath) {
+          await supabase.storage
+            .from('asset_images')
+            .remove([imagePath]);
+        }
+      }
+      
+      // Then delete the asset record
       const { error } = await supabase
         .from('employee_assets')
         .delete()
@@ -141,6 +161,40 @@ export const assetService = {
       console.error('Error deleting asset:', error);
       toast.error('Failed to delete asset');
       return false;
+    }
+  },
+  
+  // New method for uploading asset images
+  async uploadAssetImage(file: File): Promise<string | null> {
+    try {
+      if (!file) return null;
+      
+      // Create a unique file name to avoid collisions
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      
+      // Upload the file to the asset_images bucket
+      const { data, error } = await supabase.storage
+        .from('asset_images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('asset_images')
+        .getPublicUrl(data.path);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading asset image:', error);
+      toast.error('Failed to upload image');
+      return null;
     }
   }
 };

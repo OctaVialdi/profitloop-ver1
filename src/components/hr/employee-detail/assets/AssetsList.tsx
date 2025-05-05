@@ -22,7 +22,8 @@ import {
   MousePointer,
   Printer,
   Camera,
-  Package
+  Package,
+  ImageOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -178,12 +179,12 @@ export const AssetsList = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[25%]">Asset Name</TableHead>
+              <TableHead className="w-[30%]">Asset Name</TableHead>
               <TableHead className="w-[15%]">Type</TableHead>
               <TableHead className="w-[15%]">Serial Number</TableHead>
               <TableHead className="w-[15%]">Assigned Date</TableHead>
               <TableHead className="w-[15%]">Return Date</TableHead>
-              <TableHead className="w-[15%]">Actions</TableHead>
+              <TableHead className="w-[10%]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -191,8 +192,25 @@ export const AssetsList = ({
               <TableRow key={asset.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center">
-                    {getAssetIcon(asset.asset_type)}
-                    <div className="ml-2">
+                    {asset.asset_image ? (
+                      <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-gray-100 border">
+                        <img 
+                          src={asset.asset_image} 
+                          alt={asset.name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'/><circle cx='8.5' cy='8.5' r='1.5'/><polyline points='21 15 16 10 5 21'/></svg>";
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded flex-shrink-0 bg-gray-100 border flex items-center justify-center">
+                        <ImageOff className="h-5 w-5 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="ml-3">
                       <div>{asset.name}</div>
                       {asset.specifications && (
                         <div className="text-xs text-gray-500">{asset.specifications}</div>

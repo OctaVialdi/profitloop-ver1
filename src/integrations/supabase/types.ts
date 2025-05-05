@@ -53,6 +53,7 @@ export type Database = {
       }
       employee_assets: {
         Row: {
+          asset_image: string | null
           asset_tag: string | null
           asset_type: string
           assigned_date: string | null
@@ -73,6 +74,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          asset_image?: string | null
           asset_tag?: string | null
           asset_type: string
           assigned_date?: string | null
@@ -93,6 +95,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          asset_image?: string | null
           asset_tag?: string | null
           asset_type?: string
           assigned_date?: string | null

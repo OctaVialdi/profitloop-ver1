@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,12 @@ import {
   FormLabel, 
   FormMessage 
 } from "@/components/ui/form";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Image, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface EditAssetDialogProps {
   asset: EmployeeAsset;
@@ -35,6 +37,10 @@ interface EditAssetDialogProps {
 
 export const EditAssetDialog = ({ asset, isOpen, onClose, onSaved }: EditAssetDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(asset.asset_image || null);
+  const [removeCurrentImage, setRemoveCurrentImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<AssetFormData>({
     defaultValues: {
@@ -51,7 +57,8 @@ export const EditAssetDialog = ({ asset, isOpen, onClose, onSaved }: EditAssetDi
       expected_return_date: asset.expected_return_date || undefined,
       purchase_date: asset.purchase_date || undefined,
       purchase_price: asset.purchase_price || undefined,
-      notes: asset.notes || ''
+      notes: asset.notes || '',
+      asset_image: asset.asset_image || undefined
     }
   });
 
@@ -72,17 +79,76 @@ export const EditAssetDialog = ({ asset, isOpen, onClose, onSaved }: EditAssetDi
         expected_return_date: asset.expected_return_date || undefined,
         purchase_date: asset.purchase_date || undefined,
         purchase_price: asset.purchase_price || undefined,
-        notes: asset.notes || ''
+        notes: asset.notes || '',
+        asset_image: asset.asset_image || undefined
       });
+      
+      setImagePreview(asset.asset_image || null);
+      setRemoveCurrentImage(false);
     }
   }, [asset, form]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Please select a valid image file (JPEG, PNG, GIF, or WEBP)');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      
+      setImageFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setImagePreview(objectUrl);
+      setRemoveCurrentImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setRemoveCurrentImage(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const onSubmit = async (data: AssetFormData) => {
     setIsSubmitting(true);
     try {
-      await assetService.updateAsset(asset.id, data);
+      let imageUrl = asset.asset_image;
+      
+      // Handle image changes
+      if (removeCurrentImage) {
+        imageUrl = null;
+      } else if (imageFile) {
+        // Upload new image
+        imageUrl = await assetService.uploadAssetImage(imageFile);
+        if (!imageUrl && imageFile) {
+          toast.error('Failed to upload asset image');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // Update asset with image URL
+      await assetService.updateAsset(asset.id, {
+        ...data,
+        asset_image: imageUrl
+      });
+      
       onSaved();
       onClose();
+    } catch (error) {
+      console.error('Error updating asset:', error);
+      toast.error('Failed to update asset');
     } finally {
       setIsSubmitting(false);
     }
@@ -97,6 +163,53 @@ export const EditAssetDialog = ({ asset, isOpen, onClose, onSaved }: EditAssetDi
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Image Upload Section */}
+            <div className="space-y-2">
+              <Label>Asset Image</Label>
+              <div className="border-2 border-dashed rounded-md p-4 text-center">
+                {imagePreview ? (
+                  <div className="relative w-full">
+                    <img 
+                      src={imagePreview} 
+                      alt="Asset preview" 
+                      className="mx-auto max-h-[200px] object-contain rounded-md"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-0 right-0 h-6 w-6 rounded-full"
+                      onClick={removeImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <Image className="h-10 w-10 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500">Upload an image of this asset</p>
+                    <p className="text-xs text-gray-400 mt-1">Max size: 5MB (JPEG, PNG, GIF, WEBP)</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-4"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose Image
+                    </Button>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleImageChange}
+                />
+              </div>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
