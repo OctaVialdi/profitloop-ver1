@@ -13,6 +13,7 @@ import { settingsRoutes } from "./settingsRoutes";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Apply from "@/pages/Apply";
+import TrialProtection from "@/components/TrialProtection";
 
 import EmptyPage from "@/pages/EmptyPage";
 import NotFound from "@/pages/NotFound";
@@ -39,21 +40,100 @@ const router = createBrowserRouter([
   ...(authRoutes as RouteObject[]),
   ...(onboardingRoutes as RouteObject[]),
   ...(dashboardRoutes as RouteObject[]),
-  // The single route objects
-  hrRoutes as unknown as RouteObject,
-  financeRoutes as unknown as RouteObject,
-  operationsRoutes as unknown as RouteObject,
-  marketingRoutes as unknown as RouteObject,
-  itRoutes as unknown as RouteObject,
-  myInfoRoutes as unknown as RouteObject,
-  settingsRoutes as unknown as RouteObject,
+  // The single route objects - wrap in TrialProtection
+  {
+    path: "/hr",
+    element: (
+      <ProtectedRoute>
+        <TrialProtection>
+          <DashboardLayout>
+            {hrRoutes}
+          </DashboardLayout>
+        </TrialProtection>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/finance",
+    element: (
+      <ProtectedRoute>
+        <TrialProtection>
+          <DashboardLayout>
+            {financeRoutes}
+          </DashboardLayout>
+        </TrialProtection>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/operations",
+    element: (
+      <ProtectedRoute>
+        <TrialProtection>
+          <DashboardLayout>
+            {operationsRoutes}
+          </DashboardLayout>
+        </TrialProtection>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/marketing",
+    element: (
+      <ProtectedRoute>
+        <TrialProtection>
+          <DashboardLayout>
+            {marketingRoutes}
+          </DashboardLayout>
+        </TrialProtection>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/it",
+    element: (
+      <ProtectedRoute>
+        <TrialProtection>
+          <DashboardLayout>
+            {itRoutes}
+          </DashboardLayout>
+        </TrialProtection>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/my-info",
+    element: (
+      <ProtectedRoute>
+        <TrialProtection>
+          <DashboardLayout>
+            {myInfoRoutes}
+          </DashboardLayout>
+        </TrialProtection>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/settings",
+    element: (
+      <ProtectedRoute>
+        <TrialProtection>
+          <DashboardLayout>
+            {settingsRoutes}
+          </DashboardLayout>
+        </TrialProtection>
+      </ProtectedRoute>
+    )
+  },
   {
     path: "/empty",
     element: (
       <ProtectedRoute>
-        <DashboardLayout>
-          <EmptyPage />
-        </DashboardLayout>
+        <TrialProtection>
+          <DashboardLayout>
+            <EmptyPage />
+          </DashboardLayout>
+        </TrialProtection>
       </ProtectedRoute>
     )
   },
