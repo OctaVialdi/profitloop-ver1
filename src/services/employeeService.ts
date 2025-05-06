@@ -396,14 +396,16 @@ export const employeeService = {
         blood_type: "O",
         nik: "1234567890123456",
         address: "Jl. Sudirman No. 123, Jakarta",
-        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Required field
-        employee_id: generateUniqueId()
+        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500" // Required field
       };
 
-      // Insert first employee - use a single object, not an array
+      // Add employee_id directly to employee1Data
+      employee1Data.employee_id = generateUniqueId();
+
+      // Insert first employee
       const { data: newEmployee1, error: error1 } = await supabase
         .from('employees')
-        .insert(employee1Data) // Pass a single object, not an array
+        .insert(employee1Data)
         .select('*')
         .single();
 
@@ -425,14 +427,16 @@ export const employeeService = {
         blood_type: "A",
         nik: "6543210987654321",
         address: "Jl. Gatot Subroto No. 456, Jakarta",
-        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Required field
-        employee_id: generateUniqueId()
+        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500" // Required field
       };
 
-      // Insert second employee - use a single object, not an array
+      // Add employee_id directly to employee2Data
+      employee2Data.employee_id = generateUniqueId();
+
+      // Insert second employee
       const { data: newEmployee2, error: error2 } = await supabase
         .from('employees')
-        .insert(employee2Data) // Pass a single object, not an array
+        .insert(employee2Data)
         .select('*')
         .single();
 
