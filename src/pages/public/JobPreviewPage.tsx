@@ -43,7 +43,8 @@ export default function JobPreviewPage() {
             id,
             token,
             job_position_id,
-            organization_id
+            organization_id,
+            clicks
           `)
           .eq("token", token)
           .eq("status", "active")
