@@ -272,7 +272,7 @@ export default function InvitationLinks() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => toggleLinkStatus(link.id, link.status === 'active')}
+                      onClick={() => toggleLinkStatus(link.id, link.status)}
                     >
                       {link.status === 'active' ? 'Deactivate' : 'Activate'}
                     </Button>
@@ -290,7 +290,7 @@ export default function InvitationLinks() {
                         <DropdownMenuItem onClick={() => window.open(applicationUrl, '_blank')}>
                           Open Link
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toggleLinkStatus(link.id, link.status === 'active')}>
+                        <DropdownMenuItem onClick={() => toggleLinkStatus(link.id, link.status)}>
                           {link.status === 'active' ? 'Deactivate' : 'Activate'} Link
                         </DropdownMenuItem>
                       </DropdownMenuContent>
