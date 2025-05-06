@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -126,6 +126,17 @@ export const useApplicationForm = () => {
         return;
       }
       
+      console.log("Submitting application with data:", {
+        formData,
+        linkInfo,
+        familyMembers: familyMembers.length,
+        education: {
+          formal: formalEducation.length,
+          informal: informalEducation.length
+        },
+        workExperience: workExperience.length
+      });
+      
       // Insert candidate application
       const applicationData = {
         job_position_id: linkInfo.job_position_id,
@@ -159,6 +170,7 @@ export const useApplicationForm = () => {
       }
       
       const applicationId = insertedData.id;
+      console.log("Application created with ID:", applicationId);
       
       // Insert family members
       if (familyMembers.length > 0) {
@@ -179,6 +191,7 @@ export const useApplicationForm = () => {
           .insert(familyData);
           
         if (familyError) {
+          console.error("Error inserting family members:", familyError);
           throw familyError;
         }
       }
@@ -201,6 +214,7 @@ export const useApplicationForm = () => {
           .insert(educationData);
           
         if (educationError) {
+          console.error("Error inserting formal education:", educationError);
           throw educationError;
         }
       }
@@ -223,6 +237,7 @@ export const useApplicationForm = () => {
           .insert(informalData);
           
         if (informalError) {
+          console.error("Error inserting informal education:", informalError);
           throw informalError;
         }
       }
@@ -244,6 +259,7 @@ export const useApplicationForm = () => {
           .insert(workData);
           
         if (workError) {
+          console.error("Error inserting work experience:", workError);
           throw workError;
         }
       }
