@@ -28,7 +28,7 @@ interface ApplicationFormData {
   maritalStatus: string;
   bloodType: string;
   religion: string;
-  position: string; // Added position field
+  position: string;
   
   // Identity & Address
   nik: string;
@@ -62,7 +62,7 @@ const JobApplicationForm = () => {
     maritalStatus: "",
     bloodType: "",
     religion: "",
-    position: "", // Initialize position field
+    position: "",
     
     nik: "",
     passportNumber: "",
@@ -143,30 +143,33 @@ const JobApplicationForm = () => {
       }
       
       // Insert candidate application
-      // The token is passed directly to the recruitment_link_id field
-      const { data: applicationData, error: applicationError } = await supabase
+      // Map our form fields to the database column names
+      const applicationData = {
+        name: formData.fullName,             // Changed from full_name to name
+        email: formData.email,
+        phone: formData.mobilePhone,
+        address: formData.residentialAddress,
+        birth_date: formData.birthdate,
+        birth_place: formData.birthPlace,
+        gender: formData.gender,
+        religion: formData.religion,
+        marital_status: formData.maritalStatus,
+        blood_type: formData.bloodType,
+        nik: formData.nik,
+        passport_number: formData.passportNumber,
+        passport_expiry: formData.passportExpiry,
+        postal_code: formData.postalCode,
+        citizen_address: formData.citizenAddress,
+        organization_id: linkInfo.organization_id,
+        position: formData.position,
+        job_position_id: linkInfo.job_position_id || null,
+        recruitment_link_id: token
+      };
+      
+      // Type casting to match expected database schema
+      const { data: insertedData, error: applicationError } = await supabase
         .from('candidate_applications')
-        .insert({
-          full_name: formData.fullName,
-          email: formData.email,
-          phone: formData.mobilePhone,
-          address: formData.residentialAddress,
-          birth_date: formData.birthdate,
-          birth_place: formData.birthPlace,
-          gender: formData.gender,
-          religion: formData.religion,
-          marital_status: formData.maritalStatus,
-          blood_type: formData.bloodType,
-          nik: formData.nik,
-          passport_number: formData.passportNumber,
-          passport_expiry: formData.passportExpiry,
-          postal_code: formData.postalCode,
-          citizen_address: formData.citizenAddress,
-          organization_id: linkInfo.organization_id,
-          position: formData.position, // Add position to submission
-          job_position_id: linkInfo.job_position_id || null,
-          recruitment_link_id: token // This should be the token
-        })
+        .insert(applicationData as any)
         .select('id')
         .single();
       
@@ -174,7 +177,7 @@ const JobApplicationForm = () => {
         throw applicationError;
       }
       
-      const applicationId = applicationData.id;
+      const applicationId = insertedData.id;
       
       // Insert family members
       if (familyMembers.length > 0) {
