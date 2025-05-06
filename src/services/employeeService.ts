@@ -69,6 +69,7 @@ export interface EmployeeIdentityAddress {
 export interface EmployeeEmployment {
   employee_id?: string;
   barcode?: string | null;
+  // Update the interface to match both formats (organization and organization_name)
   organization_name?: string | null;
   job_position?: string | null;
   job_level?: string | null;
@@ -195,14 +196,31 @@ export const employeeService = {
       if (employeeError) throw employeeError;
       if (!employeeData) return null;
       
+      // Fetch employment data
+      const { data: employmentData } = await supabase
+        .from("employee_employment")
+        .select("*")
+        .eq("employee_id", id)
+        .maybeSingle();
+        
       // Ensure we treat it as the correct type with all the fields we need
-      const employeeWithAllFields = employeeData as unknown as Employee;
+      const employeeWithAllFields = {
+        ...employeeData,
+        organization_name: employmentData?.organization_name || null,
+        barcode: employmentData?.barcode || null,
+        job_position: employmentData?.job_position || null,
+        job_level: employmentData?.job_level || null,
+        employment_status: employmentData?.employment_status || null,
+        branch: employmentData?.branch || null,
+        join_date: employmentData?.join_date || null,
+        sign_date: employmentData?.sign_date || null
+      } as Employee;
       
       // For backward compatibility, create an EmployeeWithDetails structure
       const employeeWithDetails: EmployeeWithDetails = {
         ...employeeWithAllFields,
         personalDetails: {
-          employee_id: employeeWithAllFields.employee_id, // Include employee_id in personalDetails
+          employee_id: employeeWithAllFields.employee_id,
           mobile_phone: employeeWithAllFields.mobile_phone,
           birth_place: employeeWithAllFields.birth_place,
           birth_date: employeeWithAllFields.birth_date,
@@ -222,6 +240,7 @@ export const employeeService = {
         employment: {
           employee_id: employeeWithAllFields.employee_id,
           barcode: employeeWithAllFields.barcode,
+          organization_name: employeeWithAllFields.organization_name,
           job_position: employeeWithAllFields.job_position,
           job_level: employeeWithAllFields.job_level,
           employment_status: employeeWithAllFields.employment_status,
@@ -527,6 +546,14 @@ export const updateEmployeeEmployment = async (
     };
     
     const result = await employeeService.updateEmployee(employeeId, employeeData);
+    
+    // Also update the organization_name in employee_employment table if provided
+    if (data.organization_name) {
+      await createOrUpdateEmployeeEmployment(employeeId, {
+        organization_name: data.organization_name
+      });
+    }
+    
     return !!result;
   } catch (error) {
     console.error("Error updating employee employment:", error);
@@ -752,55 +779,65 @@ export const addDummyEmployees = async (): Promise<boolean> => {
     // Generate unique employee IDs for new employees
     const generateUniqueId = () => `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
     
-    const dummyEmployeesData = [
-      {
-        name: "John Doe",
-        email: "john.doe@example.com",
-        mobile_phone: "+6281234567890",
-        birth_place: "Jakarta",
-        birth_date: "1990-01-01",
-        gender: "male",
-        marital_status: "single",
-        religion: "islam",
-        blood_type: "O",
-        nik: "1234567890123456",
-        address: "Jl. Sudirman No. 123, Jakarta",
-        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Required field
-        employee_id: generateUniqueId()
-      },
-      {
-        name: "Jane Smith",
-        email: "jane.smith@example.com",
-        mobile_phone: "+6287654321098",
-        birth_place: "Bandung",
-        birth_date: "1992-05-15",
-        gender: "female",
-        marital_status: "married",
-        religion: "catholicism",
-        blood_type: "A",
-        nik: "6543210987654321",
-        address: "Jl. Gatot Subroto No. 456, Jakarta",
-        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Required field
-        employee_id: generateUniqueId()
-      }
-    ];
-
-    // Insert employees one by one
-    for (const empData of dummyEmployeesData) {
-      const newEmployee = await this.createEmployee({
-        ...empData,
-        organization_name: "Sales Department", // Add organization_name for the employment table
+    // Create first employee
+    const employee1 = {
+      name: "John Doe",
+      email: "john.doe@example.com",
+      mobile_phone: "+6281234567890",
+      birth_place: "Jakarta",
+      birth_date: "1990-01-01",
+      gender: "male",
+      marital_status: "single",
+      religion: "islam",
+      blood_type: "O",
+      nik: "1234567890123456",
+      address: "Jl. Sudirman No. 123, Jakarta",
+      organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500",
+      employee_id: generateUniqueId()
+    };
+    
+    const employee1Result = await this.createEmployee(employee1);
+      
+    if (employee1Result) {
+      // Add employment data for first employee
+      await createOrUpdateEmployeeEmployment(employee1Result.id, {
+        organization_name: "Sales Department",
         job_position: "Staff",
         job_level: "Junior",
         employment_status: "Permanent"
       });
-      
-      if (!newEmployee) {
-        console.error("Failed to add dummy employee:", empData.name);
-      }
     }
     
-    return true;
+    // Create second employee
+    const employee2 = {
+      name: "Jane Smith",
+      email: "jane.smith@example.com",
+      mobile_phone: "+6287654321098",
+      birth_place: "Bandung",
+      birth_date: "1992-05-15",
+      gender: "female",
+      marital_status: "married",
+      religion: "catholicism",
+      blood_type: "A",
+      nik: "6543210987654321",
+      address: "Jl. Gatot Subroto No. 456, Jakarta",
+      organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500",
+      employee_id: generateUniqueId()
+    };
+    
+    const employee2Result = await this.createEmployee(employee2);
+      
+    if (employee2Result) {
+      // Add employment data for second employee
+      await createOrUpdateEmployeeEmployment(employee2Result.id, {
+        organization_name: "Marketing Department",
+        job_position: "Manager",
+        job_level: "Senior",
+        employment_status: "Permanent"
+      });
+    }
+    
+    return !!(employee1Result && employee2Result);
   } catch (error) {
     console.error("Error adding dummy employees:", error);
     throw error;

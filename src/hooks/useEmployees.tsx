@@ -111,7 +111,8 @@ export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> 
     postal_code: employee.postalCode || null,
     citizen_address: employee.citizenAddress || null,
     address: employee.address || null,
-    organization_id: employee.organization_id || employee.organization,
+    organization_id: employee.organization_id || '',
+    organization_name: employee.organization || null,
     // Employment fields
     barcode: employee.barcode || null,
     job_position: employee.jobPosition || null,

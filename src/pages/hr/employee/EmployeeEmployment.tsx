@@ -39,7 +39,7 @@ const EmployeeEmployment = () => {
     defaultValues: {
       employeeId: employee?.employee_id || '',
       barcode: employee?.barcode || '',
-      organization: employee?.organization_id || '',
+      organization_name: employee?.organization_name || '',
       jobPosition: employee?.job_position || '',
       jobLevel: employee?.job_level || '',
       employmentStatus: employee?.employment_status || 'Permanent',
@@ -59,7 +59,7 @@ const EmployeeEmployment = () => {
       await updateEmployeeEmployment(employeeId, {
         employee_id: data.employeeId,
         barcode: data.barcode,
-        organization: data.organization,
+        organization_name: data.organization_name,
         job_position: data.jobPosition,
         job_level: data.jobLevel,
         employment_status: data.employmentStatus,
@@ -128,7 +128,7 @@ const EmployeeEmployment = () => {
               
               <FormField
                 control={form.control}
-                name="organization"
+                name="organization_name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Organization</FormLabel>

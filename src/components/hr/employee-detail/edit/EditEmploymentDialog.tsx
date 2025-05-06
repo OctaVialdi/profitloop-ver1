@@ -41,7 +41,7 @@ export const EditEmploymentDialog = ({
 }: EditEmploymentDialogProps) => {
   const [formValues, setFormValues] = useState({
     barcode: employee.barcode || "",
-    organization: employee.organization || "",
+    organization_name: employee.organization || "",
     jobPosition: employee.jobPosition || "",
     jobLevel: employee.jobLevel || "",
     employmentStatus: employee.employmentStatus || "",
@@ -73,7 +73,7 @@ export const EditEmploymentDialog = ({
     try {
       const updatedData: Partial<EmployeeEmployment> = {
         barcode: formValues.barcode,
-        organization: formValues.organization,
+        organization_name: formValues.organization_name,
         job_position: formValues.jobPosition,
         job_level: formValues.jobLevel,
         employment_status: formValues.employmentStatus,
@@ -114,10 +114,10 @@ export const EditEmploymentDialog = ({
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="organization">Organization name</Label>
+              <Label htmlFor="organization_name">Organization name</Label>
               <Input
-                id="organization"
-                value={formValues.organization}
+                id="organization_name"
+                value={formValues.organization_name}
                 onChange={handleInputChange}
                 placeholder="Enter organization name"
               />
