@@ -22,10 +22,11 @@ import { NewPositionDialog } from "./NewPositionDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Updated interface to make department optional since it's not in the database
 interface JobPosition {
   id: string;
   title: string;
-  department: string;
+  department?: string; // Make department optional
   location: string;
   employment_type: string;
   status: 'active' | 'draft' | 'closed';
@@ -78,13 +79,16 @@ export default function JobPositionsList() {
           .select('id', { count: 'exact', head: true })
           .eq('job_position_id', position.id);
           
+        // Add the department field with a default value if it doesn't exist in the database
         return {
           ...position,
+          department: position.department || '-', // Add default department value
           applicantCount: count || 0
         };
       }));
       
-      setJobPositions(positionsWithApplicants);
+      // Cast the result to JobPosition[] to satisfy TypeScript
+      setJobPositions(positionsWithApplicants as JobPosition[]);
     } catch (error: any) {
       console.error("Error fetching job positions:", error);
       toast.error("Failed to load job positions");

@@ -140,7 +140,7 @@ const JobApplicationForm = () => {
         return;
       }
       
-      // Insert candidate application
+      // Insert candidate application - corrected field name to match database schema
       const { data: applicationData, error: applicationError } = await supabase
         .from('candidate_applications')
         .insert({
