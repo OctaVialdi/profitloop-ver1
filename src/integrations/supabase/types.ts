@@ -9,6 +9,269 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      candidate_applications: {
+        Row: {
+          address: string | null
+          birth_date: string | null
+          birth_place: string | null
+          blood_type: string | null
+          citizen_address: string | null
+          created_at: string
+          email: string
+          full_name: string
+          gender: string | null
+          id: string
+          job_position_id: string | null
+          marital_status: string | null
+          nik: string | null
+          organization_id: string
+          passport_expiry: string | null
+          passport_number: string | null
+          phone: string | null
+          postal_code: string | null
+          recruitment_link_id: string
+          religion: string | null
+          status: string
+        }
+        Insert: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          blood_type?: string | null
+          citizen_address?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          gender?: string | null
+          id?: string
+          job_position_id?: string | null
+          marital_status?: string | null
+          nik?: string | null
+          organization_id: string
+          passport_expiry?: string | null
+          passport_number?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          recruitment_link_id: string
+          religion?: string | null
+          status?: string
+        }
+        Update: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          blood_type?: string | null
+          citizen_address?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          gender?: string | null
+          id?: string
+          job_position_id?: string | null
+          marital_status?: string | null
+          nik?: string | null
+          organization_id?: string
+          passport_expiry?: string | null
+          passport_number?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          recruitment_link_id?: string
+          religion?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_applications_job_position_id_fkey"
+            columns: ["job_position_id"]
+            isOneToOne: false
+            referencedRelation: "job_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_applications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_family_members: {
+        Row: {
+          address: string | null
+          age: number | null
+          candidate_application_id: string
+          gender: string | null
+          id: string
+          is_emergency_contact: boolean | null
+          name: string
+          occupation: string | null
+          phone: string | null
+          relationship: string | null
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          candidate_application_id: string
+          gender?: string | null
+          id?: string
+          is_emergency_contact?: boolean | null
+          name: string
+          occupation?: string | null
+          phone?: string | null
+          relationship?: string | null
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          candidate_application_id?: string
+          gender?: string | null
+          id?: string
+          is_emergency_contact?: boolean | null
+          name?: string
+          occupation?: string | null
+          phone?: string | null
+          relationship?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_family_members_candidate_application_id_fkey"
+            columns: ["candidate_application_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_formal_education: {
+        Row: {
+          candidate_application_id: string
+          degree: string
+          description: string | null
+          end_date: string | null
+          field_of_study: string
+          grade: string | null
+          id: string
+          institution_name: string
+          start_date: string | null
+        }
+        Insert: {
+          candidate_application_id: string
+          degree: string
+          description?: string | null
+          end_date?: string | null
+          field_of_study: string
+          grade?: string | null
+          id?: string
+          institution_name: string
+          start_date?: string | null
+        }
+        Update: {
+          candidate_application_id?: string
+          degree?: string
+          description?: string | null
+          end_date?: string | null
+          field_of_study?: string
+          grade?: string | null
+          id?: string
+          institution_name?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_formal_education_candidate_application_id_fkey"
+            columns: ["candidate_application_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_informal_education: {
+        Row: {
+          candidate_application_id: string
+          certificate_number: string | null
+          certification_field: string
+          course_name: string
+          description: string | null
+          end_date: string | null
+          id: string
+          provider: string
+          start_date: string | null
+        }
+        Insert: {
+          candidate_application_id: string
+          certificate_number?: string | null
+          certification_field: string
+          course_name: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          provider: string
+          start_date?: string | null
+        }
+        Update: {
+          candidate_application_id?: string
+          certificate_number?: string | null
+          certification_field?: string
+          course_name?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          provider?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_informal_education_candidate_application_id_fkey"
+            columns: ["candidate_application_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_work_experience: {
+        Row: {
+          candidate_application_id: string
+          company_name: string
+          end_date: string | null
+          id: string
+          job_description: string | null
+          location: string | null
+          position: string
+          start_date: string | null
+        }
+        Insert: {
+          candidate_application_id: string
+          company_name: string
+          end_date?: string | null
+          id?: string
+          job_description?: string | null
+          location?: string | null
+          position: string
+          start_date?: string | null
+        }
+        Update: {
+          candidate_application_id?: string
+          company_name?: string
+          end_date?: string | null
+          id?: string
+          job_description?: string | null
+          location?: string | null
+          position?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_work_experience_candidate_application_id_fkey"
+            columns: ["candidate_application_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaborations: {
         Row: {
           created_at: string | null
