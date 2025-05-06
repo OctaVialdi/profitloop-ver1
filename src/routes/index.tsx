@@ -1,5 +1,4 @@
-
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
@@ -15,27 +14,42 @@ import { publicRoutes } from "./publicRoutes";
 
 import NotFound from "@/pages/NotFound";
 
+// Helper function to ensure all routes are of the correct type
+const asRouteObject = (route: React.ReactElement | RouteObject): RouteObject => {
+  if (React.isValidElement(route)) {
+    // Convert JSX element to route object
+    const props = route.props;
+    return {
+      path: props.path,
+      element: props.element,
+      children: props.children ? props.children.map(asRouteObject) : undefined,
+      // Add any other properties from Route element that might be needed
+    };
+  }
+  return route as RouteObject;
+};
+
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Outlet />,
     children: [
       // Other routes
-      ...authRoutes,
-      ...dashboardRoutes,
-      financeRoutes,
-      hrRoutes,
-      itRoutes,
-      marketingRoutes,
-      operationsRoutes,
-      settingsRoutes,
-      myInfoRoutes,
-      ...onboardingRoutes,
-      ...publicRoutes,
+      ...authRoutes.map(asRouteObject),
+      ...dashboardRoutes.map(asRouteObject),
+      asRouteObject(financeRoutes),
+      asRouteObject(hrRoutes),
+      asRouteObject(itRoutes),
+      asRouteObject(marketingRoutes),
+      asRouteObject(operationsRoutes),
+      asRouteObject(settingsRoutes),
+      asRouteObject(myInfoRoutes),
+      ...onboardingRoutes.map(asRouteObject),
+      ...publicRoutes.map(asRouteObject),
       {
         path: "*",
         element: <NotFound />,
       },
-    ].flat(), // Flatten the array to handle both array and single route elements
+    ],
   },
 ]);
