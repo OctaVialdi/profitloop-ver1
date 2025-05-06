@@ -1,20 +1,21 @@
 
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { router } from "./routes";
+import { AppRoutes } from "./routes";
 import TrialProtection from "./components/TrialProtection";
 import { QueryProvider } from "./components/QueryProvider";
-import { RouterProvider } from "react-router-dom";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-      <QueryProvider>
-        <TrialProtection>
-          <RouterProvider router={router} />
-        </TrialProtection>
-      </QueryProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <QueryProvider>
+          <TrialProtection>
+            <AppRoutes />
+          </TrialProtection>
+        </QueryProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

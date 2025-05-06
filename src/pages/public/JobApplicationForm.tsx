@@ -28,7 +28,6 @@ interface ApplicationFormData {
   maritalStatus: string;
   bloodType: string;
   religion: string;
-  position: string;
   
   // Identity & Address
   nik: string;
@@ -62,7 +61,6 @@ const JobApplicationForm = () => {
     maritalStatus: "",
     bloodType: "",
     religion: "",
-    position: "",
     
     nik: "",
     passportNumber: "",
@@ -130,7 +128,7 @@ const JobApplicationForm = () => {
       setIsSubmitting(true);
       
       // Validate required fields
-      if (!formData.fullName || !formData.email || !formData.position) {
+      if (!formData.fullName || !formData.email) {
         toast.error("Please fill out all required fields.");
         setIsSubmitting(false);
         return;
@@ -143,33 +141,28 @@ const JobApplicationForm = () => {
       }
       
       // Insert candidate application
-      // Map our form fields to the database column names
-      const applicationData = {
-        name: formData.fullName,             // Changed from full_name to name
-        email: formData.email,
-        phone: formData.mobilePhone,
-        address: formData.residentialAddress,
-        birth_date: formData.birthdate,
-        birth_place: formData.birthPlace,
-        gender: formData.gender,
-        religion: formData.religion,
-        marital_status: formData.maritalStatus,
-        blood_type: formData.bloodType,
-        nik: formData.nik,
-        passport_number: formData.passportNumber,
-        passport_expiry: formData.passportExpiry,
-        postal_code: formData.postalCode,
-        citizen_address: formData.citizenAddress,
-        organization_id: linkInfo.organization_id,
-        position: formData.position,
-        job_position_id: linkInfo.job_position_id || null,
-        recruitment_link_id: token
-      };
-      
-      // Type casting to match expected database schema
-      const { data: insertedData, error: applicationError } = await supabase
+      const { data: applicationData, error: applicationError } = await supabase
         .from('candidate_applications')
-        .insert(applicationData as any)
+        .insert({
+          job_position_id: linkInfo.job_position_id,
+          recruitment_link_id: token || '',
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.mobilePhone,
+          address: formData.residentialAddress,
+          birth_date: formData.birthdate,
+          birth_place: formData.birthPlace,
+          gender: formData.gender,
+          religion: formData.religion,
+          marital_status: formData.maritalStatus,
+          blood_type: formData.bloodType,
+          nik: formData.nik,
+          passport_number: formData.passportNumber,
+          passport_expiry: formData.passportExpiry,
+          postal_code: formData.postalCode,
+          citizen_address: formData.citizenAddress,
+          organization_id: linkInfo.organization_id
+        })
         .select('id')
         .single();
       
@@ -177,7 +170,7 @@ const JobApplicationForm = () => {
         throw applicationError;
       }
       
-      const applicationId = insertedData.id;
+      const applicationId = applicationData.id;
       
       // Insert family members
       if (familyMembers.length > 0) {
@@ -307,7 +300,7 @@ const JobApplicationForm = () => {
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold">Job Application Form</h1>
         <p className="text-muted-foreground mt-2">
-          {linkInfo?.job_title === 'General Application' ? 'Join Our Team' : linkInfo?.job_title} at {linkInfo?.organization_name}
+          {linkInfo?.job_title} at {linkInfo?.organization_name}
         </p>
       </div>
       

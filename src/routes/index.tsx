@@ -1,66 +1,82 @@
 
-import React from "react";
-import { createBrowserRouter, RouteObject } from "react-router-dom";
-import { Outlet } from "react-router-dom";
-import { authRoutes } from "./authRoutes";
+import { Route, Routes } from "react-router-dom";
+import NotFound from "@/pages/NotFound";
+import { rootRedirect, authRoutes } from "./authRoutes";
+import { onboardingRoutes } from "./onboardingRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
-import { financeRoutes } from "./financeRoutes";
 import { hrRoutes } from "./hrRoutes";
-import { itRoutes } from "./itRoutes";
-import { marketingRoutes } from "./marketingRoutes";
+import { financeRoutes } from "./financeRoutes";
 import { operationsRoutes } from "./operationsRoutes";
+import { marketingRoutes } from "./marketingRoutes";
+import { itRoutes } from "./itRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
-import { onboardingRoutes } from "./onboardingRoutes";
-import { publicRoutes } from "./publicRoutes";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import JoinOrganization from "@/pages/auth/JoinOrganization";
+import JobApplicationForm from "@/pages/public/JobApplicationForm";
+import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
 
-import NotFound from "@/pages/NotFound";
+export const AppRoutes = () => {
+  return (
+    <Routes>
+      {/* Root redirects to login */}
+      {rootRedirect}
 
-// Helper function to ensure all routes are of the correct type
-const asRouteObject = (route: React.ReactElement | RouteObject): RouteObject => {
-  if (React.isValidElement(route)) {
-    // Convert JSX element to route object
-    const props = route.props as {
-      path?: string;
-      element?: React.ReactNode;
-      children?: React.ReactElement[] | React.ReactElement;
-    };
-    
-    return {
-      path: props.path,
-      element: props.element,
-      children: props.children 
-        ? Array.isArray(props.children) 
-          ? props.children.map(asRouteObject) 
-          : [asRouteObject(props.children)]
-        : undefined,
-      // Add any other properties from Route element that might be needed
-    };
-  }
-  return route as RouteObject;
+      {/* Auth Routes */}
+      {authRoutes}
+      
+      {/* Public Routes */}
+      <Route path="/join-organization" element={<JoinOrganization />} />
+      <Route path="/apply/:token" element={<JobApplicationForm />} />
+      <Route path="/apply/success" element={<ApplicationSuccess />} />
+      
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        {onboardingRoutes}
+      </Route>
+
+      {/* Dashboard Routes */}
+      <Route element={<ProtectedRoute />}>
+        {dashboardRoutes}
+      </Route>
+
+      {/* HR Routes */}
+      <Route element={<ProtectedRoute />}>
+        {hrRoutes}
+      </Route>
+      
+      {/* My Info Routes */}
+      <Route element={<ProtectedRoute />}>
+        {myInfoRoutes}
+      </Route>
+
+      {/* Finance Routes */}
+      <Route element={<ProtectedRoute />}>
+        {financeRoutes}
+      </Route>
+
+      {/* Operations Routes */}
+      <Route element={<ProtectedRoute />}>
+        {operationsRoutes}
+      </Route>
+      
+      {/* Marketing Routes */}
+      <Route element={<ProtectedRoute />}>
+        {marketingRoutes}
+      </Route>
+      
+      {/* IT Routes */}
+      <Route element={<ProtectedRoute />}>
+        {itRoutes}
+      </Route>
+
+      {/* Settings Routes */}
+      <Route element={<ProtectedRoute />}>
+        {settingsRoutes}
+      </Route>
+
+      {/* Catch all */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 };
-
-export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Outlet />,
-    children: [
-      // Other routes
-      ...authRoutes.map(asRouteObject),
-      ...dashboardRoutes.map(asRouteObject),
-      asRouteObject(financeRoutes),
-      asRouteObject(hrRoutes),
-      asRouteObject(itRoutes),
-      asRouteObject(marketingRoutes),
-      asRouteObject(operationsRoutes),
-      asRouteObject(settingsRoutes),
-      asRouteObject(myInfoRoutes),
-      ...onboardingRoutes.map(asRouteObject),
-      ...publicRoutes.map(asRouteObject),
-      {
-        path: "*",
-        element: <NotFound />,
-      },
-    ],
-  },
-]);
