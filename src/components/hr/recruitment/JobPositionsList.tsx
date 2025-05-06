@@ -66,13 +66,27 @@ export default function JobPositionsList() {
         return;
       }
       
+      // Need to get the organization_id
+      const { data: profileData } = await supabase.auth.getUser();
+      const { data: userData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', profileData.user?.id)
+        .single();
+        
+      if (!userData?.organization_id) {
+        toast.error("Could not determine your organization");
+        return;
+      }
+      
       const { error } = await supabase
         .from('job_positions')
         .insert({
           title: newPosition.title,
           location: newPosition.location || null,
           status: newPosition.status,
-          description: newPosition.description || null
+          description: newPosition.description || null,
+          organization_id: userData.organization_id
         });
         
       if (error) throw error;
@@ -110,8 +124,7 @@ export default function JobPositionsList() {
   };
   
   const filteredPositions = positions.filter(position => 
-    position.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (position.department && position.department.toLowerCase().includes(searchQuery.toLowerCase()))
+    position.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   return (
@@ -135,7 +148,7 @@ export default function JobPositionsList() {
         <TableHeader>
           <TableRow>
             <TableHead>Title</TableHead>
-            <TableHead>Department</TableHead>
+            <TableHead>Location</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
@@ -153,7 +166,7 @@ export default function JobPositionsList() {
             filteredPositions.map((position) => (
               <TableRow key={position.id}>
                 <TableCell>{position.title}</TableCell>
-                <TableCell>{position.department || "-"}</TableCell>
+                <TableCell>{position.location || "-"}</TableCell>
                 <TableCell>
                   <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     position.status === 'active' ? 'bg-green-100 text-green-800' :
@@ -208,12 +221,12 @@ export default function JobPositionsList() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
+              <Label htmlFor="location">Location</Label>
               <Input 
-                id="department" 
-                value={newPosition.department} 
-                onChange={(e) => setNewPosition({...newPosition, department: e.target.value})}
-                placeholder="e.g. Marketing"
+                id="location" 
+                value={newPosition.location} 
+                onChange={(e) => setNewPosition({...newPosition, location: e.target.value})}
+                placeholder="e.g. Remote, New York, etc."
               />
             </div>
             

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,6 +94,19 @@ export default function InvitationLinks() {
       // Generate a random token for the link
       const token = generateToken();
       
+      // Need to get the organization_id
+      const { data: profileData } = await supabase.auth.getUser();
+      const { data: userData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', profileData.user?.id)
+        .single();
+        
+      if (!userData?.organization_id) {
+        toast.error("Could not determine your organization");
+        return;
+      }
+      
       // Insert new recruitment link
       const { error } = await supabase
         .from('recruitment_links')
@@ -100,7 +114,8 @@ export default function InvitationLinks() {
           token,
           job_position_id: newLink.is_general_application ? null : newLink.job_position_id || null,
           status: newLink.status,
-          expires_at: newLink.expires_at
+          expires_at: newLink.expires_at,
+          organization_id: userData.organization_id
         });
         
       if (error) throw error;
@@ -142,9 +157,9 @@ export default function InvitationLinks() {
     );
   };
   
-  const toggleLinkStatus = async (id: string, currentStatus: boolean) => {
+  const toggleLinkStatus = async (id: string, currentStatus: string) => {
     try {
-      const newStatus = currentStatus ? 'inactive' : 'active';
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
       
       const { error } = await supabase
         .from('recruitment_links')
@@ -153,7 +168,7 @@ export default function InvitationLinks() {
         
       if (error) throw error;
       
-      toast.success(`Link ${currentStatus ? 'deactivated' : 'activated'}`);
+      toast.success(`Link ${currentStatus === 'active' ? 'deactivated' : 'activated'}`);
       fetchData();
     } catch (error) {
       console.error("Error toggling link status:", error);
