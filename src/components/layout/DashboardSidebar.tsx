@@ -1,5 +1,5 @@
 
-import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, Headset, CircleDollarSign, Truck, TrendingUp, Laptop, Users } from "lucide-react";
+import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, Headset, CircleDollarSign, Truck, TrendingUp, Laptop, Users, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarRail, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 interface NavigationItem {
@@ -41,6 +41,10 @@ export function DashboardSidebar({
     name: "Human Resources",
     href: "/hr/dashboard",
     icon: Users
+  }, {
+    name: "Recruitment",
+    href: "/hr/recruitment",
+    icon: UserPlus
   }, {
     name: "Finance",
     href: "/finance/dashboard",

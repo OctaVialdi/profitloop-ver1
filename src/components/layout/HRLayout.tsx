@@ -23,6 +23,7 @@ export default function HRLayout({ children }: HRLayoutProps) {
     { name: "Dashboard", href: "/hr/dashboard" },
     { name: "OKR", href: "/hr/okr" },
     { name: "Data Karyawan", href: "/hr/data" },
+    { name: "Recruitment", href: "/hr/recruitment" }, // Added new Recruitment tab
     { name: "Absensi", href: "/hr/absensi" },
     { name: "Cuti & Izin", href: "/hr/cuti" },
     { name: "Payroll", href: "/hr/payroll" },

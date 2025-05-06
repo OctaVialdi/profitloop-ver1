@@ -13,6 +13,7 @@ import HRKontrak from "@/pages/hr/Kontrak";
 import HRTraining from "@/pages/hr/Training";
 import HRKinerja from "@/pages/hr/Kinerja";
 import HRCompany from "@/pages/hr/Company";
+import HRRecruitment from "@/pages/hr/Recruitment"; // Added import for Recruitment
 import AddEmployee from "@/pages/hr/AddEmployee";
 import EmployeeDetail from "@/pages/hr/EmployeeDetail";
 import EmployeePersonal from "@/pages/hr/employee/EmployeePersonal";
@@ -36,6 +37,7 @@ export const hrRoutes = (
     <Route path="dashboard" element={<HRDashboard />} />
     <Route path="okr" element={<HROKR />} />
     <Route path="data" element={<HRDataKaryawan />} />
+    <Route path="recruitment" element={<HRRecruitment />} /> {/* Added route for Recruitment */}
     <Route path="data/employee/:id" element={<EmployeeDetail />} />
     <Route path="data/add-employee" element={<AddEmployee />} />
     <Route path="my-info/personal/:id" element={<EmployeePersonal />} />
