@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Card, 
@@ -39,6 +38,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
+
+// Application base URL - change this to your domain in production
+const APPLICATION_BASE_URL = "https://app.profitloop.id";
 
 interface InvitationLink {
   id: string;
@@ -119,7 +121,7 @@ export default function InvitationLinks() {
         const formattedLinks: InvitationLink[] = links.map(link => ({
           id: link.id,
           position: link.job_positions?.title || 'General Application',
-          link: `${window.location.origin}/apply/${link.token}`,
+          link: `${APPLICATION_BASE_URL}/apply/${link.token}`,
           createdAt: new Date(link.created_at).toLocaleDateString(),
           expiresAt: link.expires_at ? new Date(link.expires_at).toLocaleDateString() : 'N/A',
           clicks: link.clicks || 0,

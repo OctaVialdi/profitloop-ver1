@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import { formatTimestampToUserTimezone, convertToUTC } from "@/utils/dateUtils";
 
 // Import form sections
@@ -80,6 +80,7 @@ const JobApplicationForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [linkInfo, setLinkInfo] = useState<LinkInfo | null>(null);
   const [invalidLink, setInvalidLink] = useState(false);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
   
   // Validate token and fetch job position info
   useEffect(() => {
@@ -90,7 +91,7 @@ const JobApplicationForm = () => {
           return;
         }
         
-        // Call Supabase function to get information about the recruitment link
+        // Track the click on the recruitment link
         const { data, error } = await supabase
           .rpc('get_recruitment_link_info', { p_token: token });
         
@@ -266,9 +267,7 @@ const JobApplicationForm = () => {
       
       // Show success message
       toast.success("Application submitted successfully!");
-      
-      // Navigate to success page (you could create a dedicated success page)
-      navigate("/apply/success");
+      setSubmissionSuccess(true);
       
     } catch (error: any) {
       console.error("Submission error:", error);
@@ -277,6 +276,37 @@ const JobApplicationForm = () => {
       setIsSubmitting(false);
     }
   };
+  
+  // Show application success page
+  if (submissionSuccess) {
+    return (
+      <div className="container max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="text-center">
+          <CardHeader>
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl sm:text-3xl">Application Submitted Successfully!</CardTitle>
+            <CardDescription className="text-lg">
+              Thank you for applying to {linkInfo?.job_title} at {linkInfo?.organization_name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-8">
+            <p className="mb-6 text-muted-foreground">
+              We have received your application and will review it shortly. 
+              You will be contacted if your qualifications match our requirements.
+            </p>
+            <Button 
+              onClick={() => window.location.href = "https://app.profitloop.id"}
+              className="min-w-[200px]"
+            >
+              Return to Homepage
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   if (isLoading) {
     return (

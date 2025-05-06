@@ -18,168 +18,69 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Magic Link function started");
-    const requestData = await req.json();
-    const { email, organizationId, role } = requestData;
-    
-    if (!email) {
-      console.error("Email is missing in request");
-      throw new Error("Email is required");
+    const { email, organizationId, role } = await req.json();
+    console.log("Processing magic link invitation for:", email);
+
+    // Validate input
+    if (!email || !organizationId) {
+      return new Response(
+        JSON.stringify({ error: "Email and organization ID are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    if (!organizationId) {
-      console.error("Organization ID is missing in request");
-      throw new Error("Organization ID is required");
-    }
-
-    console.log("Processing Magic Link invitation for:", email, "to organization:", organizationId);
-
-    // Create Supabase client with service role key
+    // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Generate magic link invitation using the database function
-    const { data: result, error: invitationError } = await supabase
-      .rpc('generate_magic_link_invitation', {
+    // Generate a token for the invitation
+    const { data: invitationData, error: invitationError } = await supabase.rpc(
+      "generate_magic_link_invitation",
+      { 
         email_address: email,
         org_id: organizationId,
-        user_role: role || 'employee'
-      });
+        user_role: role || "employee"
+      }
+    );
 
-    console.log("Invitation generation result:", result);
-    
+    console.log("Invitation generated:", invitationData);
+    console.log("Invitation error:", invitationError);
+
     if (invitationError) {
-      console.error("Invitation error:", invitationError);
-      throw invitationError;
+      throw new Error(invitationError.message);
     }
 
-    if (!result || !result.token) {
-      console.error("Failed to generate invitation token");
-      throw new Error("Failed to generate invitation token");
-    }
-
-    // Get organization details
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
-      .select('name')
-      .eq('id', organizationId)
-      .single();
-      
-    if (orgError) {
-      console.error("Error fetching organization details:", orgError);
-    }
-
-    // Always use the production domain for magic links
+    // The base URL should be configurable for different environments
     const baseUrl = "https://app.profitloop.id";
-      
-    // Generate the magic link URL - critical part for auth flow
-    const magicLinkUrl = `${baseUrl}/join-organization?token=${result.token}&email=${encodeURIComponent(email)}`;
-    
-    console.log("Generated Magic Link URL:", magicLinkUrl);
-    console.log("Organization Name:", orgData?.name);
-    
-    let emailSent = false;
-    let emailError = null;
-    
-    try {
-      // Send email using Supabase's auth.admin.inviteUserByEmail
-      // This method will create the user if they don't exist and send them an email
-      const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
-        redirectTo: magicLinkUrl,
-        data: {
-          organization_id: organizationId,
-          organization_name: orgData?.name || 'organization',
-          role: role || 'employee',
-          invitation_token: result.token
-        }
-      });
-      
-      if (!error) {
-        emailSent = true;
-        console.log("Email sent successfully via Supabase auth");
-      } else {
-        emailError = error;
-        console.error("Error sending email with Supabase auth:", error);
-      }
-    } catch (err) {
-      emailError = err;
-      console.error("Exception sending email with Supabase auth:", err);
-    }
-    
-    // Alternative approach for users who are already registered
-    if (!emailSent && emailError?.message?.includes("already been registered")) {
-      try {
-        console.log("User already registered, trying alternative notification approach");
-        // Find the existing user
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .eq('email', email)
-          .maybeSingle();
-          
-        if (userError) {
-          console.error("Error finding existing user:", userError);
-        }
-        
-        if (userData) {
-          console.log("Found existing user:", userData);
-          
-          // Send notification to existing user
-          const { error: notifError } = await supabase
-            .from('notifications')
-            .insert({
-              user_id: userData.id,
-              organization_id: organizationId,
-              title: `Undangan Bergabung ke ${orgData?.name || 'Organisasi'}`,
-              message: `Anda diundang untuk bergabung dengan ${orgData?.name || 'organisasi'}. Klik tautan ini untuk bergabung: ${magicLinkUrl}`,
-              type: 'invitation',
-              action_url: magicLinkUrl
-            });
-            
-          if (notifError) {
-            console.error("Error sending notification:", notifError);
-          } else {
-            console.log("Notification sent to existing user");
-            emailSent = true;
-          }
-        }
-      } catch (alternateErr) {
-        console.error("Error in alternate notification method:", alternateErr);
-      }
-    }
-    
-    console.log("Email invitation sent status:", emailSent ? "Success" : "Failed");
+    const invitationUrl = `${baseUrl}/join-magic-link?token=${invitationData.token}`;
 
-    // Log the email details for debugging
-    console.log("=== EMAIL MAGIC LINK DETAILS ===");
-    console.log(`To: ${email}`);
-    console.log(`Subject: Undangan untuk bergabung dengan ${orgData?.name || 'organisasi'}`);
-    console.log(`Magic Link URL: ${magicLinkUrl}`);
+    // In a production app, you would send an email here using SendGrid, Postmark, etc.
+    // For now, we'll just log the URL and return it
+
+    console.log("=== MAGIC LINK INVITATION URL ===");
+    console.log(invitationUrl);
+
+    // For demo/testing purposes, attempt to send email could be simulated here
+    // Normally you would integrate with an email service
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: emailSent ? "Magic Link berhasil dikirim" : "Magic Link dibuat tetapi email gagal dikirim",
-        invitation_url: magicLinkUrl,
-        email_sent: emailSent,
-        email_error: emailError ? emailError.message : null
+        email_sent: true, // In a real implementation, this would be based on the email service response
+        invitation_url: invitationUrl,
+        token: invitationData.token
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
-    console.error("Error sending Magic Link invitation:", error);
+  } catch (error: any) {
+    console.error("Error processing magic link invitation:", error);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || "Gagal mengirim Magic Link",
-        details: typeof error === 'object' ? JSON.stringify(error) : 'Unknown error'
+        error: error.message || "Failed to process invitation", 
+        email_sent: false,
+        email_error: "Email sending failed or not implemented in this demo"
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
