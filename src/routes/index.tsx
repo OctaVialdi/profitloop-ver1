@@ -12,14 +12,14 @@ import { myInfoRoutes } from "./myInfoRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import Apply from "@/pages/Apply"; // Import the new Apply page
+import Apply from "@/pages/Apply";
 
 import EmptyPage from "@/pages/EmptyPage";
 import NotFound from "@/pages/NotFound";
 import WelcomePage from "@/pages/WelcomePage";
 import IndexPage from "@/pages/Index";
 
-// Create browser router - fix the array structures
+// Create browser router with proper route objects
 const router = createBrowserRouter([
   // Public application form route (accessible without authentication)
   {
@@ -41,7 +41,7 @@ const router = createBrowserRouter([
   ...onboardingRoutes,
   // Dashboard routes - already an array
   ...dashboardRoutes,
-  // HR routes - single element, no spread
+  // HR routes - must be wrapped in an array since it's a single element
   hrRoutes,
   // Finance routes - already an array
   ...financeRoutes,
