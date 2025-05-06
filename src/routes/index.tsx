@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
@@ -23,7 +22,7 @@ export const router = createBrowserRouter([
       // Other routes
       ...authRoutes,
       ...dashboardRoutes,
-      ...financeRoutes,
+      financeRoutes,
       hrRoutes,
       itRoutes,
       marketingRoutes,
