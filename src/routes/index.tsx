@@ -1,3 +1,5 @@
+
+import React from "react";
 import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
@@ -18,7 +20,12 @@ import NotFound from "@/pages/NotFound";
 const asRouteObject = (route: React.ReactElement | RouteObject): RouteObject => {
   if (React.isValidElement(route)) {
     // Convert JSX element to route object
-    const props = route.props;
+    const props = route.props as {
+      path?: string;
+      element?: React.ReactNode;
+      children?: React.ReactElement[];
+    };
+    
     return {
       path: props.path,
       element: props.element,
