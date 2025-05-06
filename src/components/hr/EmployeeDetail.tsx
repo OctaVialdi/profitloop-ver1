@@ -33,7 +33,9 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
   const navigate = useNavigate();
   const [activeTab] = useState(initialActiveTab);
   const [activePersonalTab, setActivePersonalTab] = useState("basic-info");
-  const [employeeData, setEmployeeData] = useState<Employee>(employee);
+  
+  // Handle both Employee and EmployeeWithDetails types
+  const [employeeData, setEmployeeData] = useState<Employee | EmployeeWithDetails>(employee);
 
   // Convert to legacy employee object format for backward compatibility
   const legacyEmployee: LegacyEmployee = convertToLegacyFormat(employeeData);

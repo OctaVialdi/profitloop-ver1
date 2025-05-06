@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { Employee, employeeService } from "@/services/employeeService";
+import { Employee, employeeService, EmployeeWithDetails } from "@/services/employeeService";
 import { toast } from "sonner";
 
 // Export the Employee type from the service
-export type { Employee } from "@/services/employeeService";
+export type { Employee, EmployeeWithDetails } from "@/services/employeeService";
 
 export interface LegacyEmployee {
   id: string;
@@ -45,10 +45,21 @@ export interface LegacyEmployee {
 // Export these types from employeeService for backward compatibility
 export type { EmployeePersonalDetails, EmployeeIdentityAddress, EmployeeEmployment } from "@/services/employeeService";
 
-// Converts a backend Employee to a LegacyEmployee format for frontend components
-export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
+// Converts a backend Employee or EmployeeWithDetails to a LegacyEmployee format for frontend components
+export const convertToLegacyFormat = (employee: Employee | EmployeeWithDetails): LegacyEmployee => {
   // Generate an employee_id if one doesn't exist
   const empId = employee.employee_id || `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+  
+  // Check if the employee is an EmployeeWithDetails which has employment as an object
+  const isEmployeeWithDetails = 'personalDetails' in employee || 
+    (employee.employment && !Array.isArray(employee.employment));
+  
+  // Get employment data
+  const employmentData = isEmployeeWithDetails 
+    ? (employee as EmployeeWithDetails).employment 
+    : (employee.employment && Array.isArray(employee.employment) && employee.employment.length > 0 
+        ? employee.employment[0] 
+        : null);
   
   return {
     id: employee.id,
@@ -72,18 +83,26 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
     citizenAddress: employee.citizen_address || '',
     address: employee.address || '',
     organization_id: employee.organization_id,
-    // Use organization_name instead of organization_id for display
-    organization: employee.organization_name || '',
+    // Use organization_name from the appropriate source
+    organization: employee.organization_name || 
+      (employmentData ? employmentData.organization_name : '') || '',
     // Legacy properties
     employeeId: empId,
-    barcode: employee.barcode || '',
-    branch: employee.branch || '',
-    jobPosition: employee.job_position || '',
-    jobLevel: employee.job_level || '',
-    employmentStatus: employee.employment_status || 'Active',
-    joinDate: employee.join_date || '',
+    barcode: employee.barcode || 
+      (employmentData ? employmentData.barcode : '') || '',
+    branch: employee.branch || 
+      (employmentData ? employmentData.branch : '') || '',
+    jobPosition: employee.job_position || 
+      (employmentData ? employmentData.job_position : '') || '',
+    jobLevel: employee.job_level || 
+      (employmentData ? employmentData.job_level : '') || '',
+    employmentStatus: employee.employment_status || 
+      (employmentData ? employmentData.employment_status : '') || 'Active',
+    joinDate: employee.join_date || 
+      (employmentData ? employmentData.join_date : '') || '',
     endDate: '', // No field in new model
-    signDate: employee.sign_date || '',
+    signDate: employee.sign_date || 
+      (employmentData ? employmentData.sign_date : '') || '',
     resignDate: '' // No field in new model
   };
 };
