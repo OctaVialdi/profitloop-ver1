@@ -42,7 +42,7 @@ export interface Employee {
 }
 
 // For backward compatibility with existing components
-export interface EmployeeWithDetails extends Employee {
+export interface EmployeeWithDetails extends Omit<Employee, 'employment'> {
   personalDetails?: EmployeePersonalDetails;
   identityAddress?: EmployeeIdentityAddress;
   employment?: EmployeeEmployment;
@@ -72,7 +72,6 @@ export interface EmployeeIdentityAddress {
 export interface EmployeeEmployment {
   employee_id?: string;
   barcode?: string | null;
-  // Update the interface to match both formats (organization and organization_name)
   organization_name?: string | null;
   job_position?: string | null;
   job_level?: string | null;
@@ -80,16 +79,7 @@ export interface EmployeeEmployment {
   branch?: string | null;
   join_date?: string | null;
   sign_date?: string | null;
-}
-
-export interface EmployeeBasic {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-  status?: string;
-  employee_id?: string;
-  profile_image?: string;
+  company_name?: string | null;
 }
 
 // Additional types needed based on the errors
@@ -170,13 +160,13 @@ export const employeeService = {
         return {
           ...employee,
           organization_name: employmentData?.organization_name || null,
-          barcode: employmentData?.barcode || employee.barcode || null,
-          job_position: employmentData?.job_position || employee.job_position || null,
-          job_level: employmentData?.job_level || employee.job_level || null,
-          employment_status: employmentData?.employment_status || employee.employment_status || null,
-          branch: employmentData?.branch || employee.branch || null,
-          join_date: employmentData?.join_date || employee.join_date || null,
-          sign_date: employmentData?.sign_date || employee.sign_date || null,
+          barcode: employmentData?.barcode || null,
+          job_position: employmentData?.job_position || null,
+          job_level: employmentData?.job_level || null,
+          employment_status: employmentData?.employment_status || null,
+          branch: employmentData?.branch || null,
+          join_date: employmentData?.join_date || null,
+          sign_date: employmentData?.sign_date || null,
           // Keep the employment array for advanced use cases
           employment: employee.employment
         };
@@ -240,8 +230,8 @@ export const employeeService = {
           citizen_address: employeeWithAllFields.citizen_address,
           residential_address: employeeWithAllFields.address
         },
-        employment: {
-          employee_id: employeeWithAllFields.employee_id,
+        employment: employmentData || {
+          employee_id: employeeWithAllFields.id,
           barcode: employeeWithAllFields.barcode,
           organization_name: employeeWithAllFields.organization_name,
           job_position: employeeWithAllFields.job_position,

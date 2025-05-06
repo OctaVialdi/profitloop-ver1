@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { employeeService, Employee } from "@/services/employeeService";
+import { employeeService, Employee, EmployeeWithDetails } from "@/services/employeeService";
 import { convertToLegacyFormat, LegacyEmployee } from "@/hooks/useEmployees";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -22,7 +22,7 @@ import {
 } from "./employee-detail";
 
 interface EmployeeDetailProps {
-  employee: Employee;
+  employee: Employee | EmployeeWithDetails;
   activeTab: string;
 }
 

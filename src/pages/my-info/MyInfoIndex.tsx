@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
+import { EmployeeWithDetails, employeeService, Employee } from "@/services/employeeService";
 import { EmployeeDetail } from "@/components/hr/EmployeeDetail";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
