@@ -382,8 +382,8 @@ export const employeeService = {
       // Generate unique employee IDs for new employees
       const generateUniqueId = () => `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
       
-      // Define dummy employee data - each employee as a separate object with required fields
-      const employee1 = {
+      // First dummy employee data
+      const employee1Data = {
         name: "John Doe",
         email: "john.doe@example.com",
         mobile_phone: "+6281234567890",
@@ -399,7 +399,8 @@ export const employeeService = {
         employee_id: generateUniqueId()
       };
 
-      const employee2 = {
+      // Second dummy employee data
+      const employee2Data = {
         name: "Jane Smith",
         email: "jane.smith@example.com",
         mobile_phone: "+6287654321098",
@@ -415,11 +416,11 @@ export const employeeService = {
         employee_id: generateUniqueId()
       };
 
-      // Insert employees one by one
+      // Insert first employee - note: insert takes a single object
       const { data: newEmployee1, error: error1 } = await supabase
         .from('employees')
-        .insert(employee1)  // Insert a single object, not an array
-        .select()
+        .insert(employee1Data)
+        .select('*')
         .single();
 
       if (error1) {
@@ -427,10 +428,11 @@ export const employeeService = {
         return false;
       }
 
+      // Insert second employee - note: insert takes a single object
       const { data: newEmployee2, error: error2 } = await supabase
         .from('employees')
-        .insert(employee2)  // Insert a single object, not an array
-        .select()
+        .insert(employee2Data)
+        .select('*')
         .single();
 
       if (error2) {
@@ -438,7 +440,7 @@ export const employeeService = {
         return false;
       }
 
-      // Now add employment data for each employee
+      // Add employment data for first employee
       if (newEmployee1) {
         const employment1 = {
           employee_id: newEmployee1.id,
@@ -456,6 +458,7 @@ export const employeeService = {
         }
       }
 
+      // Add employment data for second employee
       if (newEmployee2) {
         const employment2 = {
           employee_id: newEmployee2.id,
