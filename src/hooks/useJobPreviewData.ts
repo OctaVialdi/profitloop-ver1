@@ -68,14 +68,16 @@ export const useJobPreviewData = (token: string | undefined) => {
         // Get organization details
         const { data: orgData, error: orgError } = await supabase
           .from("organizations")
-          .select("name, logo_url")
+          .select("name, logo_path")
           .eq("id", linkData.organization_id)
           .single();
 
-        // Handle organization data error case with default values
-        const organizationData = orgError || !orgData 
-          ? { name: "Organization", logo_url: null }
-          : orgData;
+        // Create organization data with the correct structure
+        // Using logo_path from the database as logo_url in our interface
+        const organizationData = {
+          name: orgError || !orgData ? "Organization" : orgData.name,
+          logo_url: orgError || !orgData ? null : orgData.logo_path
+        };
 
         // Set job data with complete, valid structure
         setJobData({
