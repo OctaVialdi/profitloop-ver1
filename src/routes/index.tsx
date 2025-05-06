@@ -41,20 +41,20 @@ const router = createBrowserRouter([
   ...onboardingRoutes,
   // Dashboard routes - already an array
   ...dashboardRoutes,
-  // HR routes - must be wrapped in an array since it's a single element
+  // HR routes - not an array, just include directly
   hrRoutes,
-  // Finance routes - already an array
-  ...financeRoutes,
-  // Operations routes - already an array
-  ...operationsRoutes,
-  // Marketing routes - already an array
-  ...marketingRoutes,
-  // IT routes - already an array
-  ...itRoutes,
-  // My Info routes - already an array
-  ...myInfoRoutes,
-  // Settings routes - already an array
-  ...settingsRoutes,
+  // Finance routes - not an array, just include directly
+  financeRoutes,
+  // Operations routes - not an array, just include directly
+  operationsRoutes,
+  // Marketing routes - not an array, just include directly
+  marketingRoutes,
+  // IT routes - not an array, just include directly
+  itRoutes,
+  // My Info routes - not an array, just include directly
+  myInfoRoutes,
+  // Settings routes - not an array, just include directly
+  settingsRoutes,
   {
     path: "/empty",
     element: (
