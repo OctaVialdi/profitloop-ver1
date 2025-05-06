@@ -1,5 +1,5 @@
 
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
 import { onboardingRoutes } from "./onboardingRoutes";
@@ -35,26 +35,21 @@ const router = createBrowserRouter([
     path: "/welcome",
     element: <WelcomePage />
   },
-  // Authentication routes - already an array
+  // Flatten and add authentication routes (array of elements)
   ...authRoutes,
-  // Onboarding routes - already an array
+  // Flatten and add onboarding routes (array of elements)
   ...onboardingRoutes,
-  // Dashboard routes - already an array
+  // Flatten and add dashboard routes (array of elements)
   ...dashboardRoutes,
-  // HR routes - not an array, just include directly
-  hrRoutes,
-  // Finance routes - not an array, just include directly
-  financeRoutes,
-  // Operations routes - not an array, just include directly
-  operationsRoutes,
-  // Marketing routes - not an array, just include directly
-  marketingRoutes,
-  // IT routes - not an array, just include directly
-  itRoutes,
-  // My Info routes - not an array, just include directly
-  myInfoRoutes,
-  // Settings routes - not an array, just include directly
-  settingsRoutes,
+  // The rest of the routes are single route objects (not arrays),
+  // so we add them directly
+  hrRoutes as RouteObject,
+  financeRoutes as RouteObject,
+  operationsRoutes as RouteObject,
+  marketingRoutes as RouteObject,
+  itRoutes as RouteObject,
+  myInfoRoutes as RouteObject,
+  settingsRoutes as RouteObject,
   {
     path: "/empty",
     element: (
