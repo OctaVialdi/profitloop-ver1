@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +32,7 @@ export default function InvitationLinks() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newLink, setNewLink] = useState({
     job_position_id: "",
-    is_active: true,
+    status: "active",
     expires_at: null,
     notes: "",
     is_general_application: false
@@ -62,9 +61,8 @@ export default function InvitationLinks() {
           token,
           created_at,
           expires_at,
-          is_active,
+          status,
           notes,
-          is_general_application,
           job_positions (
             id,
             title
@@ -101,10 +99,8 @@ export default function InvitationLinks() {
         .insert({
           token,
           job_position_id: newLink.is_general_application ? null : newLink.job_position_id || null,
-          is_active: newLink.is_active,
-          expires_at: newLink.expires_at,
-          notes: newLink.notes || null,
-          is_general_application: newLink.is_general_application
+          status: newLink.status,
+          expires_at: newLink.expires_at
         });
         
       if (error) throw error;
@@ -113,7 +109,7 @@ export default function InvitationLinks() {
       setShowCreateDialog(false);
       setNewLink({
         job_position_id: "",
-        is_active: true,
+        status: "active",
         expires_at: null,
         notes: "",
         is_general_application: false
@@ -148,14 +144,16 @@ export default function InvitationLinks() {
   
   const toggleLinkStatus = async (id: string, currentStatus: boolean) => {
     try {
+      const newStatus = currentStatus ? 'inactive' : 'active';
+      
       const { error } = await supabase
         .from('recruitment_links')
-        .update({ is_active: !currentStatus })
+        .update({ status: newStatus })
         .eq('id', id);
         
       if (error) throw error;
       
-      toast.success(`Link ${!currentStatus ? 'activated' : 'deactivated'}`);
+      toast.success(`Link ${currentStatus ? 'deactivated' : 'activated'}`);
       fetchData();
     } catch (error) {
       console.error("Error toggling link status:", error);
@@ -201,7 +199,7 @@ export default function InvitationLinks() {
           {filteredLinks.map((link) => {
             const applicationUrl = getApplicationUrl(link.token);
             return (
-              <Card key={link.id} className={link.is_active ? "" : "opacity-75"}>
+              <Card key={link.id} className={link.status === 'active' ? "" : "opacity-75"}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
@@ -215,9 +213,9 @@ export default function InvitationLinks() {
                     </div>
                     <div className="flex items-center">
                       <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        link.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        link.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {link.is_active ? 'Active' : 'Inactive'}
+                        {link.status === 'active' ? 'Active' : 'Inactive'}
                       </div>
                     </div>
                   </div>
@@ -260,9 +258,9 @@ export default function InvitationLinks() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => toggleLinkStatus(link.id, link.is_active)}
+                      onClick={() => toggleLinkStatus(link.id, link.status === 'active')}
                     >
-                      {link.is_active ? 'Deactivate' : 'Activate'}
+                      {link.status === 'active' ? 'Deactivate' : 'Activate'}
                     </Button>
                     
                     <DropdownMenu>
@@ -278,8 +276,8 @@ export default function InvitationLinks() {
                         <DropdownMenuItem onClick={() => window.open(applicationUrl, '_blank')}>
                           Open Link
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toggleLinkStatus(link.id, link.is_active)}>
-                          {link.is_active ? 'Deactivate' : 'Activate'} Link
+                        <DropdownMenuItem onClick={() => toggleLinkStatus(link.id, link.status === 'active')}>
+                          {link.status === 'active' ? 'Deactivate' : 'Activate'} Link
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -356,8 +354,8 @@ export default function InvitationLinks() {
             <div className="flex items-center space-x-2">
               <Switch 
                 id="active" 
-                checked={newLink.is_active}
-                onCheckedChange={(checked) => setNewLink({...newLink, is_active: checked})}
+                checked={newLink.status === 'active'}
+                onCheckedChange={(checked) => setNewLink({...newLink, status: checked ? 'active' : 'inactive'})}
               />
               <Label htmlFor="active">Active</Label>
             </div>

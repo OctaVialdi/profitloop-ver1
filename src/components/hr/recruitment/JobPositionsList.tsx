@@ -31,7 +31,7 @@ export default function JobPositionsList() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newPosition, setNewPosition] = useState({
     title: "",
-    department: "",
+    location: "",
     status: "active",
     description: "",
   });
@@ -70,7 +70,7 @@ export default function JobPositionsList() {
         .from('job_positions')
         .insert({
           title: newPosition.title,
-          department: newPosition.department || null,
+          location: newPosition.location || null,
           status: newPosition.status,
           description: newPosition.description || null
         });
@@ -81,7 +81,7 @@ export default function JobPositionsList() {
       setShowAddDialog(false);
       setNewPosition({
         title: "",
-        department: "",
+        location: "",
         status: "active",
         description: "",
       });

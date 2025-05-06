@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-
-import App from "../App";
+import { Outlet } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
 import { financeRoutes } from "./financeRoutes";
@@ -13,17 +12,17 @@ import { myInfoRoutes } from "./myInfoRoutes";
 import { onboardingRoutes } from "./onboardingRoutes";
 import { publicRoutes } from "./publicRoutes";
 
-import { NotFound } from "@/pages/NotFound";
+import NotFound from "@/pages/NotFound";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <Outlet />,
     children: [
       // Other routes
-      authRoutes,
-      dashboardRoutes,
-      financeRoutes,
+      ...authRoutes,
+      ...dashboardRoutes,
+      ...financeRoutes,
       hrRoutes,
       itRoutes,
       marketingRoutes,
@@ -31,7 +30,7 @@ export const router = createBrowserRouter([
       settingsRoutes,
       myInfoRoutes,
       onboardingRoutes,
-      publicRoutes,
+      ...publicRoutes,
       {
         path: "*",
         element: <NotFound />,
