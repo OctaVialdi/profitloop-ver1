@@ -45,7 +45,7 @@ export const AppRoutes = () => {
       {/* HR Routes */}
       <Route element={<ProtectedRoute />}>
         {hrRoutes}
-      </Route}
+      </Route>
       
       {/* My Info Routes */}
       <Route element={<ProtectedRoute />}>
