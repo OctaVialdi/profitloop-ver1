@@ -144,9 +144,9 @@ const JobApplicationForm = () => {
       const { data: applicationData, error: applicationError } = await supabase
         .from('candidate_applications')
         .insert({
-          job_position_id: linkInfo.job_position_id,
-          recruitment_link_id: token,
           organization_id: linkInfo.organization_id,
+          job_position_id: linkInfo.job_position_id,
+          recruitment_link_id: token || '',
           full_name: formData.fullName,
           email: formData.email,
           phone: formData.mobilePhone,
