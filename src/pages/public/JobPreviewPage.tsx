@@ -54,9 +54,11 @@ export default function JobPreviewPage() {
         }
 
         // Record the click on the link
-        await supabase.rpc("increment_link_clicks", {
-          p_link_id: linkData.id
-        });
+        // Use a direct update instead of RPC
+        await supabase
+          .from("recruitment_links")
+          .update({ clicks: supabase.sql`clicks + 1` })
+          .eq("id", linkData.id);
 
         // Get position details
         const { data: positionData, error: positionError } = await supabase
@@ -77,14 +79,24 @@ export default function JobPreviewPage() {
           .single();
 
         if (orgError || !orgData) {
-          throw new Error("Organization not found");
+          // Provide default organization data if not found
+          const defaultOrgData = {
+            name: "Organization",
+            logo_url: null
+          };
+          
+          setJobData({
+            position: positionData,
+            organization: defaultOrgData,
+            token: token
+          });
+        } else {
+          setJobData({
+            position: positionData,
+            organization: orgData,
+            token: token
+          });
         }
-
-        setJobData({
-          position: positionData,
-          organization: orgData,
-          token: token
-        });
         
       } catch (err: any) {
         console.error("Error fetching job data:", err);

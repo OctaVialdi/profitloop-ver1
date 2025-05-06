@@ -5,10 +5,9 @@ import {
   CardContent, 
   CardHeader, 
   CardTitle, 
-  CardDescription,
-  Alert,
-  AlertDescription 
+  CardDescription 
 } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ClipboardIcon, Share2Icon, AlertTriangleIcon, EyeIcon } from "lucide-react";
 
 export default function InvitationInfoCard() {
@@ -23,7 +22,7 @@ export default function InvitationInfoCard() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <Alert variant="warning" className="mb-4">
+          <Alert className="mb-4">
             <AlertTriangleIcon className="h-4 w-4" />
             <AlertDescription>
               Due to a temporary hosting issue, we recommend using the Preview Link option when sharing invitations with candidates.
