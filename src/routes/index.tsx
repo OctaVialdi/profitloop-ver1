@@ -23,13 +23,17 @@ const asRouteObject = (route: React.ReactElement | RouteObject): RouteObject => 
     const props = route.props as {
       path?: string;
       element?: React.ReactNode;
-      children?: React.ReactElement[];
+      children?: React.ReactElement[] | React.ReactElement;
     };
     
     return {
       path: props.path,
       element: props.element,
-      children: props.children ? props.children.map(asRouteObject) : undefined,
+      children: props.children 
+        ? Array.isArray(props.children) 
+          ? props.children.map(asRouteObject) 
+          : [asRouteObject(props.children)]
+        : undefined,
       // Add any other properties from Route element that might be needed
     };
   }
