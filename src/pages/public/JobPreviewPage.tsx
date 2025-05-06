@@ -57,7 +57,7 @@ export default function JobPreviewPage() {
         // Use a direct update instead of RPC
         await supabase
           .from("recruitment_links")
-          .update({ clicks: supabase.sql`clicks + 1` })
+          .update({ clicks: linkData.clicks ? linkData.clicks + 1 : 1 })
           .eq("id", linkData.id);
 
         // Get position details
