@@ -35,21 +35,18 @@ const router = createBrowserRouter([
     path: "/welcome",
     element: <WelcomePage />
   },
-  // Flatten and add authentication routes (array of elements)
-  ...authRoutes,
-  // Flatten and add onboarding routes (array of elements)
-  ...onboardingRoutes,
-  // Flatten and add dashboard routes (array of elements)
-  ...dashboardRoutes,
-  // The rest of the routes are single route objects (not arrays),
-  // so we add them directly
-  hrRoutes as RouteObject,
-  financeRoutes as RouteObject,
-  operationsRoutes as RouteObject,
-  marketingRoutes as RouteObject,
-  itRoutes as RouteObject,
-  myInfoRoutes as RouteObject,
-  settingsRoutes as RouteObject,
+  // Convert route elements to RouteObjects using the spread operator for arrays of routes
+  ...(authRoutes as RouteObject[]),
+  ...(onboardingRoutes as RouteObject[]),
+  ...(dashboardRoutes as RouteObject[]),
+  // The single route objects
+  hrRoutes as unknown as RouteObject,
+  financeRoutes as unknown as RouteObject,
+  operationsRoutes as unknown as RouteObject,
+  marketingRoutes as unknown as RouteObject,
+  itRoutes as unknown as RouteObject,
+  myInfoRoutes as unknown as RouteObject,
+  settingsRoutes as unknown as RouteObject,
   {
     path: "/empty",
     element: (
