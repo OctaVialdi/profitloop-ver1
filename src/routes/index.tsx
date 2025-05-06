@@ -14,11 +14,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Apply from "@/pages/Apply"; // Import the new Apply page
 
-import LoginPage from "@/pages/auth/Login";
-import RegisterPage from "@/pages/auth/Register";
-import VerificationSentPage from "@/pages/auth/VerificationSent";
-import MagicLinkJoinPage from "@/pages/auth/MagicLinkJoin";
-
 import EmptyPage from "@/pages/EmptyPage";
 import NotFound from "@/pages/NotFound";
 import WelcomePage from "@/pages/WelcomePage";
@@ -46,7 +41,7 @@ const router = createBrowserRouter([
   ...onboardingRoutes,
   // Dashboard routes
   ...dashboardRoutes,
-  // HR routes
+  // HR routes (this is already one element, no spread needed)
   hrRoutes,
   // Finance routes
   ...financeRoutes,
