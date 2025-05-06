@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -79,16 +78,15 @@ export default function JobPositionsList() {
           .select('id', { count: 'exact', head: true })
           .eq('job_position_id', position.id);
           
-        // Add the department field with a default value if it doesn't exist in the database
+        // Create a JobPosition object with all required properties
         return {
           ...position,
-          department: position.department || '-', // Add default department value
+          department: '-', // Add default department value since it doesn't exist in the database
           applicantCount: count || 0
-        };
+        } as JobPosition; // Explicitly cast to JobPosition
       }));
       
-      // Cast the result to JobPosition[] to satisfy TypeScript
-      setJobPositions(positionsWithApplicants as JobPosition[]);
+      setJobPositions(positionsWithApplicants);
     } catch (error: any) {
       console.error("Error fetching job positions:", error);
       toast.error("Failed to load job positions");

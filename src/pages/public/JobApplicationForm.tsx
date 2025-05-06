@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -140,29 +139,31 @@ const JobApplicationForm = () => {
         return;
       }
       
-      // Insert candidate application - corrected field name to match database schema
-      const { data: applicationData, error: applicationError } = await supabase
+      // Insert candidate application - using the correct field names to match database schema
+      const applicationData = {
+        job_position_id: linkInfo.job_position_id,
+        recruitment_link_id: token || '',
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: formData.mobilePhone,
+        address: formData.residentialAddress,
+        birth_date: formData.birthdate,
+        birth_place: formData.birthPlace,
+        gender: formData.gender,
+        religion: formData.religion,
+        marital_status: formData.maritalStatus,
+        blood_type: formData.bloodType,
+        nik: formData.nik,
+        passport_number: formData.passportNumber,
+        passport_expiry: formData.passportExpiry,
+        postal_code: formData.postalCode,
+        citizen_address: formData.citizenAddress,
+        organization_id: linkInfo.organization_id
+      };
+      
+      const { data: insertedData, error: applicationError } = await supabase
         .from('candidate_applications')
-        .insert({
-          job_position_id: linkInfo.job_position_id,
-          recruitment_link_id: token || '',
-          full_name: formData.fullName,
-          email: formData.email,
-          phone: formData.mobilePhone,
-          address: formData.residentialAddress,
-          birth_date: formData.birthdate,
-          birth_place: formData.birthPlace,
-          gender: formData.gender,
-          religion: formData.religion,
-          marital_status: formData.maritalStatus,
-          blood_type: formData.bloodType,
-          nik: formData.nik,
-          passport_number: formData.passportNumber,
-          passport_expiry: formData.passportExpiry,
-          postal_code: formData.postalCode,
-          citizen_address: formData.citizenAddress,
-          organization_id: linkInfo.organization_id
-        })
+        .insert(applicationData)
         .select('id')
         .single();
       
@@ -170,7 +171,7 @@ const JobApplicationForm = () => {
         throw applicationError;
       }
       
-      const applicationId = applicationData.id;
+      const applicationId = insertedData.id;
       
       // Insert family members
       if (familyMembers.length > 0) {
