@@ -25,7 +25,7 @@ export const AppRoutes = () => {
       {/* Auth Routes */}
       {authRoutes}
       
-      {/* Public Routes */}
+      {/* Public Routes - Ensuring these are registered BEFORE protected routes for priority */}
       <Route path="/join-organization" element={<JoinOrganization />} />
       <Route path="/apply/:token" element={<JobApplicationForm />} />
       <Route path="/apply/success" element={<ApplicationSuccess />} />
@@ -75,7 +75,7 @@ export const AppRoutes = () => {
         {settingsRoutes}
       </Route>
 
-      {/* Catch all */}
+      {/* Catch all - This must always be last */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

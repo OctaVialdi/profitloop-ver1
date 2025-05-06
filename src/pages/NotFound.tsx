@@ -10,11 +10,26 @@ const NotFound = () => {
   useEffect(() => {
     // Enhanced magic link detection - handle more complex URL patterns
     console.log("NotFound: Current URL:", window.location.href);
+    console.log("NotFound: Path:", location.pathname);
     console.log("NotFound: Search params:", location.search);
     console.log("NotFound: Hash:", location.hash);
     
     try {
       const url = new URL(window.location.href);
+      const path = location.pathname;
+      
+      // Special handling for job application routes
+      if (path.startsWith('/apply/')) {
+        console.log("Job application path detected:", path);
+        const token = path.split('/apply/')[1];
+        console.log("Extracted token:", token);
+        
+        if (token) {
+          console.log("Redirecting to job application with token:", token);
+          navigate(`/apply/${token}`, { replace: true });
+          return;
+        }
+      }
       
       // Handle URL query parameters for token and email
       const token = url.searchParams.get("token");
