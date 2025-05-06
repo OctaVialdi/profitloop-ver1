@@ -79,8 +79,9 @@ export default function JobPreviewPage() {
           .eq("id", linkData.organization_id)
           .single();
 
+        // Fix: Properly handle the organization data error case
         if (orgError || !orgData) {
-          // Provide default organization data if not found
+          // Create default organization data with the correct shape
           const defaultOrgData = {
             name: "Organization",
             logo_url: null
