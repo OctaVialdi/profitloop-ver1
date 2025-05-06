@@ -19,7 +19,7 @@ import NotFound from "@/pages/NotFound";
 import WelcomePage from "@/pages/WelcomePage";
 import IndexPage from "@/pages/Index";
 
-// Create browser router
+// Create browser router - fix the array structures
 const router = createBrowserRouter([
   // Public application form route (accessible without authentication)
   {
@@ -35,25 +35,25 @@ const router = createBrowserRouter([
     path: "/welcome",
     element: <WelcomePage />
   },
-  // Authentication routes
+  // Authentication routes - already an array
   ...authRoutes,
-  // Onboarding routes
+  // Onboarding routes - already an array
   ...onboardingRoutes,
-  // Dashboard routes
+  // Dashboard routes - already an array
   ...dashboardRoutes,
-  // HR routes (this is already one element, no spread needed)
+  // HR routes - single element, no spread
   hrRoutes,
-  // Finance routes
+  // Finance routes - already an array
   ...financeRoutes,
-  // Operations routes
+  // Operations routes - already an array
   ...operationsRoutes,
-  // Marketing routes
+  // Marketing routes - already an array
   ...marketingRoutes,
-  // IT routes
+  // IT routes - already an array
   ...itRoutes,
-  // My Info routes
+  // My Info routes - already an array
   ...myInfoRoutes,
-  // Settings routes
+  // Settings routes - already an array
   ...settingsRoutes,
   {
     path: "/empty",
