@@ -1,3 +1,4 @@
+
 import { createBrowserRouter } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
@@ -29,7 +30,7 @@ export const router = createBrowserRouter([
       operationsRoutes,
       settingsRoutes,
       myInfoRoutes,
-      onboardingRoutes,
+      ...onboardingRoutes, // Changed to spread this since it's an array
       ...publicRoutes,
       {
         path: "*",
