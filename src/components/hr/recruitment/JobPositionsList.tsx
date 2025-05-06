@@ -1,212 +1,257 @@
 
-import React from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { BriefcaseIcon, PlusIcon, MoreVertical } from "lucide-react";
-import { 
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { supabase } from "@/integrations/supabase/client";
+import { PlusIcon, Search, MoreHorizontal } from "lucide-react";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-
-interface JobPosition {
-  id: string;
-  title: string;
-  department: string;
-  location: string;
-  type: 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
-  status: 'active' | 'draft' | 'closed';
-  postedDate: string;
-  applicantCount: number;
-}
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export default function JobPositionsList() {
-  // Mock data - would be replaced with actual API calls
-  const jobPositions: JobPosition[] = [
-    {
-      id: "1",
-      title: "Frontend Developer",
-      department: "Engineering",
-      location: "Remote",
-      type: "Full-time",
-      status: "active",
-      postedDate: "2023-04-15",
-      applicantCount: 18
-    },
-    {
-      id: "2",
-      title: "UX Designer",
-      department: "Design",
-      location: "Jakarta, Indonesia",
-      type: "Full-time",
-      status: "active",
-      postedDate: "2023-04-18",
-      applicantCount: 12
-    },
-    {
-      id: "3",
-      title: "Backend Developer",
-      department: "Engineering",
-      location: "Remote",
-      type: "Contract",
-      status: "active",
-      postedDate: "2023-04-20",
-      applicantCount: 9
-    },
-    {
-      id: "4",
-      title: "Product Manager",
-      department: "Product",
-      location: "Bandung, Indonesia",
-      type: "Full-time",
-      status: "draft",
-      postedDate: "2023-04-22",
-      applicantCount: 0
-    },
-    {
-      id: "5",
-      title: "Marketing Specialist",
-      department: "Marketing",
-      location: "Jakarta, Indonesia",
-      type: "Part-time",
-      status: "closed",
-      postedDate: "2023-03-10",
-      applicantCount: 24
+  const [isLoading, setIsLoading] = useState(true);
+  const [positions, setPositions] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newPosition, setNewPosition] = useState({
+    title: "",
+    department: "",
+    status: "active",
+    description: "",
+  });
+  
+  useEffect(() => {
+    fetchPositions();
+  }, []);
+  
+  async function fetchPositions() {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('job_positions')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setPositions(data || []);
+    } catch (error) {
+      console.error("Error fetching job positions:", error);
+      toast.error("Failed to load job positions");
+    } finally {
+      setIsLoading(false);
     }
-  ];
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'draft':
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-      case 'closed':
-        return 'bg-red-100 text-red-800 hover:bg-red-200';
-      default:
-        return '';
+  }
+  
+  async function handleAddPosition() {
+    try {
+      if (!newPosition.title) {
+        toast.error("Position title is required");
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('job_positions')
+        .insert({
+          title: newPosition.title,
+          department: newPosition.department || null,
+          status: newPosition.status,
+          description: newPosition.description || null
+        });
+        
+      if (error) throw error;
+      
+      toast.success("Job position added successfully");
+      setShowAddDialog(false);
+      setNewPosition({
+        title: "",
+        department: "",
+        status: "active",
+        description: "",
+      });
+      fetchPositions();
+    } catch (error) {
+      console.error("Error adding position:", error);
+      toast.error("Failed to add job position");
+    }
+  }
+  
+  const handleStatusChange = async (positionId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('job_positions')
+        .update({ status: newStatus })
+        .eq('id', positionId);
+        
+      if (error) throw error;
+      
+      toast.success("Status updated successfully");
+      fetchPositions();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
     }
   };
-
+  
+  const filteredPositions = positions.filter(position => 
+    position.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (position.department && position.department.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold flex items-center gap-2">
-          <BriefcaseIcon className="h-5 w-5" />
-          Job Positions
-        </h2>
-        <Button className="flex items-center gap-1">
-          <PlusIcon className="h-4 w-4" />
-          <span>New Position</span>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search positions..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <PlusIcon className="h-4 w-4 mr-2" /> Add Position
         </Button>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Active Positions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {jobPositions.filter(job => job.status === 'active').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Total Applicants</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {jobPositions.reduce((acc, job) => acc + job.applicantCount, 0)}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Avg. Applicants per Role</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(jobPositions.reduce((acc, job) => acc + job.applicantCount, 0) / 
-              jobPositions.filter(job => job.applicantCount > 0).length)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="rounded-md border overflow-hidden">
-        <Table>
-          <TableHeader>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>Department</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="w-[100px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
             <TableRow>
-              <TableHead>Position</TableHead>
-              <TableHead className="hidden md:table-cell">Department</TableHead>
-              <TableHead className="hidden md:table-cell">Location</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Applicants</TableHead>
-              <TableHead className="w-12"></TableHead>
+              <TableCell colSpan={4} className="text-center">Loading...</TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {jobPositions.map((job) => (
-              <TableRow key={job.id}>
+          ) : filteredPositions.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center">No job positions found</TableCell>
+            </TableRow>
+          ) : (
+            filteredPositions.map((position) => (
+              <TableRow key={position.id}>
+                <TableCell>{position.title}</TableCell>
+                <TableCell>{position.department || "-"}</TableCell>
                 <TableCell>
-                  <div className="font-medium">{job.title}</div>
-                  <div className="text-sm text-muted-foreground md:hidden">{job.department}</div>
-                  <div className="text-sm text-muted-foreground md:hidden">{job.location}</div>
+                  <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    position.status === 'active' ? 'bg-green-100 text-green-800' :
+                    position.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {position.status === 'active' ? 'Active' : 
+                     position.status === 'inactive' ? 'Inactive' : 'Draft'}
+                  </div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{job.department}</TableCell>
-                <TableCell className="hidden md:table-cell">{job.location}</TableCell>
-                <TableCell>{job.type}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusBadgeClass(job.status)}>
-                    {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">{job.applicantCount}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Position</DropdownMenuItem>
-                      <DropdownMenuItem>View Applicants</DropdownMenuItem>
-                      <DropdownMenuItem>Generate Link</DropdownMenuItem>
-                      {job.status === 'active' && (
-                        <DropdownMenuItem>Close Position</DropdownMenuItem>
-                      )}
-                      {job.status === 'draft' && (
-                        <DropdownMenuItem>Publish Position</DropdownMenuItem>
-                      )}
-                      {job.status === 'closed' && (
-                        <DropdownMenuItem>Reopen Position</DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange(position.id, 'active')}>
+                        Set as Active
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange(position.id, 'inactive')}>
+                        Set as Inactive
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            ))
+          )}
+        </TableBody>
+      </Table>
+      
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Job Position</DialogTitle>
+            <DialogDescription>
+              Create a new job position for your organization.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Position Title*</Label>
+              <Input 
+                id="title" 
+                value={newPosition.title} 
+                onChange={(e) => setNewPosition({...newPosition, title: e.target.value})}
+                placeholder="e.g. Marketing Manager"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="department">Department</Label>
+              <Input 
+                id="department" 
+                value={newPosition.department} 
+                onChange={(e) => setNewPosition({...newPosition, department: e.target.value})}
+                placeholder="e.g. Marketing"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select 
+                value={newPosition.status} 
+                onValueChange={(value) => setNewPosition({...newPosition, status: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description" 
+                value={newPosition.description} 
+                onChange={(e) => setNewPosition({...newPosition, description: e.target.value})}
+                placeholder="Job description and requirements"
+                rows={4}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
+            <Button onClick={handleAddPosition}>Add Position</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

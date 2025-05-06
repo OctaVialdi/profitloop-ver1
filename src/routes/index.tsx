@@ -1,82 +1,41 @@
+import { createBrowserRouter } from "react-router-dom";
 
-import { Route, Routes } from "react-router-dom";
-import NotFound from "@/pages/NotFound";
-import { rootRedirect, authRoutes } from "./authRoutes";
-import { onboardingRoutes } from "./onboardingRoutes";
+import App from "../App";
+import { authRoutes } from "./authRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
-import { hrRoutes } from "./hrRoutes";
 import { financeRoutes } from "./financeRoutes";
-import { operationsRoutes } from "./operationsRoutes";
-import { marketingRoutes } from "./marketingRoutes";
+import { hrRoutes } from "./hrRoutes";
 import { itRoutes } from "./itRoutes";
+import { marketingRoutes } from "./marketingRoutes";
+import { operationsRoutes } from "./operationsRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import JoinOrganization from "@/pages/auth/JoinOrganization";
-import JobApplicationForm from "@/pages/public/JobApplicationForm";
-import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
+import { onboardingRoutes } from "./onboardingRoutes";
+import { publicRoutes } from "./publicRoutes";
 
-export const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* Root redirects to login */}
-      {rootRedirect}
+import { NotFound } from "@/pages/NotFound";
 
-      {/* Auth Routes */}
-      {authRoutes}
-      
-      {/* Public Routes */}
-      <Route path="/join-organization" element={<JoinOrganization />} />
-      <Route path="/apply/:token" element={<JobApplicationForm />} />
-      <Route path="/apply/success" element={<ApplicationSuccess />} />
-      
-      {/* Protected Routes */}
-      <Route element={<ProtectedRoute />}>
-        {onboardingRoutes}
-      </Route>
-
-      {/* Dashboard Routes */}
-      <Route element={<ProtectedRoute />}>
-        {dashboardRoutes}
-      </Route>
-
-      {/* HR Routes */}
-      <Route element={<ProtectedRoute />}>
-        {hrRoutes}
-      </Route>
-      
-      {/* My Info Routes */}
-      <Route element={<ProtectedRoute />}>
-        {myInfoRoutes}
-      </Route>
-
-      {/* Finance Routes */}
-      <Route element={<ProtectedRoute />}>
-        {financeRoutes}
-      </Route>
-
-      {/* Operations Routes */}
-      <Route element={<ProtectedRoute />}>
-        {operationsRoutes}
-      </Route>
-      
-      {/* Marketing Routes */}
-      <Route element={<ProtectedRoute />}>
-        {marketingRoutes}
-      </Route>
-      
-      {/* IT Routes */}
-      <Route element={<ProtectedRoute />}>
-        {itRoutes}
-      </Route>
-
-      {/* Settings Routes */}
-      <Route element={<ProtectedRoute />}>
-        {settingsRoutes}
-      </Route>
-
-      {/* Catch all */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    children: [
+      // Other routes
+      authRoutes,
+      dashboardRoutes,
+      financeRoutes,
+      hrRoutes,
+      itRoutes,
+      marketingRoutes,
+      operationsRoutes,
+      settingsRoutes,
+      myInfoRoutes,
+      onboardingRoutes,
+      publicRoutes,
+      {
+        path: "*",
+        element: <NotFound />,
+      },
+    ],
+  },
+]);
