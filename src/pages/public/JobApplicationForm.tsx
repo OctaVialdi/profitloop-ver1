@@ -143,10 +143,10 @@ const JobApplicationForm = () => {
       }
       
       // Insert candidate application
+      // The token is passed directly to the recruitment_link_id field
       const { data: applicationData, error: applicationError } = await supabase
         .from('candidate_applications')
         .insert({
-          recruitment_link_id: token || '',
           full_name: formData.fullName,
           email: formData.email,
           phone: formData.mobilePhone,
@@ -164,7 +164,8 @@ const JobApplicationForm = () => {
           citizen_address: formData.citizenAddress,
           organization_id: linkInfo.organization_id,
           position: formData.position, // Add position to submission
-          job_position_id: linkInfo.job_position_id || null
+          job_position_id: linkInfo.job_position_id || null,
+          recruitment_link_id: token // This should be the token
         })
         .select('id')
         .single();

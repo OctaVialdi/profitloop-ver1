@@ -45,7 +45,6 @@ export const PersonalInformationSection: React.FC<PersonalInformationProps> = ({
           />
         </div>
         
-        {/* New Position Field */}
         <div className="space-y-2">
           <Label htmlFor="position" className="required">Position Applied For</Label>
           <Input
