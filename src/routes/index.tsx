@@ -30,7 +30,7 @@ export const router = createBrowserRouter([
       operationsRoutes,
       settingsRoutes,
       myInfoRoutes,
-      ...onboardingRoutes, // Changed to spread this since it's an array
+      ...onboardingRoutes,
       ...publicRoutes,
       {
         path: "*",
