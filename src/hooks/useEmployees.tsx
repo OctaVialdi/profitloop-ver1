@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Employee, employeeService } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -49,20 +50,6 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
   // Generate an employee_id if one doesn't exist
   const empId = employee.employee_id || `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
   
-  // Fetch employment data for this employee (if available)
-  let organizationName = '';
-  let branch = '';
-
-  // Use organization_name from employee_employment data if available
-  if (employee.employment && employee.employment.organization_name) {
-    organizationName = employee.employment.organization_name;
-  }
-
-  // Use branch from employee_employment data if available
-  if (employee.employment && employee.employment.branch) {
-    branch = employee.employment.branch;
-  }
-  
   return {
     id: employee.id,
     name: employee.name,
@@ -87,33 +74,21 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
     organization_id: employee.organization_id,
     // Legacy properties
     employeeId: empId,
-    barcode: employee.employment?.barcode || '',
-    branch: branch,
-    organization: organizationName,
-    jobPosition: employee.employment?.job_position || '',
-    jobLevel: employee.employment?.job_level || '',
-    employmentStatus: employee.employment?.employment_status || 'Active',
-    joinDate: employee.employment?.join_date || '',
+    barcode: employee.barcode || '',
+    branch: employee.branch || '',
+    organization: employee.organization_id || '',
+    jobPosition: employee.job_position || '',
+    jobLevel: employee.job_level || '',
+    employmentStatus: employee.employment_status || 'Active',
+    joinDate: employee.join_date || '',
     endDate: '', // No field in new model
-    signDate: employee.employment?.sign_date || '',
+    signDate: employee.sign_date || '',
     resignDate: '' // No field in new model
   };
 };
 
 // Converts from LegacyEmployee (frontend) to Employee (backend) format
 export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> => {
-  // Create employment data separately
-  const employment = {
-    barcode: employee.barcode || null,
-    job_position: employee.jobPosition || null,
-    job_level: employee.jobLevel || null,
-    employment_status: employee.employmentStatus || null,
-    branch: employee.branch || null,
-    join_date: employee.joinDate || null,
-    sign_date: employee.signDate || null,
-    organization_name: employee.organization || null
-  };
-
   return {
     id: employee.id,
     name: employee.name,
@@ -136,8 +111,14 @@ export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> 
     citizen_address: employee.citizenAddress || null,
     address: employee.address || null,
     organization_id: employee.organization_id || employee.organization,
-    // Add employment object instead of flattened properties
-    employment: employment
+    // Employment fields
+    barcode: employee.barcode || null,
+    job_position: employee.jobPosition || null,
+    job_level: employee.jobLevel || null,
+    employment_status: employee.employmentStatus || null,
+    branch: employee.branch || null,
+    join_date: employee.joinDate || null,
+    sign_date: employee.signDate || null
   };
 };
 
@@ -241,12 +222,7 @@ export const useEmployees = () => {
           nik: "1234567890123456",
           address: "Jl. Sudirman No. 123, Jakarta",
           organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
-          employee_id: generateUniqueId(), // Add employee_id with proper format
-          employment: {
-            organization_name: "Finance Department",
-            branch: "Jakarta HQ",
-            job_position: "Finance Officer"
-          }
+          employee_id: generateUniqueId() // Add employee_id with proper format
         },
         {
           name: "Jane Smith",
@@ -261,12 +237,7 @@ export const useEmployees = () => {
           nik: "6543210987654321",
           address: "Jl. Gatot Subroto No. 456, Jakarta",
           organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
-          employee_id: generateUniqueId(), // Add employee_id with proper format
-          employment: {
-            organization_name: "Marketing Department",
-            branch: "Jakarta HQ",
-            job_position: "Marketing Executive"
-          }
+          employee_id: generateUniqueId() // Add employee_id with proper format
         }
       ];
   

@@ -1,56 +1,45 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
+import { EmployeeDetail } from "@/components/hr/EmployeeDetail";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader } from "lucide-react";
-import { Employee, employeeService } from "@/services/employeeService";
-import { useEmployees } from "@/hooks/useEmployees";
-import { FilesSection } from "@/components/hr/employee-detail";
+import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { QueryProvider } from "@/components/QueryProvider";
 
-const MyFilesPage = () => {
+export default function MyFilesPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
+  // Extract the employee ID from the query parameters
   const employeeId = searchParams.get("id");
   
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [employee, setEmployee] = useState<EmployeeWithDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const { employees } = useEmployees();
-
-  // Stub function for handleEdit - not needed in the My Info context
-  // but required by the component props
-  const handleEdit = (section: string) => {
-    console.log(`Edit ${section} requested but not implemented in My Info view`);
-    // In the My Info view, we don't need editing functionality
-    // but we provide this function to satisfy the component props
-  };
-
-  useEffect(() => {
-    const fetchEmployee = async () => {
-      setLoading(true);
-      try {
-        if (employeeId) {
-          // Find employee in the cache
-          const foundEmployee = employees.find(emp => emp.id === employeeId);
-          if (foundEmployee) {
-            setEmployee(foundEmployee);
-          } else {
-            console.error("Employee not found");
-          }
-        } else {
-          console.error("No employee ID provided");
-        }
-      } catch (error) {
-        console.error("Error fetching employee:", error);
-      } finally {
-        setLoading(false);
+  
+  const fetchEmployee = async () => {
+    if (!employeeId) return;
+    
+    setLoading(true);
+    try {
+      const data = await employeeService.fetchEmployeeById(employeeId);
+      setEmployee(data);
+      if (!data) {
+        toast.error("Employee not found");
       }
-    };
-
-    if (employees.length > 0) {
-      fetchEmployee();
+    } catch (error) {
+      console.error("Error fetching employee:", error);
+      toast.error("Failed to load employee data");
+    } finally {
+      setLoading(false);
     }
-  }, [employeeId, employees]);
+  };
+  
+  useEffect(() => {
+    fetchEmployee();
+  }, [employeeId]);
 
   if (!employeeId) {
     return (
@@ -86,24 +75,24 @@ const MyFilesPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button 
-          variant="ghost" 
-          className="flex items-center gap-2" 
-          onClick={() => navigate("/hr/data")}
-        >
-          <ArrowLeft size={16} />
-          <span>Back to Employee List</span>
-        </Button>
+    <QueryProvider>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            className="flex items-center gap-2" 
+            onClick={() => navigate("/hr/data")}
+          >
+            <ArrowLeft size={16} />
+            <span>Back to Employee List</span>
+          </Button>
+        </div>
+
+        <EmployeeDetail 
+          employee={employee} 
+          activeTab="files" 
+        />
       </div>
-
-      <FilesSection 
-        employee={employee}
-        handleEdit={handleEdit}
-      />
-    </div>
+    </QueryProvider>
   );
-};
-
-export default MyFilesPage;
+}

@@ -24,7 +24,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { LegacyEmployee, EmployeeEmployment } from "@/hooks/useEmployees";
-import { employeeService } from "@/services/employeeService";
+import { updateEmployeeEmployment } from "@/services/employeeService";
 
 interface EditEmploymentDialogProps {
   open: boolean;
@@ -73,7 +73,7 @@ export const EditEmploymentDialog = ({
     try {
       const updatedData: Partial<EmployeeEmployment> = {
         barcode: formValues.barcode,
-        organization_name: formValues.organization,
+        organization: formValues.organization,
         job_position: formValues.jobPosition,
         job_level: formValues.jobLevel,
         employment_status: formValues.employmentStatus,
@@ -82,7 +82,7 @@ export const EditEmploymentDialog = ({
         sign_date: signDate ? format(signDate, 'yyyy-MM-dd') : null
       };
       
-      await employeeService.updateEmployeeEmployment(employee.id, updatedData);
+      await updateEmployeeEmployment(employee.id, updatedData);
       
       toast.success("Employment details updated successfully");
       onSave();

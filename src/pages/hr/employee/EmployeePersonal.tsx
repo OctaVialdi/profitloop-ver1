@@ -23,7 +23,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useEmployees } from "@/hooks/useEmployees";
-import { employeeService } from "@/services/employeeService";
+import { 
+  employeeService, 
+  updateEmployeePersonalDetails, 
+  updateEmployeeIdentityAddress 
+} from "@/services/employeeService";
 
 const EmployeePersonal = () => {
   const { id } = useParams<{ id: string }>();
@@ -80,6 +84,7 @@ const EmployeePersonal = () => {
 
       // Update personal details data separately
       const personalDetailsData = {
+        employee_id: id,
         mobile_phone: data.mobilePhone,
         birth_place: data.birthPlace,
         birth_date: data.birthDate,
@@ -91,12 +96,13 @@ const EmployeePersonal = () => {
 
       // Update identity address data separately
       const identityAddressData = {
+        employee_id: id,
         nik: data.nik,
         passport_number: data.passportNumber,
         passport_expiry: data.passportExpiry,
         postal_code: data.postalCode,
         citizen_address: data.citizenAddress,
-        address: data.residentialAddress
+        residential_address: data.residentialAddress
       };
       
       console.log("Updating base employee data:", baseUpdate);
@@ -107,10 +113,10 @@ const EmployeePersonal = () => {
       await updateEmployee(id, baseUpdate);
       
       // Then update the personal details data
-      await employeeService.updateEmployeePersonalDetails(id, personalDetailsData);
+      await updateEmployeePersonalDetails(id, personalDetailsData);
       
       // Then update the identity address data
-      await employeeService.updateEmployeeIdentityAddress(id, identityAddressData);
+      await updateEmployeeIdentityAddress(id, identityAddressData);
       
       toast.success("Personal data updated successfully");
       navigate(`/hr/data/employee/${id}`);

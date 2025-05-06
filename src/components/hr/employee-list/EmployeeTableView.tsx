@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -50,7 +51,6 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
   
   // Important: We need exactly 5 data columns (plus checkbox and actions columns) for a total of 7
   const limitedVisibleColumnsOrder: Array<keyof EmployeeColumnState> = (() => {
-    // ... keep existing code (limitedVisibleColumnsOrder logic)
     const maxDataColumns = 5; // Maximum number of data columns to display
     
     // If name is in the visible columns, we need to ensure it's included

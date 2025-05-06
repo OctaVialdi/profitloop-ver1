@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Edit, CalendarIcon, Loader2, Check, X } from "lucide-react";
 import { LegacyEmployee } from "@/hooks/useEmployees";
-import { employeeService } from "@/services/employeeService";
+import { updateEmployeeEmployment, getEmployeeEmploymentData, createOrUpdateEmployeeEmployment } from "@/services/employeeService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +48,7 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     const fetchEmploymentData = async () => {
       setIsLoadingData(true);
       try {
-        const data = await employeeService.getEmployeeEmploymentData(employee.id);
+        const data = await getEmployeeEmploymentData(employee.id);
         if (data) {
           setEmploymentData(data);
           setFormValues({
@@ -121,13 +122,13 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
       };
       
       // Use our service function to update employment data
-      const success = await employeeService.createOrUpdateEmployeeEmployment(employee.id, updatedData);
+      const success = await createOrUpdateEmployeeEmployment(employee.id, updatedData);
       
       if (success) {
         toast.success("Employment data updated successfully");
         setIsEditing(false);
         // Refresh data
-        const updatedData = await employeeService.getEmployeeEmploymentData(employee.id);
+        const updatedData = await getEmployeeEmploymentData(employee.id);
         if (updatedData) {
           setEmploymentData(updatedData);
         }
@@ -416,3 +417,4 @@ export const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     </Card>
   );
 };
+

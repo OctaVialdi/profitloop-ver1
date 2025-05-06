@@ -27,9 +27,12 @@ export const EditProfilePhotoDialog: React.FC<EditProfilePhotoDialogProps> = ({
         <div className="py-4">
           <ProfilePhotoUploader
             employeeId={employee.id}
-            currentImageUrl={employee.profile_image}
+            currentPhotoUrl={employee.profile_image}
             employeeName={employee.name}
-            onPhotoUpdated={onPhotoUpdated}
+            onPhotoUpdated={(newPhotoUrl) => {
+              onPhotoUpdated(newPhotoUrl);
+              onClose();
+            }}
           />
         </div>
       </DialogContent>
