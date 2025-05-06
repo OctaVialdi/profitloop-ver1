@@ -81,6 +81,7 @@ export const useApplicationForm = () => {
   const validateRecruitmentLink = async () => {
     try {
       if (!token) {
+        console.error("No token provided");
         setInvalidLink(true);
         return;
       }
@@ -95,10 +96,12 @@ export const useApplicationForm = () => {
       }
       
       if (!data || !data[0] || !data[0].is_valid) {
+        console.error("Invalid link data:", data);
         setInvalidLink(true);
         return;
       }
       
+      console.log("Link info retrieved:", data[0]);
       setLinkInfo(data[0]);
     } catch (error) {
       console.error("Error:", error);
@@ -145,7 +148,7 @@ export const useApplicationForm = () => {
         email: formData.email,
         phone: formData.mobilePhone,
         address: formData.residentialAddress,
-        birth_date: formData.birthdate ? formData.birthdate.toISOString() : null,
+        birth_date: formData.birthdate ? formData.birthdate.toISOString().split('T')[0] : null,
         birth_place: formData.birthPlace,
         gender: formData.gender,
         religion: formData.religion,
@@ -153,11 +156,13 @@ export const useApplicationForm = () => {
         blood_type: formData.bloodType,
         nik: formData.nik,
         passport_number: formData.passportNumber,
-        passport_expiry: formData.passportExpiry ? formData.passportExpiry.toISOString() : null,
+        passport_expiry: formData.passportExpiry ? formData.passportExpiry.toISOString().split('T')[0] : null,
         postal_code: formData.postalCode,
         citizen_address: formData.citizenAddress,
         organization_id: linkInfo.organization_id
       };
+      
+      console.log("Inserting application data:", applicationData);
       
       const { data: insertedData, error: applicationError } = await supabase
         .from('candidate_applications')
@@ -166,6 +171,7 @@ export const useApplicationForm = () => {
         .single();
       
       if (applicationError) {
+        console.error("Error inserting application:", applicationError);
         throw applicationError;
       }
       
@@ -185,6 +191,8 @@ export const useApplicationForm = () => {
           address: member.address,
           is_emergency_contact: member.isEmergencyContact
         }));
+        
+        console.log("Inserting family members:", familyData);
         
         const { error: familyError } = await supabase
           .from('candidate_family_members')
@@ -209,6 +217,8 @@ export const useApplicationForm = () => {
           description: edu.description
         }));
         
+        console.log("Inserting formal education:", educationData);
+        
         const { error: educationError } = await supabase
           .from('candidate_formal_education')
           .insert(educationData);
@@ -232,6 +242,8 @@ export const useApplicationForm = () => {
           description: edu.description
         }));
         
+        console.log("Inserting informal education:", informalData);
+        
         const { error: informalError } = await supabase
           .from('candidate_informal_education')
           .insert(informalData);
@@ -253,6 +265,8 @@ export const useApplicationForm = () => {
           end_date: work.endDate,
           job_description: work.jobDescription
         }));
+        
+        console.log("Inserting work experience:", workData);
         
         const { error: workError } = await supabase
           .from('candidate_work_experience')
