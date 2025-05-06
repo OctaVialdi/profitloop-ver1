@@ -1,7 +1,7 @@
 
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { AppRoutes } from "./routes";
+import router from "./routes";
 import TrialProtection from "./components/TrialProtection";
 import { QueryProvider } from "./components/QueryProvider";
 
@@ -11,7 +11,8 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
         <QueryProvider>
           <TrialProtection>
-            <AppRoutes />
+            {/* Use the router directly instead of AppRoutes component */}
+            {router}
           </TrialProtection>
         </QueryProvider>
       </ThemeProvider>

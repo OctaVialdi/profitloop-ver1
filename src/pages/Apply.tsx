@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,10 +107,10 @@ export default function Apply() {
         throw error;
       }
 
-      // Update submission count
+      // Update submission count using direct update with a +1 approach instead of the increment function
       await supabase
         .from("recruitment_links")
-        .update({ submissions: supabase.rpc("increment", { x: 1 }) })
+        .update({ submissions: (await supabase.from("recruitment_links").select("submissions").eq("token", token).single()).data.submissions + 1 })
         .eq("token", token);
 
       setIsSubmitted(true);
