@@ -15,6 +15,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import JoinOrganization from "@/pages/auth/JoinOrganization";
 import JobApplicationForm from "@/pages/public/JobApplicationForm";
 import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
+import JobPreviewPage from "@/pages/public/JobPreviewPage";
 
 export const AppRoutes = () => {
   return (
@@ -28,6 +29,7 @@ export const AppRoutes = () => {
       {/* Public Routes - Ensuring these are registered BEFORE protected routes for priority */}
       <Route path="/join-organization" element={<JoinOrganization />} />
       <Route path="/apply/:token" element={<JobApplicationForm />} />
+      <Route path="/apply/preview/:token" element={<JobPreviewPage />} />
       <Route path="/apply/success" element={<ApplicationSuccess />} />
       
       {/* Protected Routes */}
@@ -43,7 +45,7 @@ export const AppRoutes = () => {
       {/* HR Routes */}
       <Route element={<ProtectedRoute />}>
         {hrRoutes}
-      </Route>
+      </Route}
       
       {/* My Info Routes */}
       <Route element={<ProtectedRoute />}>
