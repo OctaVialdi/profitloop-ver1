@@ -382,7 +382,7 @@ export const employeeService = {
       // Generate unique employee IDs for new employees
       const generateUniqueId = () => `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
       
-      // First employee data
+      // Define dummy employee data - each employee as a separate object with required fields
       const employee1 = {
         name: "John Doe",
         email: "john.doe@example.com",
@@ -395,11 +395,10 @@ export const employeeService = {
         blood_type: "O",
         nik: "1234567890123456",
         address: "Jl. Sudirman No. 123, Jakarta",
-        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
+        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Required field
         employee_id: generateUniqueId()
       };
 
-      // Second employee data
       const employee2 = {
         name: "Jane Smith",
         email: "jane.smith@example.com",
@@ -412,14 +411,14 @@ export const employeeService = {
         blood_type: "A",
         nik: "6543210987654321",
         address: "Jl. Gatot Subroto No. 456, Jakarta",
-        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
+        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Required field
         employee_id: generateUniqueId()
       };
 
       // Insert employees one by one
       const { data: newEmployee1, error: error1 } = await supabase
         .from('employees')
-        .insert([employee1])
+        .insert(employee1)  // Insert a single object, not an array
         .select()
         .single();
 
@@ -430,7 +429,7 @@ export const employeeService = {
 
       const { data: newEmployee2, error: error2 } = await supabase
         .from('employees')
-        .insert([employee2])
+        .insert(employee2)  // Insert a single object, not an array
         .select()
         .single();
 
@@ -450,7 +449,7 @@ export const employeeService = {
 
         const { error: empError1 } = await supabase
           .from('employee_employment')
-          .insert([employment1]);
+          .insert(employment1);
 
         if (empError1) {
           console.error("Error adding employment data for first employee:", empError1);
@@ -467,7 +466,7 @@ export const employeeService = {
 
         const { error: empError2 } = await supabase
           .from('employee_employment')
-          .insert([employment2]);
+          .insert(employment2);
 
         if (empError2) {
           console.error("Error adding employment data for second employee:", empError2);
