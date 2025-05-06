@@ -6,6 +6,7 @@ import LoadingState from "@/components/public/application/LoadingState";
 import InvalidLinkState from "@/components/public/application/InvalidLinkState";
 import SuccessState from "@/components/public/application/SuccessState";
 import ApplicationFormTabs from "@/components/public/application/ApplicationFormTabs";
+import { toast } from "sonner";
 
 const JobApplicationForm = () => {
   const {
@@ -27,13 +28,15 @@ const JobApplicationForm = () => {
     invalidLink,
     submissionSuccess,
     validateRecruitmentLink,
-    handleSubmit
+    handleSubmit,
+    token
   } = useApplicationForm();
   
   // Validate token on component mount
   useEffect(() => {
+    console.log("JobApplicationForm mounted with token:", token);
     validateRecruitmentLink();
-  }, []);
+  }, [token]);
   
   // Show loading state
   if (isLoading) {
@@ -64,6 +67,7 @@ const JobApplicationForm = () => {
           <CardTitle>Application Form</CardTitle>
           <CardDescription>
             Please fill out all sections of the application form carefully.
+            Fields marked with * are required.
           </CardDescription>
         </CardHeader>
         <CardContent>

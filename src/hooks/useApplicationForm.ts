@@ -86,6 +86,8 @@ export const useApplicationForm = () => {
         return;
       }
       
+      console.log("Validating recruitment link with token:", token);
+      
       const { data, error } = await supabase
         .rpc('get_recruitment_link_info', { p_token: token });
       
@@ -95,7 +97,7 @@ export const useApplicationForm = () => {
         return;
       }
       
-      if (!data || !data[0] || !data[0].is_valid) {
+      if (!data || data.length === 0 || !data[0] || !data[0].is_valid) {
         console.error("Invalid link data:", data);
         setInvalidLink(true);
         return;
@@ -111,24 +113,48 @@ export const useApplicationForm = () => {
     }
   };
   
+  // Format date for database
+  const formatDateForDb = (date: Date | null): string | null => {
+    if (!date) return null;
+    return date.toISOString().split('T')[0];
+  };
+  
+  // Validate required fields
+  const validateForm = (): boolean => {
+    // Basic validation
+    if (!formData.fullName) {
+      toast.error("Nama lengkap wajib diisi");
+      setActiveTab("personal");
+      return false;
+    }
+    
+    if (!formData.email) {
+      toast.error("Email wajib diisi");
+      setActiveTab("personal");
+      return false;
+    }
+    
+    if (!linkInfo) {
+      toast.error("Link aplikasi tidak valid");
+      return false;
+    }
+    
+    return true;
+  };
+  
   // Handle form submission
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
       
       // Validate required fields
-      if (!formData.fullName || !formData.email) {
-        toast.error("Please fill out all required fields.");
+      if (!validateForm()) {
         setIsSubmitting(false);
         return;
       }
       
-      if (!linkInfo) {
-        toast.error("Invalid application link.");
-        setIsSubmitting(false);
-        return;
-      }
-      
+      console.log("Starting submission with token:", token);
+      console.log("Link info for submission:", linkInfo);
       console.log("Submitting application with data:", {
         formData,
         linkInfo,
@@ -142,13 +168,13 @@ export const useApplicationForm = () => {
       
       // Insert candidate application
       const applicationData = {
-        job_position_id: linkInfo.job_position_id,
+        job_position_id: linkInfo?.job_position_id,
         recruitment_link_id: token || '',
         full_name: formData.fullName,
         email: formData.email,
         phone: formData.mobilePhone,
         address: formData.residentialAddress,
-        birth_date: formData.birthdate ? formData.birthdate.toISOString().split('T')[0] : null,
+        birth_date: formatDateForDb(formData.birthdate),
         birth_place: formData.birthPlace,
         gender: formData.gender,
         religion: formData.religion,
@@ -156,10 +182,10 @@ export const useApplicationForm = () => {
         blood_type: formData.bloodType,
         nik: formData.nik,
         passport_number: formData.passportNumber,
-        passport_expiry: formData.passportExpiry ? formData.passportExpiry.toISOString().split('T')[0] : null,
+        passport_expiry: formatDateForDb(formData.passportExpiry),
         postal_code: formData.postalCode,
         citizen_address: formData.citizenAddress,
-        organization_id: linkInfo.organization_id
+        organization_id: linkInfo?.organization_id
       };
       
       console.log("Inserting application data:", applicationData);
@@ -172,11 +198,17 @@ export const useApplicationForm = () => {
       
       if (applicationError) {
         console.error("Error inserting application:", applicationError);
-        throw applicationError;
+        toast.error(`Error: ${applicationError.message}`);
+        setIsSubmitting(false);
+        return;
       }
       
-      const applicationId = insertedData.id;
-      console.log("Application created with ID:", applicationId);
+      console.log("Application created with ID:", insertedData?.id);
+      const applicationId = insertedData?.id;
+      
+      if (!applicationId) {
+        throw new Error("Failed to get application ID");
+      }
       
       // Insert family members
       if (familyMembers.length > 0) {
@@ -185,11 +217,11 @@ export const useApplicationForm = () => {
           name: member.name,
           relationship: member.relationship,
           gender: member.gender,
-          age: member.age,
+          age: parseInt(member.age) || null,
           occupation: member.occupation,
           phone: member.phone,
           address: member.address,
-          is_emergency_contact: member.isEmergencyContact
+          is_emergency_contact: member.isEmergencyContact || false
         }));
         
         console.log("Inserting family members:", familyData);
@@ -284,7 +316,7 @@ export const useApplicationForm = () => {
       
     } catch (error: any) {
       console.error("Submission error:", error);
-      toast.error(`Error submitting application: ${error.message}`);
+      toast.error(`Error submitting application: ${error.message || "Unknown error"}`);
     } finally {
       setIsSubmitting(false);
     }

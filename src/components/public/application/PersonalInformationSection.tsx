@@ -23,7 +23,7 @@ export const PersonalInformationSection: React.FC<PersonalInformationProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="fullName" className="required">Full Name</Label>
+          <Label htmlFor="fullName" className="after:content-['*'] after:text-red-500 after:ml-0.5">Full Name</Label>
           <Input
             id="fullName"
             value={formData.fullName}
@@ -34,7 +34,7 @@ export const PersonalInformationSection: React.FC<PersonalInformationProps> = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="email" className="required">Email</Label>
+          <Label htmlFor="email" className="after:content-['*'] after:text-red-500 after:ml-0.5">Email</Label>
           <Input
             id="email"
             type="email"
@@ -70,6 +70,7 @@ export const PersonalInformationSection: React.FC<PersonalInformationProps> = ({
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                id="birthdate"
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
@@ -96,7 +97,7 @@ export const PersonalInformationSection: React.FC<PersonalInformationProps> = ({
         <div className="space-y-2">
           <Label htmlFor="gender">Gender</Label>
           <Select value={formData.gender} onValueChange={(value) => updateFormData('gender', value)}>
-            <SelectTrigger>
+            <SelectTrigger id="gender">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
@@ -109,7 +110,7 @@ export const PersonalInformationSection: React.FC<PersonalInformationProps> = ({
         <div className="space-y-2">
           <Label htmlFor="maritalStatus">Marital Status</Label>
           <Select value={formData.maritalStatus} onValueChange={(value) => updateFormData('maritalStatus', value)}>
-            <SelectTrigger>
+            <SelectTrigger id="maritalStatus">
               <SelectValue placeholder="Select marital status" />
             </SelectTrigger>
             <SelectContent>
@@ -124,7 +125,7 @@ export const PersonalInformationSection: React.FC<PersonalInformationProps> = ({
         <div className="space-y-2">
           <Label htmlFor="bloodType">Blood Type</Label>
           <Select value={formData.bloodType} onValueChange={(value) => updateFormData('bloodType', value)}>
-            <SelectTrigger>
+            <SelectTrigger id="bloodType">
               <SelectValue placeholder="Select blood type" />
             </SelectTrigger>
             <SelectContent>
@@ -147,7 +148,7 @@ export const PersonalInformationSection: React.FC<PersonalInformationProps> = ({
         <div className="space-y-2">
           <Label htmlFor="religion">Religion</Label>
           <Select value={formData.religion} onValueChange={(value) => updateFormData('religion', value)}>
-            <SelectTrigger>
+            <SelectTrigger id="religion">
               <SelectValue placeholder="Select religion" />
             </SelectTrigger>
             <SelectContent>

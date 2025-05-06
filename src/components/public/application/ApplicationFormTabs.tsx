@@ -10,6 +10,7 @@ import { FormalEducationSection } from "@/components/public/application/FormalEd
 import { InformalEducationSection } from "@/components/public/application/InformalEducationSection";
 import { WorkExperienceSection } from "@/components/public/application/WorkExperienceSection";
 import { ApplicationFormData } from "@/hooks/useApplicationForm";
+import { toast } from "sonner";
 
 interface ApplicationFormTabsProps {
   activeTab: string;
@@ -44,6 +45,35 @@ const ApplicationFormTabs = ({
   handleSubmit,
   isSubmitting
 }: ApplicationFormTabsProps) => {
+  
+  const validatePersonal = () => {
+    if (!formData.fullName.trim()) {
+      toast.error("Full name is required");
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast.error("Email is required");
+      return false;
+    }
+    return true;
+  };
+  
+  const onSubmitClick = async () => {
+    try {
+      // Validate required fields
+      if (!validatePersonal()) {
+        setActiveTab("personal");
+        return;
+      }
+      
+      // Proceed with submission
+      await handleSubmit();
+    } catch (error) {
+      console.error("Submit error:", error);
+      toast.error("Submission failed. Please try again.");
+    }
+  };
+  
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-8">
@@ -61,7 +91,7 @@ const ApplicationFormTabs = ({
           updateFormData={updateFormData}
         />
         <div className="flex justify-end mt-4">
-          <Button onClick={() => setActiveTab("identity")}>Next</Button>
+          <Button onClick={() => validatePersonal() && setActiveTab("identity")}>Next</Button>
         </div>
       </TabsContent>
       
@@ -117,7 +147,7 @@ const ApplicationFormTabs = ({
         <div className="flex justify-between mt-8">
           <Button variant="outline" onClick={() => setActiveTab("informal")}>Previous</Button>
           <Button 
-            onClick={handleSubmit}
+            onClick={onSubmitClick}
             disabled={isSubmitting}
             className="bg-primary text-white"
           >
