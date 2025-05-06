@@ -28,11 +28,11 @@ export interface LegacyEmployee {
   citizenAddress?: string;
   address?: string; // residential address
   organization_id: string; // Make this required to match Employee type
+  organization?: string; // This will store organization_name
   // Legacy properties for backward compatibility
   employeeId?: string;
   barcode?: string;
   branch?: string;
-  organization?: string;
   jobPosition?: string;
   jobLevel?: string;
   employmentStatus?: string;
@@ -72,11 +72,12 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
     citizenAddress: employee.citizen_address || '',
     address: employee.address || '',
     organization_id: employee.organization_id,
+    // Use organization_name instead of organization_id for display
+    organization: employee.organization_name || '',
     // Legacy properties
     employeeId: empId,
     barcode: employee.barcode || '',
     branch: employee.branch || '',
-    organization: employee.organization_id || '',
     jobPosition: employee.job_position || '',
     jobLevel: employee.job_level || '',
     employmentStatus: employee.employment_status || 'Active',

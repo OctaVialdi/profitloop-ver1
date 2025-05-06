@@ -34,6 +34,11 @@ export default function HRDataKaryawan() {
           employee_id: newId
         });
       }
+      
+      // Make sure organization is set (even if it's empty)
+      if (emp.organization === undefined) {
+        emp.organization = '';
+      }
     });
     
     return convertedData;

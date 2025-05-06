@@ -33,6 +33,9 @@ export interface Employee {
   branch?: string | null;
   join_date?: string | null;
   sign_date?: string | null;
+  
+  // Additional field to store organization_name from employee_employment table
+  organization_name?: string | null;
 }
 
 // For backward compatibility with existing components
@@ -66,7 +69,7 @@ export interface EmployeeIdentityAddress {
 export interface EmployeeEmployment {
   employee_id?: string;
   barcode?: string | null;
-  organization?: string | null;
+  organization_name?: string | null;
   job_position?: string | null;
   job_level?: string | null;
   employment_status?: string | null;
@@ -132,15 +135,48 @@ export interface EmployeeWorkExperience {
 export const employeeService = {
   async fetchEmployees(): Promise<Employee[]> {
     try {
-      // Fetch employee data
+      // Fetch employee data with a join to employee_employment to get organization_name
       const { data: employeesData, error: employeesError } = await supabase
         .from("employees")
-        .select("*");
+        .select(`
+          *,
+          employment:employee_employment(
+            organization_name,
+            barcode,
+            job_position,
+            job_level,
+            employment_status,
+            branch,
+            join_date,
+            sign_date
+          )
+        `);
 
       if (employeesError) throw employeesError;
       if (!employeesData) return [];
 
-      return employeesData as Employee[];
+      // Process the joined data to include organization_name in the employee object
+      return employeesData.map(employee => {
+        // Get the employment data from the join result (it's an array but should only have one item)
+        const employmentData = employee.employment && employee.employment.length > 0 
+          ? employee.employment[0] 
+          : null;
+
+        // Create a new employee object with organization_name from employment data
+        return {
+          ...employee,
+          organization_name: employmentData?.organization_name || null,
+          barcode: employmentData?.barcode || employee.barcode || null,
+          job_position: employmentData?.job_position || employee.job_position || null,
+          job_level: employmentData?.job_level || employee.job_level || null,
+          employment_status: employmentData?.employment_status || employee.employment_status || null,
+          branch: employmentData?.branch || employee.branch || null,
+          join_date: employmentData?.join_date || employee.join_date || null,
+          sign_date: employmentData?.sign_date || employee.sign_date || null,
+          // Remove the employment property to avoid confusion
+          employment: undefined
+        };
+      }) as Employee[];
     } catch (error) {
       console.error("Error fetching employees:", error);
       return [];
@@ -233,20 +269,34 @@ export const employeeService = {
       branch?: string | null;
       join_date?: string | null;
       sign_date?: string | null;
+      organization_name?: string | null;
     }
   ): Promise<Employee | null> {
     try {
       console.log("Creating employee with data:", employeeData);
       
+      // Make a copy of the data without employment-specific fields
+      const { 
+        organization_name, 
+        barcode, 
+        job_position, 
+        job_level, 
+        employment_status, 
+        branch,
+        join_date,
+        sign_date,
+        ...employeeOnlyData 
+      } = employeeData;
+      
       // If no employee_id is provided, generate one
-      if (!employeeData.employee_id) {
-        employeeData.employee_id = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+      if (!employeeOnlyData.employee_id) {
+        employeeOnlyData.employee_id = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
       }
       
-      // Insert all employee data at once
+      // Insert employee data
       const { data: newEmployee, error: employeeError } = await supabase
         .from("employees")
-        .insert([employeeData])
+        .insert(employeeOnlyData)
         .select()
         .single();
 
@@ -260,8 +310,37 @@ export const employeeService = {
         throw new Error("Failed to create employee: No data returned");
       }
 
+      // If we have employment data, create an employment record
+      if (newEmployee.id && (organization_name || barcode || job_position || job_level || employment_status || branch || join_date || sign_date)) {
+        const employmentData = {
+          employee_id: newEmployee.id,
+          organization_name,
+          barcode,
+          job_position,
+          job_level,
+          employment_status,
+          branch,
+          join_date,
+          sign_date
+        };
+        
+        const { error: employmentError } = await supabase
+          .from("employee_employment")
+          .insert(employmentData);
+          
+        if (employmentError) {
+          console.error("Error creating employment data:", employmentError);
+          // We'll continue since the employee was created successfully
+        }
+      }
+
       console.log("Employee created successfully:", newEmployee);
-      return newEmployee as Employee;
+      
+      // Include the organization_name in the returned data
+      return {
+        ...newEmployee,
+        organization_name
+      } as Employee;
     } catch (error) {
       console.error("Error creating employee in service:", error);
       throw error; // Re-throw to handle in the component
@@ -664,5 +743,66 @@ export const createOrUpdateEmployeeEmployment = async (
   } catch (error) {
     console.error("Error saving employee employment data:", error);
     return false;
+  }
+};
+
+// Add dummyEmployees function for testing purposes
+export const addDummyEmployees = async (): Promise<boolean> => {
+  try {
+    // Generate unique employee IDs for new employees
+    const generateUniqueId = () => `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    const dummyEmployeesData = [
+      {
+        name: "John Doe",
+        email: "john.doe@example.com",
+        mobile_phone: "+6281234567890",
+        birth_place: "Jakarta",
+        birth_date: "1990-01-01",
+        gender: "male",
+        marital_status: "single",
+        religion: "islam",
+        blood_type: "O",
+        nik: "1234567890123456",
+        address: "Jl. Sudirman No. 123, Jakarta",
+        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Required field
+        employee_id: generateUniqueId()
+      },
+      {
+        name: "Jane Smith",
+        email: "jane.smith@example.com",
+        mobile_phone: "+6287654321098",
+        birth_place: "Bandung",
+        birth_date: "1992-05-15",
+        gender: "female",
+        marital_status: "married",
+        religion: "catholicism",
+        blood_type: "A",
+        nik: "6543210987654321",
+        address: "Jl. Gatot Subroto No. 456, Jakarta",
+        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Required field
+        employee_id: generateUniqueId()
+      }
+    ];
+
+    // Insert employees one by one
+    for (const empData of dummyEmployeesData) {
+      const newEmployee = await this.createEmployee({
+        ...empData,
+        organization_name: "Sales Department", // Add organization_name for the employment table
+        job_position: "Staff",
+        job_level: "Junior",
+        employment_status: "Permanent"
+      });
+      
+      if (!newEmployee) {
+        console.error("Failed to add dummy employee:", empData.name);
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error adding dummy employees:", error);
+    throw error;
   }
 };
