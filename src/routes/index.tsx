@@ -13,6 +13,8 @@ import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import JoinOrganization from "@/pages/auth/JoinOrganization";
+import JobApplicationForm from "@/pages/public/JobApplicationForm";
+import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
 
 export const AppRoutes = () => {
   return (
@@ -23,8 +25,10 @@ export const AppRoutes = () => {
       {/* Auth Routes */}
       {authRoutes}
       
-      {/* Join Organization Route - Public accessible */}
+      {/* Public Routes */}
       <Route path="/join-organization" element={<JoinOrganization />} />
+      <Route path="/apply/:token" element={<JobApplicationForm />} />
+      <Route path="/apply/success" element={<ApplicationSuccess />} />
       
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>

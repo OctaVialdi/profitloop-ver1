@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { ClipboardIcon, LinkIcon, PlusIcon, Share2Icon, CopyIcon, CheckCircleIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface InvitationLink {
   id: string;
@@ -53,59 +54,73 @@ export default function InvitationLinks() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<string>("");
   const [copiedLinks, setCopiedLinks] = useState<Record<string, boolean>>({});
+  const [expirationPeriod, setExpirationPeriod] = useState<string>("30");
+  const [invitationLinks, setInvitationLinks] = useState<InvitationLink[]>([]);
+  const [jobPositions, setJobPositions] = useState<{id: string, title: string}[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Mock data - would be replaced with actual API calls
-  const invitationLinks: InvitationLink[] = [
-    {
-      id: "1",
-      position: "Frontend Developer",
-      link: "https://appdomain.com/apply?org=123&job=456",
-      createdAt: "2023-05-01",
-      expiresAt: "2023-06-01",
-      clicks: 24,
-      submissions: 12,
-      status: 'active'
-    },
-    {
-      id: "2",
-      position: "UX Designer",
-      link: "https://appdomain.com/apply?org=123&job=457",
-      createdAt: "2023-05-02",
-      expiresAt: "2023-06-02",
-      clicks: 18,
-      submissions: 8,
-      status: 'active'
-    },
-    {
-      id: "3",
-      position: "Backend Developer",
-      link: "https://appdomain.com/apply?org=123&job=458",
-      createdAt: "2023-04-15",
-      expiresAt: "2023-05-15",
-      clicks: 30,
-      submissions: 15,
-      status: 'expired'
-    },
-    {
-      id: "4",
-      position: "Product Manager",
-      link: "https://appdomain.com/apply?org=123&job=459",
-      createdAt: "2023-04-25",
-      expiresAt: "2023-05-25",
-      clicks: 10,
-      submissions: 3,
-      status: 'disabled'
+  // Fetch invitation links and job positions when the component loads
+  React.useEffect(() => {
+    fetchInvitationLinks();
+    fetchJobPositions();
+  }, []);
+  
+  const fetchInvitationLinks = async () => {
+    try {
+      const { data: links, error } = await supabase
+        .from('recruitment_links')
+        .select(`
+          id, 
+          job_position_id,
+          token,
+          created_at,
+          expires_at,
+          clicks,
+          submissions,
+          status,
+          job_positions(title)
+        `)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      if (links) {
+        const formattedLinks: InvitationLink[] = links.map(link => ({
+          id: link.id,
+          position: link.job_positions?.title || 'Unknown Position',
+          link: `${window.location.origin}/apply/${link.token}`,
+          createdAt: new Date(link.created_at).toLocaleDateString(),
+          expiresAt: link.expires_at ? new Date(link.expires_at).toLocaleDateString() : 'N/A',
+          clicks: link.clicks || 0,
+          submissions: link.submissions || 0,
+          status: link.status as 'active' | 'expired' | 'disabled'
+        }));
+        
+        setInvitationLinks(formattedLinks);
+      }
+    } catch (error: any) {
+      console.error("Error fetching invitation links:", error);
+      toast.error("Failed to fetch invitation links");
     }
-  ];
-
-  // Mock job positions for the dropdown
-  const jobPositions = [
-    { id: "456", title: "Frontend Developer" },
-    { id: "457", title: "UX Designer" },
-    { id: "458", title: "Backend Developer" },
-    { id: "459", title: "Product Manager" },
-    { id: "460", title: "Marketing Specialist" }
-  ];
+  };
+  
+  const fetchJobPositions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('job_positions')
+        .select('id, title')
+        .eq('status', 'active');
+        
+      if (error) throw error;
+      
+      if (data) {
+        setJobPositions(data);
+      }
+    } catch (error: any) {
+      console.error("Error fetching job positions:", error);
+      toast.error("Failed to fetch job positions");
+    }
+  };
 
   const handleCopyLink = (id: string, link: string) => {
     navigator.clipboard.writeText(link).then(() => {
@@ -119,16 +134,37 @@ export default function InvitationLinks() {
     });
   };
 
-  const handleGenerateLink = () => {
+  const handleGenerateLink = async () => {
     if (!selectedPosition) {
       toast.error("Please select a position");
       return;
     }
     
-    // Here you would call your API to generate a new link
-    toast.success("New invitation link generated");
-    setIsDialogOpen(false);
-    setSelectedPosition("");
+    setIsLoading(true);
+    
+    try {
+      // Call the Supabase function to generate a link
+      const { data, error } = await supabase.rpc(
+        'generate_recruitment_link',
+        { 
+          p_organization_id: null, // Will be set by the RPC function
+          p_job_position_id: selectedPosition,
+          p_expires_in_days: parseInt(expirationPeriod)
+        }
+      );
+      
+      if (error) throw error;
+      
+      toast.success("New invitation link generated");
+      fetchInvitationLinks(); // Refresh the list
+      setIsDialogOpen(false);
+      setSelectedPosition("");
+    } catch (error: any) {
+      console.error("Error generating link:", error);
+      toast.error("Failed to generate link");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -186,7 +222,7 @@ export default function InvitationLinks() {
               
               <div className="space-y-2">
                 <Label htmlFor="expiry">Link Expiration</Label>
-                <Select defaultValue="30">
+                <Select value={expirationPeriod} onValueChange={setExpirationPeriod}>
                   <SelectTrigger id="expiry">
                     <SelectValue />
                   </SelectTrigger>
@@ -204,8 +240,8 @@ export default function InvitationLinks() {
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleGenerateLink}>
-                Generate Link
+              <Button onClick={handleGenerateLink} disabled={isLoading}>
+                {isLoading ? "Generating..." : "Generate Link"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -248,49 +284,60 @@ export default function InvitationLinks() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invitationLinks.map((invitation) => (
-              <TableRow key={invitation.id}>
-                <TableCell>
-                  <div className="font-medium">{invitation.position}</div>
-                  <div className="text-xs text-muted-foreground md:hidden">
-                    Created: {invitation.createdAt}
-                  </div>
-                  <div className="text-xs text-muted-foreground md:hidden">
-                    Expires: {invitation.expiresAt}
-                  </div>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">{invitation.createdAt}</TableCell>
-                <TableCell className="hidden md:table-cell">{invitation.expiresAt}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusBadgeClass(invitation.status)}>
-                    {invitation.status.charAt(0).toUpperCase() + invitation.status.slice(1)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-center">{invitation.clicks}</TableCell>
-                <TableCell className="text-center">{invitation.submissions}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      value={invitation.link}
-                      readOnly
-                      className="h-8 text-xs w-[140px] md:w-auto"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleCopyLink(invitation.id, invitation.link)}
-                      className="h-8 w-8 p-0"
-                    >
-                      {copiedLinks[invitation.id] ? (
-                        <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <CopyIcon className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
+            {invitationLinks.length > 0 ? (
+              invitationLinks.map((invitation) => (
+                <TableRow key={invitation.id}>
+                  <TableCell>
+                    <div className="font-medium">{invitation.position}</div>
+                    <div className="text-xs text-muted-foreground md:hidden">
+                      Created: {invitation.createdAt}
+                    </div>
+                    <div className="text-xs text-muted-foreground md:hidden">
+                      Expires: {invitation.expiresAt}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{invitation.createdAt}</TableCell>
+                  <TableCell className="hidden md:table-cell">{invitation.expiresAt}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusBadgeClass(invitation.status)}>
+                      {invitation.status.charAt(0).toUpperCase() + invitation.status.slice(1)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">{invitation.clicks}</TableCell>
+                  <TableCell className="text-center">{invitation.submissions}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        value={invitation.link}
+                        readOnly
+                        className="h-8 text-xs w-[140px] md:w-auto"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCopyLink(invitation.id, invitation.link)}
+                        className="h-8 w-8 p-0"
+                      >
+                        {copiedLinks[invitation.id] ? (
+                          <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <CopyIcon className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  <p className="text-muted-foreground">No invitation links created yet.</p>
+                  <Button variant="outline" className="mt-4" onClick={() => setIsDialogOpen(true)}>
+                    Generate your first invitation link
+                  </Button>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
