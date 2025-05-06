@@ -1,78 +1,79 @@
 
-import { Route, Routes } from "react-router-dom";
-import NotFound from "@/pages/NotFound";
-import { rootRedirect, authRoutes } from "./authRoutes";
-import { onboardingRoutes } from "./onboardingRoutes";
+import { createBrowserRouter } from "react-router-dom";
+import { authRoutes } from "./authRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
+import { onboardingRoutes } from "./onboardingRoutes";
 import { hrRoutes } from "./hrRoutes";
 import { financeRoutes } from "./financeRoutes";
 import { operationsRoutes } from "./operationsRoutes";
 import { marketingRoutes } from "./marketingRoutes";
 import { itRoutes } from "./itRoutes";
-import { settingsRoutes } from "./settingsRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
+import { settingsRoutes } from "./settingsRoutes";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import JoinOrganization from "@/pages/auth/JoinOrganization";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import Apply from "@/pages/Apply"; // Import the new Apply page
 
-export const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* Root redirects to login */}
-      {rootRedirect}
+import LoginPage from "@/pages/auth/Login";
+import RegisterPage from "@/pages/auth/Register";
+import VerificationSentPage from "@/pages/auth/VerificationSent";
+import MagicLinkJoinPage from "@/pages/auth/MagicLinkJoin";
 
-      {/* Auth Routes */}
-      {authRoutes}
-      
-      {/* Join Organization Route - Public accessible */}
-      <Route path="/join-organization" element={<JoinOrganization />} />
-      
-      {/* Protected Routes */}
-      <Route element={<ProtectedRoute />}>
-        {onboardingRoutes}
-      </Route>
+import EmptyPage from "@/pages/EmptyPage";
+import NotFound from "@/pages/NotFound";
+import WelcomePage from "@/pages/WelcomePage";
+import IndexPage from "@/pages/Index";
 
-      {/* Dashboard Routes */}
-      <Route element={<ProtectedRoute />}>
-        {dashboardRoutes}
-      </Route>
+// Create browser router
+const router = createBrowserRouter([
+  // Public application form route (accessible without authentication)
+  {
+    path: "/apply/:token",
+    element: <Apply />
+  },
+  // Application index page
+  {
+    path: "/",
+    element: <IndexPage />
+  },
+  {
+    path: "/welcome",
+    element: <WelcomePage />
+  },
+  // Authentication routes
+  ...authRoutes,
+  // Onboarding routes
+  ...onboardingRoutes,
+  // Dashboard routes
+  ...dashboardRoutes,
+  // HR routes
+  hrRoutes,
+  // Finance routes
+  ...financeRoutes,
+  // Operations routes
+  ...operationsRoutes,
+  // Marketing routes
+  ...marketingRoutes,
+  // IT routes
+  ...itRoutes,
+  // My Info routes
+  ...myInfoRoutes,
+  // Settings routes
+  ...settingsRoutes,
+  {
+    path: "/empty",
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout>
+          <EmptyPage />
+        </DashboardLayout>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "*",
+    element: <NotFound />
+  }
+]);
 
-      {/* HR Routes */}
-      <Route element={<ProtectedRoute />}>
-        {hrRoutes}
-      </Route>
-      
-      {/* My Info Routes */}
-      <Route element={<ProtectedRoute />}>
-        {myInfoRoutes}
-      </Route>
-
-      {/* Finance Routes */}
-      <Route element={<ProtectedRoute />}>
-        {financeRoutes}
-      </Route>
-
-      {/* Operations Routes */}
-      <Route element={<ProtectedRoute />}>
-        {operationsRoutes}
-      </Route>
-      
-      {/* Marketing Routes */}
-      <Route element={<ProtectedRoute />}>
-        {marketingRoutes}
-      </Route>
-      
-      {/* IT Routes */}
-      <Route element={<ProtectedRoute />}>
-        {itRoutes}
-      </Route>
-
-      {/* Settings Routes */}
-      <Route element={<ProtectedRoute />}>
-        {settingsRoutes}
-      </Route>
-
-      {/* Catch all */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
+export default router;
