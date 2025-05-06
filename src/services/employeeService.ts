@@ -36,6 +36,9 @@ export interface Employee {
   
   // Additional field to store organization_name from employee_employment table
   organization_name?: string | null;
+  
+  // Reference to employment data when joined
+  employment?: EmployeeEmployment[] | null;
 }
 
 // For backward compatibility with existing components
@@ -174,8 +177,8 @@ export const employeeService = {
           branch: employmentData?.branch || employee.branch || null,
           join_date: employmentData?.join_date || employee.join_date || null,
           sign_date: employmentData?.sign_date || employee.sign_date || null,
-          // Remove the employment property to avoid confusion
-          employment: undefined
+          // Keep the employment array for advanced use cases
+          employment: employee.employment
         };
       }) as Employee[];
     } catch (error) {
@@ -796,7 +799,7 @@ export const addDummyEmployees = async (): Promise<boolean> => {
       employee_id: generateUniqueId()
     };
     
-    const employee1Result = await this.createEmployee(employee1);
+    const employee1Result = await employeeService.createEmployee(employee1);
       
     if (employee1Result) {
       // Add employment data for first employee
@@ -825,7 +828,7 @@ export const addDummyEmployees = async (): Promise<boolean> => {
       employee_id: generateUniqueId()
     };
     
-    const employee2Result = await this.createEmployee(employee2);
+    const employee2Result = await employeeService.createEmployee(employee2);
       
     if (employee2Result) {
       // Add employment data for second employee
