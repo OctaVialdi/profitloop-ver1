@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -370,7 +369,10 @@ export default function InvitationLinks() {
               <Switch 
                 id="active" 
                 checked={newLink.status === 'active'}
-                onCheckedChange={(checked) => setNewLink({...newLink, status: checked ? 'active' : 'inactive'})}
+                onCheckedChange={(checked) => {
+                  const newStatus = checked ? 'active' : 'inactive';
+                  setNewLink({...newLink, status: newStatus});
+                }}
               />
               <Label htmlFor="active">Active</Label>
             </div>
