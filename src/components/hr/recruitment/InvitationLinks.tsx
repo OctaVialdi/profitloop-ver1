@@ -87,7 +87,7 @@ export default function InvitationLinks() {
       if (links) {
         const formattedLinks: InvitationLink[] = links.map(link => ({
           id: link.id,
-          position: link.job_positions?.title || 'Unknown Position',
+          position: link.job_positions?.title || 'General Application',
           link: `${window.location.origin}/apply/${link.token}`,
           createdAt: new Date(link.created_at).toLocaleDateString(),
           expiresAt: link.expires_at ? new Date(link.expires_at).toLocaleDateString() : 'N/A',
@@ -135,20 +135,16 @@ export default function InvitationLinks() {
   };
 
   const handleGenerateLink = async () => {
-    if (!selectedPosition) {
-      toast.error("Please select a position");
-      return;
-    }
-    
     setIsLoading(true);
     
     try {
       // Call the Supabase function to generate a link
+      // Now the job position is optional
       const { data, error } = await supabase.rpc(
         'generate_recruitment_link',
         { 
           p_organization_id: null, // Will be set by the RPC function
-          p_job_position_id: selectedPosition,
+          p_job_position_id: selectedPosition || null, // Optional - can be null for general purpose links
           p_expires_in_days: parseInt(expirationPeriod)
         }
       );
@@ -205,12 +201,13 @@ export default function InvitationLinks() {
             
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="position">Job Position</Label>
+                <Label htmlFor="position">Job Position (Optional)</Label>
                 <Select value={selectedPosition} onValueChange={setSelectedPosition}>
                   <SelectTrigger id="position">
-                    <SelectValue placeholder="Select a position" />
+                    <SelectValue placeholder="Select a position or leave empty for general application" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">General Application</SelectItem>
                     {jobPositions.map(job => (
                       <SelectItem key={job.id} value={job.id}>
                         {job.title}
@@ -218,6 +215,9 @@ export default function InvitationLinks() {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  Leave empty to create a general application link where candidates specify the position they're applying for.
+                </p>
               </div>
               
               <div className="space-y-2">

@@ -28,6 +28,7 @@ export type Database = {
           passport_expiry: string | null
           passport_number: string | null
           phone: string | null
+          position: string | null
           postal_code: string | null
           recruitment_link_id: string
           religion: string | null
@@ -51,6 +52,7 @@ export type Database = {
           passport_expiry?: string | null
           passport_number?: string | null
           phone?: string | null
+          position?: string | null
           postal_code?: string | null
           recruitment_link_id: string
           religion?: string | null
@@ -74,6 +76,7 @@ export type Database = {
           passport_expiry?: string | null
           passport_number?: string | null
           phone?: string | null
+          position?: string | null
           postal_code?: string | null
           recruitment_link_id?: string
           religion?: string | null
@@ -1472,7 +1475,7 @@ export type Database = {
       generate_recruitment_link: {
         Args: {
           p_organization_id: string
-          p_job_position_id: string
+          p_job_position_id?: string
           p_expires_in_days?: number
         }
         Returns: string

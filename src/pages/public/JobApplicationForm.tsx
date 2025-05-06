@@ -28,6 +28,7 @@ interface ApplicationFormData {
   maritalStatus: string;
   bloodType: string;
   religion: string;
+  position: string; // Added position field
   
   // Identity & Address
   nik: string;
@@ -61,6 +62,7 @@ const JobApplicationForm = () => {
     maritalStatus: "",
     bloodType: "",
     religion: "",
+    position: "", // Initialize position field
     
     nik: "",
     passportNumber: "",
@@ -128,7 +130,7 @@ const JobApplicationForm = () => {
       setIsSubmitting(true);
       
       // Validate required fields
-      if (!formData.fullName || !formData.email) {
+      if (!formData.fullName || !formData.email || !formData.position) {
         toast.error("Please fill out all required fields.");
         setIsSubmitting(false);
         return;
@@ -144,7 +146,6 @@ const JobApplicationForm = () => {
       const { data: applicationData, error: applicationError } = await supabase
         .from('candidate_applications')
         .insert({
-          job_position_id: linkInfo.job_position_id,
           recruitment_link_id: token || '',
           full_name: formData.fullName,
           email: formData.email,
@@ -161,7 +162,9 @@ const JobApplicationForm = () => {
           passport_expiry: formData.passportExpiry,
           postal_code: formData.postalCode,
           citizen_address: formData.citizenAddress,
-          organization_id: linkInfo.organization_id
+          organization_id: linkInfo.organization_id,
+          position: formData.position, // Add position to submission
+          job_position_id: linkInfo.job_position_id || null
         })
         .select('id')
         .single();
@@ -300,7 +303,7 @@ const JobApplicationForm = () => {
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold">Job Application Form</h1>
         <p className="text-muted-foreground mt-2">
-          {linkInfo?.job_title} at {linkInfo?.organization_name}
+          {linkInfo?.job_title === 'General Application' ? 'Join Our Team' : linkInfo?.job_title} at {linkInfo?.organization_name}
         </p>
       </div>
       
