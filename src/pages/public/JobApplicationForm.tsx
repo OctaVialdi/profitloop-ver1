@@ -144,7 +144,6 @@ const JobApplicationForm = () => {
       const { data: applicationData, error: applicationError } = await supabase
         .from('candidate_applications')
         .insert({
-          organization_id: linkInfo.organization_id,
           job_position_id: linkInfo.job_position_id,
           recruitment_link_id: token || '',
           full_name: formData.fullName,
@@ -161,7 +160,8 @@ const JobApplicationForm = () => {
           passport_number: formData.passportNumber,
           passport_expiry: formData.passportExpiry,
           postal_code: formData.postalCode,
-          citizen_address: formData.citizenAddress
+          citizen_address: formData.citizenAddress,
+          organization_id: linkInfo.organization_id
         })
         .select('id')
         .single();
