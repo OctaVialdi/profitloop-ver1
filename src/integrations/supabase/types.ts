@@ -51,93 +51,6 @@ export type Database = {
           },
         ]
       }
-      data_calon_kandidat: {
-        Row: {
-          address: string | null
-          application_date: string
-          birth_date: string | null
-          created_at: string
-          education: string | null
-          email: string
-          experience: string | null
-          full_name: string
-          has_been_contacted: boolean | null
-          id: string
-          interview_date: string | null
-          interview_notes: string | null
-          job_position_id: string | null
-          organization_id: string
-          phone: string | null
-          recruiter_comments: string | null
-          resume_url: string | null
-          score: number | null
-          status: string | null
-          updated_at: string
-          video_url: string | null
-        }
-        Insert: {
-          address?: string | null
-          application_date?: string
-          birth_date?: string | null
-          created_at?: string
-          education?: string | null
-          email: string
-          experience?: string | null
-          full_name: string
-          has_been_contacted?: boolean | null
-          id?: string
-          interview_date?: string | null
-          interview_notes?: string | null
-          job_position_id?: string | null
-          organization_id: string
-          phone?: string | null
-          recruiter_comments?: string | null
-          resume_url?: string | null
-          score?: number | null
-          status?: string | null
-          updated_at?: string
-          video_url?: string | null
-        }
-        Update: {
-          address?: string | null
-          application_date?: string
-          birth_date?: string | null
-          created_at?: string
-          education?: string | null
-          email?: string
-          experience?: string | null
-          full_name?: string
-          has_been_contacted?: boolean | null
-          id?: string
-          interview_date?: string | null
-          interview_notes?: string | null
-          job_position_id?: string | null
-          organization_id?: string
-          phone?: string | null
-          recruiter_comments?: string | null
-          resume_url?: string | null
-          score?: number | null
-          status?: string | null
-          updated_at?: string
-          video_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "data_calon_kandidat_job_position_id_fkey"
-            columns: ["job_position_id"]
-            isOneToOne: false
-            referencedRelation: "job_positions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "data_calon_kandidat_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       employee_assets: {
         Row: {
           asset_image: string | null
@@ -648,59 +561,6 @@ export type Database = {
           },
         ]
       }
-      job_positions: {
-        Row: {
-          created_at: string
-          description: string | null
-          employment_type: string | null
-          id: string
-          location: string | null
-          organization_id: string
-          requirements: string | null
-          responsibilities: string | null
-          salary_range: string | null
-          status: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          employment_type?: string | null
-          id?: string
-          location?: string | null
-          organization_id: string
-          requirements?: string | null
-          responsibilities?: string | null
-          salary_range?: string | null
-          status?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          employment_type?: string | null
-          id?: string
-          location?: string | null
-          organization_id?: string
-          requirements?: string | null
-          responsibilities?: string | null
-          salary_range?: string | null
-          status?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "job_positions_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       magic_link_invitations: {
         Row: {
           created_at: string
@@ -1068,67 +928,6 @@ export type Database = {
           },
         ]
       }
-      recruitment_links: {
-        Row: {
-          clicks: number | null
-          created_at: string
-          created_by: string | null
-          expires_at: string | null
-          id: string
-          job_position_id: string | null
-          organization_id: string
-          status: string | null
-          submissions: number | null
-          token: string
-        }
-        Insert: {
-          clicks?: number | null
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string | null
-          id?: string
-          job_position_id?: string | null
-          organization_id: string
-          status?: string | null
-          submissions?: number | null
-          token: string
-        }
-        Update: {
-          clicks?: number | null
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string | null
-          id?: string
-          job_position_id?: string | null
-          organization_id?: string
-          status?: string | null
-          submissions?: number | null
-          token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "recruitment_links_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recruitment_links_job_position_id_fkey"
-            columns: ["job_position_id"]
-            isOneToOne: false
-            referencedRelation: "job_positions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recruitment_links_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       subscription_plans: {
         Row: {
           created_at: string | null
@@ -1205,24 +1004,6 @@ export type Database = {
       generate_magic_link_invitation: {
         Args: { email_address: string; org_id: string; user_role?: string }
         Returns: Json
-      }
-      generate_recruitment_link: {
-        Args: {
-          p_organization_id: string
-          p_job_position_id: string
-          p_expires_in_days?: number
-        }
-        Returns: string
-      }
-      get_recruitment_link_info: {
-        Args: { p_token: string }
-        Returns: {
-          organization_id: string
-          job_position_id: string
-          job_title: string
-          organization_name: string
-          is_valid: boolean
-        }[]
       }
       get_user_organizations: {
         Args: Record<PropertyKey, never>

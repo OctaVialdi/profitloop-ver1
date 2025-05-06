@@ -1,19 +1,21 @@
 
+import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import router from "./routes";
-import { RouterProvider } from "react-router-dom";
-import { QueryProvider } from "./components/QueryProvider";
+import { AppRoutes } from "./routes";
 import TrialProtection from "./components/TrialProtection";
+import { QueryProvider } from "./components/QueryProvider";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-      <QueryProvider>
-        {/* RouterProvider should wrap TrialProtection since 
-            TrialProtection and its child components use router hooks */}
-        <RouterProvider router={router} />
-      </QueryProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <QueryProvider>
+          <TrialProtection>
+            <AppRoutes />
+          </TrialProtection>
+        </QueryProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 
