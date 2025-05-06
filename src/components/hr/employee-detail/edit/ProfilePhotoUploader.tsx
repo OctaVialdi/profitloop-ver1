@@ -8,13 +8,17 @@ import { employeeService } from "@/services/employeeService";
 interface ProfilePhotoUploaderProps {
   employeeId: string;
   currentImageUrl?: string;
+  employeeName?: string;
   onSuccess?: (imageUrl: string) => void;
+  onPhotoUpdated?: (imageUrl: string) => void;
 }
 
 export const ProfilePhotoUploader: React.FC<ProfilePhotoUploaderProps> = ({
   employeeId,
   currentImageUrl,
-  onSuccess
+  employeeName,
+  onSuccess,
+  onPhotoUpdated
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   
@@ -37,6 +41,10 @@ export const ProfilePhotoUploader: React.FC<ProfilePhotoUploaderProps> = ({
         onSuccess(fakeImageUrl);
       }
       
+      if (onPhotoUpdated) {
+        onPhotoUpdated(fakeImageUrl);
+      }
+      
       toast.success("Profile photo updated successfully");
     } catch (error) {
       console.error("Error uploading profile photo:", error);
@@ -52,7 +60,7 @@ export const ProfilePhotoUploader: React.FC<ProfilePhotoUploaderProps> = ({
         <div className="mb-4">
           <img 
             src={currentImageUrl} 
-            alt="Profile" 
+            alt={employeeName ? `${employeeName}'s profile` : "Profile"} 
             className="w-24 h-24 rounded-full object-cover border"
           />
         </div>

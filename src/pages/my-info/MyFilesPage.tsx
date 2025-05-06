@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Employee, employeeService } from "@/services/employeeService";
 import { useEmployees } from "@/hooks/useEmployees";
 import { FilesSection } from "@/components/hr/employee-detail";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MyFilesPage = () => {
   const navigate = useNavigate();
@@ -89,8 +91,7 @@ const MyFilesPage = () => {
       </div>
 
       <FilesSection 
-        employee={employee} 
-        activeTab="files" 
+        employee={employee}
       />
     </div>
   );

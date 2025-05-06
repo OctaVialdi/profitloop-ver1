@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Loader } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Employee, employeeService } from "@/services/employeeService";
 import { useEmployees } from "@/hooks/useEmployees";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MyInfoIndex = () => {
   const [searchParams] = useSearchParams();

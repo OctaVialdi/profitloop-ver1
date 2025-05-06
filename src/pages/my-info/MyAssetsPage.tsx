@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Employee, employeeService } from "@/services/employeeService";
 import { useEmployees } from "@/hooks/useEmployees";
 import { AssetsSection } from "@/components/hr/employee-detail";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MyAssetsPage = () => {
   const navigate = useNavigate();
@@ -90,7 +92,6 @@ const MyAssetsPage = () => {
 
       <AssetsSection 
         employee={employee} 
-        activeTab="assets" 
       />
     </div>
   );

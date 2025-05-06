@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Employee, employeeService } from "@/services/employeeService";
 import { useEmployees } from "@/hooks/useEmployees";
 import { EmploymentSection } from "@/components/hr/employee-detail";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MyEmploymentPage = () => {
   const navigate = useNavigate();
@@ -89,8 +91,7 @@ const MyEmploymentPage = () => {
       </div>
 
       <EmploymentSection 
-        employee={employee} 
-        activeTab="employment" 
+        employee={employee}
       />
     </div>
   );
