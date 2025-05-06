@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { formatTimestampToUserTimezone, convertToUTC } from "@/utils/dateUtils";
 
 // Import form sections
 import { PersonalInformationSection } from "@/components/public/application/PersonalInformationSection";
@@ -147,7 +149,8 @@ const JobApplicationForm = () => {
         email: formData.email,
         phone: formData.mobilePhone,
         address: formData.residentialAddress,
-        birth_date: formData.birthdate,
+        // Convert Date objects to ISO strings for the database
+        birth_date: formData.birthdate ? formData.birthdate.toISOString() : null,
         birth_place: formData.birthPlace,
         gender: formData.gender,
         religion: formData.religion,
@@ -155,7 +158,7 @@ const JobApplicationForm = () => {
         blood_type: formData.bloodType,
         nik: formData.nik,
         passport_number: formData.passportNumber,
-        passport_expiry: formData.passportExpiry,
+        passport_expiry: formData.passportExpiry ? formData.passportExpiry.toISOString() : null,
         postal_code: formData.postalCode,
         citizen_address: formData.citizenAddress,
         organization_id: linkInfo.organization_id
