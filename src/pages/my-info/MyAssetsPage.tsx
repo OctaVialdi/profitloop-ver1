@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader } from "lucide-react";
 import { Employee, employeeService } from "@/services/employeeService";
 import { useEmployees } from "@/hooks/useEmployees";
 import { AssetsSection } from "@/components/hr/employee-detail";
@@ -16,6 +16,14 @@ const MyAssetsPage = () => {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const { employees } = useEmployees();
+
+  // Stub function for handleEdit - not needed in the My Info context
+  // but required by the component props
+  const handleEdit = (section: string) => {
+    console.log(`Edit ${section} requested but not implemented in My Info view`);
+    // In the My Info view, we don't need editing functionality
+    // but we provide this function to satisfy the component props
+  };
 
   useEffect(() => {
     const fetchEmployee = async () => {
@@ -92,6 +100,7 @@ const MyAssetsPage = () => {
 
       <AssetsSection 
         employee={employee} 
+        handleEdit={handleEdit}
       />
     </div>
   );

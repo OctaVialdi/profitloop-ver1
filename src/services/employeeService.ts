@@ -382,63 +382,99 @@ export const employeeService = {
       // Generate unique employee IDs for new employees
       const generateUniqueId = () => `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
       
-      const dummyEmployeesData = [
-        {
-          name: "John Doe",
-          email: "john.doe@example.com",
-          mobile_phone: "+6281234567890",
-          birth_place: "Jakarta",
-          birth_date: "1990-01-01",
-          gender: "male",
-          marital_status: "single",
-          religion: "islam",
-          blood_type: "O",
-          nik: "1234567890123456",
-          address: "Jl. Sudirman No. 123, Jakarta",
-          organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
-          employee_id: generateUniqueId(), // Add employee_id with proper format
-          employment: {
-            organization_name: "Finance Department",
-            branch: "Jakarta HQ",
-            job_position: "Finance Officer"
-          }
-        },
-        {
-          name: "Jane Smith",
-          email: "jane.smith@example.com",
-          mobile_phone: "+6287654321098",
-          birth_place: "Bandung",
-          birth_date: "1992-05-15",
-          gender: "female",
-          marital_status: "married",
-          religion: "catholicism",
-          blood_type: "A",
-          nik: "6543210987654321",
-          address: "Jl. Gatot Subroto No. 456, Jakarta",
-          organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
-          employee_id: generateUniqueId(), // Add employee_id with proper format
-          employment: {
-            organization_name: "Marketing Department",
-            branch: "Jakarta HQ",
-            job_position: "Marketing Executive"
-          }
-        }
-      ];
+      // First employee data
+      const employee1 = {
+        name: "John Doe",
+        email: "john.doe@example.com",
+        mobile_phone: "+6281234567890",
+        birth_place: "Jakarta",
+        birth_date: "1990-01-01",
+        gender: "male",
+        marital_status: "single",
+        religion: "islam",
+        blood_type: "O",
+        nik: "1234567890123456",
+        address: "Jl. Sudirman No. 123, Jakarta",
+        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
+        employee_id: generateUniqueId()
+      };
 
-      // Insert employees one by one instead of as an array
-      const newEmployees = [];
-      for (const empData of dummyEmployeesData) {
-        const newEmployee = await this.createEmployee(empData);
-        if (newEmployee) {
-          newEmployees.push(newEmployee);
+      // Second employee data
+      const employee2 = {
+        name: "Jane Smith",
+        email: "jane.smith@example.com",
+        mobile_phone: "+6287654321098",
+        birth_place: "Bandung",
+        birth_date: "1992-05-15",
+        gender: "female",
+        marital_status: "married",
+        religion: "catholicism",
+        blood_type: "A",
+        nik: "6543210987654321",
+        address: "Jl. Gatot Subroto No. 456, Jakarta",
+        organization_id: "96b17df8-c3c3-4ace-a622-0e3c1f5b6500", // Replace with actual org ID
+        employee_id: generateUniqueId()
+      };
+
+      // Insert employees one by one
+      const { data: newEmployee1, error: error1 } = await supabase
+        .from('employees')
+        .insert([employee1])
+        .select()
+        .single();
+
+      if (error1) {
+        console.error("Error inserting first employee:", error1);
+        return false;
+      }
+
+      const { data: newEmployee2, error: error2 } = await supabase
+        .from('employees')
+        .insert([employee2])
+        .select()
+        .single();
+
+      if (error2) {
+        console.error("Error inserting second employee:", error2);
+        return false;
+      }
+
+      // Now add employment data for each employee
+      if (newEmployee1) {
+        const employment1 = {
+          employee_id: newEmployee1.id,
+          organization_name: "Finance Department",
+          branch: "Jakarta HQ",
+          job_position: "Finance Officer"
+        };
+
+        const { error: empError1 } = await supabase
+          .from('employee_employment')
+          .insert([employment1]);
+
+        if (empError1) {
+          console.error("Error adding employment data for first employee:", empError1);
         }
       }
-  
-      if (newEmployees.length > 0) {
-        return true;
+
+      if (newEmployee2) {
+        const employment2 = {
+          employee_id: newEmployee2.id,
+          organization_name: "Marketing Department",
+          branch: "Jakarta HQ",
+          job_position: "Marketing Executive"
+        };
+
+        const { error: empError2 } = await supabase
+          .from('employee_employment')
+          .insert([employment2]);
+
+        if (empError2) {
+          console.error("Error adding employment data for second employee:", empError2);
+        }
       }
       
-      return false;
+      return true;
     } catch (error) {
       console.error("Error adding dummy employees:", error);
       throw error;
