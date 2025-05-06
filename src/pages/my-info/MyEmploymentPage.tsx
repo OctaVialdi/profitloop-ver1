@@ -1,44 +1,46 @@
-
-import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
-import { EmployeeDetail } from "@/components/hr/EmployeeDetail";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import { Employee, employeeService } from "@/services/employeeService";
+import { useEmployees } from "@/hooks/useEmployees";
+import { EmploymentSection } from "@/components/hr/employee-detail";
 
-export default function MyEmploymentPage() {
+const MyEmploymentPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
-  // Extract the employee ID from the query parameters
   const employeeId = searchParams.get("id");
   
-  const [employee, setEmployee] = useState<EmployeeWithDetails | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  
-  const fetchEmployee = async () => {
-    if (!employeeId) return;
-    
-    setLoading(true);
-    try {
-      const data = await employeeService.fetchEmployeeById(employeeId);
-      setEmployee(data);
-      if (!data) {
-        toast.error("Employee not found");
-      }
-    } catch (error) {
-      console.error("Error fetching employee:", error);
-      toast.error("Failed to load employee data");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+  const { employees } = useEmployees();
+
   useEffect(() => {
-    fetchEmployee();
-  }, [employeeId]);
+    const fetchEmployee = async () => {
+      setLoading(true);
+      try {
+        if (employeeId) {
+          // Find employee in the cache
+          const foundEmployee = employees.find(emp => emp.id === employeeId);
+          if (foundEmployee) {
+            setEmployee(foundEmployee);
+          } else {
+            console.error("Employee not found");
+          }
+        } else {
+          console.error("No employee ID provided");
+        }
+      } catch (error) {
+        console.error("Error fetching employee:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (employees.length > 0) {
+      fetchEmployee();
+    }
+  }, [employeeId, employees]);
 
   if (!employeeId) {
     return (
@@ -86,10 +88,12 @@ export default function MyEmploymentPage() {
         </Button>
       </div>
 
-      <EmployeeDetail 
+      <EmploymentSection 
         employee={employee} 
         activeTab="employment" 
       />
     </div>
   );
-}
+};
+
+export default MyEmploymentPage;

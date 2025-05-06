@@ -1,45 +1,46 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
-import { EmployeeDetail } from "@/components/hr/EmployeeDetail";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { QueryProvider } from "@/components/QueryProvider";
+import { Employee, employeeService } from "@/services/employeeService";
+import { useEmployees } from "@/hooks/useEmployees";
+import { FilesSection } from "@/components/hr/employee-detail";
 
-export default function MyFilesPage() {
+const MyFilesPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
-  // Extract the employee ID from the query parameters
   const employeeId = searchParams.get("id");
   
-  const [employee, setEmployee] = useState<EmployeeWithDetails | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  
-  const fetchEmployee = async () => {
-    if (!employeeId) return;
-    
-    setLoading(true);
-    try {
-      const data = await employeeService.fetchEmployeeById(employeeId);
-      setEmployee(data);
-      if (!data) {
-        toast.error("Employee not found");
-      }
-    } catch (error) {
-      console.error("Error fetching employee:", error);
-      toast.error("Failed to load employee data");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+  const { employees } = useEmployees();
+
   useEffect(() => {
-    fetchEmployee();
-  }, [employeeId]);
+    const fetchEmployee = async () => {
+      setLoading(true);
+      try {
+        if (employeeId) {
+          // Find employee in the cache
+          const foundEmployee = employees.find(emp => emp.id === employeeId);
+          if (foundEmployee) {
+            setEmployee(foundEmployee);
+          } else {
+            console.error("Employee not found");
+          }
+        } else {
+          console.error("No employee ID provided");
+        }
+      } catch (error) {
+        console.error("Error fetching employee:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (employees.length > 0) {
+      fetchEmployee();
+    }
+  }, [employeeId, employees]);
 
   if (!employeeId) {
     return (
@@ -75,24 +76,24 @@ export default function MyFilesPage() {
   }
 
   return (
-    <QueryProvider>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            className="flex items-center gap-2" 
-            onClick={() => navigate("/hr/data")}
-          >
-            <ArrowLeft size={16} />
-            <span>Back to Employee List</span>
-          </Button>
-        </div>
-
-        <EmployeeDetail 
-          employee={employee} 
-          activeTab="files" 
-        />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Button 
+          variant="ghost" 
+          className="flex items-center gap-2" 
+          onClick={() => navigate("/hr/data")}
+        >
+          <ArrowLeft size={16} />
+          <span>Back to Employee List</span>
+        </Button>
       </div>
-    </QueryProvider>
+
+      <FilesSection 
+        employee={employee} 
+        activeTab="files" 
+      />
+    </div>
   );
-}
+};
+
+export default MyFilesPage;

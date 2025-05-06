@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Employee, employeeService } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -103,6 +102,18 @@ export const convertToLegacyFormat = (employee: Employee): LegacyEmployee => {
 
 // Converts from LegacyEmployee (frontend) to Employee (backend) format
 export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> => {
+  // Create employment data separately
+  const employment = {
+    barcode: employee.barcode || null,
+    job_position: employee.jobPosition || null,
+    job_level: employee.jobLevel || null,
+    employment_status: employee.employmentStatus || null,
+    branch: employee.branch || null,
+    join_date: employee.joinDate || null,
+    sign_date: employee.signDate || null,
+    organization_name: employee.organization || null
+  };
+
   return {
     id: employee.id,
     name: employee.name,
@@ -125,14 +136,8 @@ export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> 
     citizen_address: employee.citizenAddress || null,
     address: employee.address || null,
     organization_id: employee.organization_id || employee.organization,
-    // Employment fields
-    barcode: employee.barcode || null,
-    job_position: employee.jobPosition || null,
-    job_level: employee.jobLevel || null,
-    employment_status: employee.employmentStatus || null,
-    branch: employee.branch || null,
-    join_date: employee.joinDate || null,
-    sign_date: employee.signDate || null
+    // Add employment object instead of flattened properties
+    employment: employment
   };
 };
 

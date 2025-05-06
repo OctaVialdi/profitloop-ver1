@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { employeeService, Employee } from "@/services/employeeService";
@@ -42,7 +41,10 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
   const handleEdit = async (section: string) => {
     if (section === "refresh") {
       try {
-        const refreshedEmployee = await employeeService.fetchEmployeeById(employee.id);
+        // Use fetchEmployees and find by ID instead of fetchEmployeeById
+        const employees = await employeeService.fetchEmployees();
+        const refreshedEmployee = employees.find(emp => emp.id === employee.id);
+        
         if (refreshedEmployee) {
           setEmployeeData(refreshedEmployee);
           toast.success("Data refreshed successfully");

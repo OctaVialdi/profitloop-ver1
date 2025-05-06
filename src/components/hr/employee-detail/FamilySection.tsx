@@ -2,33 +2,22 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Edit, Plus, Loader2, Check, X, Trash2, Phone, MapPin, UserIcon } from "lucide-react";
+import { PlusCircle, User, Phone, Loader2 } from "lucide-react";
 import { LegacyEmployee } from "@/hooks/useEmployees";
-import { toast } from "sonner";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { EmployeeFamily, getFamilyMembers, addFamilyMember, updateFamilyMember, deleteFamilyMember } from "@/services/employeeService";
-import { EmptyDataDisplay } from "./EmptyDataDisplay";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { employeeService } from "@/services/employeeService";
+
+// Define the EmployeeFamily interface if not already imported
+interface EmployeeFamily {
+  id?: string;
+  name: string;
+  relationship?: string;
+  gender?: string;
+  age?: number;
+  occupation?: string;
+  phone?: string;
+  address?: string;
+  is_emergency_contact?: boolean;
+}
 
 interface FamilySectionProps {
   employee: LegacyEmployee;
@@ -39,477 +28,80 @@ export const FamilySection: React.FC<FamilySectionProps> = ({
   employee,
   handleEdit
 }) => {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<EmployeeFamily | null>(null);
   const [familyMembers, setFamilyMembers] = useState<EmployeeFamily[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Form state
-  const [formValues, setFormValues] = useState({
-    name: "",
-    relationship: "spouse",
-    age: "",
-    occupation: "",
-    phone: "",
-    address: "",
-    gender: "",
-    isEmergencyContact: false
-  });
-
+  const [isLoading, setIsLoading] = useState(true);
+  
   useEffect(() => {
-    loadFamilyMembers();
-  }, [employee.id]);
-
-  const loadFamilyMembers = async () => {
-    setIsDataLoading(true);
-    setErrorMessage(null);
-    try {
-      console.log("Loading family members for employee ID:", employee.id);
-      const data = await getFamilyMembers(employee.id);
-      setFamilyMembers(data);
-    } catch (error) {
-      console.error("Failed to load family members:", error);
-      setErrorMessage("Failed to load family members. Please try again later.");
-      toast.error("Failed to load family members");
-    } finally {
-      setIsDataLoading(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormValues(prev => ({ ...prev, [id]: value }));
-  };
-
-  const handleSelectChange = (field: string, value: string) => {
-    setFormValues(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormValues(prev => ({ ...prev, isEmergencyContact: checked }));
-  };
-
-  const resetForm = () => {
-    setFormValues({
-      name: "",
-      relationship: "spouse",
-      age: "",
-      occupation: "",
-      phone: "",
-      address: "",
-      gender: "",
-      isEmergencyContact: false
-    });
-    setSelectedMember(null);
-    setErrorMessage(null);
-  };
-
-  const openAddDialog = () => {
-    resetForm();
-    setIsAddDialogOpen(true);
-  };
-
-  const openEditDialog = (member: EmployeeFamily) => {
-    setSelectedMember(member);
-    setFormValues({
-      name: member.name || "",
-      relationship: member.relationship || "spouse",
-      age: member.age?.toString() || "",
-      occupation: member.occupation || "",
-      phone: member.phone || "",
-      address: member.address || "",
-      gender: member.gender || "",
-      isEmergencyContact: member.is_emergency_contact || false
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (member: EmployeeFamily) => {
-    setSelectedMember(member);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!formValues.name.trim()) {
-      toast.error("Name is required");
-      return;
-    }
-
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const familyData: EmployeeFamily = {
-        employee_id: employee.id,
-        name: formValues.name,
-        relationship: formValues.relationship || null,
-        age: formValues.age ? parseInt(formValues.age, 10) : null,
-        occupation: formValues.occupation || null,
-        phone: formValues.phone || null,
-        address: formValues.address || null,
-        gender: formValues.gender || null,
-        is_emergency_contact: formValues.isEmergencyContact
-      };
-
-      console.log("Saving family member data:", familyData);
-      const result = await addFamilyMember(familyData);
-      
-      if (result) {
-        setFamilyMembers([result, ...familyMembers]);
-        toast.success("Family member added successfully");
-        setIsAddDialogOpen(false);
-        resetForm();
+    const fetchFamilyMembers = async () => {
+      setIsLoading(true);
+      try {
+        const data = await employeeService.getFamilyMembers(employee.id);
+        setFamilyMembers(data || []);
+      } catch (error) {
+        console.error("Error fetching family members:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error: any) {
-      console.error("Failed to add family member:", error);
-      const errorMsg = error.message || "Failed to add family member";
-      setErrorMessage(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setIsLoading(false);
+    };
+
+    if (employee && employee.id) {
+      fetchFamilyMembers();
     }
-  };
+  }, [employee]);
 
-  const handleUpdate = async () => {
-    if (!selectedMember || !formValues.name.trim()) {
-      toast.error("Name is required");
-      return;
-    }
-
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const updatedData: Partial<EmployeeFamily> = {
-        name: formValues.name,
-        relationship: formValues.relationship || null,
-        age: formValues.age ? parseInt(formValues.age, 10) : null,
-        occupation: formValues.occupation || null,
-        phone: formValues.phone || null,
-        address: formValues.address || null,
-        gender: formValues.gender || null,
-        is_emergency_contact: formValues.isEmergencyContact
-      };
-
-      console.log("Updating family member data:", updatedData);
-      const result = await updateFamilyMember(selectedMember.id!, updatedData);
-      
-      if (result) {
-        setFamilyMembers(familyMembers.map(member => 
-          member.id === selectedMember.id ? result : member
-        ));
-        toast.success("Family member updated successfully");
-        setIsEditDialogOpen(false);
-        resetForm();
-      }
-    } catch (error: any) {
-      console.error("Failed to update family member:", error);
-      const errorMsg = error.message || "Failed to update family member";
-      setErrorMessage(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedMember) return;
-
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const success = await deleteFamilyMember(selectedMember.id!);
-      
-      if (success) {
-        setFamilyMembers(familyMembers.filter(member => member.id !== selectedMember.id));
-        toast.success("Family member deleted successfully");
-        setIsDeleteDialogOpen(false);
-      }
-    } catch (error: any) {
-      console.error("Failed to delete family member:", error);
-      const errorMsg = error.message || "Failed to delete family member";
-      setErrorMessage(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Common dialog form for both add and edit
-  const renderDialogForm = () => (
-    <div className="grid gap-4 py-4">
-      {errorMessage && (
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{errorMessage}</AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="grid grid-cols-1 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Full name *</Label>
-          <Input
-            id="name"
-            value={formValues.name}
-            onChange={handleInputChange}
-            placeholder="Enter full name"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Relationship</Label>
-          <Select
-            value={formValues.relationship}
-            onValueChange={(value) => handleSelectChange("relationship", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select relationship" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="spouse">Spouse</SelectItem>
-              <SelectItem value="child">Child</SelectItem>
-              <SelectItem value="parent">Parent</SelectItem>
-              <SelectItem value="sibling">Sibling</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Gender</Label>
-          <Select
-            value={formValues.gender}
-            onValueChange={(value) => handleSelectChange("gender", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="age">Age</Label>
-          <Input
-            id="age"
-            type="number"
-            value={formValues.age}
-            onChange={handleInputChange}
-            placeholder="Enter age"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="occupation">Occupation</Label>
-          <Input
-            id="occupation"
-            value={formValues.occupation}
-            onChange={handleInputChange}
-            placeholder="Enter occupation"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone number</Label>
-        <Input
-          id="phone"
-          value={formValues.phone}
-          onChange={handleInputChange}
-          placeholder="Enter phone number"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address">Address</Label>
-        <Input
-          id="address"
-          value={formValues.address}
-          onChange={handleInputChange}
-          placeholder="Enter address"
-        />
-      </div>
-
-      <div className="flex items-center space-x-2 pt-2">
-        <Checkbox 
-          id="isEmergencyContact" 
-          checked={formValues.isEmergencyContact} 
-          onCheckedChange={handleCheckboxChange} 
-        />
-        <Label htmlFor="isEmergencyContact" className="text-sm font-normal">
-          Emergency Contact
-        </Label>
-      </div>
-    </div>
-  );
-
+  // For now, just render a placeholder section
   return (
     <Card>
       <div className="p-6">
-        <div className="mb-6 flex justify-between items-center">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Family Members</h2>
-          <Button 
-            onClick={openAddDialog} 
-            className="gap-1 flex items-center"
-            size="sm"
-          >
-            <Plus size={14} /> Add family member
+          <Button variant="outline" className="gap-2">
+            <PlusCircle size={16} />
+            <span>Add Family Member</span>
           </Button>
         </div>
         
-        <div>
-          {isDataLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-          ) : familyMembers.length === 0 ? (
-            <EmptyDataDisplay 
-              title="No family members found" 
-              description="Add family members to see them here" 
-              section="family"  // Add this required prop
-              handleEdit={handleEdit}  // Add this required prop
-              buttonText="Add family member" 
-              onClick={openAddDialog}
-            />
-          ) : (
-            <div className="border rounded-md overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Relationship</TableHead>
-                    <TableHead>Age</TableHead>
-                    <TableHead>Occupation</TableHead>
-                    <TableHead className="w-[150px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {familyMembers.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          <span>{member.name}</span>
-                          {member.is_emergency_contact && (
-                            <Badge variant="secondary" className="mt-1 w-fit">Emergency Contact</Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{member.relationship}</TableCell>
-                      <TableCell>{member.age}</TableCell>
-                      <TableCell>{member.occupation}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => openEditDialog(member)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => openDeleteDialog(member)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Add family member dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Add Family Member</DialogTitle>
-          </DialogHeader>
-          
-          {renderDialogForm()}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit family member dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Edit Family Member</DialogTitle>
-          </DialogHeader>
-          
-          {renderDialogForm()}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdate} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                "Update"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete confirmation dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle>Delete Family Member</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <p>Are you sure you want to delete this family member?</p>
-            <p className="font-semibold mt-2">{selectedMember?.name}</p>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-40">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        ) : familyMembers.length > 0 ? (
+          <div className="space-y-4">
+            {familyMembers.map(member => (
+              <div key={member.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-lg">{member.name}</h3>
+                    <p className="text-sm text-gray-500">{member.relationship}</p>
+                    
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <User size={14} />
+                      <span>{member.gender}, {member.age} years old</span>
+                    </div>
+                    
+                    {member.phone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone size={14} />
+                        <span>{member.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {member.is_emergency_contact && (
+                    <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                      Emergency Contact
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10 text-gray-500">
+            <p>No family members added yet</p>
+          </div>
+        )}
+      </div>
     </Card>
   );
 };

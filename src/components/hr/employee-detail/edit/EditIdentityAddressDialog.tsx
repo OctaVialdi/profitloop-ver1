@@ -18,7 +18,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { LegacyEmployee, EmployeeIdentityAddress } from "@/hooks/useEmployees";
-import { updateEmployeeIdentityAddress } from "@/services/employeeService";
+import { employeeService } from "@/services/employeeService";
 
 interface EditIdentityAddressDialogProps {
   open: boolean;
@@ -70,10 +70,10 @@ export const EditIdentityAddressDialog = ({
         passport_expiry: passportExpiry ? format(passportExpiry, 'yyyy-MM-dd') : null,
         postal_code: formValues.postalCode,
         citizen_address: formValues.citizenAddress,
-        residential_address: formValues.residentialAddress
+        address: formValues.residentialAddress // Map to address instead of residential_address
       };
       
-      await updateEmployeeIdentityAddress(employee.id, updatedData);
+      await employeeService.updateEmployeeIdentityAddress(employee.id, updatedData);
       
       toast.success("Identity and address information updated successfully");
       onSave();

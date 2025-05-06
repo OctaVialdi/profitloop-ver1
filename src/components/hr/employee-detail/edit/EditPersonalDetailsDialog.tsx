@@ -24,7 +24,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { LegacyEmployee, EmployeePersonalDetails } from "@/hooks/useEmployees";
-import { updateEmployeePersonalDetails, updateEmployeeBasicInfo } from "@/services/employeeService";
+import { employeeService } from "@/services/employeeService";
 
 interface EditPersonalDetailsDialogProps {
   open: boolean;
@@ -70,7 +70,7 @@ export const EditPersonalDetailsDialog = ({
     
     try {
       // First update basic info (name, email)
-      await updateEmployeeBasicInfo(employee.id, {
+      await employeeService.updateEmployeeBasicInfo(employee.id, {
         name: formValues.name,
         email: formValues.email
       });
@@ -86,7 +86,7 @@ export const EditPersonalDetailsDialog = ({
         blood_type: formValues.bloodType
       };
       
-      await updateEmployeePersonalDetails(employee.id, updatedData);
+      await employeeService.updateEmployeePersonalDetails(employee.id, updatedData);
       
       toast.success("Personal details updated successfully");
       onSave();

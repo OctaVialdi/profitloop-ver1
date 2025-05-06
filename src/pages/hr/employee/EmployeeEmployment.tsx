@@ -22,7 +22,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { useEmployees } from "@/hooks/useEmployees";
-import { updateEmployeeEmployment } from "@/services/employeeService";
+import { employeeService } from "@/services/employeeService";
 
 const EmployeeEmployment = () => {
   const navigate = useNavigate();
@@ -38,14 +38,14 @@ const EmployeeEmployment = () => {
   const form = useForm({
     defaultValues: {
       employeeId: employee?.employee_id || '',
-      barcode: employee?.barcode || '',
-      organization: employee?.organization_id || '',
-      jobPosition: employee?.job_position || '',
-      jobLevel: employee?.job_level || '',
-      employmentStatus: employee?.employment_status || 'Permanent',
-      branch: employee?.branch || 'Pusat',
-      joinDate: employee?.join_date || new Date().toISOString().split('T')[0],
-      signDate: employee?.sign_date || new Date().toISOString().split('T')[0]
+      barcode: employee?.employment?.barcode || '',
+      organization: employee?.employment?.organization_name || '',
+      jobPosition: employee?.employment?.job_position || '',
+      jobLevel: employee?.employment?.job_level || '',
+      employmentStatus: employee?.employment?.employment_status || 'Permanent',
+      branch: employee?.employment?.branch || 'Pusat',
+      joinDate: employee?.employment?.join_date || new Date().toISOString().split('T')[0],
+      signDate: employee?.employment?.sign_date || new Date().toISOString().split('T')[0]
     }
   });
   
@@ -56,10 +56,10 @@ const EmployeeEmployment = () => {
     setIsSubmitting(true);
     
     try {
-      await updateEmployeeEmployment(employeeId, {
+      await employeeService.updateEmployeeEmployment(employeeId, {
         employee_id: data.employeeId,
         barcode: data.barcode,
-        organization: data.organization,
+        organization_name: data.organization,
         job_position: data.jobPosition,
         job_level: data.jobLevel,
         employment_status: data.employmentStatus,
