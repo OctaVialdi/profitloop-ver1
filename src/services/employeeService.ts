@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Employee {
@@ -382,9 +383,9 @@ export const employeeService = {
       // Generate unique employee IDs for new employees
       const generateUniqueId = () => `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
       
-      // First dummy employee data
+      // First dummy employee data - make sure name is required and present
       const employee1Data = {
-        name: "John Doe",
+        name: "John Doe", // Name must be required
         email: "john.doe@example.com",
         mobile_phone: "+6281234567890",
         birth_place: "Jakarta",
@@ -399,9 +400,21 @@ export const employeeService = {
         employee_id: generateUniqueId()
       };
 
-      // Second dummy employee data
+      // Insert first employee - use a single object, not an array
+      const { data: newEmployee1, error: error1 } = await supabase
+        .from('employees')
+        .insert(employee1Data) // Pass a single object, not an array
+        .select('*')
+        .single();
+
+      if (error1) {
+        console.error("Error inserting first employee:", error1);
+        return false;
+      }
+
+      // Second dummy employee data - make sure name is required and present
       const employee2Data = {
-        name: "Jane Smith",
+        name: "Jane Smith", // Name must be required
         email: "jane.smith@example.com",
         mobile_phone: "+6287654321098",
         birth_place: "Bandung",
@@ -416,22 +429,10 @@ export const employeeService = {
         employee_id: generateUniqueId()
       };
 
-      // Insert first employee - note: insert takes a single object
-      const { data: newEmployee1, error: error1 } = await supabase
-        .from('employees')
-        .insert(employee1Data)
-        .select('*')
-        .single();
-
-      if (error1) {
-        console.error("Error inserting first employee:", error1);
-        return false;
-      }
-
-      // Insert second employee - note: insert takes a single object
+      // Insert second employee - use a single object, not an array
       const { data: newEmployee2, error: error2 } = await supabase
         .from('employees')
-        .insert(employee2Data)
+        .insert(employee2Data) // Pass a single object, not an array
         .select('*')
         .single();
 
