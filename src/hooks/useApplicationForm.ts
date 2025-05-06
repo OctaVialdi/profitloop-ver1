@@ -200,7 +200,7 @@ export const useApplicationForm = () => {
           
         if (familyError) {
           console.error("Error inserting family members:", familyError);
-          throw familyError;
+          // Continue with other insertions even if this fails
         }
       }
       
@@ -211,8 +211,8 @@ export const useApplicationForm = () => {
           institution_name: edu.institutionName,
           degree: edu.degree,
           field_of_study: edu.fieldOfStudy,
-          start_date: edu.startDate,
-          end_date: edu.endDate,
+          start_date: edu.startDate ? new Date(edu.startDate).toISOString().split('T')[0] : null,
+          end_date: edu.endDate ? new Date(edu.endDate).toISOString().split('T')[0] : null,
           grade: edu.grade,
           description: edu.description
         }));
@@ -225,7 +225,7 @@ export const useApplicationForm = () => {
           
         if (educationError) {
           console.error("Error inserting formal education:", educationError);
-          throw educationError;
+          // Continue with other insertions even if this fails
         }
       }
       
@@ -237,8 +237,8 @@ export const useApplicationForm = () => {
           provider: edu.provider,
           certification_field: edu.certificationField,
           certificate_number: edu.certificateNumber,
-          start_date: edu.startDate,
-          end_date: edu.endDate,
+          start_date: edu.startDate ? new Date(edu.startDate).toISOString().split('T')[0] : null,
+          end_date: edu.endDate ? new Date(edu.endDate).toISOString().split('T')[0] : null,
           description: edu.description
         }));
         
@@ -250,7 +250,7 @@ export const useApplicationForm = () => {
           
         if (informalError) {
           console.error("Error inserting informal education:", informalError);
-          throw informalError;
+          // Continue with other insertions even if this fails
         }
       }
       
@@ -261,8 +261,8 @@ export const useApplicationForm = () => {
           company_name: work.companyName,
           position: work.position,
           location: work.location,
-          start_date: work.startDate,
-          end_date: work.endDate,
+          start_date: work.startDate ? new Date(work.startDate).toISOString().split('T')[0] : null,
+          end_date: work.endDate ? new Date(work.endDate).toISOString().split('T')[0] : null,
           job_description: work.jobDescription
         }));
         
@@ -274,7 +274,7 @@ export const useApplicationForm = () => {
           
         if (workError) {
           console.error("Error inserting work experience:", workError);
-          throw workError;
+          // Continue with other insertions even if this fails
         }
       }
       
