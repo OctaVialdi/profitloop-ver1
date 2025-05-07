@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,13 +75,18 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
       const result = await candidateService.updateCandidateStatus(candidate.id, selectedStatus);
       if (result) {
         toast.success(`Status updated to ${statusOptions.find(s => s.value === selectedStatus)?.label}`);
+        // Don't reset selectedStatus - keep the updated value
         onStatusUpdated();
       } else {
         toast.error("Failed to update status");
+        // Reset to previous status on failure
+        setSelectedStatus(candidate.status);
       }
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("An error occurred while updating status");
+      // Reset to previous status on error
+      setSelectedStatus(candidate.status);
     } finally {
       setIsUpdating(false);
     }

@@ -19,10 +19,13 @@ const CandidateDetailPage = () => {
     
     setIsLoading(true);
     try {
+      console.log(`Fetching candidate details for ID: ${id}`);
       const data = await candidateService.fetchCandidateById(id);
       if (data) {
+        console.log("Candidate data fetched successfully:", data);
         setCandidate(data);
       } else {
+        console.error("Candidate not found");
         toast.error("Candidate not found");
       }
     } catch (error) {
@@ -34,6 +37,12 @@ const CandidateDetailPage = () => {
   }, [id]);
 
   useEffect(() => {
+    fetchCandidate();
+  }, [fetchCandidate]);
+
+  // Handler for refreshing data
+  const handleDataRefresh = useCallback(() => {
+    console.log("Refreshing candidate data...");
     fetchCandidate();
   }, [fetchCandidate]);
 
@@ -76,7 +85,7 @@ const CandidateDetailPage = () => {
 
       <CandidateDetailComponent 
         candidate={candidate}
-        onStatusUpdated={fetchCandidate}
+        onStatusUpdated={handleDataRefresh}
       />
     </div>
   );

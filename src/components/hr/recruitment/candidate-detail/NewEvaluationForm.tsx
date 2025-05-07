@@ -29,15 +29,6 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
   const [criteriaScores, setCriteriaScores] = useState<EvaluationCriteriaScore[]>([]);
   const [comments, setComments] = useState("");
   
-  // For backward compatibility
-  const [legacyEvaluation, setLegacyEvaluation] = useState({
-    technical_skills: null as number | null,
-    communication: null as number | null,
-    cultural_fit: null as number | null,
-    experience_relevance: null as number | null,
-    overall_impression: null as number | null
-  });
-
   const handleRatingChange = (criterionId: string, categoryId: string, question: string, categoryName: string) => (score: number) => {
     setCriteriaScores(prev => {
       // Check if this criterion already has a score
@@ -63,14 +54,6 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
     });
   };
 
-  // Legacy rating change handler for backward compatibility
-  const handleLegacyRatingChange = (field: keyof typeof legacyEvaluation) => (value: number) => {
-    setLegacyEvaluation(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
   const handleSubmit = async () => {
     // Check if user is logged in
     if (!user) {
@@ -78,20 +61,26 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
       return;
     }
 
-    // Validate form - either criteria scores or legacy ratings must be provided
-    if (criteriaScores.length === 0 && !legacyEvaluation.technical_skills && !legacyEvaluation.communication && !legacyEvaluation.cultural_fit && !legacyEvaluation.experience_relevance && !legacyEvaluation.overall_impression) {
+    // Validate form - criterion scores must be provided
+    if (criteriaScores.length === 0) {
       toast.error("Please provide at least one rating before submitting");
       return;
     }
+    
     setIsSubmitting(true);
     try {
       const result = await candidateService.submitEvaluation({
-        ...legacyEvaluation,
         comments,
         candidate_id: candidateId,
         evaluator_id: user.id || null,
         average_score: 0, // This will be calculated by the database trigger
-        criteria_scores: criteriaScores.length > 0 ? criteriaScores : undefined
+        criteria_scores: criteriaScores,
+        // Legacy fields set to null
+        technical_skills: null,
+        communication: null,
+        cultural_fit: null,
+        experience_relevance: null,
+        overall_impression: null
       });
       
       if (result.success) {
@@ -100,13 +89,6 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
         // Reset the form
         setCriteriaScores([]);
         setComments("");
-        setLegacyEvaluation({
-          technical_skills: null,
-          communication: null,
-          cultural_fit: null,
-          experience_relevance: null,
-          overall_impression: null
-        });
 
         // Notify parent component
         if (onEvaluationSubmitted) {

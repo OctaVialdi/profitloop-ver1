@@ -50,11 +50,18 @@ export const InterviewNotesSection: React.FC<InterviewNotesSectionProps> = ({
     
     setIsSavingNotes(true);
     try {
+      // Make sure we have a valid user ID
+      const userId = user.id;
+      if (!userId) {
+        throw new Error("User ID is missing");
+      }
+      
       const result = await candidateService.saveInterviewNotes({
         candidate_id: candidateId,
         content: interviewNotes,
-        created_by: user.id
+        created_by: userId
       });
+      
       if (result.success) {
         toast.success("Interview notes saved successfully");
         if (onNotesSaved) {
@@ -62,6 +69,7 @@ export const InterviewNotesSection: React.FC<InterviewNotesSectionProps> = ({
         }
       } else {
         toast.error("Failed to save interview notes");
+        console.error("Error details:", result.error);
       }
     } catch (error) {
       toast.error("Error saving interview notes");

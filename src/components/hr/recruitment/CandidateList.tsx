@@ -11,10 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, RefreshCw } from "lucide-react";
 import { candidateService, CandidateApplication } from "@/services/candidateService";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 export default function CandidateList() {
   const navigate = useNavigate();
@@ -23,17 +24,23 @@ export default function CandidateList() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Function to fetch candidates
   const fetchCandidates = async () => {
+    setIsRefreshing(true);
     setIsLoading(true);
     try {
+      console.log("Fetching candidates list...");
       const data = await candidateService.fetchCandidates();
+      console.log(`Fetched ${data.length} candidates`);
       setCandidates(data);
     } catch (error) {
       console.error("Error fetching candidates:", error);
+      toast.error("Failed to load candidates");
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -44,6 +51,7 @@ export default function CandidateList() {
     // Set up a listener for when the user navigates back to this page
     const handleFocus = () => {
       if (document.visibilityState === 'visible') {
+        console.log("Page is visible, refreshing candidate list");
         fetchCandidates();
       }
     };
@@ -54,15 +62,14 @@ export default function CandidateList() {
     return () => {
       document.removeEventListener('visibilitychange', handleFocus);
     };
-  }, [location]);
+  }, [location.key]); // Add location.key to dependencies to refresh on navigation
 
   // Filter the candidates based on search term and status filter
   const filteredCandidates = candidates.filter(candidate => {
     const matchesSearch = 
-      candidate.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      candidate.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      candidate.job_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      false;
+      (candidate.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (candidate.email?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (candidate.job_title?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     
     const matchesStatus = statusFilter === "all" || candidate.status === statusFilter;
     
@@ -128,9 +135,18 @@ export default function CandidateList() {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" className="flex items-center gap-2" onClick={fetchCandidates}>
-            <SlidersHorizontal size={16} />
-            <span>Refresh</span>
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2" 
+            onClick={fetchCandidates}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <RefreshCw size={16} className="animate-spin" />
+            ) : (
+              <SlidersHorizontal size={16} />
+            )}
+            <span>{isRefreshing ? "Refreshing..." : "Refresh"}</span>
           </Button>
         </div>
       </div>
@@ -186,4 +202,4 @@ export default function CandidateList() {
       </div>
     </div>
   );
-}
+};

@@ -263,13 +263,19 @@ export const candidateService = {
   },
   
   async updateCandidateStatus(id: string, status: string): Promise<boolean> {
+    console.log(`Updating candidate status: ${id} to ${status}`);
     try {
       const { error } = await supabase
         .from("candidate_applications")
         .update({ status })
         .eq("id", id);
 
-      return !error;
+      if (error) {
+        console.error("Error updating candidate status:", error);
+        return false;
+      }
+      
+      return true;
     } catch (error) {
       console.error("Error updating candidate status:", error);
       return false;
@@ -313,13 +319,23 @@ export const candidateService = {
 
   async submitEvaluation(evaluation: Omit<CandidateEvaluation, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean, data?: CandidateEvaluation, error?: any }> {
     try {
+      console.log("Submitting evaluation:", evaluation);
+      
       // Convert criteria_scores to format expected by Supabase
+      // Make sure criteria_scores is properly formatted as a JSON array
+      const criteriaScores = evaluation.criteria_scores 
+        ? JSON.stringify(evaluation.criteria_scores) 
+        : null;
+      
+      // Prepare data for insertion
       const dataToInsert = {
         ...evaluation,
         evaluator_id: (await supabase.auth.getUser()).data.user?.id,
-        criteria_scores: evaluation.criteria_scores ? JSON.stringify(evaluation.criteria_scores) : undefined
+        criteria_scores: criteriaScores
       };
 
+      console.log("Data to insert:", dataToInsert);
+      
       // Insert the evaluation - the trigger will calculate the average score
       const { data, error } = await supabase
         .from("candidate_evaluations")
@@ -333,18 +349,17 @@ export const candidateService = {
       }
 
       // Process the returned data to match our interface
-      let criteriaScores: any = undefined;
+      let parsedCriteriaScores: EvaluationCriteriaScore[] | undefined = undefined;
       
       if (data.criteria_scores) {
         if (typeof data.criteria_scores === 'string') {
           try {
-            criteriaScores = JSON.parse(data.criteria_scores);
+            parsedCriteriaScores = JSON.parse(data.criteria_scores);
           } catch (e) {
             console.error("Error parsing returned criteria_scores:", e);
-            criteriaScores = undefined;
           }
         } else {
-          criteriaScores = data.criteria_scores;
+          parsedCriteriaScores = data.criteria_scores;
         }
       }
       
@@ -362,7 +377,7 @@ export const candidateService = {
         comments: data.comments,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        criteria_scores: criteriaScores
+        criteria_scores: parsedCriteriaScores
       };
 
       return {
@@ -798,6 +813,7 @@ export const candidateService = {
 
   async fetchInterviewNotes(candidateId: string): Promise<InterviewNotes | null> {
     try {
+      console.log(`Fetching interview notes for candidate: ${candidateId}`);
       const { data, error } = await supabase
         .from("candidate_interview_notes")
         .select("*")
@@ -809,6 +825,7 @@ export const candidateService = {
         return null;
       }
 
+      console.log("Fetched interview notes:", data);
       return data || null;
     } catch (error) {
       console.error("Error fetching interview notes:", error);
@@ -818,6 +835,8 @@ export const candidateService = {
 
   async saveInterviewNotes(notes: InterviewNotes): Promise<{ success: boolean, error?: any }> {
     try {
+      console.log(`Saving interview notes for candidate: ${notes.candidate_id}`);
+      
       // Check if notes already exist for this candidate
       const { data: existingNotes, error: checkError } = await supabase
         .from("candidate_interview_notes")
@@ -833,6 +852,7 @@ export const candidateService = {
       
       if (existingNotes && existingNotes.length > 0) {
         // Update existing notes
+        console.log(`Updating existing notes with ID: ${existingNotes[0].id}`);
         result = await supabase
           .from("candidate_interview_notes")
           .update({
@@ -842,6 +862,7 @@ export const candidateService = {
           .eq("id", existingNotes[0].id);
       } else {
         // Insert new notes
+        console.log("Creating new interview notes");
         result = await supabase
           .from("candidate_interview_notes")
           .insert({
@@ -856,6 +877,7 @@ export const candidateService = {
         return { success: false, error: result.error };
       }
 
+      console.log("Interview notes saved successfully");
       return { success: true };
     } catch (error) {
       console.error("Error saving interview notes:", error);
