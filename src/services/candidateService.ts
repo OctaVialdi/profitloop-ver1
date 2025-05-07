@@ -23,6 +23,7 @@ export interface CandidateApplication {
   organization_id: string;
   recruitment_link_id: string;
   created_at: string;
+  job_title?: string; // Add this property
 }
 
 export interface CandidateWithDetails extends CandidateApplication {
