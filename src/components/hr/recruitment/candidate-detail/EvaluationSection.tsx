@@ -59,7 +59,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
   }, []);
   
   // Handler for when an evaluation is reset/deleted
-  const handleEvaluationReset = () => {
+  const handleEvaluationReset = async () => {
     // Call the parent callback if provided to refresh candidate data
     if (onEvaluationSubmitted) {
       onEvaluationSubmitted();
@@ -67,6 +67,14 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     
     // Show a toast notification
     toast.info("Candidate score has been recalculated");
+  };
+
+  // Handler for when interview notes are saved
+  const handleNotesSaved = () => {
+    // Refresh the candidate data to ensure we have the latest notes
+    if (onEvaluationSubmitted) {
+      onEvaluationSubmitted();
+    }
   };
   
   return (
@@ -90,6 +98,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
           <InterviewNotesSection 
             candidateId={candidate.id}
             initialNotes={interviewNotes}
+            onNotesSaved={handleNotesSaved}
           />
 
           <div className="border rounded-lg p-4">

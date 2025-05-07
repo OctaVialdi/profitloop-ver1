@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CandidateWithDetails, candidateService } from "@/services/candidateService";
@@ -28,6 +28,11 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>(candidate.status);
+  
+  // Update selectedStatus when candidate.status changes
+  useEffect(() => {
+    setSelectedStatus(candidate.status);
+  }, [candidate.status]);
   
   const getStatusBadgeProps = (status: string): BadgeProps => {
     switch (status) {

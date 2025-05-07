@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { candidateService } from "@/services/candidateService";
+import { candidateService, InterviewNotes } from "@/services/candidateService";
 import { useUser } from "@/hooks/auth/useUser";
 
 interface InterviewNotesSectionProps {
@@ -21,6 +21,25 @@ export const InterviewNotesSection: React.FC<InterviewNotesSectionProps> = ({
   const { user } = useUser();
   const [interviewNotes, setInterviewNotes] = useState(initialNotes);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [notesLoaded, setNotesLoaded] = useState(false);
+
+  // Load interview notes when component mounts or candidateId changes
+  useEffect(() => {
+    const fetchInterviewNotes = async () => {
+      try {
+        const notes = await candidateService.fetchInterviewNotes(candidateId);
+        if (notes) {
+          setInterviewNotes(notes.content || "");
+        }
+        setNotesLoaded(true);
+      } catch (error) {
+        console.error("Error fetching interview notes:", error);
+        setNotesLoaded(true);
+      }
+    };
+
+    fetchInterviewNotes();
+  }, [candidateId]);
 
   const handleSaveInterviewNotes = async () => {
     // Check if user is logged in
@@ -28,10 +47,7 @@ export const InterviewNotesSection: React.FC<InterviewNotesSectionProps> = ({
       toast.error("You must be logged in to save notes");
       return;
     }
-    if (!interviewNotes.trim()) {
-      toast.error("Please enter some notes before saving");
-      return;
-    }
+    
     setIsSavingNotes(true);
     try {
       const result = await candidateService.saveInterviewNotes({
@@ -55,6 +71,17 @@ export const InterviewNotesSection: React.FC<InterviewNotesSectionProps> = ({
     }
   };
 
+  if (!notesLoaded) {
+    return (
+      <div className="border rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-4">Interview Notes</h3>
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="border rounded-lg p-4">
       <h3 className="text-lg font-semibold mb-4">Interview Notes</h3>
@@ -71,7 +98,7 @@ export const InterviewNotesSection: React.FC<InterviewNotesSectionProps> = ({
         </div>
         <Button 
           onClick={handleSaveInterviewNotes} 
-          disabled={isSavingNotes || !interviewNotes.trim()} 
+          disabled={isSavingNotes} 
           variant="outline" 
           className="w-full"
         >

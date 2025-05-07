@@ -804,12 +804,12 @@ export const candidateService = {
         .eq("candidate_id", candidateId)
         .single();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
         console.error("Error fetching interview notes:", error);
         return null;
       }
 
-      return data;
+      return data || null;
     } catch (error) {
       console.error("Error fetching interview notes:", error);
       return null;
@@ -819,15 +819,19 @@ export const candidateService = {
   async saveInterviewNotes(notes: InterviewNotes): Promise<{ success: boolean, error?: any }> {
     try {
       // Check if notes already exist for this candidate
-      const { data: existingNotes } = await supabase
+      const { data: existingNotes, error: checkError } = await supabase
         .from("candidate_interview_notes")
         .select("id")
-        .eq("candidate_id", notes.candidate_id)
-        .single();
+        .eq("candidate_id", notes.candidate_id);
 
+      if (checkError) {
+        console.error("Error checking existing notes:", checkError);
+        return { success: false, error: checkError };
+      }
+      
       let result;
       
-      if (existingNotes) {
+      if (existingNotes && existingNotes.length > 0) {
         // Update existing notes
         result = await supabase
           .from("candidate_interview_notes")
@@ -835,7 +839,7 @@ export const candidateService = {
             content: notes.content,
             updated_at: new Date().toISOString()
           })
-          .eq("id", existingNotes.id);
+          .eq("id", existingNotes[0].id);
       } else {
         // Insert new notes
         result = await supabase

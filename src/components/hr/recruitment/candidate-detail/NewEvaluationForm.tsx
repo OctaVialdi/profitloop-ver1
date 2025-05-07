@@ -90,10 +90,10 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
         comments,
         candidate_id: candidateId,
         evaluator_id: user.id || null,
-        average_score: 0,
-        // This will be calculated by the database trigger
+        average_score: 0, // This will be calculated by the database trigger
         criteria_scores: criteriaScores.length > 0 ? criteriaScores : undefined
       });
+      
       if (result.success) {
         toast.success("Evaluation submitted successfully");
 
@@ -114,6 +114,7 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
         }
       } else {
         toast.error("Failed to submit evaluation");
+        console.error("Error details:", result.error);
       }
     } catch (error) {
       toast.error("Error submitting evaluation");
@@ -134,6 +135,13 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
       [categoryId]: !prev[categoryId]
     }));
   };
+
+  // Auto-expand the first category when categories are loaded
+  React.useEffect(() => {
+    if (evaluationCategories.length > 0 && Object.keys(expandedCategories).length === 0) {
+      setExpandedCategories({ [evaluationCategories[0].id]: true });
+    }
+  }, [evaluationCategories, expandedCategories]);
 
   if (isLoading) {
     return (

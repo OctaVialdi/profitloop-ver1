@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -14,7 +14,7 @@ const CandidateDetailPage = () => {
   const [candidate, setCandidate] = useState<CandidateWithDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchCandidate = async () => {
+  const fetchCandidate = useCallback(async () => {
     if (!id) return;
     
     setIsLoading(true);
@@ -31,11 +31,11 @@ const CandidateDetailPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchCandidate();
-  }, [id]);
+  }, [fetchCandidate]);
 
   if (isLoading) {
     return (
