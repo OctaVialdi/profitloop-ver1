@@ -7,6 +7,7 @@ import { candidateService, CandidateWithDetails } from "@/services/candidateServ
 import { CandidateDetail as CandidateDetailComponent } from "@/components/hr/recruitment/candidate-detail/CandidateDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { ensureEvaluationHasCriteriaScores } from "@/utils/evaluationUtils";
 
 const CandidateDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,31 +25,11 @@ const CandidateDetailPage = () => {
       if (data) {
         console.log("Candidate data fetched successfully:", data);
         
-        // Ensure evaluations are processed correctly
-        if (data.evaluations) {
-          data.evaluations = data.evaluations.map(evaluation => {
-            // Make sure criteria_scores is in the right format
-            if (evaluation.criteria_scores && 
-                typeof evaluation.criteria_scores === 'object' && 
-                !Array.isArray(evaluation.criteria_scores)) {
-              // If it's an object but not an array, it might be a JSON structure
-              console.log("Converting evaluation criteria_scores from object to array");
-              try {
-                // Try to convert from object representation to array if needed
-                const criteriaArray = Object.values(evaluation.criteria_scores);
-                if (Array.isArray(criteriaArray)) {
-                  evaluation.criteria_scores = criteriaArray;
-                }
-              } catch (err) {
-                console.error("Error processing criteria_scores:", err);
-                evaluation.criteria_scores = [];
-              }
-            } else if (!evaluation.criteria_scores) {
-              evaluation.criteria_scores = [];
-            }
-            
-            return evaluation;
-          });
+        // Process evaluations to ensure they all have criteria_scores
+        if (data.evaluations && data.evaluations.length > 0) {
+          data.evaluations = data.evaluations.map(evaluation => 
+            ensureEvaluationHasCriteriaScores(evaluation)
+          );
         }
         
         setCandidate(data);
