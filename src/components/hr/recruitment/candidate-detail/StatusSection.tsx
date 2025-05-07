@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,9 +100,11 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
     
     setIsUpdating(true);
     try {
+      // This call updates the status column in the candidate_applications table
       const result = await candidateService.updateCandidateStatus(candidate.id, selectedStatus);
       if (result) {
         toast.success(`Status updated to ${statusOptions.find(s => s.value === selectedStatus)?.label}`);
+        // Trigger the parent component to refresh data
         onStatusUpdated();
       } else {
         toast.error("Failed to update status");
