@@ -8,6 +8,7 @@ import { EducationSection } from "./EducationSection";
 import { WorkExperienceSection } from "./WorkExperienceSection";
 import { FamilySection } from "./FamilySection";
 import { StatusSection } from "./StatusSection";
+import { EvaluationSection } from "./EvaluationSection";
 
 interface CandidateDetailProps {
   candidate: CandidateWithDetails;
@@ -40,6 +41,9 @@ export const CandidateDetail: React.FC<CandidateDetailProps> = ({
         
       case 'family':
         return <FamilySection candidate={candidate} />;
+        
+      case 'evaluation':
+        return <EvaluationSection candidate={candidate} onEvaluationSubmitted={onStatusUpdated} />;
         
       default:
         return <div>Select a section to view details</div>;

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CandidateWithDetails } from "@/services/candidateService";
 import { getInitials } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, FileText, Home, Mail, Phone, User } from "lucide-react";
+import { CalendarDays, FileText, Home, Mail, Phone, User, Star, ClipboardCheck } from "lucide-react";
 
 interface CandidateDetailSidebarProps {
   candidate: CandidateWithDetails;
@@ -34,6 +34,13 @@ export const CandidateDetailSidebar: React.FC<CandidateDetailSidebarProps> = ({
           <p className="text-sm text-muted-foreground mb-4">
             {candidate.job_title || "Candidate"}
           </p>
+          
+          {candidate.score !== undefined && (
+            <div className="flex items-center gap-1 mb-4 p-2 bg-yellow-50 rounded-full px-3">
+              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+              <span className="font-semibold">{candidate.score.toFixed(1)}</span>
+            </div>
+          )}
           
           <div className="w-full space-y-3 text-sm">
             {candidate.email && (
@@ -94,6 +101,10 @@ export const CandidateDetailSidebar: React.FC<CandidateDetailSidebarProps> = ({
               <TabsTrigger value="family" className="justify-start">
                 <FileText className="h-4 w-4 mr-2" />
                 <span>Family</span>
+              </TabsTrigger>
+              <TabsTrigger value="evaluation" className="justify-start">
+                <ClipboardCheck className="h-4 w-4 mr-2" />
+                <span>Evaluation</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>

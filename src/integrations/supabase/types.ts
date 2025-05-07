@@ -32,6 +32,7 @@ export type Database = {
           postal_code: string | null
           recruitment_link_id: string
           religion: string | null
+          score: number | null
           status: string
         }
         Insert: {
@@ -56,6 +57,7 @@ export type Database = {
           postal_code?: string | null
           recruitment_link_id: string
           religion?: string | null
+          score?: number | null
           status?: string
         }
         Update: {
@@ -80,6 +82,7 @@ export type Database = {
           postal_code?: string | null
           recruitment_link_id?: string
           religion?: string | null
+          score?: number | null
           status?: string
         }
         Relationships: [
@@ -95,6 +98,59 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_evaluations: {
+        Row: {
+          average_score: number
+          candidate_id: string
+          comments: string | null
+          communication: number | null
+          created_at: string
+          cultural_fit: number | null
+          evaluator_id: string | null
+          experience_relevance: number | null
+          id: string
+          overall_impression: number | null
+          technical_skills: number | null
+          updated_at: string
+        }
+        Insert: {
+          average_score: number
+          candidate_id: string
+          comments?: string | null
+          communication?: number | null
+          created_at?: string
+          cultural_fit?: number | null
+          evaluator_id?: string | null
+          experience_relevance?: number | null
+          id?: string
+          overall_impression?: number | null
+          technical_skills?: number | null
+          updated_at?: string
+        }
+        Update: {
+          average_score?: number
+          candidate_id?: string
+          comments?: string | null
+          communication?: number | null
+          created_at?: string
+          cultural_fit?: number | null
+          evaluator_id?: string | null
+          experience_relevance?: number | null
+          id?: string
+          overall_impression?: number | null
+          technical_skills?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_evaluations_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_applications"
             referencedColumns: ["id"]
           },
         ]

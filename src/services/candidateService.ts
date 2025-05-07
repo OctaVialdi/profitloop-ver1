@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface CandidateApplication {
@@ -23,7 +22,8 @@ export interface CandidateApplication {
   organization_id: string;
   recruitment_link_id: string;
   created_at: string;
-  job_title?: string; // Add this property
+  job_title?: string;
+  score?: number;
 }
 
 export interface CandidateWithDetails extends CandidateApplication {
@@ -33,6 +33,7 @@ export interface CandidateWithDetails extends CandidateApplication {
   workExperience?: CandidateWorkExperience[];
   job_title?: string;
   organization_name?: string;
+  evaluations?: CandidateEvaluation[];
 }
 
 export interface CandidateFamilyMember {
@@ -81,6 +82,22 @@ export interface CandidateWorkExperience {
   start_date: string | null;
   end_date: string | null;
   job_description: string | null;
+}
+
+export interface CandidateEvaluation {
+  id: string;
+  candidate_id: string;
+  evaluator_id: string | null;
+  technical_skills: number | null;
+  communication: number | null;
+  cultural_fit: number | null;
+  experience_relevance: number | null;
+  overall_impression: number | null;
+  average_score: number;
+  comments: string | null;
+  created_at: string;
+  updated_at: string;
+  evaluator_name?: string;
 }
 
 export const candidateService = {
@@ -147,6 +164,13 @@ export const candidateService = {
         .select("*")
         .eq("candidate_application_id", id);
 
+      // Fetch evaluations
+      const { data: evaluations } = await supabase
+        .from("candidate_evaluations")
+        .select("*")
+        .eq("candidate_id", id)
+        .order("created_at", { ascending: false });
+
       // Combine all data into a single object
       return {
         ...candidate,
@@ -155,7 +179,8 @@ export const candidateService = {
         familyMembers: familyMembers || [],
         formalEducation: formalEducation || [],
         informalEducation: informalEducation || [],
-        workExperience: workExperience || []
+        workExperience: workExperience || [],
+        evaluations: evaluations || []
       };
     } catch (error) {
       console.error("Error fetching candidate by id:", error);
@@ -173,6 +198,149 @@ export const candidateService = {
       return !error;
     } catch (error) {
       console.error("Error updating candidate status:", error);
+      return false;
+    }
+  },
+
+  async submitEvaluation(evaluation: Omit<CandidateEvaluation, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean, data?: CandidateEvaluation, error?: any }> {
+    try {
+      // Calculate average score from the ratings
+      let count = 0;
+      let total = 0;
+      
+      if (evaluation.technical_skills) { 
+        total += evaluation.technical_skills;
+        count++;
+      }
+      if (evaluation.communication) {
+        total += evaluation.communication;
+        count++;
+      }
+      if (evaluation.cultural_fit) {
+        total += evaluation.cultural_fit;
+        count++;
+      }
+      if (evaluation.experience_relevance) {
+        total += evaluation.experience_relevance;
+        count++;
+      }
+      if (evaluation.overall_impression) {
+        total += evaluation.overall_impression;
+        count++;
+      }
+
+      const average_score = count > 0 ? parseFloat((total / count).toFixed(2)) : 0;
+
+      // Insert the evaluation
+      const { data, error } = await supabase
+        .from("candidate_evaluations")
+        .insert({ 
+          ...evaluation,
+          average_score,
+          evaluator_id: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error submitting evaluation:", error);
+        return { success: false, error };
+      }
+
+      return {
+        success: true,
+        data: data as CandidateEvaluation
+      };
+    } catch (error) {
+      console.error("Error submitting evaluation:", error);
+      return { success: false, error };
+    }
+  },
+
+  async updateEvaluation(id: string, updates: Partial<CandidateEvaluation>): Promise<{ success: boolean, data?: CandidateEvaluation, error?: any }> {
+    try {
+      // Recalculate average score if any rating fields have changed
+      if (updates.technical_skills !== undefined || 
+          updates.communication !== undefined || 
+          updates.cultural_fit !== undefined || 
+          updates.experience_relevance !== undefined || 
+          updates.overall_impression !== undefined) {
+        
+        // First fetch the current evaluation
+        const { data: currentEval, error: fetchError } = await supabase
+          .from("candidate_evaluations")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (fetchError) {
+          return { success: false, error: fetchError };
+        }
+
+        // Merge current values with updates
+        const merged = { ...currentEval, ...updates };
+        
+        // Calculate new average
+        let count = 0;
+        let total = 0;
+        
+        if (merged.technical_skills) { 
+          total += merged.technical_skills;
+          count++;
+        }
+        if (merged.communication) {
+          total += merged.communication;
+          count++;
+        }
+        if (merged.cultural_fit) {
+          total += merged.cultural_fit;
+          count++;
+        }
+        if (merged.experience_relevance) {
+          total += merged.experience_relevance;
+          count++;
+        }
+        if (merged.overall_impression) {
+          total += merged.overall_impression;
+          count++;
+        }
+
+        updates.average_score = count > 0 ? parseFloat((total / count).toFixed(2)) : 0;
+      }
+
+      // Update the evaluation
+      const { data, error } = await supabase
+        .from("candidate_evaluations")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating evaluation:", error);
+        return { success: false, error };
+      }
+
+      return {
+        success: true,
+        data: data as CandidateEvaluation
+      };
+    } catch (error) {
+      console.error("Error updating evaluation:", error);
+      return { success: false, error };
+    }
+  },
+
+  async deleteEvaluation(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from("candidate_evaluations")
+        .delete()
+        .eq("id", id);
+
+      return !error;
+    } catch (error) {
+      console.error("Error deleting evaluation:", error);
       return false;
     }
   }

@@ -26,16 +26,24 @@ import {
   Filter, 
   UserPlus, 
   Download,
-  Loader2
+  Loader2,
+  Star,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { candidateService, CandidateApplication } from "@/services/candidateService";
+import { Slider } from "@/components/ui/slider";
 
 export default function CandidateList() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [candidates, setCandidates] = useState<CandidateApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [minScore, setMinScore] = useState(0);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -77,17 +85,59 @@ export default function CandidateList() {
         return { variant: 'secondary' };
     }
   };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if already sorting by this column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
   
-  // Simple filter for demonstration
-  const filteredCandidates = candidates.filter(candidate => 
-    candidate.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (candidate.job_title && candidate.job_title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    candidate.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Apply filters and sorting
+  const filteredCandidates = candidates
+    .filter(candidate => 
+      // Text search filter
+      (candidate.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (candidate.job_title && candidate.job_title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      candidate.email.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      // Score filter
+      (minScore === 0 || (candidate.score !== undefined && candidate.score >= minScore))
+    )
+    .sort((a, b) => {
+      if (!sortColumn) return 0;
+
+      if (sortColumn === 'score') {
+        const scoreA = a.score || 0;
+        const scoreB = b.score || 0;
+        return sortDirection === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+      } else if (sortColumn === 'name') {
+        return sortDirection === 'asc' 
+          ? a.full_name.localeCompare(b.full_name)
+          : b.full_name.localeCompare(a.full_name);
+      } else if (sortColumn === 'date') {
+        return sortDirection === 'asc'
+          ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      
+      return 0;
+    });
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString();
+  };
+
+  const renderSortIcon = (column: string) => {
+    if (sortColumn !== column) return null;
+    
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="h-4 w-4 ml-1" /> : 
+      <ChevronDown className="h-4 w-4 ml-1" />;
   };
 
   return (
@@ -104,7 +154,12 @@ export default function CandidateList() {
         </div>
         
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={() => setShowFilters(!showFilters)}
+          >
             <Filter className="h-4 w-4" />
             <span>Filter</span>
           </Button>
@@ -118,22 +173,80 @@ export default function CandidateList() {
           </Button>
         </div>
       </div>
+
+      {showFilters && (
+        <div className="rounded-md border p-4">
+          <h3 className="font-medium mb-3">Filter Candidates</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm mb-2">
+                Minimum Score: {minScore.toFixed(1)}
+              </label>
+              <div className="flex gap-4 items-center">
+                <Slider
+                  defaultValue={[0]}
+                  value={[minScore]}
+                  min={0}
+                  max={5}
+                  step={0.5}
+                  onValueChange={(value) => setMinScore(value[0])}
+                  className="w-64"
+                />
+                {minScore > 0 ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setMinScore(0)}
+                  >
+                    Reset
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('name')}
+              >
+                <div className="flex items-center">
+                  Name
+                  {renderSortIcon('name')}
+                </div>
+              </TableHead>
               <TableHead>Position</TableHead>
-              <TableHead className="hidden md:table-cell">Applied</TableHead>
+              <TableHead 
+                className="hidden md:table-cell cursor-pointer"
+                onClick={() => handleSort('date')}
+              >
+                <div className="flex items-center">
+                  Applied
+                  {renderSortIcon('date')}
+                </div>
+              </TableHead>
               <TableHead>Status</TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('score')}
+              >
+                <div className="flex items-center">
+                  Score
+                  {renderSortIcon('score')}
+                </div>
+              </TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   <div className="flex justify-center items-center">
                     <Loader2 className="h-6 w-6 animate-spin mr-2" />
                     Loading candidates...
@@ -154,6 +267,16 @@ export default function CandidateList() {
                     <Badge {...getStatusBadgeProps(candidate.status)}>
                       {candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {candidate.score !== undefined && candidate.score > 0 ? (
+                      <div className="flex items-center">
+                        <span className="font-medium mr-1">{candidate.score.toFixed(1)}</span>
+                        <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-sm">Not rated</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -178,7 +301,7 @@ export default function CandidateList() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   No candidates found
                 </TableCell>
               </TableRow>
