@@ -47,3 +47,15 @@ export interface EvaluationValidationResult {
   errors: EvaluationValidationError[];
   warnings: EvaluationValidationError[];
 }
+
+/**
+ * Represents a category of evaluation criteria from the database
+ */
+export interface EvaluationCategoryData {
+  category_id: string;
+  category_name: string;
+  criteria: Array<{
+    id: string;
+    question: string;
+  }>;
+}

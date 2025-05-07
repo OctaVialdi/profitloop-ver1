@@ -7,6 +7,7 @@ import {
   CandidateEvaluation, 
   EvaluationCriteriaScore 
 } from "@/services/candidateService";
+import { CriterionScore, EvaluationStatus, EvaluationValidationResult } from "@/components/hr/recruitment/candidate-detail/EvaluationTypes";
 
 /**
  * Converts legacy evaluation fields to criteria-based format
@@ -122,8 +123,8 @@ export const calculateAverageFromCriteria = (criteriaScores: EvaluationCriteriaS
  * Groups criteria scores by category for better display
  */
 export const groupCriteriaByCategory = (
-  criteriaScores: EvaluationCriteriaScore[]
-): Record<string, EvaluationCriteriaScore[]> => {
+  criteriaScores: EvaluationCriteriaScore[] | CriterionScore[]
+): Record<string, EvaluationCriteriaScore[] | CriterionScore[]> => {
   return criteriaScores.reduce((grouped, score) => {
     const category = score.category || 'Uncategorized';
     if (!grouped[category]) {
@@ -131,7 +132,7 @@ export const groupCriteriaByCategory = (
     }
     grouped[category].push(score);
     return grouped;
-  }, {} as Record<string, EvaluationCriteriaScore[]>);
+  }, {} as Record<string, EvaluationCriteriaScore[] | CriterionScore[]>);
 };
 
 /**
@@ -154,4 +155,49 @@ export const validateEvaluationScore = (evaluation: CandidateEvaluation): boolea
   }
 
   return true;
+};
+
+/**
+ * Get a comprehensive validation result for an evaluation
+ */
+export const validateEvaluation = (evaluation: CandidateEvaluation): EvaluationValidationResult => {
+  const result: EvaluationValidationResult = {
+    status: EvaluationStatus.Valid,
+    errors: [],
+    warnings: []
+  };
+
+  // Check if there are any criteria scores
+  if (!evaluation.criteria_scores || evaluation.criteria_scores.length === 0) {
+    result.errors.push({
+      field: 'criteria_scores',
+      message: 'No evaluation criteria scores found'
+    });
+    result.status = EvaluationStatus.Error;
+    return result;
+  }
+
+  // Check if average score is valid
+  if (evaluation.average_score < 1 || evaluation.average_score > 5) {
+    result.errors.push({
+      field: 'average_score',
+      message: `Invalid average score: ${evaluation.average_score}`
+    });
+    result.status = EvaluationStatus.Error;
+  }
+
+  // Check if calculated average score matches stored average
+  const calculatedAverage = calculateAverageFromCriteria(evaluation.criteria_scores);
+  if (Math.abs(calculatedAverage - evaluation.average_score) > 0.2) {
+    result.warnings.push({
+      field: 'average_score',
+      message: `Calculated average (${calculatedAverage.toFixed(2)}) differs from stored average (${evaluation.average_score.toFixed(2)})`
+    });
+    
+    if (result.status !== EvaluationStatus.Error) {
+      result.status = EvaluationStatus.Warning;
+    }
+  }
+  
+  return result;
 };

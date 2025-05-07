@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ensureEvaluationHasCriteriaScores } from "@/utils/evaluationUtils";
 import { CandidateEvaluation, EvaluationCategory, EvaluationCriterion, EvaluationCriteriaScore } from "./candidateService";
+import { EvaluationCategoryData } from "@/components/hr/recruitment/candidate-detail/EvaluationTypes";
 
 /**
  * Service for handling candidate evaluations
@@ -41,6 +42,26 @@ export const evaluationService = {
       });
     } catch (error) {
       console.error("Error fetching evaluation criteria:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Fetches evaluation category data using the database function
+   */
+  async fetchEvaluationCriteriaNames(): Promise<EvaluationCategoryData[]> {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_evaluation_criteria_names');
+      
+      if (error) {
+        console.error("Error fetching criteria names:", error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error("Error in fetchEvaluationCriteriaNames:", error);
       return [];
     }
   },

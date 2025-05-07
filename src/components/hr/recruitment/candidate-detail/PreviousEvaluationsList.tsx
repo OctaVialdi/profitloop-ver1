@@ -18,9 +18,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { 
   groupCriteriaByCategory, 
-  validateEvaluationScore,
+  validateEvaluation,
   ensureEvaluationHasCriteriaScores
 } from "@/utils/evaluationUtils";
+import { EvaluationStatus } from "./EvaluationTypes";
 
 interface PreviousEvaluationsListProps {
   evaluations: CandidateEvaluation[];
@@ -88,6 +89,9 @@ export const PreviousEvaluationsList: React.FC<PreviousEvaluationsListProps> = (
             // Group criteria by category for better organization
             const criteriaByCategory = groupCriteriaByCategory(evaluation.criteria_scores || []);
             
+            // Validate the evaluation
+            const validationResult = validateEvaluation(evaluation);
+            
             return (
               <div key={evaluation.id} className="border rounded-lg shadow-sm overflow-hidden">
                 <div className="bg-gray-50 p-4 border-b flex justify-between items-start">
@@ -117,6 +121,29 @@ export const PreviousEvaluationsList: React.FC<PreviousEvaluationsListProps> = (
                 </div>
 
                 <div className="p-4">
+                  {/* Display validation warnings if any */}
+                  {validationResult.status !== EvaluationStatus.Valid && (
+                    <div className={`mb-4 p-3 rounded-md ${
+                      validationResult.status === EvaluationStatus.Error 
+                        ? "bg-red-50 border border-red-200 text-red-800" 
+                        : "bg-amber-50 border border-amber-200 text-amber-800"
+                    }`}>
+                      <p className="font-semibold mb-1">
+                        {validationResult.status === EvaluationStatus.Error 
+                          ? "Evaluation Errors:" 
+                          : "Evaluation Warnings:"}
+                      </p>
+                      <ul className="list-disc list-inside text-sm space-y-1">
+                        {validationResult.errors.map((error, index) => (
+                          <li key={`error-${index}`}>{error.message}</li>
+                        ))}
+                        {validationResult.warnings.map((warning, index) => (
+                          <li key={`warning-${index}`}>{warning.message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Display criteria-based ratings grouped by category */}
                   <div>
                     <h5 className="text-sm font-medium mb-2">Ratings:</h5>
@@ -195,12 +222,6 @@ export const PreviousEvaluationsList: React.FC<PreviousEvaluationsListProps> = (
                     <li>If this is the only evaluation, the candidate's score will be removed entirely.</li>
                   </ul>
                 </div>
-                {selectedEvaluation && !validateEvaluationScore(selectedEvaluation) && (
-                  <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md mt-2">
-                    <p className="font-semibold">Score validation warning:</p>
-                    <p className="text-sm">This evaluation appears to have inconsistent scoring that may be affecting the candidate's overall score accuracy.</p>
-                  </div>
-                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>

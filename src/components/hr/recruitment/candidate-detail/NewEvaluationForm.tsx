@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { candidateService, EvaluationCategory, EvaluationCriteriaScore } from "@/services/candidateService";
 import { useUser } from "@/hooks/auth/useUser";
 import { StarRating } from "./StarRating";
+import { evaluationService } from "@/services/evaluationService";
+import { EvaluationCategoryData } from "./EvaluationTypes";
 
 interface NewEvaluationFormProps {
   candidateId: string;
@@ -28,6 +30,26 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [criteriaScores, setCriteriaScores] = useState<EvaluationCriteriaScore[]>([]);
   const [comments, setComments] = useState("");
+  const [categoryNames, setCategoryNames] = useState<EvaluationCategoryData[]>([]);
+  const [fetchingCategoryNames, setFetchingCategoryNames] = useState(false);
+  
+  // Fetch dynamic category names from database
+  useEffect(() => {
+    const fetchCategoryNames = async () => {
+      setFetchingCategoryNames(true);
+      try {
+        const names = await evaluationService.fetchEvaluationCriteriaNames();
+        console.log("Fetched category names:", names);
+        setCategoryNames(names);
+      } catch (error) {
+        console.error("Error fetching category names:", error);
+      } finally {
+        setFetchingCategoryNames(false);
+      }
+    };
+    
+    fetchCategoryNames();
+  }, []);
   
   const handleRatingChange = (criterionId: string, categoryId: string, question: string, categoryName: string) => (score: number) => {
     setCriteriaScores(prev => {
@@ -125,7 +147,7 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
     }
   }, [evaluationCategories, expandedCategories]);
 
-  if (isLoading) {
+  if (isLoading || fetchingCategoryNames) {
     return (
       <div className="flex justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -143,7 +165,10 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
                 className="p-3 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100" 
                 onClick={() => toggleCategory(category.id)}
               >
-                <h4 className="font-medium">{category.name}</h4>
+                <h4 className="font-medium">
+                  {/* Use the category name from the database if available */}
+                  {categoryNames.find(c => c.category_id === category.id)?.category_name || category.name}
+                </h4>
                 {expandedCategories[category.id] ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </div>
               
@@ -151,6 +176,11 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
                 <div className="p-3 space-y-4">
                   {category.criteria.map(criterion => {
                     const criterionScore = getCriterionScore(criterion.id);
+                    
+                    // Find category name from our fetched data
+                    const categoryData = categoryNames.find(c => c.category_id === category.id);
+                    const categoryName = categoryData?.category_name || category.name;
+                    
                     return (
                       <div key={criterion.id} className="space-y-2">
                         <div className="flex justify-between">
@@ -159,7 +189,7 @@ export const NewEvaluationForm: React.FC<NewEvaluationFormProps> = ({
                         </div>
                         <StarRating 
                           value={criterionScore} 
-                          onChange={handleRatingChange(criterion.id, category.id, criterion.question, category.name)} 
+                          onChange={handleRatingChange(criterion.id, category.id, criterion.question, categoryName)} 
                         />
                       </div>
                     );
