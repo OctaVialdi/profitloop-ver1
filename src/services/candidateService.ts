@@ -1,4 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestResponse } from "@supabase/supabase-js";
 
 export interface CandidateApplication {
   id: string;
@@ -98,7 +100,7 @@ export interface CandidateEvaluation {
   created_at: string;
   updated_at: string;
   evaluator_name?: string;
-  criteria_scores?: EvaluationCriteriaScore[];
+  criteria_scores?: EvaluationCriteriaScore[] | any; // Allow any for JSON compatibility
 }
 
 export interface EvaluationCategory {
@@ -195,6 +197,20 @@ export const candidateService = {
         .eq("candidate_id", id)
         .order("created_at", { ascending: false });
 
+      // Ensure evaluations have the right format (if there are any)
+      const processedEvaluations = evaluations ? evaluations.map(eval => {
+        // Process the evaluation to match our interface
+        return {
+          ...eval,
+          // If criteria_scores exists but comes as a string, parse it
+          criteria_scores: eval.criteria_scores ? 
+            (typeof eval.criteria_scores === 'string' ? 
+              JSON.parse(eval.criteria_scores) : 
+              eval.criteria_scores) : 
+            undefined
+        } as CandidateEvaluation;
+      }) : [];
+
       // Combine all data into a single object
       return {
         ...candidate,
@@ -204,7 +220,7 @@ export const candidateService = {
         formalEducation: formalEducation || [],
         informalEducation: informalEducation || [],
         workExperience: workExperience || [],
-        evaluations: evaluations || []
+        evaluations: processedEvaluations
       };
     } catch (error) {
       console.error("Error fetching candidate by id:", error);
@@ -263,13 +279,17 @@ export const candidateService = {
 
   async submitEvaluation(evaluation: Omit<CandidateEvaluation, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean, data?: CandidateEvaluation, error?: any }> {
     try {
+      // Convert criteria_scores to format expected by Supabase
+      const dataToInsert = {
+        ...evaluation,
+        evaluator_id: (await supabase.auth.getUser()).data.user?.id,
+        criteria_scores: evaluation.criteria_scores ? JSON.stringify(evaluation.criteria_scores) : undefined
+      };
+
       // Insert the evaluation - the trigger will calculate the average score
-      const { data, error } = await supabase
+      const { data, error }: PostgrestResponse<any> = await supabase
         .from("candidate_evaluations")
-        .insert({ 
-          ...evaluation,
-          evaluator_id: (await supabase.auth.getUser()).data.user?.id
-        })
+        .insert(dataToInsert)
         .select()
         .single();
 
@@ -278,9 +298,19 @@ export const candidateService = {
         return { success: false, error };
       }
 
+      // Process the returned data to match our interface
+      const processedData = {
+        ...data,
+        criteria_scores: data.criteria_scores ? 
+          (typeof data.criteria_scores === 'string' ? 
+            JSON.parse(data.criteria_scores) : 
+            data.criteria_scores) : 
+          undefined
+      } as CandidateEvaluation;
+
       return {
         success: true,
-        data: data as CandidateEvaluation
+        data: processedData
       };
     } catch (error) {
       console.error("Error submitting evaluation:", error);
@@ -290,10 +320,16 @@ export const candidateService = {
 
   async updateEvaluation(id: string, updates: Partial<CandidateEvaluation>): Promise<{ success: boolean, data?: CandidateEvaluation, error?: any }> {
     try {
+      // Convert criteria_scores to format expected by Supabase
+      const dataToUpdate = {
+        ...updates,
+        criteria_scores: updates.criteria_scores ? JSON.stringify(updates.criteria_scores) : undefined
+      };
+
       // Update the evaluation - the trigger will recalculate the average score
-      const { data, error } = await supabase
+      const { data, error }: PostgrestResponse<any> = await supabase
         .from("candidate_evaluations")
-        .update(updates)
+        .update(dataToUpdate)
         .eq("id", id)
         .select()
         .single();
@@ -303,9 +339,19 @@ export const candidateService = {
         return { success: false, error };
       }
 
+      // Process the returned data to match our interface
+      const processedData = {
+        ...data,
+        criteria_scores: data.criteria_scores ? 
+          (typeof data.criteria_scores === 'string' ? 
+            JSON.parse(data.criteria_scores) : 
+            data.criteria_scores) : 
+          undefined
+      } as CandidateEvaluation;
+
       return {
         success: true,
-        data: data as CandidateEvaluation
+        data: processedData
       };
     } catch (error) {
       console.error("Error updating evaluation:", error);
