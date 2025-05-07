@@ -312,7 +312,7 @@ export const candidateService = {
       };
 
       // Insert the evaluation - the trigger will calculate the average score
-      const { data, error }: PostgrestResponse<any> = await supabase
+      const { data, error } = await supabase
         .from("candidate_evaluations")
         .insert(dataToInsert)
         .select()
@@ -375,7 +375,7 @@ export const candidateService = {
       };
 
       // Update the evaluation - the trigger will recalculate the average score
-      const { data, error }: PostgrestResponse<any> = await supabase
+      const { data, error } = await supabase
         .from("candidate_evaluations")
         .update(dataToUpdate)
         .eq("id", id)
