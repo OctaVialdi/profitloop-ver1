@@ -480,7 +480,7 @@ export const candidateService = {
       // Update the candidate's score based on remaining evaluations
       if (remainingEvaluations && remainingEvaluations.length > 0) {
         // Calculate new average score from remaining evaluations
-        const totalScore = remainingEvaluations.reduce((sum, eval) => sum + eval.average_score, 0);
+        const totalScore = remainingEvaluations.reduce((sum, evaluation) => sum + evaluation.average_score, 0);
         const newAverageScore = totalScore / remainingEvaluations.length;
         
         const { error: updateError } = await supabase
