@@ -4,6 +4,7 @@ import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { candidateService, CandidateWithDetails } from "@/services/candidateService";
+import { CandidateDetail } from "@/components/hr/recruitment/candidate-detail/CandidateDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ensureEvaluationHasCriteriaScores } from "@/utils/evaluationUtils";
@@ -99,15 +100,11 @@ const CandidateDetailPage = () => {
         </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Left sidebar with profile picture and navigation */}
-        <CandidateDetailSidebar candidate={candidate} />
-
-        {/* Main content area - render the nested route content */}
-        <div className="flex-1">
-          <Outlet context={{ candidate, onStatusUpdated: handleDataRefresh }} />
-        </div>
-      </div>
+      {/* Using the imported CandidateDetail component */}
+      <CandidateDetail 
+        candidate={candidate} 
+        onStatusUpdated={handleDataRefresh} 
+      />
     </div>
   );
 };
