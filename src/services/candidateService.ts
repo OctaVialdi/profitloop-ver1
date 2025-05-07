@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestResponse } from "@supabase/supabase-js";
 
@@ -197,9 +198,9 @@ export const candidateService = {
         .order("created_at", { ascending: false });
 
       // Ensure evaluations have the right format (if there are any)
-      const processedEvaluations = evaluations ? evaluations.map(evaluation => {
+      const processedEvaluations = evaluations ? evaluations.map((evaluation: any) => {
         // Process the evaluation to match our interface
-        return {
+        const parsedEval = {
           ...evaluation,
           // If criteria_scores exists but comes as a string, parse it
           criteria_scores: evaluation.criteria_scores ? 
@@ -207,7 +208,8 @@ export const candidateService = {
               JSON.parse(evaluation.criteria_scores) : 
               evaluation.criteria_scores) : 
             undefined
-        } as CandidateEvaluation;
+        };
+        return parsedEval as CandidateEvaluation;
       }) : [];
 
       // Combine all data into a single object
