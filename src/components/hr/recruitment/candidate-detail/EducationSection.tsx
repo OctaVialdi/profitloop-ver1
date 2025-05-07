@@ -2,6 +2,8 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { CandidateWithDetails } from "@/services/candidateService";
+import { School, BookOpen } from "lucide-react";
+import { formatDate } from "@/utils/formatUtils";
 
 interface EducationSectionProps {
   candidate: CandidateWithDetails;
@@ -13,23 +15,19 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   const hasFormalEducation = candidate.formalEducation && candidate.formalEducation.length > 0;
   const hasInformalEducation = candidate.informalEducation && candidate.informalEducation.length > 0;
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
-
   return (
     <div className="space-y-6">
+      {/* Formal Education Section */}
       <Card>
         <div className="p-6">
-          <div className="mb-6">
+          <div className="flex items-center gap-2 mb-6">
+            <School className="h-5 w-5 text-primary" />
             <h2 className="text-2xl font-bold">Formal Education</h2>
           </div>
           
           {hasFormalEducation ? (
             <div className="space-y-4">
-              {candidate.formalEducation!.map((education, index) => (
+              {candidate.formalEducation!.map((education) => (
                 <div key={education.id} className="border rounded-md p-4">
                   <div className="flex justify-between">
                     <h3 className="font-semibold text-lg">{education.institution_name}</h3>
@@ -55,15 +53,17 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
         </div>
       </Card>
 
+      {/* Informal Education Section */}
       <Card>
         <div className="p-6">
-          <div className="mb-6">
+          <div className="flex items-center gap-2 mb-6">
+            <BookOpen className="h-5 w-5 text-primary" />
             <h2 className="text-2xl font-bold">Informal Education</h2>
           </div>
           
           {hasInformalEducation ? (
             <div className="space-y-4">
-              {candidate.informalEducation!.map((education, index) => (
+              {candidate.informalEducation!.map((education) => (
                 <div key={education.id} className="border rounded-md p-4">
                   <div className="flex justify-between">
                     <h3 className="font-semibold text-lg">{education.course_name}</h3>
