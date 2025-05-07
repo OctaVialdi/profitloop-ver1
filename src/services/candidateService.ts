@@ -322,7 +322,7 @@ export const candidateService = {
       console.log("Submitting evaluation:", evaluation);
       
       // Convert criteria_scores to format expected by Supabase
-      // Make sure criteria_scores is properly formatted as a JSON array
+      // Make sure criteria_scores is properly formatted as a JSON string
       const criteriaScores = evaluation.criteria_scores 
         ? JSON.stringify(evaluation.criteria_scores) 
         : null;
@@ -357,9 +357,14 @@ export const candidateService = {
             parsedCriteriaScores = JSON.parse(data.criteria_scores);
           } catch (e) {
             console.error("Error parsing returned criteria_scores:", e);
+            parsedCriteriaScores = undefined;
           }
+        } else if (Array.isArray(data.criteria_scores)) {
+          // Handle case where it's already an array
+          parsedCriteriaScores = data.criteria_scores as EvaluationCriteriaScore[];
         } else {
-          parsedCriteriaScores = data.criteria_scores;
+          console.error("Unexpected criteria_scores format:", typeof data.criteria_scores);
+          parsedCriteriaScores = undefined;
         }
       }
       
@@ -412,18 +417,22 @@ export const candidateService = {
       }
 
       // Process the returned data to match our interface
-      let criteriaScores: any = undefined;
+      let parsedCriteriaScores: EvaluationCriteriaScore[] | undefined = undefined;
       
       if (data.criteria_scores) {
         if (typeof data.criteria_scores === 'string') {
           try {
-            criteriaScores = JSON.parse(data.criteria_scores);
+            parsedCriteriaScores = JSON.parse(data.criteria_scores);
           } catch (e) {
             console.error("Error parsing returned criteria_scores:", e);
-            criteriaScores = undefined;
+            parsedCriteriaScores = undefined;
           }
+        } else if (Array.isArray(data.criteria_scores)) {
+          // Handle case where it's already an array
+          parsedCriteriaScores = data.criteria_scores as EvaluationCriteriaScore[];
         } else {
-          criteriaScores = data.criteria_scores;
+          console.error("Unexpected criteria_scores format:", typeof data.criteria_scores);
+          parsedCriteriaScores = undefined;
         }
       }
       
@@ -441,7 +450,7 @@ export const candidateService = {
         comments: data.comments,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        criteria_scores: criteriaScores
+        criteria_scores: parsedCriteriaScores
       };
 
       return {
