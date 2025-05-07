@@ -12,14 +12,18 @@ interface EducationSectionProps {
 export const EducationSection: React.FC<EducationSectionProps> = ({
   candidate
 }) => {
-  // Add debug logging to understand what data we're receiving
-  console.log("EducationSection: Candidate object:", candidate);
+  // Enhanced debug logging to verify the data we're receiving
+  console.log("EducationSection: Rendering with candidate ID:", candidate.id);
+  console.log("EducationSection: Candidate full data:", candidate);
   console.log("EducationSection: Formal education data:", candidate.formalEducation);
   console.log("EducationSection: Informal education data:", candidate.informalEducation);
 
-  // Ensure we have arrays for education data even if they are undefined
+  // Better validation to ensure we have arrays for education data
   const formalEducation = candidate.formalEducation || [];
   const informalEducation = candidate.informalEducation || [];
+  
+  console.log("EducationSection: Formal education count:", formalEducation.length);
+  console.log("EducationSection: Informal education count:", informalEducation.length);
   
   const hasFormalEducation = formalEducation.length > 0;
   const hasInformalEducation = informalEducation.length > 0;
