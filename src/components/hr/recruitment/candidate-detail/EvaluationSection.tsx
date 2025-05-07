@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -202,36 +201,40 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
               <div className="mt-3">
                 <h5 className="text-sm font-medium mb-2">Ratings:</h5>
                 <Accordion type="multiple" className="w-full">
-                  {Array.from(new Set(evaluation.criteria_scores.map(score => score.category))).map(categoryName => (
-                    <AccordionItem key={categoryName} value={categoryName}>
-                      <AccordionTrigger className="text-sm font-medium">
-                        {categoryName}
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-2">
-                          {evaluation.criteria_scores
-                            ?.filter(score => score.category === categoryName)
-                            .map(score => (
-                              <div key={score.criterion_id} className="flex items-center justify-between">
-                                <span className="text-sm text-gray-600 flex-1">{score.question}</span>
-                                <div className="flex">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star 
-                                      key={i}
-                                      className={`h-4 w-4 ${
-                                        i < score.score 
-                                          ? "text-yellow-400 fill-yellow-400" 
-                                          : "text-gray-300"
-                                      }`} 
-                                    />
-                                  ))}
+                  {Array.from(new Set(evaluation.criteria_scores.map(score => score.category))).map(categoryName => {
+                    // Ensure categoryName is a valid string
+                    const category = typeof categoryName === 'string' ? categoryName : String(categoryName);
+                    return (
+                      <AccordionItem key={category} value={category}>
+                        <AccordionTrigger className="text-sm font-medium">
+                          {category}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2">
+                            {evaluation.criteria_scores
+                              ?.filter(score => score.category === categoryName)
+                              .map(score => (
+                                <div key={score.criterion_id} className="flex items-center justify-between">
+                                  <span className="text-sm text-gray-600 flex-1">{score.question}</span>
+                                  <div className="flex">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star 
+                                        key={i}
+                                        className={`h-4 w-4 ${
+                                          i < score.score 
+                                            ? "text-yellow-400 fill-yellow-400" 
+                                            : "text-gray-300"
+                                        }`} 
+                                      />
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
+                              ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
                 </Accordion>
               </div>
             ) : (

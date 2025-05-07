@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestResponse } from "@supabase/supabase-js";
 
@@ -198,15 +197,15 @@ export const candidateService = {
         .order("created_at", { ascending: false });
 
       // Ensure evaluations have the right format (if there are any)
-      const processedEvaluations = evaluations ? evaluations.map(eval => {
+      const processedEvaluations = evaluations ? evaluations.map(evaluation => {
         // Process the evaluation to match our interface
         return {
-          ...eval,
+          ...evaluation,
           // If criteria_scores exists but comes as a string, parse it
-          criteria_scores: eval.criteria_scores ? 
-            (typeof eval.criteria_scores === 'string' ? 
-              JSON.parse(eval.criteria_scores) : 
-              eval.criteria_scores) : 
+          criteria_scores: evaluation.criteria_scores ? 
+            (typeof evaluation.criteria_scores === 'string' ? 
+              JSON.parse(evaluation.criteria_scores) : 
+              evaluation.criteria_scores) : 
             undefined
         } as CandidateEvaluation;
       }) : [];
@@ -299,14 +298,14 @@ export const candidateService = {
       }
 
       // Process the returned data to match our interface
-      const processedData = {
+      const processedData: CandidateEvaluation = {
         ...data,
         criteria_scores: data.criteria_scores ? 
           (typeof data.criteria_scores === 'string' ? 
             JSON.parse(data.criteria_scores) : 
             data.criteria_scores) : 
           undefined
-      } as CandidateEvaluation;
+      };
 
       return {
         success: true,
@@ -340,14 +339,14 @@ export const candidateService = {
       }
 
       // Process the returned data to match our interface
-      const processedData = {
+      const processedData: CandidateEvaluation = {
         ...data,
         criteria_scores: data.criteria_scores ? 
           (typeof data.criteria_scores === 'string' ? 
             JSON.parse(data.criteria_scores) : 
             data.criteria_scores) : 
           undefined
-      } as CandidateEvaluation;
+      };
 
       return {
         success: true,
