@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ensureEvaluationHasCriteriaScores } from "@/utils/evaluationUtils";
 import { CandidateEvaluation, EvaluationCategory, EvaluationCriterion, EvaluationCriteriaScore } from "./candidateService";
@@ -396,36 +395,6 @@ export const evaluationService = {
     } catch (error) {
       console.error("Error saving interview notes:", error);
       return { success: false, error };
-    }
-  },
-  
-  /**
-   * Fetches candidate application status options from the database
-   */
-  async fetchCandidateStatusOptions(): Promise<string[]> {
-    try {
-      // Query for unique status values in the candidate_applications table
-      // Fix: Use not() and eq() instead of is('status', 'not.null')
-      const { data, error } = await supabase
-        .from("candidate_applications")
-        .select('status')
-        .not('status', 'is', null);
-      
-      if (error) {
-        console.error("Error fetching candidate status options:", error);
-        return ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected']; // Default fallback
-      }
-      
-      // Extract unique status values
-      if (data && data.length > 0) {
-        const uniqueStatuses = Array.from(new Set(data.map(item => item.status)));
-        return uniqueStatuses.filter(status => !!status); // Filter out any null/undefined values
-      }
-      
-      return ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected']; // Default fallback
-    } catch (error) {
-      console.error("Error in fetchCandidateStatusOptions:", error);
-      return ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected']; // Default fallback
     }
   }
 };

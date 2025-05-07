@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CandidateWithDetails, candidateService } from "@/services/candidateService";
-import { evaluationService } from "@/services/evaluationService";
 import { toast } from "sonner";
 import {
   Select,
@@ -29,47 +27,11 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>(candidate.status);
-  const [statusOptions, setStatusOptions] = useState<{value: string, label: string}[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   
   // Update selectedStatus when candidate.status changes
   useEffect(() => {
     setSelectedStatus(candidate.status);
   }, [candidate.status]);
-  
-  // Fetch status options from database
-  useEffect(() => {
-    const fetchStatusOptions = async () => {
-      setIsLoading(true);
-      try {
-        const statuses = await evaluationService.fetchCandidateStatusOptions();
-        
-        // Format for display: capitalize first letter
-        const formattedOptions = statuses.map(status => ({
-          value: status,
-          label: status.charAt(0).toUpperCase() + status.slice(1)
-        }));
-        
-        setStatusOptions(formattedOptions);
-      } catch (error) {
-        console.error("Failed to fetch status options:", error);
-        // Fallback options
-        setStatusOptions([
-          { value: 'new', label: 'New' },
-          { value: 'screening', label: 'Screening' },
-          { value: 'interview', label: 'Interview' },
-          { value: 'assessment', label: 'Assessment' },
-          { value: 'offered', label: 'Offered' },
-          { value: 'hired', label: 'Hired' },
-          { value: 'rejected', label: 'Rejected' }
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchStatusOptions();
-  }, []);
   
   const getStatusBadgeProps = (status: string): BadgeProps => {
     switch (status) {
@@ -91,6 +53,16 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
         return { variant: 'secondary' };
     }
   };
+  
+  const statusOptions = [
+    { value: 'new', label: 'New' },
+    { value: 'screening', label: 'Screening' },
+    { value: 'interview', label: 'Interview' },
+    { value: 'assessment', label: 'Assessment' },
+    { value: 'offered', label: 'Offered' },
+    { value: 'hired', label: 'Hired' },
+    { value: 'rejected', label: 'Rejected' }
+  ];
   
   const handleUpdateStatus = async () => {
     if (selectedStatus === candidate.status) {
@@ -139,29 +111,25 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
             <div>
               <p className="text-sm text-gray-500 mb-2">Update Status</p>
               <div className="flex items-center gap-2">
-                {isLoading ? (
-                  <div className="w-[180px] h-10 bg-gray-100 rounded-md animate-pulse"></div>
-                ) : (
-                  <Select 
-                    value={selectedStatus} 
-                    onValueChange={setSelectedStatus}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                <Select 
+                  value={selectedStatus} 
+                  onValueChange={setSelectedStatus}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
                 <Button 
                   onClick={handleUpdateStatus} 
-                  disabled={isUpdating || selectedStatus === candidate.status || isLoading}
+                  disabled={isUpdating || selectedStatus === candidate.status}
                 >
                   {isUpdating ? (
                     <>
