@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestResponse } from "@supabase/supabase-js";
 
@@ -440,14 +441,73 @@ export const candidateService = {
 
   async deleteEvaluation(id: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      // First, get the candidate_id from the evaluation before deleting it
+      const { data: evaluation, error: fetchError } = await supabase
+        .from("candidate_evaluations")
+        .select("candidate_id")
+        .eq("id", id)
+        .single();
+      
+      if (fetchError || !evaluation) {
+        console.error("Error fetching evaluation before deletion:", fetchError);
+        return false;
+      }
+      
+      const candidateId = evaluation.candidate_id;
+      
+      // Delete the evaluation
+      const { error: deleteError } = await supabase
         .from("candidate_evaluations")
         .delete()
         .eq("id", id);
 
-      return !error;
+      if (deleteError) {
+        console.error("Error deleting evaluation:", deleteError);
+        return false;
+      }
+      
+      // Check if there are any remaining evaluations for this candidate
+      const { data: remainingEvaluations, error: countError } = await supabase
+        .from("candidate_evaluations")
+        .select("average_score")
+        .eq("candidate_id", candidateId);
+      
+      if (countError) {
+        console.error("Error counting remaining evaluations:", countError);
+        return false;
+      }
+      
+      // Update the candidate's score based on remaining evaluations
+      if (remainingEvaluations && remainingEvaluations.length > 0) {
+        // Calculate new average score from remaining evaluations
+        const totalScore = remainingEvaluations.reduce((sum, eval) => sum + eval.average_score, 0);
+        const newAverageScore = totalScore / remainingEvaluations.length;
+        
+        const { error: updateError } = await supabase
+          .from("candidate_applications")
+          .update({ score: newAverageScore })
+          .eq("id", candidateId);
+          
+        if (updateError) {
+          console.error("Error updating candidate score:", updateError);
+          return false;
+        }
+      } else {
+        // If no evaluations remain, set the score to null
+        const { error: updateError } = await supabase
+          .from("candidate_applications")
+          .update({ score: null })
+          .eq("id", candidateId);
+          
+        if (updateError) {
+          console.error("Error resetting candidate score:", updateError);
+          return false;
+        }
+      }
+
+      return true;
     } catch (error) {
-      console.error("Error deleting evaluation:", error);
+      console.error("Error in deleteEvaluation process:", error);
       return false;
     }
   },

@@ -48,11 +48,6 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
       try {
         const data = await candidateService.fetchEvaluationCriteria();
         setEvaluationCategories(data);
-
-        // Initialize expanded categories - expand the first one by default
-        if (data.length > 0) {
-          // This initialization is now handled in the NewEvaluationForm component
-        }
       } catch (error) {
         console.error("Error fetching evaluation criteria:", error);
         toast.error("Failed to load evaluation criteria");
@@ -63,9 +58,9 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     fetchCriteria();
   }, []);
   
-  // Handler for when an evaluation is reset
+  // Handler for when an evaluation is reset/deleted
   const handleEvaluationReset = () => {
-    // Call the parent callback if provided
+    // Call the parent callback if provided to refresh candidate data
     if (onEvaluationSubmitted) {
       onEvaluationSubmitted();
     }
@@ -85,7 +80,9 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
               <Star className="h-6 w-6 text-yellow-400 fill-yellow-400" />
               <span className="text-gray-500">Overall Score</span>
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-2 text-gray-500">No evaluations yet</div>
+          )}
         </div>
 
         <div className="space-y-6">

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Star, Trash2 } from "lucide-react";
 import { CandidateEvaluation, candidateService } from "@/services/candidateService";
@@ -64,10 +63,6 @@ export const PreviousEvaluationsList: React.FC<PreviousEvaluationsListProps> = (
     
     setIsDeleting(true);
     try {
-      // Check if this is the only evaluation
-      const isSingleEvaluation = evaluations.length === 1;
-
-      // Proceed with deletion
       const success = await candidateService.deleteEvaluation(selectedEvaluation.id);
       
       if (success) {
