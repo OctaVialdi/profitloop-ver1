@@ -29,12 +29,14 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
 }) => {
   const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [evaluationCategories, setEvaluationCategories] = useState<EvaluationCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   
   const [criteriaScores, setCriteriaScores] = useState<EvaluationCriteriaScore[]>([]);
   const [comments, setComments] = useState("");
+  const [interviewNotes, setInterviewNotes] = useState("");
 
   // For backward compatibility
   const [legacyEvaluation, setLegacyEvaluation] = useState({
@@ -44,6 +46,24 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     experience_relevance: null as number | null,
     overall_impression: null as number | null
   });
+
+  // Load interview notes if they exist
+  useEffect(() => {
+    const fetchInterviewNotes = async () => {
+      try {
+        if (candidate && candidate.id) {
+          const notes = await candidateService.fetchInterviewNotes(candidate.id);
+          if (notes) {
+            setInterviewNotes(notes.content || "");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching interview notes:", error);
+      }
+    };
+    
+    fetchInterviewNotes();
+  }, [candidate]);
 
   // Fetch evaluation criteria on component mount
   useEffect(() => {
@@ -100,6 +120,40 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleSaveInterviewNotes = async () => {
+    // Check if user is logged in
+    if (!user) {
+      toast.error("You must be logged in to save notes");
+      return;
+    }
+    
+    if (!interviewNotes.trim()) {
+      toast.error("Please enter some notes before saving");
+      return;
+    }
+
+    setIsSavingNotes(true);
+
+    try {
+      const result = await candidateService.saveInterviewNotes({
+        candidate_id: candidate.id,
+        content: interviewNotes,
+        created_by: user.id
+      });
+
+      if (result.success) {
+        toast.success("Interview notes saved successfully");
+      } else {
+        toast.error("Failed to save interview notes");
+      }
+    } catch (error) {
+      toast.error("Error saving interview notes");
+      console.error("Error saving interview notes:", error);
+    } finally {
+      setIsSavingNotes(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -393,6 +447,37 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
         </div>
 
         <div className="space-y-6">
+          {/* Interview Notes Section - at the top, outside of scrollable areas */}
+          <div className="border rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4">Interview Notes</h3>
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="interviewNotes">Initial interview notes</Label>
+                <Textarea
+                  id="interviewNotes"
+                  placeholder="Add your initial observations and important points from the interview..."
+                  value={interviewNotes}
+                  onChange={(e) => setInterviewNotes(e.target.value)}
+                  rows={4}
+                  className="mt-2"
+                />
+              </div>
+              <Button 
+                onClick={handleSaveInterviewNotes} 
+                disabled={isSavingNotes || !interviewNotes.trim()}
+                variant="outline"
+                className="w-full"
+              >
+                {isSavingNotes ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving Notes...
+                  </>
+                ) : "Save Interview Notes"}
+              </Button>
+            </div>
+          </div>
+
           <div className="border rounded-lg p-4">
             <h3 className="text-lg font-semibold mb-4">New Evaluation</h3>
             
@@ -444,10 +529,10 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="comments">Comments</Label>
+                    <Label htmlFor="comments">Final Comments</Label>
                     <Textarea
                       id="comments"
-                      placeholder="Add your comments about the candidate..."
+                      placeholder="Add your final evaluation comments about the candidate..."
                       value={comments}
                       onChange={(e) => setComments(e.target.value)}
                       rows={4}
