@@ -223,8 +223,20 @@ const CompanyProfile: React.FC = () => {
 
   // Prepare data for display and editing
   const companyName = organization?.name || "Company Name";
-  const profile = companyData?.profile || {};
-  const missionVision = companyData?.missionVision || {};
+  const profile = companyData?.profile || {
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
+    established: '',
+    employees: undefined,
+    tax_id: '',
+    logo_url: ''
+  };
+  const missionVision = companyData?.missionVision || {
+    mission: '',
+    vision: ''
+  };
   const departments = companyData?.departments || [];
   const values = companyData?.values || [];
   

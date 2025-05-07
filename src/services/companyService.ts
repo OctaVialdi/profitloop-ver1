@@ -111,13 +111,13 @@ export const fetchCompanyData = async (organizationId: string): Promise<CompanyD
 
 // Save or update company profile
 export const saveCompanyProfile = async (
-  profile: Partial<CompanyProfile>
+  profile: { organization_id: string } & Partial<Omit<CompanyProfile, 'id' | 'organization_id'>>
 ): Promise<CompanyProfile | null> => {
   try {
     const { data: existingProfile, error: fetchError } = await supabase
       .from("company_profiles")
       .select("id")
-      .eq("organization_id", profile.organization_id!)
+      .eq("organization_id", profile.organization_id)
       .maybeSingle();
 
     if (fetchError && fetchError.code !== "PGRST116") throw fetchError;
@@ -158,13 +158,13 @@ export const saveCompanyProfile = async (
 
 // Save or update mission and vision
 export const saveMissionVision = async (
-  missionVision: Partial<CompanyMissionVision>
+  missionVision: { organization_id: string } & Partial<Omit<CompanyMissionVision, 'id' | 'organization_id'>>
 ): Promise<CompanyMissionVision | null> => {
   try {
     const { data: existingData, error: fetchError } = await supabase
       .from("company_mission_vision")
       .select("id")
-      .eq("organization_id", missionVision.organization_id!)
+      .eq("organization_id", missionVision.organization_id)
       .maybeSingle();
       
     if (fetchError && fetchError.code !== "PGRST116") throw fetchError;

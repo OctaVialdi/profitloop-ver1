@@ -17,24 +17,36 @@ interface CompanyEditDialogProps {
 
 const CompanyEditDialog: React.FC<CompanyEditDialogProps> = ({ companyData, onSave, onCancel }) => {
   const organization = companyData?.organization;
-  const profile = companyData?.profile || {};
-  const missionVision = companyData?.missionVision || {};
+  const profile = companyData?.profile || {
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
+    established: '',
+    employees: undefined,
+    tax_id: '',
+    logo_url: ''
+  };
+  const missionVision = companyData?.missionVision || {
+    mission: '',
+    vision: ''
+  };
   
   const [formData, setFormData] = useState({
     name: organization?.name || "",
-    address: profile?.address || "",
-    phone: profile?.phone || "",
-    email: profile?.email || "",
-    website: profile?.website || "",
-    established: profile?.established || "",
-    employees: profile?.employees?.toString() || "",
-    taxId: profile?.tax_id || "",
-    mission: missionVision?.mission || "",
-    vision: missionVision?.vision || "",
+    address: profile.address || "",
+    phone: profile.phone || "",
+    email: profile.email || "",
+    website: profile.website || "",
+    established: profile.established || "",
+    employees: profile.employees?.toString() || "",
+    taxId: profile.tax_id || "",
+    mission: missionVision.mission || "",
+    vision: missionVision.vision || "",
   });
   
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(profile?.logo_url || null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(profile.logo_url || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
