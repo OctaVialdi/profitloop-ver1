@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { InvitationLink, JobPosition } from './types';
 
-// Application base URL - change this to your domain in production
+// Application base URL - production domain
 const APPLICATION_BASE_URL = "https://app.profitloop.id";
 
 export function useInvitationLinks() {
@@ -62,7 +62,7 @@ export function useInvitationLinks() {
           id: link.id,
           position: link.job_positions?.title || 'General Application',
           link: `${APPLICATION_BASE_URL}/apply/${link.token}`,
-          previewLink: `${window.location.origin}/apply/preview/${link.token}`,
+          previewLink: `${APPLICATION_BASE_URL}/apply/preview/${link.token}`,
           createdAt: new Date(link.created_at).toLocaleDateString(),
           expiresAt: link.expires_at ? new Date(link.expires_at).toLocaleDateString() : 'N/A',
           clicks: link.clicks || 0,
