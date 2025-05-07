@@ -10,17 +10,17 @@ import { Loader2, Star, ChevronDown, ChevronUp } from "lucide-react";
 import { useUser } from "@/hooks/auth/useUser";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 interface EvaluationSectionProps {
   candidate: CandidateWithDetails;
   onEvaluationSubmitted?: () => void;
 }
+
 export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
   candidate,
   onEvaluationSubmitted
 }) => {
-  const {
-    user
-  } = useUser();
+  const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [evaluationCategories, setEvaluationCategories] = useState<EvaluationCategory[]>([]);
@@ -325,10 +325,21 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
             <h3 className="text-lg font-semibold mb-4">Interview Notes</h3>
             <div className="space-y-3">
               <div>
-                
-                <Textarea id="interviewNotes" placeholder="Add your initial observations and important points from the interview..." value={interviewNotes} onChange={e => setInterviewNotes(e.target.value)} rows={4} className="mt-2" />
+                <Textarea 
+                  id="interviewNotes" 
+                  placeholder="Add your initial observations and important points from the interview..." 
+                  value={interviewNotes} 
+                  onChange={e => setInterviewNotes(e.target.value)} 
+                  rows={4} 
+                  className="mt-2" 
+                />
               </div>
-              <Button onClick={handleSaveInterviewNotes} disabled={isSavingNotes || !interviewNotes.trim()} variant="outline" className="w-full">
+              <Button 
+                onClick={handleSaveInterviewNotes} 
+                disabled={isSavingNotes || !interviewNotes.trim()} 
+                variant="outline" 
+                className="w-full"
+              >
                 {isSavingNotes ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving Notes...

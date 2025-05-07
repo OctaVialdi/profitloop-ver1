@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestResponse } from "@supabase/supabase-js";
 
@@ -124,6 +123,15 @@ export interface EvaluationCriteriaScore {
   score: number;
   question: string;
   category: string;
+}
+
+export interface InterviewNotes {
+  id?: string;
+  candidate_id: string;
+  content: string;
+  created_by: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const candidateService = {
@@ -726,6 +734,68 @@ export const candidateService = {
       console.error("Error updating criteria order:", error);
       return { success: false, error };
     }
+  },
+
+  async fetchInterviewNotes(candidateId: string): Promise<InterviewNotes | null> {
+    try {
+      const { data, error } = await supabase
+        .from("candidate_interview_notes")
+        .select("*")
+        .eq("candidate_id", candidateId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching interview notes:", error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error fetching interview notes:", error);
+      return null;
+    }
+  },
+
+  async saveInterviewNotes(notes: InterviewNotes): Promise<{ success: boolean, error?: any }> {
+    try {
+      // Check if notes already exist for this candidate
+      const { data: existingNotes } = await supabase
+        .from("candidate_interview_notes")
+        .select("id")
+        .eq("candidate_id", notes.candidate_id)
+        .single();
+
+      let result;
+      
+      if (existingNotes) {
+        // Update existing notes
+        result = await supabase
+          .from("candidate_interview_notes")
+          .update({
+            content: notes.content,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", existingNotes.id);
+      } else {
+        // Insert new notes
+        result = await supabase
+          .from("candidate_interview_notes")
+          .insert({
+            candidate_id: notes.candidate_id,
+            content: notes.content,
+            created_by: notes.created_by
+          });
+      }
+
+      if (result.error) {
+        console.error("Error saving interview notes:", result.error);
+        return { success: false, error: result.error };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error saving interview notes:", error);
+      return { success: false, error };
+    }
   }
 };
-
