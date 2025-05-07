@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestResponse } from "@supabase/supabase-js";
 
@@ -455,7 +456,13 @@ export const candidateService = {
         return [];
       }
       
-      return categories;
+      // Initialize empty criteria array for each category
+      const categoriesWithEmptyCriteria = categories.map(category => ({
+        ...category,
+        criteria: []
+      }));
+      
+      return categoriesWithEmptyCriteria;
     } catch (error) {
       console.error("Error fetching evaluation categories:", error);
       return [];
@@ -489,9 +496,15 @@ export const candidateService = {
         return { success: false, error };
       }
       
+      // Add empty criteria array to conform to the EvaluationCategory type
+      const categoryWithCriteria: EvaluationCategory = {
+        ...data,
+        criteria: []
+      };
+      
       return {
         success: true,
-        data
+        data: categoryWithCriteria
       };
     } catch (error) {
       console.error("Error creating evaluation category:", error);
@@ -499,7 +512,7 @@ export const candidateService = {
     }
   },
 
-  async updateCategory(id: string, updates: Partial<Omit<EvaluationCategory, 'id'>>): Promise<{ success: boolean, data?: EvaluationCategory, error?: any }> {
+  async updateCategory(id: string, updates: Partial<Omit<EvaluationCategory, 'id' | 'criteria'>>): Promise<{ success: boolean, data?: EvaluationCategory, error?: any }> {
     try {
       const { data, error } = await supabase
         .from("evaluation_categories")
@@ -512,9 +525,15 @@ export const candidateService = {
         return { success: false, error };
       }
       
+      // Add empty criteria array to conform to the EvaluationCategory type
+      const categoryWithCriteria: EvaluationCategory = {
+        ...data,
+        criteria: []
+      };
+      
       return {
         success: true,
-        data
+        data: categoryWithCriteria
       };
     } catch (error) {
       console.error("Error updating evaluation category:", error);
@@ -562,29 +581,15 @@ export const candidateService = {
 
   async updateCategoryOrder(categories: { id: string, display_order: number }[]): Promise<{ success: boolean, error?: any }> {
     try {
-      // Use a transaction to update all categories at once
-      const updates = categories.map(({ id, display_order }) => ({
-        id,
-        display_order
-      }));
-      
-      const { error } = await supabase.rpc('update_evaluation_category_orders', {
-        updates: updates
-      });
-      
-      if (error) {
-        console.error("Error updating category order:", error);
+      // Instead of using RPC, update each category separately
+      for (const category of categories) {
+        const { error: updateError } = await supabase
+          .from("evaluation_categories")
+          .update({ display_order: category.display_order })
+          .eq("id", category.id);
         
-        // Fallback if the RPC doesn't exist: update each category separately
-        for (const category of categories) {
-          const { error: updateError } = await supabase
-            .from("evaluation_categories")
-            .update({ display_order: category.display_order })
-            .eq("id", category.id);
-          
-          if (updateError) {
-            return { success: false, error: updateError };
-          }
+        if (updateError) {
+          return { success: false, error: updateError };
         }
       }
       
@@ -723,3 +728,4 @@ export const candidateService = {
     }
   }
 };
+
