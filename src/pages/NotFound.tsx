@@ -18,6 +18,10 @@ const NotFound = () => {
       const url = new URL(window.location.href);
       const path = location.pathname;
       
+      // Handle domains - check if we're on profitloop.id vs app.profitloop.id
+      const hostname = window.location.hostname;
+      console.log("Current hostname:", hostname);
+      
       // Special handling for job application preview routes - handle them more precisely
       if (path.match(/^\/apply\/preview\/[^\/]+$/)) {
         console.log("Job application preview path detected:", path);

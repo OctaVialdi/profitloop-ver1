@@ -14,5 +14,12 @@
         { "key": "Access-Control-Allow-Headers", "value": "X-Requested-With, Content-Type, Accept, Authorization, x-client-info, apikey" }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "profitloop.id/(.*)",
+      "destination": "https://app.profitloop.id/$1",
+      "permanent": true
+    }
   ]
 }

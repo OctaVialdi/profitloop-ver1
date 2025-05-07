@@ -25,7 +25,7 @@ file_size_limit = "50MiB"
 
 [auth]
 site_url = "https://app.profitloop.id"
-additional_redirect_urls = ["https://localhost:3000", "https://app.profitloop.id", "https://preview--profitloop-ver1.lovable.app"]
+additional_redirect_urls = ["https://localhost:3000", "https://profitloop.id", "https://app.profitloop.id", "https://preview--profitloop-ver1.lovable.app"]
 jwt_expiry = 3600
 enable_signup = true
 
@@ -35,6 +35,6 @@ verify_jwt = false
 
 [functions.cors]
 enabled = true
-allowed_origins = ["https://app.profitloop.id", "https://preview--profitloop-ver1.lovable.app", "http://localhost:3000"]
+allowed_origins = ["https://profitloop.id", "https://app.profitloop.id", "https://preview--profitloop-ver1.lovable.app", "http://localhost:3000"]
 allowed_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 allowed_headers = ["X-Requested-With", "Content-Type", "Accept", "Authorization", "x-client-info", "apikey"]
