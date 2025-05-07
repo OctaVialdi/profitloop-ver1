@@ -8,7 +8,7 @@ import { useUser } from "@/hooks/auth/useUser";
 import { InterviewNotesSection } from "./InterviewNotesSection";
 import { NewEvaluationForm } from "./NewEvaluationForm";
 import { PreviousEvaluationsList } from "./PreviousEvaluationsList";
-import { toast } from "sonner"; // Added the missing import
+import { toast } from "sonner"; 
 
 interface EvaluationSectionProps {
   candidate: CandidateWithDetails;
@@ -63,6 +63,17 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     fetchCriteria();
   }, []);
   
+  // Handler for when an evaluation is reset
+  const handleEvaluationReset = () => {
+    // Call the parent callback if provided
+    if (onEvaluationSubmitted) {
+      onEvaluationSubmitted();
+    }
+    
+    // Show a toast notification
+    toast.info("Candidate score has been recalculated");
+  };
+  
   return (
     <Card>
       <div className="p-6">
@@ -100,6 +111,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
             <h3 className="text-lg font-semibold mb-4">Past Evaluations</h3>
             <PreviousEvaluationsList 
               evaluations={candidate.evaluations || []}
+              onEvaluationReset={handleEvaluationReset}
             />
           </div>
         </div>
