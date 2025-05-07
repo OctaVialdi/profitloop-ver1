@@ -18,8 +18,21 @@ const NotFound = () => {
       const url = new URL(window.location.href);
       const path = location.pathname;
       
+      // Special handling for job application preview routes - handle them more precisely
+      if (path.match(/^\/apply\/preview\/[^\/]+$/)) {
+        console.log("Job application preview path detected:", path);
+        const token = path.split('/apply/preview/')[1];
+        console.log("Extracted preview token:", token);
+        
+        if (token) {
+          console.log("Redirecting to job preview with token:", token);
+          navigate(`/apply/preview/${token}`, { replace: true });
+          return;
+        }
+      }
+      
       // Special handling for job application routes
-      if (path.startsWith('/apply/')) {
+      else if (path.match(/^\/apply\/[^\/]+$/)) {
         console.log("Job application path detected:", path);
         const token = path.split('/apply/')[1];
         console.log("Extracted token:", token);

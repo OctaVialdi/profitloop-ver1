@@ -28,8 +28,10 @@ export const AppRoutes = () => {
       
       {/* Public Routes - Ensuring these are registered BEFORE protected routes for priority */}
       <Route path="/join-organization" element={<JoinOrganization />} />
-      <Route path="/apply/:token" element={<JobApplicationForm />} />
+      
+      {/* Important: Preview route must come before the regular apply route to avoid conflicts */}
       <Route path="/apply/preview/:token" element={<JobPreviewPage />} />
+      <Route path="/apply/:token" element={<JobApplicationForm />} />
       <Route path="/apply/success" element={<ApplicationSuccess />} />
       
       {/* Protected Routes */}

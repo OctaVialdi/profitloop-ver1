@@ -2,6 +2,7 @@
 {
   "routes": [
     { "handle": "filesystem" },
+    { "src": "/apply/preview/.*", "dest": "/index.html" },
     { "src": "/apply/.*", "dest": "/index.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
