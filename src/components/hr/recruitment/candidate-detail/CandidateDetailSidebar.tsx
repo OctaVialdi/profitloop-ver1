@@ -35,7 +35,7 @@ export const CandidateDetailSidebar: React.FC<CandidateDetailSidebarProps> = ({
             {candidate.job_title || "Candidate"}
           </p>
           
-          {candidate.score !== undefined && (
+          {candidate.score !== undefined && candidate.score !== null && (
             <div className="flex items-center gap-1 mb-4 p-2 bg-yellow-50 rounded-full px-3">
               <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
               <span className="font-semibold">{candidate.score.toFixed(1)}</span>
