@@ -501,8 +501,17 @@ export const evaluationService = {
         return { success: false, error };
       }
       
-      // Handle the returned data appropriately
-      const resultData = Array.isArray(data) && data.length > 0 ? data[0] : data;
+      // Handle the returned data appropriately - ensure we're taking the first item if array is returned
+      let resultData: StatusOption;
+      
+      if (Array.isArray(data)) {
+        if (data.length === 0) {
+          return { success: false, error: "No data returned from operation" };
+        }
+        resultData = data[0];
+      } else {
+        resultData = data;
+      }
       
       return { 
         success: true, 
@@ -539,8 +548,17 @@ export const evaluationService = {
         return { success: false, error };
       }
       
-      // Handle the returned data appropriately
-      const resultData = Array.isArray(data) && data.length > 0 ? data[0] : data;
+      // Handle the returned data appropriately - ensure we're taking the first item if array is returned
+      let resultData: StatusOption;
+      
+      if (Array.isArray(data)) {
+        if (data.length === 0) {
+          return { success: false, error: "No data returned from operation" };
+        }
+        resultData = data[0];
+      } else {
+        resultData = data;
+      }
       
       return { 
         success: true, 
