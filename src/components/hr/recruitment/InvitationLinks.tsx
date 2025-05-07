@@ -31,7 +31,7 @@ export default function InvitationLinks() {
     if (jobIdFromParams) {
       setIsDialogOpen(true);
     }
-  }, [jobIdFromParams]);
+  }, [jobIdFromParams, setIsDialogOpen]);
   
   // Handle generate link with selected position and expiration period
   const handleGenerateLinkSubmit = async (selectedPosition: string, expirationPeriod: string) => {

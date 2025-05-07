@@ -1,29 +1,41 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import RecruitmentDashboard from "@/components/hr/recruitment/RecruitmentDashboard";
-import CandidateList from "@/components/hr/recruitment/CandidateList";
-import JobPositionsList from "@/components/hr/recruitment/JobPositionsList";
-import InvitationLinks from "@/components/hr/recruitment/InvitationLinks";
-import EvaluationSettingsTab from "@/components/hr/recruitment/EvaluationSettingsTab";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 export default function HRRecruitment() {
-  const [activeTab, setActiveTab] = useState<string>("dashboard");
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  // If there's a tab parameter in the URL or jobId parameter (which means we want the invitations tab)
+  // Determine the active tab based on the current URL
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path.includes("/hr/recruitment/dashboard")) return "dashboard";
+    if (path.includes("/hr/recruitment/candidates")) return "candidates";
+    if (path.includes("/hr/recruitment/positions")) return "positions";
+    if (path.includes("/hr/recruitment/invitations")) return "invitations";
+    if (path.includes("/hr/recruitment/evaluation")) return "evaluation";
+    return "dashboard"; // Default tab
+  };
+  
+  // Handle tab changes
+  const handleTabChange = (value: string) => {
+    navigate(`/hr/recruitment/${value}`);
+  };
+  
+  // Redirect to dashboard on first load if at the root recruitment path
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    const jobIdParam = searchParams.get("jobId");
-    
-    if (tabParam) {
-      setActiveTab(tabParam);
-    } else if (jobIdParam) {
-      setActiveTab("invitations");
+    if (location.pathname === "/hr/recruitment") {
+      navigate("/hr/recruitment/dashboard", { replace: true });
     }
-  }, [searchParams]);
+  }, [location.pathname, navigate]);
+
+  // If we're at exactly /hr/recruitment, redirect to /hr/recruitment/dashboard
+  if (location.pathname === "/hr/recruitment") {
+    return <Navigate to="/hr/recruitment/dashboard" replace />;
+  }
 
   return (
     <div className="space-y-4">
@@ -36,9 +48,8 @@ export default function HRRecruitment() {
         </CardHeader>
         <CardContent>
           <Tabs 
-            defaultValue="dashboard" 
-            value={activeTab}
-            onValueChange={setActiveTab}
+            value={getActiveTab()}
+            onValueChange={handleTabChange}
             className="w-full"
           >
             <TabsList className="grid grid-cols-5 mb-6">
@@ -48,26 +59,6 @@ export default function HRRecruitment() {
               <TabsTrigger value="invitations">Invitation Links</TabsTrigger>
               <TabsTrigger value="evaluation">Evaluation Settings</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="dashboard">
-              <RecruitmentDashboard />
-            </TabsContent>
-            
-            <TabsContent value="candidates">
-              <CandidateList />
-            </TabsContent>
-            
-            <TabsContent value="positions">
-              <JobPositionsList />
-            </TabsContent>
-            
-            <TabsContent value="invitations">
-              <InvitationLinks />
-            </TabsContent>
-            
-            <TabsContent value="evaluation">
-              <EvaluationSettingsTab />
-            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

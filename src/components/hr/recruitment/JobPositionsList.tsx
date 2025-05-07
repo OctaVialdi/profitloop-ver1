@@ -20,6 +20,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { NewPositionDialog } from "./NewPositionDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 // Updated interface to make department optional since it's not in the database
 interface JobPosition {
@@ -37,6 +38,7 @@ export default function JobPositionsList() {
   const [jobPositions, setJobPositions] = useState<JobPosition[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchJobPositions();
@@ -116,9 +118,8 @@ export default function JobPositionsList() {
   };
 
   const handleGenerateLink = (jobId: string) => {
-    // Just set this to be handled in the InvitationLinks component
-    // Update the URL with query parameters
-    window.location.href = "/hr/recruitment?tab=invitations&jobId=" + jobId;
+    // Update to use the new route structure
+    navigate(`/hr/recruitment/invitations?jobId=${jobId}`);
   };
   
   const handleDeletePosition = async (id: string) => {

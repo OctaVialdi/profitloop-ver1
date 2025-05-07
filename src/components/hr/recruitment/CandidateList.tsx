@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -98,7 +97,7 @@ export default function CandidateList() {
     }
   };
 
-  // Handle row click
+  // Handle row click - updated to use absolute path
   const handleRowClick = (id: string) => {
     navigate(`/hr/recruitment/candidate/${id}`);
   };
