@@ -1516,6 +1516,37 @@ export type Database = {
           timezone: string | null
         }[]
       }
+      increment_recruitment_link_clicks: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
+      internal_submit_job_application: {
+        Args: {
+          p_job_position_id: string
+          p_recruitment_link_id: string
+          p_full_name: string
+          p_email: string
+          p_phone: string
+          p_address: string
+          p_birth_date: string
+          p_birth_place: string
+          p_gender: string
+          p_religion: string
+          p_marital_status: string
+          p_blood_type: string
+          p_nik: string
+          p_passport_number: string
+          p_passport_expiry: string
+          p_postal_code: string
+          p_citizen_address: string
+          p_organization_id: string
+          p_family_members?: Json
+          p_formal_education?: Json
+          p_informal_education?: Json
+          p_work_experience?: Json
+        }
+        Returns: Json
+      }
       is_in_same_organization: {
         Args: { profile_id: string }
         Returns: boolean

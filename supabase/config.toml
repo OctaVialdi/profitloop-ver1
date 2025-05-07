@@ -33,6 +33,9 @@ enable_signup = true
 [functions.create-profile-if-not-exists]
 verify_jwt = false
 
+[functions.submit-job-application]
+verify_jwt = false
+
 [functions.cors]
 enabled = true
 allowed_origins = ["https://profitloop.id", "https://app.profitloop.id", "https://preview--profitloop-ver1.lovable.app", "http://localhost:3000"]
