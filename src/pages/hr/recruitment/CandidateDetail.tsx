@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { candidateService, CandidateWithDetails } from "@/services/candidateService";
-import { CandidateDetail as CandidateDetailComponent } from "@/components/hr/recruitment/candidate-detail/CandidateDetail";
+import { CandidateDetailSidebar } from "@/components/hr/recruitment/candidate-detail/CandidateDetailSidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ensureEvaluationHasCriteriaScores } from "@/utils/evaluationUtils";
@@ -71,7 +71,7 @@ const CandidateDetailPage = () => {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Candidate not found</h2>
-          <Button onClick={() => navigate("/hr/recruitment?tab=candidates")}>
+          <Button onClick={() => navigate("/hr/recruitment/candidates")}>
             Back to Candidates List
           </Button>
         </div>
@@ -85,17 +85,22 @@ const CandidateDetailPage = () => {
         <Button 
           variant="ghost" 
           className="flex items-center gap-2" 
-          onClick={() => navigate("/hr/recruitment?tab=candidates")}
+          onClick={() => navigate("/hr/recruitment/candidates")}
         >
           <ArrowLeft size={16} />
           <span>Back to Candidates List</span>
         </Button>
       </div>
 
-      <CandidateDetailComponent 
-        candidate={candidate}
-        onStatusUpdated={handleDataRefresh}
-      />
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Left sidebar with profile picture and navigation */}
+        <CandidateDetailSidebar candidate={candidate} />
+
+        {/* Main content area - render the nested route content */}
+        <div className="flex-1">
+          <Outlet context={{ candidate, onStatusUpdated: handleDataRefresh }} />
+        </div>
+      </div>
     </div>
   );
 };

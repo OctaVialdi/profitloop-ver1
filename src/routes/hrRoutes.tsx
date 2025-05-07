@@ -25,6 +25,7 @@ import JobPositionsPage from "@/pages/hr/recruitment/JobPositions";
 import InvitationLinksPage from "@/pages/hr/recruitment/InvitationLinks";
 import EvaluationSettingsPage from "@/pages/hr/recruitment/EvaluationSettings";
 import { Outlet } from "react-router-dom";
+import CandidateDetailSection from "@/pages/hr/recruitment/candidate-detail/CandidateDetailSection";
 
 export const hrRoutes = (
   <Route
@@ -51,7 +52,14 @@ export const hrRoutes = (
       <Route path="evaluation" element={<EvaluationSettingsPage />} />
       <Route path="" element={<Navigate to="/hr/recruitment/dashboard" replace />} />
     </Route>
-    <Route path="recruitment/candidate/:id" element={<CandidateDetail />} />
+    <Route path="recruitment/candidate/:id" element={<CandidateDetail />}>
+      <Route path="personal" element={<CandidateDetailSection section="personal" />} />
+      <Route path="education" element={<CandidateDetailSection section="education" />} />
+      <Route path="work" element={<CandidateDetailSection section="work" />} />
+      <Route path="family" element={<CandidateDetailSection section="family" />} />
+      <Route path="evaluation" element={<CandidateDetailSection section="evaluation" />} />
+      <Route path="" element={<Navigate to="personal" replace />} />
+    </Route>
     <Route path="data/employee/:id" element={<EmployeeDetail />} />
     <Route path="data/add-employee" element={<AddEmployee />} />
     <Route path="my-info/personal/:id" element={<EmployeePersonal />} />

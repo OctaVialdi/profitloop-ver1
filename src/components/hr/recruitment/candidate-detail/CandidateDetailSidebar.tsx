@@ -1,24 +1,27 @@
 
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CandidateWithDetails } from "@/services/candidateService";
 import { getInitials } from "@/lib/utils";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, FileText, Home, Mail, Phone, User, Star, ClipboardCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CandidateDetailSidebarProps {
   candidate: CandidateWithDetails;
-  activeTab: string;
-  onTabChange: (tab: string) => void;
 }
 
 export const CandidateDetailSidebar: React.FC<CandidateDetailSidebarProps> = ({
-  candidate,
-  activeTab,
-  onTabChange
+  candidate
 }) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+  
+  const isActiveTab = (tab: string) => {
+    return currentPath.endsWith(`/${tab}`);
+  };
+  
   return (
     <div className="w-full md:w-72 space-y-4">
       {/* Profile Card */}
@@ -79,35 +82,72 @@ export const CandidateDetailSidebar: React.FC<CandidateDetailSidebarProps> = ({
       {/* Navigation Card */}
       <Card>
         <CardContent className="p-4">
-          <Tabs
-            orientation="vertical"
-            value={activeTab}
-            onValueChange={onTabChange}
-            className="w-full"
-          >
-            <TabsList className="flex flex-col items-stretch h-auto gap-1">
-              <TabsTrigger value="personal" className="justify-start">
-                <User className="h-4 w-4 mr-2" />
-                <span>Personal Info</span>
-              </TabsTrigger>
-              <TabsTrigger value="education" className="justify-start">
-                <FileText className="h-4 w-4 mr-2" />
-                <span>Education</span>
-              </TabsTrigger>
-              <TabsTrigger value="work" className="justify-start">
-                <FileText className="h-4 w-4 mr-2" />
-                <span>Work Experience</span>
-              </TabsTrigger>
-              <TabsTrigger value="family" className="justify-start">
-                <FileText className="h-4 w-4 mr-2" />
-                <span>Family</span>
-              </TabsTrigger>
-              <TabsTrigger value="evaluation" className="justify-start">
-                <ClipboardCheck className="h-4 w-4 mr-2" />
-                <span>Evaluation</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <nav className="flex flex-col space-y-1">
+            <Link
+              to={`/hr/recruitment/candidate/${candidate.id}/personal`}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+                isActiveTab("personal") 
+                  ? "bg-primary text-primary-foreground" 
+                  : "hover:bg-muted"
+              )}
+            >
+              <User className="h-4 w-4 flex-shrink-0" />
+              <span>Personal Info</span>
+            </Link>
+            
+            <Link
+              to={`/hr/recruitment/candidate/${candidate.id}/education`}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+                isActiveTab("education") 
+                  ? "bg-primary text-primary-foreground" 
+                  : "hover:bg-muted"
+              )}
+            >
+              <FileText className="h-4 w-4 flex-shrink-0" />
+              <span>Education</span>
+            </Link>
+            
+            <Link
+              to={`/hr/recruitment/candidate/${candidate.id}/work`}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+                isActiveTab("work") 
+                  ? "bg-primary text-primary-foreground" 
+                  : "hover:bg-muted"
+              )}
+            >
+              <FileText className="h-4 w-4 flex-shrink-0" />
+              <span>Work Experience</span>
+            </Link>
+            
+            <Link
+              to={`/hr/recruitment/candidate/${candidate.id}/family`}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+                isActiveTab("family") 
+                  ? "bg-primary text-primary-foreground" 
+                  : "hover:bg-muted"
+              )}
+            >
+              <FileText className="h-4 w-4 flex-shrink-0" />
+              <span>Family</span>
+            </Link>
+            
+            <Link
+              to={`/hr/recruitment/candidate/${candidate.id}/evaluation`}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+                isActiveTab("evaluation") 
+                  ? "bg-primary text-primary-foreground" 
+                  : "hover:bg-muted"
+              )}
+            >
+              <ClipboardCheck className="h-4 w-4 flex-shrink-0" />
+              <span>Evaluation</span>
+            </Link>
+          </nav>
         </CardContent>
       </Card>
     </div>
