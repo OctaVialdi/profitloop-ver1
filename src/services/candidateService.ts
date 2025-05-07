@@ -200,16 +200,40 @@ export const candidateService = {
       // Ensure evaluations have the right format (if there are any)
       const processedEvaluations = evaluations ? evaluations.map((evaluation: any) => {
         // Process the evaluation to match our interface
-        const parsedEval = {
-          ...evaluation,
-          // If criteria_scores exists but comes as a string, parse it
-          criteria_scores: evaluation.criteria_scores ? 
-            (typeof evaluation.criteria_scores === 'string' ? 
-              JSON.parse(evaluation.criteria_scores) : 
-              evaluation.criteria_scores) : 
-            undefined
+        let criteriaScores: any = undefined;
+        
+        if (evaluation.criteria_scores) {
+          if (typeof evaluation.criteria_scores === 'string') {
+            try {
+              criteriaScores = JSON.parse(evaluation.criteria_scores);
+            } catch (e) {
+              console.error("Error parsing criteria_scores:", e);
+              criteriaScores = undefined;
+            }
+          } else {
+            criteriaScores = evaluation.criteria_scores;
+          }
+        }
+        
+        // Create a properly typed evaluation object
+        const parsedEval: CandidateEvaluation = {
+          id: evaluation.id,
+          candidate_id: evaluation.candidate_id,
+          evaluator_id: evaluation.evaluator_id,
+          technical_skills: evaluation.technical_skills,
+          communication: evaluation.communication,
+          cultural_fit: evaluation.cultural_fit,
+          experience_relevance: evaluation.experience_relevance,
+          overall_impression: evaluation.overall_impression,
+          average_score: evaluation.average_score,
+          comments: evaluation.comments,
+          created_at: evaluation.created_at,
+          updated_at: evaluation.updated_at,
+          evaluator_name: evaluation.evaluator_name,
+          criteria_scores: criteriaScores
         };
-        return parsedEval as CandidateEvaluation;
+        
+        return parsedEval;
       }) : [];
 
       // Combine all data into a single object
@@ -300,13 +324,36 @@ export const candidateService = {
       }
 
       // Process the returned data to match our interface
+      let criteriaScores: any = undefined;
+      
+      if (data.criteria_scores) {
+        if (typeof data.criteria_scores === 'string') {
+          try {
+            criteriaScores = JSON.parse(data.criteria_scores);
+          } catch (e) {
+            console.error("Error parsing returned criteria_scores:", e);
+            criteriaScores = undefined;
+          }
+        } else {
+          criteriaScores = data.criteria_scores;
+        }
+      }
+      
+      // Create a properly typed evaluation object for return
       const processedData: CandidateEvaluation = {
-        ...data,
-        criteria_scores: data.criteria_scores ? 
-          (typeof data.criteria_scores === 'string' ? 
-            JSON.parse(data.criteria_scores) : 
-            data.criteria_scores) : 
-          undefined
+        id: data.id,
+        candidate_id: data.candidate_id,
+        evaluator_id: data.evaluator_id,
+        technical_skills: data.technical_skills,
+        communication: data.communication,
+        cultural_fit: data.cultural_fit,
+        experience_relevance: data.experience_relevance,
+        overall_impression: data.overall_impression,
+        average_score: data.average_score,
+        comments: data.comments,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        criteria_scores: criteriaScores
       };
 
       return {
@@ -341,13 +388,36 @@ export const candidateService = {
       }
 
       // Process the returned data to match our interface
+      let criteriaScores: any = undefined;
+      
+      if (data.criteria_scores) {
+        if (typeof data.criteria_scores === 'string') {
+          try {
+            criteriaScores = JSON.parse(data.criteria_scores);
+          } catch (e) {
+            console.error("Error parsing returned criteria_scores:", e);
+            criteriaScores = undefined;
+          }
+        } else {
+          criteriaScores = data.criteria_scores;
+        }
+      }
+      
+      // Create a properly typed evaluation object for return
       const processedData: CandidateEvaluation = {
-        ...data,
-        criteria_scores: data.criteria_scores ? 
-          (typeof data.criteria_scores === 'string' ? 
-            JSON.parse(data.criteria_scores) : 
-            data.criteria_scores) : 
-          undefined
+        id: data.id,
+        candidate_id: data.candidate_id,
+        evaluator_id: data.evaluator_id,
+        technical_skills: data.technical_skills,
+        communication: data.communication,
+        cultural_fit: data.cultural_fit,
+        experience_relevance: data.experience_relevance,
+        overall_impression: data.overall_impression,
+        average_score: data.average_score,
+        comments: data.comments,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        criteria_scores: criteriaScores
       };
 
       return {
