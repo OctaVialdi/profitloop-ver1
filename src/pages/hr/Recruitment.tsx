@@ -6,6 +6,7 @@ import RecruitmentDashboard from "@/components/hr/recruitment/RecruitmentDashboa
 import CandidateList from "@/components/hr/recruitment/CandidateList";
 import JobPositionsList from "@/components/hr/recruitment/JobPositionsList";
 import InvitationLinks from "@/components/hr/recruitment/InvitationLinks";
+import EvaluationSettingsTab from "@/components/hr/recruitment/EvaluationSettingsTab";
 import { useSearchParams } from "react-router-dom";
 
 export default function HRRecruitment() {
@@ -40,11 +41,12 @@ export default function HRRecruitment() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-4 mb-6">
+            <TabsList className="grid grid-cols-5 mb-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="candidates">Candidates</TabsTrigger>
               <TabsTrigger value="positions">Job Positions</TabsTrigger>
               <TabsTrigger value="invitations">Invitation Links</TabsTrigger>
+              <TabsTrigger value="evaluation">Evaluation Settings</TabsTrigger>
             </TabsList>
             
             <TabsContent value="dashboard">
@@ -61,6 +63,10 @@ export default function HRRecruitment() {
             
             <TabsContent value="invitations">
               <InvitationLinks />
+            </TabsContent>
+            
+            <TabsContent value="evaluation">
+              <EvaluationSettingsTab />
             </TabsContent>
           </Tabs>
         </CardContent>
