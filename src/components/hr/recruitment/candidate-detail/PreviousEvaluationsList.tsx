@@ -91,11 +91,77 @@ export const PreviousEvaluationsList: React.FC<PreviousEvaluationsListProps> = (
     );
   }
 
+  // Transform any legacy evaluations to criteria-based format
+  const processedEvaluations = evaluations.map(evaluation => {
+    // If we already have criteria scores, use them as is
+    if (evaluation.criteria_scores && evaluation.criteria_scores.length > 0) {
+      return evaluation;
+    }
+    
+    // Otherwise, generate a synthetic criteria-based format from the legacy fields
+    const syntheticCriteria = [];
+    
+    if (evaluation.technical_skills !== null && evaluation.technical_skills !== undefined) {
+      syntheticCriteria.push({
+        criterion_id: "legacy-technical",
+        category_id: "legacy",
+        score: evaluation.technical_skills,
+        question: "Technical Skills",
+        category: "Legacy Evaluation"
+      });
+    }
+    
+    if (evaluation.communication !== null && evaluation.communication !== undefined) {
+      syntheticCriteria.push({
+        criterion_id: "legacy-communication",
+        category_id: "legacy",
+        score: evaluation.communication,
+        question: "Communication",
+        category: "Legacy Evaluation"
+      });
+    }
+    
+    if (evaluation.cultural_fit !== null && evaluation.cultural_fit !== undefined) {
+      syntheticCriteria.push({
+        criterion_id: "legacy-cultural",
+        category_id: "legacy",
+        score: evaluation.cultural_fit,
+        question: "Cultural Fit",
+        category: "Legacy Evaluation"
+      });
+    }
+    
+    if (evaluation.experience_relevance !== null && evaluation.experience_relevance !== undefined) {
+      syntheticCriteria.push({
+        criterion_id: "legacy-experience",
+        category_id: "legacy",
+        score: evaluation.experience_relevance,
+        question: "Experience Relevance",
+        category: "Legacy Evaluation"
+      });
+    }
+    
+    if (evaluation.overall_impression !== null && evaluation.overall_impression !== undefined) {
+      syntheticCriteria.push({
+        criterion_id: "legacy-overall",
+        category_id: "legacy",
+        score: evaluation.overall_impression,
+        question: "Overall Impression",
+        category: "Legacy Evaluation"
+      });
+    }
+    
+    return {
+      ...evaluation,
+      criteria_scores: syntheticCriteria
+    };
+  });
+
   return (
     <>
       <ScrollArea className="h-[300px] pr-4">
         <div className="space-y-6">
-          {evaluations.map(evaluation => (
+          {processedEvaluations.map(evaluation => (
             <div key={evaluation.id} className="border rounded-lg shadow-sm overflow-hidden">
               <div className="bg-gray-50 p-4 border-b flex justify-between items-start">
                 <div>
@@ -124,102 +190,43 @@ export const PreviousEvaluationsList: React.FC<PreviousEvaluationsListProps> = (
               </div>
 
               <div className="p-4">
-                {/* Render either criteria scores or legacy ratings */}
-                {evaluation.criteria_scores && evaluation.criteria_scores.length > 0 ? (
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Ratings:</h5>
-                    <Accordion type="multiple" className="w-full">
-                      {Array.from(new Set(evaluation.criteria_scores.map(score => score.category))).map(categoryName => {
-                        // Ensure categoryName is a valid string
-                        const category = typeof categoryName === 'string' ? categoryName : String(categoryName);
-                        return (
-                          <AccordionItem key={category} value={category} className="border rounded-md mb-3">
-                            <AccordionTrigger className="text-sm font-medium px-4 py-2 bg-gray-50 hover:bg-gray-100">
-                              {category}
-                            </AccordionTrigger>
-                            <AccordionContent className="px-4 py-3 border-t bg-white">
-                              <div className="space-y-4">
-                                {evaluation.criteria_scores?.filter(score => score.category === categoryName).map(score => (
-                                  <div key={score.criterion_id} className="border-b pb-3 last:border-0 last:pb-0">
-                                    <div className="flex justify-between mb-2">
-                                      <span className="text-sm font-medium">{score.question}</span>
-                                      <span className="text-sm font-medium bg-gray-100 px-2 py-0.5 rounded">{score.score}/5</span>
-                                    </div>
-                                    <div className="flex">
-                                      {[...Array(5)].map((_, i) => (
-                                        <Star 
-                                          key={i} 
-                                          className={`h-5 w-5 ${i < score.score ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} 
-                                        />
-                                      ))}
-                                    </div>
+                {/* Only show criteria-based ratings */}
+                <div>
+                  <h5 className="text-sm font-medium mb-2">Ratings:</h5>
+                  <Accordion type="multiple" className="w-full">
+                    {Array.from(new Set(evaluation.criteria_scores?.map(score => score.category) || [])).map(categoryName => {
+                      // Ensure categoryName is a valid string
+                      const category = typeof categoryName === 'string' ? categoryName : String(categoryName);
+                      return (
+                        <AccordionItem key={category} value={category} className="border rounded-md mb-3">
+                          <AccordionTrigger className="text-sm font-medium px-4 py-2 bg-gray-50 hover:bg-gray-100">
+                            {category}
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 py-3 border-t bg-white">
+                            <div className="space-y-4">
+                              {evaluation.criteria_scores?.filter(score => score.category === categoryName).map(score => (
+                                <div key={score.criterion_id} className="border-b pb-3 last:border-0 last:pb-0">
+                                  <div className="flex justify-between mb-2">
+                                    <span className="text-sm font-medium">{score.question}</span>
+                                    <span className="text-sm font-medium bg-gray-100 px-2 py-0.5 rounded">{score.score}/5</span>
                                   </div>
-                                ))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        );
-                      })}
-                    </Accordion>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 bg-white p-4 rounded-md border">
-                    {evaluation.technical_skills && (
-                      <div className="flex items-center justify-between border-b pb-3">
-                        <span className="text-sm font-medium">Technical Skills:</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-5 w-5 ${i < evaluation.technical_skills! ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {evaluation.communication && (
-                      <div className="flex items-center justify-between border-b pb-3">
-                        <span className="text-sm font-medium">Communication:</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-5 w-5 ${i < evaluation.communication! ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {evaluation.cultural_fit && (
-                      <div className="flex items-center justify-between border-b pb-3">
-                        <span className="text-sm font-medium">Cultural Fit:</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-5 w-5 ${i < evaluation.cultural_fit! ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {evaluation.experience_relevance && (
-                      <div className="flex items-center justify-between border-b pb-3">
-                        <span className="text-sm font-medium">Experience Relevance:</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-5 w-5 ${i < evaluation.experience_relevance! ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {evaluation.overall_impression && (
-                      <div className="flex items-center justify-between border-b pb-3">
-                        <span className="text-sm font-medium">Overall Impression:</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-5 w-5 ${i < evaluation.overall_impression! ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                                  <div className="flex">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star 
+                                        key={i} 
+                                        className={`h-5 w-5 ${i < score.score ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} 
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+                </div>
 
                 {evaluation.comments && (
                   <div className="mt-4 p-4 border rounded-md bg-gray-50">

@@ -23,6 +23,34 @@ const CandidateDetailPage = () => {
       const data = await candidateService.fetchCandidateById(id);
       if (data) {
         console.log("Candidate data fetched successfully:", data);
+        
+        // Ensure evaluations are processed correctly
+        if (data.evaluations) {
+          data.evaluations = data.evaluations.map(evaluation => {
+            // Make sure criteria_scores is in the right format
+            if (evaluation.criteria_scores && 
+                typeof evaluation.criteria_scores === 'object' && 
+                !Array.isArray(evaluation.criteria_scores)) {
+              // If it's an object but not an array, it might be a JSON structure
+              console.log("Converting evaluation criteria_scores from object to array");
+              try {
+                // Try to convert from object representation to array if needed
+                const criteriaArray = Object.values(evaluation.criteria_scores);
+                if (Array.isArray(criteriaArray)) {
+                  evaluation.criteria_scores = criteriaArray;
+                }
+              } catch (err) {
+                console.error("Error processing criteria_scores:", err);
+                evaluation.criteria_scores = [];
+              }
+            } else if (!evaluation.criteria_scores) {
+              evaluation.criteria_scores = [];
+            }
+            
+            return evaluation;
+          });
+        }
+        
         setCandidate(data);
       } else {
         console.error("Candidate not found");
