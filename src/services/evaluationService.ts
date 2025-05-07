@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ensureEvaluationHasCriteriaScores } from "@/utils/evaluationUtils";
 import { CandidateEvaluation, EvaluationCategory, EvaluationCriterion, EvaluationCriteriaScore } from "./candidateService";
@@ -47,19 +46,35 @@ export const evaluationService = {
   },
 
   /**
-   * Fetches evaluation category data using the database function
+   * Fetches evaluation category data using a direct query instead of RPC
    */
   async fetchEvaluationCriteriaNames(): Promise<EvaluationCategoryData[]> {
     try {
+      // Query evaluation_categories and join with evaluation_criteria
       const { data, error } = await supabase
-        .rpc('get_evaluation_criteria_names');
+        .from("evaluation_categories")
+        .select(`
+          id:id,
+          category_name:name,
+          criteria:evaluation_criteria(id, question)
+        `)
+        .order('display_order');
       
       if (error) {
         console.error("Error fetching criteria names:", error);
         return [];
       }
       
-      return data || [];
+      // Transform data to match EvaluationCategoryData structure
+      if (data && Array.isArray(data)) {
+        return data.map(item => ({
+          category_id: item.id,
+          category_name: item.category_name,
+          criteria: item.criteria
+        })) as EvaluationCategoryData[];
+      }
+      
+      return [];
     } catch (error) {
       console.error("Error in fetchEvaluationCriteriaNames:", error);
       return [];
