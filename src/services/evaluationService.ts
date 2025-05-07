@@ -1,7 +1,15 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ensureEvaluationHasCriteriaScores } from "@/utils/evaluationUtils";
 import { CandidateEvaluation, EvaluationCategory, EvaluationCriterion, EvaluationCriteriaScore } from "./candidateService";
 import { EvaluationCategoryData } from "@/components/hr/recruitment/candidate-detail/EvaluationTypes";
+
+export interface StatusOption {
+  id?: string;
+  value: string;
+  label: string;
+  is_system?: boolean;
+}
 
 /**
  * Service for handling candidate evaluations
@@ -401,45 +409,197 @@ export const evaluationService = {
   /**
    * Fetches available candidate status options from the database
    */
-  async fetchCandidateStatusOptions(): Promise<string[]> {
+  async fetchCandidateStatusOptions(): Promise<StatusOption[]> {
     try {
       console.log("Fetching candidate status options from the database");
       
+      // Get the user's organization
+      const { data: profileData } = await supabase.auth.getUser();
+      if (!profileData.user) {
+        throw new Error("User is not authenticated");
+      }
+      
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", profileData.user.id)
+        .single();
+      
+      if (!userProfile?.organization_id) {
+        throw new Error("User does not belong to an organization");
+      }
+      
+      // Fetch status options for the user's organization
       const { data, error } = await supabase
-        .from("candidate_applications")
-        .select("status")
-        .not('status', 'is', null)
-        .order('status')
-        .limit(100);
+        .from("candidate_status_options")
+        .select("id, value, label, is_system")
+        .eq("organization_id", userProfile.organization_id)
+        .order('label');
         
       if (error) {
         console.error("Error fetching status options:", error);
-        return ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected'];
+        // Return default options as fallback
+        return [
+          { value: 'new', label: 'New' },
+          { value: 'screening', label: 'Screening' },
+          { value: 'interview', label: 'Interview' },
+          { value: 'assessment', label: 'Assessment' },
+          { value: 'offered', label: 'Offered' },
+          { value: 'hired', label: 'Hired' },
+          { value: 'rejected', label: 'Rejected' }
+        ];
       }
       
-      // Extract unique status values
-      const statusSet = new Set<string>();
-      
-      // Ensure our required status options are always available
-      ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected'].forEach(status => {
-        statusSet.add(status);
-      });
-      
-      // Add any additional statuses from the database
-      if (data && Array.isArray(data)) {
-        data.forEach(item => {
-          if (item.status) {
-            statusSet.add(item.status.toLowerCase());
-          }
-        });
-      }
-      
-      // Return as sorted array
-      return Array.from(statusSet).sort();
+      console.log("Fetched status options:", data);
+      return data as StatusOption[];
     } catch (error) {
       console.error("Error in fetchCandidateStatusOptions:", error);
       // Return default options as fallback
-      return ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected'];
+      return [
+        { value: 'new', label: 'New' },
+        { value: 'screening', label: 'Screening' },
+        { value: 'interview', label: 'Interview' },
+        { value: 'assessment', label: 'Assessment' },
+        { value: 'offered', label: 'Offered' },
+        { value: 'hired', label: 'Hired' },
+        { value: 'rejected', label: 'Rejected' }
+      ];
+    }
+  },
+  
+  /**
+   * Create a new status option
+   */
+  async createStatusOption(status: { value: string; label: string }): Promise<{ success: boolean; error?: any; data?: StatusOption }> {
+    try {
+      // Get the user's organization
+      const { data: profileData } = await supabase.auth.getUser();
+      if (!profileData.user) {
+        throw new Error("User is not authenticated");
+      }
+      
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", profileData.user.id)
+        .single();
+      
+      if (!userProfile?.organization_id) {
+        throw new Error("User does not belong to an organization");
+      }
+      
+      // Normalize the value (lowercase, no spaces)
+      const normalizedValue = status.value.toLowerCase().replace(/\s+/g, '_');
+      
+      // Insert the new status option
+      const { data, error } = await supabase
+        .from("candidate_status_options")
+        .insert({
+          value: normalizedValue,
+          label: status.label,
+          organization_id: userProfile.organization_id,
+          is_system: false
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error creating status option:", error);
+        return { success: false, error };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in createStatusOption:", error);
+      return { success: false, error };
+    }
+  },
+  
+  /**
+   * Update an existing status option
+   */
+  async updateStatusOption(id: string, status: { value: string; label: string }): Promise<{ success: boolean; error?: any; data?: StatusOption }> {
+    try {
+      // Normalize the value (lowercase, no spaces)
+      const normalizedValue = status.value.toLowerCase().replace(/\s+/g, '_');
+      
+      // Update the status option
+      const { data, error } = await supabase
+        .from("candidate_status_options")
+        .update({
+          value: normalizedValue,
+          label: status.label
+        })
+        .eq("id", id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error updating status option:", error);
+        return { success: false, error };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in updateStatusOption:", error);
+      return { success: false, error };
+    }
+  },
+  
+  /**
+   * Check if a status option is in use by any candidate
+   */
+  async checkStatusInUse(value: string): Promise<{ inUse: boolean; count: number }> {
+    try {
+      const { count, error } = await supabase
+        .from("candidate_applications")
+        .select("id", { count: 'exact', head: true })
+        .eq("status", value);
+        
+      if (error) {
+        console.error("Error checking if status is in use:", error);
+        return { inUse: false, count: 0 };
+      }
+      
+      return { inUse: count !== null && count > 0, count: count || 0 };
+    } catch (error) {
+      console.error("Error in checkStatusInUse:", error);
+      return { inUse: false, count: 0 };
+    }
+  },
+  
+  /**
+   * Delete a status option
+   */
+  async deleteStatusOption(id: string, value: string): Promise<{ success: boolean; error?: any; inUse?: boolean }> {
+    try {
+      // Check if the status is in use
+      const { inUse, count } = await this.checkStatusInUse(value);
+      
+      if (inUse) {
+        return { 
+          success: false, 
+          error: `Cannot delete status that is in use by ${count} candidate(s)`,
+          inUse: true
+        };
+      }
+      
+      // Delete the status option
+      const { error } = await supabase
+        .from("candidate_status_options")
+        .delete()
+        .eq("id", id)
+        .eq("is_system", false); // Additional safety check to prevent deleting system statuses
+        
+      if (error) {
+        console.error("Error deleting status option:", error);
+        return { success: false, error };
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error("Error in deleteStatusOption:", error);
+      return { success: false, error };
     }
   }
 };

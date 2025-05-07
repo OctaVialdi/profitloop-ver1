@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,8 @@ import {
   Badge, 
   BadgeProps
 } from "@/components/ui/badge";
-import { evaluationService } from "@/services/evaluationService";
+import { evaluationService, StatusOption } from "@/services/evaluationService";
+import { StatusManager } from "./StatusManager";
 
 interface StatusSectionProps {
   candidate: CandidateWithDetails;
@@ -40,7 +40,7 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>(candidate.status);
-  const [statusOptions, setStatusOptions] = useState(CANDIDATE_STATUS_OPTIONS);
+  const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   
   // Update selectedStatus when candidate.status changes
@@ -49,38 +49,23 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
   }, [candidate.status]);
   
   // Fetch status options from the database
-  useEffect(() => {
-    const fetchStatusOptions = async () => {
-      setIsLoadingOptions(true);
-      try {
-        const options = await evaluationService.fetchCandidateStatusOptions();
-        if (options && options.length > 0) {
-          // Format options for dropdown
-          const formattedOptions = options.map(option => ({
-            value: option.toLowerCase(),
-            label: option.charAt(0).toUpperCase() + option.slice(1)
-          }));
-          
-          // Merge with default options to ensure all standard options are always available
-          const mergedOptions = [...CANDIDATE_STATUS_OPTIONS];
-          
-          // Add any custom options from the database that aren't in our defaults
-          formattedOptions.forEach(option => {
-            if (!mergedOptions.some(o => o.value === option.value)) {
-              mergedOptions.push(option);
-            }
-          });
-          
-          setStatusOptions(mergedOptions);
-        }
-      } catch (error) {
-        console.error("Error fetching status options:", error);
-        // Keep default options if there's an error
-      } finally {
-        setIsLoadingOptions(false);
+  const fetchStatusOptions = async () => {
+    setIsLoadingOptions(true);
+    try {
+      const options = await evaluationService.fetchCandidateStatusOptions();
+      if (options && options.length > 0) {
+        setStatusOptions(options);
       }
-    };
-    
+    } catch (error) {
+      console.error("Error fetching status options:", error);
+      // Keep default options if there's an error
+    } finally {
+      setIsLoadingOptions(false);
+    }
+  };
+  
+  // Fetch status options on component mount and when status is updated
+  useEffect(() => {
     fetchStatusOptions();
   }, []);
   
@@ -116,7 +101,8 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
       // This call updates the status column in the candidate_applications table
       const result = await candidateService.updateCandidateStatus(candidate.id, selectedStatus);
       if (result) {
-        toast.success(`Status updated to ${statusOptions.find(s => s.value === selectedStatus)?.label}`);
+        const selectedOption = statusOptions.find(s => s.value === selectedStatus);
+        toast.success(`Status updated to ${selectedOption?.label || selectedStatus}`);
         // Trigger the parent component to refresh data
         onStatusUpdated();
       } else {
@@ -137,17 +123,21 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
   return (
     <Card>
       <div className="p-6">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold">Application Status</h2>
+          <StatusManager onStatusesChanged={fetchStatusOptions} />
         </div>
         
         <div className="border rounded-md p-4">
           <div className="flex flex-col gap-4">
             <div>
               <p className="text-sm text-gray-500 mb-2">Current Status</p>
-              <Badge {...getStatusBadgeProps(candidate.status)}>
-                {candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
-              </Badge>
+              {candidate.status && (
+                <Badge {...getStatusBadgeProps(candidate.status)}>
+                  {statusOptions.find(s => s.value === candidate.status)?.label || 
+                   candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
+                </Badge>
+              )}
             </div>
             
             <div>
