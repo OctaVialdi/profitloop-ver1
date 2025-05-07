@@ -8,6 +8,7 @@ import { useUser } from "@/hooks/auth/useUser";
 import { InterviewNotesSection } from "./InterviewNotesSection";
 import { NewEvaluationForm } from "./NewEvaluationForm";
 import { PreviousEvaluationsList } from "./PreviousEvaluationsList";
+import { toast } from "sonner"; // Added the missing import
 
 interface EvaluationSectionProps {
   candidate: CandidateWithDetails;
