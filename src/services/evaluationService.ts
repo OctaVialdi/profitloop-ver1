@@ -405,10 +405,11 @@ export const evaluationService = {
   async fetchCandidateStatusOptions(): Promise<string[]> {
     try {
       // Query for unique status values in the candidate_applications table
+      // Fix: Use not() and eq() instead of is('status', 'not.null')
       const { data, error } = await supabase
         .from("candidate_applications")
         .select('status')
-        .is('status', 'not.null');
+        .not('status', 'is', null);
       
       if (error) {
         console.error("Error fetching candidate status options:", error);
