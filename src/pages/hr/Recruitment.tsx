@@ -1,9 +1,8 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Navigate } from "react-router-dom";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 
 export default function HRRecruitment() {
   const navigate = useNavigate();
@@ -24,18 +23,6 @@ export default function HRRecruitment() {
   const handleTabChange = (value: string) => {
     navigate(`/hr/recruitment/${value}`);
   };
-  
-  // Redirect to dashboard on first load if at the root recruitment path
-  useEffect(() => {
-    if (location.pathname === "/hr/recruitment") {
-      navigate("/hr/recruitment/dashboard", { replace: true });
-    }
-  }, [location.pathname, navigate]);
-
-  // If we're at exactly /hr/recruitment, redirect to /hr/recruitment/dashboard
-  if (location.pathname === "/hr/recruitment") {
-    return <Navigate to="/hr/recruitment/dashboard" replace />;
-  }
 
   return (
     <div className="space-y-4">
@@ -62,6 +49,9 @@ export default function HRRecruitment() {
           </Tabs>
         </CardContent>
       </Card>
+      
+      {/* Render the nested routes */}
+      <Outlet />
     </div>
   );
 }

@@ -43,12 +43,14 @@ export const hrRoutes = (
     <Route path="dashboard" element={<HRDashboard />} />
     <Route path="okr" element={<HROKR />} />
     <Route path="data" element={<HRDataKaryawan />} />
-    <Route path="recruitment" element={<HRRecruitment />} />
-    <Route path="recruitment/dashboard" element={<RecruitmentDashboard />} />
-    <Route path="recruitment/candidates" element={<CandidatesPage />} />
-    <Route path="recruitment/positions" element={<JobPositionsPage />} />
-    <Route path="recruitment/invitations" element={<InvitationLinksPage />} />
-    <Route path="recruitment/evaluation" element={<EvaluationSettingsPage />} />
+    <Route path="recruitment" element={<HRRecruitment />}>
+      <Route path="dashboard" element={<RecruitmentDashboard />} />
+      <Route path="candidates" element={<CandidatesPage />} />
+      <Route path="positions" element={<JobPositionsPage />} />
+      <Route path="invitations" element={<InvitationLinksPage />} />
+      <Route path="evaluation" element={<EvaluationSettingsPage />} />
+      <Route path="" element={<Navigate to="/hr/recruitment/dashboard" replace />} />
+    </Route>
     <Route path="recruitment/candidate/:id" element={<CandidateDetail />} />
     <Route path="data/employee/:id" element={<EmployeeDetail />} />
     <Route path="data/add-employee" element={<AddEmployee />} />
