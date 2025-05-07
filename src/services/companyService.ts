@@ -156,6 +156,27 @@ export const saveCompanyProfile = async (
   }
 };
 
+// Update organization name
+export const updateOrganizationName = async (
+  organizationId: string,
+  name: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("organizations")
+      .update({ name })
+      .eq("id", organizationId);
+
+    if (error) throw error;
+    toast.success("Organization name updated successfully");
+    return true;
+  } catch (error) {
+    console.error("Error updating organization name:", error);
+    toast.error("Failed to update organization name");
+    return false;
+  }
+};
+
 // Save or update mission and vision
 export const saveMissionVision = async (
   missionVision: { organization_id: string } & Partial<Omit<CompanyMissionVision, 'id' | 'organization_id'>>
@@ -298,7 +319,7 @@ export const uploadCompanyLogo = async (
 
     const { error: uploadError } = await supabase
       .storage
-      .from('public')
+      .from('company-logos')
       .upload(filePath, file, {
         upsert: true,
         contentType: file.type
@@ -308,7 +329,7 @@ export const uploadCompanyLogo = async (
 
     const { data } = supabase
       .storage
-      .from('public')
+      .from('company-logos')
       .getPublicUrl(filePath);
 
     return data.publicUrl;

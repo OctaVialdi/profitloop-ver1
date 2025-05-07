@@ -1781,6 +1781,10 @@ export type Database = {
           has_seen_welcome: boolean
         }[]
       }
+      count_organization_employees: {
+        Args: { org_id: string }
+        Returns: number
+      }
       create_organization_with_profile: {
         Args:
           | {

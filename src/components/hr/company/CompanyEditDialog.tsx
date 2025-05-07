@@ -91,7 +91,7 @@ const CompanyEditDialog: React.FC<CompanyEditDialogProps> = ({ companyData, onSa
   };
 
   // Get company initials for avatar
-  const companyName = organization?.name || "Company Name";
+  const companyName = formData.name || "Company Name";
   const nameInitials = companyName
     .split(' ')
     .map(part => part[0])
@@ -143,13 +143,14 @@ const CompanyEditDialog: React.FC<CompanyEditDialogProps> = ({ companyData, onSa
                 <div className="w-full">
                   <label className="block mb-1 text-sm text-muted-foreground">Company Name</label>
                   <Input
+                    name="name"
                     value={formData.name}
-                    disabled
+                    onChange={handleInputChange}
                     className="text-lg font-semibold"
-                    placeholder="Company name is managed in organization settings"
+                    placeholder="Enter company name"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Company name comes from organization settings
+                    Company name will be updated across the entire system
                   </p>
                 </div>
               </div>
@@ -206,10 +207,13 @@ const CompanyEditDialog: React.FC<CompanyEditDialogProps> = ({ companyData, onSa
                   <Input
                     name="employees"
                     value={formData.employees}
-                    onChange={handleInputChange}
-                    placeholder="Number of Employees"
-                    type="number"
+                    disabled
+                    placeholder="Number of Employees (Auto-calculated)"
+                    className="bg-gray-100"
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    This field is automatically calculated from active employees
+                  </p>
                 </div>
                 <div>
                   <label className="block mb-1 text-sm text-muted-foreground">Tax ID</label>
@@ -261,7 +265,8 @@ const CompanyEditDialog: React.FC<CompanyEditDialogProps> = ({ companyData, onSa
             <CardContent>
               <ul className="space-y-2 list-disc pl-5">
                 <li>Click on the company logo circle to upload a new logo</li>
-                <li>Company name is managed in organization settings</li>
+                <li>The company name will update the organization name across the system</li>
+                <li>Number of employees is calculated automatically from active employees</li>
                 <li>Fill all the details and save changes when done</li>
                 <li>Changes will be visible immediately after saving</li>
               </ul>

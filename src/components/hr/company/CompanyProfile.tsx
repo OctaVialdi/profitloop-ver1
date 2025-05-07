@@ -14,7 +14,8 @@ import {
   deleteDepartment,
   addCompanyValue,
   deleteCompanyValue,
-  uploadCompanyLogo
+  uploadCompanyLogo,
+  updateOrganizationName
 } from '@/services/companyService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +26,7 @@ const CompanyProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
-  const { organization } = useOrganization();
+  const { organization, refreshData: refreshOrganizationData } = useOrganization();
   
   const loadCompanyData = async () => {
     if (!organization?.id) return;
@@ -54,6 +55,13 @@ const CompanyProfile: React.FC = () => {
     if (!organization?.id || !companyData) return;
 
     try {
+      // Update organization name if changed
+      if (formData.name !== organization.name) {
+        await updateOrganizationName(organization.id, formData.name);
+        // Refresh the organization data in the context
+        await refreshOrganizationData();
+      }
+
       // Save company profile - Fix by explicitly providing organization_id as required
       const profileData: { 
         organization_id: string;
@@ -72,7 +80,6 @@ const CompanyProfile: React.FC = () => {
         email: formData.email,
         website: formData.website,
         established: formData.established,
-        employees: parseInt(formData.employees) || 0,
         tax_id: formData.taxId
       };
       
@@ -99,6 +106,7 @@ const CompanyProfile: React.FC = () => {
       await loadCompanyData();
       
       setIsEditing(false);
+      toast.success("Company profile updated successfully");
     } catch (error) {
       console.error("Error saving company data:", error);
       toast.error("Failed to save company data");
