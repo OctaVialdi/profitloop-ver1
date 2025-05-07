@@ -98,8 +98,11 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
     
     setIsUpdating(true);
     try {
+      console.log(`Updating candidate ${candidate.id} status to: ${selectedStatus}`);
+      
       // This call updates the status column in the candidate_applications table
       const result = await candidateService.updateCandidateStatus(candidate.id, selectedStatus);
+      
       if (result) {
         const selectedOption = statusOptions.find(s => s.value === selectedStatus);
         toast.success(`Status updated to ${selectedOption?.label || selectedStatus}`);

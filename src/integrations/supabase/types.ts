@@ -328,6 +328,41 @@ export type Database = {
           },
         ]
       }
+      candidate_status_options: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_system: boolean
+          label: string
+          organization_id: string
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_system?: boolean
+          label: string
+          organization_id: string
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_system?: boolean
+          label?: string
+          organization_id?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_status_options_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_work_experience: {
         Row: {
           candidate_application_id: string

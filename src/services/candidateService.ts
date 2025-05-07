@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestResponse } from "@supabase/supabase-js";
 
@@ -135,6 +134,9 @@ export interface InterviewNotes {
   updated_at?: string;
 }
 
+/**
+ * Service for handling candidate applications data
+ */
 export const candidateService = {
   async fetchCandidates(): Promise<CandidateApplication[]> {
     try {
@@ -156,6 +158,34 @@ export const candidateService = {
     } catch (error) {
       console.error("Error fetching candidates:", error);
       return [];
+    }
+  },
+
+  /**
+   * Updates a candidate's status
+   * @param id Candidate ID
+   * @param status New status value
+   * @returns boolean indicating success
+   */
+  async updateCandidateStatus(id: string, status: string): Promise<boolean> {
+    try {
+      console.log(`Updating candidate status: ID ${id}, new status: ${status}`);
+      
+      const { error } = await supabase
+        .from("candidate_applications")
+        .update({ status })
+        .eq("id", id);
+      
+      if (error) {
+        console.error("Error updating candidate status:", error);
+        return false;
+      }
+      
+      console.log("Candidate status updated successfully");
+      return true;
+    } catch (error) {
+      console.error("Error in updateCandidateStatus:", error);
+      return false;
     }
   },
 
@@ -262,26 +292,6 @@ export const candidateService = {
     }
   },
   
-  async updateCandidateStatus(id: string, status: string): Promise<boolean> {
-    console.log(`Updating candidate status: ${id} to ${status}`);
-    try {
-      const { error } = await supabase
-        .from("candidate_applications")
-        .update({ status })
-        .eq("id", id);
-
-      if (error) {
-        console.error("Error updating candidate status:", error);
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error("Error updating candidate status:", error);
-      return false;
-    }
-  },
-
   async fetchEvaluationCriteria(): Promise<EvaluationCategory[]> {
     try {
       // First, fetch all categories
