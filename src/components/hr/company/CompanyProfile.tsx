@@ -54,8 +54,8 @@ const CompanyProfile: React.FC = () => {
     if (!organization?.id || !companyData) return;
 
     try {
-      // Save company profile
-      const profileData: Partial<CompanyProfileType> = {
+      // Save company profile - Fix by explicitly providing organization_id as required
+      const profileData = {
         organization_id: organization.id,
         address: formData.address,
         phone: formData.phone,
@@ -76,7 +76,7 @@ const CompanyProfile: React.FC = () => {
       
       const updatedProfile = await saveCompanyProfile(profileData);
       
-      // Save mission and vision
+      // Save mission and vision - Fix by explicitly providing organization_id as required
       const missionVisionData = {
         organization_id: organization.id,
         mission: formData.mission,
