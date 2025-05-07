@@ -446,6 +446,161 @@ export type Database = {
           },
         ]
       }
+      company_departments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_departments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_mission_vision: {
+        Row: {
+          created_at: string
+          id: string
+          mission: string | null
+          organization_id: string
+          updated_at: string
+          vision: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mission?: string | null
+          organization_id: string
+          updated_at?: string
+          vision?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mission?: string | null
+          organization_id?: string
+          updated_at?: string
+          vision?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_mission_vision_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_profiles: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          employees: number | null
+          established: string | null
+          id: string
+          logo_url: string | null
+          organization_id: string
+          phone: string | null
+          tax_id: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          employees?: number | null
+          established?: string | null
+          id?: string
+          logo_url?: string | null
+          organization_id: string
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          employees?: number | null
+          established?: string | null
+          id?: string
+          logo_url?: string | null
+          organization_id?: string
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_values: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          organization_id: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index: number
+          organization_id: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          organization_id?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_values_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       data_calon_kandidat: {
         Row: {
           address: string | null
