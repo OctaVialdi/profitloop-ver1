@@ -293,6 +293,41 @@ export type Database = {
           },
         ]
       }
+      candidate_interview_notes: {
+        Row: {
+          candidate_id: string
+          content: string | null
+          created_at: string | null
+          created_by: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          candidate_id: string
+          content?: string | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          candidate_id?: string
+          content?: string | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_interview_notes_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_work_experience: {
         Row: {
           candidate_application_id: string

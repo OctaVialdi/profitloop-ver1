@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     };
     fetchCriteria();
   }, []);
+  
   const handleRatingChange = (criterionId: string, categoryId: string, question: string, categoryName: string) => (score: number) => {
     setCriteriaScores(prev => {
       // Check if this criterion already has a score
@@ -111,6 +113,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
       [field]: value
     }));
   };
+  
   const handleSaveInterviewNotes = async () => {
     // Check if user is logged in
     if (!user) {
@@ -140,6 +143,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
       setIsSavingNotes(false);
     }
   };
+  
   const handleSubmit = async () => {
     // Check if user is logged in
     if (!user) {
@@ -191,10 +195,12 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
       setIsSubmitting(false);
     }
   };
+  
   const getCriterionScore = (criterionId: string) => {
     const found = criteriaScores.find(item => item.criterion_id === criterionId);
     return found ? found.score : 0;
   };
+  
   const renderPreviousEvaluations = () => {
     if (!candidate.evaluations || candidate.evaluations.length === 0) {
       return <div className="text-center py-8">
@@ -302,12 +308,14 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
           </button>)}
       </div>;
   };
+  
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => ({
       ...prev,
       [categoryId]: !prev[categoryId]
     }));
   };
+  
   return <Card>
       <div className="p-6">
         <div className="mb-6">
