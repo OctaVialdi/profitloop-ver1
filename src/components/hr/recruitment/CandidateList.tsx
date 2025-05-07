@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Table, 
   TableBody, 
@@ -25,98 +25,70 @@ import {
   MoreVertical, 
   Filter, 
   UserPlus, 
-  Download
+  Download,
+  Loader2
 } from "lucide-react";
-
-type CandidateStatus = 'new' | 'screening' | 'interview' | 'assessment' | 'offered' | 'hired' | 'rejected';
-
-interface Candidate {
-  id: string;
-  name: string;
-  email: string;
-  position: string;
-  applyDate: string;
-  status: CandidateStatus;
-  score?: number;
-}
-
-const getStatusBadgeProps = (status: CandidateStatus): BadgeProps => {
-  switch (status) {
-    case 'new':
-      return { variant: 'default' };
-    case 'screening':
-      return { variant: 'outline' };
-    case 'interview':
-      return { className: 'bg-blue-100 text-blue-800 hover:bg-blue-200' };
-    case 'assessment':
-      return { className: 'bg-purple-100 text-purple-800 hover:bg-purple-200' };
-    case 'offered':
-      return { className: 'bg-amber-100 text-amber-800 hover:bg-amber-200' };
-    case 'hired':
-      return { className: 'bg-green-100 text-green-800 hover:bg-green-200' };
-    case 'rejected':
-      return { className: 'bg-red-100 text-red-800 hover:bg-red-200' };
-    default:
-      return { variant: 'secondary' };
-  }
-};
+import { useNavigate } from "react-router-dom";
+import { candidateService, CandidateApplication } from "@/services/candidateService";
 
 export default function CandidateList() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [candidates, setCandidates] = useState<CandidateApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Mock data - this would be replaced with actual API calls
-  const mockCandidates: Candidate[] = [
-    {
-      id: "1",
-      name: "John Smith",
-      email: "john.smith@example.com",
-      position: "Frontend Developer",
-      applyDate: "2023-05-02",
-      status: "interview",
-      score: 4.2
-    },
-    {
-      id: "2",
-      name: "Jane Doe",
-      email: "jane.doe@example.com",
-      position: "UX Designer",
-      applyDate: "2023-05-01",
-      status: "assessment",
-      score: 3.8
-    },
-    {
-      id: "3",
-      name: "Michael Johnson",
-      email: "michael.j@example.com",
-      position: "Backend Developer",
-      applyDate: "2023-04-28",
-      status: "hired",
-      score: 4.7
-    },
-    {
-      id: "4",
-      name: "Sarah Williams",
-      email: "sarah.w@example.com",
-      position: "Product Manager",
-      applyDate: "2023-04-25",
-      status: "rejected"
-    },
-    {
-      id: "5",
-      name: "David Brown",
-      email: "david.b@example.com",
-      position: "Frontend Developer",
-      applyDate: "2023-05-03",
-      status: "new"
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      setIsLoading(true);
+      try {
+        const data = await candidateService.fetchCandidates();
+        setCandidates(data);
+      } catch (error) {
+        console.error("Error fetching candidates:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchCandidates();
+  }, []);
+  
+  const handleViewProfile = (id: string) => {
+    navigate(`/hr/recruitment/candidate/${id}`);
+  };
+  
+  const getStatusBadgeProps = (status: string): BadgeProps => {
+    switch (status) {
+      case 'new':
+        return { variant: 'default' };
+      case 'screening':
+        return { variant: 'outline' };
+      case 'interview':
+        return { className: 'bg-blue-100 text-blue-800 hover:bg-blue-200' };
+      case 'assessment':
+        return { className: 'bg-purple-100 text-purple-800 hover:bg-purple-200' };
+      case 'offered':
+        return { className: 'bg-amber-100 text-amber-800 hover:bg-amber-200' };
+      case 'hired':
+        return { className: 'bg-green-100 text-green-800 hover:bg-green-200' };
+      case 'rejected':
+        return { className: 'bg-red-100 text-red-800 hover:bg-red-200' };
+      default:
+        return { variant: 'secondary' };
     }
-  ];
-
+  };
+  
   // Simple filter for demonstration
-  const filteredCandidates = mockCandidates.filter(candidate => 
-    candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    candidate.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredCandidates = candidates.filter(candidate => 
+    candidate.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (candidate.job_title && candidate.job_title.toLowerCase().includes(searchQuery.toLowerCase())) ||
     candidate.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="space-y-4">
@@ -155,32 +127,33 @@ export default function CandidateList() {
               <TableHead>Position</TableHead>
               <TableHead className="hidden md:table-cell">Applied</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden md:table-cell">Score</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCandidates.length > 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  <div className="flex justify-center items-center">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    Loading candidates...
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filteredCandidates.length > 0 ? (
               filteredCandidates.map((candidate) => (
                 <TableRow key={candidate.id}>
                   <TableCell>
-                    <div className="font-medium">{candidate.name}</div>
-                    <div className="text-sm text-muted-foreground md:hidden">{candidate.position}</div>
+                    <div className="font-medium">{candidate.full_name}</div>
+                    <div className="text-sm text-muted-foreground md:hidden">{candidate.job_title}</div>
                     <div className="text-xs text-muted-foreground truncate">{candidate.email}</div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{candidate.position}</TableCell>
-                  <TableCell className="hidden md:table-cell">{candidate.applyDate}</TableCell>
+                  <TableCell className="hidden md:table-cell">{candidate.job_title}</TableCell>
+                  <TableCell className="hidden md:table-cell">{formatDate(candidate.created_at)}</TableCell>
                   <TableCell>
                     <Badge {...getStatusBadgeProps(candidate.status)}>
                       {candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {candidate.score ? (
-                      <div className="font-medium">{candidate.score}/5</div>
-                    ) : (
-                      <div className="text-muted-foreground text-sm">Not rated</div>
-                    )}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -190,7 +163,9 @@ export default function CandidateList() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Profile</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewProfile(candidate.id)}>
+                          View Profile
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Schedule Interview</DropdownMenuItem>
                         <DropdownMenuItem>Send Email</DropdownMenuItem>
                         <DropdownMenuItem>Rate Candidate</DropdownMenuItem>
@@ -203,7 +178,7 @@ export default function CandidateList() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No candidates found
                 </TableCell>
               </TableRow>

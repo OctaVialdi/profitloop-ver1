@@ -13,11 +13,12 @@ import HRKontrak from "@/pages/hr/Kontrak";
 import HRTraining from "@/pages/hr/Training";
 import HRKinerja from "@/pages/hr/Kinerja";
 import HRCompany from "@/pages/hr/Company";
-import HRRecruitment from "@/pages/hr/Recruitment"; // Added import for Recruitment
+import HRRecruitment from "@/pages/hr/Recruitment";
 import AddEmployee from "@/pages/hr/AddEmployee";
 import EmployeeDetail from "@/pages/hr/EmployeeDetail";
 import EmployeePersonal from "@/pages/hr/employee/EmployeePersonal";
 import EmployeeEmployment from "@/pages/hr/employee/EmployeeEmployment";
+import CandidateDetail from "@/pages/hr/recruitment/CandidateDetail"; // New import for CandidateDetail
 import { Outlet } from "react-router-dom";
 
 export const hrRoutes = (
@@ -37,7 +38,8 @@ export const hrRoutes = (
     <Route path="dashboard" element={<HRDashboard />} />
     <Route path="okr" element={<HROKR />} />
     <Route path="data" element={<HRDataKaryawan />} />
-    <Route path="recruitment" element={<HRRecruitment />} /> {/* Added route for Recruitment */}
+    <Route path="recruitment" element={<HRRecruitment />} />
+    <Route path="recruitment/candidate/:id" element={<CandidateDetail />} /> {/* New route for candidate detail */}
     <Route path="data/employee/:id" element={<EmployeeDetail />} />
     <Route path="data/add-employee" element={<AddEmployee />} />
     <Route path="my-info/personal/:id" element={<EmployeePersonal />} />
