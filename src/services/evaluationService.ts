@@ -429,13 +429,11 @@ export const evaluationService = {
         throw new Error("User does not belong to an organization");
       }
       
-      // Fetch status options for the user's organization
-      const { data, error } = await supabase
-        .from("candidate_status_options")
-        .select("id, value, label, is_system")
-        .eq("organization_id", userProfile.organization_id)
-        .order('label');
-        
+      // Fetch status options for the user's organization using rpc to bypass type issues
+      const { data, error } = await supabase.rpc('get_status_options', {
+        org_id: userProfile.organization_id
+      });
+      
       if (error) {
         console.error("Error fetching status options:", error);
         // Return default options as fallback
@@ -491,24 +489,27 @@ export const evaluationService = {
       // Normalize the value (lowercase, no spaces)
       const normalizedValue = status.value.toLowerCase().replace(/\s+/g, '_');
       
-      // Insert the new status option
-      const { data, error } = await supabase
-        .from("candidate_status_options")
-        .insert({
-          value: normalizedValue,
-          label: status.label,
-          organization_id: userProfile.organization_id,
-          is_system: false
-        })
-        .select()
-        .single();
-        
+      // Insert the new status option using RPC to bypass type issues
+      const { data, error } = await supabase.rpc('create_status_option', {
+        p_value: normalizedValue,
+        p_label: status.label,
+        p_org_id: userProfile.organization_id
+      });
+      
       if (error) {
         console.error("Error creating status option:", error);
         return { success: false, error };
       }
       
-      return { success: true, data };
+      return { 
+        success: true, 
+        data: { 
+          id: data.id, 
+          value: data.value, 
+          label: data.label, 
+          is_system: false 
+        }
+      };
     } catch (error) {
       console.error("Error in createStatusOption:", error);
       return { success: false, error };
@@ -523,23 +524,27 @@ export const evaluationService = {
       // Normalize the value (lowercase, no spaces)
       const normalizedValue = status.value.toLowerCase().replace(/\s+/g, '_');
       
-      // Update the status option
-      const { data, error } = await supabase
-        .from("candidate_status_options")
-        .update({
-          value: normalizedValue,
-          label: status.label
-        })
-        .eq("id", id)
-        .select()
-        .single();
-        
+      // Update the status option using RPC to bypass type issues
+      const { data, error } = await supabase.rpc('update_status_option', {
+        p_id: id,
+        p_value: normalizedValue,
+        p_label: status.label
+      });
+      
       if (error) {
         console.error("Error updating status option:", error);
         return { success: false, error };
       }
       
-      return { success: true, data };
+      return { 
+        success: true, 
+        data: { 
+          id: data.id, 
+          value: data.value, 
+          label: data.label, 
+          is_system: false 
+        }
+      };
     } catch (error) {
       console.error("Error in updateStatusOption:", error);
       return { success: false, error };
@@ -584,13 +589,11 @@ export const evaluationService = {
         };
       }
       
-      // Delete the status option
-      const { error } = await supabase
-        .from("candidate_status_options")
-        .delete()
-        .eq("id", id)
-        .eq("is_system", false); // Additional safety check to prevent deleting system statuses
-        
+      // Delete the status option using RPC to bypass type issues
+      const { data, error } = await supabase.rpc('delete_status_option', {
+        p_id: id
+      });
+      
       if (error) {
         console.error("Error deleting status option:", error);
         return { success: false, error };
