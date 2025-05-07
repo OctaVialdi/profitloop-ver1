@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { toast } from "sonner";
 import { Loader2, Star, ChevronDown, ChevronUp } from "lucide-react";
 import { useUser } from "@/hooks/auth/useUser";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface EvaluationSectionProps {
   candidate: CandidateWithDetails;
@@ -400,71 +401,73 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  {evaluationCategories.map(category => (
-                    <div key={category.id} className="border rounded-lg">
-                      <div 
-                        className="p-3 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100"
-                        onClick={() => toggleCategory(category.id)}
-                      >
-                        <h4 className="font-medium">{category.name}</h4>
-                        {expandedCategories[category.id] ? (
-                          <ChevronUp className="h-5 w-5" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5" />
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    {evaluationCategories.map(category => (
+                      <div key={category.id} className="border rounded-lg">
+                        <div 
+                          className="p-3 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100"
+                          onClick={() => toggleCategory(category.id)}
+                        >
+                          <h4 className="font-medium">{category.name}</h4>
+                          {expandedCategories[category.id] ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </div>
+                        
+                        {expandedCategories[category.id] && (
+                          <div className="p-3 space-y-4">
+                            {category.criteria.map(criterion => {
+                              const criterionScore = getCriterionScore(criterion.id);
+                              return (
+                                <div key={criterion.id} className="space-y-2">
+                                  <div className="flex justify-between">
+                                    <Label className="text-sm">{criterion.question}</Label>
+                                    {criterionScore > 0 && (
+                                      <span className="text-sm font-medium">{criterionScore}/5</span>
+                                    )}
+                                  </div>
+                                  <StarRating 
+                                    value={criterionScore} 
+                                    onChange={handleRatingChange(criterion.id, category.id, criterion.question, category.name)}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
-                      
-                      {expandedCategories[category.id] && (
-                        <div className="p-3 space-y-4">
-                          {category.criteria.map(criterion => {
-                            const criterionScore = getCriterionScore(criterion.id);
-                            return (
-                              <div key={criterion.id} className="space-y-2">
-                                <div className="flex justify-between">
-                                  <Label className="text-sm">{criterion.question}</Label>
-                                  {criterionScore > 0 && (
-                                    <span className="text-sm font-medium">{criterionScore}/5</span>
-                                  )}
-                                </div>
-                                <StarRating 
-                                  value={criterionScore} 
-                                  onChange={handleRatingChange(criterion.id, category.id, criterion.question, category.name)}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="comments">Comments</Label>
-                  <Textarea
-                    id="comments"
-                    placeholder="Add your comments about the candidate..."
-                    value={comments}
-                    onChange={(e) => setComments(e.target.value)}
-                    rows={4}
-                  />
-                </div>
+                    ))}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="comments">Comments</Label>
+                    <Textarea
+                      id="comments"
+                      placeholder="Add your comments about the candidate..."
+                      value={comments}
+                      onChange={(e) => setComments(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
 
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={isSubmitting}
-                  className="w-full"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : "Submit Evaluation"}
-                </Button>
-              </div>
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={isSubmitting}
+                    className="w-full"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : "Submit Evaluation"}
+                  </Button>
+                </div>
+              </ScrollArea>
             )}
           </div>
 
@@ -472,7 +475,9 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Past Evaluations</h3>
-            {renderPreviousEvaluations()}
+            <ScrollArea className="h-[300px] pr-4">
+              {renderPreviousEvaluations()}
+            </ScrollArea>
           </div>
         </div>
       </div>
