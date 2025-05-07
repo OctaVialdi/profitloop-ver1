@@ -1,15 +1,22 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { CandidateWithDetails, CandidateEvaluation, candidateService } from "@/services/candidateService";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { 
+  CandidateWithDetails, 
+  CandidateEvaluation, 
+  candidateService, 
+  EvaluationCategory,
+  EvaluationCriteriaScore 
+} from "@/services/candidateService";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Star, StarHalf } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client"; // Replace useUser with direct supabase usage
+import { Loader2, Star, ChevronDown, ChevronUp } from "lucide-react";
+import { useUser } from "@/hooks/auth/useUser";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EvaluationSectionProps {
   candidate: CandidateWithDetails;
@@ -20,40 +27,96 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
   candidate,
   onEvaluationSubmitted
 }) => {
-  // Get current user ID directly from supabase instead of using useUser hook
+  const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [evaluationCategories, setEvaluationCategories] = useState<EvaluationCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   
-  const [evaluation, setEvaluation] = useState<{
-    technical_skills: number | null;
-    communication: number | null;
-    cultural_fit: number | null;
-    experience_relevance: number | null;
-    overall_impression: number | null;
-    comments: string;
-  }>({
-    technical_skills: null,
-    communication: null,
-    cultural_fit: null,
-    experience_relevance: null,
-    overall_impression: null,
-    comments: ""
+  const [criteriaScores, setCriteriaScores] = useState<EvaluationCriteriaScore[]>([]);
+  const [comments, setComments] = useState("");
+
+  // For backward compatibility
+  const [legacyEvaluation, setLegacyEvaluation] = useState({
+    technical_skills: null as number | null,
+    communication: null as number | null,
+    cultural_fit: null as number | null,
+    experience_relevance: null as number | null,
+    overall_impression: null as number | null
   });
 
-  const handleRatingChange = (field: string) => (value: string) => {
-    setEvaluation(prev => ({
+  // Fetch evaluation criteria on component mount
+  useEffect(() => {
+    const fetchCriteria = async () => {
+      setIsLoading(true);
+      try {
+        const data = await candidateService.fetchEvaluationCriteria();
+        setEvaluationCategories(data);
+        
+        // Initialize expanded categories - expand the first one by default
+        if (data.length > 0) {
+          setExpandedCategories({ [data[0].id]: true });
+        }
+      } catch (error) {
+        console.error("Error fetching evaluation criteria:", error);
+        toast.error("Failed to load evaluation criteria");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchCriteria();
+  }, []);
+
+  const handleRatingChange = (criterionId: string, categoryId: string, question: string, categoryName: string) => (score: number) => {
+    setCriteriaScores(prev => {
+      // Check if this criterion already has a score
+      const existingIndex = prev.findIndex(item => item.criterion_id === criterionId);
+      
+      if (existingIndex >= 0) {
+        // Update existing score
+        const updated = [...prev];
+        updated[existingIndex] = { 
+          ...updated[existingIndex], 
+          score 
+        };
+        return updated;
+      } else {
+        // Add new score
+        return [...prev, { 
+          criterion_id: criterionId,
+          category_id: categoryId,
+          score, 
+          question,
+          category: categoryName
+        }];
+      }
+    });
+  };
+
+  // Legacy rating change handler for backward compatibility
+  const handleLegacyRatingChange = (field: keyof typeof legacyEvaluation) => (value: number) => {
+    setLegacyEvaluation(prev => ({
       ...prev,
-      [field]: parseInt(value)
+      [field]: value
     }));
   };
 
   const handleSubmit = async () => {
-    // Validate form
+    // Check if user is logged in
+    if (!user) {
+      toast.error("You must be logged in to submit an evaluation");
+      return;
+    }
+    
+    // Validate form - either criteria scores or legacy ratings must be provided
     if (
-      !evaluation.technical_skills &&
-      !evaluation.communication &&
-      !evaluation.cultural_fit &&
-      !evaluation.experience_relevance &&
-      !evaluation.overall_impression
+      criteriaScores.length === 0 &&
+      !legacyEvaluation.technical_skills &&
+      !legacyEvaluation.communication &&
+      !legacyEvaluation.cultural_fit &&
+      !legacyEvaluation.experience_relevance &&
+      !legacyEvaluation.overall_impression
     ) {
       toast.error("Please provide at least one rating before submitting");
       return;
@@ -62,26 +125,27 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     setIsSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       const result = await candidateService.submitEvaluation({
-        ...evaluation,
+        ...legacyEvaluation,
+        comments,
         candidate_id: candidate.id,
-        evaluator_id: user?.id || null,
-        average_score: 0 // This will be calculated in the service
+        evaluator_id: user.id || null,
+        average_score: 0, // This will be calculated by the database trigger
+        criteria_scores: criteriaScores.length > 0 ? criteriaScores : undefined
       });
 
       if (result.success) {
         toast.success("Evaluation submitted successfully");
         
         // Reset the form
-        setEvaluation({
+        setCriteriaScores([]);
+        setComments("");
+        setLegacyEvaluation({
           technical_skills: null,
           communication: null,
           cultural_fit: null,
           experience_relevance: null,
-          overall_impression: null,
-          comments: ""
+          overall_impression: null
         });
         
         // Notify parent component
@@ -97,6 +161,11 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getCriterionScore = (criterionId: string) => {
+    const found = criteriaScores.find(item => item.criterion_id === criterionId);
+    return found ? found.score : 0;
   };
 
   const renderPreviousEvaluations = () => {
@@ -128,97 +197,136 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-              {evaluation.technical_skills && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Technical Skills:</span>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < evaluation.technical_skills! 
-                            ? "text-yellow-400 fill-yellow-400" 
-                            : "text-gray-300"
-                        }`} 
-                      />
-                    ))}
+            {/* Render either criteria scores or legacy ratings */}
+            {evaluation.criteria_scores && evaluation.criteria_scores.length > 0 ? (
+              <div className="mt-3">
+                <h5 className="text-sm font-medium mb-2">Ratings:</h5>
+                <Accordion type="multiple" className="w-full">
+                  {Array.from(new Set(evaluation.criteria_scores.map(score => score.category))).map(categoryName => (
+                    <AccordionItem key={categoryName} value={categoryName}>
+                      <AccordionTrigger className="text-sm font-medium">
+                        {categoryName}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {evaluation.criteria_scores
+                            ?.filter(score => score.category === categoryName)
+                            .map(score => (
+                              <div key={score.criterion_id} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600 flex-1">{score.question}</span>
+                                <div className="flex">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star 
+                                      key={i}
+                                      className={`h-4 w-4 ${
+                                        i < score.score 
+                                          ? "text-yellow-400 fill-yellow-400" 
+                                          : "text-gray-300"
+                                      }`} 
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                {evaluation.technical_skills && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Technical Skills:</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < evaluation.technical_skills! 
+                              ? "text-yellow-400 fill-yellow-400" 
+                              : "text-gray-300"
+                          }`} 
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {evaluation.communication && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Communication:</span>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < evaluation.communication! 
-                            ? "text-yellow-400 fill-yellow-400" 
-                            : "text-gray-300"
-                        }`} 
-                      />
-                    ))}
+                {evaluation.communication && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Communication:</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < evaluation.communication! 
+                              ? "text-yellow-400 fill-yellow-400" 
+                              : "text-gray-300"
+                          }`} 
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {evaluation.cultural_fit && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Cultural Fit:</span>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < evaluation.cultural_fit! 
-                            ? "text-yellow-400 fill-yellow-400" 
-                            : "text-gray-300"
-                        }`} 
-                      />
-                    ))}
+                {evaluation.cultural_fit && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Cultural Fit:</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < evaluation.cultural_fit! 
+                              ? "text-yellow-400 fill-yellow-400" 
+                              : "text-gray-300"
+                          }`} 
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {evaluation.experience_relevance && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Experience Relevance:</span>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < evaluation.experience_relevance! 
-                            ? "text-yellow-400 fill-yellow-400" 
-                            : "text-gray-300"
-                        }`} 
-                      />
-                    ))}
+                {evaluation.experience_relevance && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Experience Relevance:</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < evaluation.experience_relevance! 
+                              ? "text-yellow-400 fill-yellow-400" 
+                              : "text-gray-300"
+                          }`} 
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {evaluation.overall_impression && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Overall Impression:</span>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < evaluation.overall_impression! 
-                            ? "text-yellow-400 fill-yellow-400" 
-                            : "text-gray-300"
-                        }`} 
-                      />
-                    ))}
+                {evaluation.overall_impression && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Overall Impression:</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < evaluation.overall_impression! 
+                              ? "text-yellow-400 fill-yellow-400" 
+                              : "text-gray-300"
+                          }`} 
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {evaluation.comments && (
               <div className="mt-3">
@@ -232,57 +340,38 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     );
   };
 
-  const renderRatingField = (
-    label: string,
-    field: keyof typeof evaluation,
-    value: number | null
-  ) => {
+  // Improved Star Rating component that fills all stars up to the selected rating
+  const StarRating: React.FC<{ 
+    value: number, 
+    onChange: (value: number) => void 
+  }> = ({ value, onChange }) => {
     return (
-      <div className="space-y-2">
-        <div className="flex justify-between">
-          <Label className="text-base">{label}</Label>
-          {value && (
-            <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i}
-                  className={`h-4 w-4 ${
-                    i < value 
-                      ? "text-yellow-400 fill-yellow-400" 
-                      : "text-gray-300"
-                  }`} 
-                />
-              ))}
-            </div>
-          )}
-        </div>
-        <RadioGroup
-          value={value?.toString() || ""}
-          onValueChange={handleRatingChange(field)}
-          className="flex space-x-1"
-        >
-          {[1, 2, 3, 4, 5].map((rating) => (
-            <div key={rating} className="flex items-center space-x-1">
-              <RadioGroupItem
-                value={rating.toString()}
-                id={`${field}-${rating}`}
-                className="sr-only"
-              />
-              <Label
-                htmlFor={`${field}-${rating}`}
-                className={`cursor-pointer rounded-full p-1 hover:bg-gray-100 ${
-                  value === rating ? "text-yellow-500" : "text-gray-400"
-                }`}
-              >
-                <Star className={`h-6 w-6 ${
-                  value === rating ? "fill-yellow-400 text-yellow-400" : ""
-                }`} />
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
+      <div className="flex">
+        {[1, 2, 3, 4, 5].map(rating => (
+          <button
+            key={rating}
+            type="button"
+            onClick={() => onChange(rating)}
+            className={`p-1 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary`}
+          >
+            <Star 
+              className={`h-6 w-6 ${
+                rating <= value 
+                  ? "text-yellow-400 fill-yellow-400" 
+                  : "text-gray-300"
+              }`} 
+            />
+          </button>
+        ))}
       </div>
     );
+  };
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryId]: !prev[categoryId]
+    }));
   };
 
   return (
@@ -290,7 +379,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
       <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold">Candidate Evaluation</h2>
-          {candidate.score ? (
+          {candidate.score !== undefined && candidate.score !== null ? (
             <div className="mt-2 flex items-center space-x-2">
               <span className="text-xl font-semibold">{candidate.score.toFixed(1)}</span>
               <Star className="h-6 w-6 text-yellow-400 fill-yellow-400" />
@@ -303,37 +392,77 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
           <div className="border rounded-lg p-4">
             <h3 className="text-lg font-semibold mb-4">New Evaluation</h3>
             
-            <div className="grid gap-6">
-              {renderRatingField("Technical Skills", "technical_skills", evaluation.technical_skills)}
-              {renderRatingField("Communication", "communication", evaluation.communication)}
-              {renderRatingField("Cultural Fit", "cultural_fit", evaluation.cultural_fit)}
-              {renderRatingField("Experience Relevance", "experience_relevance", evaluation.experience_relevance)}
-              {renderRatingField("Overall Impression", "overall_impression", evaluation.overall_impression)}
-              
-              <div className="space-y-2">
-                <Label htmlFor="comments">Comments</Label>
-                <Textarea
-                  id="comments"
-                  placeholder="Add your comments about the candidate..."
-                  value={evaluation.comments}
-                  onChange={(e) => setEvaluation({ ...evaluation, comments: e.target.value })}
-                  rows={4}
-                />
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  {evaluationCategories.map(category => (
+                    <div key={category.id} className="border rounded-lg">
+                      <div 
+                        className="p-3 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100"
+                        onClick={() => toggleCategory(category.id)}
+                      >
+                        <h4 className="font-medium">{category.name}</h4>
+                        {expandedCategories[category.id] ? (
+                          <ChevronUp className="h-5 w-5" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5" />
+                        )}
+                      </div>
+                      
+                      {expandedCategories[category.id] && (
+                        <div className="p-3 space-y-4">
+                          {category.criteria.map(criterion => {
+                            const criterionScore = getCriterionScore(criterion.id);
+                            return (
+                              <div key={criterion.id} className="space-y-2">
+                                <div className="flex justify-between">
+                                  <Label className="text-sm">{criterion.question}</Label>
+                                  {criterionScore > 0 && (
+                                    <span className="text-sm font-medium">{criterionScore}/5</span>
+                                  )}
+                                </div>
+                                <StarRating 
+                                  value={criterionScore} 
+                                  onChange={handleRatingChange(criterion.id, category.id, criterion.question, category.name)}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="comments">Comments</Label>
+                  <Textarea
+                    id="comments"
+                    placeholder="Add your comments about the candidate..."
+                    value={comments}
+                    onChange={(e) => setComments(e.target.value)}
+                    rows={4}
+                  />
+                </div>
 
-              <Button 
-                onClick={handleSubmit} 
-                disabled={isSubmitting}
-                className="w-full mt-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : "Submit Evaluation"}
-              </Button>
-            </div>
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : "Submit Evaluation"}
+                </Button>
+              </div>
+            )}
           </div>
 
           <Separator />

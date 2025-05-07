@@ -140,6 +140,31 @@ export default function CandidateList() {
       <ChevronDown className="h-4 w-4 ml-1" />;
   };
 
+  // Render stars based on score
+  const renderStars = (score: number | undefined | null) => {
+    if (score === undefined || score === null) return null;
+    
+    return (
+      <div className="flex items-center">
+        <span className="font-medium mr-1">{score.toFixed(1)}</span>
+        <div className="flex">
+          {[...Array(5)].map((_, i) => (
+            <Star 
+              key={i}
+              className={`h-3 w-3 ${
+                i < Math.floor(score)
+                  ? "text-yellow-400 fill-yellow-400"
+                  : i < score
+                    ? "text-yellow-400 fill-yellow-400 opacity-50"
+                    : "text-gray-300"
+              }`} 
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -269,11 +294,8 @@ export default function CandidateList() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {candidate.score !== undefined && candidate.score > 0 ? (
-                      <div className="flex items-center">
-                        <span className="font-medium mr-1">{candidate.score.toFixed(1)}</span>
-                        <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                      </div>
+                    {candidate.score !== undefined && candidate.score !== null ? (
+                      renderStars(candidate.score)
                     ) : (
                       <span className="text-gray-400 text-sm">Not rated</span>
                     )}

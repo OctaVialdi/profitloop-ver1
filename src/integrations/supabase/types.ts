@@ -109,6 +109,7 @@ export type Database = {
           comments: string | null
           communication: number | null
           created_at: string
+          criteria_scores: Json | null
           cultural_fit: number | null
           evaluator_id: string | null
           experience_relevance: number | null
@@ -123,6 +124,7 @@ export type Database = {
           comments?: string | null
           communication?: number | null
           created_at?: string
+          criteria_scores?: Json | null
           cultural_fit?: number | null
           evaluator_id?: string | null
           experience_relevance?: number | null
@@ -137,6 +139,7 @@ export type Database = {
           comments?: string | null
           communication?: number | null
           created_at?: string
+          criteria_scores?: Json | null
           cultural_fit?: number | null
           evaluator_id?: string | null
           experience_relevance?: number | null
@@ -925,6 +928,68 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order: number
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      evaluation_criteria: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          display_order: number
+          id: string
+          question: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          display_order: number
+          id?: string
+          question: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          question?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_criteria_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_categories"
             referencedColumns: ["id"]
           },
         ]

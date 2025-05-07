@@ -98,6 +98,30 @@ export interface CandidateEvaluation {
   created_at: string;
   updated_at: string;
   evaluator_name?: string;
+  criteria_scores?: EvaluationCriteriaScore[];
+}
+
+export interface EvaluationCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  display_order: number;
+  criteria: EvaluationCriterion[];
+}
+
+export interface EvaluationCriterion {
+  id: string;
+  category_id: string;
+  question: string;
+  display_order: number;
+}
+
+export interface EvaluationCriteriaScore {
+  criterion_id: string;
+  category_id: string;
+  score: number;
+  question: string;
+  category: string;
 }
 
 export const candidateService = {
@@ -202,41 +226,48 @@ export const candidateService = {
     }
   },
 
+  async fetchEvaluationCriteria(): Promise<EvaluationCategory[]> {
+    try {
+      // First, fetch all categories
+      const { data: categories, error: categoriesError } = await supabase
+        .from("evaluation_categories")
+        .select("*")
+        .order("display_order", { ascending: true });
+      
+      if (categoriesError) throw categoriesError;
+      
+      // Then, fetch all criteria
+      const { data: criteria, error: criteriaError } = await supabase
+        .from("evaluation_criteria")
+        .select("*")
+        .order("display_order", { ascending: true });
+      
+      if (criteriaError) throw criteriaError;
+      
+      // Group criteria by category
+      return categories.map(category => {
+        const categoryCriteria = criteria
+          .filter(criterion => criterion.category_id === category.id)
+          .sort((a, b) => a.display_order - b.display_order);
+        
+        return {
+          ...category,
+          criteria: categoryCriteria
+        };
+      });
+    } catch (error) {
+      console.error("Error fetching evaluation criteria:", error);
+      return [];
+    }
+  },
+
   async submitEvaluation(evaluation: Omit<CandidateEvaluation, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean, data?: CandidateEvaluation, error?: any }> {
     try {
-      // Calculate average score from the ratings
-      let count = 0;
-      let total = 0;
-      
-      if (evaluation.technical_skills) { 
-        total += evaluation.technical_skills;
-        count++;
-      }
-      if (evaluation.communication) {
-        total += evaluation.communication;
-        count++;
-      }
-      if (evaluation.cultural_fit) {
-        total += evaluation.cultural_fit;
-        count++;
-      }
-      if (evaluation.experience_relevance) {
-        total += evaluation.experience_relevance;
-        count++;
-      }
-      if (evaluation.overall_impression) {
-        total += evaluation.overall_impression;
-        count++;
-      }
-
-      const average_score = count > 0 ? parseFloat((total / count).toFixed(2)) : 0;
-
-      // Insert the evaluation
+      // Insert the evaluation - the trigger will calculate the average score
       const { data, error } = await supabase
         .from("candidate_evaluations")
         .insert({ 
           ...evaluation,
-          average_score,
           evaluator_id: (await supabase.auth.getUser()).data.user?.id
         })
         .select()
@@ -259,56 +290,7 @@ export const candidateService = {
 
   async updateEvaluation(id: string, updates: Partial<CandidateEvaluation>): Promise<{ success: boolean, data?: CandidateEvaluation, error?: any }> {
     try {
-      // Recalculate average score if any rating fields have changed
-      if (updates.technical_skills !== undefined || 
-          updates.communication !== undefined || 
-          updates.cultural_fit !== undefined || 
-          updates.experience_relevance !== undefined || 
-          updates.overall_impression !== undefined) {
-        
-        // First fetch the current evaluation
-        const { data: currentEval, error: fetchError } = await supabase
-          .from("candidate_evaluations")
-          .select("*")
-          .eq("id", id)
-          .single();
-
-        if (fetchError) {
-          return { success: false, error: fetchError };
-        }
-
-        // Merge current values with updates
-        const merged = { ...currentEval, ...updates };
-        
-        // Calculate new average
-        let count = 0;
-        let total = 0;
-        
-        if (merged.technical_skills) { 
-          total += merged.technical_skills;
-          count++;
-        }
-        if (merged.communication) {
-          total += merged.communication;
-          count++;
-        }
-        if (merged.cultural_fit) {
-          total += merged.cultural_fit;
-          count++;
-        }
-        if (merged.experience_relevance) {
-          total += merged.experience_relevance;
-          count++;
-        }
-        if (merged.overall_impression) {
-          total += merged.overall_impression;
-          count++;
-        }
-
-        updates.average_score = count > 0 ? parseFloat((total / count).toFixed(2)) : 0;
-      }
-
-      // Update the evaluation
+      // Update the evaluation - the trigger will recalculate the average score
       const { data, error } = await supabase
         .from("candidate_evaluations")
         .update(updates)
