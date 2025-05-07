@@ -208,23 +208,29 @@ export const candidateService = {
       if (error) throw error;
       if (!candidate) return null;
 
+      console.log("candidateService: Fetched main candidate data:", candidate);
+
       // Fetch family members
       const { data: familyMembers } = await supabase
         .from("candidate_family_members")
         .select("*")
         .eq("candidate_application_id", id);
 
-      // Fetch formal education
-      const { data: formalEducation } = await supabase
+      // Fetch formal education - dengan log tambahan untuk debug
+      const { data: formalEducation, error: formalError } = await supabase
         .from("candidate_formal_education")
         .select("*")
         .eq("candidate_application_id", id);
+      
+      console.log("candidateService: Formal education query result:", { data: formalEducation, error: formalError });
 
       // Fetch informal education
-      const { data: informalEducation } = await supabase
+      const { data: informalEducation, error: informalError } = await supabase
         .from("candidate_informal_education")
         .select("*")
         .eq("candidate_application_id", id);
+      
+      console.log("candidateService: Informal education query result:", { data: informalEducation, error: informalError });
 
       // Fetch work experience
       const { data: workExperience } = await supabase
@@ -279,7 +285,7 @@ export const candidateService = {
       }) : [];
 
       // Combine all data into a single object
-      return {
+      const candidateWithDetails: CandidateWithDetails = {
         ...candidate,
         job_title: candidate.job_positions?.title || "General Application",
         organization_name: candidate.organizations?.name || "",
@@ -289,12 +295,57 @@ export const candidateService = {
         workExperience: workExperience || [],
         evaluations: processedEvaluations
       };
+
+      console.log("candidateService: Returning combined candidate data with education:", {
+        formalCount: candidateWithDetails.formalEducation?.length,
+        informalCount: candidateWithDetails.informalEducation?.length
+      });
+
+      return candidateWithDetails;
     } catch (error) {
       console.error("Error fetching candidate by id:", error);
       return null;
     }
   },
   
+  async fetchCandidateEducation(candidateId: string): Promise<{
+    formalEducation: CandidateFormalEducation[],
+    informalEducation: CandidateInformalEducation[]
+  }> {
+    try {
+      // Fetch formal education langsung dari table
+      const { data: formalEducation, error: formalError } = await supabase
+        .from("candidate_formal_education")
+        .select("*")
+        .eq("candidate_application_id", candidateId);
+      
+      if (formalError) {
+        console.error("Error fetching formal education:", formalError);
+      }
+      
+      // Fetch informal education langsung dari table
+      const { data: informalEducation, error: informalError } = await supabase
+        .from("candidate_informal_education")
+        .select("*")
+        .eq("candidate_application_id", candidateId);
+      
+      if (informalError) {
+        console.error("Error fetching informal education:", informalError);
+      }
+      
+      return {
+        formalEducation: formalEducation || [],
+        informalEducation: informalEducation || []
+      };
+    } catch (error) {
+      console.error("Error in fetchCandidateEducation:", error);
+      return {
+        formalEducation: [],
+        informalEducation: []
+      };
+    }
+  },
+
   async fetchEvaluationCriteria(): Promise<EvaluationCategory[]> {
     try {
       // First, fetch all categories
