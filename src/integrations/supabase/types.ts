@@ -1614,6 +1614,19 @@ export type Database = {
             }
         Returns: Json
       }
+      create_status_option: {
+        Args: { p_value: string; p_label: string; p_org_id: string }
+        Returns: {
+          id: string
+          value: string
+          label: string
+          is_system: boolean
+        }[]
+      }
+      delete_status_option: {
+        Args: { p_id: string }
+        Returns: boolean
+      }
       employee_belongs_to_users_org: {
         Args:
           | { employee_row: Database["public"]["Tables"]["employees"]["Row"] }
@@ -1644,6 +1657,15 @@ export type Database = {
           job_title: string
           organization_name: string
           is_valid: boolean
+        }[]
+      }
+      get_status_options: {
+        Args: { org_id: string }
+        Returns: {
+          id: string
+          value: string
+          label: string
+          is_system: boolean
         }[]
       }
       get_user_organizations: {
@@ -1721,6 +1743,15 @@ export type Database = {
       remove_organization_member: {
         Args: { member_id: string }
         Returns: Json
+      }
+      update_status_option: {
+        Args: { p_id: string; p_value: string; p_label: string }
+        Returns: {
+          id: string
+          value: string
+          label: string
+          is_system: boolean
+        }[]
       }
       update_user_organization: {
         Args: { user_id: string; org_id: string; user_role: string }
