@@ -39,13 +39,22 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
   onStatusUpdated
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string>(candidate.status);
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   
+  // Sanitize status value to ensure it's a clean string without newlines
+  const sanitizeStatus = (status: string): string => {
+    if (!status) return "new";
+    
+    // Remove newlines and trim whitespace
+    return status.split('\n')[0].trim();
+  };
+  
   // Update selectedStatus when candidate.status changes
   useEffect(() => {
-    setSelectedStatus(candidate.status);
+    const sanitizedStatus = sanitizeStatus(candidate.status);
+    setSelectedStatus(sanitizedStatus);
   }, [candidate.status]);
   
   // Fetch status options from the database
@@ -70,7 +79,9 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
   }, []);
   
   const getStatusBadgeProps = (status: string): BadgeProps => {
-    switch (status) {
+    const sanitizedStatus = sanitizeStatus(status);
+    
+    switch (sanitizedStatus) {
       case 'new':
         return { variant: 'default' };
       case 'screening':
@@ -91,7 +102,14 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
   };
   
   const handleUpdateStatus = async () => {
-    if (selectedStatus === candidate.status) {
+    if (!selectedStatus) {
+      toast.error("Please select a status");
+      return;
+    }
+    
+    // Check if the sanitized current status is the same as selected status
+    const sanitizedCurrentStatus = sanitizeStatus(candidate.status);
+    if (selectedStatus === sanitizedCurrentStatus) {
       toast.info("Status is unchanged");
       return;
     }
@@ -111,16 +129,28 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
       } else {
         toast.error("Failed to update status");
         // Reset to previous status on failure
-        setSelectedStatus(candidate.status);
+        setSelectedStatus(sanitizedCurrentStatus);
       }
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("An error occurred while updating status");
       // Reset to previous status on error
-      setSelectedStatus(candidate.status);
+      setSelectedStatus(sanitizedCurrentStatus);
     } finally {
       setIsUpdating(false);
     }
+  };
+  
+  const getCurrentStatusLabel = () => {
+    const sanitizedStatus = sanitizeStatus(candidate.status);
+    const matchingOption = statusOptions.find(s => s.value === sanitizedStatus);
+    
+    if (matchingOption) {
+      return matchingOption.label;
+    }
+    
+    // If no matching option, format the status for display
+    return sanitizedStatus.charAt(0).toUpperCase() + sanitizedStatus.slice(1);
   };
   
   return (
@@ -135,12 +165,9 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
           <div className="flex flex-col gap-4">
             <div>
               <p className="text-sm text-gray-500 mb-2">Current Status</p>
-              {candidate.status && (
-                <Badge {...getStatusBadgeProps(candidate.status)}>
-                  {statusOptions.find(s => s.value === candidate.status)?.label || 
-                   candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
-                </Badge>
-              )}
+              <Badge {...getStatusBadgeProps(candidate.status)}>
+                {getCurrentStatusLabel()}
+              </Badge>
             </div>
             
             <div>
@@ -172,7 +199,7 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
                 
                 <Button 
                   onClick={handleUpdateStatus} 
-                  disabled={isUpdating || selectedStatus === candidate.status || isLoadingOptions}
+                  disabled={isUpdating || !selectedStatus || selectedStatus === sanitizeStatus(candidate.status) || isLoadingOptions}
                 >
                   {isUpdating ? (
                     <>

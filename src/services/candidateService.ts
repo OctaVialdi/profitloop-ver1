@@ -169,11 +169,14 @@ export const candidateService = {
    */
   async updateCandidateStatus(id: string, status: string): Promise<boolean> {
     try {
-      console.log(`Updating candidate status: ID ${id}, new status: ${status}`);
+      // Ensure status doesn't contain any newlines or extra spacing
+      const sanitizedStatus = status.trim();
+      
+      console.log(`Updating candidate status: ID ${id}, new status: ${sanitizedStatus}`);
       
       const { error } = await supabase
         .from("candidate_applications")
-        .update({ status })
+        .update({ status: sanitizedStatus })
         .eq("id", id);
       
       if (error) {
