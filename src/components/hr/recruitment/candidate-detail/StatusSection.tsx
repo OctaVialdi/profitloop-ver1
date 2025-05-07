@@ -23,21 +23,24 @@ interface StatusSectionProps {
   onStatusUpdated: () => void;
 }
 
+// Define all possible status values to ensure consistency
+export const CANDIDATE_STATUS_OPTIONS = [
+  { value: 'new', label: 'New' },
+  { value: 'screening', label: 'Screening' },
+  { value: 'interview', label: 'Interview' },
+  { value: 'assessment', label: 'Assessment' },
+  { value: 'offered', label: 'Offered' },
+  { value: 'hired', label: 'Hired' },
+  { value: 'rejected', label: 'Rejected' }
+];
+
 export const StatusSection: React.FC<StatusSectionProps> = ({
   candidate,
   onStatusUpdated
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>(candidate.status);
-  const [statusOptions, setStatusOptions] = useState([
-    { value: 'new', label: 'New' },
-    { value: 'screening', label: 'Screening' },
-    { value: 'interview', label: 'Interview' },
-    { value: 'assessment', label: 'Assessment' },
-    { value: 'offered', label: 'Offered' },
-    { value: 'hired', label: 'Hired' },
-    { value: 'rejected', label: 'Rejected' }
-  ]);
+  const [statusOptions, setStatusOptions] = useState(CANDIDATE_STATUS_OPTIONS);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   
   // Update selectedStatus when candidate.status changes
@@ -58,7 +61,17 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
             label: option.charAt(0).toUpperCase() + option.slice(1)
           }));
           
-          setStatusOptions(formattedOptions);
+          // Merge with default options to ensure all standard options are always available
+          const mergedOptions = [...CANDIDATE_STATUS_OPTIONS];
+          
+          // Add any custom options from the database that aren't in our defaults
+          formattedOptions.forEach(option => {
+            if (!mergedOptions.some(o => o.value === option.value)) {
+              mergedOptions.push(option);
+            }
+          });
+          
+          setStatusOptions(mergedOptions);
         }
       } catch (error) {
         console.error("Error fetching status options:", error);
