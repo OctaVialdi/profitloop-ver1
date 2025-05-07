@@ -396,5 +396,50 @@ export const evaluationService = {
       console.error("Error saving interview notes:", error);
       return { success: false, error };
     }
+  },
+  
+  /**
+   * Fetches available candidate status options from the database
+   */
+  async fetchCandidateStatusOptions(): Promise<string[]> {
+    try {
+      console.log("Fetching candidate status options from the database");
+      
+      const { data, error } = await supabase
+        .from("candidate_applications")
+        .select("status")
+        .not('status', 'is', null)
+        .order('status')
+        .limit(100);
+        
+      if (error) {
+        console.error("Error fetching status options:", error);
+        return ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected'];
+      }
+      
+      // Extract unique status values
+      const statusSet = new Set<string>();
+      
+      // Ensure our required status options are always available
+      ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected'].forEach(status => {
+        statusSet.add(status);
+      });
+      
+      // Add any additional statuses from the database
+      if (data && Array.isArray(data)) {
+        data.forEach(item => {
+          if (item.status) {
+            statusSet.add(item.status.toLowerCase());
+          }
+        });
+      }
+      
+      // Return as sorted array
+      return Array.from(statusSet).sort();
+    } catch (error) {
+      console.error("Error in fetchCandidateStatusOptions:", error);
+      // Return default options as fallback
+      return ['new', 'screening', 'interview', 'assessment', 'offered', 'hired', 'rejected'];
+    }
   }
 };

@@ -15,6 +15,7 @@ import {
   Badge, 
   BadgeProps
 } from "@/components/ui/badge";
+import { evaluationService } from "@/services/evaluationService";
 
 interface StatusSectionProps {
   candidate: CandidateWithDetails;
@@ -27,11 +28,47 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>(candidate.status);
+  const [statusOptions, setStatusOptions] = useState([
+    { value: 'new', label: 'New' },
+    { value: 'screening', label: 'Screening' },
+    { value: 'interview', label: 'Interview' },
+    { value: 'assessment', label: 'Assessment' },
+    { value: 'offered', label: 'Offered' },
+    { value: 'hired', label: 'Hired' },
+    { value: 'rejected', label: 'Rejected' }
+  ]);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   
   // Update selectedStatus when candidate.status changes
   useEffect(() => {
     setSelectedStatus(candidate.status);
   }, [candidate.status]);
+  
+  // Fetch status options from the database
+  useEffect(() => {
+    const fetchStatusOptions = async () => {
+      setIsLoadingOptions(true);
+      try {
+        const options = await evaluationService.fetchCandidateStatusOptions();
+        if (options && options.length > 0) {
+          // Format options for dropdown
+          const formattedOptions = options.map(option => ({
+            value: option.toLowerCase(),
+            label: option.charAt(0).toUpperCase() + option.slice(1)
+          }));
+          
+          setStatusOptions(formattedOptions);
+        }
+      } catch (error) {
+        console.error("Error fetching status options:", error);
+        // Keep default options if there's an error
+      } finally {
+        setIsLoadingOptions(false);
+      }
+    };
+    
+    fetchStatusOptions();
+  }, []);
   
   const getStatusBadgeProps = (status: string): BadgeProps => {
     switch (status) {
@@ -54,16 +91,6 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
     }
   };
   
-  const statusOptions = [
-    { value: 'new', label: 'New' },
-    { value: 'screening', label: 'Screening' },
-    { value: 'interview', label: 'Interview' },
-    { value: 'assessment', label: 'Assessment' },
-    { value: 'offered', label: 'Offered' },
-    { value: 'hired', label: 'Hired' },
-    { value: 'rejected', label: 'Rejected' }
-  ];
-  
   const handleUpdateStatus = async () => {
     if (selectedStatus === candidate.status) {
       toast.info("Status is unchanged");
@@ -75,7 +102,6 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
       const result = await candidateService.updateCandidateStatus(candidate.id, selectedStatus);
       if (result) {
         toast.success(`Status updated to ${statusOptions.find(s => s.value === selectedStatus)?.label}`);
-        // Don't reset selectedStatus - keep the updated value
         onStatusUpdated();
       } else {
         toast.error("Failed to update status");
@@ -114,9 +140,17 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
                 <Select 
                   value={selectedStatus} 
                   onValueChange={setSelectedStatus}
+                  disabled={isLoadingOptions}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select status" />
+                    {isLoadingOptions ? (
+                      <div className="flex items-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span>Loading...</span>
+                      </div>
+                    ) : (
+                      <SelectValue placeholder="Select status" />
+                    )}
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map(option => (
@@ -129,7 +163,7 @@ export const StatusSection: React.FC<StatusSectionProps> = ({
                 
                 <Button 
                   onClick={handleUpdateStatus} 
-                  disabled={isUpdating || selectedStatus === candidate.status}
+                  disabled={isUpdating || selectedStatus === candidate.status || isLoadingOptions}
                 >
                   {isUpdating ? (
                     <>
