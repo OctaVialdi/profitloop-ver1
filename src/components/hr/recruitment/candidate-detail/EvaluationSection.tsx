@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Star, StarHalf } from "lucide-react";
-import { useUser } from "@/hooks/auth";
+import { supabase } from "@/integrations/supabase/client"; // Replace useUser with direct supabase usage
 
 interface EvaluationSectionProps {
   candidate: CandidateWithDetails;
@@ -20,7 +20,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
   candidate,
   onEvaluationSubmitted
 }) => {
-  const { user } = useUser();
+  // Get current user ID directly from supabase instead of using useUser hook
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [evaluation, setEvaluation] = useState<{
@@ -62,6 +62,8 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
     setIsSubmitting(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const result = await candidateService.submitEvaluation({
         ...evaluation,
         candidate_id: candidate.id,
@@ -108,26 +110,26 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
 
     return (
       <div className="space-y-6">
-        {candidate.evaluations.map((eval) => (
-          <div key={eval.id} className="border rounded-lg p-4 space-y-3">
+        {candidate.evaluations.map((evaluation) => (
+          <div key={evaluation.id} className="border rounded-lg p-4 space-y-3">
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="font-medium">
-                  Evaluation from {eval.evaluator_name || "Recruiter"}
+                  Evaluation from {evaluation.evaluator_name || "Recruiter"}
                 </h4>
                 <p className="text-sm text-gray-500">
-                  {new Date(eval.created_at).toLocaleDateString()} at{" "}
-                  {new Date(eval.created_at).toLocaleTimeString()}
+                  {new Date(evaluation.created_at).toLocaleDateString()} at{" "}
+                  {new Date(evaluation.created_at).toLocaleTimeString()}
                 </p>
               </div>
               <div className="flex items-center space-x-1">
-                <span className="font-semibold text-lg">{eval.average_score.toFixed(1)}</span>
+                <span className="font-semibold text-lg">{evaluation.average_score.toFixed(1)}</span>
                 <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-              {eval.technical_skills && (
+              {evaluation.technical_skills && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Technical Skills:</span>
                   <div className="flex">
@@ -135,7 +137,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                       <Star 
                         key={i}
                         className={`h-4 w-4 ${
-                          i < eval.technical_skills! 
+                          i < evaluation.technical_skills! 
                             ? "text-yellow-400 fill-yellow-400" 
                             : "text-gray-300"
                         }`} 
@@ -145,7 +147,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                 </div>
               )}
 
-              {eval.communication && (
+              {evaluation.communication && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Communication:</span>
                   <div className="flex">
@@ -153,7 +155,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                       <Star 
                         key={i}
                         className={`h-4 w-4 ${
-                          i < eval.communication! 
+                          i < evaluation.communication! 
                             ? "text-yellow-400 fill-yellow-400" 
                             : "text-gray-300"
                         }`} 
@@ -163,7 +165,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                 </div>
               )}
 
-              {eval.cultural_fit && (
+              {evaluation.cultural_fit && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Cultural Fit:</span>
                   <div className="flex">
@@ -171,7 +173,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                       <Star 
                         key={i}
                         className={`h-4 w-4 ${
-                          i < eval.cultural_fit! 
+                          i < evaluation.cultural_fit! 
                             ? "text-yellow-400 fill-yellow-400" 
                             : "text-gray-300"
                         }`} 
@@ -181,7 +183,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                 </div>
               )}
 
-              {eval.experience_relevance && (
+              {evaluation.experience_relevance && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Experience Relevance:</span>
                   <div className="flex">
@@ -189,7 +191,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                       <Star 
                         key={i}
                         className={`h-4 w-4 ${
-                          i < eval.experience_relevance! 
+                          i < evaluation.experience_relevance! 
                             ? "text-yellow-400 fill-yellow-400" 
                             : "text-gray-300"
                         }`} 
@@ -199,7 +201,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                 </div>
               )}
 
-              {eval.overall_impression && (
+              {evaluation.overall_impression && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Overall Impression:</span>
                   <div className="flex">
@@ -207,7 +209,7 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                       <Star 
                         key={i}
                         className={`h-4 w-4 ${
-                          i < eval.overall_impression! 
+                          i < evaluation.overall_impression! 
                             ? "text-yellow-400 fill-yellow-400" 
                             : "text-gray-300"
                         }`} 
@@ -218,10 +220,10 @@ export const EvaluationSection: React.FC<EvaluationSectionProps> = ({
               )}
             </div>
 
-            {eval.comments && (
+            {evaluation.comments && (
               <div className="mt-3">
                 <h5 className="text-sm font-medium text-gray-600">Comments:</h5>
-                <p className="text-sm mt-1">{eval.comments}</p>
+                <p className="text-sm mt-1">{evaluation.comments}</p>
               </div>
             )}
           </div>
