@@ -354,14 +354,33 @@ export const candidateService = {
       if (data.criteria_scores) {
         if (typeof data.criteria_scores === 'string') {
           try {
-            parsedCriteriaScores = JSON.parse(data.criteria_scores);
+            // Parse the JSON string back to an object
+            const parsedJson = JSON.parse(data.criteria_scores);
+            
+            // Validate and map to our expected type
+            if (Array.isArray(parsedJson)) {
+              // Map each item to ensure it matches our type
+              parsedCriteriaScores = parsedJson.map(item => ({
+                criterion_id: item.criterion_id,
+                category_id: item.category_id,
+                score: item.score,
+                question: item.question,
+                category: item.category
+              }));
+            }
           } catch (e) {
             console.error("Error parsing returned criteria_scores:", e);
             parsedCriteriaScores = undefined;
           }
         } else if (Array.isArray(data.criteria_scores)) {
-          // Handle case where it's already an array
-          parsedCriteriaScores = data.criteria_scores as EvaluationCriteriaScore[];
+          // Map the array data to our expected type
+          parsedCriteriaScores = (data.criteria_scores as any[]).map(item => ({
+            criterion_id: item.criterion_id,
+            category_id: item.category_id,
+            score: item.score,
+            question: item.question,
+            category: item.category
+          }));
         } else {
           console.error("Unexpected criteria_scores format:", typeof data.criteria_scores);
           parsedCriteriaScores = undefined;
@@ -422,14 +441,33 @@ export const candidateService = {
       if (data.criteria_scores) {
         if (typeof data.criteria_scores === 'string') {
           try {
-            parsedCriteriaScores = JSON.parse(data.criteria_scores);
+            // Parse the JSON string back to an object
+            const parsedJson = JSON.parse(data.criteria_scores);
+            
+            // Validate and map to our expected type
+            if (Array.isArray(parsedJson)) {
+              // Map each item to ensure it matches our type
+              parsedCriteriaScores = parsedJson.map(item => ({
+                criterion_id: item.criterion_id,
+                category_id: item.category_id,
+                score: item.score,
+                question: item.question,
+                category: item.category
+              }));
+            }
           } catch (e) {
             console.error("Error parsing returned criteria_scores:", e);
             parsedCriteriaScores = undefined;
           }
         } else if (Array.isArray(data.criteria_scores)) {
-          // Handle case where it's already an array
-          parsedCriteriaScores = data.criteria_scores as EvaluationCriteriaScore[];
+          // Map the array data to our expected type
+          parsedCriteriaScores = (data.criteria_scores as any[]).map(item => ({
+            criterion_id: item.criterion_id,
+            category_id: item.category_id,
+            score: item.score,
+            question: item.question,
+            category: item.category
+          }));
         } else {
           console.error("Unexpected criteria_scores format:", typeof data.criteria_scores);
           parsedCriteriaScores = undefined;
