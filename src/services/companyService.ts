@@ -117,7 +117,7 @@ export const saveCompanyProfile = async (
     const { data: existingProfile, error: fetchError } = await supabase
       .from("company_profiles")
       .select("id")
-      .eq("organization_id", profile.organization_id)
+      .eq("organization_id", profile.organization_id!)
       .maybeSingle();
 
     if (fetchError && fetchError.code !== "PGRST116") throw fetchError;
@@ -164,7 +164,7 @@ export const saveMissionVision = async (
     const { data: existingData, error: fetchError } = await supabase
       .from("company_mission_vision")
       .select("id")
-      .eq("organization_id", missionVision.organization_id)
+      .eq("organization_id", missionVision.organization_id!)
       .maybeSingle();
       
     if (fetchError && fetchError.code !== "PGRST116") throw fetchError;
