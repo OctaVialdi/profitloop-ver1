@@ -55,7 +55,17 @@ const CompanyProfile: React.FC = () => {
 
     try {
       // Save company profile - Fix by explicitly providing organization_id as required
-      const profileData = {
+      const profileData: { 
+        organization_id: string;
+        address?: any;
+        phone?: any;
+        email?: any;
+        website?: any;
+        established?: any;
+        employees?: number;
+        tax_id?: any;
+        logo_url?: string;
+      } = {
         organization_id: organization.id,
         address: formData.address,
         phone: formData.phone,
