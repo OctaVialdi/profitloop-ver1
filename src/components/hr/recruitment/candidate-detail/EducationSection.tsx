@@ -12,8 +12,17 @@ interface EducationSectionProps {
 export const EducationSection: React.FC<EducationSectionProps> = ({
   candidate
 }) => {
-  const hasFormalEducation = candidate.formalEducation && candidate.formalEducation.length > 0;
-  const hasInformalEducation = candidate.informalEducation && candidate.informalEducation.length > 0;
+  // Add debug logging to understand what data we're receiving
+  console.log("EducationSection: Candidate object:", candidate);
+  console.log("EducationSection: Formal education data:", candidate.formalEducation);
+  console.log("EducationSection: Informal education data:", candidate.informalEducation);
+
+  // Ensure we have arrays for education data even if they are undefined
+  const formalEducation = candidate.formalEducation || [];
+  const informalEducation = candidate.informalEducation || [];
+  
+  const hasFormalEducation = formalEducation.length > 0;
+  const hasInformalEducation = informalEducation.length > 0;
 
   return (
     <div className="space-y-6">
@@ -27,7 +36,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
           
           {hasFormalEducation ? (
             <div className="space-y-4">
-              {candidate.formalEducation!.map((education) => (
+              {formalEducation.map((education) => (
                 <div key={education.id} className="border rounded-md p-4">
                   <div className="flex justify-between">
                     <h3 className="font-semibold text-lg">{education.institution_name}</h3>
@@ -63,7 +72,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
           
           {hasInformalEducation ? (
             <div className="space-y-4">
-              {candidate.informalEducation!.map((education) => (
+              {informalEducation.map((education) => (
                 <div key={education.id} className="border rounded-md p-4">
                   <div className="flex justify-between">
                     <h3 className="font-semibold text-lg">{education.course_name}</h3>

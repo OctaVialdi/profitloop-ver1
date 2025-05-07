@@ -4,7 +4,6 @@ import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { candidateService, CandidateWithDetails } from "@/services/candidateService";
-import { CandidateDetailSidebar } from "@/components/hr/recruitment/candidate-detail/CandidateDetailSidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ensureEvaluationHasCriteriaScores } from "@/utils/evaluationUtils";
@@ -24,6 +23,8 @@ const CandidateDetailPage = () => {
       const data = await candidateService.fetchCandidateById(id);
       if (data) {
         console.log("Candidate data fetched successfully:", data);
+        console.log("Formal education data:", data.formalEducation);
+        console.log("Informal education data:", data.informalEducation);
         
         // Process evaluations to ensure they all have criteria_scores
         if (data.evaluations && data.evaluations.length > 0) {
@@ -31,6 +32,12 @@ const CandidateDetailPage = () => {
             ensureEvaluationHasCriteriaScores(evaluation)
           );
         }
+        
+        // Ensure education arrays are defined
+        data.formalEducation = data.formalEducation || [];
+        data.informalEducation = data.informalEducation || [];
+        data.workExperience = data.workExperience || [];
+        data.familyMembers = data.familyMembers || [];
         
         setCandidate(data);
       } else {

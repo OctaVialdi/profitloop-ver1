@@ -1,4 +1,3 @@
-
 /**
  * Formats a file size in bytes to a human-readable string
  */
@@ -19,4 +18,11 @@ export function formatDate(dateString: string | null): string {
   if (!dateString) return "-";
   const date = new Date(dateString);
   return date.toLocaleDateString();
+}
+
+/**
+ * Safely check if an array has items
+ */
+export function hasItems(arr: any[] | null | undefined): boolean {
+  return Array.isArray(arr) && arr.length > 0;
 }
