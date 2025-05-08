@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, X, Upload, Plus } from 'lucide-react';
+import { Save, X, Upload } from 'lucide-react';
 import { toast } from "sonner";
 import { CompanyData } from '@/services/companyService';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -98,6 +98,9 @@ const CompanyEditDialog: React.FC<CompanyEditDialogProps> = ({ companyData, onSa
     .join('')
     .toUpperCase()
     .substring(0, 2);
+
+  // Get departments for display (read-only)
+  const departments = companyData?.departments || [];
 
   return (
     <div className="space-y-6">
@@ -258,6 +261,37 @@ const CompanyEditDialog: React.FC<CompanyEditDialogProps> = ({ companyData, onSa
         </div>
         
         <div className="space-y-6">
+          {/* Added Departments (Read-only) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Departments
+                <span className="text-xs font-normal text-muted-foreground ml-2 px-2 py-1 bg-slate-100 rounded-full">
+                  from employee data
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {departments.length > 0 ? (
+                <ul className="space-y-2">
+                  {departments.map((dept, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-primary"></span>
+                      <span>{dept.organization_name}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-center p-4 border rounded-md">
+                  <p className="text-muted-foreground">No departments found in employee data</p>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-4">
+                Departments are managed through employee assignments and cannot be edited directly
+              </p>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Instructions</CardTitle>
@@ -267,8 +301,8 @@ const CompanyEditDialog: React.FC<CompanyEditDialogProps> = ({ companyData, onSa
                 <li>Click on the company logo circle to upload a new logo</li>
                 <li>The company name will update the organization name across the system</li>
                 <li>Number of employees is calculated automatically from active employees</li>
+                <li>Departments are derived from employee organization assignments</li>
                 <li>Fill all the details and save changes when done</li>
-                <li>Changes will be visible immediately after saving</li>
               </ul>
             </CardContent>
           </Card>

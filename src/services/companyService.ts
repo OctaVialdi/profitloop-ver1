@@ -23,10 +23,9 @@ export interface CompanyMissionVision {
   vision?: string;
 }
 
-export interface CompanyDepartment {
-  id: string;
-  organization_id: string;
-  name: string;
+// Modified: Removed CompanyDepartment interface and added OrganizationName
+export interface OrganizationName {
+  organization_name: string;
 }
 
 export interface CompanyValue {
@@ -43,7 +42,7 @@ export interface CompanyData {
   };
   profile: CompanyProfile | null;
   missionVision: CompanyMissionVision | null;
-  departments: CompanyDepartment[];
+  departments: OrganizationName[]; // Changed type to OrganizationName[]
   values: CompanyValue[];
 }
 
@@ -77,12 +76,9 @@ export const fetchCompanyData = async (organizationId: string): Promise<CompanyD
     
     if (missionVisionError && missionVisionError.code !== "PGRST116") throw missionVisionError;
     
-    // Fetch departments
+    // Modified: Fetch departments from employee_employment instead of company_departments
     const { data: departmentsData, error: departmentsError } = await supabase
-      .from("company_departments")
-      .select("*")
-      .eq("organization_id", organizationId)
-      .order("name");
+      .rpc("get_unique_organization_names", { org_id: organizationId });
     
     if (departmentsError) throw departmentsError;
     
@@ -223,44 +219,7 @@ export const saveMissionVision = async (
   }
 };
 
-// Add a new department
-export const addDepartment = async (
-  department: Omit<CompanyDepartment, "id">
-): Promise<CompanyDepartment | null> => {
-  try {
-    const { data, error } = await supabase
-      .from("company_departments")
-      .insert(department)
-      .select("*")
-      .single();
-      
-    if (error) throw error;
-    toast.success("Department added successfully");
-    return data;
-  } catch (error) {
-    console.error("Error adding department:", error);
-    toast.error("Failed to add department");
-    return null;
-  }
-};
-
-// Delete a department
-export const deleteDepartment = async (id: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from("company_departments")
-      .delete()
-      .eq("id", id);
-      
-    if (error) throw error;
-    toast.success("Department removed successfully");
-    return true;
-  } catch (error) {
-    console.error("Error deleting department:", error);
-    toast.error("Failed to remove department");
-    return false;
-  }
-};
+// Removed: addDepartment and deleteDepartment functions as departments now come from employee_employment
 
 // Add a new company value
 export const addCompanyValue = async (

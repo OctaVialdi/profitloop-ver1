@@ -446,38 +446,6 @@ export type Database = {
           },
         ]
       }
-      company_departments: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          organization_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          organization_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          organization_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_departments_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       company_mission_vision: {
         Row: {
           created_at: string
@@ -1860,6 +1828,12 @@ export type Database = {
           value: string
           label: string
           is_system: boolean
+        }[]
+      }
+      get_unique_organization_names: {
+        Args: { org_id: string }
+        Returns: {
+          organization_name: string
         }[]
       }
       get_user_organizations: {
