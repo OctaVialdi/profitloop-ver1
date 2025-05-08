@@ -62,7 +62,7 @@ export const MeetingStatusBadge: React.FC<MeetingStatusBadgeProps> = ({ status, 
 
   return (
     <Select defaultValue={status} onValueChange={onChange}>
-      <SelectTrigger className={`w-[150px] border ${statusConfig.bg} ${statusConfig.color} mx-auto transition-colors rounded-full`}>
+      <SelectTrigger className={`w-full mx-auto transition-colors rounded-full ${statusConfig.bg} ${statusConfig.color}`}>
         <div className="flex items-center">
           <StatusIcon className="w-4 h-4 mr-2" />
           <SelectValue>{statusConfig.label}</SelectValue>

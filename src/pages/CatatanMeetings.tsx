@@ -327,69 +327,69 @@ const CatatanMeetings = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-hidden">
+                  {/* Unified Table Structure - Combined header and body to fix alignment */}
                   <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50 dark:bg-gray-800">
+                    <TableHeader className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                      <TableRow>
                         <TableHead className="w-[120px] text-left font-semibold">DATE</TableHead>
-                        <TableHead className="w-[300px] text-left px-[20px] font-semibold">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[300px] text-left font-semibold">DISCUSSION POINT</TableHead>
                         <TableHead className="w-[140px] text-center font-semibold">REQUEST BY</TableHead>
                         <TableHead className="w-[140px] text-center font-semibold">STATUS</TableHead>
                         <TableHead className="w-[100px] text-center font-semibold">UPDATES</TableHead>
                         <TableHead className="w-[140px] text-right font-semibold">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
-                  </Table>
-                  
-                  <div className="overflow-hidden" style={{ height: "600px" }}>
-                    <ScrollArea className="h-full">
-                      <Table>
-                        <TableBody>
-                          {loading ? (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center py-8">
-                                <div className="flex justify-center">
-                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                </div>
-                                <div className="mt-2 text-gray-500">Loading meeting points...</div>
-                              </TableCell>
-                            </TableRow>
-                          ) : filteredMeetingPoints.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                                {searchTerm ? 'No matching meeting points found.' : 'No meeting points found. Add one above.'}
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            <AnimatePresence>
-                              {filteredMeetingPoints.map((point, index) => (
-                                <motion.tr
-                                  key={point.id}
-                                  className={index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"}
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  <TableCell className="w-[120px] text-left font-medium text-gray-700 dark:text-gray-300">
-                                    {point.date}
-                                  </TableCell>
-                                  <TableCell className="w-[300px] text-left px-[25px]">
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div className="relative h-10 overflow-hidden">
-                                            <ScrollArea className="h-10 w-full">
-                                              <div className="pr-3 text-left">{point.discussion_point}</div>
-                                            </ScrollArea>
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-md p-2 bg-white dark:bg-gray-800 shadow-lg">
-                                          <p className="text-sm">{point.discussion_point}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </TableCell>
-                                  <TableCell className="w-[140px] text-center px-0">
+                    
+                    {/* Table Body in ScrollArea */}
+                    <ScrollArea className="h-[600px]">
+                      <TableBody>
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8">
+                              <div className="flex justify-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                              </div>
+                              <div className="mt-2 text-gray-500">Loading meeting points...</div>
+                            </TableCell>
+                          </TableRow>
+                        ) : filteredMeetingPoints.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                              {searchTerm ? 'No matching meeting points found.' : 'No meeting points found. Add one above.'}
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          <AnimatePresence>
+                            {filteredMeetingPoints.map((point, index) => (
+                              <motion.tr
+                                key={point.id}
+                                className={index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <TableCell className="w-[120px] text-left font-medium text-gray-700 dark:text-gray-300">
+                                  {point.date}
+                                </TableCell>
+                                <TableCell className="w-[300px] text-left">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="relative h-10 overflow-hidden">
+                                          <ScrollArea className="h-10 w-full">
+                                            <div className="pr-3 text-left">{point.discussion_point}</div>
+                                          </ScrollArea>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-md p-2 bg-white dark:bg-gray-800 shadow-lg">
+                                        <p className="text-sm">{point.discussion_point}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </TableCell>
+                                <TableCell className="w-[140px] text-center">
+                                  <div className="flex justify-center">
                                     <Select 
                                       defaultValue={point.request_by || "unassigned"} 
                                       onValueChange={value => handleRequestByChange(point.id, value)}
@@ -407,51 +407,55 @@ const CatatanMeetings = () => {
                                         ))}
                                       </SelectContent>
                                     </Select>
-                                  </TableCell>
-                                  <TableCell className="w-[140px] text-center px-0">
-                                    <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
-                                  </TableCell>
-                                  <TableCell className="w-[100px] text-center">
-                                    <div className="flex justify-center">
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        onClick={() => handleAddUpdates(point)} 
-                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900" 
-                                        title="View and Add Updates"
-                                      >
-                                        <History size={16} />
-                                        <span className="ml-2 font-medium">
-                                          {updateCounts[point.id] || 0}
-                                        </span>
-                                      </Button>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="w-[140px] text-center">
+                                  <div className="flex justify-center">
+                                    <div className="w-[140px]">
+                                      <MeetingStatusBadge status={point.status} onChange={value => handleStatusChange(point.id, value as MeetingStatus)} />
                                     </div>
-                                  </TableCell>
-                                  <TableCell className="w-[140px] text-right">
-                                    <div className="flex justify-end space-x-2">
-                                      <MeetingActionButton 
-                                        icon={Edit} 
-                                        label="Edit" 
-                                        onClick={() => handleEditMeeting(point)}
-                                        className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" 
-                                      />
-                                      <MeetingActionButton 
-                                        icon={Trash2} 
-                                        label="Delete" 
-                                        variant="destructive" 
-                                        onClick={() => handleDeletePrompt(point)}
-                                        className="hover:bg-red-100 dark:hover:bg-red-900"
-                                      />
-                                    </div>
-                                  </TableCell>
-                                </motion.tr>
-                              ))}
-                            </AnimatePresence>
-                          )}
-                        </TableBody>
-                      </Table>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="w-[100px] text-center">
+                                  <div className="flex justify-center">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => handleAddUpdates(point)} 
+                                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900" 
+                                      title="View and Add Updates"
+                                    >
+                                      <History size={16} />
+                                      <span className="ml-2 font-medium">
+                                        {updateCounts[point.id] || 0}
+                                      </span>
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="w-[140px] text-right">
+                                  <div className="flex justify-end space-x-2">
+                                    <MeetingActionButton 
+                                      icon={Edit} 
+                                      label="Edit" 
+                                      onClick={() => handleEditMeeting(point)}
+                                      className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" 
+                                    />
+                                    <MeetingActionButton 
+                                      icon={Trash2} 
+                                      label="Delete" 
+                                      variant="destructive" 
+                                      onClick={() => handleDeletePrompt(point)}
+                                      className="hover:bg-red-100 dark:hover:bg-red-900"
+                                    />
+                                  </div>
+                                </TableCell>
+                              </motion.tr>
+                            ))}
+                          </AnimatePresence>
+                        )}
+                      </TableBody>
                     </ScrollArea>
-                  </div>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
@@ -503,7 +507,7 @@ const CatatanMeetings = () => {
         </div>
       </div>
       
-      {/* Edit Dialog */}
+      {/* Dialogs */}
       <MeetingDialog 
         open={editDialogOpen} 
         onOpenChange={setEditDialogOpen} 
@@ -512,7 +516,6 @@ const CatatanMeetings = () => {
         title={selectedMeeting ? "Edit Meeting Point" : "Add Meeting Point"} 
       />
       
-      {/* History Dialog */}
       {selectedMeeting && (
         <HistoryDialog 
           open={historyDialogOpen} 
@@ -521,7 +524,6 @@ const CatatanMeetings = () => {
         />
       )}
       
-      {/* Updates Dialog */}
       {selectedMeeting && (
         <UpdatesDialog 
           open={updatesDialogOpen} 
