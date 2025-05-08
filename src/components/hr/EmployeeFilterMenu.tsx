@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, CalendarIcon } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
 // Define filter options
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Resigned'];
@@ -22,50 +23,17 @@ interface EmployeeFilterMenuProps {
 
 export const EmployeeFilterMenu: React.FC<EmployeeFilterMenuProps> = ({ onClose, activeFilters, setActiveFilters }) => {
   // Date filter state
-  const [joinDateRange, setJoinDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
+  const [joinDateRange, setJoinDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined
   });
 
   const handleFilterChange = (key: string, value: string) => {
-    setActiveFilters((prev) => {
-      const newFilters = { ...prev };
-      
-      if (prev[key]?.includes(value)) {
-        // Remove value if it exists
-        newFilters[key] = prev[key].filter(v => v !== value);
-        // If "All" is selected, remove it as well when selecting specific items
-        if (value !== 'All' && newFilters[key].includes('All')) {
-          newFilters[key] = newFilters[key].filter(v => v !== 'All');
-        }
-      } else {
-        // Add value
-        if (!newFilters[key]) {
-          newFilters[key] = [];
-        }
-        
-        // Handle "All" option
-        if (value === 'All') {
-          // If selecting "All", remove other selections
-          newFilters[key] = ['All'];
-        } else {
-          // If selecting specific item, remove "All" if present
-          if (newFilters[key].includes('All')) {
-            newFilters[key] = newFilters[key].filter(v => v !== 'All');
-          }
-          newFilters[key].push(value);
-        }
-      }
-      
-      // If no selections left, add "All" by default
-      if (newFilters[key].length === 0) {
-        newFilters[key] = ['All'];
-      }
-      
-      return newFilters;
+    setActiveFilters({
+      ...activeFilters,
+      [key]: activeFilters[key]?.includes(value)
+        ? activeFilters[key].filter(v => v !== value)
+        : [...(activeFilters[key] || []), value]
     });
   };
 
@@ -76,32 +44,27 @@ export const EmployeeFilterMenu: React.FC<EmployeeFilterMenuProps> = ({ onClose,
 
   const applyDateFilter = () => {
     if (joinDateRange.from) {
-      // Fixed the type issue with the next line by explicitly creating a new object
-      setActiveFilters(prevFilters => {
-        const newFilters = { ...prevFilters };
-        
-        if (joinDateRange.from) {
-          newFilters['joinDateFrom'] = [format(joinDateRange.from, 'yyyy-MM-dd')];
-        }
-        
-        if (joinDateRange.to) {
-          newFilters['joinDateTo'] = [format(joinDateRange.to, 'yyyy-MM-dd')];
-        }
-        
-        return newFilters;
-      });
+      const newFilters = { ...activeFilters };
+      
+      if (joinDateRange.from) {
+        newFilters['joinDateFrom'] = [format(joinDateRange.from, 'yyyy-MM-dd')];
+      }
+      
+      if (joinDateRange.to) {
+        newFilters['joinDateTo'] = [format(joinDateRange.to, 'yyyy-MM-dd')];
+      }
+      
+      setActiveFilters(newFilters);
     }
   };
 
   const clearDateFilter = () => {
     setJoinDateRange({ from: undefined, to: undefined });
     
-    setActiveFilters(prevFilters => {
-      const newFilters = { ...prevFilters };
-      delete newFilters['joinDateFrom'];
-      delete newFilters['joinDateTo'];
-      return newFilters;
-    });
+    const newFilters = { ...activeFilters };
+    delete newFilters['joinDateFrom'];
+    delete newFilters['joinDateTo'];
+    setActiveFilters(newFilters);
   };
 
   const renderCheckbox = (key: string, value: string, label: string) => {
@@ -199,6 +162,7 @@ export const EmployeeFilterMenu: React.FC<EmployeeFilterMenuProps> = ({ onClose,
               selected={joinDateRange}
               onSelect={setJoinDateRange}
               numberOfMonths={2}
+              className="pointer-events-auto"
             />
             <div className="flex justify-end gap-2 p-2 border-t">
               <Button variant="outline" size="sm" onClick={clearDateFilter}>

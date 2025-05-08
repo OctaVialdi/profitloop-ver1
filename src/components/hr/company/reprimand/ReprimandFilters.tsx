@@ -44,44 +44,44 @@ const ReprimandFilters: React.FC<ReprimandFiltersProps> = ({
   }, [filters]);
 
   const handleDepartmentChange = (value: string) => {
-    setFilters(prev => {
-      const current = prev.department || [];
-      if (current.includes(value)) {
-        return { ...prev, department: current.filter(item => item !== value) };
-      } else {
-        return { ...prev, department: [...current, value] };
-      }
+    setFilters({
+      ...filters,
+      department: filters.department 
+        ? filters.department.includes(value)
+          ? filters.department.filter(item => item !== value)
+          : [...filters.department, value]
+        : [value]
     });
   };
 
   const handleTypeChange = (value: string) => {
-    setFilters(prev => {
-      const current = prev.reprimand_type || [];
-      if (current.includes(value)) {
-        return { ...prev, reprimand_type: current.filter(item => item !== value) };
-      } else {
-        return { ...prev, reprimand_type: [...current, value] };
-      }
+    setFilters({
+      ...filters,
+      reprimand_type: filters.reprimand_type 
+        ? filters.reprimand_type.includes(value)
+          ? filters.reprimand_type.filter(item => item !== value)
+          : [...filters.reprimand_type, value]
+        : [value]
     });
   };
 
   const handleStatusChange = (value: string) => {
-    setFilters(prev => {
-      const current = prev.status || [];
-      if (current.includes(value)) {
-        return { ...prev, status: current.filter(item => item !== value) };
-      } else {
-        return { ...prev, status: [...current, value] };
-      }
+    setFilters({
+      ...filters,
+      status: filters.status 
+        ? filters.status.includes(value)
+          ? filters.status.filter(item => item !== value)
+          : [...filters.status, value]
+        : [value]
     });
   };
 
   const handleDateChange = (type: 'start' | 'end', date?: Date) => {
     if (date) {
-      setFilters(prev => ({
-        ...prev,
-        [type === 'start' ? 'startDate' : 'endDate']: date.toISOString().split('T')[0],
-      }));
+      setFilters({
+        ...filters,
+        [type === 'start' ? 'startDate' : 'endDate']: date.toISOString().split('T')[0]
+      });
     }
   };
 

@@ -6,19 +6,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Reprimand } from '@/services/reprimandService';
+import { Reprimand, appealReprimand } from '@/services/reprimandService';
+import { toast } from 'sonner';
 
 interface ReprimandDetailDialogProps {
   reprimand: Reprimand | null;
   isOpen: boolean; 
   onClose: () => void;
+  onAppeal?: (reprimandId: string) => void;
 }
 
 const ReprimandDetailDialog: React.FC<ReprimandDetailDialogProps> = ({
   reprimand,
   isOpen,
   onClose,
+  onAppeal
 }) => {
+  const [isAppealing, setIsAppealing] = React.useState(false);
+  
   if (!reprimand) return null;
 
   const handleDownload = (url: string, fileName: string) => {
@@ -28,6 +33,24 @@ const ReprimandDetailDialog: React.FC<ReprimandDetailDialogProps> = ({
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
+  };
+  
+  const handleAppeal = async () => {
+    if (onAppeal) {
+      onAppeal(reprimand.id);
+    } else {
+      setIsAppealing(true);
+      try {
+        await appealReprimand(reprimand.id);
+        toast.success('Appeal submitted successfully');
+        onClose();
+      } catch (error) {
+        toast.error('Failed to submit appeal');
+        console.error('Appeal error:', error);
+      } finally {
+        setIsAppealing(false);
+      }
+    }
   };
 
   return (
@@ -134,8 +157,17 @@ const ReprimandDetailDialog: React.FC<ReprimandDetailDialogProps> = ({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button onClick={onClose} className="w-full sm:w-auto">
+        <DialogFooter className="flex justify-between items-center">
+          {reprimand.status === 'Active' && (
+            <Button 
+              variant="outline" 
+              onClick={handleAppeal}
+              disabled={isAppealing}
+            >
+              {isAppealing ? 'Submitting Appeal...' : 'Submit Appeal'}
+            </Button>
+          )}
+          <Button onClick={onClose}>
             Close
           </Button>
         </DialogFooter>
