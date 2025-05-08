@@ -426,6 +426,41 @@ export const employeeService = {
       console.error("Error fetching family members:", error);
       return [];
     }
+  },
+
+  // Add new function to resign employee in both tables
+  async resignEmployee(id: string): Promise<boolean> {
+    try {
+      console.log("Resigning employee:", id);
+      
+      // First, update the employee status in the employees table
+      const { error: employeeError } = await supabase
+        .from("employees")
+        .update({ status: "Resigned" })
+        .eq("id", id);
+
+      if (employeeError) {
+        console.error("Error updating employee status:", employeeError);
+        throw employeeError;
+      }
+      
+      // Then, update the employment_status in the employee_employment table
+      const { error: employmentError } = await supabase
+        .from("employee_employment")
+        .update({ employment_status: "Resigned" })
+        .eq("employee_id", id);
+      
+      if (employmentError) {
+        console.error("Error updating employee employment status:", employmentError);
+        // We continue even if there's an error here, as the main employee status was updated
+        // But we don't throw so the overall function can still return success
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error resigning employee:", error);
+      return false;
+    }
   }
 };
 

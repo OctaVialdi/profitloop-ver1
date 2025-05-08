@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Employee, employeeService, EmployeeWithDetails } from "@/services/employeeService";
 import { toast } from "sonner";
@@ -224,6 +223,27 @@ export const useEmployees = () => {
     []
   );
 
+  const resignEmployee = useCallback(
+    async (id: string) => {
+      try {
+        const success = await employeeService.resignEmployee(id);
+        
+        if (success) {
+          // Update the local state to reflect the change
+          setEmployees((prev) =>
+            prev.map((emp) => (emp.id === id ? { ...emp, status: "Resigned" } : emp))
+          );
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error resigning employee:", error);
+        throw error;
+      }
+    },
+    []
+  );
+
   const addDummyEmployees = useCallback(async () => {
     try {
       // Generate unique employee IDs for new employees
@@ -287,6 +307,7 @@ export const useEmployees = () => {
     addEmployee,
     updateEmployee,
     deleteEmployee,
+    resignEmployee,
     addDummyEmployees
   };
 };

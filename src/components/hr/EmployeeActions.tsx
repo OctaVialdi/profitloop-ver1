@@ -25,7 +25,7 @@ interface EmployeeActionsProps {
 
 export const EmployeeActions: React.FC<EmployeeActionsProps> = ({ employeeId, employeeName }) => {
   const navigate = useNavigate();
-  const { updateEmployee, deleteEmployee } = useEmployees();
+  const { resignEmployee, deleteEmployee } = useEmployees();
   
   const handleViewInfo = () => {
     // Changed route from /hr/my-info/personal/{id} to /my-info/personal?id={id}
@@ -34,9 +34,14 @@ export const EmployeeActions: React.FC<EmployeeActionsProps> = ({ employeeId, em
   
   const handleResign = async () => {
     try {
-      // Update employee status to "Resigned"
-      await updateEmployee(employeeId, { status: 'Resigned' });
-      toast.success(`Employee ${employeeName} has been marked as resigned`);
+      // Update employee status to "Resigned" in both tables
+      const success = await resignEmployee(employeeId);
+      
+      if (success) {
+        toast.success(`Employee ${employeeName} has been marked as resigned`);
+      } else {
+        toast.error("Failed to resign employee");
+      }
     } catch (error) {
       console.error(`Error resigning employee: ${employeeId}`, error);
       toast.error("Failed to resign employee");
