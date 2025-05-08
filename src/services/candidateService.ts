@@ -5,25 +5,10 @@ export interface CandidateApplication {
   id: string;
   full_name: string;
   email: string;
-  phone: string | null;
-  address: string | null;
-  birth_date: string | null;
-  birth_place: string | null;
-  gender: string | null;
-  religion: string | null;
-  marital_status: string | null;
-  blood_type: string | null;
-  nik: string | null;
-  passport_number: string | null;
-  passport_expiry: string | null;
-  postal_code: string | null;
-  citizen_address: string | null;
-  status: string;
-  job_position_id: string | null;
-  organization_id: string;
-  recruitment_link_id: string;
-  created_at: string;
+  phone?: string;
   job_title?: string;
+  status: string;
+  created_at: string;
   score?: number;
 }
 
@@ -993,6 +978,22 @@ export const candidateService = {
     } catch (error) {
       console.error("Error saving interview notes:", error);
       return { success: false, error };
+    }
+  },
+
+  async deleteCandidate: async (id: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('candidate_applications')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting candidate:', error);
+      throw error;
     }
   }
 };

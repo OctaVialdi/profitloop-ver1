@@ -12,9 +12,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { createReprimand } from '@/services/reprimandService';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Upload, X, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
+import { createAssetImagesBucket, getUploadFileURL } from '@/integrations/supabase/storage';
 
 interface AddReprimandDialogProps {
   isOpen: boolean;
@@ -28,10 +31,19 @@ interface EmployeeOption {
   role: string;
 }
 
+interface FileAttachment {
+  name: string;
+  size: number;
+  file: File;
+  url?: string;
+}
+
 const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose, onSuccess }) => {
   const { organization } = useOrganization();
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [dragActive, setDragActive] = useState(false);
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -69,13 +81,98 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
     fetchEmployees();
   }, [organization?.id]);
 
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleFiles = (files: File[]) => {
+    const newAttachments: FileAttachment[] = files.map(file => ({
+      name: file.name,
+      size: file.size,
+      file: file,
+    }));
+
+    setAttachments(prev => [...prev, ...newAttachments]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadAttachments = async (organizationId: string, employeeId: string, reprimandId: string) => {
+    try {
+      // Check if bucket exists, if not create it
+      await createAssetImagesBucket();
+      
+      // Upload each attachment
+      const uploads = await Promise.all(attachments.map(async (attachment) => {
+        const fileExt = attachment.name.split('.').pop();
+        const filePath = `${organizationId}/${employeeId}/${reprimandId}/${uuidv4()}.${fileExt}`;
+        
+        // Upload file to storage
+        const { error } = await supabase.storage
+          .from('reprimand-attachments')
+          .upload(filePath, attachment.file);
+          
+        if (error) throw error;
+        
+        // Get public URL
+        const url = await getUploadFileURL(filePath, attachment.file);
+        
+        return {
+          name: attachment.name,
+          size: attachment.size,
+          url
+        };
+      }));
+      
+      return uploads;
+    } catch (error) {
+      console.error('Error uploading attachments:', error);
+      throw error;
+    }
+  };
+
   const onSubmit = async (data: any) => {
     if (!organization?.id) return;
     
     setIsLoading(true);
     
     try {
+      const reprimandId = uuidv4();
+      
+      // Upload any attachments
+      let evidenceAttachments = null;
+      if (attachments.length > 0) {
+        evidenceAttachments = await uploadAttachments(organization.id, data.employee_id, reprimandId);
+      }
+      
+      // Create the reprimand
       await createReprimand({
+        id: reprimandId,
         organization_id: organization.id,
         employee_id: data.employee_id,
         reprimand_type: data.reprimand_type,
@@ -83,14 +180,18 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
         details: data.details,
         escalation_level: data.escalation_level,
         status: 'Active',
-        created_by: supabase.auth.getUser().then(({ data }) => data.user?.id) as unknown as string
+        evidence_attachments: evidenceAttachments,
+        created_by: (await supabase.auth.getUser()).data.user?.id
       });
       
       reset();
+      setAttachments([]);
       onSuccess();
       onClose();
+      toast.success('Reprimand created successfully');
     } catch (error) {
       console.error('Error creating reprimand:', error);
+      toast.error('Failed to create reprimand');
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +217,7 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
               <SelectContent>
                 {employees.map(emp => (
                   <SelectItem key={emp.id} value={emp.id}>
-                    {emp.name} - {emp.role}
+                    {emp.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -195,6 +296,74 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
               {...register('details')}
               rows={4}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Evidence/Attachments</Label>
+            <div
+              className={`mt-1 border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-sm
+                ${dragActive ? 'border-primary bg-primary/10' : 'border-gray-300'}
+                ${attachments.length > 0 ? 'bg-gray-50' : ''}
+              `}
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+            >
+              {attachments.length === 0 ? (
+                <>
+                  <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                  <p className="text-gray-500">Drag and drop files here or</p>
+                  <label htmlFor="file_upload" className="cursor-pointer text-primary hover:underline mt-1">
+                    <span>Browse files</span>
+                    <input
+                      id="file_upload"
+                      type="file"
+                      className="sr-only"
+                      onChange={handleFileChange}
+                      multiple
+                    />
+                  </label>
+                </>
+              ) : (
+                <div className="w-full space-y-2">
+                  {attachments.map((attachment, index) => (
+                    <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
+                      <div className="flex items-center">
+                        <div className="bg-blue-100 p-2 rounded">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="ml-3">
+                          <p className="font-medium text-sm">{attachment.name}</p>
+                          <p className="text-xs text-gray-500">{(attachment.size / 1024).toFixed(1)} KB</p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeAttachment(index)}
+                        className="text-gray-500 hover:text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex justify-center mt-2">
+                    <label htmlFor="add_more_files" className="cursor-pointer text-primary hover:underline text-sm">
+                      <span>+ Add more files</span>
+                      <input
+                        id="add_more_files"
+                        type="file"
+                        className="sr-only"
+                        onChange={handleFileChange}
+                        multiple
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           <DialogFooter>

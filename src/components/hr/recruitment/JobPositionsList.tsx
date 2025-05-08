@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Table, 
@@ -9,11 +10,12 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BriefcaseIcon, PlusIcon, MoreVertical } from "lucide-react";
+import { BriefcaseIcon, PlusIcon, MoreVertical, Users, Eye, Edit, Trash, Link } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -21,23 +23,305 @@ import { NewPositionDialog } from "./NewPositionDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 // Updated interface to make department optional since it's not in the database
 interface JobPosition {
   id: string;
   title: string;
-  department?: string; // Make department optional
+  department?: string;
   location: string;
   employment_type: string;
   status: 'active' | 'draft' | 'closed';
   created_at: string;
   applicantCount: number;
+  description?: string;
+  requirements?: string;
+  responsibilities?: string;
+  salary_range?: string;
 }
+
+interface JobPositionDetailDialogProps {
+  position: JobPosition | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface EditPositionDialogProps {
+  position: JobPosition | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+const JobPositionDetailDialog: React.FC<JobPositionDetailDialogProps> = ({ position, isOpen, onClose }) => {
+  if (!position) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <BriefcaseIcon className="h-5 w-5" />
+            {position.title}
+          </DialogTitle>
+          <DialogDescription>
+            {position.employment_type} • {position.location}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <Badge
+              className={
+                position.status === 'active' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                position.status === 'draft' ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' :
+                'bg-red-100 text-red-800 hover:bg-red-200'
+              }
+            >
+              {position.status.charAt(0).toUpperCase() + position.status.slice(1)}
+            </Badge>
+            
+            <div className="text-sm text-gray-500">
+              {position.applicantCount} applicant{position.applicantCount !== 1 ? 's' : ''}
+            </div>
+          </div>
+          
+          {position.description && (
+            <div>
+              <h3 className="text-sm font-medium mb-1">Description</h3>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">{position.description}</p>
+            </div>
+          )}
+          
+          {position.responsibilities && (
+            <div>
+              <h3 className="text-sm font-medium mb-1">Responsibilities</h3>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">{position.responsibilities}</p>
+            </div>
+          )}
+          
+          {position.requirements && (
+            <div>
+              <h3 className="text-sm font-medium mb-1">Requirements</h3>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">{position.requirements}</p>
+            </div>
+          )}
+          
+          {position.salary_range && (
+            <div>
+              <h3 className="text-sm font-medium mb-1">Salary Range</h3>
+              <p className="text-sm text-gray-600">{position.salary_range}</p>
+            </div>
+          )}
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const EditPositionDialog: React.FC<EditPositionDialogProps> = ({ position, isOpen, onClose, onSave }) => {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [requirements, setRequirements] = useState("");
+  const [responsibilities, setResponsibilities] = useState("");
+  const [location, setLocation] = useState("");
+  const [employmentType, setEmploymentType] = useState("");
+  const [salaryRange, setSalaryRange] = useState("");
+  const [status, setStatus] = useState<'active' | 'draft' | 'closed'>('active');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (position) {
+      setTitle(position.title || "");
+      setDescription(position.description || "");
+      setRequirements(position.requirements || "");
+      setResponsibilities(position.responsibilities || "");
+      setLocation(position.location || "");
+      setEmploymentType(position.employment_type || "");
+      setSalaryRange(position.salary_range || "");
+      setStatus(position.status || 'active');
+    }
+  }, [position]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!position) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('job_positions')
+        .update({
+          title,
+          description,
+          requirements,
+          responsibilities,
+          location,
+          employment_type: employmentType,
+          salary_range: salaryRange,
+          status
+        })
+        .eq('id', position.id);
+        
+      if (error) throw error;
+      
+      toast.success("Position updated successfully");
+      onSave();
+      onClose();
+    } catch (error: any) {
+      console.error("Error updating job position:", error);
+      toast.error("Failed to update position");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Edit Job Position</DialogTitle>
+          <DialogDescription>
+            Update the details of this job position.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Position Title</Label>
+            <Input 
+              id="title" 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+              required 
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input 
+                id="location" 
+                value={location} 
+                onChange={(e) => setLocation(e.target.value)} 
+                required 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="employment_type">Employment Type</Label>
+              <Select 
+                value={employmentType} 
+                onValueChange={setEmploymentType}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Full-time">Full-time</SelectItem>
+                  <SelectItem value="Part-time">Part-time</SelectItem>
+                  <SelectItem value="Contract">Contract</SelectItem>
+                  <SelectItem value="Internship">Internship</SelectItem>
+                  <SelectItem value="Temporary">Temporary</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea 
+              id="description" 
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)} 
+              rows={4} 
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="responsibilities">Responsibilities</Label>
+            <Textarea 
+              id="responsibilities" 
+              value={responsibilities} 
+              onChange={(e) => setResponsibilities(e.target.value)} 
+              rows={4} 
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="requirements">Requirements</Label>
+            <Textarea 
+              id="requirements" 
+              value={requirements} 
+              onChange={(e) => setRequirements(e.target.value)} 
+              rows={4} 
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="salary_range">Salary Range</Label>
+              <Input 
+                id="salary_range" 
+                value={salaryRange} 
+                onChange={(e) => setSalaryRange(e.target.value)} 
+                placeholder="e.g. $50,000 - $70,000" 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select 
+                value={status} 
+                onValueChange={(value: 'active' | 'draft' | 'closed') => setStatus(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function JobPositionsList() {
   const [jobPositions, setJobPositions] = useState<JobPosition[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedPosition, setSelectedPosition] = useState<JobPosition | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [positionToDelete, setPositionToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -122,23 +406,44 @@ export default function JobPositionsList() {
     navigate(`/hr/recruitment/invitations?jobId=${jobId}`);
   };
   
-  const handleDeletePosition = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this position?")) return;
+  const handleDeletePosition = async () => {
+    if (!positionToDelete) return;
     
     try {
       const { error } = await supabase
         .from('job_positions')
         .delete()
-        .eq('id', id);
+        .eq('id', positionToDelete);
         
       if (error) throw error;
       
-      setJobPositions(prev => prev.filter(job => job.id !== id));
+      setJobPositions(prev => prev.filter(job => job.id !== positionToDelete));
       toast.success("Position deleted successfully");
+      setDeleteConfirmOpen(false);
+      setPositionToDelete(null);
     } catch (error: any) {
       console.error("Error deleting job position:", error);
       toast.error("Failed to delete position");
     }
+  };
+
+  const confirmDelete = (id: string) => {
+    setPositionToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleViewDetails = (position: JobPosition) => {
+    setSelectedPosition(position);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const handleEditPosition = (position: JobPosition) => {
+    setSelectedPosition(position);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleViewApplicants = (jobId: string) => {
+    navigate(`/hr/recruitment/candidates?jobId=${jobId}`);
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -234,7 +539,7 @@ export default function JobPositionsList() {
                 <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Applicants</TableHead>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-[120px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -255,42 +560,71 @@ export default function JobPositionsList() {
                   </TableCell>
                   <TableCell className="text-right">{job.applicantCount}</TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit Position</DropdownMenuItem>
-                        <DropdownMenuItem>View Applicants</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleGenerateLink(job.id)}>
-                          Generate Link
-                        </DropdownMenuItem>
-                        {job.status === 'active' && (
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(job.id, 'closed')}>
-                            Close Position
+                    <div className="flex items-center justify-end space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-8 w-8" 
+                        onClick={() => handleViewDetails(job)}
+                        title="View Details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-8 w-8" 
+                        onClick={() => handleViewApplicants(job.id)}
+                        title="View Applicants"
+                      >
+                        <Users className="h-4 w-4" />
+                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewDetails(job)}>
+                            <Eye className="h-4 w-4 mr-2" /> View Details
                           </DropdownMenuItem>
-                        )}
-                        {job.status === 'draft' && (
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(job.id, 'active')}>
-                            Publish Position
+                          <DropdownMenuItem onClick={() => handleEditPosition(job)}>
+                            <Edit className="h-4 w-4 mr-2" /> Edit Position
                           </DropdownMenuItem>
-                        )}
-                        {job.status === 'closed' && (
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(job.id, 'active')}>
-                            Reopen Position
+                          <DropdownMenuItem onClick={() => handleViewApplicants(job.id)}>
+                            <Users className="h-4 w-4 mr-2" /> View Applicants
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem 
-                          className="text-destructive"
-                          onClick={() => handleDeletePosition(job.id)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <DropdownMenuItem onClick={() => handleGenerateLink(job.id)}>
+                            <Link className="h-4 w-4 mr-2" /> Generate Link
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {job.status === 'active' && (
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(job.id, 'closed')}>
+                              Close Position
+                            </DropdownMenuItem>
+                          )}
+                          {job.status === 'draft' && (
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(job.id, 'active')}>
+                              Publish Position
+                            </DropdownMenuItem>
+                          )}
+                          {job.status === 'closed' && (
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(job.id, 'active')}>
+                              Reopen Position
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => confirmDelete(job.id)}
+                          >
+                            <Trash className="h-4 w-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -304,6 +638,36 @@ export default function JobPositionsList() {
         onOpenChange={setIsDialogOpen}
         onPositionCreated={fetchJobPositions}
       />
+
+      <JobPositionDetailDialog 
+        position={selectedPosition}
+        isOpen={isDetailsDialogOpen}
+        onClose={() => setIsDetailsDialogOpen(false)}
+      />
+
+      <EditPositionDialog 
+        position={selectedPosition}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSave={fetchJobPositions}
+      />
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Position</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this position? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePosition} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

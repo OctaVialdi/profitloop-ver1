@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Reprimand } from '@/services/reprimandService';
 import { format } from 'date-fns';
-import { AlertTriangle, FileText, User, Calendar, ArrowUpRight } from 'lucide-react';
+import { AlertTriangle, FileText, User, Calendar, ArrowUpRight, ExternalLink } from 'lucide-react';
 
 interface ReprimandDetailDialogProps {
   reprimand: Reprimand | null;
@@ -118,10 +118,11 @@ const ReprimandDetailDialog: React.FC<ReprimandDetailDialogProps> = ({
                     href={attachment.url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="p-2 border rounded hover:bg-gray-50 flex items-center gap-1"
+                    className="p-2 border rounded hover:bg-gray-50 flex items-center gap-1 text-sm"
                   >
                     <FileText className="h-4 w-4" />
-                    {attachment.name}
+                    <span className="max-w-[140px] truncate">{attachment.name}</span>
+                    <ExternalLink className="h-3 w-3 ml-1" />
                   </a>
                 ))}
               </div>

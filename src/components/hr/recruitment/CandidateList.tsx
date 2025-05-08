@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +11,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, SlidersHorizontal, RefreshCw } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  RefreshCw,
+  Eye,
+  Edit,
+  Trash2,
+  MoreHorizontal
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { candidateService, CandidateApplication } from "@/services/candidateService";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function CandidateList() {
   const navigate = useNavigate();
@@ -24,6 +41,12 @@ export default function CandidateList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [candidateToDelete, setCandidateToDelete] = useState<string | null>(null);
+  
+  // Extract jobId from URL parameters if present
+  const searchParams = new URLSearchParams(location.search);
+  const jobIdFilter = searchParams.get('jobId');
   
   // Function to fetch candidates
   const fetchCandidates = async () => {
@@ -33,7 +56,16 @@ export default function CandidateList() {
       console.log("Fetching candidates list...");
       const data = await candidateService.fetchCandidates();
       console.log(`Fetched ${data.length} candidates`);
-      setCandidates(data);
+      
+      // If jobId filter is present, filter candidates
+      if (jobIdFilter) {
+        const filtered = data.filter(candidate => 
+          candidate.job_position_id === jobIdFilter
+        );
+        setCandidates(filtered);
+      } else {
+        setCandidates(data);
+      }
     } catch (error) {
       console.error("Error fetching candidates:", error);
       toast.error("Failed to load candidates");
@@ -61,7 +93,7 @@ export default function CandidateList() {
     return () => {
       document.removeEventListener('visibilitychange', handleFocus);
     };
-  }, [location.key]); // Add location.key to dependencies to refresh on navigation
+  }, [location.key, jobIdFilter]); // Add location.key and jobIdFilter to dependencies
 
   // Filter the candidates based on search term and status filter
   const filteredCandidates = candidates.filter(candidate => {
@@ -97,13 +129,67 @@ export default function CandidateList() {
     }
   };
 
-  // Handle row click - updated to use absolute path
-  const handleRowClick = (id: string) => {
+  // Handle view details
+  const handleViewDetails = (id: string) => {
     navigate(`/hr/recruitment/candidate/${id}`);
+  };
+
+  // Handle edit candidate
+  const handleEditCandidate = (id: string) => {
+    navigate(`/hr/recruitment/candidate/${id}?edit=true`);
+  };
+
+  // Handle delete candidate
+  const handleDeleteCandidate = async () => {
+    if (!candidateToDelete) return;
+    
+    try {
+      await candidateService.deleteCandidate(candidateToDelete);
+      
+      // Remove candidate from the list
+      setCandidates(candidates.filter(c => c.id !== candidateToDelete));
+      
+      toast.success("Candidate deleted successfully");
+    } catch (error) {
+      console.error("Error deleting candidate:", error);
+      toast.error("Failed to delete candidate");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setCandidateToDelete(null);
+    }
+  };
+
+  // Open delete confirmation dialog
+  const confirmDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCandidateToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  // Build title with job position context if filtered
+  const getTitle = () => {
+    if (jobIdFilter) {
+      const jobTitle = candidates.length > 0 ? candidates[0].job_title : 'Position';
+      return `Candidates for ${jobTitle || 'Selected Position'}`;
+    }
+    return "All Candidates";
   };
 
   return (
     <div className="space-y-4">
+      {jobIdFilter && (
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-medium">{getTitle()}</h2>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/hr/recruitment/candidates')}
+          >
+            View All Candidates
+          </Button>
+        </div>
+      )}
+      
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -160,24 +246,21 @@ export default function CandidateList() {
               <TableHead>Score</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Applied On</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">Loading candidates...</TableCell>
+                <TableCell colSpan={7} className="text-center py-10">Loading candidates...</TableCell>
               </TableRow>
             ) : filteredCandidates.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">No candidates found</TableCell>
+                <TableCell colSpan={7} className="text-center py-10">No candidates found</TableCell>
               </TableRow>
             ) : (
               filteredCandidates.map((candidate) => (
-                <TableRow 
-                  key={candidate.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleRowClick(candidate.id)}
-                >
+                <TableRow key={candidate.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">{candidate.full_name}</TableCell>
                   <TableCell>{candidate.job_title || "General Application"}</TableCell>
                   <TableCell>
@@ -193,12 +276,64 @@ export default function CandidateList() {
                   </TableCell>
                   <TableCell>{candidate.email}</TableCell>
                   <TableCell>{format(new Date(candidate.created_at), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end items-center gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleViewDetails(candidate.id)}
+                        title="View Details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewDetails(candidate.id)}>
+                            <Eye className="h-4 w-4 mr-2" /> View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditCandidate(candidate.id)}>
+                            <Edit className="h-4 w-4 mr-2" /> Edit Candidate
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={(e) => confirmDelete(candidate.id, e)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Delete Candidate
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Candidate</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this candidate? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCandidate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-};
+}
