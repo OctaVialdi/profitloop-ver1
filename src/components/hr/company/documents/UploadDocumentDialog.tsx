@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -216,7 +215,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                   <SelectValue placeholder="Not related to employee" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not related to employee</SelectItem>
+                  <SelectItem value="none">Not related to employee</SelectItem>
                   {employees.map(employee => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.name}

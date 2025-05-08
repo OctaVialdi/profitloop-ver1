@@ -35,12 +35,16 @@ interface BreadcrumbNavProps {
   rootLabel?: string;
   excludePaths?: string[];
   customLabels?: Record<string, string>;
+  showHomeIcon?: boolean;
+  className?: string;
 }
 
 export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
   rootLabel = "Dashboard",
   excludePaths = [],
   customLabels = {},
+  showHomeIcon = true,
+  className = "mb-4",
 }) => {
   const location = useLocation();
   
@@ -79,16 +83,20 @@ export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
   });
 
   return (
-    <Breadcrumb className="mb-4">
+    <Breadcrumb className={className}>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link to="/dashboard">
-              <HomeIcon className="h-4 w-4" />
-            </Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
+        {showHomeIcon && (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/dashboard">
+                  <HomeIcon className="h-4 w-4" />
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+          </>
+        )}
         
         {breadcrumbItems.map((item, index) => (
           <React.Fragment key={item.path}>
