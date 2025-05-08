@@ -1,173 +1,136 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { AlertTriangle, Eye, FileText, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Reprimand, appealReprimand } from '@/services/reprimandService';
-import { toast } from 'sonner';
+import { Reprimand } from '@/services/reprimandService';
+import { format } from 'date-fns';
+import { AlertTriangle, FileText, User, Calendar, ArrowUpRight } from 'lucide-react';
 
 interface ReprimandDetailDialogProps {
   reprimand: Reprimand | null;
-  isOpen: boolean; 
+  isOpen: boolean;
   onClose: () => void;
-  onAppeal?: (reprimandId: string) => void;
 }
 
 const ReprimandDetailDialog: React.FC<ReprimandDetailDialogProps> = ({
   reprimand,
   isOpen,
-  onClose,
-  onAppeal
+  onClose
 }) => {
-  const [isAppealing, setIsAppealing] = React.useState(false);
-  
   if (!reprimand) return null;
 
-  const handleDownload = (url: string, fileName: string) => {
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = fileName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
+  const renderStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Active':
+        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Active</Badge>;
+      case 'Resolved':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Resolved</Badge>;
+      case 'Appealed':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Appealed</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
-  
-  const handleAppeal = async () => {
-    if (onAppeal) {
-      onAppeal(reprimand.id);
-    } else {
-      setIsAppealing(true);
-      try {
-        await appealReprimand(reprimand.id);
-        toast.success('Appeal submitted successfully');
-        onClose();
-      } catch (error) {
-        toast.error('Failed to submit appeal');
-        console.error('Appeal error:', error);
-      } finally {
-        setIsAppealing(false);
-      }
+
+  const renderTypeBadge = (type: string) => {
+    switch (type) {
+      case 'Verbal':
+        return <Badge variant="outline">{type}</Badge>;
+      case 'Written':
+        return <Badge variant="secondary">{type}</Badge>;
+      case 'PIP':
+        return <Badge variant="default">{type}</Badge>;
+      case 'Final Warning':
+        return <Badge variant="destructive">{type}</Badge>;
+      default:
+        return <Badge variant="outline">{type}</Badge>;
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <div className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
-            <DialogTitle>Reprimand Details</DialogTitle>
-          </div>
+            Reprimand Details
+          </DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-4">
+        
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {renderTypeBadge(reprimand.reprimand_type)}
+              {reprimand.escalation_level > 1 && (
+                <Badge variant="outline" className="bg-amber-100 text-amber-800">
+                  Level {reprimand.escalation_level}
+                </Badge>
+              )}
+            </div>
+            {renderStatusBadge(reprimand.status)}
+          </div>
+          
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Employee</p>
-              <p className="text-base">{reprimand.employee_name}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Department</p>
-              <p className="text-base">{reprimand.department}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Type</p>
-              <p className="text-base">{reprimand.reprimand_type}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Date</p>
-              <p className="text-base">{format(new Date(reprimand.date), 'PPP')}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Status</p>
-              <Badge 
-                variant={
-                  reprimand.status === 'Active' ? 'default' : 
-                  reprimand.status === 'Resolved' ? 'outline' : 'secondary'
-                }
-              >
-                {reprimand.status}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Escalation Level</p>
-              <p className="text-base">Level {reprimand.escalation_level}</p>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <p className="text-sm font-medium text-muted-foreground mb-2">Details</p>
-            <div className="bg-muted p-4 rounded-md min-h-[100px] whitespace-pre-wrap">
-              {reprimand.details || "No details provided."}
-            </div>
-          </div>
-
-          {reprimand.evidence_attachments && reprimand.evidence_attachments.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Evidence Attachments</p>
-                <div className="space-y-2">
-                  {reprimand.evidence_attachments.map((attachment, index) => (
-                    <div 
-                      key={index}
-                      className="flex items-center justify-between bg-muted p-3 rounded-md"
-                    >
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm">{attachment.name}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => window.open(attachment.url, '_blank')}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownload(attachment.url, attachment.name)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <User className="h-3 w-3" /> Employee
               </div>
-            </>
-          )}
-
-          <div className="text-xs text-muted-foreground">
-            <p>Created: {format(new Date(reprimand.created_at), 'PPP p')}</p>
-            <p>Last updated: {format(new Date(reprimand.updated_at), 'PPP p')}</p>
+              <div className="font-medium">{reprimand.employee_name}</div>
+            </div>
+            
+            <div>
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <ArrowUpRight className="h-3 w-3" /> Department
+              </div>
+              <div className="font-medium">{reprimand.department}</div>
+            </div>
+            
+            <div>
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <Calendar className="h-3 w-3" /> Date
+              </div>
+              <div className="font-medium">{format(new Date(reprimand.date), 'MMMM d, yyyy')}</div>
+            </div>
+            
+            <div>
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <FileText className="h-3 w-3" /> Created
+              </div>
+              <div className="font-medium">{format(new Date(reprimand.created_at), 'MMMM d, yyyy')}</div>
+            </div>
           </div>
-        </div>
-
-        <DialogFooter className="flex justify-between items-center">
-          {reprimand.status === 'Active' && (
-            <Button 
-              variant="outline" 
-              onClick={handleAppeal}
-              disabled={isAppealing}
-            >
-              {isAppealing ? 'Submitting Appeal...' : 'Submit Appeal'}
-            </Button>
+          
+          <div>
+            <div className="text-sm text-gray-500 mb-1">Details</div>
+            <div className="p-4 bg-gray-50 rounded-md whitespace-pre-wrap">
+              {reprimand.details || 'No details provided.'}
+            </div>
+          </div>
+          
+          {reprimand.evidence_attachments && reprimand.evidence_attachments.length > 0 && (
+            <div>
+              <div className="text-sm text-gray-500 mb-1">Evidence/Attachments</div>
+              <div className="flex flex-wrap gap-2">
+                {reprimand.evidence_attachments.map((attachment, index) => (
+                  <a 
+                    key={index} 
+                    href={attachment.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-2 border rounded hover:bg-gray-50 flex items-center gap-1"
+                  >
+                    <FileText className="h-4 w-4" />
+                    {attachment.name}
+                  </a>
+                ))}
+              </div>
+            </div>
           )}
-          <Button onClick={onClose}>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
             Close
           </Button>
         </DialogFooter>

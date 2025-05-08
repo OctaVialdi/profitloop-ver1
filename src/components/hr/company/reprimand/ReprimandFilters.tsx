@@ -1,16 +1,14 @@
 
 import React from 'react';
-import { Search, Filter, ArrowDownToLine } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Calendar } from '@/components/ui/calendar';
+import { Search, Filter, Download, CalendarIcon } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReprimandFilter } from '@/services/reprimandService';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface ReprimandFiltersProps {
   searchTerm: string;
@@ -20,213 +18,136 @@ interface ReprimandFiltersProps {
   exportToCSV: () => void;
 }
 
-const reprimandTypes = ["Verbal", "Written", "PIP", "Suspension"];
-const statusOptions = ["Active", "Resolved", "Appealed"];
-const departmentOptions = ["HR", "Finance", "IT", "Marketing", "Operations"];
-
 const ReprimandFilters: React.FC<ReprimandFiltersProps> = ({
   searchTerm,
   setSearchTerm,
   filters,
   setFilters,
-  exportToCSV,
+  exportToCSV
 }) => {
-  const [showFilters, setShowFilters] = React.useState(false);
+  const reprimandTypes = ['All', 'Verbal', 'Written', 'PIP', 'Final Warning'];
+  const statusOptions = ['All', 'Active', 'Resolved', 'Appealed'];
 
-  // Count active filters
-  const activeFiltersCount = React.useMemo(() => {
-    let count = 0;
-    if (filters.department && filters.department.length > 0) count++;
-    if (filters.reprimand_type && filters.reprimand_type.length > 0) count++;
-    if (filters.status && filters.status.length > 0) count++;
-    if (filters.startDate || filters.endDate) count++;
-    return count;
-  }, [filters]);
-
-  const handleDepartmentChange = (value: string) => {
-    setFilters({
-      ...filters,
-      department: filters.department 
-        ? filters.department.includes(value)
-          ? filters.department.filter(item => item !== value)
-          : [...filters.department, value]
-        : [value]
-    });
-  };
-
-  const handleTypeChange = (value: string) => {
-    setFilters({
-      ...filters,
-      reprimand_type: filters.reprimand_type 
-        ? filters.reprimand_type.includes(value)
-          ? filters.reprimand_type.filter(item => item !== value)
-          : [...filters.reprimand_type, value]
-        : [value]
-    });
-  };
-
-  const handleStatusChange = (value: string) => {
-    setFilters({
-      ...filters,
-      status: filters.status 
-        ? filters.status.includes(value)
-          ? filters.status.filter(item => item !== value)
-          : [...filters.status, value]
-        : [value]
-    });
-  };
-
-  const handleDateChange = (type: 'start' | 'end', date?: Date) => {
-    if (date) {
+  const handleFilterChange = (type: keyof ReprimandFilter, value: string) => {
+    if (value === 'All') {
+      // If 'All' is selected, clear the filter for this type
+      const newFilters = { ...filters };
+      if (type === 'reprimand_type') {
+        newFilters.reprimand_type = ['All'];
+      } else if (type === 'status') {
+        newFilters.status = ['All'];
+      }
+      setFilters(newFilters);
+    } else {
+      // Update the specific filter
       setFilters({
         ...filters,
-        [type === 'start' ? 'startDate' : 'endDate']: date.toISOString().split('T')[0]
+        [type]: [value]
       });
     }
   };
 
-  const clearFilters = () => {
-    setFilters({});
+  const handleStartDateChange = (date: Date | undefined) => {
+    setFilters({
+      ...filters,
+      startDate: date ? format(date, 'yyyy-MM-dd') : undefined
+    });
+  };
+
+  const handleEndDateChange = (date: Date | undefined) => {
+    setFilters({
+      ...filters,
+      endDate: date ? format(date, 'yyyy-MM-dd') : undefined
+    });
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4 mb-4">
-      <div className="relative w-full sm:w-auto flex-1 max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="flex flex-col md:flex-row gap-4 mb-4">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
         <Input
-          placeholder="Search reprimands..."
+          className="pl-10"
+          placeholder="Search by employee name, department..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 w-full"
         />
       </div>
-
-      <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-        <Popover open={showFilters} onOpenChange={setShowFilters}>
+      
+      <Select 
+        value={filters.reprimand_type?.[0] || 'All'} 
+        onValueChange={(value) => handleFilterChange('reprimand_type', value)}
+      >
+        <SelectTrigger className="w-[180px]">
+          <Filter className="mr-2 h-4 w-4" />
+          <SelectValue placeholder="Reprimand Type" />
+        </SelectTrigger>
+        <SelectContent>
+          {reprimandTypes.map(type => (
+            <SelectItem key={type} value={type}>{type}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <Select 
+        value={filters.status?.[0] || 'All'} 
+        onValueChange={(value) => handleFilterChange('status', value)}
+      >
+        <SelectTrigger className="w-[180px]">
+          <Filter className="mr-2 h-4 w-4" />
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          {statusOptions.map(status => (
+            <SelectItem key={status} value={status}>{status}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <div className="flex space-x-2">
+        <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="flex gap-2">
-              <Filter className="h-4 w-4" />
-              <span>Filter</span>
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {activeFiltersCount}
-                </Badge>
-              )}
+            <Button variant="outline" className={cn(
+              "justify-start text-left font-normal",
+              !filters.startDate && "text-muted-foreground"
+            )}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {filters.startDate ? format(new Date(filters.startDate), 'PP') : <span>Start Date</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-80">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium">Filter Reprimands</h3>
-                {activeFiltersCount > 0 && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    Clear all
-                  </Button>
-                )}
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label className="text-xs">Department</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {departmentOptions.map(dept => (
-                    <div key={dept} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`dept-${dept}`}
-                        checked={(filters.department || []).includes(dept)}
-                        onCheckedChange={() => handleDepartmentChange(dept)}
-                      />
-                      <label 
-                        htmlFor={`dept-${dept}`}
-                        className="text-sm cursor-pointer"
-                      >
-                        {dept}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs">Reprimand Type</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {reprimandTypes.map(type => (
-                    <div key={type} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`type-${type}`}
-                        checked={(filters.reprimand_type || []).includes(type)}
-                        onCheckedChange={() => handleTypeChange(type)}
-                      />
-                      <label 
-                        htmlFor={`type-${type}`}
-                        className="text-sm cursor-pointer"
-                      >
-                        {type}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs">Status</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {statusOptions.map(status => (
-                    <div key={status} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`status-${status}`}
-                        checked={(filters.status || []).includes(status)}
-                        onCheckedChange={() => handleStatusChange(status)}
-                      />
-                      <label 
-                        htmlFor={`status-${status}`}
-                        className="text-sm cursor-pointer"
-                      >
-                        {status}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs">Date Range</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <Card className="col-span-2">
-                    <CardContent className="p-2">
-                      <Calendar
-                        mode="range"
-                        selected={{
-                          from: filters.startDate ? new Date(filters.startDate) : undefined,
-                          to: filters.endDate ? new Date(filters.endDate) : undefined,
-                        }}
-                        onSelect={(range) => {
-                          if (range?.from) handleDateChange('start', range.from);
-                          if (range?.to) handleDateChange('end', range.to);
-                        }}
-                        className="rounded-md border w-full"
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              <Button 
-                className="w-full"
-                onClick={() => setShowFilters(false)}
-              >
-                Apply Filters
-              </Button>
-            </div>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={filters.startDate ? new Date(filters.startDate) : undefined}
+              onSelect={handleStartDateChange}
+              initialFocus
+            />
           </PopoverContent>
         </Popover>
-
-        <Button variant="outline" onClick={exportToCSV}>
-          <ArrowDownToLine className="h-4 w-4 mr-2" />
-          Export
-        </Button>
+        
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={cn(
+              "justify-start text-left font-normal",
+              !filters.endDate && "text-muted-foreground"
+            )}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {filters.endDate ? format(new Date(filters.endDate), 'PP') : <span>End Date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={filters.endDate ? new Date(filters.endDate) : undefined}
+              onSelect={handleEndDateChange}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
       </div>
+
+      <Button variant="outline" onClick={exportToCSV}>
+        <Download className="mr-2 h-4 w-4" /> Export
+      </Button>
     </div>
   );
 };
