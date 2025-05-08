@@ -38,6 +38,22 @@ export default function MyAssetsPage() {
     category: 'all',
     status: 'all',
   });
+
+  // Define asset types and statuses locally
+  const assetTypes = [
+    'Laptop', 
+    'Desktop', 
+    'Monitor', 
+    'Phone', 
+    'Tablet', 
+    'Keyboard', 
+    'Mouse', 
+    'Headset',
+    'Docking Station',
+    'Printer',
+    'Camera',
+    'Other'
+  ];
   
   // Extract the employee ID from the query parameters
   const employeeId = searchParams.get("id");
@@ -244,7 +260,7 @@ export default function MyAssetsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      {assetService.assetTypes.map(type => (
+                      {assetTypes.map(type => (
                         <SelectItem key={type} value={type}>
                           {type}
                         </SelectItem>
