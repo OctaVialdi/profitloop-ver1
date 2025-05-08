@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { checkBucketExists, uploadFileToBucket } from '@/integrations/supabase/storage';
+import { ensureBucketExists, uploadFileToBucket } from '@/integrations/supabase/storage';
 
 interface AddReprimandDialogProps {
   isOpen: boolean;
@@ -124,7 +124,7 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
   const uploadAttachments = async (organizationId: string, employeeId: string, reprimandId: string) => {
     try {
       // Check if bucket exists
-      const bucketExists = await checkBucketExists('reprimand-attachments');
+      const bucketExists = await ensureBucketExists('reprimand-attachments');
       if (!bucketExists) {
         toast.error("Storage bucket 'reprimand-attachments' not found. Contact your administrator.");
         throw new Error("Storage bucket not found");

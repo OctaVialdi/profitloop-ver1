@@ -5,12 +5,15 @@ import { toast } from "sonner";
 // Helper function to check if a storage bucket exists
 export async function checkBucketExists(bucketName: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.storage.getBucket(bucketName);
+    // Using listBuckets instead of getBucket for more reliable bucket existence check
+    const { data: buckets, error } = await supabase.storage.listBuckets();
+    
     if (error) {
       console.error("Error checking bucket existence:", error.message);
       return false;
     }
-    return !!data;
+    
+    return buckets.some(bucket => bucket.name === bucketName);
   } catch (error) {
     console.error('Error checking if bucket exists:', error);
     return false;
@@ -18,7 +21,7 @@ export async function checkBucketExists(bucketName: string): Promise<boolean> {
 }
 
 // Create storage bucket if it doesn't exist
-export async function createAssetImagesBucket(): Promise<boolean> {
+export async function createBucket(bucketName: string, isPublic: boolean = false): Promise<boolean> {
   try {
     // First check if the user has permissions to create buckets
     const { data: userInfo, error: userError } = await supabase.auth.getUser();
@@ -28,27 +31,38 @@ export async function createAssetImagesBucket(): Promise<boolean> {
       return false;
     }
     
-    const exists = await checkBucketExists('company_documents');
+    const exists = await checkBucketExists(bucketName);
     
     if (!exists) {
-      // Instead of directly creating the bucket which might trigger RLS errors,
-      // we'll use a more focused approach
-      // Signal to the user that they need to create the bucket in the Supabase dashboard
-      console.log("The 'company_documents' bucket doesn't exist. Using temporary alternative storage.");
-      toast.warning("Some storage features may be limited. Please contact your administrator to create a 'company_documents' bucket.");
-      return false;
+      const { data, error } = await supabase.storage.createBucket(bucketName, {
+        public: isPublic,
+      });
+      
+      if (error) {
+        if (error.message.includes('Permission denied')) {
+          console.log(`Insufficient permissions to create the '${bucketName}' bucket.`);
+          toast.warning(`You don't have permission to create storage buckets. Please contact your administrator to create the '${bucketName}' bucket.`);
+        } else {
+          console.error(`Error creating ${bucketName} bucket:`, error);
+          toast.error(`Failed to create ${bucketName} bucket: ${error.message}`);
+        }
+        return false;
+      }
+      
+      console.log(`Successfully created '${bucketName}' bucket.`);
+      return true;
     }
     
-    return true;
+    return true; // Bucket already exists
   } catch (error: any) {
-    console.error('Error creating asset_images bucket:', error.message || error);
+    console.error(`Error creating ${bucketName} bucket:`, error.message || error);
     toast.error("Storage initialization failed. Please try again.");
     return false;
   }
 }
 
 // Function to check if a bucket exists and create it if needed
-export async function ensureBucketExists(bucketName: string): Promise<boolean> {
+export async function ensureBucketExists(bucketName: string, isPublic: boolean = false): Promise<boolean> {
   try {
     // First check if the user has permissions
     const { data: userInfo, error: userError } = await supabase.auth.getUser();
@@ -61,9 +75,7 @@ export async function ensureBucketExists(bucketName: string): Promise<boolean> {
     const exists = await checkBucketExists(bucketName);
     
     if (!exists) {
-      console.log(`The '${bucketName}' bucket doesn't exist. Please ensure it's created in the Supabase dashboard.`);
-      toast.warning(`Storage bucket '${bucketName}' not found. Some features may be limited.`);
-      return false;
+      return await createBucket(bucketName, isPublic);
     }
     
     return true;
@@ -116,10 +128,14 @@ export async function uploadFileToBucket(
     const bucketExists = await checkBucketExists(bucketName);
     
     if (!bucketExists) {
-      return { 
-        url: null, 
-        error: new Error(`Storage bucket '${bucketName}' not found`) 
-      };
+      // Try to create the bucket
+      const created = await createBucket(bucketName, true);
+      if (!created) {
+        return { 
+          url: null, 
+          error: new Error(`Storage bucket '${bucketName}' not found and could not be created`) 
+        };
+      }
     }
     
     // Upload the file
