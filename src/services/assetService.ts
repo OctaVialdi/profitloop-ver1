@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 export interface EmployeeAsset {
   id: string;
-  employee_id: string;
+  employee_id: string | null; // Changed to allow null for company assets
   name: string;
   asset_type: string;
   serial_number?: string;
@@ -22,6 +22,13 @@ export interface EmployeeAsset {
   created_at: string;
   updated_at: string;
   asset_image?: string;
+  // Properties added for organization assets view
+  employeeName?: string;
+  employeeCode?: string;
+  employees?: {
+    name: string;
+    employee_id: string;
+  };
 }
 
 export interface AssetFormData {
@@ -120,13 +127,20 @@ export const assetService = {
 
   async addAsset(employeeId: string | null, assetData: AssetFormData): Promise<EmployeeAsset | null> {
     try {
-      // If employeeId is null, this is a company asset not assigned to anyone yet
-      const insertData = employeeId ? {
-        employee_id: employeeId,
-        ...assetData
-      } : {
-        ...assetData
-      };
+      // Modified to handle optional employeeId
+      let insertData;
+      
+      if (employeeId) {
+        insertData = {
+          employee_id: employeeId,
+          ...assetData
+        };
+      } else {
+        // For company assets not assigned to anyone
+        insertData = {
+          ...assetData
+        };
+      }
 
       const { data, error } = await supabase
         .from('employee_assets')

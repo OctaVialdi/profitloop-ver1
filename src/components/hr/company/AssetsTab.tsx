@@ -92,7 +92,7 @@ const AssetsTab: React.FC = () => {
       category: asset.asset_type,
       serialNumber: asset.serial_number || '',
       qrCode: asset.asset_tag || `QR-${asset.asset_type}-${asset.id.substring(0, 8)}`,
-      employee: asset.employees ? asset.employees.name : 'Unassigned',
+      employee: asset.employeeName || 'Unassigned',
       description: asset.name,
       specifications: asset.specifications || '',
       lendDate: asset.assigned_date || '',

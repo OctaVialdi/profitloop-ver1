@@ -1,6 +1,6 @@
 
 import { BrowserRouter } from "react-router-dom";
-import { Routes } from "./routes";
+import { AppRoutes } from "./routes";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/QueryProvider";
 import { useAssetStorage } from "./hooks/useAssetStorage";
@@ -12,7 +12,7 @@ function App() {
   return (
     <QueryProvider>
       <BrowserRouter>
-        <Routes />
+        <AppRoutes />
         <Toaster />
       </BrowserRouter>
     </QueryProvider>
