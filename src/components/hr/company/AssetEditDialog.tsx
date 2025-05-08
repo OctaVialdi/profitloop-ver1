@@ -17,7 +17,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { CalendarIcon, QrCode, Save, X, File } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface Asset {
   id: string;
