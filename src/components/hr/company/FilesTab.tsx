@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, FileText, Search, Filter, Download, Calendar } from "lucide-react";
+import { Plus, FileText, Search, Filter, Download, Calendar as CalendarIcon } from "lucide-react";
 import { UploadDocumentDialog } from "./documents/UploadDocumentDialog";
 import { DocumentsList } from "./documents/DocumentsList";
 import { useCompanyDocuments } from "@/hooks/useCompanyDocuments";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 
 const FilesTab = () => {
@@ -64,7 +65,7 @@ const FilesTab = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="flex items-center">
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateFilter ? format(dateFilter, 'PP') : "Filter by Date"}
                 </Button>
               </PopoverTrigger>
