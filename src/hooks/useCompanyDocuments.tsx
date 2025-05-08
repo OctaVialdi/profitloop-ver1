@@ -2,11 +2,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { documentService, CompanyDocument, documentTypes } from '@/services/companyDocumentService';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useCompanyDocuments(initialType?: string) {
   const [currentType, setCurrentType] = useState<string | undefined>(initialType);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const queryClient = useQueryClient();
   
   // Use React Query for better caching and state management
   const { 
@@ -28,7 +29,8 @@ export function useCompanyDocuments(initialType?: string) {
         toast.error("Failed to load documents");
         throw err;
       }
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes before data becomes stale
   });
 
   // Get document counts by type
@@ -41,7 +43,8 @@ export function useCompanyDocuments(initialType?: string) {
         console.error("Error counting documents:", err);
         return {};
       }
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Update counts when typeCounts changes
@@ -61,7 +64,11 @@ export function useCompanyDocuments(initialType?: string) {
     try {
       const result = await documentService.uploadCompanyDocument(file, documentData);
       toast.success("Document uploaded successfully");
-      await fetchDocuments(); // Refresh the documents list
+      
+      // Invalidate relevant queries to update data
+      queryClient.invalidateQueries({ queryKey: ['companyDocuments'] });
+      queryClient.invalidateQueries({ queryKey: ['documentCounts'] });
+      
       return result;
     } catch (err) {
       console.error("Error uploading document:", err);
@@ -74,7 +81,11 @@ export function useCompanyDocuments(initialType?: string) {
     try {
       await documentService.deleteCompanyDocument(documentId);
       toast.success("Document deleted successfully");
-      await fetchDocuments(); // Refresh the documents list
+      
+      // Invalidate relevant queries to update data
+      queryClient.invalidateQueries({ queryKey: ['companyDocuments'] });
+      queryClient.invalidateQueries({ queryKey: ['documentCounts'] });
+      
       return true;
     } catch (err) {
       console.error("Error deleting document:", err);
@@ -87,7 +98,10 @@ export function useCompanyDocuments(initialType?: string) {
     try {
       const result = await documentService.updateCompanyDocument(documentId, updateData);
       toast.success("Document updated successfully");
-      await fetchDocuments(); // Refresh the documents list
+      
+      // Invalidate relevant queries to update data
+      queryClient.invalidateQueries({ queryKey: ['companyDocuments'] });
+      
       return result;
     } catch (err) {
       console.error("Error updating document:", err);

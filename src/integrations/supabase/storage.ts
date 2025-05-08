@@ -7,6 +7,7 @@ export async function checkBucketExists(bucketName: string): Promise<boolean> {
   try {
     const { data, error } = await supabase.storage.getBucket(bucketName);
     if (error) {
+      console.error("Error checking bucket existence:", error.message);
       return false;
     }
     return !!data;
@@ -20,9 +21,10 @@ export async function checkBucketExists(bucketName: string): Promise<boolean> {
 export async function createAssetImagesBucket(): Promise<boolean> {
   try {
     // First check if the user has permissions to create buckets
-    const { data: userInfo } = await supabase.auth.getUser();
-    if (!userInfo || !userInfo.user) {
-      console.error('User not authenticated');
+    const { data: userInfo, error: userError } = await supabase.auth.getUser();
+    if (userError || !userInfo || !userInfo.user) {
+      console.error('User not authenticated:', userError?.message || 'No user data');
+      toast.error("Authentication required for storage operations");
       return false;
     }
     
@@ -33,21 +35,30 @@ export async function createAssetImagesBucket(): Promise<boolean> {
       // we'll use a more focused approach
       // Signal to the user that they need to create the bucket in the Supabase dashboard
       console.log("The 'company_documents' bucket doesn't exist. Using temporary alternative storage.");
-      toast.warning("Some storage features may be limited. Please contact your administrator.");
-      return true; // Return true to continue the app flow without blocking the user
+      toast.warning("Some storage features may be limited. Please contact your administrator to create a 'company_documents' bucket.");
+      return false;
     }
     
     return true;
-  } catch (error) {
-    console.error('Error creating asset_images bucket:', error);
+  } catch (error: any) {
+    console.error('Error creating asset_images bucket:', error.message || error);
+    toast.error("Storage initialization failed. Please try again.");
     return false;
   }
 }
 
-// Function to get the URL for an uploaded file without bucket creation
+// Function to get the URL for an uploaded file with improved error handling
 export async function getUploadFileURL(filePath: string, file: File): Promise<string | null> {
   try {
-    // Since we can't guarantee the bucket exists, we'll use a more resilient approach
+    // Verify bucket exists first
+    const bucketExists = await checkBucketExists('company_documents');
+    
+    if (!bucketExists) {
+      toast.error("Storage bucket 'company_documents' not found. Contact your administrator.");
+      return null;
+    }
+    
+    // Get the public URL
     const response = await supabase.storage
       .from('company_documents')
       .getPublicUrl(filePath);
@@ -55,12 +66,14 @@ export async function getUploadFileURL(filePath: string, file: File): Promise<st
     // Check if response has data with publicUrl
     if (!response || !response.data || !response.data.publicUrl) {
       console.error("Error getting URL for file:", response);
+      toast.error("Failed to generate file URL");
       return null;
     }
 
     return response.data.publicUrl;
-  } catch (error) {
-    console.error('Error getting upload URL:', error);
+  } catch (error: any) {
+    console.error('Error getting upload URL:', error.message || error);
+    toast.error("Failed to process file upload");
     return null;
   }
 }

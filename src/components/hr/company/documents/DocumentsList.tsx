@@ -6,17 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Download, Eye, Trash2, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, isAfter, isSameDay } from 'date-fns';
 
 interface DocumentsListProps {
   filterType?: string;
   searchQuery?: string;
+  dateFilter?: Date;
+  sortOrder?: string;
   onDocumentDeleted: () => void;
 }
 
 export const DocumentsList: React.FC<DocumentsListProps> = ({ 
   filterType,
   searchQuery = "",
+  dateFilter,
+  sortOrder = "newest",
   onDocumentDeleted
 }) => {
   const [documents, setDocuments] = useState<CompanyDocument[]>([]);
@@ -46,17 +50,37 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
     fetchDocuments();
   }, [filterType]);
 
-  // Filter documents based on search query
+  // Filter documents based on search query and date filter
   const filteredDocuments = documents.filter(doc => {
-    if (!searchQuery) return true;
-    
-    const query = searchQuery.toLowerCase();
-    return (
-      doc.name.toLowerCase().includes(query) ||
-      doc.document_type.toLowerCase().includes(query) ||
-      (doc.employeeName && doc.employeeName.toLowerCase().includes(query)) ||
-      (doc.description && doc.description.toLowerCase().includes(query))
+    // Filter by search query
+    const matchesSearch = !searchQuery ? true : (
+      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.document_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (doc.employeeName && doc.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+    
+    // Filter by date
+    const matchesDate = !dateFilter ? true : (
+      isSameDay(new Date(doc.upload_date), dateFilter)
+    );
+    
+    return matchesSearch && matchesDate;
+  });
+
+  // Sort documents based on sort order
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
+    switch (sortOrder) {
+      case "oldest":
+        return new Date(a.upload_date).getTime() - new Date(b.upload_date).getTime();
+      case "name_asc":
+        return a.name.localeCompare(b.name);
+      case "name_desc":
+        return b.name.localeCompare(a.name);
+      case "newest":
+      default:
+        return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
+    }
   });
 
   const handlePreview = (document: CompanyDocument) => {
@@ -97,13 +121,13 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
     return <div className="flex justify-center p-6">Loading documents...</div>;
   }
 
-  if (filteredDocuments.length === 0) {
+  if (sortedDocuments.length === 0) {
     return (
       <div className="text-center p-8 border rounded-lg bg-gray-50">
         <FileText className="mx-auto h-12 w-12 text-gray-400" />
         <h3 className="mt-2 text-sm font-semibold">No documents found</h3>
         <p className="mt-1 text-sm text-gray-500">
-          {searchQuery 
+          {searchQuery || dateFilter
             ? "No documents match your search criteria."
             : filterType 
               ? `No ${filterType} documents have been uploaded yet.` 
@@ -128,7 +152,7 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredDocuments.map((document) => (
+          {sortedDocuments.map((document) => (
             <TableRow key={document.id}>
               <TableCell className="font-medium">{document.name}</TableCell>
               <TableCell>{document.document_type}</TableCell>

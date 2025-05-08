@@ -2,17 +2,23 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, FileText, Search, Filter, Download } from "lucide-react";
+import { Plus, FileText, Search, Filter, Download, Calendar } from "lucide-react";
 import { UploadDocumentDialog } from "./documents/UploadDocumentDialog";
 import { DocumentsList } from "./documents/DocumentsList";
 import { useCompanyDocuments } from "@/hooks/useCompanyDocuments";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 
 const FilesTab = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<string>("newest");
+  
   const { 
     documents, 
     loading, 
@@ -23,6 +29,12 @@ const FilesTab = () => {
     counts
   } = useCompanyDocuments();
 
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setDateFilter(undefined);
+    setSortOrder("newest");
+  };
+
   return (
     <Card className="border-0 shadow-none">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -32,7 +44,7 @@ const FilesTab = () => {
         </Button>
       </CardHeader>
       <CardContent className="p-0 pt-4">
-        {/* Search & Filter Bar */}
+        {/* Enhanced Search & Filter Bar */}
         <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
           <div className="relative w-full md:w-1/2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -43,7 +55,44 @@ const FilesTab = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {/* Date Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex items-center">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {dateFilter ? format(dateFilter, 'PP') : "Filter by Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={dateFilter}
+                  onSelect={setDateFilter}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            
+            {/* Sort Order */}
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+                <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {(searchQuery || dateFilter || sortOrder !== "newest") && (
+              <Button variant="ghost" onClick={handleClearFilters}>
+                Clear Filters
+              </Button>
+            )}
+            
             <Button variant="outline">
               <Download className="mr-2 h-4 w-4" /> Export List
             </Button>
@@ -71,6 +120,8 @@ const FilesTab = () => {
           <DocumentsList 
             filterType={currentType}
             searchQuery={searchQuery}
+            dateFilter={dateFilter}
+            sortOrder={sortOrder}
             onDocumentDeleted={fetchDocuments} 
           />
         </Tabs>
