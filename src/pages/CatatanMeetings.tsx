@@ -293,7 +293,7 @@ const CatatanMeetings = () => {
                     <TableHeader>
                       <TableRow className="bg-gray-50 dark:bg-gray-800">
                         <TableHead className="w-[120px] text-left font-semibold px-[19px]">DATE</TableHead>
-                        <TableHead className="w-[300px] text-left font-semibold px-[86px]">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[300px] text-left font-semibold px-[86px]">                DISCUSSION POINT</TableHead>
                         <TableHead className="w-[140px] text-center font-semibold mx-0 px-0">REQUEST BY</TableHead>
                         <TableHead className="w-[140px] text-center font-semibold px-0">STATUS</TableHead>
                         <TableHead className="w-[100px] text-center font-semibold mx-0 my-0 px-0">UPDATES</TableHead>
