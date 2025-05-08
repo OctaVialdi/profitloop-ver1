@@ -41,9 +41,19 @@ export const hrRoutes = (
       </ProtectedRoute>
     }
   >
+    {/* Main HR routes */}
     <Route path="dashboard" element={<HRDashboard />} />
     <Route path="okr" element={<HROKR />} />
     <Route path="data" element={<HRDataKaryawan />} />
+    <Route path="absensi" element={<HRAbsensi />} />
+    <Route path="cuti" element={<HRCutiIzin />} />
+    <Route path="payroll" element={<HRPayroll />} />
+    <Route path="kontrak" element={<HRKontrak />} />
+    <Route path="training" element={<HRTraining />} />
+    <Route path="kinerja" element={<HRKinerja />} />
+    <Route path="company" element={<HRCompany />} />
+    
+    {/* Recruitment section - nested under HR */}
     <Route path="recruitment" element={<HRRecruitment />}>
       <Route path="dashboard" element={<RecruitmentDashboard />} />
       <Route path="candidates" element={<CandidatesPage />} />
@@ -52,6 +62,8 @@ export const hrRoutes = (
       <Route path="evaluation" element={<EvaluationSettingsPage />} />
       <Route path="" element={<Navigate to="/hr/recruitment/dashboard" replace />} />
     </Route>
+    
+    {/* Candidate and employee detail routes */}
     <Route path="recruitment/candidate/:id" element={<CandidateDetail />}>
       <Route path="personal" element={<CandidateDetailSection section="personal" />} />
       <Route path="education" element={<CandidateDetailSection section="education" />} />
@@ -60,17 +72,13 @@ export const hrRoutes = (
       <Route path="evaluation" element={<CandidateDetailSection section="evaluation" />} />
       <Route path="" element={<Navigate to="personal" replace />} />
     </Route>
+    
+    {/* Employee detail routes */}
     <Route path="data/employee/:id" element={<EmployeeDetail />} />
     <Route path="data/add-employee" element={<AddEmployee />} />
     <Route path="my-info/personal/:id" element={<EmployeePersonal />} />
     <Route path="my-info/employment/:id" element={<EmployeeEmployment />} />
-    <Route path="absensi" element={<HRAbsensi />} />
-    <Route path="cuti" element={<HRCutiIzin />} />
-    <Route path="payroll" element={<HRPayroll />} />
-    <Route path="kontrak" element={<HRKontrak />} />
-    <Route path="training" element={<HRTraining />} />
-    <Route path="kinerja" element={<HRKinerja />} />
-    <Route path="company" element={<HRCompany />} />
+    
     {/* Redirect to dashboard if no path matches */}
     <Route path="" element={<Navigate to="/hr/dashboard" replace />} />
   </Route>

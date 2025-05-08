@@ -107,6 +107,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     if (location.pathname.includes('/company')) {
       customLabels["company"] = "Company Profile";
     }
+
+    // Handle training section
+    if (location.pathname.includes('/training')) {
+      customLabels["training"] = "Training & Development";
+    }
+
+    // Handle recruitment section
+    if (location.pathname.includes('/recruitment')) {
+      customLabels["recruitment"] = "Recruitment";
+    }
   }
   
   // Support for meeting notes
@@ -115,54 +125,52 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <DashboardSidebar
-          organization={organization}
-          isAdmin={isAdmin}
-          isSuperAdmin={isSuperAdmin}
-          logoUrl={logoUrl}
-          currentPath={location.pathname}
-        />
-        
-        {/* Main content */}
-        <SidebarInset className="flex flex-col">
-          {/* Top navigation - Modified to be full width without scroll constraints */}
-          <header className="bg-white border-b sticky top-0 z-10 w-full">
-            <div className="px-4 h-16 flex items-center justify-between">
-              <HeaderContent organization={organization} logoUrl={logoUrl} />
-              <HeaderActions />
-            </div>
-          </header>
-          
-          {/* Page content with direct overflow handling */}
-          <div className="flex-1 overflow-auto">
-            <div className="p-4 md:p-6">
-              {shouldShowBreadcrumbs && (
-                <BreadcrumbNav 
-                  customLabels={customLabels}
-                />
-              )}
-              
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={location.pathname}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ 
-                    duration: 0.15,
-                    ease: "easeInOut"
-                  }}
-                  className="will-change-transform"
-                >
-                  {children || <Outlet />}
-                </motion.div>
-              </AnimatePresence>
-            </div>
+    <SidebarProvider defaultOpen={true} className="group/sidebar-wrapper flex min-h-screen w-full">
+      <DashboardSidebar
+        organization={organization}
+        isAdmin={isAdmin}
+        isSuperAdmin={isSuperAdmin}
+        logoUrl={logoUrl}
+        currentPath={location.pathname}
+      />
+      
+      {/* Main content */}
+      <SidebarInset className="flex flex-col">
+        {/* Top navigation - Modified to be full width without scroll constraints */}
+        <header className="bg-white border-b sticky top-0 z-10 w-full shadow-sm">
+          <div className="px-4 h-16 flex items-center justify-between">
+            <HeaderContent organization={organization} logoUrl={logoUrl} />
+            <HeaderActions />
           </div>
-        </SidebarInset>
-      </div>
+        </header>
+        
+        {/* Page content with direct overflow handling */}
+        <div className="flex-1 overflow-auto bg-gray-50">
+          <div className="p-4 md:p-6">
+            {shouldShowBreadcrumbs && (
+              <BreadcrumbNav 
+                customLabels={customLabels}
+              />
+            )}
+            
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ 
+                  duration: 0.15,
+                  ease: "easeInOut"
+                }}
+                className="will-change-transform"
+              >
+                {children || <Outlet />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </SidebarInset>
     </SidebarProvider>
   );
 };
