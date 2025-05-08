@@ -74,6 +74,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   // Determine if we should show breadcrumbs based on the current path
   const shouldShowBreadcrumbs = location.pathname !== "/dashboard";
 
+  // Determine custom breadcrumb labels based on the path
+  const customLabels: Record<string, string> = {};
+  
+  // Add support for dev section
+  if (location.pathname.startsWith('/dev')) {
+    customLabels["dev"] = "Developer";
+    
+    if (location.pathname.includes('/components')) {
+      customLabels["components"] = "UI Components";
+    }
+  }
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -99,7 +111,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="flex-1 overflow-auto">
             <div className="p-4 md:p-6">
               {shouldShowBreadcrumbs && (
-                <BreadcrumbNav />
+                <BreadcrumbNav 
+                  customLabels={customLabels}
+                />
               )}
               
               <AnimatePresence mode="wait" initial={false}>

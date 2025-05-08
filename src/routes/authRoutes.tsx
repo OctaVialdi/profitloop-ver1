@@ -14,7 +14,7 @@ export const authRoutes = [
     <Route path="verification-sent" element={<VerificationSent />} />
   </Route>,
   <Route key="accept-invitation" path="/accept-invitation" element={<AcceptInvitation />} />,
-  <Route key="join-organization" path="/join-organization" element={<MagicLinkJoin />} />,
+  <Route key="join-organization" path="/join" element={<MagicLinkJoin />} />,
 ];
 
 // Redirect from root to login
