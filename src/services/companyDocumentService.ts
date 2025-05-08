@@ -54,10 +54,18 @@ export const documentService = {
       }
 
       // Enhance documents with employee names
-      return documents.map(doc => ({
-        ...doc,
-        employeeName: doc.employees ? doc.employees.name : 'Not Assigned'
-      }));
+      return documents.map(doc => {
+        // Check if doc.employees exists and is not an error
+        const employeeName = doc.employees && typeof doc.employees === 'object' && 
+                            !('error' in doc.employees) && 'name' in doc.employees 
+                            ? doc.employees.name 
+                            : 'Not Assigned';
+        
+        return {
+          ...doc,
+          employeeName
+        };
+      });
     } catch (error) {
       console.error("Error in getAllCompanyDocuments:", error);
       throw error;
@@ -81,10 +89,18 @@ export const documentService = {
         throw error;
       }
 
-      return documents.map(doc => ({
-        ...doc,
-        employeeName: doc.employees ? doc.employees.name : 'Not Assigned'
-      }));
+      return documents.map(doc => {
+        // Check if doc.employees exists and is not an error
+        const employeeName = doc.employees && typeof doc.employees === 'object' && 
+                            !('error' in doc.employees) && 'name' in doc.employees 
+                            ? doc.employees.name 
+                            : 'Not Assigned';
+        
+        return {
+          ...doc,
+          employeeName
+        };
+      });
     } catch (error) {
       console.error("Error in getDocumentsByType:", error);
       throw error;
