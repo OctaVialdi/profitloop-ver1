@@ -1,14 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Toaster } from "@/components/ui/toaster";
-import { 
-  AlertTriangle, Clock, CheckCircle, XCircle, Presentation, 
-  History, Download, Edit, Trash2, Plus, Search, Calendar, Filter
-} from "lucide-react";
+import { AlertTriangle, Clock, CheckCircle, XCircle, Presentation, History, Download, Edit, Trash2, Plus, Search, Calendar, Filter } from "lucide-react";
 import { MeetingSummaryCard } from "@/components/meetings/MeetingSummaryCard";
 import { MeetingUpdateItem } from "@/components/meetings/MeetingUpdateItem";
 import { MeetingStatusBadge } from "@/components/meetings/MeetingStatusBadge";
@@ -25,9 +21,10 @@ import { getMeetingPoints, getMeetingUpdates, createMeetingPoint, updateMeetingP
 import { MeetingPoint, MeetingUpdate, MeetingPointFilters, MeetingStatus, MeetingSummaryStatus } from "@/types/meetings";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { motion, AnimatePresence } from "framer-motion";
-
 const CatatanMeetings = () => {
-  const { organization } = useOrganization();
+  const {
+    organization
+  } = useOrganization();
   const [meetingPoints, setMeetingPoints] = useState<MeetingPoint[]>([]);
   const [newPoint, setNewPoint] = useState<string>("");
   const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false);
@@ -44,19 +41,16 @@ const CatatanMeetings = () => {
   });
   const [updateCounts, setUpdateCounts] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState<string>("");
-  
   const currentDate = new Date().toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
-  
   useEffect(() => {
     if (organization) {
       loadData();
     }
   }, [organization, filters]);
-  
   const loadData = async () => {
     setLoading(true);
     const points = await getMeetingPoints(filters);
@@ -75,7 +69,6 @@ const CatatanMeetings = () => {
     setUpdateCounts(counts);
     setLoading(false);
   };
-  
   const handleAddPoint = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newPoint.trim() !== "") {
@@ -94,27 +87,22 @@ const CatatanMeetings = () => {
       }
     }
   };
-  
   const handleEditMeeting = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setEditDialogOpen(true);
   };
-  
   const handleViewHistory = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setHistoryDialogOpen(true);
   };
-  
   const handleAddUpdates = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setUpdatesDialogOpen(true);
   };
-  
   const handleDeletePrompt = (meeting: MeetingPoint) => {
     setSelectedMeeting(meeting);
     setDeleteDialogOpen(true);
   };
-  
   const handleDeleteMeeting = async () => {
     if (selectedMeeting) {
       const success = await deleteMeetingPoint(selectedMeeting.id);
@@ -125,12 +113,10 @@ const CatatanMeetings = () => {
       }
     }
   };
-  
   const handleCreateMeeting = () => {
     setSelectedMeeting(null);
     setEditDialogOpen(true);
   };
-  
   const handleSaveMeeting = async (meetingData: Partial<MeetingPoint>) => {
     if (selectedMeeting) {
       // Update existing
@@ -148,7 +134,6 @@ const CatatanMeetings = () => {
       }
     }
   };
-  
   const handleStatusChange = async (meetingId: string, newStatus: MeetingStatus) => {
     const meeting = meetingPoints.find(m => m.id === meetingId);
     if (meeting) {
@@ -161,7 +146,6 @@ const CatatanMeetings = () => {
       }
     }
   };
-  
   const handleRequestByChange = async (meetingId: string, requestBy: string) => {
     const meeting = meetingPoints.find(m => m.id === meetingId);
     if (meeting) {
@@ -174,7 +158,6 @@ const CatatanMeetings = () => {
       }
     }
   };
-  
   const handleGenerateMinutes = async () => {
     const minutes = await generateMeetingMinutes(currentDate);
     if (minutes) {
@@ -192,18 +175,13 @@ const CatatanMeetings = () => {
   const updatesCount = recentUpdates.length;
 
   // Filter meeting points based on search term
-  const filteredMeetingPoints = meetingPoints.filter(point => 
-    point.discussion_point.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (point.request_by && point.request_by.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-  
+  const filteredMeetingPoints = meetingPoints.filter(point => point.discussion_point.toLowerCase().includes(searchTerm.toLowerCase()) || point.request_by && point.request_by.toLowerCase().includes(searchTerm.toLowerCase()));
+
   // Add the handleUpdateAdded function to reload data after an update is added
   const handleUpdateAdded = () => {
     loadData();
   };
-  
-  return (
-    <div className="w-full">
+  return <div className="w-full">
       {/* Header section with gradient background and shadow */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-b shadow-sm">
         <div className="max-w-full mx-auto p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -212,18 +190,11 @@ const CatatanMeetings = () => {
             <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">{currentDate}</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900 transition-all"
-              onClick={handleGenerateMinutes}
-            >
+            <Button variant="outline" className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900 transition-all" onClick={handleGenerateMinutes}>
               <Download size={16} />
               <span>Download Minutes</span>
             </Button>
-            <Button 
-              className="bg-blue-600 hover:bg-blue-700 transition-all"
-              onClick={handleCreateMeeting}
-            >
+            <Button className="bg-blue-600 hover:bg-blue-700 transition-all" onClick={handleCreateMeeting}>
               <Plus size={16} className="mr-2" />
               <span>New Meeting Point</span>
             </Button>
@@ -237,15 +208,13 @@ const CatatanMeetings = () => {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input 
-                placeholder="Search discussion points..." 
-                className="pl-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <Input placeholder="Search discussion points..." className="pl-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Select value={filters.status} onValueChange={value => setFilters(prev => ({...prev, status: value}))}>
+              <Select value={filters.status} onValueChange={value => setFilters(prev => ({
+              ...prev,
+              status: value
+            }))}>
                 <SelectTrigger className="w-[150px] bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
@@ -259,22 +228,26 @@ const CatatanMeetings = () => {
                 </SelectContent>
               </Select>
               
-              <Select value={filters.requestBy} onValueChange={value => setFilters(prev => ({...prev, requestBy: value}))}>
+              <Select value={filters.requestBy} onValueChange={value => setFilters(prev => ({
+              ...prev,
+              requestBy: value
+            }))}>
                 <SelectTrigger className="w-[150px] bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                   <SelectValue placeholder="All Request By" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Request By</SelectItem>
                   {/* Dynamically generate list from unique requestBy values */}
-                  {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map(person => (
-                    <SelectItem key={person} value={person as string}>
+                  {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map(person => <SelectItem key={person} value={person as string}>
                       {person}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
               
-              <Select value={filters.timeRange} onValueChange={value => setFilters(prev => ({...prev, timeRange: value}))}>
+              <Select value={filters.timeRange} onValueChange={value => setFilters(prev => ({
+              ...prev,
+              timeRange: value
+            }))}>
                 <SelectTrigger className="w-[150px] bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                   <SelectValue placeholder="All Time" />
                 </SelectTrigger>
@@ -292,19 +265,8 @@ const CatatanMeetings = () => {
         {/* New Discussion Point Input */}
         <form onSubmit={handleAddPoint} className="flex items-center mb-6">
           <div className="relative flex-grow">
-            <Input 
-              type="text" 
-              placeholder="Type a new discussion point and press Enter..." 
-              className="pr-24 border-blue-200 dark:border-blue-800 focus:border-blue-400 transition-all" 
-              value={newPoint} 
-              onChange={e => setNewPoint(e.target.value)} 
-            />
-            <Button 
-              type="submit" 
-              className="absolute right-1 top-1 bottom-1 bg-blue-600 hover:bg-blue-700 transition-all" 
-              size="sm"
-              disabled={!newPoint.trim()}
-            >
+            <Input type="text" placeholder="Type a new discussion point and press Enter..." className="pr-24 border-blue-200 dark:border-blue-800 focus:border-blue-400 transition-all" value={newPoint} onChange={e => setNewPoint(e.target.value)} />
+            <Button type="submit" className="absolute right-1 top-1 bottom-1 bg-blue-600 hover:bg-blue-700 transition-all" size="sm" disabled={!newPoint.trim()}>
               Add
             </Button>
           </div>
@@ -330,46 +292,43 @@ const CatatanMeetings = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50 dark:bg-gray-800">
-                        <TableHead className="w-[120px] text-left font-semibold">DATE</TableHead>
-                        <TableHead className="w-[300px] text-left px-[20px] font-semibold">DISCUSSION POINT</TableHead>
-                        <TableHead className="w-[140px] text-center font-semibold">REQUEST BY</TableHead>
-                        <TableHead className="w-[140px] text-center font-semibold">STATUS</TableHead>
-                        <TableHead className="w-[100px] text-center font-semibold">UPDATES</TableHead>
+                        <TableHead className="w-[120px] text-left font-semibold px-[19px]">DATE</TableHead>
+                        <TableHead className="w-[300px] text-left font-semibold px-[179px]">DISCUSSION POINT</TableHead>
+                        <TableHead className="w-[140px] text-center font-semibold mx-0 px-0">REQUEST BY</TableHead>
+                        <TableHead className="w-[140px] text-center font-semibold px-0">STATUS</TableHead>
+                        <TableHead className="w-[100px] text-center font-semibold mx-0 my-0 px-0">UPDATES</TableHead>
                         <TableHead className="w-[140px] text-right font-semibold">ACTIONS</TableHead>
                       </TableRow>
                     </TableHeader>
                   </Table>
                   
-                  <div className="overflow-hidden" style={{ height: "600px" }}>
+                  <div className="overflow-hidden" style={{
+                  height: "600px"
+                }}>
                     <ScrollArea className="h-full">
                       <Table>
                         <TableBody>
-                          {loading ? (
-                            <TableRow>
+                          {loading ? <TableRow>
                               <TableCell colSpan={6} className="text-center py-8">
                                 <div className="flex justify-center">
                                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                                 </div>
                                 <div className="mt-2 text-gray-500">Loading meeting points...</div>
                               </TableCell>
-                            </TableRow>
-                          ) : filteredMeetingPoints.length === 0 ? (
-                            <TableRow>
+                            </TableRow> : filteredMeetingPoints.length === 0 ? <TableRow>
                               <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                                 {searchTerm ? 'No matching meeting points found.' : 'No meeting points found. Add one above.'}
                               </TableCell>
-                            </TableRow>
-                          ) : (
-                            <AnimatePresence>
-                              {filteredMeetingPoints.map((point, index) => (
-                                <motion.tr
-                                  key={point.id}
-                                  className={index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"}
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
+                            </TableRow> : <AnimatePresence>
+                              {filteredMeetingPoints.map((point, index) => <motion.tr key={point.id} className={index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"} initial={{
+                            opacity: 0
+                          }} animate={{
+                            opacity: 1
+                          }} exit={{
+                            opacity: 0
+                          }} transition={{
+                            duration: 0.2
+                          }}>
                                   <TableCell className="w-[120px] text-left font-medium text-gray-700 dark:text-gray-300">
                                     {point.date}
                                   </TableCell>
@@ -390,21 +349,16 @@ const CatatanMeetings = () => {
                                     </TooltipProvider>
                                   </TableCell>
                                   <TableCell className="w-[140px] text-center px-0">
-                                    <Select 
-                                      defaultValue={point.request_by || "unassigned"} 
-                                      onValueChange={value => handleRequestByChange(point.id, value)}
-                                    >
+                                    <Select defaultValue={point.request_by || "unassigned"} onValueChange={value => handleRequestByChange(point.id, value)}>
                                       <SelectTrigger className="w-[120px] mx-auto bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                                         <SelectValue placeholder="Select person" />
                                       </SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="unassigned">Select person</SelectItem>
                                         {/* Dynamically generate list from unique requestBy values */}
-                                        {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map(person => (
-                                          <SelectItem key={person} value={person as string}>
+                                        {Array.from(new Set(meetingPoints.map(p => p.request_by))).filter(Boolean).map(person => <SelectItem key={person} value={person as string}>
                                             {person}
-                                          </SelectItem>
-                                        ))}
+                                          </SelectItem>)}
                                       </SelectContent>
                                     </Select>
                                   </TableCell>
@@ -413,13 +367,7 @@ const CatatanMeetings = () => {
                                   </TableCell>
                                   <TableCell className="w-[100px] text-center">
                                     <div className="flex justify-center">
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        onClick={() => handleAddUpdates(point)} 
-                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900" 
-                                        title="View and Add Updates"
-                                      >
+                                      <Button variant="ghost" size="sm" onClick={() => handleAddUpdates(point)} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900" title="View and Add Updates">
                                         <History size={16} />
                                         <span className="ml-2 font-medium">
                                           {updateCounts[point.id] || 0}
@@ -429,25 +377,12 @@ const CatatanMeetings = () => {
                                   </TableCell>
                                   <TableCell className="w-[140px] text-right">
                                     <div className="flex justify-end space-x-2">
-                                      <MeetingActionButton 
-                                        icon={Edit} 
-                                        label="Edit" 
-                                        onClick={() => handleEditMeeting(point)}
-                                        className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" 
-                                      />
-                                      <MeetingActionButton 
-                                        icon={Trash2} 
-                                        label="Delete" 
-                                        variant="destructive" 
-                                        onClick={() => handleDeletePrompt(point)}
-                                        className="hover:bg-red-100 dark:hover:bg-red-900"
-                                      />
+                                      <MeetingActionButton icon={Edit} label="Edit" onClick={() => handleEditMeeting(point)} className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" />
+                                      <MeetingActionButton icon={Trash2} label="Delete" variant="destructive" onClick={() => handleDeletePrompt(point)} className="hover:bg-red-100 dark:hover:bg-red-900" />
                                     </div>
                                   </TableCell>
-                                </motion.tr>
-                              ))}
-                            </AnimatePresence>
-                          )}
+                                </motion.tr>)}
+                            </AnimatePresence>}
                         </TableBody>
                       </Table>
                     </ScrollArea>
@@ -482,19 +417,7 @@ const CatatanMeetings = () => {
               <CardContent className="p-4">
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-4 pr-4">
-                    {recentUpdates.length === 0 ? (
-                      <p className="text-gray-500 text-center py-4">No recent updates.</p>
-                    ) : (
-                      recentUpdates.map(update => (
-                        <MeetingUpdateItem 
-                          key={update.id} 
-                          title={update.title} 
-                          status={update.status} 
-                          person={update.person} 
-                          date={update.date} 
-                        />
-                      ))
-                    )}
+                    {recentUpdates.length === 0 ? <p className="text-gray-500 text-center py-4">No recent updates.</p> : recentUpdates.map(update => <MeetingUpdateItem key={update.id} title={update.title} status={update.status} person={update.person} date={update.date} />)}
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -504,32 +427,13 @@ const CatatanMeetings = () => {
       </div>
       
       {/* Edit Dialog */}
-      <MeetingDialog 
-        open={editDialogOpen} 
-        onOpenChange={setEditDialogOpen} 
-        onSave={handleSaveMeeting} 
-        meetingPoint={selectedMeeting || undefined} 
-        title={selectedMeeting ? "Edit Meeting Point" : "Add Meeting Point"} 
-      />
+      <MeetingDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} onSave={handleSaveMeeting} meetingPoint={selectedMeeting || undefined} title={selectedMeeting ? "Edit Meeting Point" : "Add Meeting Point"} />
       
       {/* History Dialog */}
-      {selectedMeeting && (
-        <HistoryDialog 
-          open={historyDialogOpen} 
-          onOpenChange={setHistoryDialogOpen} 
-          meetingPoint={selectedMeeting} 
-        />
-      )}
+      {selectedMeeting && <HistoryDialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen} meetingPoint={selectedMeeting} />}
       
       {/* Updates Dialog */}
-      {selectedMeeting && (
-        <UpdatesDialog 
-          open={updatesDialogOpen} 
-          onOpenChange={setUpdatesDialogOpen} 
-          meetingPoint={selectedMeeting} 
-          onUpdateAdded={handleUpdateAdded} 
-        />
-      )}
+      {selectedMeeting && <UpdatesDialog open={updatesDialogOpen} onOpenChange={setUpdatesDialogOpen} meetingPoint={selectedMeeting} onUpdateAdded={handleUpdateAdded} />}
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -548,8 +452,6 @@ const CatatanMeetings = () => {
       </AlertDialog>
       
       <Toaster />
-    </div>
-  );
+    </div>;
 };
-
 export default CatatanMeetings;
