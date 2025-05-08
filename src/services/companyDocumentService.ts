@@ -41,10 +41,7 @@ export const documentService = {
     try {
       const { data: documents, error } = await supabase
         .from('company_documents')
-        .select(`
-          *,
-          employees (id, name)
-        `)
+        .select('*')
         .order('upload_date', { ascending: false });
 
       if (error) {
@@ -53,23 +50,29 @@ export const documentService = {
         throw error;
       }
 
-      // Enhance documents with employee names
-      return documents.map(doc => {
-        // Check if doc.employees exists and is not null/undefined
-        const employees = doc.employees;
-        const employeeName = employees && 
-                           typeof employees === 'object' && 
-                           !('error' in employees) && 
-                           'name' in employees && 
-                           employees.name 
-                           ? employees.name 
-                           : 'Not Assigned';
+      // For documents with employee_id, fetch the corresponding employee names
+      const enhancedDocuments = await Promise.all(documents.map(async (doc) => {
+        let employeeName = 'Not Assigned';
+        
+        if (doc.employee_id) {
+          const { data: employeeData, error: employeeError } = await supabase
+            .from('employees')
+            .select('name')
+            .eq('id', doc.employee_id)
+            .single();
+            
+          if (!employeeError && employeeData) {
+            employeeName = employeeData.name;
+          }
+        }
         
         return {
           ...doc,
           employeeName
         };
-      });
+      }));
+
+      return enhancedDocuments;
     } catch (error) {
       console.error("Error in getAllCompanyDocuments:", error);
       throw error;
@@ -80,10 +83,7 @@ export const documentService = {
     try {
       const { data: documents, error } = await supabase
         .from('company_documents')
-        .select(`
-          *,
-          employees (id, name)
-        `)
+        .select('*')
         .eq('document_type', documentType)
         .order('upload_date', { ascending: false });
 
@@ -93,22 +93,29 @@ export const documentService = {
         throw error;
       }
 
-      return documents.map(doc => {
-        // Check if doc.employees exists and is not null/undefined
-        const employees = doc.employees;
-        const employeeName = employees && 
-                           typeof employees === 'object' && 
-                           !('error' in employees) && 
-                           'name' in employees && 
-                           employees.name 
-                           ? employees.name 
-                           : 'Not Assigned';
+      // For documents with employee_id, fetch the corresponding employee names
+      const enhancedDocuments = await Promise.all(documents.map(async (doc) => {
+        let employeeName = 'Not Assigned';
+        
+        if (doc.employee_id) {
+          const { data: employeeData, error: employeeError } = await supabase
+            .from('employees')
+            .select('name')
+            .eq('id', doc.employee_id)
+            .single();
+            
+          if (!employeeError && employeeData) {
+            employeeName = employeeData.name;
+          }
+        }
         
         return {
           ...doc,
           employeeName
         };
-      });
+      }));
+
+      return enhancedDocuments;
     } catch (error) {
       console.error("Error in getDocumentsByType:", error);
       throw error;
