@@ -56,7 +56,7 @@ export const documentService = {
       // Enhance documents with employee names
       return documents.map(doc => ({
         ...doc,
-        employeeName: doc.employees?.name || 'Not Assigned'
+        employeeName: doc.employees ? doc.employees.name : 'Not Assigned'
       }));
     } catch (error) {
       console.error("Error in getAllCompanyDocuments:", error);
@@ -83,7 +83,7 @@ export const documentService = {
 
       return documents.map(doc => ({
         ...doc,
-        employeeName: doc.employees?.name || 'Not Assigned'
+        employeeName: doc.employees ? doc.employees.name : 'Not Assigned'
       }));
     } catch (error) {
       console.error("Error in getDocumentsByType:", error);

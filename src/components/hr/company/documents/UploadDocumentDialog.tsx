@@ -40,7 +40,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   // Fetch employees for dropdown
   const { data: employees = [] } = useQuery({
     queryKey: ['employeesForDocuments'],
-    queryFn: () => employeeService.getAllEmployees(),
+    queryFn: () => employeeService.fetchEmployees(),
   });
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
