@@ -22,7 +22,7 @@ interface AssetEditDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
-  onCancel?: () => void; // Added this prop to match the expected interface
+  onCancel?: () => void;
   asset: any; // Using any for now since we don't have the asset type
 }
 

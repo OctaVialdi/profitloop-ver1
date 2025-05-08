@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -364,6 +365,8 @@ const AssetsTab: React.FC = () => {
       {isEditDialogWithTabsOpen && selectedMockAsset && (
         <AssetEditDialog
           asset={selectedMockAsset}
+          isOpen={isEditDialogWithTabsOpen}
+          onClose={() => setIsEditDialogWithTabsOpen(false)}
           onSave={handleSaveAssetWithTabs}
           onCancel={() => setIsEditDialogWithTabsOpen(false)}
         />
