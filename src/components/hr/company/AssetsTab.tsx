@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -130,7 +129,8 @@ const AssetsTab: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSaveAsset = (updatedAsset: EmployeeAsset) => {
+  const handleSaveAsset = () => {
+    // After saving the asset, refetch the data
     refetchAssets();
     setIsEditDialogOpen(false);
   };
