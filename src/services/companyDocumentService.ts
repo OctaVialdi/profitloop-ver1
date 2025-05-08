@@ -55,11 +55,15 @@ export const documentService = {
 
       // Enhance documents with employee names
       return documents.map(doc => {
-        // Check if doc.employees exists and is not an error
-        const employeeName = doc.employees && typeof doc.employees === 'object' && 
-                            !('error' in doc.employees) && 'name' in doc.employees 
-                            ? doc.employees.name 
-                            : 'Not Assigned';
+        // Check if doc.employees exists and is not null/undefined
+        const employees = doc.employees;
+        const employeeName = employees && 
+                           typeof employees === 'object' && 
+                           !('error' in employees) && 
+                           'name' in employees && 
+                           employees.name 
+                           ? employees.name 
+                           : 'Not Assigned';
         
         return {
           ...doc,
@@ -90,11 +94,15 @@ export const documentService = {
       }
 
       return documents.map(doc => {
-        // Check if doc.employees exists and is not an error
-        const employeeName = doc.employees && typeof doc.employees === 'object' && 
-                            !('error' in doc.employees) && 'name' in doc.employees 
-                            ? doc.employees.name 
-                            : 'Not Assigned';
+        // Check if doc.employees exists and is not null/undefined
+        const employees = doc.employees;
+        const employeeName = employees && 
+                           typeof employees === 'object' && 
+                           !('error' in employees) && 
+                           'name' in employees && 
+                           employees.name 
+                           ? employees.name 
+                           : 'Not Assigned';
         
         return {
           ...doc,
