@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { LegacyEmployee } from '@/hooks/useEmployees';
 import { EmployeeColumnState, ColumnOrder } from './EmployeeColumnManager';
 import { EmployeeHeader } from './employee-list/EmployeeHeader';
@@ -17,6 +17,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilter, setShowFilter] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   
   // Update with the proper type
   const [visibleColumns, setVisibleColumns] = useState<EmployeeColumnState>({
@@ -66,45 +67,130 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
     'maritalStatus'
   ]);
 
-  // Statistics for this period (May 2025)
-  const periodStats = {
-    period: "May 2025",
-    totalEmployees: data.length,
-    newHires: 0,
-    leaving: 0
-  };
+  // Filter employees based on search term
+  const filteredData = useMemo(() => {
+    // Process data to ensure valid employee_id
+    const processedData = data.map(employee => {
+      // If there's no employee_id, generate one with the EMP- prefix
+      if (!employee.employee_id && !employee.employeeId) {
+        const randomId = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+        return {
+          ...employee,
+          employee_id: randomId,
+          employeeId: randomId
+        };
+      }
+      
+      // If there's only employee_id but no employeeId, copy it
+      if (employee.employee_id && !employee.employeeId) {
+        return {
+          ...employee,
+          employeeId: employee.employee_id
+        };
+      }
+      
+      // If there's only employeeId but no employee_id, copy it
+      if (!employee.employee_id && employee.employeeId) {
+        return {
+          ...employee,
+          employee_id: employee.employeeId
+        };
+      }
+      
+      // Both exist, return as is
+      return employee;
+    });
+    
+    if (!searchTerm.trim()) {
+      return processedData;
+    }
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    return processedData.filter(employee => 
+      employee.name.toLowerCase().includes(searchLower) || 
+      (employee.email && employee.email.toLowerCase().includes(searchLower)) ||
+      (employee.employee_id && employee.employee_id.toLowerCase().includes(searchLower)) ||
+      (employee.employeeId && employee.employeeId.toLowerCase().includes(searchLower))
+    );
+  }, [data, searchTerm]);
 
-  // Ensure each employee has a valid employee_id
-  const processedData = data.map(employee => {
-    // If there's no employee_id, generate one with the EMP- prefix
-    if (!employee.employee_id && !employee.employeeId) {
-      const randomId = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
-      return {
-        ...employee,
-        employee_id: randomId,
-        employeeId: randomId
-      };
+  // Further filter data based on active filters
+  const filteredAndSearchedData = useMemo(() => {
+    if (Object.keys(activeFilters).length === 0) {
+      return filteredData;
     }
     
-    // If there's only employee_id but no employeeId, copy it
-    if (employee.employee_id && !employee.employeeId) {
-      return {
-        ...employee,
-        employeeId: employee.employee_id
-      };
-    }
+    return filteredData.filter(employee => {
+      for (const [filterKey, filterValues] of Object.entries(activeFilters)) {
+        if (filterValues.length === 0) continue;
+        
+        // Skip if we're looking for "All"
+        if (filterValues.includes('All')) continue;
+        
+        // Handle each filter type specifically
+        switch (filterKey) {
+          case 'status':
+            if (!filterValues.includes(employee.status || 'Active')) return false;
+            break;
+          case 'employmentStatus':
+            if (!filterValues.includes(employee.employmentStatus || '')) return false;
+            break;
+          case 'branch':
+            if (!filterValues.includes(employee.branch || '')) return false;
+            break;
+          case 'organization':
+            if (!filterValues.includes(employee.organization || '')) return false;
+            break;
+          case 'jobPosition':
+            if (!filterValues.includes(employee.jobPosition || '')) return false;
+            break;
+          case 'jobLevel':
+            if (!filterValues.includes(employee.jobLevel || '')) return false;
+            break;
+        }
+      }
+      
+      return true;
+    });
+  }, [filteredData, activeFilters]);
+
+  // Statistics for this period (May 2025)
+  // Count active, new hires (joined this month), and leaving (resigned this month)
+  const periodStats = useMemo(() => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
     
-    // If there's only employeeId but no employee_id, copy it
-    if (!employee.employee_id && employee.employeeId) {
-      return {
-        ...employee,
-        employee_id: employee.employeeId
-      };
-    }
+    let newHires = 0;
+    let leaving = 0;
     
-    // Both exist, return as is
-    return employee;
-  });
+    // Count employees who joined or resigned this month
+    data.forEach(employee => {
+      // Check if joined this month
+      if (employee.joinDate) {
+        const joinDate = new Date(employee.joinDate);
+        if (joinDate.getMonth() === currentMonth && joinDate.getFullYear() === currentYear) {
+          newHires++;
+        }
+      }
+      
+      // Check if leaving (resigned) this month
+      if (employee.status === 'Resigned' && employee.resignDate) {
+        const resignDate = new Date(employee.resignDate);
+        if (resignDate.getMonth() === currentMonth && resignDate.getFullYear() === currentYear) {
+          leaving++;
+        }
+      }
+    });
+    
+    return {
+      period: `May 2025`,
+      totalEmployees: filteredAndSearchedData.length,
+      newHires,
+      leaving
+    };
+  }, [filteredAndSearchedData, data]);
 
   return (
     <div className="space-y-4">
@@ -122,6 +208,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
           setVisibleColumns={setVisibleColumns}
           columnOrder={columnOrder}
           setColumnOrder={setColumnOrder}
+          activeFilters={activeFilters}
+          setActiveFilters={setActiveFilters}
         />
         
         <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
@@ -132,13 +220,13 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
 
       {/* Employee table with horizontal scroll */}
       <EmployeeTableView 
-        data={processedData} 
+        data={filteredAndSearchedData} 
         visibleColumns={visibleColumns} 
         columnOrder={columnOrder}
       />
 
       {/* Pagination */}
-      <EmployeePagination totalCount={data.length} />
+      <EmployeePagination totalCount={filteredAndSearchedData.length} />
     </div>
   );
 };

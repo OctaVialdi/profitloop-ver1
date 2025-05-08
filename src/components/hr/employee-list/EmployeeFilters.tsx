@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { EmployeeFilterMenu } from "../EmployeeFilterMenu";
 import { EmployeeColumnManager, EmployeeColumnState, ColumnOrder } from "../EmployeeColumnManager";
+
 interface EmployeeFiltersProps {
   showFilter: boolean;
   setShowFilter: (value: boolean) => void;
@@ -13,7 +15,10 @@ interface EmployeeFiltersProps {
   setVisibleColumns: (columns: EmployeeColumnState) => void;
   columnOrder: ColumnOrder;
   setColumnOrder: (order: ColumnOrder) => void;
+  activeFilters: Record<string, string[]>;
+  setActiveFilters: (filters: Record<string, string[]>) => void;
 }
+
 export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
   showFilter,
   setShowFilter,
@@ -22,17 +27,33 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
   visibleColumns,
   setVisibleColumns,
   columnOrder,
-  setColumnOrder
+  setColumnOrder,
+  activeFilters,
+  setActiveFilters
 }) => {
-  return <div className="flex items-center justify-between gap-4">
+  // Count the number of active filters (excluding entries with empty arrays)
+  const activeFilterCount = Object.entries(activeFilters)
+    .filter(([_, values]) => values.length > 0 && !values.includes('All'))
+    .length;
+    
+  const filterButtonText = activeFilterCount > 0 
+    ? `Filter (${activeFilterCount})` 
+    : "Filter";
+  
+  return (
+    <div className="flex items-center justify-between gap-4">
       <Popover open={showFilter} onOpenChange={setShowFilter}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-[200px] justify-between text-sm">
-            Filter (1) <ChevronDown className="h-4 w-4" />
+            {filterButtonText} <ChevronDown className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0" align="start">
-          <EmployeeFilterMenu onClose={() => setShowFilter(false)} />
+          <EmployeeFilterMenu 
+            onClose={() => setShowFilter(false)} 
+            activeFilters={activeFilters}
+            setActiveFilters={setActiveFilters}
+          />
         </PopoverContent>
       </Popover>
 
@@ -44,11 +65,15 @@ export const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[300px] p-0" align="end">
-            <EmployeeColumnManager columns={visibleColumns} onColumnChange={newColumns => setVisibleColumns(newColumns)} columnOrder={columnOrder} onOrderChange={newOrder => setColumnOrder(newOrder)} />
+            <EmployeeColumnManager 
+              columns={visibleColumns} 
+              onColumnChange={newColumns => setVisibleColumns(newColumns)} 
+              columnOrder={columnOrder} 
+              onOrderChange={newOrder => setColumnOrder(newOrder)} 
+            />
           </PopoverContent>
         </Popover>
-        
-        
       </div>
-    </div>;
+    </div>
+  );
 };
