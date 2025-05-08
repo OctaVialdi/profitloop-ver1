@@ -16,43 +16,43 @@ export const MeetingStatusBadge: React.FC<MeetingStatusBadgeProps> = ({ status, 
         return {
           icon: AlertTriangle,
           label: "Not Started",
-          color: "text-gray-600",
-          bg: "bg-[#f5f5fa]"
+          color: "text-amber-700 dark:text-amber-500",
+          bg: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
         };
       case "on-going":
         return {
           icon: Clock,
           label: "On Going",
-          color: "text-blue-600",
-          bg: "bg-[#f5f5fa]"
+          color: "text-blue-700 dark:text-blue-500",
+          bg: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
         };
       case "completed":
         return {
           icon: CheckCircle,
           label: "Completed",
-          color: "text-green-600",
-          bg: "bg-[#f5f5fa]"
+          color: "text-green-700 dark:text-green-500",
+          bg: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
         };
       case "rejected":
         return {
           icon: XCircle,
           label: "Rejected",
-          color: "text-red-600",
-          bg: "bg-[#f5f5fa]"
+          color: "text-red-700 dark:text-red-500",
+          bg: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
         };
       case "presented":
         return {
           icon: Presentation,
           label: "Presented",
-          color: "text-purple-600",
-          bg: "bg-[#f5f5fa]"
+          color: "text-purple-700 dark:text-purple-500",
+          bg: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800"
         };
       default:
         return {
           icon: AlertTriangle,
           label: "Not Started",
-          color: "text-gray-600",
-          bg: "bg-[#f5f5fa]"
+          color: "text-amber-700 dark:text-amber-500",
+          bg: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
         };
     }
   };
@@ -62,40 +62,40 @@ export const MeetingStatusBadge: React.FC<MeetingStatusBadgeProps> = ({ status, 
 
   return (
     <Select defaultValue={status} onValueChange={onChange}>
-      <SelectTrigger className={`w-[150px] ${statusConfig.bg} ${statusConfig.color} mx-auto`}>
+      <SelectTrigger className={`w-[150px] border ${statusConfig.bg} ${statusConfig.color} mx-auto transition-colors rounded-full`}>
         <div className="flex items-center">
-          <StatusIcon className="w-5 h-5 mr-2" />
+          <StatusIcon className="w-4 h-4 mr-2" />
           <SelectValue>{statusConfig.label}</SelectValue>
         </div>
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="not-started">
+      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
+        <SelectItem value="not-started" className="hover:bg-amber-50 dark:hover:bg-amber-900/20">
           <div className="flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-2 text-gray-600" />
+            <AlertTriangle className="w-4 h-4 mr-2 text-amber-600 dark:text-amber-500" />
             Not Started
           </div>
         </SelectItem>
-        <SelectItem value="on-going">
+        <SelectItem value="on-going" className="hover:bg-blue-50 dark:hover:bg-blue-900/20">
           <div className="flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-blue-600" />
+            <Clock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-500" />
             On Going
           </div>
         </SelectItem>
-        <SelectItem value="completed">
+        <SelectItem value="completed" className="hover:bg-green-50 dark:hover:bg-green-900/20">
           <div className="flex items-center">
-            <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+            <CheckCircle className="w-4 h-4 mr-2 text-green-600 dark:text-green-500" />
             Completed
           </div>
         </SelectItem>
-        <SelectItem value="rejected">
+        <SelectItem value="rejected" className="hover:bg-red-50 dark:hover:bg-red-900/20">
           <div className="flex items-center">
-            <XCircle className="w-5 h-5 mr-2 text-red-600" />
+            <XCircle className="w-4 h-4 mr-2 text-red-600 dark:text-red-500" />
             Rejected
           </div>
         </SelectItem>
-        <SelectItem value="presented">
+        <SelectItem value="presented" className="hover:bg-purple-50 dark:hover:bg-purple-900/20">
           <div className="flex items-center">
-            <Presentation className="w-5 h-5 mr-2 text-purple-600" />
+            <Presentation className="w-4 h-4 mr-2 text-purple-600 dark:text-purple-500" />
             Presented
           </div>
         </SelectItem>

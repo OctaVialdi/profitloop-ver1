@@ -9,6 +9,7 @@ interface MeetingActionButtonProps {
   onClick: () => void;
   variant?: "default" | "destructive" | "outline";
   showLabel?: boolean;
+  className?: string;
 }
 
 export const MeetingActionButton: React.FC<MeetingActionButtonProps> = ({
@@ -16,13 +17,14 @@ export const MeetingActionButton: React.FC<MeetingActionButtonProps> = ({
   label,
   onClick,
   variant = "outline",
-  showLabel = false
+  showLabel = false,
+  className = ""
 }) => {
   return (
     <Button
       variant={variant}
       size="sm"
-      className={`h-8 ${showLabel ? 'px-3' : 'px-2'}`}
+      className={`h-8 ${showLabel ? 'px-3' : 'px-2'} transition-all ${className}`}
       onClick={onClick}
       title={label}
     >
