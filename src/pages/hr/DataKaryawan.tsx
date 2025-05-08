@@ -15,7 +15,7 @@ export default function HRDataKaryawan() {
   }];
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Employee Data</h1>
+        
         {activeTab === "employees" && <Link to="/hr/data/add-employee">
             
           </Link>}
