@@ -44,7 +44,7 @@ export async function createAssetImagesBucket(): Promise<boolean> {
   }
 }
 
-// New function to get the URL for an uploaded file without bucket creation
+// Function to get the URL for an uploaded file without bucket creation
 export async function getUploadFileURL(filePath: string, file: File): Promise<string | null> {
   try {
     // Since we can't guarantee the bucket exists, we'll use a more resilient approach

@@ -2,44 +2,52 @@
 import { useState, useEffect, useCallback } from 'react';
 import { documentService, CompanyDocument, documentTypes } from '@/services/companyDocumentService';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 export function useCompanyDocuments(initialType?: string) {
-  const [documents, setDocuments] = useState<CompanyDocument[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentType, setCurrentType] = useState<string | undefined>(initialType);
   const [counts, setCounts] = useState<Record<string, number>>({});
   
-  const fetchDocuments = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      let fetchedDocuments: CompanyDocument[];
-      
-      if (currentType) {
-        fetchedDocuments = await documentService.getDocumentsByType(currentType);
-      } else {
-        fetchedDocuments = await documentService.getAllCompanyDocuments();
+  // Use React Query for better caching and state management
+  const { 
+    data: documents = [], 
+    isLoading: loading, 
+    error,
+    refetch: fetchDocuments
+  } = useQuery({
+    queryKey: ['companyDocuments', currentType],
+    queryFn: async () => {
+      try {
+        if (currentType) {
+          return await documentService.getDocumentsByType(currentType);
+        } else {
+          return await documentService.getAllCompanyDocuments();
+        }
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+        toast.error("Failed to load documents");
+        throw err;
       }
-      
-      setDocuments(fetchedDocuments);
-      
-      // Update document counts
-      const typeCounts = await documentService.countDocumentsByType();
-      setCounts(typeCounts);
-    } catch (err) {
-      console.error("Error fetching documents:", err);
-      setError("Failed to load documents");
-      toast.error("Failed to load documents");
-    } finally {
-      setLoading(false);
     }
-  }, [currentType]);
-  
+  });
+
+  // Get document counts by type
+  const { data: typeCounts = {} } = useQuery({
+    queryKey: ['documentCounts'],
+    queryFn: async () => {
+      try {
+        return await documentService.countDocumentsByType();
+      } catch (err) {
+        console.error("Error counting documents:", err);
+        return {};
+      }
+    }
+  });
+
+  // Update counts when typeCounts changes
   useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
+    setCounts(typeCounts);
+  }, [typeCounts]);
   
   const uploadDocument = async (file: File, documentData: {
     name: string,

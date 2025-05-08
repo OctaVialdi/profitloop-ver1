@@ -2,15 +2,17 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Search, Filter, Download } from "lucide-react";
 import { UploadDocumentDialog } from "./documents/UploadDocumentDialog";
 import { DocumentsList } from "./documents/DocumentsList";
 import { useCompanyDocuments } from "@/hooks/useCompanyDocuments";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 const FilesTab = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { 
     documents, 
     loading, 
@@ -30,6 +32,24 @@ const FilesTab = () => {
         </Button>
       </CardHeader>
       <CardContent className="p-0 pt-4">
+        {/* Search & Filter Bar */}
+        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
+          <div className="relative w-full md:w-1/2">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Input
+              className="pl-10"
+              placeholder="Search documents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" /> Export List
+            </Button>
+          </div>
+        </div>
+      
         <Tabs 
           value={currentType || "all"} 
           onValueChange={(value) => setCurrentType(value === "all" ? undefined : value)}
@@ -49,7 +69,8 @@ const FilesTab = () => {
           </TabsList>
           
           <DocumentsList 
-            filterType={currentType} 
+            filterType={currentType}
+            searchQuery={searchQuery}
             onDocumentDeleted={fetchDocuments} 
           />
         </Tabs>

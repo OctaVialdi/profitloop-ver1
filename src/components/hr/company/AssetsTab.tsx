@@ -318,22 +318,6 @@ const AssetsTab: React.FC = () => {
                 </td>
                 <td className="py-3 px-4 text-right">
                   <div className="flex justify-end gap-1">
-                    {asset.status === 'In Use' && (
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-9 w-9 text-blue-600"
-                        title="Return Asset"
-                        onClick={() => {
-                          if (asset.id) {
-                            assetService.assignAssetToEmployee(asset.id, null);
-                            setTimeout(() => refetchAssets(), 500);
-                          }
-                        }}
-                      >
-                        <RotateCw className="h-4 w-4" />
-                      </Button>
-                    )}
                     <Button 
                       variant="outline" 
                       size="icon" 

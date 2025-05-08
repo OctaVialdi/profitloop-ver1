@@ -10,11 +10,13 @@ import { format } from 'date-fns';
 
 interface DocumentsListProps {
   filterType?: string;
+  searchQuery?: string;
   onDocumentDeleted: () => void;
 }
 
 export const DocumentsList: React.FC<DocumentsListProps> = ({ 
   filterType,
+  searchQuery = "",
   onDocumentDeleted
 }) => {
   const [documents, setDocuments] = useState<CompanyDocument[]>([]);
@@ -43,6 +45,19 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
 
     fetchDocuments();
   }, [filterType]);
+
+  // Filter documents based on search query
+  const filteredDocuments = documents.filter(doc => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      doc.name.toLowerCase().includes(query) ||
+      doc.document_type.toLowerCase().includes(query) ||
+      (doc.employeeName && doc.employeeName.toLowerCase().includes(query)) ||
+      (doc.description && doc.description.toLowerCase().includes(query))
+    );
+  });
 
   const handlePreview = (document: CompanyDocument) => {
     window.open(document.file_url, '_blank');
@@ -82,15 +97,17 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
     return <div className="flex justify-center p-6">Loading documents...</div>;
   }
 
-  if (documents.length === 0) {
+  if (filteredDocuments.length === 0) {
     return (
       <div className="text-center p-8 border rounded-lg bg-gray-50">
         <FileText className="mx-auto h-12 w-12 text-gray-400" />
         <h3 className="mt-2 text-sm font-semibold">No documents found</h3>
         <p className="mt-1 text-sm text-gray-500">
-          {filterType 
-            ? `No ${filterType} documents have been uploaded yet.` 
-            : "No documents have been uploaded yet."}
+          {searchQuery 
+            ? "No documents match your search criteria."
+            : filterType 
+              ? `No ${filterType} documents have been uploaded yet.` 
+              : "No documents have been uploaded yet."}
         </p>
       </div>
     );
@@ -111,7 +128,7 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {documents.map((document) => (
+          {filteredDocuments.map((document) => (
             <TableRow key={document.id}>
               <TableCell className="font-medium">{document.name}</TableCell>
               <TableCell>{document.document_type}</TableCell>
