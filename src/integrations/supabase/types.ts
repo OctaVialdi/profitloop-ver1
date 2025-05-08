@@ -1766,6 +1766,73 @@ export type Database = {
           },
         ]
       }
+      reprimands: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          date: string
+          details: string | null
+          employee_id: string
+          escalation_level: number | null
+          evidence_attachments: Json | null
+          id: string
+          organization_id: string
+          reprimand_type: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          date: string
+          details?: string | null
+          employee_id: string
+          escalation_level?: number | null
+          evidence_attachments?: Json | null
+          id?: string
+          organization_id: string
+          reprimand_type: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          details?: string | null
+          employee_id?: string
+          escalation_level?: number | null
+          evidence_attachments?: Json | null
+          id?: string
+          organization_id?: string
+          reprimand_type?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reprimands_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reprimands_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reprimands_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string | null
@@ -2004,7 +2071,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      reprimand_type: "Verbal" | "Written" | "PIP" | "Suspension"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2119,6 +2186,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      reprimand_type: ["Verbal", "Written", "PIP", "Suspension"],
+    },
   },
 } as const

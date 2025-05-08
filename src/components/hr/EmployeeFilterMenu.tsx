@@ -1,287 +1,247 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, CalendarIcon } from "lucide-react";
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
-interface FilterMenuProps {
-  onClose?: () => void;
+// Define filter options
+const STATUS_OPTIONS = ['Active', 'Inactive', 'Resigned'];
+const EMPLOYMENT_STATUS_OPTIONS = ['Permanent', 'Contract', 'Probation', 'Internship'];
+
+interface EmployeeFilterMenuProps {
+  onClose: () => void;
   activeFilters: Record<string, string[]>;
   setActiveFilters: (filters: Record<string, string[]>) => void;
 }
 
-type FilterCategory = 'main' | 'status' | 'employmentStatus' | 'branch' | 'organization' | 'jobPosition' | 'jobLevel' | 'sbu';
-
-export const EmployeeFilterMenu: React.FC<FilterMenuProps> = ({ 
-  onClose, 
-  activeFilters, 
-  setActiveFilters 
-}) => {
-  const [currentMenu, setCurrentMenu] = useState<FilterCategory>('main');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
-    status: ['Active', 'Resigned'],
-    employmentStatus: ['Permanent', 'Contract', 'Probation'],
-    branch: ['Pusat'],
-    organization: [],
-    jobPosition: [],
-    jobLevel: ['Junior', 'Middle', 'Senior', 'Lead'],
-    sbu: []
+export const EmployeeFilterMenu: React.FC<EmployeeFilterMenuProps> = ({ onClose, activeFilters, setActiveFilters }) => {
+  // Date filter state
+  const [joinDateRange, setJoinDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
+    from: undefined,
+    to: undefined
   });
 
-  // Fetch organization names from Supabase when component mounts
-  useEffect(() => {
-    const fetchOrganizationNames = async () => {
-      try {
-        const { data } = await supabase.rpc('get_unique_organization_names');
-        if (data && data.length > 0) {
-          setFilterOptions(prev => ({
-            ...prev,
-            organization: data.map(item => item.organization_name)
-          }));
-        }
-      } catch (error) {
-        console.error("Error fetching organization names:", error);
-      }
-    };
-
-    fetchOrganizationNames();
-  }, []);
-  
-  const handleClose = () => {
-    if (onClose) onClose();
-  };
-
-  const renderMainMenu = () => (
-    <div className="space-y-4 p-4">
-      <h4 className="font-medium text-lg mb-2">Filter</h4>
-      <div className="flex flex-col space-y-1">
-        <Button 
-          variant="ghost" 
-          className="flex justify-between items-center w-full text-sm" 
-          onClick={() => setCurrentMenu('status')}
-        >
-          Status
-          {activeFilters.status && activeFilters.status.length > 0 && !activeFilters.status.includes('All') && (
-            <span className="bg-primary text-primary-foreground text-xs rounded-full px-2">
-              {activeFilters.status.length}
-            </span>
-          )}
-          <ChevronLeft className="h-5 w-5 rotate-180" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          className="flex justify-between items-center w-full text-sm" 
-          onClick={() => setCurrentMenu('employmentStatus')}
-        >
-          Employment status
-          {activeFilters.employmentStatus && activeFilters.employmentStatus.length > 0 && !activeFilters.employmentStatus.includes('All') && (
-            <span className="bg-primary text-primary-foreground text-xs rounded-full px-2">
-              {activeFilters.employmentStatus.length}
-            </span>
-          )}
-          <ChevronLeft className="h-5 w-5 rotate-180" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          className="flex justify-between items-center w-full text-sm" 
-          onClick={() => setCurrentMenu('branch')}
-        >
-          Branch
-          {activeFilters.branch && activeFilters.branch.length > 0 && !activeFilters.branch.includes('All') && (
-            <span className="bg-primary text-primary-foreground text-xs rounded-full px-2">
-              {activeFilters.branch.length}
-            </span>
-          )}
-          <ChevronLeft className="h-5 w-5 rotate-180" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          className="flex justify-between items-center w-full text-sm" 
-          onClick={() => setCurrentMenu('organization')}
-        >
-          Organization
-          {activeFilters.organization && activeFilters.organization.length > 0 && !activeFilters.organization.includes('All') && (
-            <span className="bg-primary text-primary-foreground text-xs rounded-full px-2">
-              {activeFilters.organization.length}
-            </span>
-          )}
-          <ChevronLeft className="h-5 w-5 rotate-180" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          className="flex justify-between items-center w-full text-sm" 
-          onClick={() => setCurrentMenu('jobPosition')}
-        >
-          Job position
-          {activeFilters.jobPosition && activeFilters.jobPosition.length > 0 && !activeFilters.jobPosition.includes('All') && (
-            <span className="bg-primary text-primary-foreground text-xs rounded-full px-2">
-              {activeFilters.jobPosition.length}
-            </span>
-          )}
-          <ChevronLeft className="h-5 w-5 rotate-180" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          className="flex justify-between items-center w-full text-sm" 
-          onClick={() => setCurrentMenu('jobLevel')}
-        >
-          Job level
-          {activeFilters.jobLevel && activeFilters.jobLevel.length > 0 && !activeFilters.jobLevel.includes('All') && (
-            <span className="bg-primary text-primary-foreground text-xs rounded-full px-2">
-              {activeFilters.jobLevel.length}
-            </span>
-          )}
-          <ChevronLeft className="h-5 w-5 rotate-180" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          className="flex justify-between items-center w-full text-sm" 
-          onClick={() => setCurrentMenu('sbu')}
-        >
-          SBU
-          {activeFilters.sbu && activeFilters.sbu.length > 0 && !activeFilters.sbu.includes('All') && (
-            <span className="bg-primary text-primary-foreground text-xs rounded-full px-2">
-              {activeFilters.sbu.length}
-            </span>
-          )}
-          <ChevronLeft className="h-5 w-5 rotate-180" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const handleFilterSelection = (category: string, value: string, isChecked: boolean) => {
-    setActiveFilters(prev => {
-      const current = prev[category] || [];
+  const handleFilterChange = (key: string, value: string) => {
+    setActiveFilters((prev) => {
+      const newFilters = { ...prev };
       
-      // Handle the "All" option specially
-      if (value === 'All') {
-        if (isChecked) {
-          return {
-            ...prev,
-            [category]: ['All']
-          };
-        } else {
-          return {
-            ...prev,
-            [category]: []
-          };
+      if (prev[key]?.includes(value)) {
+        // Remove value if it exists
+        newFilters[key] = prev[key].filter(v => v !== value);
+        // If "All" is selected, remove it as well when selecting specific items
+        if (value !== 'All' && newFilters[key].includes('All')) {
+          newFilters[key] = newFilters[key].filter(v => v !== 'All');
         }
       } else {
-        // If "All" was previously selected, remove it
-        let newValues = current.filter(v => v !== 'All');
-        
-        // Add or remove the value based on isChecked
-        if (isChecked) {
-          newValues = [...newValues, value];
-        } else {
-          newValues = newValues.filter(v => v !== value);
+        // Add value
+        if (!newFilters[key]) {
+          newFilters[key] = [];
         }
         
-        return {
-          ...prev,
-          [category]: newValues
-        };
+        // Handle "All" option
+        if (value === 'All') {
+          // If selecting "All", remove other selections
+          newFilters[key] = ['All'];
+        } else {
+          // If selecting specific item, remove "All" if present
+          if (newFilters[key].includes('All')) {
+            newFilters[key] = newFilters[key].filter(v => v !== 'All');
+          }
+          newFilters[key].push(value);
+        }
       }
+      
+      // If no selections left, add "All" by default
+      if (newFilters[key].length === 0) {
+        newFilters[key] = ['All'];
+      }
+      
+      return newFilters;
     });
   };
 
-  const handleApplyFilter = () => {
-    handleClose();
+  const clearAllFilters = () => {
+    setActiveFilters({});
+    setJoinDateRange({ from: undefined, to: undefined });
   };
 
-  const renderSubMenu = (title: string, key: FilterCategory) => {
-    const options = filterOptions[key] || [];
-    const currentFilters = activeFilters[key] || [];
-    const allSelected = currentFilters.includes('All');
+  const applyDateFilter = () => {
+    if (joinDateRange.from) {
+      // Fixed the type issue with the next line by explicitly creating a new object
+      setActiveFilters(prevFilters => {
+        const newFilters = { ...prevFilters };
+        
+        if (joinDateRange.from) {
+          newFilters['joinDateFrom'] = [format(joinDateRange.from, 'yyyy-MM-dd')];
+        }
+        
+        if (joinDateRange.to) {
+          newFilters['joinDateTo'] = [format(joinDateRange.to, 'yyyy-MM-dd')];
+        }
+        
+        return newFilters;
+      });
+    }
+  };
+
+  const clearDateFilter = () => {
+    setJoinDateRange({ from: undefined, to: undefined });
     
-    // Filter options based on search query
-    const filteredOptions = searchQuery.trim() 
-      ? options.filter(opt => opt.toLowerCase().includes(searchQuery.toLowerCase()))
-      : options;
+    setActiveFilters(prevFilters => {
+      const newFilters = { ...prevFilters };
+      delete newFilters['joinDateFrom'];
+      delete newFilters['joinDateTo'];
+      return newFilters;
+    });
+  };
+
+  const renderCheckbox = (key: string, value: string, label: string) => {
+    const isChecked = activeFilters[key]?.includes(value) || false;
     
     return (
-      <div className="h-full flex flex-col">
-        <div className="p-4 flex items-center border-b">
-          <Button variant="ghost" size="icon" onClick={() => setCurrentMenu('main')}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <h4 className="font-medium text-sm ml-2">{title}</h4>
-        </div>
-        
-        <div className="p-4 space-y-4 flex-1 overflow-auto">
-          <div className="relative">
-            <Input 
-              placeholder="Search..." 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="text-sm"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id={`${key}-all`} 
-                checked={allSelected}
-                onCheckedChange={(checked) => {
-                  handleFilterSelection(key, 'All', checked === true);
-                }}
-              />
-              <label htmlFor={`${key}-all`} className="text-sm font-medium">All</label>
-            </div>
-            
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((item, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`${key}-${index}`} 
-                    checked={currentFilters.includes(item)} 
-                    onCheckedChange={(checked) => {
-                      handleFilterSelection(key, item, checked === true);
-                    }}
-                    disabled={allSelected}
-                  />
-                  <label htmlFor={`${key}-${index}`} className="text-sm font-medium">{item}</label>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4 text-gray-500 text-sm">No data found</div>
-            )}
-          </div>
-        </div>
-        
-        <div className="bg-primary p-4 mt-auto">
-          <Button className="w-full text-sm" onClick={handleApplyFilter}>Apply Filter</Button>
-        </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id={`${key}-${value}`} 
+          checked={isChecked}
+          onCheckedChange={() => handleFilterChange(key, value)}
+        />
+        <label 
+          htmlFor={`${key}-${value}`}
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          {label}
+        </label>
       </div>
     );
   };
 
-  // Switch between different menus based on current selection
-  const renderContent = () => {
-    switch (currentMenu) {
-      case 'status':
-        return renderSubMenu('Status', 'status');
-      case 'employmentStatus':
-        return renderSubMenu('Employment status', 'employmentStatus');
-      case 'branch':
-        return renderSubMenu('Branch', 'branch');
-      case 'organization':
-        return renderSubMenu('Organization', 'organization');
-      case 'jobPosition':
-        return renderSubMenu('Job position', 'jobPosition');
-      case 'jobLevel':
-        return renderSubMenu('Job level', 'jobLevel');
-      case 'sbu':
-        return renderSubMenu('SBU', 'sbu');
-      default:
-        return renderMainMenu();
-    }
-  };
+  return (
+    <div className="p-4 w-full">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-medium text-lg">Filter</h3>
+        {Object.keys(activeFilters).length > 0 && (
+          <Button variant="ghost" size="sm" onClick={clearAllFilters}>
+            Clear all
+          </Button>
+        )}
+      </div>
 
-  return renderContent();
+      {/* Status filter */}
+      <div className="space-y-2 mb-6">
+        <Label className="font-medium">Status</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {renderCheckbox('status', 'All', 'All')}
+          {STATUS_OPTIONS.map(status => (
+            renderCheckbox('status', status, status)
+          ))}
+        </div>
+      </div>
+
+      {/* Employment status filter */}
+      <div className="space-y-2 mb-6">
+        <Label className="font-medium">Employment Status</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {renderCheckbox('employmentStatus', 'All', 'All')}
+          {EMPLOYMENT_STATUS_OPTIONS.map(status => (
+            renderCheckbox('employmentStatus', status, status)
+          ))}
+        </div>
+      </div>
+
+      {/* Join date filter */}
+      <div className="space-y-2 mb-6">
+        <div className="flex items-center justify-between">
+          <Label className="font-medium">Join Date</Label>
+          {(joinDateRange.from || joinDateRange.to) && (
+            <Button variant="ghost" size="sm" onClick={clearDateFilter}>
+              Clear
+            </Button>
+          )}
+        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              id="date"
+              variant={"outline"}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !joinDateRange.from && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {joinDateRange.from ? (
+                joinDateRange.to ? (
+                  <>
+                    {format(joinDateRange.from, "PPP")} - {format(joinDateRange.to, "PPP")}
+                  </>
+                ) : (
+                  format(joinDateRange.from, "PPP")
+                )
+              ) : (
+                "Select join date range"
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={joinDateRange.from}
+              selected={joinDateRange}
+              onSelect={setJoinDateRange}
+              numberOfMonths={2}
+            />
+            <div className="flex justify-end gap-2 p-2 border-t">
+              <Button variant="outline" size="sm" onClick={clearDateFilter}>
+                Clear
+              </Button>
+              <Button size="sm" onClick={applyDateFilter}>
+                Apply
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="space-y-2 mb-6">
+        <Command>
+          <CommandInput placeholder="Search branch..." />
+          <CommandList className="h-52">
+            <CommandEmpty>No branches found.</CommandEmpty>
+            <CommandGroup heading="Branches">
+              <CommandItem className="flex items-center">
+                <Checkbox id="branch-all" className="mr-2" />
+                <label htmlFor="branch-all" className="flex-1 cursor-pointer">All Branches</label>
+              </CommandItem>
+              <CommandItem className="flex items-center">
+                <Checkbox id="branch-jakarta" className="mr-2" />
+                <label htmlFor="branch-jakarta" className="flex-1 cursor-pointer">Jakarta</label>
+              </CommandItem>
+              <CommandItem className="flex items-center">
+                <Checkbox id="branch-surabaya" className="mr-2" />
+                <label htmlFor="branch-surabaya" className="flex-1 cursor-pointer">Surabaya</label>
+              </CommandItem>
+              <CommandItem className="flex items-center">
+                <Checkbox id="branch-bandung" className="mr-2" />
+                <label htmlFor="branch-bandung" className="flex-1 cursor-pointer">Bandung</label>
+              </CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </div>
+
+      <Button className="w-full" onClick={onClose}>
+        Apply Filters
+      </Button>
+    </div>
+  );
 };
