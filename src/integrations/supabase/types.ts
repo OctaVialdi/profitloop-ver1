@@ -446,6 +446,63 @@ export type Database = {
           },
         ]
       }
+      company_documents: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_type: string
+          employee_id: string | null
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          name: string
+          organization_id: string
+          signed: boolean
+          status: string
+          tags: string[] | null
+          updated_at: string
+          upload_date: string
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_type: string
+          employee_id?: string | null
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          name: string
+          organization_id: string
+          signed?: boolean
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          upload_date?: string
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_type?: string
+          employee_id?: string | null
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          signed?: boolean
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          upload_date?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
       company_mission_vision: {
         Row: {
           created_at: string
