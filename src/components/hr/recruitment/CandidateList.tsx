@@ -57,7 +57,7 @@ export default function CandidateList() {
       const data = await candidateService.fetchCandidates();
       console.log(`Fetched ${data.length} candidates`);
       
-      // If jobId filter is present, filter candidates
+      // Updated jobIdFilter check to work with updated type
       if (jobIdFilter) {
         const filtered = data.filter(candidate => 
           candidate.job_position_id === jobIdFilter

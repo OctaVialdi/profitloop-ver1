@@ -6,6 +6,7 @@ export interface CandidateApplication {
   full_name: string;
   email: string;
   phone?: string;
+  job_position_id?: string; // Added this property to fix type error
   job_title?: string;
   status: string;
   created_at: string;
@@ -20,6 +21,19 @@ export interface CandidateWithDetails extends CandidateApplication {
   job_title?: string;
   organization_name?: string;
   evaluations?: CandidateEvaluation[];
+  // Adding missing properties referenced in components
+  nik?: string;
+  passport_number?: string;
+  passport_expiry?: string;
+  postal_code?: string;
+  citizen_address?: string;
+  address?: string;
+  birth_date?: string;
+  birth_place?: string;
+  gender?: string;
+  religion?: string;
+  blood_type?: string;
+  marital_status?: string;
 }
 
 export interface CandidateFamilyMember {
@@ -981,7 +995,8 @@ export const candidateService = {
     }
   },
 
-  async deleteCandidate: async (id: string): Promise<boolean> => {
+  // Fix the syntax error in deleteCandidate function
+  async deleteCandidate(id: string): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('candidate_applications')

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -170,9 +169,8 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
         evidenceAttachments = await uploadAttachments(organization.id, data.employee_id, reprimandId);
       }
       
-      // Create the reprimand
+      // Create the reprimand - removing the id property from the object literal
       await createReprimand({
-        id: reprimandId,
         organization_id: organization.id,
         employee_id: data.employee_id,
         reprimand_type: data.reprimand_type,

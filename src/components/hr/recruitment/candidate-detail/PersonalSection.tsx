@@ -28,18 +28,6 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                 <div>
-                  <p className="text-sm text-gray-500">Full name</p>
-                  <p className="font-medium">{candidate.full_name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{candidate.email || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium">{candidate.phone || "-"}</p>
-                </div>
-                <div>
                   <p className="text-sm text-gray-500">Birthdate</p>
                   <p className="font-medium">
                     {candidate.birth_date 
@@ -47,37 +35,36 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                       : "-"}
                   </p>
                 </div>
+                
                 <div>
-                  <p className="text-sm text-gray-500">Birth place</p>
+                  <p className="text-sm text-gray-500">Place of birth</p>
                   <p className="font-medium">{candidate.birth_place || "-"}</p>
                 </div>
+                
                 <div>
                   <p className="text-sm text-gray-500">Gender</p>
-                  <p className="font-medium">
-                    {candidate.gender 
-                      ? candidate.gender.charAt(0).toUpperCase() + candidate.gender.slice(1)
-                      : "-"}
-                  </p>
+                  <p className="font-medium">{candidate.gender 
+                    ? candidate.gender.charAt(0).toUpperCase() + candidate.gender.slice(1) 
+                    : "-"}</p>
                 </div>
+                
                 <div>
                   <p className="text-sm text-gray-500">Religion</p>
-                  <p className="font-medium">
-                    {candidate.religion 
-                      ? candidate.religion.charAt(0).toUpperCase() + candidate.religion.slice(1)
-                      : "-"}
-                  </p>
+                  <p className="font-medium">{candidate.religion 
+                    ? candidate.religion.charAt(0).toUpperCase() + candidate.religion.slice(1) 
+                    : "-"}</p>
                 </div>
+                
                 <div>
                   <p className="text-sm text-gray-500">Blood type</p>
                   <p className="font-medium">{candidate.blood_type || "-"}</p>
                 </div>
+                
                 <div>
                   <p className="text-sm text-gray-500">Marital status</p>
-                  <p className="font-medium">
-                    {candidate.marital_status 
-                      ? candidate.marital_status.charAt(0).toUpperCase() + candidate.marital_status.slice(1)
-                      : "-"}
-                  </p>
+                  <p className="font-medium">{candidate.marital_status 
+                    ? candidate.marital_status.charAt(0).toUpperCase() + candidate.marital_status.slice(1) 
+                    : "-"}</p>
                 </div>
               </div>
             </div>
