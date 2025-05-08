@@ -47,20 +47,47 @@ export async function createAssetImagesBucket(): Promise<boolean> {
   }
 }
 
+// Function to check if a bucket exists and create it if needed
+export async function ensureBucketExists(bucketName: string): Promise<boolean> {
+  try {
+    // First check if the user has permissions
+    const { data: userInfo, error: userError } = await supabase.auth.getUser();
+    if (userError || !userInfo || !userInfo.user) {
+      console.error('User not authenticated:', userError?.message || 'No user data');
+      toast.error("Authentication required for storage operations");
+      return false;
+    }
+    
+    const exists = await checkBucketExists(bucketName);
+    
+    if (!exists) {
+      console.log(`The '${bucketName}' bucket doesn't exist. Please ensure it's created in the Supabase dashboard.`);
+      toast.warning(`Storage bucket '${bucketName}' not found. Some features may be limited.`);
+      return false;
+    }
+    
+    return true;
+  } catch (error: any) {
+    console.error(`Error ensuring ${bucketName} bucket exists:`, error.message || error);
+    toast.error("Storage initialization failed. Please try again.");
+    return false;
+  }
+}
+
 // Function to get the URL for an uploaded file with improved error handling
-export async function getUploadFileURL(filePath: string, file: File): Promise<string | null> {
+export async function getUploadFileURL(filePath: string, file: File, bucketName: string = 'company_documents'): Promise<string | null> {
   try {
     // Verify bucket exists first
-    const bucketExists = await checkBucketExists('company_documents');
+    const bucketExists = await checkBucketExists(bucketName);
     
     if (!bucketExists) {
-      toast.error("Storage bucket 'company_documents' not found. Contact your administrator.");
+      toast.error(`Storage bucket '${bucketName}' not found. Contact your administrator.`);
       return null;
     }
     
     // Get the public URL
     const response = await supabase.storage
-      .from('company_documents')
+      .from(bucketName)
       .getPublicUrl(filePath);
       
     // Check if response has data with publicUrl
@@ -75,5 +102,52 @@ export async function getUploadFileURL(filePath: string, file: File): Promise<st
     console.error('Error getting upload URL:', error.message || error);
     toast.error("Failed to process file upload");
     return null;
+  }
+}
+
+// Function to upload a file to a specific bucket
+export async function uploadFileToBucket(
+  bucketName: string, 
+  filePath: string, 
+  file: File
+): Promise<{ url: string | null; error: Error | null }> {
+  try {
+    // Verify bucket exists first
+    const bucketExists = await checkBucketExists(bucketName);
+    
+    if (!bucketExists) {
+      return { 
+        url: null, 
+        error: new Error(`Storage bucket '${bucketName}' not found`) 
+      };
+    }
+    
+    // Upload the file
+    const { error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file);
+      
+    if (uploadError) {
+      return { url: null, error: uploadError };
+    }
+    
+    // Get the URL
+    const response = await supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+      
+    if (!response || !response.data || !response.data.publicUrl) {
+      return { 
+        url: null, 
+        error: new Error("Failed to generate file URL") 
+      };
+    }
+    
+    return { url: response.data.publicUrl, error: null };
+  } catch (error: any) {
+    return { 
+      url: null, 
+      error: error instanceof Error ? error : new Error(error.message || "Unknown error") 
+    };
   }
 }

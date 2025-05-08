@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -16,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { createAssetImagesBucket, getUploadFileURL } from '@/integrations/supabase/storage';
+import { checkBucketExists, uploadFileToBucket } from '@/integrations/supabase/storage';
 
 interface AddReprimandDialogProps {
   isOpen: boolean;
@@ -123,23 +124,27 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
 
   const uploadAttachments = async (organizationId: string, employeeId: string, reprimandId: string) => {
     try {
-      // Check if bucket exists, if not create it
-      await createAssetImagesBucket();
+      // Check if bucket exists
+      const bucketExists = await checkBucketExists('reprimand-attachments');
+      if (!bucketExists) {
+        toast.error("Storage bucket 'reprimand-attachments' not found. Contact your administrator.");
+        throw new Error("Storage bucket not found");
+      }
       
       // Upload each attachment
       const uploads = await Promise.all(attachments.map(async (attachment) => {
         const fileExt = attachment.name.split('.').pop();
         const filePath = `${organizationId}/${employeeId}/${reprimandId}/${uuidv4()}.${fileExt}`;
         
-        // Upload file to storage
-        const { error } = await supabase.storage
-          .from('reprimand-attachments')
-          .upload(filePath, attachment.file);
-          
-        if (error) throw error;
+        // Upload file to storage using our new utility function
+        const { url, error } = await uploadFileToBucket(
+          'reprimand-attachments',
+          filePath,
+          attachment.file
+        );
         
-        // Get public URL
-        const url = await getUploadFileURL(filePath, attachment.file);
+        if (error) throw error;
+        if (!url) throw new Error("Failed to get URL for uploaded file");
         
         return {
           name: attachment.name,
@@ -169,7 +174,7 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
         evidenceAttachments = await uploadAttachments(organization.id, data.employee_id, reprimandId);
       }
       
-      // Create the reprimand - removing the id property from the object literal
+      // Create the reprimand
       await createReprimand({
         organization_id: organization.id,
         employee_id: data.employee_id,
