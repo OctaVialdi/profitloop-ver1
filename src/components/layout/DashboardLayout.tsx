@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
 import { AnimatePresence, motion } from "framer-motion";
+import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
 
 // Import your sidebar navigation component
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
@@ -70,6 +71,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     );
   }
 
+  // Determine if we should show breadcrumbs based on the current path
+  const shouldShowBreadcrumbs = location.pathname !== "/dashboard";
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -94,6 +98,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {/* Page content with direct overflow handling */}
           <div className="flex-1 overflow-auto">
             <div className="p-4 md:p-6">
+              {shouldShowBreadcrumbs && (
+                <BreadcrumbNav />
+              )}
+              
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={location.pathname}

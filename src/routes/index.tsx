@@ -16,6 +16,8 @@ import JoinOrganization from "@/pages/auth/JoinOrganization";
 import JobApplicationForm from "@/pages/public/JobApplicationForm";
 import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
 import JobPreviewPage from "@/pages/public/JobPreviewPage";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import Components from "@/pages/dev/Components";
 
 export const AppRoutes = () => {
   return (
@@ -33,6 +35,11 @@ export const AppRoutes = () => {
       <Route path="/apply/preview/:token" element={<JobPreviewPage />} />
       <Route path="/apply/:token" element={<JobApplicationForm />} />
       <Route path="/apply/success" element={<ApplicationSuccess />} />
+      
+      {/* Dev Routes */}
+      <Route path="/dev" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+        <Route path="components" element={<Components />} />
+      </Route>
       
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
