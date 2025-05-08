@@ -167,16 +167,21 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
     try {
       const reprimandId = uuidv4();
       
+      // Find the selected employee to get their name
+      const selectedEmployee = employees.find(emp => emp.id === data.employee_id);
+      const employeeName = selectedEmployee ? selectedEmployee.name : 'Unknown Employee';
+      
       // Upload any attachments
       let evidenceAttachments = null;
       if (attachments.length > 0) {
         evidenceAttachments = await uploadAttachments(organization.id, data.employee_id, reprimandId);
       }
       
-      // Create the reprimand
+      // Create the reprimand with employee_name included
       await createReprimand({
         organization_id: organization.id,
         employee_id: data.employee_id,
+        employee_name: employeeName, // Include the employee name
         reprimand_type: data.reprimand_type,
         date: format(data.date, 'yyyy-MM-dd'),
         details: data.details,

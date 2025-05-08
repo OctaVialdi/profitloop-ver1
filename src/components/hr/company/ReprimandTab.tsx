@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileWarning, Plus, Eye, Check, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +16,8 @@ import AddReprimandDialog from './reprimand/AddReprimandDialog';
 import ReprimandDetailDialog from './reprimand/ReprimandDetailDialog';
 import ReprimandFilters from './reprimand/ReprimandFilters';
 import ReprimandStats from './reprimand/ReprimandStats';
+
+interface ReprimandTabProps {}
 
 const ReprimandTab: React.FC = () => {
   const { organization } = useOrganization();

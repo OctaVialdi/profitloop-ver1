@@ -1773,6 +1773,7 @@ export type Database = {
           date: string
           details: string | null
           employee_id: string
+          employee_name: string | null
           escalation_level: number | null
           evidence_attachments: Json | null
           id: string
@@ -1787,6 +1788,7 @@ export type Database = {
           date: string
           details?: string | null
           employee_id: string
+          employee_name?: string | null
           escalation_level?: number | null
           evidence_attachments?: Json | null
           id?: string
@@ -1801,6 +1803,7 @@ export type Database = {
           date?: string
           details?: string | null
           employee_id?: string
+          employee_name?: string | null
           escalation_level?: number | null
           evidence_attachments?: Json | null
           id?: string

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Employee } from "@/hooks/useEmployees";
@@ -117,7 +116,14 @@ export const HistorySection: React.FC<HistorySectionProps> = ({
         setIsLoading(true);
         try {
           const data = await fetchEmployeeReprimands(employee.id);
-          setReprimands(data);
+          
+          // Add employee name to reprimands if missing
+          const enrichedData = data.map(reprimand => ({
+            ...reprimand,
+            employee_name: reprimand.employee_name || employee.name
+          }));
+          
+          setReprimands(enrichedData);
         } catch (error) {
           console.error("Error loading reprimands:", error);
         } finally {
@@ -127,7 +133,7 @@ export const HistorySection: React.FC<HistorySectionProps> = ({
     };
     
     loadReprimands();
-  }, [activeTab, employee.id]);
+  }, [activeTab, employee.id, employee.name]);
 
   const handleViewReprimand = (reprimand: Reprimand) => {
     setSelectedReprimand(reprimand);

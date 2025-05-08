@@ -7,7 +7,7 @@ export interface Reprimand {
   id: string;
   organization_id: string;
   employee_id: string;
-  employee_name?: string;
+  employee_name: string; // Added this field
   department?: string;
   reprimand_type: string;
   date: string;
@@ -90,7 +90,7 @@ export const fetchReprimandById = async (id: string) => {
 
     return {
       ...data,
-      employee_name: data.employees?.name || 'Unknown',
+      employee_name: data.employee_name || data.employees?.name || 'Unknown',
       department: data.employees?.role || 'Unknown'
     } as Reprimand;
   } catch (error: any) {
