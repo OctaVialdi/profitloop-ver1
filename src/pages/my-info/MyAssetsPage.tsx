@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { EmployeeWithDetails, employeeService } from "@/services/employeeService";
@@ -24,6 +23,17 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+
+// Sidebar navigation items
+const sidebarItems = [
+  { id: "general", label: "General", href: "#general" },
+  { id: "time-management", label: "Time Management", href: "#time-management" },
+  { id: "payroll", label: "Payroll", href: "#payroll" },
+  { id: "finance", label: "Finance", href: "#finance" },
+  { id: "files", label: "Files", href: "#files" },
+  { id: "assets", label: "Assets", href: "#assets", active: true },
+  { id: "history", label: "History", href: "#history" },
+];
 
 export default function MyAssetsPage() {
   const navigate = useNavigate();
@@ -212,213 +222,246 @@ export default function MyAssetsPage() {
 
   return (
     <QueryProvider>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              className="flex items-center gap-2 mr-4" 
-              onClick={() => navigate("/hr/data")}
-            >
-              <ArrowLeft size={16} />
-              <span>Back</span>
-            </Button>
-            <h1 className="text-2xl font-bold">Assets - {employee.name}</h1>
+      <div className="flex">
+        {/* Sidebar */}
+        <div className="w-64 min-h-[calc(100vh-4rem)] border-r bg-gray-50 p-4">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold">{employee.name}</h3>
+            <p className="text-sm text-gray-500">{employee.employee_id}</p>
           </div>
-          <Button onClick={handleAddAssetClick} className="flex items-center gap-1">
-            <Plus className="h-4 w-4" /> Add Asset
-          </Button>
+          
+          <nav>
+            <ul className="space-y-1">
+              {sidebarItems.map((item) => (
+                <li key={item.id}>
+                  <a 
+                    href={item.href}
+                    className={`flex items-center px-4 py-2 rounded-md transition-colors ${
+                      item.active 
+                        ? 'bg-primary text-white font-medium' 
+                        : 'hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
 
-        <Card className="p-6">
-          {isLoading ? (
-            <div className="flex justify-center items-center p-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        {/* Main content */}
+        <div className="flex-1 p-6">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center gap-2 mr-4" 
+                  onClick={() => navigate("/hr/data")}
+                >
+                  <ArrowLeft size={16} />
+                  <span>Back</span>
+                </Button>
+                <h1 className="text-2xl font-bold">Assets - {employee.name}</h1>
+              </div>
+              <Button onClick={handleAddAssetClick} className="flex items-center gap-1">
+                <Plus className="h-4 w-4" /> Add Asset
+              </Button>
             </div>
-          ) : (
-            <>
-              <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-                <div className="w-full md:w-1/2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <Input
-                      className="pl-10"
-                      placeholder="Search assets..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
+
+            <Card className="p-6">
+              {isLoading ? (
+                <div className="flex justify-center items-center p-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
-                <div className="flex gap-2">
-                  <Select 
-                    value={filters.category} 
-                    onValueChange={(value) => setFilters({...filters, category: value})}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <Filter className="mr-2 h-4 w-4" />
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {assetTypes.map(type => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select 
-                    value={filters.status} 
-                    onValueChange={(value) => setFilters({...filters, status: value})}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <Filter className="mr-2 h-4 w-4" />
-                      <SelectValue placeholder="All Statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="In Use">In Use</SelectItem>
-                      <SelectItem value="Available">Available</SelectItem>
-                      <SelectItem value="Maintenance">Maintenance</SelectItem>
-                      <SelectItem value="Lost">Lost</SelectItem>
-                      <SelectItem value="Retired">Retired</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Button variant="outline">
-                    <Download className="mr-2 h-4 w-4" /> Export
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="border rounded-lg overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 border-b">
-                      <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Category</TableHead>
-                      <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Serial Number</TableHead>
-                      <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Description</TableHead>
-                      <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Lend Date</TableHead>
-                      <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Expected Return</TableHead>
-                      <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Status</TableHead>
-                      <TableHead className="py-3 px-4 text-right font-medium text-gray-500 text-sm">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAssets.map((asset) => (
-                      <TableRow key={asset.id} className="border-b hover:bg-gray-50">
-                        <TableCell className="py-3 px-4">
-                          <div className="flex items-center">
-                            <span className="font-medium">{asset.asset_type}</span>
-                            {asset.asset_tag && (
-                              <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 text-xs">
-                                {asset.asset_tag}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3 px-4">{asset.serial_number || '-'}</TableCell>
-                        <TableCell className="py-3 px-4">
-                          <div>{asset.name}</div>
-                          <div className="text-xs text-gray-500">{asset.specifications || ''}</div>
-                        </TableCell>
-                        <TableCell className="py-3 px-4">
-                          {asset.assigned_date 
-                            ? format(new Date(asset.assigned_date), 'MMM d, yyyy') 
-                            : 'Not set'}
-                        </TableCell>
-                        <TableCell className="py-3 px-4">
-                          {asset.expected_return_date 
-                            ? format(new Date(asset.expected_return_date), 'MMM d, yyyy') 
-                            : 'Not set'}
-                        </TableCell>
-                        <TableCell className="py-3 px-4">
-                          <div className="flex flex-col space-y-1">
-                            <Badge variant="outline" className={`${statusColors[asset.status]} font-normal`}>
-                              {asset.status}
-                            </Badge>
-                            {asset.condition && (
-                              <Badge variant="outline" className={`${conditionColors[asset.condition]} font-normal`}>
-                                {asset.condition}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-9 w-9"
-                              title="Edit Asset" 
-                              onClick={() => handleEditAsset(asset)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-9 w-9 text-red-600"
-                              title="Delete Asset" 
-                              onClick={() => confirmDeleteAsset(asset.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                
-                {filteredAssets.length === 0 && (
-                  <div className="p-8 text-center text-gray-500">
-                    No assets found matching your criteria
+              ) : (
+                <>
+                  <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                    <div className="w-full md:w-1/2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                        <Input
+                          className="pl-10"
+                          placeholder="Search assets..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Select 
+                        value={filters.category} 
+                        onValueChange={(value) => setFilters({...filters, category: value})}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <Filter className="mr-2 h-4 w-4" />
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {assetTypes.map(type => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select 
+                        value={filters.status} 
+                        onValueChange={(value) => setFilters({...filters, status: value})}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <Filter className="mr-2 h-4 w-4" />
+                          <SelectValue placeholder="All Statuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="In Use">In Use</SelectItem>
+                          <SelectItem value="Available">Available</SelectItem>
+                          <SelectItem value="Maintenance">Maintenance</SelectItem>
+                          <SelectItem value="Lost">Lost</SelectItem>
+                          <SelectItem value="Retired">Retired</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Button variant="outline">
+                        <Download className="mr-2 h-4 w-4" /> Export
+                      </Button>
+                    </div>
                   </div>
-                )}
-              </div>
-            </>
-          )}
-        </Card>
-        
-        {isAddDialogOpen && (
-          <AddAssetDialog
-            employeeId={employeeId}
-            isOpen={isAddDialogOpen}
-            onClose={() => setIsAddDialogOpen(false)}
-            onSaved={handleAssetsUpdated}
-          />
-        )}
-        
-        {isEditDialogOpen && selectedAsset && (
-          <EditAssetDialog
-            asset={selectedAsset}
-            isOpen={isEditDialogOpen}
-            onClose={() => setIsEditDialogOpen(false)}
-            onSaved={handleSaveAsset}
-          />
-        )}
-        
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete this asset. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-red-600 hover:bg-red-700"
-                onClick={() => assetToDelete && handleDeleteAsset(assetToDelete)}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                  
+                  <div className="border rounded-lg overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-50 border-b">
+                          <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Category</TableHead>
+                          <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Serial Number</TableHead>
+                          <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Description</TableHead>
+                          <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Lend Date</TableHead>
+                          <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Expected Return</TableHead>
+                          <TableHead className="py-3 px-4 text-left font-medium text-gray-500 text-sm">Status</TableHead>
+                          <TableHead className="py-3 px-4 text-right font-medium text-gray-500 text-sm">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAssets.map((asset) => (
+                          <TableRow key={asset.id} className="border-b hover:bg-gray-50">
+                            <TableCell className="py-3 px-4">
+                              <div className="flex items-center">
+                                <span className="font-medium">{asset.asset_type}</span>
+                                {asset.asset_tag && (
+                                  <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 text-xs">
+                                    {asset.asset_tag}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 px-4">{asset.serial_number || '-'}</TableCell>
+                            <TableCell className="py-3 px-4">
+                              <div>{asset.name}</div>
+                              <div className="text-xs text-gray-500">{asset.specifications || ''}</div>
+                            </TableCell>
+                            <TableCell className="py-3 px-4">
+                              {asset.assigned_date 
+                                ? format(new Date(asset.assigned_date), 'MMM d, yyyy') 
+                                : 'Not set'}
+                            </TableCell>
+                            <TableCell className="py-3 px-4">
+                              {asset.expected_return_date 
+                                ? format(new Date(asset.expected_return_date), 'MMM d, yyyy') 
+                                : 'Not set'}
+                            </TableCell>
+                            <TableCell className="py-3 px-4">
+                              <div className="flex flex-col space-y-1">
+                                <Badge variant="outline" className={`${statusColors[asset.status]} font-normal`}>
+                                  {asset.status}
+                                </Badge>
+                                {asset.condition && (
+                                  <Badge variant="outline" className={`${conditionColors[asset.condition]} font-normal`}>
+                                    {asset.condition}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 px-4 text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-9 w-9"
+                                  title="Edit Asset" 
+                                  onClick={() => handleEditAsset(asset)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-9 w-9 text-red-600"
+                                  title="Delete Asset" 
+                                  onClick={() => confirmDeleteAsset(asset.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    
+                    {filteredAssets.length === 0 && (
+                      <div className="p-8 text-center text-gray-500">
+                        No assets found matching your criteria
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </Card>
+            
+            {/* Dialogs */}
+            {isAddDialogOpen && (
+              <AddAssetDialog
+                employeeId={employeeId}
+                isOpen={isAddDialogOpen}
+                onClose={() => setIsAddDialogOpen(false)}
+                onSaved={handleAssetsUpdated}
+              />
+            )}
+            
+            {isEditDialogOpen && selectedAsset && (
+              <EditAssetDialog
+                asset={selectedAsset}
+                isOpen={isEditDialogOpen}
+                onClose={() => setIsEditDialogOpen(false)}
+                onSaved={handleSaveAsset}
+              />
+            )}
+            
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this asset. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={() => assetToDelete && handleDeleteAsset(assetToDelete)}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
       </div>
     </QueryProvider>
   );
