@@ -29,6 +29,16 @@ const routeLabels: Record<string, string> = {
   "org-structure": "Organization Structure",
   "dev": "Development",
   "components": "Components",
+  "data": "Employee Data",
+  "recruitment": "Recruitment",
+  "absensi": "Attendance",
+  "cuti": "Leave",
+  "payroll": "Payroll",
+  "kontrak": "Contracts",
+  "training": "Training",
+  "kinerja": "Performance",
+  "okr": "OKR",
+  "catatan-meetings": "Meeting Notes",
 };
 
 interface BreadcrumbNavProps {

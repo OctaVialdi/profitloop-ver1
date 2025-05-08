@@ -85,6 +85,34 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       customLabels["components"] = "UI Components";
     }
   }
+  
+  // Add support for finance section
+  if (location.pathname.startsWith('/finance')) {
+    customLabels["finance"] = "Finance";
+    
+    if (location.pathname.includes('/dashboard')) {
+      customLabels["dashboard"] = "Overview";
+    }
+  }
+  
+  // Add support for HR section
+  if (location.pathname.startsWith('/hr')) {
+    customLabels["hr"] = "Human Resources";
+    
+    if (location.pathname.includes('/dashboard')) {
+      customLabels["dashboard"] = "Overview";
+    }
+    
+    // Handle company section
+    if (location.pathname.includes('/company')) {
+      customLabels["company"] = "Company Profile";
+    }
+  }
+  
+  // Support for meeting notes
+  if (location.pathname.startsWith('/catatan-meetings')) {
+    customLabels["catatan-meetings"] = "Meeting Notes";
+  }
 
   return (
     <SidebarProvider defaultOpen={true}>

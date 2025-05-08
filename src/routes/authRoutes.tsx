@@ -9,6 +9,7 @@ import MagicLinkJoin from "@/pages/auth/MagicLinkJoin";
 
 export const authRoutes = [
   <Route key="auth-layout" path="/auth" element={<AuthLayout />}>
+    <Route index element={<Navigate to="/auth/login" replace />} />
     <Route path="login" element={<Login />} />
     <Route path="register" element={<Register />} />
     <Route path="verification-sent" element={<VerificationSent />} />

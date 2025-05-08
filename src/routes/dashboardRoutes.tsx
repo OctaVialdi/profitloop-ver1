@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import Notifications from "@/pages/dashboard/Notifications";
 import CatatanMeetings from "@/pages/CatatanMeetings";
+import Components from "@/pages/dev/Components";
 
 export const dashboardRoutes = [
   <Route
@@ -31,6 +32,18 @@ export const dashboardRoutes = [
     }
   >
     <Route index element={<CatatanMeetings />} />
+  </Route>,
+  <Route
+    key="dev"
+    path="/dev"
+    element={
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    }
+  >
+    <Route path="components" element={<Components />} />
+    {/* Default redirect for /dev path */}
+    <Route path="" element={<Navigate to="/dev/components" replace />} />
   </Route>
 ];
-
