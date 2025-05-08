@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import ReprimandTab from "@/components/hr/company/ReprimandTab";
+import KinerjaDashboardTab from "@/components/hr/kinerja/KinerjaDashboardTab";
 
 export default function HRKinerja() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -33,19 +34,48 @@ export default function HRKinerja() {
             ))}
           </div>
           
-          {activeTab === "dashboard" && (
-            <div className="p-4 border rounded-md">
-              <h2 className="text-lg font-medium mb-4">KPI Dashboard</h2>
-              <p className="text-muted-foreground">Performance metrics and evaluations will be displayed here.</p>
-            </div>
-          )}
+          {activeTab === "dashboard" && <KinerjaDashboardTab />}
           
           {activeTab === "reprimand" && <ReprimandTab />}
           
           {activeTab === "settings" && (
             <div className="p-4 border rounded-md">
               <h2 className="text-lg font-medium mb-4">Pengaturan</h2>
-              <p className="text-muted-foreground">KPI settings and configuration options will be displayed here.</p>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-md font-medium">Template Review</h3>
+                  <p className="text-muted-foreground text-sm">Kelola template untuk berbagai jenis review kinerja</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border rounded-md p-4">
+                      <div className="font-medium">Standard Performance Review</div>
+                      <div className="text-xs text-muted-foreground mt-1">Untuk evaluasi kinerja umum</div>
+                      <Button variant="outline" size="sm" className="mt-2">Edit</Button>
+                    </div>
+                    <div className="border rounded-md p-4">
+                      <div className="font-medium">Leadership Review</div>
+                      <div className="text-xs text-muted-foreground mt-1">Untuk evaluasi posisi manajerial</div>
+                      <Button variant="outline" size="sm" className="mt-2">Edit</Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-md font-medium">Kriteria Penilaian</h3>
+                  <p className="text-muted-foreground text-sm">Atur kriteria dan bobot untuk review kinerja</p>
+                  <Button variant="outline" size="sm">Kelola Kriteria</Button>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-md font-medium">Notifikasi</h3>
+                  <div className="flex items-center justify-between border rounded-md p-4">
+                    <div>
+                      <div className="font-medium">Pengingat Deadline Review</div>
+                      <div className="text-sm text-muted-foreground">Kirim email 3 hari sebelum deadline</div>
+                    </div>
+                    <Switch />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
@@ -53,3 +83,7 @@ export default function HRKinerja() {
     </div>
   );
 }
+
+// Import the Switch component for the settings tab
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
