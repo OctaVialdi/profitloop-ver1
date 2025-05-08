@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, 
@@ -22,20 +21,21 @@ import {
   FormLabel, 
   FormMessage 
 } from "@/components/ui/form";
-import { CalendarIcon, Image, Upload, X } from "lucide-react";
+import { CalendarIcon, Image, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 interface AddAssetDialogProps {
-  employeeId: string;
+  employeeId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  onAdded: () => void;
+  onSaved: () => void;
 }
 
-export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAssetDialogProps) => {
+export const AddAssetDialog = ({ employeeId, isOpen, onClose, onSaved }: AddAssetDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -45,14 +45,18 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
     defaultValues: {
       name: '',
       asset_type: 'Laptop',
-      condition: 'Good',
-      status: 'In Use',
       serial_number: '',
       asset_tag: '',
       brand: '',
       model: '',
       specifications: '',
-      notes: ''
+      condition: 'Good',
+      status: employeeId ? 'In Use' : 'Available',
+      assigned_date: employeeId ? new Date().toISOString().split('T')[0] : undefined,
+      expected_return_date: undefined,
+      purchase_date: undefined,
+      purchase_price: undefined,
+      notes: '',
     }
   });
 
@@ -78,14 +82,6 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
     }
   };
 
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   const onSubmit = async (data: AssetFormData) => {
     setIsSubmitting(true);
     try {
@@ -94,24 +90,19 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
       // Upload image if one was selected
       if (imageFile) {
         imageUrl = await assetService.uploadAssetImage(imageFile);
-        if (!imageUrl) {
-          toast.error('Failed to upload asset image');
-          setIsSubmitting(false);
-          return;
-        }
       }
       
-      // Add image URL to asset data
+      // Add asset with image URL
       await assetService.addAsset(employeeId, {
         ...data,
-        asset_image: imageUrl
+        asset_image: imageUrl || undefined
       });
       
-      onAdded();
+      onSaved();
       onClose();
     } catch (error) {
-      console.error('Error creating asset:', error);
-      toast.error('Failed to create asset');
+      console.error('Error adding asset:', error);
+      toast.error('Failed to add asset');
     } finally {
       setIsSubmitting(false);
     }
@@ -137,15 +128,6 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
                       alt="Asset preview" 
                       className="mx-auto max-h-[200px] object-contain rounded-md"
                     />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-0 right-0 h-6 w-6 rounded-full"
-                      onClick={removeImage}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-4">
@@ -196,7 +178,7 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
                     <FormLabel>Asset Type*</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -217,6 +199,7 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
               />
             </div>
             
+            {/* Additional fields */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -304,7 +287,7 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
                     <FormLabel>Condition</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      defaultValue={field.value}
+                      value={field.value || "Good"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -332,7 +315,7 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
                     <FormLabel>Status</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -353,6 +336,7 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
               />
             </div>
 
+            {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -431,6 +415,7 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
               />
             </div>
             
+            {/* Financial information */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -482,8 +467,9 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
                         step="0.01" 
                         placeholder="e.g. 1299.99" 
                         {...field} 
+                        value={field.value === undefined ? '' : field.value}
                         onChange={(e) => {
-                          const value = e.target.value === '' ? '' : Number(e.target.value);
+                          const value = e.target.value === '' ? undefined : Number(e.target.value);
                           field.onChange(value);
                         }}
                       />
@@ -517,7 +503,7 @@ export const AddAssetDialog = ({ employeeId, isOpen, onClose, onAdded }: AddAsse
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save Asset'}
+                {isSubmitting ? 'Adding...' : 'Add Asset'}
               </Button>
             </DialogFooter>
           </form>

@@ -21,7 +21,7 @@ export interface EmployeeAsset {
   notes?: string;
   created_at: string;
   updated_at: string;
-  asset_image?: string; // New field for asset image
+  asset_image?: string;
 }
 
 export interface AssetFormData {
@@ -39,7 +39,7 @@ export interface AssetFormData {
   purchase_date?: string;
   purchase_price?: number;
   notes?: string;
-  asset_image?: string; // New field for asset image
+  asset_image?: string;
 }
 
 export const assetTypes = [
@@ -80,14 +80,57 @@ export const assetService = {
     }
   },
 
-  async addAsset(employeeId: string, assetData: AssetFormData): Promise<EmployeeAsset | null> {
+  // New method to get all organization assets
+  async getAllOrganizationAssets(): Promise<EmployeeAsset[]> {
     try {
       const { data, error } = await supabase
         .from('employee_assets')
-        .insert({
-          employee_id: employeeId,
-          ...assetData
-        })
+        .select(`
+          *,
+          employees(name, employee_id)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Transform the data to match the EmployeeAsset interface
+      const transformedData = data.map((asset: any) => {
+        const employeeName = asset.employees ? asset.employees.name : 'Unassigned';
+        const employeeCode = asset.employees ? asset.employees.employee_id : '';
+        
+        // Create a copy without the employees field
+        const { employees, ...assetData } = asset;
+        
+        return {
+          ...assetData,
+          employeeName, // Add employeeName for display purposes
+          employeeCode  // Add employeeCode for display purposes
+        };
+      });
+      
+      return transformedData;
+    } catch (error) {
+      console.error('Error fetching all organization assets:', error);
+      toast.error('Failed to load organization assets');
+      return [];
+    }
+  },
+
+  async addAsset(employeeId: string | null, assetData: AssetFormData): Promise<EmployeeAsset | null> {
+    try {
+      // If employeeId is null, this is a company asset not assigned to anyone yet
+      const insertData = employeeId ? {
+        employee_id: employeeId,
+        ...assetData
+      } : {
+        ...assetData
+      };
+
+      const { data, error } = await supabase
+        .from('employee_assets')
+        .insert(insertData)
         .select()
         .single();
       
@@ -123,6 +166,31 @@ export const assetService = {
       console.error('Error updating asset:', error);
       toast.error('Failed to update asset');
       return null;
+    }
+  },
+
+  // Update to accept optional employeeId for reassigning assets
+  async assignAssetToEmployee(assetId: string, employeeId: string | null): Promise<boolean> {
+    try {
+      const updateData = employeeId 
+        ? { employee_id: employeeId, status: 'In Use' as const, assigned_date: new Date().toISOString().split('T')[0] }
+        : { employee_id: null, status: 'Available' as const, assigned_date: null };
+      
+      const { error } = await supabase
+        .from('employee_assets')
+        .update(updateData)
+        .eq('id', assetId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success(employeeId ? 'Asset assigned successfully' : 'Asset unassigned successfully');
+      return true;
+    } catch (error) {
+      console.error('Error assigning/unassigning asset:', error);
+      toast.error(employeeId ? 'Failed to assign asset' : 'Failed to unassign asset');
+      return false;
     }
   },
 

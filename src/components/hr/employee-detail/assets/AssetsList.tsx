@@ -1,45 +1,15 @@
 
-import { useState } from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Download, 
-  Edit,
-  Trash2, 
-  Search, 
-  ChevronDown,
-  Laptop,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Keyboard,
-  MousePointer,
-  Printer,
-  Camera,
-  Package,
-  ImageOff
-} from "lucide-react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent,
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { EmployeeAsset, assetService, assetTypes } from "@/services/assetService";
-import { format } from "date-fns";
-import { EmptyDataDisplay } from "../EmptyDataDisplay";
-import { AddAssetDialog } from "./AddAssetDialog";
+import { EmployeeAsset } from "@/services/assetService";
 import { EditAssetDialog } from "./EditAssetDialog";
-import { DeleteAssetDialog } from "./DeleteAssetDialog";
+import { AddAssetDialog } from "./AddAssetDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { assetService } from "@/services/assetService";
+import { Edit, Trash2 } from "lucide-react";
+import { format } from "date-fns";
 
 interface AssetsListProps {
   assets: EmployeeAsset[];
@@ -48,236 +18,222 @@ interface AssetsListProps {
   isLoading?: boolean;
 }
 
-export const AssetsList = ({ 
-  assets, 
-  employeeId, 
+export const AssetsList: React.FC<AssetsListProps> = ({
+  assets,
+  employeeId,
   onAssetsUpdated,
   isLoading = false
-}: AssetsListProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [assetTypeFilter, setAssetTypeFilter] = useState<string | null>(null);
-  const [editingAsset, setEditingAsset] = useState<EmployeeAsset | null>(null);
-  const [deletingAsset, setDeletingAsset] = useState<EmployeeAsset | null>(null);
+}) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  
-  const filteredAssets = assets.filter(asset => {
-    const matchesSearch = 
-      asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (asset.serial_number && asset.serial_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (asset.specifications && asset.specifications.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesType = assetTypeFilter ? asset.asset_type === assetTypeFilter : true;
-    
-    return matchesSearch && matchesType;
-  });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<EmployeeAsset | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState<string | null>(null);
 
-  const getAssetIcon = (type: string) => {
-    switch(type.toLowerCase()) {
-      case 'laptop': return <Laptop className="h-4 w-4 text-blue-500" />;
-      case 'monitor': return <Monitor className="h-4 w-4 text-green-500" />;
-      case 'phone': return <Smartphone className="h-4 w-4 text-purple-500" />;
-      case 'tablet': return <Tablet className="h-4 w-4 text-orange-500" />;
-      case 'keyboard': return <Keyboard className="h-4 w-4 text-indigo-500" />;
-      case 'mouse': return <MousePointer className="h-4 w-4 text-pink-500" />;
-      case 'printer': return <Printer className="h-4 w-4 text-cyan-500" />;
-      case 'camera': return <Camera className="h-4 w-4 text-amber-500" />;
-      default: return <Package className="h-4 w-4 text-gray-500" />;
+  const handleEditAsset = (asset: EmployeeAsset) => {
+    setSelectedAsset(asset);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteAsset = async (assetId: string) => {
+    const success = await assetService.deleteAsset(assetId);
+    if (success) {
+      onAssetsUpdated();
+    }
+    setIsDeleteDialogOpen(false);
+    setAssetToDelete(null);
+  };
+
+  const confirmDeleteAsset = (assetId: string) => {
+    setAssetToDelete(assetId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleAddAssetClick = () => {
+    setIsAddDialogOpen(true);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'In Use': return 'bg-blue-100 text-blue-700';
+      case 'Available': return 'bg-green-100 text-green-700';
+      case 'Maintenance': return 'bg-amber-100 text-amber-700';
+      case 'Retired': return 'bg-gray-100 text-gray-700';
+      case 'Lost': return 'bg-red-100 text-red-700';
+      default: return 'bg-blue-100 text-blue-700';
     }
   };
 
-  const handleEditClick = (asset: EmployeeAsset) => {
-    setEditingAsset(asset);
-  };
-  
-  const handleDeleteClick = (asset: EmployeeAsset) => {
-    setDeletingAsset(asset);
-  };
-
-  const handleEditComplete = () => {
-    setEditingAsset(null);
-    onAssetsUpdated();
-  };
-
-  const handleDeleteComplete = () => {
-    setDeletingAsset(null);
-    onAssetsUpdated();
-  };
-
-  const handleEditButtonClick = () => {
-    setIsAddDialogOpen(true);
+  const getConditionColor = (condition?: string) => {
+    switch (condition) {
+      case 'Excellent': return 'bg-green-100 text-green-700';
+      case 'Good': return 'bg-blue-100 text-blue-700';
+      case 'Fair': return 'bg-amber-100 text-amber-700';
+      case 'Poor': return 'bg-red-100 text-red-700';
+      default: return '';
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-4 my-4">
-        <div className="h-8 bg-gray-200 rounded animate-pulse" />
-        <div className="h-12 bg-gray-200 rounded animate-pulse" />
-        <div className="h-12 bg-gray-200 rounded animate-pulse" />
-        <div className="h-12 bg-gray-200 rounded animate-pulse" />
+      <div className="p-8 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4 text-gray-500">Loading assets...</p>
       </div>
     );
   }
 
-  if (assets.length === 0) {
+  if (!assets.length) {
     return (
-      <>
-        <EmptyDataDisplay
-          title="No assets assigned yet"
-          description="Assign assets to this employee using the 'Add Asset' button above."
-          section="assets"
-          handleEdit={handleEditButtonClick}
-          buttonText="Add Asset"
-          onClick={handleEditButtonClick}
-        />
+      <div className="text-center p-8">
+        <h3 className="text-lg font-medium mb-2">No Assets Found</h3>
+        <p className="text-gray-500 mb-4">This employee has no assigned assets yet.</p>
+        <Button onClick={handleAddAssetClick}>Add First Asset</Button>
         
-        <AddAssetDialog
-          employeeId={employeeId}
-          isOpen={isAddDialogOpen}
-          onClose={() => setIsAddDialogOpen(false)}
-          onAdded={onAssetsUpdated}
-        />
-      </>
+        {isAddDialogOpen && (
+          <AddAssetDialog
+            employeeId={employeeId}
+            isOpen={isAddDialogOpen}
+            onClose={() => setIsAddDialogOpen(false)}
+            onSaved={onAssetsUpdated}
+          />
+        )}
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search assets..."
-            className="pl-10 w-full md:w-[300px]"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              {assetTypeFilter || "All Asset Types"} <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setAssetTypeFilter(null)}>
-              All Asset Types
-            </DropdownMenuItem>
-            {assetTypes.map(type => (
-              <DropdownMenuItem 
-                key={type} 
-                onClick={() => setAssetTypeFilter(type)}
-              >
-                {type}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      
-      <div className="border rounded-md overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[30%]">Asset Name</TableHead>
-              <TableHead className="w-[15%]">Type</TableHead>
-              <TableHead className="w-[15%]">Serial Number</TableHead>
-              <TableHead className="w-[15%]">Assigned Date</TableHead>
-              <TableHead className="w-[15%]">Return Date</TableHead>
-              <TableHead className="w-[10%]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAssets.map(asset => (
-              <TableRow key={asset.id}>
-                <TableCell className="font-medium">
-                  <div className="flex items-center">
-                    {asset.asset_image ? (
-                      <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-gray-100 border">
-                        <img 
-                          src={asset.asset_image} 
-                          alt={asset.name} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'/><circle cx='8.5' cy='8.5' r='1.5'/><polyline points='21 15 16 10 5 21'/></svg>";
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded flex-shrink-0 bg-gray-100 border flex items-center justify-center">
-                        <ImageOff className="h-5 w-5 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="ml-3">
-                      <div>{asset.name}</div>
-                      {asset.specifications && (
-                        <div className="text-xs text-gray-500">{asset.specifications}</div>
-                      )}
-                    </div>
+    <div>
+      <div className="space-y-4">
+        {assets.map((asset) => (
+          <Card key={asset.id} className="p-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+              <div className="space-y-1 mb-2 md:mb-0 md:w-1/3">
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className={`${getStatusColor(asset.status)}`}>
+                    {asset.status}
+                  </Badge>
+                  {asset.condition && (
+                    <Badge variant="outline" className={`${getConditionColor(asset.condition)}`}>
+                      {asset.condition}
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="bg-purple-100 text-purple-700">
+                    {asset.asset_type}
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-medium">{asset.name}</h3>
+                {asset.brand && asset.model && (
+                  <p className="text-sm text-gray-500">{asset.brand} {asset.model}</p>
+                )}
+                {asset.serial_number && (
+                  <p className="text-xs text-gray-500">S/N: {asset.serial_number}</p>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 md:w-1/3">
+                {asset.assigned_date && (
+                  <div>
+                    <p className="text-xs text-gray-500">Assigned Date</p>
+                    <p className="text-sm">{format(new Date(asset.assigned_date), 'MMM dd, yyyy')}</p>
                   </div>
-                </TableCell>
-                <TableCell>{asset.asset_type}</TableCell>
-                <TableCell>{asset.serial_number || "-"}</TableCell>
-                <TableCell>
-                  {asset.assigned_date ? format(new Date(asset.assigned_date), 'dd/MM/yyyy') : '-'}
-                </TableCell>
-                <TableCell>
-                  {asset.expected_return_date ? format(new Date(asset.expected_return_date), 'dd/MM/yyyy') : '-'}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleEditClick(asset)}
-                      title="Edit"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleDeleteClick(asset)}
-                      title="Delete"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-100"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                )}
+                {asset.expected_return_date && (
+                  <div>
+                    <p className="text-xs text-gray-500">Expected Return</p>
+                    <p className="text-sm">{format(new Date(asset.expected_return_date), 'MMM dd, yyyy')}</p>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleEditAsset(asset)}
+                >
+                  <Edit className="h-4 w-4 mr-1" /> Edit
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => confirmDeleteAsset(asset.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" /> Delete
+                </Button>
+              </div>
+            </div>
+            
+            {asset.specifications && (
+              <div className="mt-4 pt-3 border-t border-gray-100">
+                <p className="text-xs text-gray-500 mb-1">Specifications</p>
+                <p className="text-sm">{asset.specifications}</p>
+              </div>
+            )}
+            
+            {asset.notes && (
+              <div className="mt-2">
+                <p className="text-xs text-gray-500 mb-1">Notes</p>
+                <p className="text-sm">{asset.notes}</p>
+              </div>
+            )}
+
+            {asset.asset_image && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <p className="text-xs text-gray-500 mb-2">Asset Image</p>
+                <img 
+                  src={asset.asset_image} 
+                  alt={asset.name} 
+                  className="max-h-44 object-contain rounded-md" 
+                />
+              </div>
+            )}
+          </Card>
+        ))}
       </div>
 
-      {/* Dialog components */}
-      {editingAsset && (
+      <div className="mt-6">
+        <Button onClick={handleAddAssetClick}>Add Another Asset</Button>
+      </div>
+      
+      {isAddDialogOpen && (
+        <AddAssetDialog
+          employeeId={employeeId}
+          isOpen={isAddDialogOpen}
+          onClose={() => setIsAddDialogOpen(false)}
+          onSaved={onAssetsUpdated}
+        />
+      )}
+      
+      {isEditDialogOpen && selectedAsset && (
         <EditAssetDialog
-          asset={editingAsset}
-          isOpen={!!editingAsset}
-          onClose={() => setEditingAsset(null)}
-          onSaved={handleEditComplete}
-        />
-      )}
-
-      {deletingAsset && (
-        <DeleteAssetDialog
-          asset={deletingAsset}
-          isOpen={!!deletingAsset}
-          onClose={() => setDeletingAsset(null)}
-          onDeleted={handleDeleteComplete}
+          asset={selectedAsset}
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          onSaved={onAssetsUpdated}
         />
       )}
       
-      <AddAssetDialog
-        employeeId={employeeId}
-        isOpen={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
-        onAdded={onAssetsUpdated}
-      />
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this asset. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => assetToDelete && handleDeleteAsset(assetToDelete)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

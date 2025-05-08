@@ -1,21 +1,21 @@
 
 import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { AppRoutes } from "./routes";
-import TrialProtection from "./components/TrialProtection";
-import { QueryProvider } from "./components/QueryProvider";
+import { Routes } from "./routes";
+import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/components/QueryProvider";
+import { useAssetStorage } from "./hooks/useAssetStorage";
 
 function App() {
+  // Initialize asset storage
+  useAssetStorage();
+
   return (
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        <QueryProvider>
-          <TrialProtection>
-            <AppRoutes />
-          </TrialProtection>
-        </QueryProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <QueryProvider>
+      <BrowserRouter>
+        <Routes />
+        <Toaster />
+      </BrowserRouter>
+    </QueryProvider>
   );
 }
 

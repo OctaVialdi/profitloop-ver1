@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Employee } from "@/hooks/useEmployees";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AssetsList } from "./assets/AssetsList";
 import { assetService } from "@/services/assetService";
 import { toast } from "sonner";
+import { AddAssetDialog } from "./assets/AddAssetDialog";
 
 interface AssetsSectionProps {
   employee: Employee;
@@ -18,6 +19,8 @@ export const AssetsSection: React.FC<AssetsSectionProps> = ({
   employee,
   handleEdit
 }) => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  
   const { 
     data: assets = [], 
     isLoading,
@@ -42,9 +45,7 @@ export const AssetsSection: React.FC<AssetsSectionProps> = ({
   };
 
   const handleAddAssetClick = () => {
-    // This will be handled by the AssetsList component
-    // which will show the AddAssetDialog
-    handleEdit("assets");
+    setIsAddDialogOpen(true);
   };
   
   return (
@@ -67,6 +68,15 @@ export const AssetsSection: React.FC<AssetsSectionProps> = ({
           onAssetsUpdated={handleAssetsUpdated}
           isLoading={isLoading}
         />
+        
+        {isAddDialogOpen && (
+          <AddAssetDialog
+            employeeId={employee.id}
+            isOpen={isAddDialogOpen}
+            onClose={() => setIsAddDialogOpen(false)}
+            onSaved={handleAssetsUpdated}
+          />
+        )}
       </div>
     </Card>
   );

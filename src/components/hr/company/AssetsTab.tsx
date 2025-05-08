@@ -17,118 +17,58 @@ import {
   ArrowUpDown,
   Edit, 
   Trash2, 
-  RotateCw
+  RotateCw,
+  Download
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { AddAssetDialog } from '../employee-detail/assets/AddAssetDialog';
+import { EditAssetDialog } from '../employee-detail/assets/EditAssetDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useQuery } from '@tanstack/react-query';
+import { EmployeeAsset, assetService, assetTypes } from '@/services/assetService';
+import { format } from 'date-fns';
 import AssetEditDialog from './AssetEditDialog';
-import AddAssetDialog from './AddAssetDialog';
-
-interface Asset {
-  id: string;
-  category: string;
-  serialNumber: string;
-  qrCode: string;
-  employee: string;
-  description: string;
-  specifications: string;
-  lendDate: string;
-  expectedReturn: string;
-  status: string;
-  condition: string;
-}
-
-interface FilterState {
-  category: string;
-  status: string;
-  assetType: 'employee' | 'company';
-}
 
 const AssetsTab: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-  const [filters, setFilters] = useState<FilterState>({
+  const [isEditDialogWithTabsOpen, setIsEditDialogWithTabsOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState<string | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<EmployeeAsset | null>(null);
+  const [selectedMockAsset, setSelectedMockAsset] = useState<any | null>(null);
+  const [filters, setFilters] = useState({
     category: 'all',
     status: 'all',
     assetType: 'employee'
   });
-  
-  // Mock data
-  const [assets] = useState<Asset[]>([
-    {
-      id: '1',
-      category: 'Laptop',
-      serialNumber: 'LP-2023-001',
-      qrCode: 'QR-LP-2023-001',
-      employee: 'John Doe',
-      description: 'MacBook Pro 16"',
-      specifications: 'M1 Max, 32GB RAM, 1TB SSD',
-      lendDate: '06/15/2023',
-      expectedReturn: '06/15/2024',
-      status: 'Borrowed',
-      condition: 'Excellent'
-    },
-    {
-      id: '2',
-      category: 'Monitor',
-      serialNumber: 'MN-2023-001',
-      qrCode: 'QR-MN-2023-001',
-      employee: 'Jane Smith',
-      description: 'Dell UltraSharp 27"',
-      specifications: '4K, USB-C, IPS Panel',
-      lendDate: '07/20/2023',
-      expectedReturn: '07/20/2024',
-      status: 'Borrowed',
-      condition: 'Good'
-    },
-    {
-      id: '3',
-      category: 'Tablet',
-      serialNumber: 'TB-2023-001',
-      qrCode: 'QR-TB-2023-001',
-      employee: 'Unassigned',
-      description: 'iPad Pro 12.9"',
-      specifications: 'M2, 512GB, WiFi+Cellular',
-      lendDate: '',
-      expectedReturn: '',
-      status: 'Available',
-      condition: 'Excellent'
-    },
-    {
-      id: '4',
-      category: 'Phone',
-      serialNumber: 'PH-2023-001',
-      qrCode: 'QR-PH-2023-001',
-      employee: 'James Johnson',
-      description: 'iPhone 14 Pro',
-      specifications: '256GB, Deep Purple',
-      lendDate: '05/10/2023',
-      expectedReturn: '11/10/2023',
-      status: 'Overdue',
-      condition: 'Good'
-    },
-    {
-      id: '5',
-      category: 'Laptop',
-      serialNumber: 'LP-2023-002',
-      qrCode: 'QR-LP-2023-002',
-      employee: 'Emily Davis',
-      description: 'Dell XPS 15',
-      specifications: 'i7, 16GB RAM, 512GB SSD',
-      lendDate: '08/05/2023',
-      expectedReturn: '08/05/2024',
-      status: 'Borrowed',
-      condition: 'Excellent'
-    },
-  ]);
 
+  // Fetch all assets from the organization
+  const { 
+    data: assets = [], 
+    isLoading, 
+    error,
+    refetch: refetchAssets 
+  } = useQuery({
+    queryKey: ['organizationAssets'],
+    queryFn: () => assetService.getAllOrganizationAssets()
+  });
+  
+  // Handle errors
+  React.useEffect(() => {
+    if (error) {
+      console.error("Error fetching assets:", error);
+      toast.error("Failed to load organization assets");
+    }
+  }, [error]);
+  
   const statusColors: Record<string, string> = {
-    'Borrowed': 'bg-blue-100 text-blue-700',
+    'In Use': 'bg-blue-100 text-blue-700',
     'Available': 'bg-green-100 text-green-700',
-    'Overdue': 'bg-red-100 text-red-700',
     'Maintenance': 'bg-yellow-100 text-yellow-700',
     'Retired': 'bg-gray-100 text-gray-700',
+    'Lost': 'bg-red-100 text-red-700',
   };
 
   const conditionColors: Record<string, string> = {
@@ -138,70 +78,129 @@ const AssetsTab: React.FC = () => {
     'Poor': 'bg-red-100 text-red-700',
   };
 
-  const handleEditAsset = (asset: Asset) => {
+  const handleEditAsset = (asset: EmployeeAsset) => {
     setSelectedAsset(asset);
+    
+    // Use the existing compact edit dialog
     setIsEditDialogOpen(true);
   };
-
-  const handleDeleteAsset = (assetId: string) => {
-    // In a real app, you'd delete from your database
-    toast({
-      title: "Asset Deleted",
-      description: `Asset ${assetId} has been deleted`,
-    });
+  
+  const handleEditAssetWithTabs = (asset: EmployeeAsset) => {
+    // Convert to the format expected by the tabbed edit dialog
+    const mockAsset = {
+      id: asset.id,
+      category: asset.asset_type,
+      serialNumber: asset.serial_number || '',
+      qrCode: asset.asset_tag || `QR-${asset.asset_type}-${asset.id.substring(0, 8)}`,
+      employee: asset.employees ? asset.employees.name : 'Unassigned',
+      description: asset.name,
+      specifications: asset.specifications || '',
+      lendDate: asset.assigned_date || '',
+      expectedReturn: asset.expected_return_date || '',
+      status: asset.status,
+      condition: asset.condition || 'Good'
+    };
+    
+    setSelectedMockAsset(mockAsset);
+    
+    // Use the existing tabbed edit dialog
+    setIsEditDialogWithTabsOpen(true);
   };
 
-  const handleSaveAsset = (updatedAsset: Asset) => {
-    // In a real app, you'd update your database
-    toast({
-      title: "Asset Updated",
-      description: "Asset details have been updated successfully",
-    });
+  const handleDeleteAsset = async (assetId: string) => {
+    try {
+      const success = await assetService.deleteAsset(assetId);
+      if (success) {
+        refetchAssets();
+        toast.success("Asset deleted successfully");
+      } else {
+        toast.error("Failed to delete asset");
+      }
+    } catch (error) {
+      console.error("Error deleting asset:", error);
+      toast.error("An error occurred while deleting the asset");
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setAssetToDelete(null);
+    }
+  };
+
+  const confirmDeleteAsset = (assetId: string) => {
+    setAssetToDelete(assetId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleSaveAsset = (updatedAsset: EmployeeAsset) => {
+    refetchAssets();
     setIsEditDialogOpen(false);
   };
+  
+  const handleSaveAssetWithTabs = () => {
+    // In a real implementation, we would sync changes from the tabbed dialog
+    // back to the database. For now, we'll just refresh the data.
+    refetchAssets();
+    setIsEditDialogWithTabsOpen(false);
+  };
 
-  const handleAddAsset = (newAsset: Partial<Asset>) => {
-    // In a real app, you'd add to your database
-    toast({
-      title: "Asset Added",
-      description: "New asset has been added successfully",
+  const handleAddAsset = () => {
+    // We'll handle this in the dialog
+    setIsAddDialogOpen(true);
+  };
+
+  const handleAssetsUpdated = () => {
+    refetchAssets();
+  };
+
+  const getUniqueCategories = () => {
+    const categories = new Set<string>();
+    assets.forEach(asset => {
+      if (asset.asset_type) {
+        categories.add(asset.asset_type);
+      }
     });
-    setIsAddDialogOpen(false);
+    return Array.from(categories);
   };
 
   const filteredAssets = assets.filter(asset => {
-    const matchesSearch = asset.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        asset.serialNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        asset.employee.toLowerCase().includes(searchQuery.toLowerCase());
+    // Search by name, serial number, or employee name
+    const matchesSearch = 
+      asset.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (asset.serial_number && asset.serial_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (asset.asset_tag && asset.asset_tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (asset.employeeName && asset.employeeName.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesCategory = filters.category === 'all' || asset.category === filters.category;
+    // Filter by category
+    const matchesCategory = filters.category === 'all' || asset.asset_type === filters.category;
+    
+    // Filter by status
     const matchesStatus = filters.status === 'all' || asset.status === filters.status;
-    
-    // Additional filter for employee/company assets could be implemented here
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold">Company Assets</h2>
+          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+        </div>
+        <div className="border rounded-lg p-12 flex justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-gray-500">Loading assets...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">
-          {filters.assetType === 'employee' ? 'Employee Assets' : 'Company Assets'}
-        </h2>
+        <h2 className="text-xl font-bold">Company Assets</h2>
         <div className="flex items-center gap-2">
-          <Select 
-            value={filters.assetType} 
-            onValueChange={(value: 'employee' | 'company') => setFilters({...filters, assetType: value})}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Asset Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="employee">Employee Assets</SelectItem>
-              <SelectItem value="company">Company Assets</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={() => setIsAddDialogOpen(true)} className="bg-purple-600">
+          <Button onClick={handleAddAsset} className="bg-purple-600 hover:bg-purple-700">
             <Plus className="mr-2 h-4 w-4" /> Add Asset
           </Button>
         </div>
@@ -230,10 +229,11 @@ const AssetsTab: React.FC = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="Laptop">Laptop</SelectItem>
-              <SelectItem value="Monitor">Monitor</SelectItem>
-              <SelectItem value="Tablet">Tablet</SelectItem>
-              <SelectItem value="Phone">Phone</SelectItem>
+              {assetTypes.map(type => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           
@@ -247,16 +247,16 @@ const AssetsTab: React.FC = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="In Use">In Use</SelectItem>
               <SelectItem value="Available">Available</SelectItem>
-              <SelectItem value="Borrowed">Borrowed</SelectItem>
               <SelectItem value="Maintenance">Maintenance</SelectItem>
-              <SelectItem value="Overdue">Overdue</SelectItem>
+              <SelectItem value="Lost">Lost</SelectItem>
               <SelectItem value="Retired">Retired</SelectItem>
             </SelectContent>
           </Select>
           
           <Button variant="outline">
-            <ArrowUpDown className="mr-2 h-4 w-4" /> Export
+            <Download className="mr-2 h-4 w-4" /> Export
           </Button>
         </div>
       </div>
@@ -280,21 +280,30 @@ const AssetsTab: React.FC = () => {
               <tr key={asset.id} className="border-b hover:bg-gray-50">
                 <td className="py-3 px-4">
                   <div className="flex items-center">
-                    <span className="font-medium">{asset.category}</span>
-                    <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 text-xs">
-                      IT Linked
-                    </Badge>
+                    <span className="font-medium">{asset.asset_type}</span>
+                    {asset.asset_tag && (
+                      <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 text-xs">
+                        {asset.asset_tag}
+                      </Badge>
+                    )}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{asset.qrCode}</div>
                 </td>
-                <td className="py-3 px-4">{asset.serialNumber}</td>
-                <td className="py-3 px-4">{asset.employee}</td>
+                <td className="py-3 px-4">{asset.serial_number || '-'}</td>
+                <td className="py-3 px-4">{asset.employeeName || 'Unassigned'}</td>
                 <td className="py-3 px-4">
-                  <div>{asset.description}</div>
-                  <div className="text-xs text-gray-500">{asset.specifications}</div>
+                  <div>{asset.name}</div>
+                  <div className="text-xs text-gray-500">{asset.specifications || ''}</div>
                 </td>
-                <td className="py-3 px-4">{asset.lendDate || 'Not set'}</td>
-                <td className="py-3 px-4">{asset.expectedReturn || 'Not set'}</td>
+                <td className="py-3 px-4">
+                  {asset.assigned_date 
+                    ? format(new Date(asset.assigned_date), 'MMM d, yyyy') 
+                    : 'Not set'}
+                </td>
+                <td className="py-3 px-4">
+                  {asset.expected_return_date 
+                    ? format(new Date(asset.expected_return_date), 'MMM d, yyyy') 
+                    : 'Not set'}
+                </td>
                 <td className="py-3 px-4">
                   <div className="flex flex-col space-y-1">
                     <Badge variant="outline" className={`${statusColors[asset.status]} font-normal`}>
@@ -309,15 +318,38 @@ const AssetsTab: React.FC = () => {
                 </td>
                 <td className="py-3 px-4 text-right">
                   <div className="flex justify-end gap-1">
-                    {asset.status === 'Borrowed' && (
-                      <Button variant="outline" size="icon" className="h-9 w-9">
+                    {asset.status === 'In Use' && (
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-9 w-9 text-blue-600"
+                        title="Return Asset"
+                        onClick={() => {
+                          if (asset.id) {
+                            assetService.assignAssetToEmployee(asset.id, null);
+                            setTimeout(() => refetchAssets(), 500);
+                          }
+                        }}
+                      >
                         <RotateCw className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleEditAsset(asset)}>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-9 w-9"
+                      title="Edit Asset (Simple)" 
+                      onClick={() => handleEditAsset(asset)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDeleteAsset(asset.id)}>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-9 w-9 text-red-600"
+                      title="Delete Asset" 
+                      onClick={() => confirmDeleteAsset(asset.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -334,20 +366,55 @@ const AssetsTab: React.FC = () => {
         )}
       </div>
       
+      {/* Simple Edit Dialog (from employee assets) */}
       {isEditDialogOpen && selectedAsset && (
-        <AssetEditDialog
+        <EditAssetDialog
           asset={selectedAsset}
-          onSave={handleSaveAsset}
-          onCancel={() => setIsEditDialogOpen(false)}
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          onSaved={handleSaveAsset}
         />
       )}
       
-      {isAddDialogOpen && (
-        <AddAssetDialog
-          onAdd={handleAddAsset}
-          onCancel={() => setIsAddDialogOpen(false)}
+      {/* Complex Edit Dialog with tabs (existing one) */}
+      {isEditDialogWithTabsOpen && selectedMockAsset && (
+        <AssetEditDialog
+          asset={selectedMockAsset}
+          onSave={handleSaveAssetWithTabs}
+          onCancel={() => setIsEditDialogWithTabsOpen(false)}
         />
       )}
+      
+      {/* Add Asset Dialog */}
+      {isAddDialogOpen && (
+        <AddAssetDialog
+          employeeId={null} // null means company asset not assigned to anyone
+          isOpen={isAddDialogOpen}
+          onClose={() => setIsAddDialogOpen(false)}
+          onSaved={handleAssetsUpdated}
+        />
+      )}
+      
+      {/* Delete Confirmation */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this asset. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => assetToDelete && handleDeleteAsset(assetToDelete)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
