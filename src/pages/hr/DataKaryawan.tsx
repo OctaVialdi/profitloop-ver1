@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -6,33 +5,23 @@ import { Link } from "react-router-dom";
 import EmployeeTable from "@/components/hr/employee/EmployeeTable";
 import ReprimandTab from "@/components/hr/company/ReprimandTab";
 import ChangeHistoryTab from "@/components/hr/company/ChangeHistoryTab";
-
 export default function HRDataKaryawan() {
   const [activeTab, setActiveTab] = useState("employees");
-  
-  const tabs = [
-    {
-      id: "employees",
-      label: "Employees"
-    }, 
-    {
-      id: "reprimand",
-      label: "Reprimand"
-    },
-    {
-      id: "history",
-      label: "Change History"
-    }
-  ];
-  
+  const tabs = [{
+    id: "employees",
+    label: "Employees"
+  }, {
+    id: "reprimand",
+    label: "Reprimand"
+  }, {
+    id: "history",
+    label: "Change History"
+  }];
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         
         {activeTab === "employees" && <Link to="/hr/data/add-employee">
-            <Button className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              Add Employee
-            </Button>
+            
           </Link>}
       </div>
       
