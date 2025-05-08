@@ -35,6 +35,10 @@ const FilesTab = () => {
     setSortOrder("newest");
   };
 
+  const handleDateSelect = (date: Date | undefined) => {
+    setDateFilter(date);
+  };
+  
   return (
     <Card className="border-0 shadow-none">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -68,7 +72,7 @@ const FilesTab = () => {
                 <Calendar
                   mode="single"
                   selected={dateFilter}
-                  onSelect={setDateFilter}
+                  onSelect={handleDateSelect}
                   initialFocus
                 />
               </PopoverContent>

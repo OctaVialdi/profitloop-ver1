@@ -39,8 +39,8 @@ export const OrganizationSection: React.FC<OrganizationSectionProps> = ({
                 <Input placeholder="Search" className="h-8" />
               </div>
             </div>
-            <SelectItem value="No branch">No branch</SelectItem>
-            <SelectItem value="Pusat">Pusat</SelectItem>
+            <SelectItem value="no-branch">No branch</SelectItem>
+            <SelectItem value="pusat">Pusat</SelectItem>
           </SelectContent>
         </Select>
       </div>
