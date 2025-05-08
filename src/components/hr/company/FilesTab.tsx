@@ -55,9 +55,9 @@ const FilesTab = () => {
         </Tabs>
         
         <UploadDocumentDialog 
-          open={isUploadDialogOpen} 
+          isOpen={isUploadDialogOpen} 
           onClose={() => setIsUploadDialogOpen(false)}
-          onUploaded={() => {
+          onDocumentUploaded={() => {
             fetchDocuments();
             setIsUploadDialogOpen(false);
           }}

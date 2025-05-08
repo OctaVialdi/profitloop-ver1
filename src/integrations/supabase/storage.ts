@@ -48,16 +48,17 @@ export async function createAssetImagesBucket(): Promise<boolean> {
 export async function getUploadFileURL(filePath: string, file: File): Promise<string | null> {
   try {
     // Since we can't guarantee the bucket exists, we'll use a more resilient approach
-    const { data: urlData, error } = await supabase.storage
+    const response = await supabase.storage
       .from('company_documents')
       .getPublicUrl(filePath);
-
-    if (error || !urlData) {
-      console.error("Error getting URL for file:", error);
+      
+    // Check if response has data with publicUrl
+    if (!response || !response.data || !response.data.publicUrl) {
+      console.error("Error getting URL for file:", response);
       return null;
     }
 
-    return urlData.publicUrl;
+    return response.data.publicUrl;
   } catch (error) {
     console.error('Error getting upload URL:', error);
     return null;
