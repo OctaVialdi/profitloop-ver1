@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -63,11 +62,11 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
       if (!organization?.id) return;
       
       try {
+        // Modified query to remove the status filter - show all employees regardless of status
         const { data, error } = await supabase
           .from('employees')
           .select('id, name, role')
           .eq('organization_id', organization.id)
-          .eq('status', 'Active')
           .order('name');
           
         if (error) throw error;
