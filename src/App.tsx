@@ -1,5 +1,6 @@
+
 import { useEffect } from 'react';
-import { createBrowserRouter, RouterProvider, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useRoutes } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme-provider';
 import { routes } from '@/routes';
@@ -8,13 +9,10 @@ import TrialBanner from '@/components/TrialBanner';
 import { checkAndUpdateTrialStatus } from '@/services/subscriptionService';
 import '@/css/trial-styles.css';
 
-// Create the router using routes definition
-const router = createBrowserRouter(routes);
-
-// Location observer component to determine when to show trial banner
-function TrialBannerWrapper() {
+function App() {
   const { organization } = useOrganization();
   const location = useLocation();
+  const routeElements = useRoutes(routes);
   
   // Check trial status on app load
   useEffect(() => {
@@ -30,17 +28,10 @@ function TrialBannerWrapper() {
   // Don't show trial banner on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
   
-  if (!isAuthPage) {
-    return <TrialBanner />;
-  }
-  
-  return null;
-}
-
-function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <RouterProvider router={router} />
+      {!isAuthPage && <TrialBanner />}
+      {routeElements}
       <Toaster position="top-right" expand={true} closeButton richColors />
     </ThemeProvider>
   );

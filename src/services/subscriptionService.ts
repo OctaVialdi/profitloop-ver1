@@ -40,9 +40,9 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
       
       // Also invoke edge function to perform any additional processing
       try {
-        await supabase.functions.invoke('daily-trial-check');
+        await supabase.functions.invoke('check-trial-expiration');
       } catch (err) {
-        console.error("Failed to invoke daily-trial-check:", err);
+        console.error("Failed to invoke check-trial-expiration:", err);
         // Continue even if the edge function fails
       }
       
@@ -61,7 +61,7 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
  */
 export async function triggerTrialExpirationCheck(): Promise<boolean> {
   try {
-    const { data, error } = await supabase.functions.invoke('daily-trial-check');
+    const { data, error } = await supabase.functions.invoke('check-trial-expiration');
     
     if (error) {
       console.error("Error triggering trial expiration check:", error);
@@ -99,22 +99,6 @@ export async function requestTrialExtension(
       ]);
 
     if (error) throw error;
-    
-    // Also create an entry in the subscription_audit_logs
-    await supabase
-      .from('subscription_audit_logs')
-      .insert([
-        {
-          organization_id: organizationId,
-          action: 'trial_extension_requested',
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          data: { 
-            reason, 
-            contact_email: contactEmail,
-            request_date: new Date().toISOString()
-          }
-        }
-      ]);
     
     toast.success("Your trial extension request has been submitted. We'll contact you soon.");
     return true;

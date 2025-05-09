@@ -1,8 +1,7 @@
 
 import { RouteObject } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
-import { dashboardRoutes, catatanMeetingsRoute, devRoutes } from "./dashboardRoutes";
-import { settingsRoutes } from "./settingsRoutes";
+import { dashboardRoutes } from "./dashboardRoutes";
 import { onboardingRoutes } from "./onboardingRoutes";
 import { hrRoutes } from "./hrRoutes";
 import { financeRoutes } from "./financeRoutes";
@@ -10,68 +9,64 @@ import { marketingRoutes } from "./marketingRoutes";
 import { operationsRoutes } from "./operationsRoutes";
 import { itRoutes } from "./itRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
-import { adminRoutes } from "./adminRoutes";
-
+import { settingsRoutes } from "./settingsRoutes";
+import WelcomePage from "@/pages/WelcomePage";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
-import WelcomePage from "@/pages/WelcomePage";
-import MagicLinkJoin from "@/pages/auth/MagicLinkJoin";
-import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
-import JobApplicationForm from "@/pages/public/JobApplicationForm";
+import EmptyPage from "@/pages/EmptyPage";
+import CatatanMeetings from "@/pages/CatatanMeetings";
 import JobPreviewPage from "@/pages/public/JobPreviewPage";
+import JobApplicationForm from "@/pages/public/JobApplicationForm";
+import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
 import Components from "@/pages/dev/Components";
-import PremiumFeatureDemo from "@/pages/dev/PremiumFeatureDemo";
 
-// Define the routes
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <Index />,
+    element: <Index />
   },
   {
     path: "/welcome",
-    element: <WelcomePage />,
+    element: <WelcomePage />
   },
   {
-    path: "/invite/:token",
-    element: <MagicLinkJoin />,
+    path: "/empty",
+    element: <EmptyPage />
   },
   {
-    path: "/public/job/:token",
-    element: <JobPreviewPage />,
+    path: "/catatan",
+    element: <CatatanMeetings />
   },
   {
-    path: "/public/job/:token/apply",
-    element: <JobApplicationForm />,
+    path: "/job/:token",
+    element: <JobPreviewPage />
   },
   {
-    path: "/public/job/apply/success",
-    element: <ApplicationSuccess />,
+    path: "/apply/:token",
+    element: <JobApplicationForm />
+  },
+  {
+    path: "/apply/success",
+    element: <ApplicationSuccess />
   },
   {
     path: "/dev/components",
     element: <Components />
   },
-  {
-    path: "/dev/premium-features",
-    element: <PremiumFeatureDemo />
-  },
-  // Add our routes as proper RouteObjects - no type casting needed
+  authRoutes,
   dashboardRoutes,
-  catatanMeetingsRoute,
-  devRoutes,
-  authRoutes as RouteObject,
-  onboardingRoutes as RouteObject,
-  hrRoutes as RouteObject,
-  financeRoutes as RouteObject,
-  marketingRoutes as RouteObject,
-  operationsRoutes as RouteObject,
-  itRoutes as RouteObject,
-  myInfoRoutes as RouteObject,
-  settingsRoutes as RouteObject,
-  adminRoutes as RouteObject,
+  onboardingRoutes,
+  hrRoutes,
+  financeRoutes,
+  marketingRoutes,
+  operationsRoutes,
+  itRoutes,
+  myInfoRoutes,
+  settingsRoutes,
   {
     path: "*",
     element: <NotFound />
   }
 ];
+
+// Remove the duplicate export to fix the error

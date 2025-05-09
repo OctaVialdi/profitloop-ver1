@@ -9,27 +9,13 @@ import { AlertTriangle } from 'lucide-react';
 interface TrialProtectionProps {
   children: ReactNode;
   requiredSubscription?: boolean;
-  featureName?: string;
-  description?: string;
 }
 
-// List of paths that are allowed even when subscription has expired
-const ALLOWED_PATHS = [
-  '/subscription', 
-  '/settings/subscription', 
-  '/auth/login',
-  '/settings/profile',
-  '/admin/trial-management'
-];
+const ALLOWED_PATHS = ['/subscription', '/settings/subscription', '/auth/login'];
 
-const TrialProtection = ({ 
-  children, 
-  requiredSubscription = false, 
-  featureName,
-  description
-}: TrialProtectionProps) => {
+const TrialProtection = ({ children, requiredSubscription = false }: TrialProtectionProps) => {
   const [showDialog, setShowDialog] = useState(false);
-  const { hasPaidSubscription, organization, isLoading, isTrialActive } = useOrganization();
+  const { hasPaidSubscription, organization, isLoading } = useOrganization();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -41,7 +27,6 @@ const TrialProtection = ({
     !isLoading && 
     requiredSubscription && 
     !hasPaidSubscription && 
-    !isTrialActive &&
     organization?.subscription_status === 'expired' && 
     !isAllowedPath;
   
@@ -69,15 +54,11 @@ const TrialProtection = ({
     setShowDialog(false);
   };
   
-  // Feature information for the dialog
-  const featureInfo = featureName || 'Fitur Premium';
-  const featureDescription = description || 'Fitur ini hanya tersedia untuk pelanggan premium. Masa trial Anda telah berakhir. Silakan upgrade langganan Anda untuk mengakses fitur ini.';
-  
   return (
     <>
       {children}
       
-      {/* Premium feature blocking dialog */}
+      {/* Blocking dialog for expired trial */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <div className="flex flex-col items-center text-center">
@@ -85,9 +66,10 @@ const TrialProtection = ({
               <AlertTriangle className="h-10 w-10 text-amber-500" />
             </div>
             
-            <DialogTitle className="text-xl">{featureInfo}</DialogTitle>
+            <DialogTitle className="text-xl">Fitur Premium</DialogTitle>
             <DialogDescription className="mt-2 mb-4">
-              {featureDescription}
+              Fitur ini hanya tersedia untuk pelanggan premium. Masa trial Anda telah berakhir.
+              Silakan upgrade langganan Anda untuk mengakses fitur ini.
             </DialogDescription>
             
             <DialogFooter className="flex flex-col sm:flex-row gap-2 w-full">

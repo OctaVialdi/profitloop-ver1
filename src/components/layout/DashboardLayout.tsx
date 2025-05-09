@@ -165,7 +165,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 }}
                 className="will-change-transform"
               >
-                {/* Render either children or Outlet in this order to ensure compatibility */}
                 {children || <Outlet />}
               </motion.div>
             </AnimatePresence>

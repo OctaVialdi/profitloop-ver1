@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,22 +10,19 @@ interface ProtectedRouteProps {
   redirectTo?: string;
   publicRoutes?: string[];
   requiresSubscription?: boolean;
-  requiredRoles?: string[];
 }
 
 interface ProfileData {
   organization_id?: string | null;
   email_verified?: boolean;
   has_seen_welcome?: boolean;
-  role?: string;
 }
 
 export const ProtectedRoute = ({
   children,
   redirectTo = "/auth/login",
   publicRoutes = ["/join-organization", "/accept-invitation"],
-  requiresSubscription = false,
-  requiredRoles = []
+  requiresSubscription = false
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
@@ -407,15 +405,6 @@ export const ProtectedRoute = ({
   if (!authenticated && !isPublicRoute) {
     console.log("Not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
-  }
-
-  // Add a role check at appropriate places
-  if (authenticated && requiredRoles.length > 0) {
-    // Check if user has the required role
-    if (profile?.role && !requiredRoles.includes(profile.role)) {
-      toast.error(`You need one of these roles to access this page: ${requiredRoles.join(', ')}`);
-      return <Navigate to="/dashboard" state={{ from: location }} replace />;
-    }
   }
 
   return children ? <>{children}</> : <Outlet />;

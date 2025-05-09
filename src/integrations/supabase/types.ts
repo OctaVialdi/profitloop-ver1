@@ -1974,10 +1974,6 @@ export type Database = {
         Args: { employee_id: string }
         Returns: boolean
       }
-      extend_organization_trial: {
-        Args: { org_id: string; days_to_add: number }
-        Returns: Json
-      }
       generate_magic_link_invitation: {
         Args: { email_address: string; org_id: string; user_role?: string }
         Returns: Json

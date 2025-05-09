@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { robustSignOut } from '@/utils/authUtils';
 import { useEffect, useState } from "react";
 import TrialExtensionRequestForm from "./TrialExtensionRequestForm";
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 interface TrialExpiredModalProps {
   open: boolean;
