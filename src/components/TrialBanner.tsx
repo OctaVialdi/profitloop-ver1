@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -462,11 +461,11 @@ const TrialBanner = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Trial Extension Request Dialog */}
+      {/* Trial Extension Dialog */}
       <TrialExtensionRequestDialog 
         open={showExtensionDialog} 
         onOpenChange={setShowExtensionDialog}
-        onSuccessfulRequest={handleExtensionRequestSuccess}
+        onRequestSuccess={handleExtensionRequestSuccess}
       />
     </>
   );

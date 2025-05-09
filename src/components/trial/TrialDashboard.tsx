@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useOrganization } from "@/hooks/useOrganization";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,7 +109,7 @@ const TrialDashboard: React.FC<TrialDashboardProps> = ({ className = '' }) => {
       <TrialExtensionRequestDialog
         open={showExtensionDialog}
         onOpenChange={setShowExtensionDialog}
-        onSuccessfulRequest={handleExtensionSuccess}
+        onRequestSuccess={handleExtensionSuccess}
       />
     </div>
   );
