@@ -13,6 +13,8 @@ import BillApprovals from "@/pages/finance/BillApprovals";
 import PayrollSummary from "@/pages/finance/PayrollSummary";
 import CashManagement from "@/pages/finance/CashManagement";
 import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
+import PaymentSuccess from "@/pages/payment/Success";
+import PaymentFailed from "@/pages/payment/Failed";
 import { Outlet } from "react-router-dom";
 
 export const financeRoutes = (
@@ -41,5 +43,13 @@ export const financeRoutes = (
     <Route path="cash-management/daftar-transaksi" element={<DaftarTransaksi />} />
     {/* Redirect to dashboard if no path matches */}
     <Route path="" element={<Navigate to="/finance/dashboard" replace />} />
+  </Route>
+);
+
+// Payment routes
+export const paymentRoutes = (
+  <Route key="payment" path="/payment">
+    <Route path="success" element={<PaymentSuccess />} />
+    <Route path="failed" element={<PaymentFailed />} />
   </Route>
 );

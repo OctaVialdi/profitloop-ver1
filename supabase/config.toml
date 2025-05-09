@@ -71,3 +71,10 @@ verify_jwt = true
 verify_jwt = false
 [edge_functions.schedule-daily-trial-check]
 verify_jwt = false
+[edge_functions.create-payment]
+verify_jwt = true
+[edge_functions.handle-xendit-webhook]
+verify_jwt = false
+[edge_functions.generate-invoice]
+verify_jwt = true
+
