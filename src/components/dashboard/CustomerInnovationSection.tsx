@@ -289,7 +289,7 @@ export function CustomerInnovationSection({ customerMetrics, innovationMetrics }
                       <div key={metric.id} className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span>{metric.name}</span>
-                          <span>{metric.value}{metric.unit ? ` ${metric.unit}` : ''}</span>
+                          <span>{metric.value}{metric.details ? ` ${metric.details}` : '%'}</span>
                         </div>
                         <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
                           <div 

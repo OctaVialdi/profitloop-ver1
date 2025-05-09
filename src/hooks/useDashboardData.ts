@@ -104,7 +104,7 @@ async function fetchCompanyGoals(): Promise<CompanyGoal[]> {
     currentProgress: goal.current_progress,
     deadline: goal.deadline,
     isCritical: goal.is_critical,
-    status: goal.status,
+    status: goal.status as "active" | "completed" | "cancelled", // Explicit cast to satisfy the type
     icon: goal.icon,
     description: goal.description
   }));
@@ -121,7 +121,7 @@ async function fetchOperationalMetrics(): Promise<OperationalMetric[]> {
   
   return data.map(metric => ({
     id: metric.id,
-    type: metric.metric_type,
+    type: metric.metric_type as "productivity" | "quality" | "inventory", // Explicit cast
     name: metric.metric_name,
     value: metric.metric_value,
     targetValue: metric.target_value,
@@ -141,7 +141,7 @@ async function fetchCustomerMetrics(): Promise<CustomerMetric[]> {
   
   return data.map(metric => ({
     id: metric.id,
-    type: metric.metric_type,
+    type: metric.metric_type as "satisfaction" | "retention" | "feedback", // Explicit cast
     name: metric.metric_name,
     value: metric.metric_value,
     category: metric.category,
@@ -160,7 +160,7 @@ async function fetchInnovationMetrics(): Promise<InnovationMetric[]> {
   
   return data.map(metric => ({
     id: metric.id,
-    type: metric.metric_type,
+    type: metric.metric_type as "training" | "innovation" | "technology", // Explicit cast
     name: metric.metric_name,
     value: metric.metric_value,
     details: metric.details
