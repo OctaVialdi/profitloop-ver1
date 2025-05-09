@@ -1,101 +1,105 @@
 
-import { Dispatch, SetStateAction } from "react";
-import { NavigateFunction } from "react-router-dom";
-import { OrganizationData, UserProfile, UserPreferences } from "@/types/organization";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 import { getOrganization, getSubscriptionPlan } from "@/services/organizationService";
-import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
-
-// Helper function to safely parse preferences
-const parseUserPreferences = (rawPreferences: any): UserPreferences => {
-  if (!rawPreferences) {
-    return { dark_mode: false };
-  }
-  
-  // If it's already an object, return it
-  if (typeof rawPreferences === 'object' && rawPreferences !== null) {
-    return rawPreferences as UserPreferences;
-  }
-  
-  // If it's a JSON string, try to parse it
-  if (typeof rawPreferences === 'string') {
-    try {
-      return JSON.parse(rawPreferences) as UserPreferences;
-    } catch (e) {
-      console.error("Error parsing preferences:", e);
-    }
-  }
-  
-  // Default preferences if parsing fails
-  return { dark_mode: false };
-};
+import { NavigateFunction } from 'react-router-dom';
+import { OrganizationData } from "@/types/organization";
 
 export async function fetchOrganizationData(
-  setOrganizationData: Dispatch<SetStateAction<OrganizationData>>,
-  navigate: NavigateFunction
+  setOrganizationData: React.Dispatch<React.SetStateAction<OrganizationData>>,
+  navigate?: NavigateFunction
 ) {
   try {
-    setOrganizationData(prevState => ({ ...prevState, isLoading: true, error: null }));
-
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser();
+    // Check if user is authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
     
-    if (!user) {
-      // If no user is found, redirect to login
-      setOrganizationData(prevState => ({ ...prevState, isLoading: false }));
-      navigate('/auth/login');
+    if (!sessionData.session) {
+      console.log("No active session found");
+      setOrganizationData(prevState => ({
+        ...prevState,
+        isLoading: false,
+      }));
       return;
     }
     
-    // Get user profile to find organization
-    const { data: userProfileData } = await supabase
+    const userId = sessionData.session.user.id;
+    
+    // Get user profile data including organization_id
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('*, organizations:organization_id (*)')
-      .eq('id', user.id)
+      .select('*')
+      .eq('id', userId)
       .maybeSingle();
       
-    // If user doesn't have an organization, redirect to organization setup
-    if (!userProfileData?.organization_id) {
-      // Check if user has seen welcome page
-      const hasSeenWelcome = userProfileData?.has_seen_welcome || false;
-      
-      if (!hasSeenWelcome) {
-        // If user hasn't seen welcome, redirect to employee welcome
-        navigate('/employee-welcome');
-        setOrganizationData(prevState => ({ ...prevState, isLoading: false }));
-      } else {
-        // Otherwise redirect to organization setup
-        navigate('/organizations');
-        setOrganizationData(prevState => ({ ...prevState, isLoading: false }));
-      }
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError);
+      setOrganizationData(prevState => ({
+        ...prevState,
+        error: "Failed to fetch user profile",
+        isLoading: false,
+      }));
       return;
     }
     
-    // Transform the raw profile data to ensure it matches the UserProfile type
-    const userProfile: UserProfile = {
-      ...userProfileData,
-      preferences: parseUserPreferences(userProfileData.preferences)
-    };
+    if (!profileData || !profileData.organization_id) {
+      console.log("User has no organization assigned");
+      setOrganizationData(prevState => ({
+        ...prevState,
+        userProfile: profileData || null,
+        isLoading: false,
+      }));
+      return;
+    }
     
-    // Get organization and subscription plan details
+    // Get organization data
     try {
-      const organization = await getOrganization(userProfile.organization_id);
-      let subscriptionPlan = null;
+      const organizationData = await getOrganization(profileData.organization_id);
       
-      if (organization?.subscription_plan_id) {
-        subscriptionPlan = await getSubscriptionPlan(organization.subscription_plan_id);
+      if (!organizationData) {
+        console.error("Organization not found");
+        setOrganizationData(prevState => ({
+          ...prevState,
+          error: "Organization not found",
+          isLoading: false,
+          userProfile: profileData,
+        }));
+        return;
       }
       
-      // Calculate status values
-      const { isTrialActive, daysLeftInTrial } = calculateTrialStatus(organization);
-      const hasPaidSubscription = calculateSubscriptionStatus(organization, subscriptionPlan);
-      const { isSuperAdmin, isAdmin, isEmployee } = calculateUserRoles(userProfile);
+      // Get subscription plan if available
+      let subscriptionPlan = null;
+      if (organizationData.subscription_plan_id) {
+        subscriptionPlan = await getSubscriptionPlan(organizationData.subscription_plan_id);
+      }
       
-      // Update organization data
-      setOrganizationData({
-        organization,
+      // Calculate trial status
+      const now = new Date();
+      const trialEnd = organizationData.trial_ends_at ? new Date(organizationData.trial_ends_at) : null;
+      const isTrialActive = trialEnd ? now < trialEnd : false;
+      
+      // Calculate days left in trial
+      let daysLeftInTrial = 0;
+      if (isTrialActive && trialEnd) {
+        const diffTime = Math.abs(trialEnd.getTime() - now.getTime());
+        daysLeftInTrial = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+      
+      // Check if has paid subscription
+      const hasPaidSubscription = !!subscriptionPlan && 
+                                subscriptionPlan.price > 0 && 
+                                !organizationData.trial_expired;
+                                
+      // Check user role within organization
+      const isSuperAdmin = profileData.role === 'super_admin';
+      const isAdmin = profileData.role === 'admin' || isSuperAdmin;
+      const isEmployee = profileData.role === 'employee' || isAdmin;
+      
+      // Update state with all the data
+      setOrganizationData(prevState => ({
+        ...prevState,
+        organization: organizationData,
         subscriptionPlan,
-        userProfile,
+        userProfile: profileData,
         isLoading: false,
         error: null,
         isSuperAdmin,
@@ -103,23 +107,33 @@ export async function fetchOrganizationData(
         isEmployee,
         isTrialActive,
         daysLeftInTrial,
-        hasPaidSubscription,
-        refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate)
-      });
+        hasPaidSubscription
+      }));
+      
     } catch (error: any) {
-      console.error("Error fetching organization data:", error);
+      console.error("Error fetching organization:", error);
+      toast.error("Failed to load organization data");
+      
       setOrganizationData(prevState => ({
         ...prevState,
+        error: error.message || "Failed to load organization data",
         isLoading: false,
-        error: error as Error
+        userProfile: profileData
       }));
     }
+    
   } catch (error: any) {
     console.error("Error in organization data fetch:", error);
+    
+    if (error.message?.includes('JWT expired')) {
+      toast.error("Your session has expired. Please login again.");
+      if (navigate) navigate("/auth/login");
+    }
+    
     setOrganizationData(prevState => ({
       ...prevState,
-      isLoading: false,
-      error: error as Error
+      error: error.message || "An unexpected error occurred",
+      isLoading: false
     }));
   }
 }

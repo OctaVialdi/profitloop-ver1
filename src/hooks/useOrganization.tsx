@@ -19,14 +19,36 @@ export function useOrganization(): OrganizationData {
     isTrialActive: false,
     daysLeftInTrial: 0,
     hasPaidSubscription: false,
-    refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate)
+    refreshData: async () => {
+      try {
+        // Safe way to get navigate function, only if we're in a Router context
+        let navFunction = undefined;
+        try {
+          navFunction = navigate;
+        } catch (e) {
+          console.warn("Navigation not available in current context");
+        }
+        return await fetchOrganizationData(setOrganizationData, navFunction);
+      } catch (error) {
+        console.error("Error refreshing organization data:", error);
+      }
+    }
   });
   
-  const navigate = useNavigate();
+  // Use a try-catch block to safely get the navigate function
+  let navigate;
+  try {
+    navigate = useNavigate();
+  } catch (e) {
+    // This will catch the error if useNavigate is called outside a Router context
+    console.warn("useNavigate must be used within a Router. Some organization features may be limited.");
+  }
   
-  // Initialize data fetching
+  // Initialize data fetching, only if navigate is available
   useEffect(() => {
-    fetchOrganizationData(setOrganizationData, navigate);
+    if (navigate) {
+      fetchOrganizationData(setOrganizationData, navigate);
+    }
   }, [navigate]);
   
   // Set up auth state change listener

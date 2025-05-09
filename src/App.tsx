@@ -1,19 +1,27 @@
 
-import { BrowserRouter } from "react-router-dom";
-import { AppRoutes } from "./routes";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/QueryProvider";
 import { useAssetStorage } from "./hooks/useAssetStorage";
+import { BrowserRouter } from "react-router-dom";
+import { AppRoutes } from "./routes";
 
-function App() {
+function AppContent() {
   // Initialize asset storage
   useAssetStorage();
 
   return (
+    <>
+      <AppRoutes />
+      <Toaster />
+    </>
+  );
+}
+
+function App() {
+  return (
     <QueryProvider>
       <BrowserRouter>
-        <AppRoutes />
-        <Toaster />
+        <AppContent />
       </BrowserRouter>
     </QueryProvider>
   );

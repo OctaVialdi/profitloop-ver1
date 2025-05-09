@@ -4,29 +4,70 @@ import { supabase } from "@/integrations/supabase/client";
 import { OrganizationData } from "@/types/organization";
 
 export function useOrganizationSubscription(
-  organizationData: OrganizationData,
-  refreshData: () => Promise<void>
+  organizationData: OrganizationData, 
+  refreshCallback: () => Promise<void>
 ) {
   useEffect(() => {
-    // Set up listener for subscription changes
-    const channel = supabase
-      .channel('org-changes')
-      .on('postgres_changes', 
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
+    // Only set up subscription if we have an organization
+    if (!organizationData.organization || !organizationData.organization.id) {
+      return;
+    }
+    
+    // Subscribe to changes in the organization table
+    const orgSubscription = supabase
+      .channel(`organization_${organizationData.organization.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'organizations',
-          filter: organizationData.userProfile?.organization_id ? 
-            `id=eq.${organizationData.userProfile.organization_id}` : undefined
-        }, 
+          filter: `id=eq.${organizationData.organization.id}`
+        },
         () => {
-          refreshData();
+          console.log("Organization data changed, refreshing...");
+          // Use setTimeout to prevent potential state update deadlocks
+          setTimeout(() => {
+            refreshCallback();
+          }, 0);
         }
       )
       .subscribe();
       
+    // Subscribe to subscription plan changes
+    if (organizationData.organization.subscription_plan_id) {
+      const planSubscription = supabase
+        .channel(`subscription_${organizationData.organization.subscription_plan_id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'subscription_plans',
+            filter: `id=eq.${organizationData.organization.subscription_plan_id}`
+          },
+          () => {
+            console.log("Subscription plan changed, refreshing...");
+            // Use setTimeout to prevent potential state update deadlocks
+            setTimeout(() => {
+              refreshCallback();
+            }, 0);
+          }
+        )
+        .subscribe();
+        
+      return () => {
+        orgSubscription.unsubscribe();
+        planSubscription.unsubscribe();
+      };
+    }
+    
     return () => {
-      supabase.removeChannel(channel);
+      orgSubscription.unsubscribe();
     };
-  }, [organizationData.userProfile?.organization_id, refreshData]);
+  }, [
+    organizationData.organization?.id, 
+    organizationData.organization?.subscription_plan_id,
+    refreshCallback
+  ]);
 }
