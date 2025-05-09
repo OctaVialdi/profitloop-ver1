@@ -12,33 +12,16 @@ import { operationsRoutes } from "./operationsRoutes";
 import { financeRoutes, paymentRoutes } from "./financeRoutes";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
-import { Outlet } from "react-router-dom";
-import TrialBanner from "@/components/TrialBanner";
-
-// Root layout component that includes trial-related functionality
-const RootLayout = () => {
-  return (
-    <>
-      <TrialBanner />
-      <Outlet />
-    </>
-  );
-};
 
 // Application Routes
 const applicationRoutes: RouteObject[] = [
   {
-    element: <RootLayout />,
-    children: [
-      {
-        path: "/",
-        element: <Index />
-      },
-      {
-        path: "*",
-        element: <NotFound />
-      }
-    ]
+    path: "/",
+    element: <Index />
+  },
+  {
+    path: "*",
+    element: <NotFound />
   }
 ];
 

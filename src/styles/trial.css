@@ -3,7 +3,7 @@
 
 /* Blur effect for expired trials */
 body.trial-expired .app-content:not(.subscription-page) {
-  filter: blur(2px);
+  filter: blur(0);
   transition: filter 0.3s ease-in-out;
 }
 
@@ -12,8 +12,12 @@ body.trial-expired .app-content:not(.subscription-page) {
   position: relative;
 }
 
-/* Premium badge styles */
-.premium-badge {
+.premium-feature::after {
+  content: '✨';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-size: 12px;
   background: linear-gradient(45deg, #9b87f5, #65b8f9);
   border-radius: 50%;
   width: 18px;
@@ -23,34 +27,6 @@ body.trial-expired .app-content:not(.subscription-page) {
   justify-content: center;
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  animation: badge-pulse 2s infinite ease-in-out;
-}
-
-.premium-badge-subtle {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(251, 191, 36, 0.4);
-  z-index: 10;
-}
-
-.premium-badge-minimal {
-  z-index: 10;
-  animation: sparkle 1.5s infinite alternate ease-in-out;
-}
-
-/* Premium tooltip content */
-.premium-tooltip-content {
-  background: linear-gradient(to bottom right, #ffffff, #f9fafb);
-  border: 1px solid rgba(209, 213, 219, 0.5);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Trial banner animations */
@@ -58,42 +34,52 @@ body.trial-expired .app-content:not(.subscription-page) {
   animation: pulse 2s infinite;
 }
 
-/* Progress indicator colors with gradient */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Progress indicator colors */
 .trial-progress-high {
-  background: linear-gradient(to right, #4ade80, #34d399);
+  background-color: #4ade80; /* Green */
 }
 
 .trial-progress-medium {
-  background: linear-gradient(to right, #facc15, #fbbf24);
+  background-color: #facc15; /* Yellow */
 }
 
 .trial-progress-low {
-  background: linear-gradient(to right, #f87171, #ef4444);
+  background-color: #f87171; /* Red */
 }
 
-/* Modal overlay for trial expiration with glassmorphism */
+/* Modal overlay for trial expiration */
 .trial-expired-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.5s ease-out;
 }
 
-/* Premium feature locked state with improved visuals */
+/* Premium feature locked state */
 .feature-locked {
-  opacity: 0.8;
+  opacity: 0.6;
   pointer-events: none;
   position: relative;
   overflow: hidden;
-  transition: opacity 0.3s ease;
 }
 
 .feature-locked::before {
@@ -104,7 +90,6 @@ body.trial-expired .app-content:not(.subscription-page) {
   transform: translate(-50%, -50%);
   font-size: 24px;
   z-index: 10;
-  animation: lock-bounce 2s infinite ease-in-out;
 }
 
 .feature-locked::after {
@@ -118,122 +103,15 @@ body.trial-expired .app-content:not(.subscription-page) {
   z-index: 9;
 }
 
-/* Premium feature restricted container */
-.premium-feature-restricted {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.premium-feature-restricted:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* Animation keyframes */
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes badge-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(155, 135, 245, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 4px rgba(155, 135, 245, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(155, 135, 245, 0);
-  }
-}
-
-@keyframes sparkle {
-  0% {
-    opacity: 0.7;
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes lock-bounce {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-}
-
-/* Circular countdown animation */
-.circular-countdown-container {
-  position: relative;
-}
-
-.circular-countdown-trail {
-  stroke-dasharray: 126;
-  stroke-dashoffset: 0;
-}
-
-.circular-countdown-path {
-  stroke-dasharray: 126;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.5s ease;
-}
-
-/* Upgrade button glow effect */
-.upgrade-button-glow {
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.upgrade-button-glow::after {
-  content: '';
+/* Feature tooltip */
+.feature-tooltip {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, 
-    rgba(255, 255, 255, 0) 0%, 
-    rgba(255, 255, 255, 0.1) 50%, 
-    rgba(255, 255, 255, 0) 100%);
-  transform: rotate(45deg);
-  animation: glow-sweep 3s infinite;
-  z-index: -1;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-width: 250px;
+  font-size: 14px;
 }
-
-@keyframes glow-sweep {
-  0% {
-    transform: translateX(-100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(100%) rotate(45deg);
-  }
-}
-
-/* Section dividers with premium gradient */
-.premium-divider {
-  height: 2px;
-  background: linear-gradient(90deg, rgba(155, 135, 245, 0.2), rgba(155, 135, 245, 0.6), rgba(155, 135, 245, 0.2));
-  margin: 1rem 0;
-}
-

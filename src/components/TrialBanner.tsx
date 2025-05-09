@@ -1,18 +1,23 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { X, HelpCircle } from "lucide-react";
+import { CalendarClock, X, Timer, HelpCircle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/sonner";
 import TrialExtensionRequestDialog from './trial/TrialExtensionRequestDialog';
 import { trackSubscriptionEvent } from '@/utils/subscriptionUtils';
-import CircularTrialCountdown from './trial/CircularTrialCountdown';
 
 const TrialBanner = () => {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
@@ -318,22 +323,17 @@ const TrialBanner = () => {
   // Don't show anything if not authenticated or on auth pages or if still loading
   if (!isAuthenticated || isAuthPage || isOnboardingPage || isDismissed || daysLeft === null || isLoading) return null;
   
-  const bannerBackgroundColor = daysLeft <= 1 
-    ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-100' 
-    : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100'; 
-  
+  const bannerBackgroundColor = daysLeft <= 1 ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'; 
   const progressColor = daysLeft <= 1 ? 'bg-amber-500' : 'bg-blue-600';
   
   return (
     <>
       {!isTrialExpired && daysLeft <= 3 && (
-        <Alert className={`sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 animate-in fade-in-50 slide-in-from-top-5 duration-500 ${bannerBackgroundColor}`}>
+        <Alert className={`sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 animate-in fade-in duration-300 ${bannerBackgroundColor}`}>
           <div className="w-full flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="mr-2 flex-shrink-0">
-                  <CircularTrialCountdown size="sm" showLabel={false} />
-                </div>
+                <CalendarClock className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
                 <AlertDescription className="text-blue-700 font-medium text-sm">
                   {daysLeft > 0 ? (
                     <>Masa trial Anda berakhir dalam <span className="font-semibold">{countdownString}</span></>
@@ -345,7 +345,7 @@ const TrialBanner = () => {
               <div className="flex gap-2">
                 <Button 
                   variant="link" 
-                  className="h-auto p-0 text-blue-700 underline font-semibold text-sm hover:text-blue-800 transition-colors"
+                  className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
                   onClick={() => {
                     trackBannerEvent('upgrade_click');
                     navigate("/settings/subscription");
@@ -353,15 +353,10 @@ const TrialBanner = () => {
                 >
                   Berlangganan
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 hover:bg-white/50 transition-colors" 
-                  onClick={() => {
-                    setIsDismissed(true);
-                    trackBannerEvent('dismiss_click');
-                  }}
-                >
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                  setIsDismissed(true);
+                  trackBannerEvent('dismiss_click');
+                }}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -376,16 +371,16 @@ const TrialBanner = () => {
         </Alert>
       )}
       
-      {/* Subscription Modal */}
+      {/* Fullscreen Subscription Modal */}
       <Sheet open={isTrialExpired && showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
-        <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white backdrop-blur-lg bg-opacity-95 shadow-lg p-0 animate-in slide-in-from-bottom duration-500">
+        <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white shadow-lg p-0 animate-in slide-in-from-bottom duration-300">
           <div className="flex flex-col items-center p-6">
-            {/* Timer Icon with gradient background */}
-            <div className="w-28 h-28 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
-              <CircularTrialCountdown size="lg" />
+            {/* Timer Icon */}
+            <div className="w-28 h-28 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <Timer className="w-14 h-14 text-blue-600" />
             </div>
             
-            <h2 className="text-2xl font-bold text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+            <h2 className="text-2xl font-bold text-center mb-2">
               Masa trial Anda telah berakhir
             </h2>
             
@@ -395,7 +390,7 @@ const TrialBanner = () => {
             
             <div className="w-full space-y-4">
               <Button 
-                className="w-full py-6 text-base font-medium bg-gradient-to-r from-[#9b87f5] to-[#7a68d3] hover:opacity-90 transition-opacity upgrade-button-glow"
+                className="w-full py-6 text-base font-medium bg-[#9b87f5] hover:bg-[#8a72f3] animate-pulse"
                 onClick={handleSubscribe}
               >
                 Upgrade Sekarang
@@ -403,7 +398,7 @@ const TrialBanner = () => {
               
               <Button 
                 variant="outline" 
-                className="w-full py-6 text-base font-medium hover:bg-gray-50 transition-colors"
+                className="w-full py-6 text-base font-medium"
                 onClick={() => setShowExtensionDialog(true)}
               >
                 <HelpCircle className="mr-2 h-4 w-4" />
@@ -412,7 +407,7 @@ const TrialBanner = () => {
               
               <Button 
                 variant="outline" 
-                className="w-full py-6 text-base font-medium hover:bg-gray-50 transition-colors"
+                className="w-full py-6 text-base font-medium"
                 onClick={handleSignOut}
               >
                 Keluar
