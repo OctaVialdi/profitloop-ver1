@@ -1,178 +1,55 @@
 
-import { ReactNode, memo } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Outlet } from "react-router-dom";
+import ProfileDropdown from "@/components/ProfileDropdown";
+import OrganizationSwitcher from "@/components/OrganizationSwitcher";
+import NotificationSystem from "@/components/NotificationSystem";
+import TrialBanner from "@/components/TrialBanner";
 import { useOrganization } from "@/hooks/useOrganization";
-import { NotificationSystem } from "@/components/NotificationSystem";
-import { useAppTheme } from "@/components/ThemeProvider";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
-import { 
-  SidebarProviderWithTooltip as SidebarProvider, 
-  SidebarInset
-} from "@/components/ui/sidebar";
-import { ProfileDropdown } from "@/components/ProfileDropdown";
-import { AnimatePresence, motion } from "framer-motion";
-import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
+import { checkAndUpdateTrialStatus } from "@/services/subscriptionService";
 
-// Import your sidebar navigation component
-import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
+export default function DashboardLayout() {
+  const { organization, isTrialActive, isTrialExpired, refreshData } = useOrganization();
+  const [checkedTrialStatus, setCheckedTrialStatus] = useState(false);
 
-interface DashboardLayoutProps {
-  children?: ReactNode;
-}
+  // Check trial status on component mount
+  useEffect(() => {
+    const verifyTrialStatus = async () => {
+      if (!organization || checkedTrialStatus) return;
 
-// Use memo to prevent unnecessary re-renders of the HeaderContent
-const HeaderContent = memo(({ organization, logoUrl }: { 
-  organization: any, 
-  logoUrl: string | undefined 
-}) => (
-  <div className="flex items-center gap-2">
-    <Link to="/dashboard" className="flex items-center gap-2">
-      {logoUrl ? (
-        <Avatar className="h-8 w-8 hidden md:flex">
-          <AvatarImage src={logoUrl} alt={organization?.name || "Logo"} />
-          <AvatarFallback>
-            {organization?.name?.charAt(0) || "O"}
-          </AvatarFallback>
-        </Avatar>
-      ) : null}
-      <span className="text-xl font-semibold text-blue-600">
-        {organization?.name || "Multi-Tenant"}
-      </span>
-    </Link>
-  </div>
-));
+      try {
+        // Check and update trial status if needed
+        if (organization.id && (isTrialActive || isTrialExpired)) {
+          const updated = await checkAndUpdateTrialStatus(organization.id);
+          if (updated) {
+            // If trial status was updated, refresh organization data
+            await refreshData();
+          }
+        }
+        setCheckedTrialStatus(true);
+      } catch (error) {
+        console.error("Error verifying trial status:", error);
+      }
+    };
 
-HeaderContent.displayName = "HeaderContent";
-
-// Use memo for the right side of the header to prevent unnecessary re-renders
-const HeaderActions = memo(() => (
-  <div className="flex items-center gap-3">
-    <OrganizationSwitcher />
-    <NotificationSystem />
-    <ProfileDropdown />
-  </div>
-));
-
-HeaderActions.displayName = "HeaderActions";
-
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const location = useLocation();
-  const { organization, userProfile, isLoading, isAdmin, isSuperAdmin } = useOrganization();
-  const { logoUrl } = useAppTheme();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <div className="flex-1 flex justify-center items-center">
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Determine if we should show breadcrumbs based on the current path
-  const shouldShowBreadcrumbs = location.pathname !== "/dashboard";
-
-  // Determine custom breadcrumb labels based on the path
-  const customLabels: Record<string, string> = {};
-  
-  // Add support for dev section
-  if (location.pathname.startsWith('/dev')) {
-    customLabels["dev"] = "Developer";
-    
-    if (location.pathname.includes('/components')) {
-      customLabels["components"] = "UI Components";
-    }
-  }
-  
-  // Add support for finance section
-  if (location.pathname.startsWith('/finance')) {
-    customLabels["finance"] = "Finance";
-    
-    if (location.pathname.includes('/dashboard')) {
-      customLabels["dashboard"] = "Overview";
-    }
-  }
-  
-  // Add support for HR section
-  if (location.pathname.startsWith('/hr')) {
-    customLabels["hr"] = "Human Resources";
-    
-    if (location.pathname.includes('/dashboard')) {
-      customLabels["dashboard"] = "Overview";
-    }
-    
-    // Handle company section
-    if (location.pathname.includes('/company')) {
-      customLabels["company"] = "Company Profile";
-    }
-
-    // Handle training section
-    if (location.pathname.includes('/training')) {
-      customLabels["training"] = "Training & Development";
-    }
-
-    // Handle recruitment section
-    if (location.pathname.includes('/recruitment')) {
-      customLabels["recruitment"] = "Recruitment";
-    }
-  }
-  
-  // Support for meeting notes
-  if (location.pathname.startsWith('/catatan-meetings')) {
-    customLabels["catatan-meetings"] = "Meeting Notes";
-  }
+    verifyTrialStatus();
+  }, [organization, isTrialActive, isTrialExpired, checkedTrialStatus, refreshData]);
 
   return (
-    <SidebarProvider defaultOpen={true} className="group/sidebar-wrapper flex min-h-screen w-full">
-      <DashboardSidebar
-        organization={organization}
-        isAdmin={isAdmin}
-        isSuperAdmin={isSuperAdmin}
-        logoUrl={logoUrl}
-        currentPath={location.pathname}
-      />
-      
-      {/* Main content */}
-      <SidebarInset className="flex flex-col">
-        {/* Top navigation - Modified to be full width without scroll constraints */}
-        <header className="bg-white border-b sticky top-0 z-10 w-full shadow-sm">
-          <div className="px-4 h-16 flex items-center justify-between">
-            <HeaderContent organization={organization} logoUrl={logoUrl} />
-            <HeaderActions />
-          </div>
-        </header>
-        
-        {/* Page content with direct overflow handling */}
-        <div className="flex-1 overflow-auto bg-gray-50">
-          <div className="p-4 md:p-6">
-            {shouldShowBreadcrumbs && (
-              <BreadcrumbNav 
-                customLabels={customLabels}
-              />
-            )}
-            
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ 
-                  duration: 0.15,
-                  ease: "easeInOut"
-                }}
-                className="will-change-transform"
-              >
-                {children || <Outlet />}
-              </motion.div>
-            </AnimatePresence>
+    <div className="flex flex-col min-h-screen">
+      <TrialBanner />
+      <header className="bg-white border-b shadow-sm z-10">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <OrganizationSwitcher />
+          <div className="flex items-center gap-4">
+            <NotificationSystem />
+            <ProfileDropdown />
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </header>
+      <main className="flex-1 relative">
+        <Outlet />
+      </main>
+    </div>
   );
-};
-
-export default DashboardLayout;
+}

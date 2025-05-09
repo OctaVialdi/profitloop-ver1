@@ -14,6 +14,15 @@ export async function createOrganization(formData: OrganizationFormData & { crea
     // Get business field options
     const employeeCount = parseInt(formData.employeeCount) || 0;
     
+    // Calculate trial dates - start date is now, end date is 14 days from now
+    const trialStartDate = new Date();
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 14);
+    
+    // Calculate grace period - one day after trial end date
+    const gracePeriodEnd = new Date(trialEndDate);
+    gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 1);
+    
     // Call the function to create organization with profile
     // Make sure the parameter names match exactly with what's defined in the SQL function
     const { data: orgData, error } = await supabase.rpc(
@@ -41,16 +50,19 @@ export async function createOrganization(formData: OrganizationFormData & { crea
       // The result is a JSON object, so we need to cast it properly
       const organizationData = orgData as { id: string };
       
-      // Set a trial_end_date to 30 days from now (instead of just 1 minute)
+      // Update trial information
       const { error: updateError } = await supabase
         .from('organizations')
         .update({
-          trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+          trial_start_date: trialStartDate.toISOString(),
+          trial_end_date: trialEndDate.toISOString(),
+          grace_period_end: gracePeriodEnd.toISOString(),
+          subscription_status: 'trial'
         })
         .eq('id', organizationData.id);
         
       if (updateError) {
-        console.error("Error updating trial end date:", updateError);
+        console.error("Error updating trial information:", updateError);
       }
       
       // Update user metadata with organization ID

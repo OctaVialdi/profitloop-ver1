@@ -87,7 +87,7 @@ export async function fetchOrganizationData(
       }
       
       // Calculate status values
-      const { isTrialActive, daysLeftInTrial } = calculateTrialStatus(organization);
+      const { isTrialActive, daysLeftInTrial, isExpired, inGracePeriod } = calculateTrialStatus(organization);
       const hasPaidSubscription = calculateSubscriptionStatus(organization, subscriptionPlan);
       const { isSuperAdmin, isAdmin, isEmployee } = calculateUserRoles(userProfile);
       
@@ -103,6 +103,8 @@ export async function fetchOrganizationData(
         isEmployee,
         isTrialActive,
         daysLeftInTrial,
+        isTrialExpired: isExpired,
+        inGracePeriod,
         hasPaidSubscription,
         refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate)
       });
