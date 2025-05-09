@@ -16,6 +16,7 @@ interface ProfileData {
   organization_id?: string | null;
   email_verified?: boolean;
   has_seen_welcome?: boolean;
+  role?: string;
 }
 
 export const ProtectedRoute = ({

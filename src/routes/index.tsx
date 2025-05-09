@@ -2,6 +2,7 @@
 import { RouteObject } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
+import { settingsRoutes } from "./settingsRoutes";
 import { onboardingRoutes } from "./onboardingRoutes";
 import { hrRoutes } from "./hrRoutes";
 import { financeRoutes } from "./financeRoutes";
@@ -9,47 +10,43 @@ import { marketingRoutes } from "./marketingRoutes";
 import { operationsRoutes } from "./operationsRoutes";
 import { itRoutes } from "./itRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
-import { settingsRoutes } from "./settingsRoutes";
 import { adminRoutes } from "./adminRoutes";
-import WelcomePage from "@/pages/WelcomePage";
+
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
-import EmptyPage from "@/pages/EmptyPage";
-import CatatanMeetings from "@/pages/CatatanMeetings";
-import JobPreviewPage from "@/pages/public/JobPreviewPage";
-import JobApplicationForm from "@/pages/public/JobApplicationForm";
+import WelcomePage from "@/pages/WelcomePage";
+import MagicLinkJoin from "@/pages/auth/MagicLinkJoin";
 import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
+import JobApplicationForm from "@/pages/public/JobApplicationForm";
+import JobPreviewPage from "@/pages/public/JobPreviewPage";
 import Components from "@/pages/dev/Components";
 import PremiumFeatureDemo from "@/pages/dev/PremiumFeatureDemo";
 
+// Define the routes
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <Index />
+    element: <Index />,
   },
   {
     path: "/welcome",
-    element: <WelcomePage />
+    element: <WelcomePage />,
   },
   {
-    path: "/empty",
-    element: <EmptyPage />
+    path: "/invite/:token",
+    element: <MagicLinkJoin />,
   },
   {
-    path: "/catatan",
-    element: <CatatanMeetings />
+    path: "/public/job/:token",
+    element: <JobPreviewPage />,
   },
   {
-    path: "/job/:token",
-    element: <JobPreviewPage />
+    path: "/public/job/:token/apply",
+    element: <JobApplicationForm />,
   },
   {
-    path: "/apply/:token",
-    element: <JobApplicationForm />
-  },
-  {
-    path: "/apply/success",
-    element: <ApplicationSuccess />
+    path: "/public/job/apply/success",
+    element: <ApplicationSuccess />,
   },
   {
     path: "/dev/components",
