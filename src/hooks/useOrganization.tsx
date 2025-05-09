@@ -7,7 +7,9 @@ import { useOrganizationSubscription } from "./organization/useOrganizationSubsc
 import { useOrganizationNavigation } from "./organization/useOrganizationNavigation";
 
 export function useOrganization(): OrganizationData {
+  // Get the navigation helper which safely handles navigation
   const { navigate } = useOrganizationNavigation();
+  
   const [organizationData, setOrganizationData] = useState<OrganizationData>({
     organization: null,
     subscriptionPlan: null,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ const TrialBanner = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [progressPercent, setProgressPercent] = useState(100);
   
-  // Use the navigation hook
+  // Use the navigation hook for safer navigation
   const { navigate } = useOrganizationNavigation();
   
   // Get current location pathname

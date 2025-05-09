@@ -18,11 +18,17 @@ import AppLayout from "@/components/layout/AppLayout";
 const applicationRoutes: RouteObject[] = [
   {
     path: "/",
-    element: <Index />
-  },
-  {
-    path: "*",
-    element: <NotFound />
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: <Index />
+      },
+      {
+        path: "*",
+        element: <NotFound />
+      }
+    ]
   }
 ];
 
