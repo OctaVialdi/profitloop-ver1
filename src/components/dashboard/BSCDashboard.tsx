@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,7 +6,7 @@ import { Download, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useOrganization } from '@/hooks/useOrganization';
-import { CompanyGoal, DateRangeType } from '@/types/dashboard';
+import { DateRangeType } from '@/types/dashboard';
 import { useDateRangeFilter } from '@/hooks/useDateRangeFilter';
 import { DashboardFilter } from './DashboardFilter';
 
@@ -49,7 +48,7 @@ export function BSCDashboard() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 && diffDays <= 7; // Within next 7 days
   }).length || 0;
-
+  
   // Handle adding a new goal
   const handleAddGoal = async (goal: Partial<CompanyGoal>) => {
     try {
@@ -223,7 +222,7 @@ export function BSCDashboard() {
         <TabsContent value="goals" className="space-y-4">
           <CompanyGoalsSection
             goals={dashboardData.companyGoals}
-            onAddGoal={handleAddGoal}
+            onAddGoal={() => {}}
           />
         </TabsContent>
         
