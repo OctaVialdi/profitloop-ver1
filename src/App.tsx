@@ -10,6 +10,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { checkAndUpdateTrialStatus } from "@/services/subscriptionService";
 import { trackSubscriptionEvent } from "@/utils/subscriptionUtils";
 import { RouterProvider } from "react-router-dom";
+import "@/styles/trial.css"; // Import trial styles explicitly
 
 function AppContent() {
   const { isTrialActive, organization } = useOrganization();
