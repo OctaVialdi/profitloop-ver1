@@ -6,6 +6,7 @@ import { CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLoginForm } from "@/hooks/auth/useLoginForm";
 import LoginForm from "@/components/auth/LoginForm";
+import { Button } from "@/components/ui/button";
 
 const Login = () => {
   // Only set justVerified to true if the URL parameter explicitly says so
@@ -66,11 +67,9 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
-  // Handle navigation to register page
-  const handleNavigateToRegister = (e: React.MouseEvent) => {
-    // Prevent default link behavior for more control
-    e.preventDefault();
-    // Navigate programmatically 
+  // Handle direct navigation to register page - simplified approach
+  const goToRegister = () => {
+    console.log("Navigating to register page");
     navigate("/auth/register");
   };
 
@@ -117,14 +116,24 @@ const Login = () => {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-600">
             Belum memiliki akun?{" "}
+            {/* Use a standard Link without onClick handler */}
             <Link 
               to="/auth/register" 
               className="text-blue-500 hover:text-blue-700"
-              onClick={handleNavigateToRegister}
             >
               Daftar sekarang
             </Link>
           </div>
+          
+          {/* Add alternative button for registration as fallback */}
+          <Button 
+            variant="outline" 
+            type="button" 
+            className="mt-2" 
+            onClick={goToRegister}
+          >
+            Buat akun baru
+          </Button>
         </CardFooter>
       </Card>
     </div>
