@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { OrganizationData } from "@/types/organization";
 import { fetchOrganizationData } from "./organization/useOrganizationData";
 import { useAuthStateListener } from "./organization/useAuthStateListener";
 import { useOrganizationSubscription } from "./organization/useOrganizationSubscription";
+import { useOrganizationNavigation } from "./organization/useOrganizationNavigation";
 
 export function useOrganization(): OrganizationData {
+  const { navigate } = useOrganizationNavigation();
   const [organizationData, setOrganizationData] = useState<OrganizationData>({
     organization: null,
     subscriptionPlan: null,
@@ -21,8 +22,6 @@ export function useOrganization(): OrganizationData {
     hasPaidSubscription: false,
     refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate)
   });
-  
-  const navigate = useNavigate();
   
   // Initialize data fetching
   useEffect(() => {

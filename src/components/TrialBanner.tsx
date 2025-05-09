@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, X, Timer, HelpCircle } from "lucide-react";
@@ -8,7 +7,6 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -18,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/sonner";
 import TrialExtensionRequestDialog from './trial/TrialExtensionRequestDialog';
 import { trackSubscriptionEvent } from '@/utils/subscriptionUtils';
+import { useOrganizationNavigation } from '@/hooks/organization/useOrganizationNavigation';
 
 const TrialBanner = () => {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
@@ -32,13 +31,16 @@ const TrialBanner = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [progressPercent, setProgressPercent] = useState(100);
   
-  const location = useLocation();
-  const navigate = useNavigate();
+  // Use the navigation hook
+  const { navigate } = useOrganizationNavigation();
+  
+  // Get current location pathname
+  const pathname = window.location.pathname;
   
   // Skip on auth pages
-  const isAuthPage = location.pathname.startsWith('/auth/');
-  const isOnboardingPage = location.pathname === '/onboarding' || location.pathname === '/organizations';
-  const isSubscriptionPage = location.pathname === '/subscription' || location.pathname.includes('/settings/subscription');
+  const isAuthPage = pathname.startsWith('/auth/');
+  const isOnboardingPage = pathname === '/onboarding' || pathname === '/organizations';
+  const isSubscriptionPage = pathname === '/subscription' || pathname.includes('/settings/subscription');
   
   // Track user engagement with trial banner
   const trackBannerEvent = async (action: string) => {
@@ -305,7 +307,11 @@ const TrialBanner = () => {
   const handleSubscribe = () => {
     // Track the click event
     trackBannerEvent('upgrade_click');
-    navigate("/settings/subscription");
+    if (typeof navigate === 'function') {
+      navigate("/settings/subscription");
+    } else {
+      window.location.href = "/settings/subscription";
+    }
     setShowSubscriptionDialog(false);
     // Remove blur when navigating to subscription page
     document.body.classList.remove('trial-expired');
@@ -316,7 +322,11 @@ const TrialBanner = () => {
     // Track the sign out event
     trackBannerEvent('signout_click');
     await supabase.auth.signOut();
-    navigate("/auth/login");
+    if (typeof navigate === 'function') {
+      navigate("/auth/login");
+    } else {
+      window.location.href = "/auth/login";
+    }
     document.body.classList.remove('trial-expired');
   };
   
@@ -348,7 +358,11 @@ const TrialBanner = () => {
                   className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
                   onClick={() => {
                     trackBannerEvent('upgrade_click');
-                    navigate("/settings/subscription");
+                    if (typeof navigate === 'function') {
+                      navigate("/settings/subscription");
+                    } else {
+                      window.location.href = "/settings/subscription";
+                    }
                   }}
                 >
                   Berlangganan
