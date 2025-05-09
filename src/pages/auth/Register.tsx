@@ -99,6 +99,7 @@ const Register = () => {
             email: email,
             role: role, // Set the role in metadata
           },
+          emailRedirectTo: window.location.origin + '/auth/login?verified=true'
         },
       });
 
@@ -173,17 +174,20 @@ const Register = () => {
               <Label htmlFor="fullName">Nama Lengkap</Label>
               <Input
                 id="fullName"
+                name="fullName"
                 type="text"
                 placeholder="Nama lengkap Anda"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
+                autoComplete="name"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="nama@perusahaan.com"
                 value={email}
@@ -191,26 +195,31 @@ const Register = () => {
                 readOnly={!!invitationEmail}
                 className={invitationEmail ? "bg-gray-100" : ""}
                 required
+                autoComplete="username"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="new-password"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
               <Input
                 id="confirmPassword"
+                name="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                autoComplete="new-password"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading || isCheckingEmail}>

@@ -95,10 +95,12 @@ export function useLoginForm() {
         return;
       }
       
+      console.log("Starting login process for:", email);
       const credentials = { email, password };
       const { data, error } = await signInWithEmailPassword(credentials);
 
       if (error) {
+        console.error("Login error details:", error);
         // Check specifically for email verification errors
         if (error.message && 
             (error.message.includes("Email not confirmed") || 
@@ -111,6 +113,8 @@ export function useLoginForm() {
       }
       
       if (data?.user) {
+        console.log("Login successful for user:", data.user.id);
+        
         // Check email verification status directly before proceeding
         if (!data.user.email_confirmed_at) {
           setIsEmailUnverified(true);

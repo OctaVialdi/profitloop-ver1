@@ -16,6 +16,9 @@ export function useAuthState(): AuthState {
 
   // Listen for auth state changes
   useEffect(() => {
+    console.log("Setting up auth state listener");
+    setIsLoading(true);
+    
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session) => {
@@ -105,12 +108,14 @@ export function useAuthState(): AuthState {
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Checking for existing session:", !!session);
       setSession(session);
       setUser(session?.user ?? null);
       
       // If user is logged in, ensure profile exists
       if (session?.user) {
         const isEmailVerified = session.user.email_confirmed_at !== null;
+        console.log("Active session found, ensuring profile exists for user:", session.user.id);
         
         ensureProfileExists(session.user.id, {
           email: session.user.email || '',
@@ -118,9 +123,12 @@ export function useAuthState(): AuthState {
           email_verified: isEmailVerified
         });
       }
+      
+      setIsLoading(false);
     });
 
     return () => {
+      console.log("Cleaning up auth state listener");
       subscription.unsubscribe();
     };
   }, []);

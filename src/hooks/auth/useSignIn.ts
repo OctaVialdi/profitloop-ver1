@@ -17,19 +17,26 @@ export function useSignIn() {
     setLoginError(null);
     
     try {
+      console.log("Attempting to sign in with email:", credentials.email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
       });
 
       if (error) {
+        console.error("Authentication error:", error);
         throw error;
       }
+      
+      console.log("Sign in successful, session established:", !!data.session);
       
       // After successful login, make sure profile exists and set email as verified
       if (data.user) {
         const fullName = data.user.user_metadata?.full_name || null;
         const emailVerified = data.user.email_confirmed_at !== null;
+        
+        console.log("Creating/updating profile for user:", data.user.id, "Email verified:", emailVerified);
         
         // Create or update profile
         await ensureProfileExists(data.user.id, {
@@ -47,6 +54,8 @@ export function useSignIn() {
             
           if (updateError) {
             console.error("Error marking email as verified:", updateError);
+          } else {
+            console.log("Profile updated: email marked as verified");
           }
         }
       }
