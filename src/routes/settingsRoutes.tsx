@@ -11,7 +11,7 @@ import ProfileSettings from "@/pages/settings/ProfileSettings";
 import BillingHistory from "@/pages/settings/BillingHistory";
 import { Outlet } from "react-router-dom";
 
-export const settingsRoutes = (
+export const settingsRoutes = 
   <Route
     key="settings"
     path="/settings"
@@ -32,5 +32,4 @@ export const settingsRoutes = (
     <Route path="billing-history" element={<BillingHistory />} />
     <Route path="profile" element={<ProfileSettings />} />
     <Route path="" element={<Navigate to="/settings/subscription" replace />} />
-  </Route>
-);
+  </Route>;

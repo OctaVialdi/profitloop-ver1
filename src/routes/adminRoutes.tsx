@@ -7,7 +7,7 @@ import TrialManagementPage from "@/pages/admin/TrialManagementPage";
 export const adminRoutes = {
   path: "/admin",
   element: (
-    <ProtectedRoute requiredRole="super_admin">
+    <ProtectedRoute requiredRoles={["super_admin"]}>
       <DashboardLayout>
         {/* Admin layout content */}
       </DashboardLayout>

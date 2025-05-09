@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,15 +71,17 @@ const TrialManagementPage = () => {
         // Format the requests
         const formattedRequests = auditLogs.map(log => {
           const profile = profiles.find(p => p.id === log.user_id);
+          const logData = typeof log.data === 'string' ? JSON.parse(log.data) : log.data;
+          
           return {
             id: log.id,
             organization_id: log.organization_id,
             organization_name: log.organizations?.name || 'Unknown',
             user_id: log.user_id,
             user_email: profile?.email || 'Unknown',
-            reason: log.data.reason || '',
+            reason: logData?.reason || '',
             requested_at: new Date(log.created_at).toLocaleString(),
-            status: log.data.status || 'pending'
+            status: logData?.status || 'pending'
           };
         });
         
