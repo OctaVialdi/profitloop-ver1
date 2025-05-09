@@ -21,14 +21,14 @@ export async function checkBucketExists(bucketName: string): Promise<boolean> {
 }
 
 // Create storage bucket if it doesn't exist
-export async function createBucket(bucketName: string, isPublic: boolean = false): Promise<boolean> {
+export async function createBucket(bucketName: string, isPublic: boolean = false): Promise<{ success: boolean, error?: string }> {
   try {
     // First check if the user has permissions to create buckets
     const { data: userInfo, error: userError } = await supabase.auth.getUser();
     if (userError || !userInfo || !userInfo.user) {
       console.error('User not authenticated:', userError?.message || 'No user data');
       toast.error("Authentication required for storage operations");
-      return false;
+      return { success: false, error: "Authentication required" };
     }
     
     const exists = await checkBucketExists(bucketName);
@@ -42,34 +42,38 @@ export async function createBucket(bucketName: string, isPublic: boolean = false
         if (error.message.includes('Permission denied')) {
           console.log(`Insufficient permissions to create the '${bucketName}' bucket.`);
           toast.warning(`You don't have permission to create storage buckets. Please contact your administrator to create the '${bucketName}' bucket.`);
+        } else if (error.message.includes('already exists')) {
+          console.log(`Bucket '${bucketName}' already exists.`);
+          return { success: true }; // Consider it a success if bucket already exists
         } else {
           console.error(`Error creating ${bucketName} bucket:`, error);
           toast.error(`Failed to create ${bucketName} bucket: ${error.message}`);
         }
-        return false;
+        return { success: false, error: error.message };
       }
       
       console.log(`Successfully created '${bucketName}' bucket.`);
-      return true;
+      return { success: true };
     }
     
-    return true; // Bucket already exists
+    return { success: true }; // Bucket already exists
   } catch (error: any) {
-    console.error(`Error creating ${bucketName} bucket:`, error.message || error);
+    const errorMessage = error.message || "Unknown error";
+    console.error(`Error creating ${bucketName} bucket:`, errorMessage);
     toast.error("Storage initialization failed. Please try again.");
-    return false;
+    return { success: false, error: errorMessage };
   }
 }
 
 // Function to check if a bucket exists and create it if needed
-export async function ensureBucketExists(bucketName: string, isPublic: boolean = false): Promise<boolean> {
+export async function ensureBucketExists(bucketName: string, isPublic: boolean = false): Promise<{ success: boolean, error?: string }> {
   try {
     // First check if the user has permissions
     const { data: userInfo, error: userError } = await supabase.auth.getUser();
     if (userError || !userInfo || !userInfo.user) {
       console.error('User not authenticated:', userError?.message || 'No user data');
       toast.error("Authentication required for storage operations");
-      return false;
+      return { success: false, error: "Authentication required" };
     }
     
     const exists = await checkBucketExists(bucketName);
@@ -78,11 +82,12 @@ export async function ensureBucketExists(bucketName: string, isPublic: boolean =
       return await createBucket(bucketName, isPublic);
     }
     
-    return true;
+    return { success: true };
   } catch (error: any) {
-    console.error(`Error ensuring ${bucketName} bucket exists:`, error.message || error);
+    const errorMessage = error.message || "Unknown error";
+    console.error(`Error ensuring ${bucketName} bucket exists:`, errorMessage);
     toast.error("Storage initialization failed. Please try again.");
-    return false;
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -128,14 +133,12 @@ export async function uploadFileToBucket(
     const bucketExists = await checkBucketExists(bucketName);
     
     if (!bucketExists) {
-      // Try to create the bucket
-      const created = await createBucket(bucketName, true);
-      if (!created) {
-        return { 
-          url: null, 
-          error: new Error(`Storage bucket '${bucketName}' not found and could not be created`) 
-        };
-      }
+      // Just log the issue rather than trying to create the bucket
+      console.log(`Storage bucket '${bucketName}' does not exist.`);
+      return { 
+        url: null, 
+        error: new Error(`Storage bucket '${bucketName}' not found. Contact your administrator.`) 
+      };
     }
     
     // Upload the file
