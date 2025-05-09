@@ -1,4 +1,3 @@
-
 // Date Range Type
 export type DateRangeType = {
   from: Date;
@@ -14,6 +13,7 @@ export type FinancialSummary = {
   roiTarget: number;
   debtTotal: number;
   debtToAssetRatio: number;
+  targetRevenue?: number; // Added target revenue field
   upcomingDebtPayments: DebtPayment[];
 };
 
@@ -115,4 +115,12 @@ export type BSCDashboardData = {
   yearlyTrends: YearlyTrend[];
   expenseBreakdowns: ExpenseBreakdown[];
   departments: DepartmentData[];
+};
+
+// Monthly Revenue Type
+export type MonthlyRevenue = {
+  month: string;
+  revenue: number;
+  expenses: number;
+  target?: number;
 };

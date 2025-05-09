@@ -64,6 +64,9 @@ async function fetchFinancialSummary(startDate?: Date, endDate?: Date): Promise<
   const totalExpenses = financialData?.[0]?.total_expenses || 0;
   const cashFlow = totalRevenue - totalExpenses;
   
+  // Get target revenue if available
+  const targetRevenue = financialData?.[0]?.target_revenue || 0;
+  
   // Calculate ROI
   const roi = totalExpenses > 0 
     ? ((totalRevenue - totalExpenses) / totalExpenses) * 100 
@@ -110,6 +113,7 @@ async function fetchFinancialSummary(startDate?: Date, endDate?: Date): Promise<
     roiTarget,
     debtTotal,
     debtToAssetRatio,
+    targetRevenue,
     upcomingDebtPayments
   };
 }

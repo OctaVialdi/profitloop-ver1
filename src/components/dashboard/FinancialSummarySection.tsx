@@ -1,26 +1,38 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
 import { MetricCard } from './MetricCard';
-import { FinancialSummary, YearlyTrend, RevenueContributor, ExpenseBreakdown } from '@/types/dashboard';
+import { FinancialSummary, YearlyTrend, RevenueContributor, ExpenseBreakdown, MonthlyRevenue } from '@/types/dashboard';
+import { TargetRevenueCard } from './TargetRevenueCard';
+import { MonthlyRevenueTrendCard } from './MonthlyRevenueTrendCard';
+import { TopRevenueContributorsCard } from './TopRevenueContributorsCard';
+import { ExpensesTrendCard } from './ExpensesTrendCard';
+import { toast } from '@/components/ui/sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useOrganization } from '@/hooks/useOrganization';
 
 interface FinancialSummarySectionProps {
   financialSummary: FinancialSummary;
   yearlyTrends: YearlyTrend[];
   revenueContributors: RevenueContributor[];
   expenseBreakdowns: ExpenseBreakdown[];
+  onUpdateTargetRevenue?: (newTarget: number) => Promise<void>;
 }
 
 export function FinancialSummarySection({
   financialSummary,
   yearlyTrends,
   revenueContributors,
-  expenseBreakdowns
+  expenseBreakdowns,
+  onUpdateTargetRevenue
 }: FinancialSummarySectionProps) {
+  const { organization } = useOrganization();
+  const [targetRevenue, setTargetRevenue] = useState(financialSummary.targetRevenue || 21500000);
+  
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -29,10 +41,60 @@ export function FinancialSummarySection({
       maximumFractionDigits: 0
     }).format(amount);
   };
+  
+  // Get current year
+  const currentYear = new Date().getFullYear();
+  
+  // Generate monthly data for the current year
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  
+  // Generate sample monthly data (in a real app, this would come from the backend)
+  const monthlyRevenueData: MonthlyRevenue[] = monthNames.map((month, index) => {
+    // Use the latest year data as a base for distribution
+    const latestYear = yearlyTrends[yearlyTrends.length - 1];
+    // Distribute annual revenue and expenses across months with some variation
+    const monthFactor = 0.5 + Math.random();
+    return {
+      month,
+      revenue: index === 0 ? financialSummary.totalRevenue : 0, // Put all revenue in January for demo
+      expenses: index === 0 ? financialSummary.totalExpenses : 0, // Put all expenses in January for demo
+      target: index === 0 ? targetRevenue / 12 : 0 // Monthly target (yearly target / 12)
+    };
+  });
+  
+  const handleUpdateTarget = async (newTarget: number) => {
+    try {
+      setTargetRevenue(newTarget);
+      
+      if (onUpdateTargetRevenue) {
+        await onUpdateTargetRevenue(newTarget);
+      } else if (organization?.id) {
+        // Default implementation if no callback is provided
+        const { error } = await supabase
+          .from('financial_summary')
+          .update({ target_revenue: newTarget })
+          .eq('organization_id', organization.id);
+        
+        if (error) throw error;
+      }
+      
+      toast.success("Target revenue updated successfully");
+    } catch (error) {
+      console.error('Error updating target revenue:', error);
+      toast.error("Failed to update target revenue");
+    }
+  };
 
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Financial BSC</h2>
+      
+      {/* Target Revenue Card */}
+      <TargetRevenueCard 
+        currentRevenue={financialSummary.totalRevenue} 
+        targetRevenue={targetRevenue}
+        onUpdateTarget={handleUpdateTarget} 
+      />
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
@@ -68,91 +130,18 @@ export function FinancialSummarySection({
         />
       </div>
 
+      {/* Monthly Revenue Trend Card */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Revenue vs. Expenses Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue vs. Expenses (5 Year Trend)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer 
-              config={{
-                revenue: { theme: { light: '#2563eb', dark: '#3b82f6' } },
-                expenses: { theme: { light: '#ef4444', dark: '#f87171' } }
-              }} 
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={yearlyTrends}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis />
-                  <Tooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    name="Revenue"
-                    stroke="var(--color-revenue)"
-                    strokeWidth={2}
-                    activeDot={{ r: 8 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="expenses"
-                    name="Expenses"
-                    stroke="var(--color-expenses)"
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-            {/* Event Annotations */}
-            <div className="mt-4 space-y-2">
-              <h4 className="text-sm font-medium">Key Events</h4>
-              <div className="space-y-1">
-                {yearlyTrends
-                  .filter(trend => trend.events && trend.events.length > 0)
-                  .map(trend => 
-                    trend.events?.map(event => (
-                      <div key={`${trend.year}-${event.name}`} className="text-xs flex items-center gap-2">
-                        <span className="font-medium">{trend.year}:</span>
-                        <span>{event.name}</span>
-                      </div>
-                    ))
-                  )
-                }
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <MonthlyRevenueTrendCard data={monthlyRevenueData} year={currentYear} />
+        <ExpensesTrendCard data={monthlyRevenueData} year={currentYear} />
+      </div>
+      
+      {/* Top Revenue Contributors and Expense Trends */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <TopRevenueContributorsCard data={revenueContributors} />
         
         <div className="space-y-4">
-          {/* Top Revenue Contributors */}
-          <Card className="h-[200px]">
-            <CardHeader className="pb-0">
-              <CardTitle className="text-sm">Top Revenue Contributors</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {revenueContributors.map(contributor => (
-                  <div key={contributor.name} className="flex text-xs items-center justify-between">
-                    <span>{contributor.name}</span>
-                    <div className="flex items-center gap-2">
-                      <span>{formatCurrency(contributor.amount)}</span>
-                      <span className="text-muted-foreground">
-                        ({contributor.percentage}%)
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Debt Management */}
+          {/* Debt Management Section - Kept from original */}
           <Card className="h-[200px]">
             <CardHeader className="pb-0">
               <CardTitle className="text-sm">Debt Management</CardTitle>
@@ -188,6 +177,66 @@ export function FinancialSummarySection({
                       <span className="text-xs text-muted-foreground">No upcoming payments</span>
                     )}
                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Revenue vs. Expenses Trend - Kept from original */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue vs. Expenses (5 Year Trend)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer 
+                config={{
+                  revenue: { theme: { light: '#2563eb', dark: '#3b82f6' } },
+                  expenses: { theme: { light: '#ef4444', dark: '#f87171' } }
+                }} 
+                className="h-[300px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={yearlyTrends}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="year" />
+                    <YAxis />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      name="Revenue"
+                      stroke="var(--color-revenue)"
+                      strokeWidth={2}
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="expenses"
+                      name="Expenses"
+                      stroke="var(--color-expenses)"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+              {/* Event Annotations */}
+              <div className="mt-4 space-y-2">
+                <h4 className="text-sm font-medium">Key Events</h4>
+                <div className="space-y-1">
+                  {yearlyTrends
+                    .filter(trend => trend.events && trend.events.length > 0)
+                    .map(trend => 
+                      trend.events?.map(event => (
+                        <div key={`${trend.year}-${event.name}`} className="text-xs flex items-center gap-2">
+                          <span className="font-medium">{trend.year}:</span>
+                          <span>{event.name}</span>
+                        </div>
+                      ))
+                    )
+                  }
                 </div>
               </div>
             </CardContent>

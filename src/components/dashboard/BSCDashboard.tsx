@@ -80,6 +80,53 @@ export function BSCDashboard() {
     }
   };
   
+  // Handle updating target revenue
+  const handleUpdateTargetRevenue = async (newTarget: number) => {
+    try {
+      if (!organization?.id) {
+        toast.error("Organization data not available.");
+        return;
+      }
+      
+      // Check if there's an existing financial_summary record
+      const { data: existingRecord, error: fetchError } = await supabase
+        .from('financial_summary')
+        .select('id')
+        .eq('organization_id', organization.id)
+        .limit(1);
+      
+      if (fetchError) throw fetchError;
+      
+      if (existingRecord && existingRecord.length > 0) {
+        // Update existing record
+        const { error } = await supabase
+          .from('financial_summary')
+          .update({ target_revenue: newTarget })
+          .eq('id', existingRecord[0].id);
+        
+        if (error) throw error;
+      } else {
+        // Create new record
+        const { error } = await supabase
+          .from('financial_summary')
+          .insert({
+            organization_id: organization.id,
+            target_revenue: newTarget,
+            month: new Date().toISOString(),
+            total_revenue: dashboardData?.financialSummary.totalRevenue || 0,
+            total_expenses: dashboardData?.financialSummary.totalExpenses || 0
+          });
+        
+        if (error) throw error;
+      }
+      
+      refetch(); // Refresh dashboard data
+    } catch (error: any) {
+      console.error("Error updating target revenue:", error);
+      throw error; // Re-throw to be handled by the caller
+    }
+  };
+  
   // Handle exporting dashboard as PDF
   const handleExportDashboard = () => {
     toast.success("Dashboard report will be downloaded shortly.");
@@ -169,6 +216,7 @@ export function BSCDashboard() {
             yearlyTrends={dashboardData.yearlyTrends}
             revenueContributors={dashboardData.revenueContributors}
             expenseBreakdowns={dashboardData.expenseBreakdowns}
+            onUpdateTargetRevenue={handleUpdateTargetRevenue}
           />
         </TabsContent>
         
