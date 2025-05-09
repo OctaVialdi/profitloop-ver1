@@ -31,8 +31,13 @@ export const ProtectedRoute = ({
   const isAuthRoute = currentPath.startsWith('/auth/'); // ALL auth routes are public
 
   useEffect(() => {
-    // Skip authentication check for public routes
-    if (isPublicRoute) {
+    console.log("ProtectedRoute: checking path", currentPath);
+    console.log("Is public route?", isPublicRoute);
+    console.log("Is auth route?", isAuthRoute);
+    
+    // Skip authentication check for auth and public routes
+    if (isPublicRoute || isAuthRoute) {
+      console.log("Skipping auth check for public/auth route");
       setLoading(false);
       return;
     }
@@ -199,7 +204,7 @@ export const ProtectedRoute = ({
       // Clean up subscription
       subscription.unsubscribe();
     };
-  }, [isPublicRoute]);
+  }, [isPublicRoute, isAuthRoute, currentPath]);
 
   if (loading) {
     return (
@@ -211,6 +216,7 @@ export const ProtectedRoute = ({
 
   // Authentication routes handling (login, register)
   if (isAuthRoute) {
+    console.log("Rendering auth route:", currentPath);
     // IMPORTANT: Auth routes are ALWAYS allowed, even if already authenticated
     // This ensures registration and login pages are always accessible
     return children ? <>{children}</> : <Outlet />;

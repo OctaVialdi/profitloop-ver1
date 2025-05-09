@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { ensureProfileExists } from "@/services/profileService";
-import { cleanupAuthState } from "@/utils/authCleanup";
+import { safeRegisterNavigation } from "@/utils/authCleanup";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -20,6 +19,9 @@ const Register = () => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Add debug log
+  console.log("Register page rendered. Current URL:", window.location.href);
   
   // Check if we have invitation data from redirect
   const invitationEmail = location.state?.invitationEmail || "";
@@ -70,14 +72,14 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Clean up existing auth state to prevent issues
-      cleanupAuthState();
+      // Use the safer register navigation function - minimal cleanup
+      safeRegisterNavigation();
       
-      // Attempt to sign out first to ensure clean state
+      // Attempt to sign out first to ensure clean state, but keep it minimal
       try {
-        await supabase.auth.signOut({ scope: 'global' });
+        console.log("Attempting minimal sign out before registration");
+        await supabase.auth.signOut();
       } catch (err) {
-        // Continue even if sign out fails
         console.log("Pre-signout failed, continuing with registration");
       }
       
@@ -255,9 +257,10 @@ const Register = () => {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-600">
             Sudah memiliki akun?{" "}
-            <Link to="/auth/login" className="text-blue-500 hover:text-blue-700">
+            {/* Use direct href for more reliable navigation */}
+            <a href="/auth/login" className="text-blue-500 hover:text-blue-700">
               Login disini
-            </Link>
+            </a>
           </div>
         </CardFooter>
       </Card>

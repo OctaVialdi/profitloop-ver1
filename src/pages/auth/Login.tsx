@@ -1,12 +1,11 @@
 
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLoginForm } from "@/hooks/auth/useLoginForm";
 import LoginForm from "@/components/auth/LoginForm";
-import { Button } from "@/components/ui/button";
 
 const Login = () => {
   // Only set justVerified to true if the URL parameter explicitly says so
@@ -67,6 +66,9 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
+  // Add debugging log
+  console.log("Login component rendered. Current URL:", window.location.href);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
@@ -114,15 +116,21 @@ const Login = () => {
             <a 
               href="/auth/register" 
               className="text-blue-500 hover:text-blue-700 font-medium cursor-pointer"
+              onClick={(e) => {
+                console.log("Register link clicked");
+              }}
             >
               Daftar sekarang
             </a>
           </div>
           
-          {/* Pure HTML button for register - no onClick handlers */}
+          {/* Pure HTML anchor for register - using href with hash to ensure browser navigation */}
           <a 
             href="/auth/register"
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full"
+            onClick={(e) => {
+              console.log("Register button clicked");
+            }}
           >
             Buat akun baru
           </a>
