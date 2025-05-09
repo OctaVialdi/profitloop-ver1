@@ -28,16 +28,11 @@ export const ProtectedRoute = ({
 
   // Check if current path is in public routes
   const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
-  const isAuthRoute = currentPath.startsWith('/auth/'); // ALL auth routes are public
+  const isAuthRoute = currentPath.startsWith('/auth/');
 
   useEffect(() => {
-    console.log("ProtectedRoute: checking path", currentPath);
-    console.log("Is public route?", isPublicRoute);
-    console.log("Is auth route?", isAuthRoute);
-    
-    // Skip authentication check for auth and public routes
-    if (isPublicRoute || isAuthRoute) {
-      console.log("Skipping auth check for public/auth route");
+    // Skip authentication check for public routes
+    if (isPublicRoute) {
       setLoading(false);
       return;
     }
@@ -204,7 +199,7 @@ export const ProtectedRoute = ({
       // Clean up subscription
       subscription.unsubscribe();
     };
-  }, [isPublicRoute, isAuthRoute, currentPath]);
+  }, [isPublicRoute]);
 
   if (loading) {
     return (
@@ -216,9 +211,28 @@ export const ProtectedRoute = ({
 
   // Authentication routes handling (login, register)
   if (isAuthRoute) {
-    console.log("Rendering auth route:", currentPath);
-    // IMPORTANT: Auth routes are ALWAYS allowed, even if already authenticated
-    // This ensures registration and login pages are always accessible
+    // If already authenticated, redirect based on profile status
+    if (authenticated) {
+      // Check email verification first
+      if (profile && !profile.email_verified) {
+        // If on login page already, no need to redirect
+        return children ? <>{children}</> : <Outlet />;
+      }
+      
+      // Check organization status
+      if (profile && profile.organization_id) {
+        // Check if has seen welcome page
+        if (!profile.has_seen_welcome) {
+          return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
+        } else {
+          return <Navigate to="/dashboard" state={{ from: location }} replace />;
+        }
+      } else {
+        return <Navigate to="/organizations" state={{ from: location }} replace />;
+      }
+    }
+    
+    // Not authenticated and on auth route, show the auth page
     return children ? <>{children}</> : <Outlet />;
   }
 
@@ -228,18 +242,6 @@ export const ProtectedRoute = ({
     if (profile && !profile.email_verified && !isPublicRoute) {
       toast.error("Email Anda belum diverifikasi. Silakan verifikasi email terlebih dahulu.");
       return <Navigate to="/auth/login" state={{ from: location, requireVerification: true }} replace />;
-    }
-    
-    // Add specific exemption for subscription page when trial has expired
-    if (currentPath === '/subscription') {
-      // Always allow access to the subscription page even if trial expired
-      // Add a class to the body to exempt this page from the blur effect
-      document.body.classList.add('subscription-page');
-      // Make sure to return and render the children
-      return children ? <>{children}</> : <Outlet />;
-    } else {
-      // Remove the class when not on the subscription page
-      document.body.classList.remove('subscription-page');
     }
     
     // Specific route handling for organizations page

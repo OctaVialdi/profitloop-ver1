@@ -4,28 +4,22 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfileExists } from "@/services/profileService";
 import { AuthState } from "./types";
-import { cleanupAuthState } from "@/utils/authCleanup";
 
 /**
  * Hook to manage authentication state and listen for auth changes
  */
 export function useAuthState(): AuthState {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
   // Listen for auth state changes
   useEffect(() => {
-    console.log("Setting up auth state listener");
-    setIsLoading(true);
-    
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session) => {
-        console.log("Auth state changed:", event, !!session?.user?.id);
-        
-        // Update state synchronously
+        console.log("Auth state changed:", event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -110,44 +104,23 @@ export function useAuthState(): AuthState {
     );
 
     // Then check for existing session
-    const checkSession = async () => {
-      try {
-        console.log("Checking for existing session");
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Existing session check result:", !!session);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      // If user is logged in, ensure profile exists
+      if (session?.user) {
+        const isEmailVerified = session.user.email_confirmed_at !== null;
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // If user is logged in, ensure profile exists
-        if (session?.user) {
-          const isEmailVerified = session.user.email_confirmed_at !== null;
-          console.log("Active session found, ensuring profile exists for user:", session.user.id);
-          
-          // Use setTimeout to avoid deadlocks
-          setTimeout(async () => {
-            try {
-              await ensureProfileExists(session.user.id, {
-                email: session.user.email || '',
-                full_name: session.user.user_metadata?.full_name || null,
-                email_verified: isEmailVerified
-              });
-            } catch (error) {
-              console.error("Error ensuring profile exists:", error);
-            }
-          }, 0);
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-      } finally {
-        setIsLoading(false);
+        ensureProfileExists(session.user.id, {
+          email: session.user.email || '',
+          full_name: session.user.user_metadata?.full_name || null,
+          email_verified: isEmailVerified
+        });
       }
-    };
-    
-    checkSession();
+    });
 
     return () => {
-      console.log("Cleaning up auth state listener");
       subscription.unsubscribe();
     };
   }, []);

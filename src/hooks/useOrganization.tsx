@@ -24,21 +24,6 @@ export function useOrganization(): OrganizationData {
   
   const navigate = useNavigate();
   
-  // Debug logging on values change
-  useEffect(() => {
-    console.log("useOrganization hook - organization data:", {
-      isTrialActive: organizationData.isTrialActive,
-      daysLeftInTrial: organizationData.daysLeftInTrial,
-      hasPaidSubscription: organizationData.hasPaidSubscription,
-      organization: organizationData.organization
-    });
-  }, [
-    organizationData.isTrialActive, 
-    organizationData.daysLeftInTrial,
-    organizationData.hasPaidSubscription,
-    organizationData.organization
-  ]);
-  
   // Initialize data fetching
   useEffect(() => {
     fetchOrganizationData(setOrganizationData, navigate);

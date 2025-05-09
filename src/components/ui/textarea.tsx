@@ -7,7 +7,7 @@ export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, autoComplete, ...props }, ref) => {
+  ({ className, ...props }, ref) => {
     return (
       <textarea
         className={cn(
@@ -15,7 +15,6 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           className
         )}
         ref={ref}
-        autoComplete={autoComplete}
         {...props}
       />
     );

@@ -27,3 +27,5 @@ export const supabase = createClient<Database>(
 export { updateUserOrgMetadata } from './auth/userMetadata';
 export { saveUserPreferences, saveThemeToDatabase } from './profiles/preferences';
 export { forceSignIn } from './auth/signIn';
+
+// Remove the reference to ensureUserProfileExists as it doesn't exist

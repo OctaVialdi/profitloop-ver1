@@ -7,13 +7,10 @@ import VerificationSent from "@/pages/auth/VerificationSent";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
 import MagicLinkJoin from "@/pages/auth/MagicLinkJoin";
 
-// IMPORTANT: All auth routes MUST be publicly accessible without any auth checks
-// These routes should be defined BEFORE protected routes in the main route configuration
 export const authRoutes = [
   <Route key="auth-layout" path="/auth" element={<AuthLayout />}>
     <Route index element={<Navigate to="/auth/login" replace />} />
     <Route path="login" element={<Login />} />
-    {/* Register route - MUST be accessible without authentication */}
     <Route path="register" element={<Register />} />
     <Route path="verification-sent" element={<VerificationSent />} />
   </Route>,
