@@ -64,8 +64,10 @@ postgres_webhooks = false
 
 [edge_functions]
 [edge_functions.check-trial-expiration]
-verify_jwt = true
+verify_jwt = false
 [edge_functions.track-event]
 verify_jwt = true
 [edge_functions.send-trial-reminder]
-verify_jwt = true
+verify_jwt = false
+[edge_functions.schedule-daily-trial-check]
+verify_jwt = false
