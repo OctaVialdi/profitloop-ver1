@@ -11,7 +11,13 @@ interface TrialProtectionProps {
   requiredSubscription?: boolean;
 }
 
-const ALLOWED_PATHS = ['/subscription', '/settings/subscription', '/auth/login'];
+// List of paths that are allowed even when subscription has expired
+const ALLOWED_PATHS = [
+  '/subscription', 
+  '/settings/subscription', 
+  '/auth/login',
+  '/settings/profile'
+];
 
 const TrialProtection = ({ children, requiredSubscription = false }: TrialProtectionProps) => {
   const [showDialog, setShowDialog] = useState(false);
@@ -58,7 +64,7 @@ const TrialProtection = ({ children, requiredSubscription = false }: TrialProtec
     <>
       {children}
       
-      {/* Blocking dialog for expired trial */}
+      {/* Premium feature blocking dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <div className="flex flex-col items-center text-center">

@@ -305,12 +305,12 @@ const TrialBanner = () => {
   } else if (daysLeft !== null) {
     // Trial is active, show countdown banner
     return (
-      <Alert className="sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 flex flex-col sm:flex-row items-center justify-between bg-blue-50 border-blue-100">
+      <Alert className="sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 flex flex-col sm:flex-row items-center justify-between bg-blue-50 border-blue-100 trial-banner-enter">
         <div className="flex items-center w-full">
           <CalendarClock className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
           <div className="w-full">
             <AlertDescription className="text-blue-700 font-medium text-sm">
-              Masa trial Anda berakhir dalam <span className="font-semibold">{countdownString}</span>.{' '}
+              Masa trial Anda berakhir dalam <span className="font-semibold trial-countdown">{countdownString}</span>.{' '}
               <Button 
                 variant="link" 
                 className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
@@ -319,11 +319,15 @@ const TrialBanner = () => {
                 Berlangganan sekarang
               </Button>
             </AlertDescription>
-            <Progress value={progress} className={`h-1.5 mt-1.5 ${progressColor}`} />
+            <Progress 
+              value={progress} 
+              className={`h-1.5 mt-1.5 ${progressColor} ${daysLeft <= 3 ? 'trial-progress-urgent' : ''}`}
+            />
           </div>
         </div>
         <Button variant="ghost" size="icon" className="h-6 w-6 mt-2 sm:mt-0 flex-shrink-0" onClick={() => setIsDismissed(true)}>
           <X className="h-4 w-4" />
+          <span className="sr-only">Dismiss</span>
         </Button>
       </Alert>
     );

@@ -2,50 +2,120 @@
 project_id = "nqbcxrujjxwgoyjxmmla"
 
 [api]
-enabled = true
-port = 54321
+# Port to use for the API URL.
+port = 8080
+# Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
+# endpoints. public and storage are always included.
 schemas = ["public", "storage", "graphql_public"]
+# Extra schemas to add to the search_path of every request.
+extra_search_path = ["extensions"]
+# The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
+# for accidental or malicious requests.
+max_rows = 1000
 
 [db]
-port = 54322
+# Host to connect to
+host = "localhost"
+# Port to connect to
+port = 5432
+# Database name to connect to
+database = "postgres"
+# The database role to use when connecting to the database
+user = "postgres"
+# Port to use for DB webhooks
+webhook_port = 54321
 
 [studio]
-enabled = true
+# Port to use for Supabase Studio
 port = 54323
+# External URL of Supabase Studio
+api_url = "http://localhost"
 
+# Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
+# are monitored, and you can view the emails that would have been sent from the web interface.
 [inbucket]
-enabled = true
+# Port to use for the email testing server web interface
 port = 54324
-
-[auth]
-enabled = true
-port = 54325
+# Uncomment to expose additional ports for testing user applications that send emails
+# smtp_port = 54325
+# pop3_port = 54326
 
 [storage]
-enabled = true
-port = 54326
+# The maximum file size allowed (e.g. "5MB", "500KB")
+file_size_limit = "50MiB"
 
-[edge-functions]
-enabled = true
+[auth]
+# The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
+# in emails.
+site_url = "http://localhost:3000"
+# A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
+additional_redirect_urls = ["https://localhost:3000"]
+# How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
+jwt_expiry = 3600
+# Allow/disallow new user signups to your project.
+enable_signup = true
+# If disabled, the user will be logged out of all devices when they change their password or update their 2FA settings.
+enable_multiple_sessions = false
+
+[auth.email]
+# Allow/disallow new user signups via email to your project.
+enable_signup = true
+# If enabled, a user will be required to confirm any email change on both the old, and new email
+# addresses. If disabled, only the new email is required to confirm.
+double_confirm_changes = true
+# If enabled, users need to confirm their email address before signing in.
+enable_confirmations = false
+
+# Uncomment to customize email template
+# [auth.email.template.invite]
+# subject = "You have been invited"
+# content_path = "./supabase/templates/invite.html"
+
+[auth.sms]
+# Allow/disallow new user signups via SMS to your project.
+enable_signup = true
+# If enabled, users need to confirm their phone number before signing in.
+enable_confirmations = false
+
+# Use pre-defined map of phone number to OTP for testing.
+[auth.sms.test_otp]
+# 4152127777 = "123456"
+
+# Configure one of the supported SMS providers: twilio, messagebird, textlocal, vonage, or generic.
+[auth.sms.twilio]
+enabled = false
+account_sid = ""
+message_service_sid = ""
+# DO NOT commit your Twilio auth token to git. Use environment variable substitution instead:
+auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
+
+# Use an external OAuth provider. The full list of providers are: "apple", "azure", "bitbucket",
+# "discord", "facebook", "figma", "github", "gitlab", "google", "keycloak", "linkedin", "notion",
+# "spotify", "slack", "twitch", "twitter", "workos", "zoom"
+[auth.external.apple]
+enabled = false
+client_id = ""
+# DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
+secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+# Overrides the default auth redirectUrl.
+redirect_uri = ""
+# Overrides the default auth provider URL. Used if you self-host your own OAuth provider.
+url = ""
+
+[analytics]
+enabled = false
 port = 54327
+vector_port = 54328
+# Configure one of the supported backends: "postgres", "bigquery", "snowflake", or "legacy".
+backend = "postgres"
 
-[functions.cron-check-trial-status]
-verify_jwt = false
+# Enables realtime functionality in the project.
+[realtime]
+enabled = false
 
-[functions.check-trial-expiration]
-verify_jwt = false
+[functions]
+# Port to apply cloud-side function restrictions to.
+port = 54345
 
-[functions.create-checkout]
-verify_jwt = true
-
-[functions.check-subscription]
-verify_jwt = true
-
-[functions.customer-portal]
-verify_jwt = true
-
-[functions.send-trial-reminder]
-verify_jwt = false
-
-[functions.webhook-stripe]
+[functions.daily-trial-check]
 verify_jwt = false
