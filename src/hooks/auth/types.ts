@@ -1,41 +1,33 @@
 
 import { Session, User } from "@supabase/supabase-js";
 
-export interface AuthCredentials {
-  email: string;
-  password: string;
-}
-
 export interface AuthState {
   isLoading: boolean;
   loginError: string | null;
   session: Session | null;
   user: User | null;
+  authInitialized?: boolean;
+}
+
+export interface AuthCredentials {
+  email: string;
+  password: string;
 }
 
 export interface AuthSignInResult {
-  data: {
-    session?: Session | null;
-    user?: User | null;
-  } | null;
+  data: any;
   error: Error | null;
 }
 
-// Add missing MagicLink related interfaces
 export interface MagicLinkParams {
-  token?: string | null;
-  email?: string | null;
-  accessToken?: string | null;
-  refreshToken?: string | null;
-  errorCode?: string | null;
-  errorDescription?: string | null;
-  type?: string | null;
-  redirectTo?: string | null;
+  email: string;
+  redirectTo?: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
 }
 
 export interface MagicLinkResult {
-  isLoading: boolean;
+  loading: boolean;
   error: string | null;
-  success: boolean;
-  organizationName: string;
+  sendMagicLink: (params: MagicLinkParams) => Promise<void>;
 }
