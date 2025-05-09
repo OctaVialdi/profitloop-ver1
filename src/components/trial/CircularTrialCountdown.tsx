@@ -1,7 +1,7 @@
 
-import React from "react";
-import { useOrganization } from "@/hooks/useOrganization";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from '@/integrations/supabase/client';
 
 interface CircularTrialCountdownProps {
   size?: "sm" | "md" | "lg";
@@ -16,10 +16,74 @@ const CircularTrialCountdown: React.FC<CircularTrialCountdownProps> = ({
   showLabel = true,
   className
 }) => {
-  const { daysLeftInTrial, isTrialActive } = useOrganization();
+  const [days, setDays] = useState<number>(0);
+  const [isTrialActive, setIsTrialActive] = useState<boolean>(false);
   
-  // If trial is inactive, show 0 days
-  const days = isTrialActive ? daysLeftInTrial : 0;
+  // Fetch trial data directly
+  useEffect(() => {
+    const fetchTrialData = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) {
+          return;
+        }
+        
+        const orgId = session.user.user_metadata?.organization_id;
+        
+        if (!orgId) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+          if (!profileData?.organization_id) {
+            return;
+          }
+          
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('trial_end_date, trial_expired')
+            .eq('id', profileData.organization_id)
+            .maybeSingle();
+            
+          if (orgData) {
+            processTrialData(orgData);
+          }
+        } else {
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('trial_end_date, trial_expired')
+            .eq('id', orgId)
+            .maybeSingle();
+            
+          if (orgData) {
+            processTrialData(orgData);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching trial data:", error);
+      }
+    };
+    
+    const processTrialData = (orgData: any) => {
+      const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
+      const now = new Date();
+      
+      if (!trialEndDate || orgData.trial_expired || trialEndDate < now) {
+        setDays(0);
+        setIsTrialActive(false);
+      } else {
+        const diffTime = trialEndDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setDays(diffDays > 0 ? diffDays : 0);
+        setIsTrialActive(diffDays > 0);
+      }
+    };
+    
+    fetchTrialData();
+  }, []);
   
   // Calculate radius and circumference based on size
   const getSizeProps = () => {

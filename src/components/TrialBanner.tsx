@@ -2,17 +2,12 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, X, Timer, HelpCircle } from "lucide-react";
+import { X, HelpCircle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/sonner";
 import TrialExtensionRequestDialog from './trial/TrialExtensionRequestDialog';
@@ -381,7 +376,7 @@ const TrialBanner = () => {
         </Alert>
       )}
       
-      {/* Fullscreen Subscription Modal with improved design */}
+      {/* Subscription Modal */}
       <Sheet open={isTrialExpired && showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
         <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white backdrop-blur-lg bg-opacity-95 shadow-lg p-0 animate-in slide-in-from-bottom duration-500">
           <div className="flex flex-col items-center p-6">
