@@ -199,12 +199,8 @@ export function BSCDashboard() {
             Financial
           </TabsTrigger>
           <TabsTrigger value="goals" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">Business Process</TabsTrigger>
-          <TabsTrigger value="operations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">
-            Operational
-          </TabsTrigger>
-          <TabsTrigger value="customer" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">
-            Customer & Innovation
-          </TabsTrigger>
+          <TabsTrigger value="operations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">Customer</TabsTrigger>
+          <TabsTrigger value="customer" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">Innovation</TabsTrigger>
         </TabsList>
         
         <TabsContent value="financial" className="space-y-6">
