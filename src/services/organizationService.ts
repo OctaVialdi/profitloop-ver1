@@ -25,7 +25,7 @@ export async function getOrganization(organizationId: string): Promise<Organizat
     return {
       ...orgData as Organization,
       trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false,
-      subscription_status: orgData.subscription_status || 'trial',
+      subscription_status: orgData.subscription_status as 'trial' | 'active' | 'expired' || 'trial',
       trial_start_date: orgData.trial_start_date || null,
       grace_period_end: orgData.grace_period_end || null
     };
