@@ -18,8 +18,6 @@ export function useOrganization(): OrganizationData {
     isEmployee: false,
     isTrialActive: false,
     daysLeftInTrial: 0,
-    isTrialExpired: false,
-    inGracePeriod: false,
     hasPaidSubscription: false,
     refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate)
   });

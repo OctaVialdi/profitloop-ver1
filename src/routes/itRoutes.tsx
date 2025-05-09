@@ -1,24 +1,33 @@
 
 import { Route, Navigate } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import ITLayout from "@/components/layout/ITLayout";
-import Dashboard from "@/pages/it/Dashboard";
-import Support from "@/pages/it/Support";
+import ITDashboard from "@/pages/it/Dashboard";
+import ITSupport from "@/pages/it/Support";
+import ITDeveloper from "@/pages/it/Developer";
+import { Outlet } from "react-router-dom";
 import TicketSystem from "@/pages/it/TicketSystem";
-import Developer from "@/pages/it/Developer";
 
-export const itRoutes = [
+export const itRoutes = (
   <Route
     key="it"
     path="/it"
-    element={<ITLayout><Outlet /></ITLayout>}
+    element={
+      <ProtectedRoute>
+        <DashboardLayout>
+          <ITLayout>
+            <Outlet />
+          </ITLayout>
+        </DashboardLayout>
+      </ProtectedRoute>
+    }
   >
-    <Route index element={<Navigate to="/it/dashboard" replace />} />
-    <Route path="dashboard" element={<Dashboard />} />
-    <Route path="support" element={<Support />} />
-    <Route path="ticket-system" element={<TicketSystem />} />
-    <Route path="developer" element={<Developer />} />
+    <Route path="dashboard" element={<ITDashboard />} />
+    <Route path="support" element={<ITSupport />} />
+    <Route path="support/ticket-system" element={<TicketSystem />} />
+    <Route path="developer" element={<ITDeveloper />} />
+    {/* Redirect to dashboard if no path matches */}
+    <Route path="" element={<Navigate to="/it/dashboard" replace />} />
   </Route>
-];
-
-// Import Outlet for nested routes
-import { Outlet } from "react-router-dom";
+);

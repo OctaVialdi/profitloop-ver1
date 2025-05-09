@@ -3,97 +3,271 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, X, Timer, CreditCard, ShieldAlert } from "lucide-react";
+import { CalendarClock, X, Timer } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Progress } from "@/components/ui/progress";
-import { useOrganization } from '@/hooks/useOrganization';
 
 const TrialBanner = () => {
+  const [daysLeft, setDaysLeft] = useState<number | null>(null);
+  const [countdownString, setCountdownString] = useState<string>('');
   const [isDismissed, setIsDismissed] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
-  const [hours, setHours] = useState<number | null>(null);
-  const [minutes, setMinutes] = useState<number | null>(null);
-  const [seconds, setSeconds] = useState<number | null>(null);
-  const [isLastThreeDays, setIsLastThreeDays] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
+  const [isTrialExpired, setIsTrialExpired] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   
-  const { 
-    isTrialActive, 
-    isTrialExpired, 
-    daysLeftInTrial, 
-    hasPaidSubscription,
-    organization 
-  } = useOrganization();
-  
-  // Skip on auth pages and subscription page
+  // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
   const isOnboardingPage = location.pathname === '/onboarding' || location.pathname === '/organizations';
-  const isSubscriptionPage = location.pathname === '/subscription' || location.pathname === '/settings/subscription';
+  const isSubscriptionPage = location.pathname === '/subscription';
   
-  // Update countdown timer for last 3 days
+  // Update countdown every minute when we have a trial end date
   useEffect(() => {
-    if (isDismissed || !isTrialActive || !organization?.trial_end_date || daysLeftInTrial > 3) {
-      setIsLastThreeDays(false);
+    if (!trialEndDate || isDismissed || isAuthPage || isOnboardingPage) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const diffTime = trialEndDate.getTime() - now.getTime();
+      
+      if (diffTime <= 0) {
+        setCountdownString('0 hari 00:00:00');
+        setDaysLeft(0);
+        setIsTrialExpired(true);
+        return;
+      }
+      
+      // Calculate days, hours, minutes, seconds
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+      
+      // Format as "X hari HH:MM:SS"
+      const formattedTime = `${days} hari ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      setCountdownString(formattedTime);
+      setDaysLeft(days);
+      setIsTrialExpired(false);
+    };
+    
+    // Initial update
+    updateCountdown();
+    
+    // Set up interval for updating the countdown (update every 60 seconds instead of every second)
+    const interval = setInterval(updateCountdown, 60000);
+    
+    // Clean up on unmount
+    return () => clearInterval(interval);
+  }, [trialEndDate, isDismissed, isAuthPage, isOnboardingPage]);
+  
+  // Get trial information
+  useEffect(() => {
+    if (isAuthPage || isDismissed || isOnboardingPage) {
+      setIsLoading(false);
       return;
     }
     
-    setIsLastThreeDays(daysLeftInTrial <= 3);
-    
-    if (daysLeftInTrial <= 3) {
-      const updateCountdown = () => {
-        const now = new Date();
-        const endDate = new Date(organization.trial_end_date!);
-        const diffTime = endDate.getTime() - now.getTime();
+    const fetchTrialInfo = async () => {
+      try {
+        setIsLoading(true);
+        // Check authentication first
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (diffTime <= 0) {
-          setHours(0);
-          setMinutes(0);
-          setSeconds(0);
+        if (!session?.user) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
           return;
         }
         
-        // Calculate hours, minutes, seconds
-        const hoursLeft = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutesLeft = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-        const secondsLeft = Math.floor((diffTime % (1000 * 60)) / 1000);
+        setIsAuthenticated(true);
         
-        setHours(hoursLeft);
-        setMinutes(minutesLeft);
-        setSeconds(secondsLeft);
-      };
-      
-      // Initial update
-      updateCountdown();
-      
-      // Update every second for the last 3 days
-      const interval = setInterval(updateCountdown, 1000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [organization?.trial_end_date, isTrialActive, daysLeftInTrial, isDismissed]);
-  
-  // Trigger the subscription dialog when trial expires
-  useEffect(() => {
-    if (isTrialExpired && !isSubscriptionPage && !isAuthPage && !isOnboardingPage) {
-      setShowSubscriptionDialog(true);
-      document.body.classList.add('trial-expired');
-    }
-    
-    return () => {
-      document.body.classList.remove('trial-expired');
+        // Get organization ID from user metadata (faster than querying profile)
+        const orgId = session.user.user_metadata?.organization_id;
+        
+        if (!orgId) {
+          // Try to get from profile as fallback
+          try {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('organization_id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (!profileData?.organization_id) {
+              setIsLoading(false);
+              return;
+            }
+            
+            setOrganizationId(profileData.organization_id);
+            
+            // Get organization trial information
+            try {
+              const { data: orgData } = await supabase
+                .from('organizations')
+                .select('trial_end_date, trial_expired')
+                .eq('id', profileData.organization_id)
+                .maybeSingle();
+                
+              if (!orgData) {
+                setIsLoading(false);
+                return;
+              }
+              
+              handleTrialData(orgData);
+            } catch (error) {
+              console.error("Error fetching organization data:", error);
+              setIsLoading(false);
+            }
+          } catch (error) {
+            console.error("Error fetching profile data:", error);
+            setIsLoading(false);
+          }
+        } else {
+          // Use organization ID from metadata
+          setOrganizationId(orgId);
+          
+          // Get organization trial information
+          try {
+            const { data: orgData } = await supabase
+              .from('organizations')
+              .select('trial_end_date, trial_expired')
+              .eq('id', orgId)
+              .maybeSingle();
+              
+            if (!orgData) {
+              setIsLoading(false);
+              return;
+            }
+            
+            handleTrialData(orgData);
+          } catch (error) {
+            console.error("Error fetching organization data:", error);
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching trial info:", error);
+        setIsLoading(false);
+      }
     };
-  }, [isTrialExpired, isSubscriptionPage, isAuthPage, isOnboardingPage]);
+    
+    // Function to handle trial data processing
+    const handleTrialData = (orgData: any) => {
+      // Check if trial has expired based on date
+      const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
+      const now = new Date();
+      const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
+      
+      if (orgData.trial_expired || isTrialExpiredByDate) {
+        setTrialEndDate(trialEndDate);
+        setDaysLeft(0);
+        setCountdownString('0 hari 00:00:00');
+        setIsTrialExpired(true);
+        setIsLoading(false);
+        
+        // Show subscription dialog on non-subscription pages when trial has expired
+        if (!isSubscriptionPage) {
+          setShowSubscriptionDialog(true);
+          
+          // Add blur class to body when trial has expired
+          document.body.classList.add('trial-expired');
+        }
+        
+        // If the trial is expired by date but not flagged as expired, update the flag
+        if (isTrialExpiredByDate && !orgData.trial_expired && organizationId) {
+          console.log("Updating trial_expired flag to true");
+          
+          try {
+            const updatePromise = supabase
+              .from('organizations')
+              .update({ trial_expired: true })
+              .eq('id', organizationId);
+              
+            // Use await instead of .then().catch()
+            (async () => {
+              try {
+                await updatePromise;
+                console.log("Trial expired flag updated");
+              } catch (err) {
+                console.error("Error updating trial expired flag:", err);
+              }
+            })();
+          } catch (err) {
+            console.error("Error setting up update promise:", err);
+          }
+        }
+        
+        return;
+      }
+      
+      if (trialEndDate) {
+        setTrialEndDate(trialEndDate);
+        const diffTime = trialEndDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setDaysLeft(diffDays > 0 ? diffDays : 0);
+        setIsTrialExpired(diffDays <= 0);
+        setIsLoading(false);
+        
+        // Trial has ended but not marked as expired yet
+        if (diffDays <= 0 && !isSubscriptionPage) {
+          setShowSubscriptionDialog(true);
+          document.body.classList.add('trial-expired');
+          
+          // Update the trial_expired flag
+          if (organizationId) {
+            console.log("Trial has ended, updating trial_expired flag");
+            
+            try {
+              const updatePromise = supabase
+                .from('organizations')
+                .update({ trial_expired: true })
+                .eq('id', organizationId);
+                
+              // Use await instead of .then().catch()
+              (async () => {
+                try {
+                  await updatePromise;
+                  console.log("Trial expired flag updated");
+                } catch (err) {
+                  console.error("Error updating trial expired flag:", err);
+                }
+              })();
+            } catch (err) {
+              console.error("Error setting up update promise:", err);
+            }
+          }
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+    
+    // Only fetch trial info once, not on every render
+    fetchTrialInfo();
+    
+    // Cleanup function
+    return () => {
+      if (isTrialExpired && !isSubscriptionPage) {
+        document.body.classList.remove('trial-expired');
+      }
+    };
+  }, [isAuthPage, isDismissed, isOnboardingPage, isSubscriptionPage, organizationId, isTrialExpired]);
   
   // Handle subscription navigation
   const handleSubscribe = () => {
     navigate("/subscription");
     setShowSubscriptionDialog(false);
+    // Remove blur when navigating to subscription page
     document.body.classList.remove('trial-expired');
   };
 
@@ -104,77 +278,43 @@ const TrialBanner = () => {
     document.body.classList.remove('trial-expired');
   };
   
-  // Don't show anything if not trial active or on certain pages
-  if (hasPaidSubscription || isAuthPage || isOnboardingPage || isDismissed || 
-      (!isTrialActive && !isTrialExpired) || isSubscriptionPage) {
-    return null;
-  }
-  
-  // Format the time remaining for display
-  const formatTimeUnit = (unit: number | null) => {
-    if (unit === null) return '00';
-    return unit.toString().padStart(2, '0');
-  };
+  // Don't show anything if not authenticated or on auth pages or if still loading
+  if (!isAuthenticated || isAuthPage || isOnboardingPage || isDismissed || daysLeft === null || isLoading) return null;
   
   return (
     <>
-      {isTrialActive && isLastThreeDays && (
+      {!isTrialExpired && (
         <Alert className="sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 flex items-center justify-between bg-blue-50 border-blue-100">
-          <div className="flex items-center flex-grow">
-            <CalendarClock className="h-4 w-4 text-blue-600 mr-2 shrink-0" />
-            <div className="flex flex-col md:flex-row md:items-center w-full">
-              <AlertDescription className="text-blue-700 font-medium text-sm mr-2">
-                Masa trial Anda akan berakhir dalam:
-              </AlertDescription>
-              <div className="font-bold text-blue-800 flex items-center">
-                {daysLeftInTrial > 0 ? (
-                  <span>{daysLeftInTrial} hari</span>
-                ) : (
-                  <div className="countdown-timer flex items-center">
-                    <span>{formatTimeUnit(hours)}</span>
-                    <span className="mx-1">:</span>
-                    <span>{formatTimeUnit(minutes)}</span>
-                    <span className="mx-1">:</span>
-                    <span>{formatTimeUnit(seconds)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="flex items-center">
+            <CalendarClock className="h-4 w-4 text-blue-600 mr-2" />
+            <AlertDescription className="text-blue-700 font-medium text-sm">
+              {daysLeft > 0 ? (
+                <>Masa trial Anda berakhir dalam <span className="font-semibold">{countdownString}</span>. </>
+              ) : (
+                <>Masa trial Anda telah berakhir. </>
+              )}
+              <Button 
+                variant="link" 
+                className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
+                onClick={() => navigate("/subscription")}
+              >
+                Berlangganan sekarang
+              </Button>
+            </AlertDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              variant="default" 
-              className="h-8 bg-blue-700 hover:bg-blue-800"
-              onClick={() => navigate("/subscription")}
-            >
-              <CreditCard className="h-3.5 w-3.5 mr-1" />
-              Berlangganan
-            </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsDismissed(true)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsDismissed(true)}>
+            <X className="h-4 w-4" />
+          </Button>
         </Alert>
       )}
       
-      {/* Display progress bar for last 3 days only */}
-      {isTrialActive && isLastThreeDays && (
-        <div className="h-1 w-full bg-gray-100">
-          <Progress 
-            value={((3 - Math.min(daysLeftInTrial, 3)) / 3) * 100} 
-            className="h-1 transition-all duration-500"
-          />
-        </div>
-      )}
-      
-      {/* Fullscreen Subscription Modal for expired trial */}
-      <Sheet open={showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
+      {/* Fullscreen Subscription Modal - Using the "bottom" side and custom styling to center it */}
+      <Sheet open={isTrialExpired && showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
         <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white shadow-lg p-0">
           <div className="flex flex-col items-center p-6">
-            {/* Warning Icon */}
-            <div className="w-28 h-28 bg-red-50 rounded-full flex items-center justify-center mb-6">
-              <ShieldAlert className="w-14 h-14 text-red-600" />
+            {/* Timer Icon */}
+            <div className="w-28 h-28 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <Timer className="w-14 h-14 text-blue-600" />
             </div>
             
             <h2 className="text-2xl font-bold text-center mb-2">
@@ -190,7 +330,6 @@ const TrialBanner = () => {
                 className="w-full py-6 text-base font-medium bg-[#9b87f5] hover:bg-[#8a72f3]"
                 onClick={handleSubscribe}
               >
-                <CreditCard className="mr-2 h-5 w-5" />
                 Upgrade Sekarang
               </Button>
               
@@ -205,43 +344,6 @@ const TrialBanner = () => {
           </div>
         </SheetContent>
       </Sheet>
-      
-      {/* Blocking dialog for pages when trial has ended */}
-      <Dialog open={isTrialExpired && !isSubscriptionPage} onOpenChange={() => {}}>
-        <DialogContent className="max-w-md">
-          <div className="flex flex-col items-center p-6">
-            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-4">
-              <ShieldAlert className="w-10 h-10 text-red-600" />
-            </div>
-            
-            <h2 className="text-xl font-bold text-center mb-2">
-              Akses Terbatas
-            </h2>
-            
-            <p className="text-gray-600 text-center mb-6">
-              Masa trial Anda telah berakhir. Untuk melanjutkan akses ke semua fitur, silakan berlangganan.
-            </p>
-            
-            <DialogFooter className="w-full flex flex-col gap-2">
-              <Button 
-                className="w-full bg-[#9b87f5] hover:bg-[#8a72f3]"
-                onClick={handleSubscribe}
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                Berlangganan Sekarang
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={handleSignOut}
-              >
-                Keluar
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
@@ -251,3 +353,4 @@ export default TrialBanner;
 function navigate(path: string): void {
   window.location.href = path;
 }
+

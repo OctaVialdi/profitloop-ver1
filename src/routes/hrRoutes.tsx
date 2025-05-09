@@ -1,51 +1,85 @@
 
 import { Route, Navigate } from "react-router-dom";
-import { Outlet } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import HRLayout from "@/components/layout/HRLayout";
-import Dashboard from "@/pages/hr/Dashboard";
-import DataKaryawan from "@/pages/hr/DataKaryawan";
-import EmployeeDetail from "@/pages/hr/EmployeeDetail";
-import Absensi from "@/pages/hr/Absensi";
-import CutiIzin from "@/pages/hr/CutiIzin";
-import Kinerja from "@/pages/hr/Kinerja";
-import Payroll from "@/pages/hr/Payroll";
-import OKR from "@/pages/hr/OKR";
-import Training from "@/pages/hr/Training";
-import Kontrak from "@/pages/hr/Kontrak";
-import Company from "@/pages/hr/Company";
+import HRDashboard from "@/pages/hr/Dashboard";
+import HROKR from "@/pages/hr/OKR";
+import HRDataKaryawan from "@/pages/hr/DataKaryawan";
+import HRAbsensi from "@/pages/hr/Absensi";
+import HRCutiIzin from "@/pages/hr/CutiIzin";
+import HRPayroll from "@/pages/hr/Payroll";
+import HRKontrak from "@/pages/hr/Kontrak";
+import HRTraining from "@/pages/hr/Training";
+import HRKinerja from "@/pages/hr/Kinerja";
+import HRCompany from "@/pages/hr/Company";
+import HRRecruitment from "@/pages/hr/Recruitment";
 import AddEmployee from "@/pages/hr/AddEmployee";
-import Recruitment from "@/pages/hr/Recruitment";
-import { Routes as RecruitmentRoutes } from "@/pages/hr/recruitment";
+import EmployeeDetail from "@/pages/hr/EmployeeDetail";
+import EmployeePersonal from "@/pages/hr/employee/EmployeePersonal";
+import EmployeeEmployment from "@/pages/hr/employee/EmployeeEmployment";
 import CandidateDetail from "@/pages/hr/recruitment/CandidateDetail";
+import RecruitmentDashboard from "@/pages/hr/recruitment/Dashboard";
+import CandidatesPage from "@/pages/hr/recruitment/Candidates";
+import JobPositionsPage from "@/pages/hr/recruitment/JobPositions";
+import InvitationLinksPage from "@/pages/hr/recruitment/InvitationLinks";
+import EvaluationSettingsPage from "@/pages/hr/recruitment/EvaluationSettings";
+import { Outlet } from "react-router-dom";
+import CandidateDetailSection from "@/pages/hr/recruitment/candidate-detail/CandidateDetailSection";
 
-export const hrRoutes = [
+export const hrRoutes = (
   <Route
     key="hr"
     path="/hr"
-    element={<HRLayout><Outlet /></HRLayout>}
+    element={
+      <ProtectedRoute>
+        <DashboardLayout>
+          <HRLayout>
+            <Outlet />
+          </HRLayout>
+        </DashboardLayout>
+      </ProtectedRoute>
+    }
   >
-    <Route index element={<Navigate to="/hr/dashboard" replace />} />
-    <Route path="dashboard" element={<Dashboard />} />
-    <Route path="karyawan" element={<DataKaryawan />} />
-    <Route path="karyawan/:employeeId" element={<EmployeeDetail />} />
-    <Route path="absensi" element={<Absensi />} />
-    <Route path="cuti-izin" element={<CutiIzin />} />
-    <Route path="kinerja" element={<Kinerja />} />
-    <Route path="payroll" element={<Payroll />} />
-    <Route path="okr" element={<OKR />} />
-    <Route path="training" element={<Training />} />
-    <Route path="kontrak" element={<Kontrak />} />
-    <Route path="company" element={<Company />} />
-    <Route path="add-employee/*" element={<AddEmployee />} />
-
-    {/* Recruitment Routes */}
-    <Route path="recruitment" element={<Recruitment />}>
-      <Route index element={<RecruitmentRoutes.Dashboard />} />
-      <Route path="candidates" element={<RecruitmentRoutes.Candidates />} />
-      <Route path="job-positions" element={<RecruitmentRoutes.JobPositions />} />
-      <Route path="evaluation-settings" element={<RecruitmentRoutes.EvaluationSettings />} />
-      <Route path="invitation-links" element={<RecruitmentRoutes.InvitationLinks />} />
+    {/* Main HR routes */}
+    <Route path="dashboard" element={<HRDashboard />} />
+    <Route path="okr" element={<HROKR />} />
+    <Route path="data" element={<HRDataKaryawan />} />
+    <Route path="absensi" element={<HRAbsensi />} />
+    <Route path="cuti" element={<HRCutiIzin />} />
+    <Route path="payroll" element={<HRPayroll />} />
+    <Route path="kontrak" element={<HRKontrak />} />
+    <Route path="training" element={<HRTraining />} />
+    <Route path="kinerja" element={<HRKinerja />} />
+    <Route path="company" element={<HRCompany />} />
+    
+    {/* Recruitment section - nested under HR */}
+    <Route path="recruitment" element={<HRRecruitment />}>
+      <Route path="dashboard" element={<RecruitmentDashboard />} />
+      <Route path="candidates" element={<CandidatesPage />} />
+      <Route path="positions" element={<JobPositionsPage />} />
+      <Route path="invitations" element={<InvitationLinksPage />} />
+      <Route path="evaluation" element={<EvaluationSettingsPage />} />
+      <Route path="" element={<Navigate to="/hr/recruitment/dashboard" replace />} />
     </Route>
-    <Route path="recruitment/candidates/:candidateId" element={<CandidateDetail />} />
+    
+    {/* Candidate and employee detail routes */}
+    <Route path="recruitment/candidate/:id" element={<CandidateDetail />}>
+      <Route path="personal" element={<CandidateDetailSection section="personal" />} />
+      <Route path="education" element={<CandidateDetailSection section="education" />} />
+      <Route path="work" element={<CandidateDetailSection section="work" />} />
+      <Route path="family" element={<CandidateDetailSection section="family" />} />
+      <Route path="evaluation" element={<CandidateDetailSection section="evaluation" />} />
+      <Route path="" element={<Navigate to="personal" replace />} />
+    </Route>
+    
+    {/* Employee detail routes */}
+    <Route path="data/employee/:id" element={<EmployeeDetail />} />
+    <Route path="data/add-employee" element={<AddEmployee />} />
+    <Route path="my-info/personal/:id" element={<EmployeePersonal />} />
+    <Route path="my-info/employment/:id" element={<EmployeeEmployment />} />
+    
+    {/* Redirect to dashboard if no path matches */}
+    <Route path="" element={<Navigate to="/hr/dashboard" replace />} />
   </Route>
-];
+);

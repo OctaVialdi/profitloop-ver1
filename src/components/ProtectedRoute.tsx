@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,11 +15,6 @@ interface ProfileData {
   has_seen_welcome?: boolean;
 }
 
-interface OrganizationStatus {
-  subscription_status?: 'active' | 'trial' | 'expired';
-  trial_end_date?: string | null;
-}
-
 export const ProtectedRoute = ({
   children,
   redirectTo = "/auth/login",
@@ -29,14 +23,12 @@ export const ProtectedRoute = ({
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [organizationStatus, setOrganizationStatus] = useState<OrganizationStatus | null>(null);
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Check if current path is in public routes or subscription route
+  // Check if current path is in public routes
   const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
   const isAuthRoute = currentPath.startsWith('/auth/');
-  const isSubscriptionRoute = currentPath === '/subscription' || currentPath === '/settings/subscription';
 
   useEffect(() => {
     // Skip authentication check for public routes
@@ -67,23 +59,6 @@ export const ProtectedRoute = ({
               has_seen_welcome: session.user.user_metadata.has_seen_welcome || false
             });
             
-            // Also fetch the organization subscription status
-            if (session.user.user_metadata.organization_id) {
-              try {
-                const { data, error } = await supabase
-                  .from('organizations')
-                  .select('subscription_status, trial_end_date')
-                  .eq('id', session.user.user_metadata.organization_id)
-                  .maybeSingle();
-                
-                if (!error && data) {
-                  setOrganizationStatus(data as OrganizationStatus);
-                }
-              } catch (error) {
-                console.error("Error fetching organization status:", error);
-              }
-            }
-            
             setLoading(false);
             return;
           }
@@ -113,23 +88,6 @@ export const ProtectedRoute = ({
               // The function returns an array, use the first result
               if (isMounted) {
                 setProfile(profileData[0]);
-                
-                // Fetch organization status if we have an organization ID
-                if (profileData[0].organization_id) {
-                  try {
-                    const { data, error } = await supabase
-                      .from('organizations')
-                      .select('subscription_status, trial_end_date')
-                      .eq('id', profileData[0].organization_id)
-                      .maybeSingle();
-                    
-                    if (!error && data) {
-                      setOrganizationStatus(data as OrganizationStatus);
-                    }
-                  } catch (error) {
-                    console.error("Error fetching organization status:", error);
-                  }
-                }
               }
             } else {
               // No profile data found
@@ -148,14 +106,12 @@ export const ProtectedRoute = ({
           console.log("No active session found");
           setAuthenticated(false);
           setProfile(null);
-          setOrganizationStatus(null);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
         if (isMounted) {
           setAuthenticated(false);
           setProfile(null);
-          setOrganizationStatus(null);
           toast.error("Terjadi kesalahan saat memeriksa autentikasi");
         }
       } finally {
@@ -190,25 +146,6 @@ export const ProtectedRoute = ({
                 has_seen_welcome: session.user.user_metadata.has_seen_welcome || false
               });
               
-              // Fetch organization status if we have an organization ID
-              setTimeout(async () => {
-                if (!isMounted) return;
-                
-                try {
-                  const { data, error } = await supabase
-                    .from('organizations')
-                    .select('subscription_status, trial_end_date')
-                    .eq('id', session.user.user_metadata.organization_id)
-                    .maybeSingle();
-                  
-                  if (!error && data && isMounted) {
-                    setOrganizationStatus(data as OrganizationStatus);
-                  }
-                } catch (error) {
-                  console.error("Error fetching organization status:", error);
-                }
-              }, 0);
-              
               setLoading(false);
               return;
             }
@@ -226,23 +163,6 @@ export const ProtectedRoute = ({
                 if (isMounted) {
                   if (!profileError && profileData && profileData.length > 0) {
                     setProfile(profileData[0]);
-                    
-                    // Fetch organization status if we have an organization ID
-                    if (profileData[0].organization_id) {
-                      try {
-                        const { data, error } = await supabase
-                          .from('organizations')
-                          .select('subscription_status, trial_end_date')
-                          .eq('id', profileData[0].organization_id)
-                          .maybeSingle();
-                        
-                        if (!error && data) {
-                          setOrganizationStatus(data as OrganizationStatus);
-                        }
-                      } catch (error) {
-                        console.error("Error fetching organization status:", error);
-                      }
-                    }
                   } else {
                     // Default to assuming verified but no organization
                     setProfile({
@@ -268,7 +188,6 @@ export const ProtectedRoute = ({
             }, 0);
           } else {
             setProfile(null);
-            setOrganizationStatus(null);
             setLoading(false);
           }
         }
@@ -282,40 +201,12 @@ export const ProtectedRoute = ({
     };
   }, [isPublicRoute]);
 
-  // Helper function to check if trial is expired
-  const isTrialExpired = () => {
-    if (!organizationStatus) return false;
-    
-    if (organizationStatus.subscription_status === 'expired') {
-      return true;
-    }
-    
-    if (organizationStatus.subscription_status === 'trial' && 
-        organizationStatus.trial_end_date) {
-      const trialEndDate = new Date(organizationStatus.trial_end_date);
-      return trialEndDate < new Date();
-    }
-    
-    return false;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <p>Loading...</p>
       </div>
     );
-  }
-
-  // Subscription routes should always be accessible
-  if (isSubscriptionRoute) {
-    return children ? <>{children}</> : <Outlet />;
-  }
-
-  // Check if trial is expired and redirect to subscription page
-  if (authenticated && !isAuthRoute && !isPublicRoute && isTrialExpired()) {
-    // Allow access only to subscription page if trial is expired
-    return <Navigate to="/subscription" state={{ from: location, trialExpired: true }} replace />;
   }
 
   // Authentication routes handling (login, register)

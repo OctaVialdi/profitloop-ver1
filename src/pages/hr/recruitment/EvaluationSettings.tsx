@@ -1,13 +1,20 @@
 
-import React from 'react';
+import React from "react";
+import EvaluationSettingsTab from "@/components/hr/recruitment/EvaluationSettingsTab";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
-const EvaluationSettings: React.FC = () => {
+export default function EvaluationSettingsPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Evaluation Settings</h1>
-      <p>Configure candidate evaluation settings</p>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Recruitment Management</CardTitle>
+        <CardDescription>
+          Manage job openings and candidate applications
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <EvaluationSettingsTab />
+      </CardContent>
+    </Card>
   );
-};
-
-export default EvaluationSettings;
+}

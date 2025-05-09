@@ -1,26 +1,37 @@
 
 import { Route, Navigate } from "react-router-dom";
-import { Outlet } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import MarketingLayout from "@/components/layout/MarketingLayout";
-import SocialMediaManagement from "@/pages/marketing/SocialMediaManagement";
-import SeoManagement from "@/pages/marketing/SeoManagement";
 import AdsPerformance from "@/pages/marketing/AdsPerformance";
+import SocialMediaManagement from "@/pages/marketing/SocialMediaManagement";
 import KolManagement from "@/pages/marketing/KolManagement";
+import SeoManagement from "@/pages/marketing/SeoManagement";
 import RatingPerformance from "@/pages/marketing/RatingPerformance";
 import AgencyComparison from "@/pages/marketing/AgencyComparison";
+import { Outlet } from "react-router-dom";
 
-export const marketingRoutes = [
+export const marketingRoutes = (
   <Route
     key="marketing"
     path="/marketing"
-    element={<MarketingLayout><Outlet /></MarketingLayout>}
+    element={
+      <ProtectedRoute>
+        <DashboardLayout>
+          <MarketingLayout>
+            <Outlet />
+          </MarketingLayout>
+        </DashboardLayout>
+      </ProtectedRoute>
+    }
   >
-    <Route index element={<Navigate to="/marketing/social-media" replace />} />
+    <Route path="ads-performance" element={<AdsPerformance />} />
     <Route path="social-media" element={<SocialMediaManagement />} />
-    <Route path="seo" element={<SeoManagement />} />
-    <Route path="ads" element={<AdsPerformance />} />
     <Route path="kol" element={<KolManagement />} />
-    <Route path="rating" element={<RatingPerformance />} />
+    <Route path="seo" element={<SeoManagement />} />
+    <Route path="ratings" element={<RatingPerformance />} />
     <Route path="agency-comparison" element={<AgencyComparison />} />
+    {/* Redirect to ads performance if no path matches */}
+    <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
   </Route>
-];
+);

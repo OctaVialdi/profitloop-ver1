@@ -1,34 +1,45 @@
 
 import { Route, Navigate } from "react-router-dom";
-import { Outlet } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import FinanceLayout from "@/components/layout/FinanceLayout";
-import Dashboard from "@/pages/finance/Dashboard";
-import BillApprovals from "@/pages/finance/BillApprovals";
-import ReminderBills from "@/pages/finance/ReminderBills";
-import ExpenseBudget from "@/pages/finance/ExpenseBudget";
+import FinanceDashboard from "@/pages/finance/Dashboard";
 import Expenses from "@/pages/finance/Expenses";
+import ExpenseBudget from "@/pages/finance/ExpenseBudget";
 import ExpenseBudgetForecast from "@/pages/finance/ExpenseBudgetForecast";
-import PayrollSummary from "@/pages/finance/PayrollSummary";
 import IncomeTarget from "@/pages/finance/IncomeTarget";
+import ReminderBills from "@/pages/finance/ReminderBills";
+import BillApprovals from "@/pages/finance/BillApprovals";
+import PayrollSummary from "@/pages/finance/PayrollSummary";
 import CashManagement from "@/pages/finance/CashManagement";
 import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
+import { Outlet } from "react-router-dom";
 
-export const financeRoutes = [
+export const financeRoutes = (
   <Route
     key="finance"
     path="/finance"
-    element={<FinanceLayout><Outlet /></FinanceLayout>}
+    element={
+      <ProtectedRoute>
+        <DashboardLayout>
+          <FinanceLayout>
+            <Outlet />
+          </FinanceLayout>
+        </DashboardLayout>
+      </ProtectedRoute>
+    }
   >
-    <Route index element={<Navigate to="/finance/dashboard" replace />} />
-    <Route path="dashboard" element={<Dashboard />} />
-    <Route path="bill-approvals" element={<BillApprovals />} />
-    <Route path="reminder-bills" element={<ReminderBills />} />
-    <Route path="expense-budget" element={<ExpenseBudget />} />
+    <Route path="dashboard" element={<FinanceDashboard />} />
     <Route path="expenses" element={<Expenses />} />
-    <Route path="expense-budget-forecast" element={<ExpenseBudgetForecast />} />
-    <Route path="payroll-summary" element={<PayrollSummary />} />
+    <Route path="expenses/budget" element={<ExpenseBudget />} />
+    <Route path="expenses/budget/forecast" element={<ExpenseBudgetForecast />} />
     <Route path="income-target" element={<IncomeTarget />} />
+    <Route path="reminder-bills" element={<ReminderBills />} />
+    <Route path="reminder-bills/approvals" element={<BillApprovals />} />
+    <Route path="payroll-summary" element={<PayrollSummary />} />
     <Route path="cash-management" element={<CashManagement />} />
-    <Route path="transaksi" element={<DaftarTransaksi />} />
+    <Route path="cash-management/daftar-transaksi" element={<DaftarTransaksi />} />
+    {/* Redirect to dashboard if no path matches */}
+    <Route path="" element={<Navigate to="/finance/dashboard" replace />} />
   </Route>
-];
+);

@@ -1,13 +1,20 @@
 
-import React from 'react';
+import React from "react";
+import InvitationLinksComponent from "@/components/hr/recruitment/InvitationLinks";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
-const InvitationLinks: React.FC = () => {
+export default function InvitationLinksPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Invitation Links</h1>
-      <p>Manage recruitment invitation links</p>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Recruitment Management</CardTitle>
+        <CardDescription>
+          Manage job openings and candidate applications
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <InvitationLinksComponent />
+      </CardContent>
+    </Card>
   );
-};
-
-export default InvitationLinks;
+}

@@ -8,16 +8,13 @@ import { supabase } from "@/integrations/supabase/client";
 export async function checkAndUpdateTrialStatus(organizationId: string): Promise<boolean> {
   try {
     // Get organization details
-    const { data: orgData, error } = await supabase
+    const { data: orgData } = await supabase
       .from('organizations')
-      .select('trial_end_date')
+      .select('trial_end_date, trial_expired')
       .eq('id', organizationId)
       .single();
       
-    if (error || !orgData) {
-      console.error("Error fetching organization:", error);
-      return false;
-    }
+    if (!orgData) return false;
     
     // Check if trial has expired based on date
     const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
@@ -25,15 +22,15 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
     const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
     
     // If trial is expired by date but not flagged, update it
-    if (isTrialExpiredByDate) {
-      console.log("Trial has expired by date. Updating status.");
-      const { error: updateError } = await supabase
+    if (isTrialExpiredByDate && !orgData.trial_expired) {
+      console.log("Trial has expired by date but not flagged. Updating flag.");
+      const { error } = await supabase
         .from('organizations')
         .update({ trial_expired: true })
         .eq('id', organizationId);
         
-      if (updateError) {
-        console.error("Error updating trial_expired flag:", updateError);
+      if (error) {
+        console.error("Error updating trial_expired flag:", error);
         return false;
       }
       

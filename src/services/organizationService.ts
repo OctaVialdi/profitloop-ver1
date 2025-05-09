@@ -21,25 +21,11 @@ export async function getOrganization(organizationId: string): Promise<Organizat
       return null;
     }
     
-    // Add default values for missing fields to match the Organization type
-    const organization: Organization = {
-      id: orgData.id,
-      name: orgData.name,
-      business_field: orgData.business_field,
-      employee_count: orgData.employee_count,
-      address: orgData.address,
-      phone: orgData.phone,
-      subscription_plan_id: orgData.subscription_plan_id,
-      trial_start_date: orgData.trial_start_date || null,
-      trial_end_date: orgData.trial_end_date || null,
-      subscription_status: orgData.subscription_status || 'trial',
-      grace_period_end: orgData.grace_period_end || null,
-      trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false,
-      logo_path: orgData.logo_path || null,
-      theme_settings: orgData.theme_settings || null
+    // Ensure trial_expired exists (default to false if not present)
+    return {
+      ...orgData as Organization,
+      trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false
     };
-    
-    return organization;
   } catch (error) {
     console.error("Error fetching organization:", error);
     throw error;

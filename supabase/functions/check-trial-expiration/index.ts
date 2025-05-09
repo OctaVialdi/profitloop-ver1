@@ -21,13 +21,13 @@ serve(async (req) => {
   try {
     const now = new Date();
     
-    // Fetch organizations with expired trials - check if trial_end_date is in the past
-    // and status is still 'trial'
+    // Fetch organizations with expired trials - notice we check if trial_end_date is in the past
+    // regardless of the trial_expired flag
     const { data: expiredTrials, error } = await supabase
       .from('organizations')
       .select('id, name, subscription_plan_id')
       .lt('trial_end_date', now.toISOString())
-      .eq('subscription_status', 'trial');
+      .eq('trial_expired', false);
     
     if (error) {
       throw error;
@@ -56,7 +56,7 @@ serve(async (req) => {
         const { error: updateError } = await supabase
           .from('organizations')
           .update({ 
-            subscription_status: 'expired',
+            trial_expired: true,
             // If they don't have a subscription plan, set to the basic free plan
             subscription_plan_id: org.subscription_plan_id || basicPlanId
           })
@@ -78,7 +78,7 @@ serve(async (req) => {
                   organization_id: org.id,
                   title: 'Masa Trial Berakhir',
                   message: `Masa trial untuk organisasi ${org.name} telah berakhir. Silakan berlangganan untuk terus menggunakan semua fitur premium.`,
-                  type: 'error',
+                  type: 'warning',
                   action_url: '/subscription'
                 });
                 
@@ -93,56 +93,22 @@ serve(async (req) => {
       }
     }
     
-    // Also check for organizations within 3 days of trial expiration for warnings
-    const threeDaysFromNow = new Date();
-    threeDaysFromNow.setDate(now.getDate() + 3);
-    
-    const { data: nearingExpiration, error: warningError } = await supabase
+    // Also update any organization where trial_end_date is in the past but trial_expired is still false
+    // This handles cases where the function wasn't triggered at the exact time
+    const { error: manualUpdateError } = await supabase
       .from('organizations')
-      .select('id, name, trial_end_date')
-      .lt('trial_end_date', threeDaysFromNow.toISOString())
-      .gt('trial_end_date', now.toISOString())
-      .eq('subscription_status', 'trial');
-    
-    if (warningError) {
-      console.error("Error fetching organizations nearing expiration:", warningError);
-    } else if (nearingExpiration && nearingExpiration.length > 0) {
-      console.log(`Found ${nearingExpiration.length} organizations nearing trial expiration`);
+      .update({ trial_expired: true })
+      .lt('trial_end_date', now.toISOString())
+      .eq('trial_expired', false);
       
-      for (const org of nearingExpiration) {
-        const daysLeft = Math.ceil((new Date(org.trial_end_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        console.log(`Organization ${org.id} trial ends in ${daysLeft} days`);
-        
-        // Get organization admins to notify
-        const { data: admins } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .eq('organization_id', org.id)
-          .in('role', ['super_admin', 'admin']);
-          
-        if (admins && admins.length > 0) {
-          for (const admin of admins) {
-            // Add a notification in the notifications table
-            await supabase
-              .from('notifications')
-              .insert({
-                user_id: admin.id,
-                organization_id: org.id,
-                title: 'Masa Trial Akan Berakhir',
-                message: `Masa trial untuk organisasi ${org.name} akan berakhir dalam ${daysLeft} hari. Silakan berlangganan untuk terus menggunakan semua fitur premium.`,
-                type: 'warning',
-                action_url: '/subscription'
-              });
-          }
-        }
-      }
+    if (manualUpdateError) {
+      console.error("Error during manual update of expired trials:", manualUpdateError);
     }
     
     return new Response(
       JSON.stringify({ 
         success: true, 
-        expired_processed: expiredTrials?.length || 0,
-        warnings_sent: nearingExpiration?.length || 0
+        processed: expiredTrials?.length || 0
       }),
       { 
         headers: { 

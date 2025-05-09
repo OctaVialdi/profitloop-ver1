@@ -1,13 +1,20 @@
 
-import React from 'react';
+import React from "react";
+import RecruitmentDashboard from "@/components/hr/recruitment/RecruitmentDashboard";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
-const Dashboard: React.FC = () => {
+export default function RecruitmentDashboardPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Recruitment Dashboard</h1>
-      <p>Welcome to the recruitment dashboard</p>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Recruitment Management</CardTitle>
+        <CardDescription>
+          Manage job openings and candidate applications
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <RecruitmentDashboard />
+      </CardContent>
+    </Card>
   );
-};
-
-export default Dashboard;
+}
