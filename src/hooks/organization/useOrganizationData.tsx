@@ -5,6 +5,7 @@ import { OrganizationData, UserProfile, UserPreferences } from "@/types/organiza
 import { supabase } from "@/integrations/supabase/client";
 import { getOrganization, getSubscriptionPlan } from "@/services/organizationService";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
+import { checkAndUpdateTrialStatus } from "@/services/subscriptionService";
 
 // Helper function to safely parse preferences
 const parseUserPreferences = (rawPreferences: any): UserPreferences => {
@@ -79,6 +80,10 @@ export async function fetchOrganizationData(
     
     // Get organization and subscription plan details
     try {
+      // Force check and update trial status to ensure it's current
+      await checkAndUpdateTrialStatus(userProfile.organization_id);
+      
+      // Get the organization details
       const organization = await getOrganization(userProfile.organization_id);
       let subscriptionPlan = null;
       
