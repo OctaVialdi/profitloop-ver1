@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, X, Timer, HelpCircle } from "lucide-react";
@@ -31,7 +31,9 @@ const TrialBanner = () => {
   const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [progressPercent, setProgressPercent] = useState(100);
-  location = useLocation();
+  
+  const location = useLocation();
+  const navigate = useNavigate();
   
   // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
@@ -354,8 +356,7 @@ const TrialBanner = () => {
             <div className="w-full">
               <Progress 
                 value={progressPercent} 
-                className="h-1" 
-                indicatorClassName={progressColor}
+                className={`h-1 ${progressColor}`}
               />
             </div>
           </div>
@@ -419,7 +420,3 @@ const TrialBanner = () => {
 };
 
 export default TrialBanner;
-
-function navigate(path: string): void {
-  window.location.href = path;
-}
