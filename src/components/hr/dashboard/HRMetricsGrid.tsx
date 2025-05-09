@@ -1,7 +1,10 @@
 
 import React, { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, DollarSign, Calendar, Percent, Award, TrendingUp, ChevronUp, ChevronDown } from "lucide-react";
+import { 
+  Users, DollarSign, Calendar, Percent, Award, 
+  TrendingUp, ChevronUp, ChevronDown 
+} from "lucide-react";
 import { Employee } from "@/hooks/useEmployees";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { calculateHRMetrics } from "@/utils/hrDashboardUtils";
@@ -20,8 +23,9 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
       icon: DollarSign,
       trend: "+5.2%",
       trendType: "up",
-      color: "bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
-      description: "Combined monthly salary expenditure across all departments"
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-100/70 dark:bg-blue-900/20",
+      description: "Combined monthly salary expenditure"
     },
     {
       title: "Total Bonus",
@@ -29,8 +33,9 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
       icon: Award,
       trend: "+2.1%",
       trendType: "up",
-      color: "bg-green-100 dark:bg-green-950/30 text-green-600 dark:text-green-400",
-      description: "Performance-based bonuses paid this quarter"
+      color: "text-green-600 dark:text-green-400",
+      bgColor: "bg-green-100/70 dark:bg-green-900/20",
+      description: "Performance-based bonuses"
     },
     {
       title: "Sick Days",
@@ -38,8 +43,9 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
       icon: Calendar,
       trend: "-1.5%",
       trendType: "down",
-      color: "bg-amber-100 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
-      description: "Total sick days taken in current month"
+      color: "text-amber-600 dark:text-amber-400",
+      bgColor: "bg-amber-100/70 dark:bg-amber-900/20",
+      description: "Total sick days this month"
     },
     {
       title: "Avg. Sick Days",
@@ -47,8 +53,9 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
       icon: Calendar,
       trend: "-0.8%",
       trendType: "down",
-      color: "bg-purple-100 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400",
-      description: "Average sick days taken per employee"
+      color: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-100/70 dark:bg-purple-900/20",
+      description: "Average per employee"
     },
     {
       title: "Total Employees",
@@ -56,8 +63,9 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
       icon: Users,
       trend: "+3.2%",
       trendType: "up",
-      color: "bg-sky-100 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400",
-      description: "Current active employee headcount"
+      color: "text-sky-600 dark:text-sky-400",
+      bgColor: "bg-sky-100/70 dark:bg-sky-900/20",
+      description: "Current active headcount"
     },
     {
       title: "Total Compensation",
@@ -65,8 +73,9 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
       icon: DollarSign,
       trend: "+4.7%",
       trendType: "up",
-      color: "bg-indigo-100 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400",
-      description: "Total salary, bonus, and benefits package"
+      color: "text-indigo-600 dark:text-indigo-400",
+      bgColor: "bg-indigo-100/70 dark:bg-indigo-900/20",
+      description: "Salary, bonus & benefits"
     },
     {
       title: "Commission",
@@ -74,8 +83,9 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
       icon: Percent,
       trend: "+6.3%",
       trendType: "up",
-      color: "bg-rose-100 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400",
-      description: "Sales commission payouts this month"
+      color: "text-rose-600 dark:text-rose-400",
+      bgColor: "bg-rose-100/70 dark:bg-rose-900/20",
+      description: "Commission payouts"
     },
     {
       title: "Avg. Salary",
@@ -83,27 +93,28 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
       icon: TrendingUp,
       trend: "+2.5%",
       trendType: "up",
-      color: "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400",
-      description: "Average base salary per employee"
+      color: "text-emerald-600 dark:text-emerald-400",
+      bgColor: "bg-emerald-100/70 dark:bg-emerald-900/20",
+      description: "Average base salary"
     }
   ], [metrics]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
       {metricsCards.map((metric, index) => (
-        <Card key={index} className="overflow-hidden hover:shadow-md transition-all duration-300 bg-gradient-to-br from-white to-slate-50/80 dark:from-slate-900 dark:to-slate-800/50 backdrop-blur-sm group">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <CardContent className="p-4 relative">
-            <div className="flex justify-between items-start">
-              <div className={`p-2 rounded-lg ${metric.color}`}>
-                <metric.icon className="w-5 h-5" />
+        <Card key={index} className="overflow-hidden h-full border border-muted/60 shadow-sm group hover:shadow-md transition-all duration-200">
+          <CardContent className="p-3 relative h-full">
+            <div className="absolute inset-0 bg-gradient-to-tr from-muted/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="flex justify-between items-center mb-1.5">
+              <div className={`p-1.5 rounded-md ${metric.bgColor} ${metric.color}`}>
+                <metric.icon className="w-3.5 h-3.5" />
               </div>
               <HoverCard>
                 <HoverCardTrigger asChild>
-                  <div className={`text-xs font-medium flex items-center cursor-help px-2 py-0.5 rounded-full ${
+                  <div className={`text-xs font-medium flex items-center cursor-help px-1.5 py-0.5 rounded-full ${
                     metric.trendType === "up" 
-                      ? "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-950/30" 
-                      : "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-950/30"
+                      ? "text-green-600 bg-green-100/70 dark:text-green-400 dark:bg-green-900/20" 
+                      : "text-blue-600 bg-blue-100/70 dark:text-blue-400 dark:bg-blue-900/20"
                   }`}>
                     {metric.trendType === "up" ? (
                       <ChevronUp className="w-3 h-3 mr-0.5" />
@@ -113,20 +124,18 @@ export function HRMetricsGrid({ employees }: HRMetricsGridProps) {
                     {metric.trend}
                   </div>
                 </HoverCardTrigger>
-                <HoverCardContent side="top" className="w-72 p-4">
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-semibold">{metric.title} Details</h4>
-                    <p className="text-sm text-muted-foreground">{metric.description}</p>
-                    <p className="text-xs text-muted-foreground/80 pt-2">
-                      Compared to previous period: {metric.trend} ({metric.trendType === "up" ? "increase" : "decrease"})
-                    </p>
-                  </div>
+                <HoverCardContent side="top" className="w-64 p-3 text-xs">
+                  <p className="font-medium mb-1">{metric.title}</p>
+                  <p className="text-muted-foreground">{metric.description}</p>
+                  <p className="text-muted-foreground/80 pt-1 mt-1 border-t border-border/50">
+                    Compared to previous period: {metric.trend} ({metric.trendType === "up" ? "increase" : "decrease"})
+                  </p>
                 </HoverCardContent>
               </HoverCard>
             </div>
-            <div className="mt-3">
-              <p className="text-xs text-muted-foreground">{metric.title}</p>
-              <h3 className="text-2xl font-bold mt-1">{metric.value}</h3>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-0.5">{metric.title}</p>
+              <p className="text-base font-bold">{metric.value}</p>
             </div>
           </CardContent>
         </Card>

@@ -145,14 +145,17 @@ export const convertToApiFormat = (employee: LegacyEmployee): Partial<Employee> 
 export const useEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const fetchEmployees = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await employeeService.fetchEmployees();
       setEmployees(data);
-    } catch (error) {
-      console.error("Error in useEmployees:", error);
+    } catch (err) {
+      console.error("Error in useEmployees:", err);
+      setError(err instanceof Error ? err : new Error("Failed to fetch employees"));
       toast.error("Failed to fetch employees");
     } finally {
       setIsLoading(false);
@@ -303,6 +306,8 @@ export const useEmployees = () => {
   return {
     employees,
     isLoading,
+    error,
+    refetch: fetchEmployees,
     fetchEmployees,
     addEmployee,
     updateEmployee,
