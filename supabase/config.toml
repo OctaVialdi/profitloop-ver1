@@ -64,17 +64,8 @@ postgres_webhooks = false
 
 [edge_functions]
 [edge_functions.check-trial-expiration]
-verify_jwt = false
+verify_jwt = true
 [edge_functions.track-event]
 verify_jwt = true
 [edge_functions.send-trial-reminder]
-verify_jwt = false
-[edge_functions.schedule-daily-trial-check]
-verify_jwt = false
-[edge_functions.create-payment]
 verify_jwt = true
-[edge_functions.handle-xendit-webhook]
-verify_jwt = false
-[edge_functions.generate-invoice]
-verify_jwt = true
-

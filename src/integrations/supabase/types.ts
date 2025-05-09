@@ -1285,72 +1285,6 @@ export type Database = {
           },
         ]
       }
-      invoices: {
-        Row: {
-          amount: number
-          created_at: string
-          currency: string
-          due_date: string
-          id: string
-          invoice_number: string
-          invoice_pdf_url: string | null
-          organization_id: string
-          payment_details: Json | null
-          status: string
-          subscription_plan_id: string | null
-          tax_amount: number
-          total_amount: number
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          currency?: string
-          due_date: string
-          id?: string
-          invoice_number: string
-          invoice_pdf_url?: string | null
-          organization_id: string
-          payment_details?: Json | null
-          status: string
-          subscription_plan_id?: string | null
-          tax_amount?: number
-          total_amount: number
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          currency?: string
-          due_date?: string
-          id?: string
-          invoice_number?: string
-          invoice_pdf_url?: string | null
-          organization_id?: string
-          payment_details?: Json | null
-          status?: string
-          subscription_plan_id?: string | null
-          tax_amount?: number
-          total_amount?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoices_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_subscription_plan_id_fkey"
-            columns: ["subscription_plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       job_positions: {
         Row: {
           created_at: string
@@ -1722,118 +1656,6 @@ export type Database = {
             columns: ["subscription_plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      payment_methods: {
-        Row: {
-          code: string
-          configuration: Json | null
-          created_at: string
-          id: string
-          is_active: boolean
-          logo_url: string | null
-          name: string
-          provider: string
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          code: string
-          configuration?: Json | null
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          logo_url?: string | null
-          name: string
-          provider: string
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          code?: string
-          configuration?: Json | null
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          logo_url?: string | null
-          name?: string
-          provider?: string
-          type?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      payment_transactions: {
-        Row: {
-          amount: number
-          created_at: string
-          currency: string
-          expires_at: string | null
-          id: string
-          invoice_id: string | null
-          organization_id: string
-          payment_details: Json | null
-          payment_method_id: string | null
-          payment_provider: string
-          payment_url: string | null
-          provider_reference: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          currency?: string
-          expires_at?: string | null
-          id?: string
-          invoice_id?: string | null
-          organization_id: string
-          payment_details?: Json | null
-          payment_method_id?: string | null
-          payment_provider: string
-          payment_url?: string | null
-          provider_reference?: string | null
-          status: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          currency?: string
-          expires_at?: string | null
-          id?: string
-          invoice_id?: string | null
-          organization_id?: string
-          payment_details?: Json | null
-          payment_method_id?: string | null
-          payment_provider?: string
-          payment_url?: string | null
-          provider_reference?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payment_transactions_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payment_transactions_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payment_transactions_payment_method_id_fkey"
-            columns: ["payment_method_id"]
-            isOneToOne: false
-            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]
@@ -2219,10 +2041,6 @@ export type Database = {
       extend_organization_trial: {
         Args: { org_id: string; days_to_add: number }
         Returns: Json
-      }
-      generate_invoice_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
       }
       generate_magic_link_invitation: {
         Args: { email_address: string; org_id: string; user_role?: string }

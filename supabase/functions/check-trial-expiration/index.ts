@@ -32,7 +32,7 @@ serve(async (req: Request) => {
     // Check for errors
     if (error) throw error;
     
-    // Now send email reminders to organizations with trials ending soon or already ended
+    // Now let's send email reminders to organizations with trials ending soon
     // Get organizations with trials ending in 1, 3 days or already ended
     const { data: orgsNeedingReminders, error: orgsError } = await supabase
       .from('organizations')
@@ -47,8 +47,6 @@ serve(async (req: Request) => {
       .gte('trial_end_date', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Include those expired in the last 24h
       .lte('trial_end_date', new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString()); // Include those expiring in the next 4 days
       
-    const emailResults = [];
-    
     if (orgsError) {
       console.error("Error fetching organizations for reminders:", orgsError);
     } else if (orgsNeedingReminders) {
@@ -62,28 +60,13 @@ serve(async (req: Request) => {
         // Only send reminders for 0, 1, or 3 days
         if (![0, 1, 3].includes(diffDays)) continue;
         
-        // Check if reminder has been sent in the last 24 hours
-        const { data: recentReminders } = await supabase
-          .from('subscription_audit_logs')
-          .select('*')
-          .eq('organization_id', org.id)
-          .eq('action', `trial_reminder_email_${diffDays}_days`)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .limit(1);
-          
-        // Skip if reminder was already sent in the last 24h
-        if (recentReminders && recentReminders.length > 0) {
-          console.log(`Skipping reminder for org ${org.id} (${diffDays} days) - already sent in last 24h`);
-          continue;
-        }
-        
         // Send reminder to each admin in the organization
         const admins = org.profiles.filter(p => ['super_admin', 'admin'].includes(p.role));
         
         for (const admin of admins) {
           try {
             // Call the send-trial-reminder function
-            const response = await fetch(`${supabaseUrl}/functions/v1/send-trial-reminder`, {
+            await fetch(`${supabaseUrl}/functions/v1/send-trial-reminder`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -96,25 +79,8 @@ serve(async (req: Request) => {
                 daysLeft: diffDays
               })
             });
-            
-            const result = await response.json();
-            emailResults.push({
-              organization: org.id,
-              admin: admin.email,
-              days_left: diffDays,
-              success: result.success,
-              email_id: result.email_id
-            });
-            
           } catch (emailError) {
             console.error(`Error sending reminder to ${admin.email}:`, emailError);
-            emailResults.push({
-              organization: org.id,
-              admin: admin.email,
-              days_left: diffDays,
-              success: false,
-              error: emailError.message
-            });
           }
         }
       }
@@ -125,8 +91,7 @@ serve(async (req: Request) => {
       JSON.stringify({
         success: true,
         message: "Trial expiration check and reminders sent successfully",
-        db_result: data,
-        email_results: emailResults
+        result: data,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
