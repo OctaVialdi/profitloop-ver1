@@ -47,6 +47,8 @@ export async function fetchOrganizationData(
       return;
     }
     
+    console.log("fetchOrganizationData - User found:", user.id);
+    
     // Get user profile to find organization
     const { data: userProfileData } = await supabase
       .from('profiles')
@@ -71,6 +73,8 @@ export async function fetchOrganizationData(
       return;
     }
     
+    console.log("fetchOrganizationData - User profile data:", userProfileData);
+    
     // Transform the raw profile data to ensure it matches the UserProfile type
     const userProfile: UserProfile = {
       ...userProfileData,
@@ -86,10 +90,16 @@ export async function fetchOrganizationData(
         subscriptionPlan = await getSubscriptionPlan(organization.subscription_plan_id);
       }
       
+      console.log("fetchOrganizationData - Organization fetched:", organization);
+      console.log("fetchOrganizationData - Subscription plan:", subscriptionPlan);
+      
       // Calculate status values
       const { isTrialActive, daysLeftInTrial } = calculateTrialStatus(organization);
       const hasPaidSubscription = calculateSubscriptionStatus(organization, subscriptionPlan);
       const { isSuperAdmin, isAdmin, isEmployee } = calculateUserRoles(userProfile);
+      
+      console.log("fetchOrganizationData - Trial status calculated:", { isTrialActive, daysLeftInTrial });
+      console.log("fetchOrganizationData - Has paid subscription:", hasPaidSubscription);
       
       // Update organization data
       setOrganizationData({

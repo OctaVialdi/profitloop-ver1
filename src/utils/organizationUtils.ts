@@ -6,7 +6,10 @@ export function calculateTrialStatus(organization: Organization | null): {
   isTrialActive: boolean;
   daysLeftInTrial: number;
 } {
+  console.log("calculateTrialStatus - Organization data:", organization);
+  
   if (!organization || !organization.trial_end_date) {
+    console.log("calculateTrialStatus - No organization or trial_end_date, returning inactive");
     return {
       isTrialActive: false,
       daysLeftInTrial: 0
@@ -25,6 +28,15 @@ export function calculateTrialStatus(organization: Organization | null): {
   // Calculate days left
   const diffTime = trialEndDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  console.log("calculateTrialStatus - Trial status calculated:", {
+    isActive,
+    diffDays,
+    trialEndDate,
+    now,
+    subscriptionStatus: organization.subscription_status,
+    trialExpired: organization.trial_expired
+  });
   
   return {
     isTrialActive: isActive,

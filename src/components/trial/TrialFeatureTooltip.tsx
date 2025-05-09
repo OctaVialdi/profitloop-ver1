@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+
+import React, { ReactNode, useState, useEffect } from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -18,7 +19,17 @@ const TrialFeatureTooltip: React.FC<TrialFeatureTooltipProps> = ({
   featureName,
   isPremiumOnly
 }) => {
-  const { isTrialActive, daysLeftInTrial, hasPaidSubscription } = useOrganization();
+  const { isTrialActive, daysLeftInTrial, hasPaidSubscription, organization } = useOrganization();
+  const [mounted, setMounted] = useState(false);
+  
+  // Debugging logs
+  useEffect(() => {
+    console.log("TrialFeatureTooltip - organization:", organization);
+    console.log("TrialFeatureTooltip - isTrialActive:", isTrialActive);
+    console.log("TrialFeatureTooltip - daysLeftInTrial:", daysLeftInTrial);
+    console.log("TrialFeatureTooltip - hasPaidSubscription:", hasPaidSubscription);
+    setMounted(true);
+  }, [organization, isTrialActive, daysLeftInTrial, hasPaidSubscription]);
   
   // Calculate the appropriate tooltip message
   const getTooltipMessage = () => {
