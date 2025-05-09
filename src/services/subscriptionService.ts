@@ -10,7 +10,7 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
     // Get organization details
     const { data: orgData, error } = await supabase
       .from('organizations')
-      .select('trial_end_date, subscription_status')
+      .select('trial_end_date')
       .eq('id', organizationId)
       .single();
       
@@ -25,15 +25,15 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
     const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
     
     // If trial is expired by date but not flagged, update it
-    if (isTrialExpiredByDate && orgData.subscription_status === 'trial') {
-      console.log("Trial has expired by date but not flagged. Updating status.");
+    if (isTrialExpiredByDate) {
+      console.log("Trial has expired by date. Updating status.");
       const { error: updateError } = await supabase
         .from('organizations')
-        .update({ subscription_status: 'expired' })
+        .update({ trial_expired: true })
         .eq('id', organizationId);
         
       if (updateError) {
-        console.error("Error updating subscription_status flag:", updateError);
+        console.error("Error updating trial_expired flag:", updateError);
         return false;
       }
       

@@ -1,5 +1,6 @@
 
 import { Route, Navigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import MyInfoLayout from "@/components/layout/MyInfoLayout";
 import MyInfoIndex from "@/pages/my-info/MyInfoIndex";
 import MyEmploymentPage from "@/pages/my-info/MyEmploymentPage";
@@ -10,7 +11,7 @@ export const myInfoRoutes = [
   <Route
     key="my-info"
     path="/my-info"
-    element={<MyInfoLayout />}
+    element={<MyInfoLayout><Outlet /></MyInfoLayout>}
   >
     <Route index element={<MyInfoIndex />} />
     <Route path="employment" element={<MyEmploymentPage />} />

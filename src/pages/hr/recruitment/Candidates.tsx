@@ -1,20 +1,13 @@
 
-import React from "react";
-import CandidateList from "@/components/hr/recruitment/CandidateList";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import React from 'react';
 
-export default function CandidatesPage() {
+const Candidates: React.FC = () => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recruitment Management</CardTitle>
-        <CardDescription>
-          Manage job openings and candidate applications
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <CandidateList />
-      </CardContent>
-    </Card>
+    <div>
+      <h1 className="text-2xl font-bold">Candidates</h1>
+      <p>Manage recruitment candidates</p>
+    </div>
   );
-}
+};
+
+export default Candidates;

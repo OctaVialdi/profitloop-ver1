@@ -1,5 +1,6 @@
 
 import { Route, Navigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import SettingsLayout from "@/components/layout/SettingsLayout";
 import ProfileSettings from "@/pages/settings/ProfileSettings";
 import Subscription from "@/pages/dashboard/Subscription";
@@ -11,7 +12,7 @@ export const settingsRoutes = [
   <Route
     key="settings"
     path="/settings"
-    element={<SettingsLayout />}
+    element={<SettingsLayout><Outlet /></SettingsLayout>}
   >
     <Route index element={<Navigate to="/settings/profile" replace />} />
     <Route path="profile" element={<ProfileSettings />} />

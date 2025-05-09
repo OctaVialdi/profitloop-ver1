@@ -1,5 +1,6 @@
 
 import { Route, Navigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import SocialMediaManagement from "@/pages/marketing/SocialMediaManagement";
 import SeoManagement from "@/pages/marketing/SeoManagement";
@@ -12,7 +13,7 @@ export const marketingRoutes = [
   <Route
     key="marketing"
     path="/marketing"
-    element={<MarketingLayout />}
+    element={<MarketingLayout><Outlet /></MarketingLayout>}
   >
     <Route index element={<Navigate to="/marketing/social-media" replace />} />
     <Route path="social-media" element={<SocialMediaManagement />} />

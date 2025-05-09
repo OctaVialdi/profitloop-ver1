@@ -1,5 +1,6 @@
 
 import { Route, Navigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import HRLayout from "@/components/layout/HRLayout";
 import Dashboard from "@/pages/hr/Dashboard";
 import DataKaryawan from "@/pages/hr/DataKaryawan";
@@ -21,7 +22,7 @@ export const hrRoutes = [
   <Route
     key="hr"
     path="/hr"
-    element={<HRLayout />}
+    element={<HRLayout><Outlet /></HRLayout>}
   >
     <Route index element={<Navigate to="/hr/dashboard" replace />} />
     <Route path="dashboard" element={<Dashboard />} />

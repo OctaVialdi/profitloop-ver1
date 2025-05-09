@@ -10,7 +10,7 @@ export const itRoutes = [
   <Route
     key="it"
     path="/it"
-    element={<ITLayout />}
+    element={<ITLayout><Outlet /></ITLayout>}
   >
     <Route index element={<Navigate to="/it/dashboard" replace />} />
     <Route path="dashboard" element={<Dashboard />} />
@@ -19,3 +19,6 @@ export const itRoutes = [
     <Route path="developer" element={<Developer />} />
   </Route>
 ];
+
+// Import Outlet for nested routes
+import { Outlet } from "react-router-dom";

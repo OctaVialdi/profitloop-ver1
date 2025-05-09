@@ -1,5 +1,6 @@
 
 import { Route, Navigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import FinanceLayout from "@/components/layout/FinanceLayout";
 import Dashboard from "@/pages/finance/Dashboard";
 import BillApprovals from "@/pages/finance/BillApprovals";
@@ -16,7 +17,7 @@ export const financeRoutes = [
   <Route
     key="finance"
     path="/finance"
-    element={<FinanceLayout />}
+    element={<FinanceLayout><Outlet /></FinanceLayout>}
   >
     <Route index element={<Navigate to="/finance/dashboard" replace />} />
     <Route path="dashboard" element={<Dashboard />} />

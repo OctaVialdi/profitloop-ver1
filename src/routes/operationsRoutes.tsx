@@ -1,5 +1,6 @@
 
 import { Route, Navigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import OperationsLayout from "@/components/layout/OperationsLayout";
 import Dashboard from "@/pages/operations/Dashboard";
 import CustomerService from "@/pages/operations/CustomerService";
@@ -10,7 +11,7 @@ export const operationsRoutes = [
   <Route
     key="operations"
     path="/operations"
-    element={<OperationsLayout />}
+    element={<OperationsLayout><Outlet /></OperationsLayout>}
   >
     <Route index element={<Navigate to="/operations/dashboard" replace />} />
     <Route path="dashboard" element={<Dashboard />} />
