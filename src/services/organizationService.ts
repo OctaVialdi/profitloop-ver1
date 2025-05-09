@@ -24,10 +24,7 @@ export async function getOrganization(organizationId: string): Promise<Organizat
     // Ensure trial_expired exists (default to false if not present)
     return {
       ...orgData as Organization,
-      trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false,
-      subscription_status: orgData.subscription_status as 'trial' | 'active' | 'expired' || 'trial',
-      trial_start_date: orgData.trial_start_date || null,
-      grace_period_end: orgData.grace_period_end || null
+      trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false
     };
   } catch (error) {
     console.error("Error fetching organization:", error);

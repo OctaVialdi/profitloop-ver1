@@ -1596,17 +1596,14 @@ export type Database = {
           created_at: string | null
           creator_email: string | null
           employee_count: number | null
-          grace_period_end: string | null
           id: string
           logo_path: string | null
           name: string
           phone: string | null
           subscription_plan_id: string | null
-          subscription_status: string | null
           theme_settings: Json | null
           trial_end_date: string | null
           trial_expired: boolean | null
-          trial_start_date: string | null
         }
         Insert: {
           address?: string | null
@@ -1614,17 +1611,14 @@ export type Database = {
           created_at?: string | null
           creator_email?: string | null
           employee_count?: number | null
-          grace_period_end?: string | null
           id?: string
           logo_path?: string | null
           name: string
           phone?: string | null
           subscription_plan_id?: string | null
-          subscription_status?: string | null
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
-          trial_start_date?: string | null
         }
         Update: {
           address?: string | null
@@ -1632,17 +1626,14 @@ export type Database = {
           created_at?: string | null
           creator_email?: string | null
           employee_count?: number | null
-          grace_period_end?: string | null
           id?: string
           logo_path?: string | null
           name?: string
           phone?: string | null
           subscription_plan_id?: string | null
-          subscription_status?: string | null
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
-          trial_start_date?: string | null
         }
         Relationships: [
           {
@@ -1877,10 +1868,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_trial_expirations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       check_user_has_organization: {
         Args: { user_id: string }
         Returns: {

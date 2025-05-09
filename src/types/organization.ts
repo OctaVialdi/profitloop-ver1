@@ -1,4 +1,3 @@
-
 export interface UserProfile {
   id: string;
   organization_id?: string;
@@ -21,13 +20,10 @@ export interface Organization {
   address: string | null;
   phone: string | null;
   subscription_plan_id: string | null;
-  trial_start_date: string | null;
   trial_end_date: string | null;
   trial_expired: boolean;
   logo_path: string | null;
   theme_settings: any;
-  subscription_status: 'trial' | 'active' | 'expired';
-  grace_period_end: string | null;
 }
 
 export interface SubscriptionPlan {

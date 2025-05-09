@@ -1,15 +1,12 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import { checkAndUpdateTrialStatus } from "@/services/subscriptionService";
 
 interface ProtectedRouteProps {
   children?: ReactNode;
   redirectTo?: string;
   publicRoutes?: string[];
-  requiresSubscription?: boolean;
 }
 
 interface ProfileData {
@@ -21,27 +18,17 @@ interface ProfileData {
 export const ProtectedRoute = ({
   children,
   redirectTo = "/auth/login",
-  publicRoutes = ["/join-organization", "/accept-invitation"],
-  requiresSubscription = false
+  publicRoutes = ["/join-organization", "/accept-invitation"]
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [organizationData, setOrganizationData] = useState<{ 
-    subscription_status?: string; 
-    trial_expired?: boolean;
-  } | null>(null);
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Check if current path is in public routes or allowed without subscription
+  // Check if current path is in public routes
   const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
   const isAuthRoute = currentPath.startsWith('/auth/');
-  const isSubscriptionRoute = 
-    currentPath === '/subscription' || 
-    currentPath === '/settings/subscription' || 
-    currentPath.startsWith('/employee-welcome') ||
-    currentPath.startsWith('/organizations');
 
   useEffect(() => {
     // Skip authentication check for public routes
@@ -72,27 +59,6 @@ export const ProtectedRoute = ({
               has_seen_welcome: session.user.user_metadata.has_seen_welcome || false
             });
             
-            // If subscription check is required and not on subscription page, fetch organization data
-            if (requiresSubscription && !isSubscriptionRoute && session.user.user_metadata.organization_id) {
-              try {
-                // Check and update trial status
-                await checkAndUpdateTrialStatus(session.user.user_metadata.organization_id);
-                
-                // Fetch organization subscription status
-                const { data: orgData } = await supabase
-                  .from('organizations')
-                  .select('subscription_status, trial_expired')
-                  .eq('id', session.user.user_metadata.organization_id)
-                  .maybeSingle();
-                
-                if (orgData && isMounted) {
-                  setOrganizationData(orgData);
-                }
-              } catch (error) {
-                console.error("Error checking organization subscription status:", error);
-              }
-            }
-            
             setLoading(false);
             return;
           }
@@ -122,27 +88,6 @@ export const ProtectedRoute = ({
               // The function returns an array, use the first result
               if (isMounted) {
                 setProfile(profileData[0]);
-                
-                // Check organization subscription status if needed
-                if (requiresSubscription && !isSubscriptionRoute && profileData[0].organization_id) {
-                  try {
-                    // Check and update trial status
-                    await checkAndUpdateTrialStatus(profileData[0].organization_id);
-                    
-                    // Fetch organization subscription status
-                    const { data: orgData } = await supabase
-                      .from('organizations')
-                      .select('subscription_status, trial_expired')
-                      .eq('id', profileData[0].organization_id)
-                      .maybeSingle();
-                    
-                    if (orgData && isMounted) {
-                      setOrganizationData(orgData);
-                    }
-                  } catch (error) {
-                    console.error("Error checking organization subscription status:", error);
-                  }
-                }
               }
             } else {
               // No profile data found
@@ -161,14 +106,12 @@ export const ProtectedRoute = ({
           console.log("No active session found");
           setAuthenticated(false);
           setProfile(null);
-          setOrganizationData(null);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
         if (isMounted) {
           setAuthenticated(false);
           setProfile(null);
-          setOrganizationData(null);
           toast.error("Terjadi kesalahan saat memeriksa autentikasi");
         }
       } finally {
@@ -203,32 +146,6 @@ export const ProtectedRoute = ({
                 has_seen_welcome: session.user.user_metadata.has_seen_welcome || false
               });
               
-              // If subscription check is required and not on subscription page, fetch organization data
-              if (requiresSubscription && !isSubscriptionRoute && session.user.user_metadata.organization_id) {
-                // Use setTimeout to prevent potential auth state deadlocks
-                setTimeout(async () => {
-                  if (!isMounted) return;
-                  
-                  try {
-                    // Check and update trial status
-                    await checkAndUpdateTrialStatus(session.user.user_metadata.organization_id);
-                    
-                    // Fetch organization subscription status
-                    const { data: orgData } = await supabase
-                      .from('organizations')
-                      .select('subscription_status, trial_expired')
-                      .eq('id', session.user.user_metadata.organization_id)
-                      .maybeSingle();
-                    
-                    if (orgData && isMounted) {
-                      setOrganizationData(orgData);
-                    }
-                  } catch (error) {
-                    console.error("Error checking organization subscription status:", error);
-                  }
-                }, 0);
-              }
-              
               setLoading(false);
               return;
             }
@@ -246,27 +163,6 @@ export const ProtectedRoute = ({
                 if (isMounted) {
                   if (!profileError && profileData && profileData.length > 0) {
                     setProfile(profileData[0]);
-                    
-                    // Check organization subscription status if needed
-                    if (requiresSubscription && !isSubscriptionRoute && profileData[0].organization_id) {
-                      try {
-                        // Check and update trial status
-                        await checkAndUpdateTrialStatus(profileData[0].organization_id);
-                        
-                        // Fetch organization subscription status
-                        const { data: orgData } = await supabase
-                          .from('organizations')
-                          .select('subscription_status, trial_expired')
-                          .eq('id', profileData[0].organization_id)
-                          .maybeSingle();
-                        
-                        if (orgData && isMounted) {
-                          setOrganizationData(orgData);
-                        }
-                      } catch (error) {
-                        console.error("Error checking organization subscription status:", error);
-                      }
-                    }
                   } else {
                     // Default to assuming verified but no organization
                     setProfile({
@@ -292,7 +188,6 @@ export const ProtectedRoute = ({
             }, 0);
           } else {
             setProfile(null);
-            setOrganizationData(null);
             setLoading(false);
           }
         }
@@ -304,7 +199,7 @@ export const ProtectedRoute = ({
       // Clean up subscription
       subscription.unsubscribe();
     };
-  }, [isPublicRoute, requiresSubscription, isSubscriptionRoute]);
+  }, [isPublicRoute]);
 
   if (loading) {
     return (
@@ -339,16 +234,6 @@ export const ProtectedRoute = ({
     
     // Not authenticated and on auth route, show the auth page
     return children ? <>{children}</> : <Outlet />;
-  }
-
-  // Subscription check - if route requires subscription and org has expired trial
-  if (authenticated && requiresSubscription && 
-      organizationData && 
-      (organizationData.subscription_status === 'expired' || organizationData.trial_expired) && 
-      !isSubscriptionRoute) {
-    // Redirect to the subscription page
-    toast.error("Masa trial Anda telah berakhir. Silakan upgrade untuk melanjutkan.");
-    return <Navigate to="/subscription" state={{ from: location }} replace />;
   }
 
   // Handle specific redirections based on the flowchart

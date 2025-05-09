@@ -18,8 +18,7 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true, // Critical: enable session detection in URLs
-      flowType: 'pkce', // Using PKCE flow for better security
-      debug: true // Add debug mode to help with troubleshooting
+      flowType: 'pkce' // Using PKCE flow for better security
     }
   }
 );
@@ -28,4 +27,5 @@ export const supabase = createClient<Database>(
 export { updateUserOrgMetadata } from './auth/userMetadata';
 export { saveUserPreferences, saveThemeToDatabase } from './profiles/preferences';
 export { forceSignIn } from './auth/signIn';
-export { cleanupAuthState, robustSignOut } from '@/utils/authUtils';
+
+// Remove the reference to ensureUserProfileExists as it doesn't exist

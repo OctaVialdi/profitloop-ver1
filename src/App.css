@@ -1,4 +1,3 @@
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -40,29 +39,4 @@
 
 .read-the-docs {
   color: #888;
-}
-
-/* Add trial expired styling */
-body.trial-expired > div#root {
-  filter: blur(3px);
-  pointer-events: none;
-  user-select: none;
-}
-
-/* Make sure dialogs are not blurred */
-.trial-expired [role="dialog"] {
-  filter: blur(0);
-  pointer-events: all;
-  user-select: auto;
-}
-
-/* Animation for trial banner */
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.8; }
-  100% { opacity: 1; }
-}
-
-.trial-about-to-expire {
-  animation: pulse 2s infinite;
 }
