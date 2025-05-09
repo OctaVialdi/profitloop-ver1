@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { createPayment, downloadBase64Pdf, formatPrice, generateInvoicePdf, getInvoices, getPaymentMethods } from "@/services/paymentService";
+import { PaymentMethod, BillingItem } from "@/types/payment";
 
 interface Plan {
   id: string;
@@ -24,27 +24,6 @@ interface Plan {
   features: Record<string, any> | null;
   current: boolean;
   popular?: boolean;
-}
-
-interface PaymentMethod {
-  id: string;
-  name: string;
-  logo_url: string;
-  type: 'bank_transfer' | 'e_wallet' | 'credit_card' | 'retail';
-  code: string;
-  provider: string;
-  is_active: boolean;
-}
-
-interface BillingItem {
-  id: string;
-  date: string;
-  invoice_number: string;
-  status: string;
-  amount: number;
-  plan_name: string;
-  currency: string;
-  payment_method?: string;
 }
 
 const Subscription = () => {
