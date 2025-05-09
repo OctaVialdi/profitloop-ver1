@@ -5,15 +5,16 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { useToast } from "@/components/ui/use-toast";
 import TrialFeatureTooltip from "@/components/trial/TrialFeatureTooltip";
 import { Sparkles, Lock } from "lucide-react";
-import { trackFeatureAccess } from "@/services/analyticsService";
+import { trackFeatureAccess, trackTrialFeatureEngagement } from "@/services/analyticsService";
 
 interface TrialProtectionProps {
   children: React.ReactNode;
   premiumFeature?: boolean;
   featureName?: string;
   showPreview?: boolean;
-  previewOpacity?: number; // New prop for controlling preview opacity
-  interactivePreview?: boolean; // New prop for allowing limited interaction with preview
+  previewOpacity?: number;
+  interactivePreview?: boolean;
+  previewMilestone?: string; // New prop for showing milestone achievements
 }
 
 // This component protects content based on trial/subscription status
@@ -22,14 +23,16 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
   premiumFeature = false,
   featureName = "Fitur Premium",
   showPreview = false,
-  previewOpacity = 0.7, // Default opacity for previews
-  interactivePreview = false // Default to non-interactive previews
+  previewOpacity = 0.7,
+  interactivePreview = false,
+  previewMilestone
 }) => {
   const organizationData = useOrganization();
   const { toast } = useToast();
   const location = useLocation();
   const [hasShownToast, setHasShownToast] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [hasEngagedWith, setHasEngagedWith] = useState(false);
   
   const isSubscriptionPage = location.pathname === '/subscription' || 
                              location.pathname === '/settings/subscription';
@@ -85,6 +88,22 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
       }
     }
   }, [shouldRestrict, hasShownToast, toast, featureName, location.pathname, organizationData]);
+
+  // Track feature engagement when viewed
+  useEffect(() => {
+    if (premiumFeature && organizationData.isTrialActive && organizationData.organization?.id && !hasEngagedWith) {
+      // Track view engagement once
+      trackTrialFeatureEngagement(featureName, 'view', organizationData.organization.id);
+      setHasEngagedWith(true);
+    }
+  }, [premiumFeature, featureName, organizationData, hasEngagedWith]);
+  
+  // Handle interaction with premium feature
+  const handleFeatureInteraction = () => {
+    if (premiumFeature && organizationData.isTrialActive && organizationData.organization?.id) {
+      trackTrialFeatureEngagement(featureName, 'interact', organizationData.organization.id);
+    }
+  };
   
   // Always allow access to the subscription page
   if (isSubscriptionPage) {
@@ -102,6 +121,7 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
             className="relative premium-feature group"
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
+            onClick={handleFeatureInteraction}
           >
             {children}
             <div className={`absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-purple-500 text-white
@@ -115,6 +135,12 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
                 Trial Feature
               </div>
             )}
+            {previewMilestone && (
+              <div 
+                className="trial-milestone absolute -top-2 left-1/2 transform -translate-x-1/2"
+                data-milestone={previewMilestone}>
+              </div>
+            )}
           </div>
         ) : (
           // Access restricted - show locked state or preview
@@ -123,8 +149,15 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
                onMouseLeave={() => setIsHovering(false)}>
             {showPreview ? (
               // Show a previewed/watermarked version with enhanced visual cues
-              <div className={`relative ${interactivePreview ? '' : 'pointer-events-none'}`} 
-                   style={{ opacity: isHovering ? Math.min(previewOpacity + 0.15, 0.95) : previewOpacity }}>
+              <div 
+                className={`relative ${interactivePreview ? 'premium-preview-interactive' : 'pointer-events-none'}`} 
+                style={{ opacity: isHovering ? Math.min(previewOpacity + 0.15, 0.95) : previewOpacity }}
+                onClick={() => {
+                  if (interactivePreview && organizationData.organization?.id) {
+                    trackTrialFeatureEngagement(featureName, 'interact', organizationData.organization.id);
+                  }
+                }}
+              >
                 <div className="relative">
                   {children}
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-200 via-transparent to-transparent 
