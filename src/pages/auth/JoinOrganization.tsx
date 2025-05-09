@@ -1,3 +1,4 @@
+
 import { useSearchParams } from "react-router-dom";
 import { useMagicLink } from "@/hooks/auth/useMagicLink";
 import LoadingState from "@/components/auth/magic-link/LoadingState";
@@ -64,8 +65,8 @@ const JoinOrganization = () => {
 
   // Process the magic link invitation
   const { isLoading, error, success, organizationName } = useMagicLink({
-    email,
     token,
+    email,
     accessToken,
     refreshToken,
     errorCode,

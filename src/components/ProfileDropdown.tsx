@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import { supabase, robustSignOut } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { UserCircle, Settings, LogOut, ChevronDown } from "lucide-react";
 import { 
@@ -18,26 +18,17 @@ export const ProfileDropdown = () => {
   const navigate = useNavigate();
   const { userProfile, isSuperAdmin, isAdmin } = useOrganization();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const handleLogout = async () => {
     try {
-      setIsLoggingOut(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       
-      // Use the robust sign out utility
-      const success = await robustSignOut();
-      
-      if (success) {
-        toast.success("Berhasil logout");
-        // Force full page refresh to ensure clean state
-        window.location.href = "/auth/login";
-      } else {
-        throw new Error("Gagal logout");
-      }
+      toast.success("Berhasil logout");
+      navigate("/auth/login");
     } catch (error: any) {
       console.error("Error signing out:", error);
       toast.error(error.message || "Gagal logout");
-      setIsLoggingOut(false);
     }
   };
 
@@ -126,19 +117,9 @@ export const ProfileDropdown = () => {
         <DropdownMenuItem 
           className="cursor-pointer flex items-center gap-2 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 focus:bg-red-50"
           onClick={handleLogout}
-          disabled={isLoggingOut}
         >
-          {isLoggingOut ? (
-            <>
-              <span className="h-4 w-4 mr-2 animate-spin">○</span>
-              Logging out...
-            </>
-          ) : (
-            <>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </>
-          )}
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,39 +1,21 @@
 
-import { useEffect } from 'react';
-import { Routes, Route, useLocation, useRoutes } from 'react-router-dom';
-import { Toaster } from '@/components/ui/sonner';
-import { ThemeProvider } from '@/components/theme-provider';
-import { routes } from '@/routes';
-import { useOrganization } from '@/hooks/useOrganization';
-import TrialBanner from '@/components/TrialBanner';
-import { checkAndUpdateTrialStatus } from '@/services/subscriptionService';
-import '@/css/trial-styles.css';
+import { BrowserRouter } from "react-router-dom";
+import { AppRoutes } from "./routes";
+import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/components/QueryProvider";
+import { useAssetStorage } from "./hooks/useAssetStorage";
 
 function App() {
-  const { organization } = useOrganization();
-  const location = useLocation();
-  const routeElements = useRoutes(routes);
-  
-  // Check trial status on app load
-  useEffect(() => {
-    const checkTrialStatus = async () => {
-      if (organization?.id) {
-        await checkAndUpdateTrialStatus(organization.id);
-      }
-    };
-    
-    checkTrialStatus();
-  }, [organization?.id]);
-  
-  // Don't show trial banner on auth pages
-  const isAuthPage = location.pathname.startsWith('/auth/');
-  
+  // Initialize asset storage
+  useAssetStorage();
+
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      {!isAuthPage && <TrialBanner />}
-      {routeElements}
-      <Toaster position="top-right" expand={true} closeButton richColors />
-    </ThemeProvider>
+    <QueryProvider>
+      <BrowserRouter>
+        <AppRoutes />
+        <Toaster />
+      </BrowserRouter>
+    </QueryProvider>
   );
 }
 
