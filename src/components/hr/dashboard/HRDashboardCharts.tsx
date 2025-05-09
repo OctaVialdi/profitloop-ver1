@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Employee } from "@/hooks/useEmployees";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { Users } from "lucide-react";
 
 interface HRDashboardChartsProps {
   employees: Employee[];
@@ -103,7 +104,7 @@ export function HRDashboardCharts({ employees }: HRDashboardChartsProps) {
         </CardHeader>
         <CardContent className="pt-2">
           <ChartContainer className="h-[250px]" config={{
-            b: { label: "Base", theme: { light: "#3b82f6" } }
+            b: { label: "Base", theme: { light: "#3b82f6", dark: "#3b82f6" } }
           }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={compensationByLocation}>
@@ -124,7 +125,7 @@ export function HRDashboardCharts({ employees }: HRDashboardChartsProps) {
         </CardHeader>
         <CardContent className="pt-2">
           <ChartContainer className="h-[250px]" config={{
-            employees: { label: "Employees", theme: { light: "#10b981" } }
+            employees: { label: "Employees", theme: { light: "#10b981", dark: "#10b981" } }
           }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={employeeGrowth}>
@@ -175,9 +176,9 @@ export function HRDashboardCharts({ employees }: HRDashboardChartsProps) {
         </CardHeader>
         <CardContent className="pt-2">
           <ChartContainer className="h-[250px]" config={{
-            salary: { label: "Salary", theme: { light: "#3b82f6" } },
-            bonus: { label: "Bonus", theme: { light: "#10b981" } },
-            commission: { label: "Commission", theme: { light: "#f59e0b" } }
+            salary: { label: "Salary", theme: { light: "#3b82f6", dark: "#3b82f6" } },
+            bonus: { label: "Bonus", theme: { light: "#10b981", dark: "#10b981" } },
+            commission: { label: "Commission", theme: { light: "#f59e0b", dark: "#f59e0b" } }
           }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={compensationByDepartment}>

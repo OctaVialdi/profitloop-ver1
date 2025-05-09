@@ -14,7 +14,7 @@ export type FinancialSummary = {
   roiTarget: number;
   debtTotal: number;
   debtToAssetRatio: number;
-  targetRevenue: number; // Changed from optional to required
+  targetRevenue: number;
   upcomingDebtPayments: DebtPayment[];
 };
 

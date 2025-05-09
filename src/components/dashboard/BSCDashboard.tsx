@@ -102,7 +102,7 @@ export function BSCDashboard() {
         const { error } = await supabase
           .from('financial_summary')
           .update({ target_revenue: newTarget })
-          .eq('organization_id', organization.id);
+          .eq('id', existingRecord[0].id);
         
         if (error) throw error;
       } else {
