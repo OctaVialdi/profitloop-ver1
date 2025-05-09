@@ -6,6 +6,21 @@ import { NavigateFunction } from 'react-router-dom';
 import { OrganizationData } from "@/types/organization";
 import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
 
+// Helper function to convert profile data to the expected UserProfile type
+function transformUserProfile(profileData: any) {
+  if (!profileData) return null;
+  
+  // Ensure preferences is properly transformed from Json to UserPreferences
+  const preferences = typeof profileData.preferences === 'string' 
+    ? JSON.parse(profileData.preferences) 
+    : profileData.preferences || {};
+    
+  return {
+    ...profileData,
+    preferences
+  };
+}
+
 export async function fetchOrganizationData(
   setOrganizationData: React.Dispatch<React.SetStateAction<OrganizationData>>,
   navigate?: NavigateFunction
@@ -46,7 +61,7 @@ export async function fetchOrganizationData(
       console.log("User has no organization assigned");
       setOrganizationData(prevState => ({
         ...prevState,
-        userProfile: profileData || null,
+        userProfile: transformUserProfile(profileData),
         isLoading: false,
       }));
       return;
@@ -62,7 +77,7 @@ export async function fetchOrganizationData(
           ...prevState,
           error: new Error("Organization not found"),
           isLoading: false,
-          userProfile: profileData,
+          userProfile: transformUserProfile(profileData),
         }));
         return;
       }
@@ -82,14 +97,14 @@ export async function fetchOrganizationData(
       const hasPaidSubscription = calculateSubscriptionStatus(organizationData, subscriptionPlan);
       
       // Calculate user roles using utility function
-      const userRoles = calculateUserRoles(profileData);
+      const userRoles = calculateUserRoles(transformUserProfile(profileData));
       
       // Update state with all the data
       setOrganizationData(prevState => ({
         ...prevState,
         organization: organizationData,
         subscriptionPlan,
-        userProfile: profileData,
+        userProfile: transformUserProfile(profileData),
         isLoading: false,
         error: null,
         isSuperAdmin: userRoles.isSuperAdmin,
@@ -108,7 +123,7 @@ export async function fetchOrganizationData(
         ...prevState,
         error: new Error(error.message || "Failed to load organization data"),
         isLoading: false,
-        userProfile: profileData
+        userProfile: transformUserProfile(profileData)
       }));
     }
     

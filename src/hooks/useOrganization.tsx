@@ -46,9 +46,7 @@ export function useOrganization(): OrganizationData {
   
   // Initialize data fetching, only if navigate is available
   useEffect(() => {
-    if (navigate) {
-      fetchOrganizationData(setOrganizationData, navigate);
-    }
+    fetchOrganizationData(setOrganizationData, navigate);
   }, [navigate]);
   
   // Set up auth state change listener
