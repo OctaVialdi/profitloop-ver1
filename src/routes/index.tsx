@@ -10,6 +10,7 @@ import { operationsRoutes } from "./operationsRoutes";
 import { itRoutes } from "./itRoutes";
 import { myInfoRoutes } from "./myInfoRoutes";
 import { settingsRoutes } from "./settingsRoutes";
+import { adminRoutes } from "./adminRoutes";
 import WelcomePage from "@/pages/WelcomePage";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
@@ -19,6 +20,7 @@ import JobPreviewPage from "@/pages/public/JobPreviewPage";
 import JobApplicationForm from "@/pages/public/JobApplicationForm";
 import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
 import Components from "@/pages/dev/Components";
+import PremiumFeatureDemo from "@/pages/dev/PremiumFeatureDemo";
 
 export const routes: RouteObject[] = [
   {
@@ -53,6 +55,10 @@ export const routes: RouteObject[] = [
     path: "/dev/components",
     element: <Components />
   },
+  {
+    path: "/dev/premium-features",
+    element: <PremiumFeatureDemo />
+  },
   authRoutes,
   dashboardRoutes,
   onboardingRoutes,
@@ -63,11 +69,9 @@ export const routes: RouteObject[] = [
   itRoutes,
   myInfoRoutes,
   settingsRoutes,
+  adminRoutes,
   {
     path: "*",
     element: <NotFound />
   }
 ];
-
-// Re-export routes so it can be imported as { routes } from '@/routes'
-export { routes };

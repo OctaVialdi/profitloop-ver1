@@ -1,82 +1,94 @@
-import { ReactNode } from 'react';
+
+import { ReactNode, useState } from 'react';
 import { useOrganization } from '@/hooks/useOrganization';
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface PremiumFeatureProps {
   children: ReactNode;
-  featureName: string; 
-  description?: string;
+  tooltip?: string;
+  requiresSubscription?: boolean;
+  tooltipPosition?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-/**
- * Wrap premium features with this component to show tooltip and handle expired trial
- */
-const PremiumFeature = ({ children, featureName, description }: PremiumFeatureProps) => {
-  const [showDialog, setShowDialog] = useState(false);
-  const { hasPaidSubscription, isTrialActive } = useOrganization();
+const PremiumFeature = ({
+  children,
+  tooltip = "This is a premium feature",
+  requiresSubscription = true,
+  tooltipPosition = 'top'
+}: PremiumFeatureProps) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const { isTrialActive, hasPaidSubscription } = useOrganization();
   const navigate = useNavigate();
-
-  // If user has paid subscription or active trial, render children normally
-  if (hasPaidSubscription || isTrialActive) {
+  
+  const hasAccess = !requiresSubscription || isTrialActive || hasPaidSubscription;
+  
+  // Position classes for the tooltip
+  const positionClasses = {
+    'top': '-top-12 left-1/2 transform -translate-x-1/2',
+    'bottom': 'top-full mt-2 left-1/2 transform -translate-x-1/2',
+    'left': 'right-full mr-2 top-1/2 transform -translate-y-1/2',
+    'right': 'left-full ml-2 top-1/2 transform -translate-y-1/2'
+  };
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (!hasAccess) {
+      e.preventDefault();
+      e.stopPropagation();
+      navigate('/settings/subscription');
+      return;
+    }
+  };
+  
+  // If the user has access (trial or subscription), just render the children
+  if (hasAccess) {
     return (
-      <div className="premium-feature">
+      <div className="premium-feature group">
         {children}
-        <div className="premium-tooltip">
-          <span className="font-medium">{featureName}</span>
-          <br />
-          <span className="text-xs text-gray-500">Fitur Premium</span>
+        <div className="premium-badge w-4 h-4 flex items-center justify-center">
+          <Sparkles className="h-3 w-3 text-white premium-sparkle" />
         </div>
+        {showTooltip && (
+          <div className={`premium-tooltip bg-gradient-to-br from-blue-50 to-blue-100 text-blue-800 ${positionClasses[tooltipPosition]}`}>
+            {tooltip}
+            <div className="text-xs mt-1 text-blue-600 font-medium">
+              Using as part of your trial
+            </div>
+          </div>
+        )}
       </div>
     );
   }
-
-  // Otherwise show placeholder with upgrade dialog
+  
+  // If the user doesn't have access, make it look disabled and add tooltip
   return (
-    <>
-      <div 
-        className="premium-feature cursor-pointer" 
-        onClick={() => setShowDialog(true)}
-      >
+    <div 
+      className="premium-feature relative cursor-not-allowed opacity-70"
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+      onClick={handleClick}
+    >
+      <div className="pointer-events-none">
         {children}
       </div>
-
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-              <Sparkles className="h-8 w-8 text-blue-600" />
-            </div>
-            
-            <DialogTitle className="text-xl">Fitur Premium</DialogTitle>
-            <DialogDescription className="mt-2 mb-4">
-              <strong>{featureName}</strong> adalah fitur premium.
-              {description && <p className="mt-2">{description}</p>}
-              <p className="mt-2">Berlangganan untuk mengakses fitur ini dan semua fitur premium lainnya.</p>
-            </DialogDescription>
-            
-            <DialogFooter className="flex flex-col sm:flex-row gap-2 w-full">
-              <Button 
-                onClick={() => setShowDialog(false)} 
-                variant="outline" 
-                className="w-full sm:w-auto"
-              >
-                Nanti Saja
-              </Button>
-              <Button 
-                onClick={() => navigate('/settings/subscription')} 
-                className="w-full sm:w-auto"
-              >
-                Berlangganan Sekarang
-              </Button>
-            </DialogFooter>
+      <div className="premium-badge w-4 h-4 flex items-center justify-center">
+        <Sparkles className="h-3 w-3 text-white premium-sparkle" />
+      </div>
+      {showTooltip && (
+        <div className={`premium-tooltip ${positionClasses[tooltipPosition]}`}>
+          {tooltip}
+          <div className="text-xs mt-1 text-blue-600 font-medium">
+            Requires subscription
+            <button 
+              className="ml-1 text-blue-800 underline font-semibold" 
+              onClick={() => navigate('/settings/subscription')}
+            >
+              Upgrade
+            </button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      )}
+    </div>
   );
 };
 
