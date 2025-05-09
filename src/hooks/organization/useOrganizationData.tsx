@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/sonner";
 import { getOrganization, getSubscriptionPlan } from "@/services/organizationService";
 import { NavigateFunction } from 'react-router-dom';
 import { OrganizationData } from "@/types/organization";
+import { calculateTrialStatus, calculateSubscriptionStatus, calculateUserRoles } from "@/utils/organizationUtils";
 
 export async function fetchOrganizationData(
   setOrganizationData: React.Dispatch<React.SetStateAction<OrganizationData>>,
@@ -35,7 +36,7 @@ export async function fetchOrganizationData(
       console.error("Error fetching user profile:", profileError);
       setOrganizationData(prevState => ({
         ...prevState,
-        error: "Failed to fetch user profile",
+        error: new Error("Failed to fetch user profile"),
         isLoading: false,
       }));
       return;
@@ -59,7 +60,7 @@ export async function fetchOrganizationData(
         console.error("Organization not found");
         setOrganizationData(prevState => ({
           ...prevState,
-          error: "Organization not found",
+          error: new Error("Organization not found"),
           isLoading: false,
           userProfile: profileData,
         }));
@@ -72,27 +73,16 @@ export async function fetchOrganizationData(
         subscriptionPlan = await getSubscriptionPlan(organizationData.subscription_plan_id);
       }
       
-      // Calculate trial status
-      const now = new Date();
-      const trialEnd = organizationData.trial_ends_at ? new Date(organizationData.trial_ends_at) : null;
-      const isTrialActive = trialEnd ? now < trialEnd : false;
+      // Calculate trial status using utility function
+      const trialStatus = calculateTrialStatus(organizationData);
+      const isTrialActive = trialStatus.isTrialActive;
+      const daysLeftInTrial = trialStatus.daysLeftInTrial;
       
-      // Calculate days left in trial
-      let daysLeftInTrial = 0;
-      if (isTrialActive && trialEnd) {
-        const diffTime = Math.abs(trialEnd.getTime() - now.getTime());
-        daysLeftInTrial = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      }
+      // Calculate subscription status using utility function
+      const hasPaidSubscription = calculateSubscriptionStatus(organizationData, subscriptionPlan);
       
-      // Check if has paid subscription
-      const hasPaidSubscription = !!subscriptionPlan && 
-                                subscriptionPlan.price > 0 && 
-                                !organizationData.trial_expired;
-                                
-      // Check user role within organization
-      const isSuperAdmin = profileData.role === 'super_admin';
-      const isAdmin = profileData.role === 'admin' || isSuperAdmin;
-      const isEmployee = profileData.role === 'employee' || isAdmin;
+      // Calculate user roles using utility function
+      const userRoles = calculateUserRoles(profileData);
       
       // Update state with all the data
       setOrganizationData(prevState => ({
@@ -102,9 +92,9 @@ export async function fetchOrganizationData(
         userProfile: profileData,
         isLoading: false,
         error: null,
-        isSuperAdmin,
-        isAdmin,
-        isEmployee,
+        isSuperAdmin: userRoles.isSuperAdmin,
+        isAdmin: userRoles.isAdmin,
+        isEmployee: userRoles.isEmployee,
         isTrialActive,
         daysLeftInTrial,
         hasPaidSubscription
@@ -116,7 +106,7 @@ export async function fetchOrganizationData(
       
       setOrganizationData(prevState => ({
         ...prevState,
-        error: error.message || "Failed to load organization data",
+        error: new Error(error.message || "Failed to load organization data"),
         isLoading: false,
         userProfile: profileData
       }));
@@ -132,7 +122,7 @@ export async function fetchOrganizationData(
     
     setOrganizationData(prevState => ({
       ...prevState,
-      error: error.message || "An unexpected error occurred",
+      error: new Error(error.message || "An unexpected error occurred"),
       isLoading: false
     }));
   }

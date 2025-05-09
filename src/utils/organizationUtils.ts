@@ -5,10 +5,28 @@ export function calculateTrialStatus(organization: Organization | null): {
   isTrialActive: boolean;
   daysLeftInTrial: number;
 } {
-  // Always return inactive trial since we're removing trial functionality
+  // If no organization or no trial_end_date, return inactive
+  if (!organization || !organization.trial_end_date) {
+    return {
+      isTrialActive: false,
+      daysLeftInTrial: 0
+    };
+  }
+  
+  const now = new Date();
+  const trialEnd = new Date(organization.trial_end_date);
+  const isTrialActive = now < trialEnd;
+  
+  // Calculate days left in trial
+  let daysLeftInTrial = 0;
+  if (isTrialActive) {
+    const diffTime = Math.abs(trialEnd.getTime() - now.getTime());
+    daysLeftInTrial = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+  
   return {
-    isTrialActive: false,
-    daysLeftInTrial: 0
+    isTrialActive,
+    daysLeftInTrial
   };
 }
 
@@ -17,8 +35,8 @@ export function calculateSubscriptionStatus(
   subscriptionPlan: SubscriptionPlan | null
 ): boolean {
   return !!subscriptionPlan && 
-         subscriptionPlan.name !== 'Basic' && 
-         !!organization?.subscription_plan_id;
+         subscriptionPlan.price > 0 && 
+         !organization?.trial_expired;
 }
 
 export function calculateUserRoles(userProfile: UserProfile | null): {
@@ -28,7 +46,7 @@ export function calculateUserRoles(userProfile: UserProfile | null): {
 } {
   const isSuperAdmin = userProfile?.role === 'super_admin';
   const isAdmin = userProfile?.role === 'admin' || isSuperAdmin;
-  const isEmployee = !!userProfile?.role;
+  const isEmployee = userProfile?.role === 'employee' || isAdmin;
 
   return { isSuperAdmin, isAdmin, isEmployee };
 }
