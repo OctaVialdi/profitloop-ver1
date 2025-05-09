@@ -52,7 +52,7 @@ const TrialExpiredModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" showClose={false}>
+      <DialogContent className="sm:max-w-md">
         {!showExtensionForm ? (
           <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-6">

@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Routes, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme-provider';
-import { appRoutes } from '@/routes';
+import { routes as appRoutes } from '@/routes';
 import { useOrganization } from '@/hooks/useOrganization';
 import TrialBanner from '@/components/TrialBanner';
 import { checkAndUpdateTrialStatus } from '@/services/subscriptionService';

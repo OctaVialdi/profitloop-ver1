@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, X } from "lucide-react";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 
 interface TrialExpirationWarningProps {
