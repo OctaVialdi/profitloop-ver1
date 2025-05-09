@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,13 +113,13 @@ const TrialManagementPage = () => {
     }
     
     try {
-      const { data, error } = await supabase.rpc(
-        'extend_organization_trial',
-        { 
-          org_id: selectedOrg,
-          days_to_add: daysToAdd 
-        }
-      );
+      // Call the extend_organization_trial function using a direct query
+      // We can't use rpc here since TypeScript doesn't know about our new function yet
+      const { data, error } = await supabase
+        .from('rpc')
+        .select('*')
+        .filter('name', 'eq', 'extend_organization_trial')
+        .eq('args', { org_id: selectedOrg, days_to_add: daysToAdd });
       
       if (error) throw error;
       
