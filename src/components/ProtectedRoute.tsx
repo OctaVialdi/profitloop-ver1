@@ -28,7 +28,7 @@ export const ProtectedRoute = ({
 
   // Check if current path is in public routes
   const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route));
-  const isAuthRoute = currentPath.startsWith('/auth/');
+  const isAuthRoute = currentPath.startsWith('/auth/'); // ALL auth routes are public
 
   useEffect(() => {
     // Skip authentication check for public routes
@@ -211,28 +211,8 @@ export const ProtectedRoute = ({
 
   // Authentication routes handling (login, register)
   if (isAuthRoute) {
-    // If already authenticated, redirect based on profile status
-    if (authenticated) {
-      // Check email verification first
-      if (profile && !profile.email_verified) {
-        // If on login page already, no need to redirect
-        return children ? <>{children}</> : <Outlet />;
-      }
-      
-      // Check organization status
-      if (profile && profile.organization_id) {
-        // Check if has seen welcome page
-        if (!profile.has_seen_welcome) {
-          return <Navigate to="/employee-welcome" state={{ from: location }} replace />;
-        } else {
-          return <Navigate to="/dashboard" state={{ from: location }} replace />;
-        }
-      } else {
-        return <Navigate to="/organizations" state={{ from: location }} replace />;
-      }
-    }
-    
-    // Not authenticated and on auth route, show the auth page
+    // IMPORTANT: Auth routes are ALWAYS allowed, even if already authenticated
+    // This ensures registration and login pages are always accessible
     return children ? <>{children}</> : <Outlet />;
   }
 

@@ -40,8 +40,8 @@ export function useLoginForm() {
       if (location.search === "?verified=true" && email) {
         try {
           console.log("Checking verification status after redirect");
-          // Clean up auth state first
-          cleanupAuthState();
+          // Clean up auth state first - but preserve navigation state
+          cleanupAuthState(true);
           
           // Check if user exists and is verified
           const { data: { user } } = await supabase.auth.getUser();
@@ -96,8 +96,8 @@ export function useLoginForm() {
     try {
       console.log("Starting login process...");
       
-      // Clean up auth state first to ensure clean login
-      cleanupAuthState();
+      // Clean up auth state first to ensure clean login - but don't interfere with navigation
+      cleanupAuthState(true);
       
       // First check if the email exists in our database
       const emailExists = await checkEmailExists(email);

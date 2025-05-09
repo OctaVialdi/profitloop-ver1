@@ -67,13 +67,6 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
-  // Simple direct navigation to register page without any auth cleanup
-  const goToRegister = () => {
-    console.log("Direct navigation to register page");
-    // Use direct navigation without any auth cleanup
-    window.location.replace("/auth/register");
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
@@ -117,7 +110,7 @@ const Login = () => {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-600">
             Belum memiliki akun?{" "}
-            {/* Use a direct link with href attribute for most reliable navigation */}
+            {/* PURE HTML link - most reliable for cross-page navigation */}
             <a 
               href="/auth/register" 
               className="text-blue-500 hover:text-blue-700 font-medium cursor-pointer"
@@ -126,15 +119,13 @@ const Login = () => {
             </a>
           </div>
           
-          {/* More visible registration button with direct href navigation */}
-          <Button 
-            variant="outline" 
-            type="button" 
-            className="mt-2 w-full" 
-            onClick={goToRegister}
+          {/* Pure HTML button for register - no onClick handlers */}
+          <a 
+            href="/auth/register"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full"
           >
             Buat akun baru
-          </Button>
+          </a>
         </CardFooter>
       </Card>
     </div>
