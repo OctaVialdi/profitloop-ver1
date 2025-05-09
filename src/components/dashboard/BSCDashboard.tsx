@@ -98,15 +98,15 @@ export function BSCDashboard() {
       if (fetchError) throw fetchError;
       
       if (existingRecord && existingRecord.length > 0) {
-        // Update existing record
+        // Update existing record - fix for the ID property
         const { error } = await supabase
           .from('financial_summary')
           .update({ target_revenue: newTarget })
-          .eq('id', existingRecord[0].id);
+          .eq('organization_id', organization.id);
         
         if (error) throw error;
       } else {
-        // Create new record - using explicit types to match the database schema
+        // Create new record with proper typing
         const currentDate = new Date().toISOString();
         const { error } = await supabase
           .from('financial_summary')
@@ -115,16 +115,19 @@ export function BSCDashboard() {
             target_revenue: newTarget,
             month: currentDate,
             total_revenue: dashboardData?.financialSummary.totalRevenue || 0,
-            total_expenses: dashboardData?.financialSummary.totalExpenses || 0
+            total_expenses: dashboardData?.financialSummary.totalExpenses || 0,
+            net_cashflow: (dashboardData?.financialSummary.totalRevenue || 0) - 
+                          (dashboardData?.financialSummary.totalExpenses || 0)
           });
         
         if (error) throw error;
       }
       
       refetch(); // Refresh dashboard data
+      toast.success("Target revenue updated successfully!");
     } catch (error: any) {
       console.error("Error updating target revenue:", error);
-      throw error; // Re-throw to be handled by the caller
+      toast.error(`Failed to update target revenue: ${error.message}`);
     }
   };
   
@@ -143,8 +146,8 @@ export function BSCDashboard() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading dashboard data...</p>
+          <div className="animate-spin h-8 w-8 border-4 border-primary/30 border-t-primary rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard data...</p>
         </div>
       </div>
     );
@@ -152,12 +155,12 @@ export function BSCDashboard() {
   
   if (error || !dashboardData) {
     return (
-      <Card>
+      <Card className="border-destructive/20">
         <CardContent className="p-6">
           <div className="text-center">
-            <p className="text-red-500 mb-2">Failed to load dashboard data.</p>
-            <p className="text-gray-500 mb-4">{error instanceof Error ? error.message : "Unknown error occurred"}</p>
-            <Button onClick={() => refetch()}>
+            <p className="text-destructive mb-2">Failed to load dashboard data.</p>
+            <p className="text-muted-foreground mb-4">{error instanceof Error ? error.message : "Unknown error occurred"}</p>
+            <Button onClick={() => refetch()} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
@@ -169,13 +172,13 @@ export function BSCDashboard() {
   
   return (
     <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-card p-4 rounded-lg border shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             {getGreeting()}, {userProfile?.full_name || 'User'}!
           </h1>
           {goalsNearDeadline > 0 && (
-            <p className="text-amber-600 mt-1">
+            <p className="text-amber-600 dark:text-amber-500 mt-1 font-medium">
               You have {goalsNearDeadline} goal{goalsNearDeadline > 1 ? 's' : ''} approaching deadline soon.
             </p>
           )}
@@ -183,11 +186,11 @@ export function BSCDashboard() {
         <div className="flex flex-col sm:flex-row gap-2">
           <DashboardFilter onRangeChange={handleDateRangeChange} initialRange={dateRange} />
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+            <Button variant="outline" onClick={() => refetch()} className="group">
+              <RefreshCw className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform duration-500" />
               Refresh
             </Button>
-            <Button onClick={handleExportDashboard}>
+            <Button onClick={handleExportDashboard} className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0">
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
@@ -204,11 +207,11 @@ export function BSCDashboard() {
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList>
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="goals">Company Goals</TabsTrigger>
-          <TabsTrigger value="operations">Operational</TabsTrigger>
-          <TabsTrigger value="customer">Customer & Innovation</TabsTrigger>
+        <TabsList className="bg-muted/50 p-1 w-full md:w-auto">
+          <TabsTrigger value="financial" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10">Financial</TabsTrigger>
+          <TabsTrigger value="goals" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10">Company Goals</TabsTrigger>
+          <TabsTrigger value="operations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10">Operational</TabsTrigger>
+          <TabsTrigger value="customer" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10">Customer & Innovation</TabsTrigger>
         </TabsList>
         
         <TabsContent value="financial" className="space-y-4">
