@@ -1,4 +1,6 @@
+
 import { Organization, SubscriptionPlan, UserProfile } from "@/types/organization";
+import { supabase } from "@/integrations/supabase/client";
 
 export function calculateTrialStatus(organization: Organization | null): {
   isTrialActive: boolean;

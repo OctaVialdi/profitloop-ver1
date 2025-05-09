@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { TrialPersonalizedRecommendation } from "@/components/TrialPersonalizedRecommendation";
+import { TrialPersonalizedRecommendation } from "@/components/trial/TrialPersonalizedRecommendation";
 
 interface Plan {
   id: string;

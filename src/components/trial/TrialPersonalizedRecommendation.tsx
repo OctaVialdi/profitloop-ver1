@@ -20,7 +20,7 @@ interface TrialPersonalizedRecommendationProps {
   className?: string;
 }
 
-const TrialPersonalizedRecommendation: React.FC<TrialPersonalizedRecommendationProps> = ({ className = "" }) => {
+export const TrialPersonalizedRecommendation: React.FC<TrialPersonalizedRecommendationProps> = ({ className = "" }) => {
   const { organization, isTrialActive, daysLeftInTrial } = useOrganization();
   const [recommendedFeatures, setRecommendedFeatures] = useState<RecommendedFeature[]>([]);
   const [loading, setLoading] = useState(true);
