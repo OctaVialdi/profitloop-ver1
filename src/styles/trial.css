@@ -5,6 +5,13 @@
 body.trial-expired .app-content:not(.subscription-page) {
   filter: blur(3px);
   transition: filter 0.5s ease-in-out;
+  pointer-events: none; /* Prevent interactions with blurred content */
+}
+
+/* Allow interactions with the subscription dialog and banner when everything else is blurred */
+body.trial-expired .trial-expired-overlay,
+body.trial-expired .trial-banner {
+  pointer-events: auto;
 }
 
 /* Premium feature indicators */
@@ -105,7 +112,6 @@ body.trial-expired .app-content:not(.subscription-page) {
 /* Premium feature locked state */
 .feature-locked {
   opacity: 0.6;
-  pointer-events: none;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -181,4 +187,141 @@ body.trial-expired .app-content:not(.subscription-page) {
 @keyframes tooltip-appear {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
+}
+
+/* Watermark grid for premium feature previews */
+.watermark-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  position: absolute;
+  inset: 0;
+  gap: 20px;
+  padding: 10px;
+  align-items: center;
+  justify-items: center;
+}
+
+/* Enhanced trial expired state */
+.trial-expired-content {
+  animation: attention-pulse 2s infinite alternate;
+  position: relative;
+}
+
+@keyframes attention-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Enhanced button animations for trial-related actions */
+.trial-action-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.trial-action-button::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right, 
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.5s ease;
+  opacity: 0;
+}
+
+.trial-action-button:hover::after {
+  opacity: 1;
+  transform: rotate(30deg) translate(50%, -50%);
+}
+
+/* Trial banner specific styling for different states */
+.trial-banner-high {
+  border-color: rgba(74, 222, 128, 0.4);
+  background-color: rgba(74, 222, 128, 0.1);
+}
+
+.trial-banner-medium {
+  border-color: rgba(250, 204, 21, 0.4);
+  background-color: rgba(250, 204, 21, 0.1);
+}
+
+.trial-banner-low {
+  border-color: rgba(248, 113, 113, 0.4);
+  background-color: rgba(248, 113, 113, 0.1);
+}
+
+/* Enhanced mobile responsiveness for trial elements */
+@media (max-width: 640px) {
+  .trial-expired-overlay {
+    align-items: flex-end;
+  }
+  
+  .trial-expired-content {
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .feature-locked::before {
+    font-size: 18px;
+  }
+}
+
+/* Interactive premium feature previews */
+.premium-preview-interactive {
+  position: relative;
+  cursor: pointer;
+}
+
+.premium-preview-interactive::before {
+  content: "👆";
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 16px;
+  z-index: 20;
+  animation: finger-tap 1.5s ease infinite;
+}
+
+@keyframes finger-tap {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Trial milestone indicators */
+.trial-milestone {
+  position: relative;
+}
+
+.trial-milestone::after {
+  content: attr(data-milestone);
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e40af;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  animation: milestone-appear 0.3s ease forwards;
+}
+
+@keyframes milestone-appear {
+  from { opacity: 0; transform: translate(-50%, 5px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }

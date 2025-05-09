@@ -1,97 +1,191 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Organization } from "@/types/organization";
 
 /**
- * Track a trial-related event for analytics
- * @param event_type The type of event to track
- * @param data Additional data to include in the event
- */
-export async function trackTrialEvent(
-  event_type: string,
-  organization_id: string,
-  additional_data?: Record<string, any>
-): Promise<boolean> {
-  try {
-    // Call the track-event edge function
-    const { error } = await supabase.functions.invoke('track-event', {
-      body: {
-        event_type,
-        organization_id,
-        additional_data
-      }
-    });
-    
-    if (error) {
-      console.error(`Error tracking trial event ${event_type}:`, error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error(`Failed to track trial event ${event_type}:`, error);
-    return false;
-  }
-}
-
-/**
- * Get subscription analytics for an organization
- * @param organization_id The organization ID to get analytics for
- * @param days Number of days to look back (default: 30)
- */
-export async function getSubscriptionAnalytics(
-  organization_id: string, 
-  days: number = 30
-): Promise<any> {
-  try {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-    
-    const { data, error } = await supabase
-      .from('subscription_analytics')
-      .select('*')
-      .eq('organization_id', organization_id)
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error("Error fetching subscription analytics:", error);
-      throw error;
-    }
-    
-    return {
-      success: true,
-      data
-    };
-  } catch (error) {
-    console.error("Error in getSubscriptionAnalytics:", error);
-    return {
-      success: false,
-      error: error.message,
-      data: []
-    };
-  }
-}
-
-/**
- * Track a feature access attempt
+ * Track a feature access event
+ * @param featureName Name of the feature being accessed
+ * @param accessGranted Whether access was granted
+ * @param reason Reason for access decision
+ * @param organizationId The organization ID
  */
 export async function trackFeatureAccess(
-  organization_id: string,
-  feature_name: string,
-  access_granted: boolean
-): Promise<boolean> {
-  return trackTrialEvent(
-    access_granted ? 'feature_access_granted' : 'feature_access_denied',
-    organization_id,
-    { feature_name }
-  );
+  featureName: string,
+  accessGranted: boolean,
+  reason: string,
+  organizationId?: string
+): Promise<void> {
+  try {
+    // Track locally first (for immediate analytics)
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'feature_access',
+        feature_name: featureName,
+        access_granted: accessGranted,
+        reason: reason,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // If no organization ID, don't track in database
+    if (!organizationId) return;
+    
+    // Track in database for later analytics
+    await supabase.functions.invoke('track-event', {
+      body: {
+        event_type: 'feature_access',
+        organization_id: organizationId,
+        additional_data: {
+          feature_name: featureName,
+          access_granted: accessGranted,
+          reason: reason,
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Failed to track feature access:", error);
+    // Non-critical operation, so we just log the error
+  }
 }
 
 /**
- * Track subscription page view
+ * Track trial-related events
+ * @param eventType The type of event
+ * @param organizationId The organization ID
+ * @param additionalData Additional data to include
  */
-export async function trackSubscriptionPageView(
-  organization_id: string
-): Promise<boolean> {
-  return trackTrialEvent('subscription_page_view', organization_id);
+export async function trackTrialEvent(
+  eventType: string,
+  organizationId: string,
+  additionalData?: Record<string, any>
+): Promise<void> {
+  try {
+    // Track locally
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: `trial_${eventType}`,
+        organization_id: organizationId,
+        ...additionalData,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Track in database
+    await supabase.functions.invoke('track-event', {
+      body: {
+        event_type: `trial_${eventType}`,
+        organization_id: organizationId,
+        additional_data: {
+          ...additionalData,
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+  } catch (error) {
+    console.error(`Failed to track trial ${eventType} event:`, error);
+  }
+}
+
+/**
+ * Check if a user has access to a feature based on organization status
+ * @param organization The organization object
+ * @param isPremiumFeature Whether the feature is premium
+ * @returns An object with access decision and reason
+ */
+export function checkFeatureAccess(
+  organization: Organization | null,
+  isPremiumFeature: boolean
+): { 
+  hasAccess: boolean; 
+  reason: string;
+  daysLeft?: number;
+} {
+  // If not a premium feature, always grant access
+  if (!isPremiumFeature) {
+    return { hasAccess: true, reason: 'not_premium_feature' };
+  }
+  
+  // If no organization, deny access
+  if (!organization) {
+    return { hasAccess: false, reason: 'no_organization' };
+  }
+  
+  // Check if organization has active subscription
+  if (organization.subscription_status === 'active' && 
+      organization.subscription_plan_id && 
+      organization.subscription_plan_id !== 'basic') {
+    return { hasAccess: true, reason: 'active_subscription' };
+  }
+  
+  // Check if organization is in active trial
+  if (organization.subscription_status === 'trial' && !organization.trial_expired) {
+    const now = new Date();
+    const trialEndDate = organization.trial_end_date ? new Date(organization.trial_end_date) : null;
+    
+    if (trialEndDate && trialEndDate > now) {
+      const diffTime = trialEndDate.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      return { 
+        hasAccess: true, 
+        reason: 'active_trial',
+        daysLeft: diffDays 
+      };
+    }
+  }
+  
+  // Check if organization is in grace period
+  if (organization.grace_period_end) {
+    const now = new Date();
+    const gracePeriodEnd = new Date(organization.grace_period_end);
+    
+    if (gracePeriodEnd > now) {
+      return { hasAccess: true, reason: 'grace_period' };
+    }
+  }
+  
+  // Default: no access
+  return { hasAccess: false, reason: 'no_active_subscription_or_trial' };
+}
+
+/**
+ * Track user engagement with trial features
+ */
+export function trackTrialFeatureEngagement(
+  featureName: string,
+  engagementType: 'view' | 'interact' | 'convert',
+  organizationId?: string
+): void {
+  try {
+    // Only track if we have an organization ID
+    if (!organizationId) return;
+    
+    // Track client-side first for immediate analytics
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'trial_feature_engagement',
+        feature_name: featureName,
+        engagement_type: engagementType,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Also track server-side for more reliable analytics
+    supabase.functions.invoke('track-event', {
+      body: {
+        event_type: 'trial_feature_engagement',
+        organization_id: organizationId,
+        additional_data: {
+          feature_name: featureName,
+          engagement_type: engagementType,
+          timestamp: new Date().toISOString()
+        }
+      }
+    }).catch(error => {
+      console.error("Failed to track trial feature engagement:", error);
+    });
+  } catch (error) {
+    console.error("Error in trackTrialFeatureEngagement:", error);
+  }
 }
