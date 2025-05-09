@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import { PaymentMethod } from "@/types/payment";
 
 interface CreatePaymentParams {
   organizationId: string;
@@ -110,7 +109,7 @@ export const getInvoices = async (organizationId: string) => {
   }
 };
 
-export const getPaymentMethods = async (): Promise<PaymentMethod[]> => {
+export const getPaymentMethods = async () => {
   try {
     const { data, error } = await supabase
       .from('payment_methods')
@@ -123,8 +122,7 @@ export const getPaymentMethods = async (): Promise<PaymentMethod[]> => {
       return [];
     }
 
-    // Ensure the data is properly typed
-    return (data as PaymentMethod[]) || [];
+    return data || [];
   } catch (error) {
     console.error('Error fetching payment methods:', error);
     return [];

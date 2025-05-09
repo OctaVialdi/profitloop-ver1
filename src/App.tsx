@@ -1,6 +1,6 @@
 
 import { BrowserRouter } from "react-router-dom";
-import router from "./routes";
+import { AppRoutes } from "./routes";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/QueryProvider";
 import { useAssetStorage } from "./hooks/useAssetStorage";
@@ -9,7 +9,6 @@ import { useEffect } from "react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { checkAndUpdateTrialStatus } from "@/services/subscriptionService";
 import { trackSubscriptionEvent } from "@/utils/subscriptionUtils";
-import { RouterProvider } from "react-router-dom";
 
 function AppContent() {
   const { isTrialActive, organization } = useOrganization();
@@ -63,7 +62,7 @@ function AppContent() {
   return (
     <>
       <TrialBanner />
-      <RouterProvider router={router} />
+      <AppRoutes />
     </>
   );
 }
@@ -74,8 +73,10 @@ function App() {
 
   return (
     <QueryProvider>
-      <AppContent />
-      <Toaster />
+      <BrowserRouter>
+        <AppContent />
+        <Toaster />
+      </BrowserRouter>
     </QueryProvider>
   );
 }

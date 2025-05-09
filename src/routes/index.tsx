@@ -1,5 +1,6 @@
 
-import { createBrowserRouter, RouteObject } from "react-router-dom";
+import { Fragment } from "react";
+import { createBrowserRouter } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
 import { hrRoutes } from "./hrRoutes";
@@ -14,7 +15,7 @@ import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 
 // Application Routes
-const applicationRoutes: RouteObject[] = [
+const applicationRoutes = [
   {
     path: "/",
     element: <Index />
@@ -25,28 +26,19 @@ const applicationRoutes: RouteObject[] = [
   }
 ];
 
-// Convert element routes to RouteObject format
-const convertToRouteObjects = (routes: any): RouteObject[] => {
-  if (Array.isArray(routes)) {
-    return routes.map(route => convertToRouteObjects(route)).flat();
-  }
-  return [routes];
-};
-
-// Create the router with all routes
 const router = createBrowserRouter([
   ...applicationRoutes,
-  ...convertToRouteObjects(authRoutes),
-  ...convertToRouteObjects(dashboardRoutes),
-  ...convertToRouteObjects(hrRoutes),
-  ...convertToRouteObjects(financeRoutes),
-  ...convertToRouteObjects(marketingRoutes),
-  ...convertToRouteObjects(operationsRoutes),
-  ...convertToRouteObjects(itRoutes),
-  ...convertToRouteObjects(myInfoRoutes),
-  ...convertToRouteObjects(settingsRoutes),
-  ...convertToRouteObjects(onboardingRoutes),
-  ...convertToRouteObjects(paymentRoutes)
+  authRoutes,
+  dashboardRoutes,
+  hrRoutes,
+  financeRoutes,
+  marketingRoutes,
+  operationsRoutes,
+  itRoutes,
+  myInfoRoutes,
+  settingsRoutes,
+  onboardingRoutes,
+  paymentRoutes // Added payment routes
 ]);
 
 export default router;
