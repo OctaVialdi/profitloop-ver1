@@ -15,48 +15,47 @@ serve(async (req: Request) => {
   }
 
   try {
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    // Create a Supabase client with the admin role
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-    // Call the check_trial_expirations database function
-    const { data, error } = await supabaseClient.rpc('check_trial_expirations');
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
 
-    if (error) {
-      console.error("Error calling check_trial_expirations:", error);
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
+    // Call the function
+    const { data, error } = await supabase.rpc('check_trial_expirations');
+    
+    // Check for errors
+    if (error) throw error;
+    
+    // Return success response
     return new Response(
       JSON.stringify({
+        success: true,
         message: "Trial expiration check completed successfully",
+        result: data,
       }),
       {
-        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
       }
     );
   } catch (error) {
-    console.error("Error in check-trial-expiration function:", error);
+    // Return error response
+    console.error("Error in trial expiration check:", error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
       {
-        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
       }
     );
   }

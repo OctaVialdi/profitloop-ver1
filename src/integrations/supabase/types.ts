@@ -1606,6 +1606,8 @@ export type Database = {
           theme_settings: Json | null
           trial_end_date: string | null
           trial_expired: boolean | null
+          trial_extension_reason: string | null
+          trial_extension_requested: boolean | null
           trial_start_date: string | null
         }
         Insert: {
@@ -1624,6 +1626,8 @@ export type Database = {
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
+          trial_extension_reason?: string | null
+          trial_extension_requested?: boolean | null
           trial_start_date?: string | null
         }
         Update: {
@@ -1642,6 +1646,8 @@ export type Database = {
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
+          trial_extension_reason?: string | null
+          trial_extension_requested?: boolean | null
           trial_start_date?: string | null
         }
         Relationships: [
@@ -1841,6 +1847,64 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_analytics: {
+        Row: {
+          additional_data: Json | null
+          created_at: string | null
+          event_type: string
+          id: string
+          organization_id: string
+          payment_method: string | null
+          plan_id: string | null
+          previous_plan_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          additional_data?: Json | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          organization_id: string
+          payment_method?: string | null
+          plan_id?: string | null
+          previous_plan_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          additional_data?: Json | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          organization_id?: string
+          payment_method?: string | null
+          plan_id?: string | null
+          previous_plan_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_analytics_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_analytics_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_analytics_previous_plan_id_fkey"
+            columns: ["previous_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
         ]
