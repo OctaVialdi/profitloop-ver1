@@ -3,12 +3,13 @@ import React from 'react';
 import { useOrganization } from "@/hooks/useOrganization";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { ArrowRight, Calendar, Clock, Info, Sparkles, Timer } from 'lucide-react';
-import { formatTrialCountdown } from "@/utils/organizationUtils";
-import { trackTrialEvent } from '@/services/analyticsService';
+import { ArrowRight, Timer } from 'lucide-react';
 import TrialPersonalizedRecommendation from './TrialPersonalizedRecommendation';
 import TrialExtensionRequestDialog from './TrialExtensionRequestDialog';
+import TrialProgress from './dashboard/TrialProgress';
+import FeaturesSummary from './dashboard/FeaturesSummary';
+import { useTrialStatusStyles } from '@/hooks/trial/useTrialStatusStyles';
+import { getTrialMilestone, trackTrialExtensionClick, trackTrialExtensionSuccess, trackTrialUpgradeClick } from './dashboard/trialAnalyticsHelpers';
 
 interface TrialDashboardProps {
   className?: string;
@@ -23,87 +24,24 @@ const TrialDashboard: React.FC<TrialDashboardProps> = ({ className = '' }) => {
     return null;
   }
   
-  // Calculate trial progress percentage
-  const calculateTrialProgress = () => {
-    if (!organization.trial_start_date || !organization.trial_end_date) return 0;
-    
-    const start = new Date(organization.trial_start_date).getTime();
-    const end = new Date(organization.trial_end_date).getTime();
-    const now = new Date().getTime();
-    const totalDuration = end - start;
-    const elapsed = now - start;
-    
-    // Return elapsed percentage (0 to 100)
-    return Math.max(0, Math.min(100, (elapsed / totalDuration * 100)));
-  };
-  
-  // Handle trial milestones based on progress
-  const getTrialMilestone = () => {
-    const progress = calculateTrialProgress();
-    
-    if (progress < 10) return 'beginning';
-    if (progress >= 90) return 'ending';
-    if (progress >= 75) return '75-percent';
-    if (progress >= 50) return 'halfway';
-    if (progress >= 25) return '25-percent';
-    return null;
-  };
-  
-  // Get appropriate styling based on trial status
-  const getStatusStyles = () => {
-    if (!isTrialActive) {
-      return {
-        containerClass: 'border-red-200 bg-red-50',
-        titleClass: 'text-red-800',
-        progressClass: 'bg-red-500',
-        buttonVariant: 'destructive' as const
-      };
-    }
-    
-    if (daysLeftInTrial <= 3) {
-      return {
-        containerClass: 'border-amber-200 bg-amber-50',
-        titleClass: 'text-amber-800',
-        progressClass: 'bg-amber-500',
-        buttonVariant: 'warning' as const
-      };
-    }
-    
-    return {
-      containerClass: 'border-blue-200 bg-blue-50',
-      titleClass: 'text-blue-800',
-      progressClass: 'bg-blue-500',
-      buttonVariant: 'default' as const
-    };
-  };
-  
-  const styles = getStatusStyles();
-  const milestone = getTrialMilestone();
+  // Get trial milestone and styling based on trial status
+  const milestone = getTrialMilestone(organization);
+  const styles = useTrialStatusStyles(isTrialActive, daysLeftInTrial);
   
   // Handle trial extension request
   const handleExtensionRequest = () => {
     setShowExtensionDialog(true);
-    
-    if (organization?.id) {
-      trackTrialEvent('extension_request_click', organization.id);
-    }
+    trackTrialExtensionClick(organization?.id);
   };
   
   // Handle upgrade button click
   const handleUpgradeClick = () => {
-    if (organization?.id) {
-      trackTrialEvent('dashboard_upgrade_click', organization.id, { 
-        days_left: daysLeftInTrial,
-        milestone
-      });
-    }
+    trackTrialUpgradeClick(organization?.id, daysLeftInTrial, milestone);
   };
   
   // Handle successful extension request
   const handleExtensionSuccess = () => {
-    if (organization?.id) {
-      trackTrialEvent('extension_request_success', organization.id);
-    }
+    trackTrialExtensionSuccess(organization?.id);
   };
 
   return (
@@ -125,55 +63,17 @@ const TrialDashboard: React.FC<TrialDashboardProps> = ({ className = '' }) => {
         
         <CardContent className="space-y-4">
           {/* Trial Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="flex items-center">
-                <Calendar className="mr-1.5 h-4 w-4" />
-                {isTrialActive ? "Progress Trial:" : "Trial Berakhir:"}  
-              </span>
-              <span className="font-medium">
-                {isTrialActive 
-                  ? formatTrialCountdown(organization.trial_end_date)
-                  : new Date(organization.trial_end_date!).toLocaleDateString()}
-              </span>
-            </div>
-            
-            <Progress 
-              value={isTrialActive ? 100 - calculateTrialProgress() : 0} 
-              className="h-2"
-              indicatorClassName={styles.progressClass}
-            />
-            
-            <div className="flex justify-between text-xs opacity-70">
-              <span>{isTrialActive ? 'Dimulai' : 'Berakhir'}</span>
-              <span>{isTrialActive ? 'Berakhir' : 'Upgrade Sekarang'}</span>
-            </div>
-          </div>
+          <TrialProgress 
+            organization={organization}
+            isTrialActive={isTrialActive}
+            daysLeftInTrial={daysLeftInTrial}
+          />
           
           {/* Trial Features Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-white bg-opacity-60 p-3 rounded-lg border border-opacity-50 flex flex-col items-center text-center">
-              <Sparkles className="h-8 w-8 mb-2 text-blue-500" />
-              <h4 className="font-medium">Fitur Premium</h4>
-              <p className="text-xs opacity-70">Akses ke semua fitur</p>
-            </div>
-            
-            <div className="bg-white bg-opacity-60 p-3 rounded-lg border border-opacity-50 flex flex-col items-center text-center">
-              <Info className="h-8 w-8 mb-2 text-blue-500" />
-              <h4 className="font-medium">Dukungan Prioritas</h4>
-              <p className="text-xs opacity-70">Bantuan teknis prioritas</p>
-            </div>
-            
-            <div className="bg-white bg-opacity-60 p-3 rounded-lg border border-opacity-50 flex flex-col items-center text-center">
-              <Clock className="h-8 w-8 mb-2 text-blue-500" />
-              <h4 className="font-medium">14 Hari Trial</h4>
-              <p className="text-xs opacity-70">
-                {isTrialActive 
-                  ? `${daysLeftInTrial} hari tersisa` 
-                  : "Trial telah berakhir"}
-              </p>
-            </div>
-          </div>
+          <FeaturesSummary 
+            isTrialActive={isTrialActive}
+            daysLeftInTrial={daysLeftInTrial}
+          />
         </CardContent>
         
         <CardFooter className="flex flex-col sm:flex-row gap-2">

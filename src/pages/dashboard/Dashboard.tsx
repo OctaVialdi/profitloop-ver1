@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useOrganization } from "@/hooks/useOrganization";
 import TrialMilestone from "@/components/trial/TrialMilestone";
 import TrialDashboard from "@/components/trial/TrialDashboard";
-import TrialPersonalizedRecommendation from "@/components/trial/TrialPersonalizedRecommendation";
 
 export default function Dashboard() {
   const { organization } = useOrganization();
