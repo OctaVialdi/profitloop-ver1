@@ -15,22 +15,47 @@ import {
   DepartmentData
 } from '@/types/dashboard';
 
-async function fetchFinancialSummary(): Promise<FinancialSummary> {
-  // Get revenue and expense totals
-  const { data: financialData, error: financialError } = await supabase
+// Helper function to format date for Supabase query
+function formatDateForQuery(date: Date | null | undefined): string | null {
+  if (!date) return null;
+  return date.toISOString();
+}
+
+async function fetchFinancialSummary(startDate?: Date, endDate?: Date): Promise<FinancialSummary> {
+  // Build financial data query with date filter
+  let financialQuery = supabase
     .from('financial_summary')
     .select('*')
-    .order('month', { ascending: false })
-    .limit(1);
+    .order('month', { ascending: false });
+  
+  // Apply date filters if provided
+  if (startDate) {
+    financialQuery = financialQuery.gte('month', formatDateForQuery(startDate));
+  }
+  if (endDate) {
+    financialQuery = financialQuery.lte('month', formatDateForQuery(endDate));
+  }
+  
+  const { data: financialData, error: financialError } = await financialQuery.limit(1);
 
   if (financialError) throw new Error(financialError.message);
   
-  // Get debt information
-  const { data: debtData, error: debtError } = await supabase
+  // Build debt query with date filter
+  let debtQuery = supabase
     .from('transactions')
     .select('*')
-    .eq('type', 'debt_payment')
-    .order('transaction_date', { ascending: true });
+    .eq('type', 'debt_payment');
+  
+  // Apply date filters to transactions
+  if (startDate) {
+    debtQuery = debtQuery.gte('transaction_date', formatDateForQuery(startDate));
+  }
+  if (endDate) {
+    debtQuery = debtQuery.lte('transaction_date', formatDateForQuery(endDate));
+  }
+  
+  debtQuery = debtQuery.order('transaction_date', { ascending: true });
+  const { data: debtData, error: debtError } = await debtQuery;
 
   if (debtError) throw new Error(debtError.message);
   
@@ -89,11 +114,22 @@ async function fetchFinancialSummary(): Promise<FinancialSummary> {
   };
 }
 
-async function fetchCompanyGoals(): Promise<CompanyGoal[]> {
-  const { data, error } = await supabase
+async function fetchCompanyGoals(startDate?: Date, endDate?: Date): Promise<CompanyGoal[]> {
+  let query = supabase
     .from('company_goals')
-    .select('*')
-    .order('deadline', { ascending: true });
+    .select('*');
+  
+  // Apply date filters for company goals based on creation date or deadline
+  if (startDate) {
+    query = query.or(`created_at.gte.${formatDateForQuery(startDate)},deadline.gte.${formatDateForQuery(startDate)}`);
+  }
+  if (endDate) {
+    query = query.or(`created_at.lte.${formatDateForQuery(endDate)},deadline.lte.${formatDateForQuery(endDate)}`);
+  }
+  
+  query = query.order('deadline', { ascending: true });
+  
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
   
@@ -110,12 +146,22 @@ async function fetchCompanyGoals(): Promise<CompanyGoal[]> {
   }));
 }
 
-async function fetchOperationalMetrics(): Promise<OperationalMetric[]> {
-  const { data, error } = await supabase
+async function fetchOperationalMetrics(startDate?: Date, endDate?: Date): Promise<OperationalMetric[]> {
+  let query = supabase
     .from('operational_metrics')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(10);
+    .select('*');
+  
+  // Apply date filters for operational metrics
+  if (startDate) {
+    query = query.gte('created_at', formatDateForQuery(startDate));
+  }
+  if (endDate) {
+    query = query.lte('created_at', formatDateForQuery(endDate));
+  }
+  
+  query = query.order('created_at', { ascending: false }).limit(10);
+  
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
   
@@ -130,12 +176,22 @@ async function fetchOperationalMetrics(): Promise<OperationalMetric[]> {
   }));
 }
 
-async function fetchCustomerMetrics(): Promise<CustomerMetric[]> {
-  const { data, error } = await supabase
+async function fetchCustomerMetrics(startDate?: Date, endDate?: Date): Promise<CustomerMetric[]> {
+  let query = supabase
     .from('customer_metrics')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(10);
+    .select('*');
+  
+  // Apply date filters for customer metrics
+  if (startDate) {
+    query = query.gte('created_at', formatDateForQuery(startDate));
+  }
+  if (endDate) {
+    query = query.lte('created_at', formatDateForQuery(endDate));
+  }
+  
+  query = query.order('created_at', { ascending: false }).limit(10);
+  
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
   
@@ -149,12 +205,22 @@ async function fetchCustomerMetrics(): Promise<CustomerMetric[]> {
   }));
 }
 
-async function fetchInnovationMetrics(): Promise<InnovationMetric[]> {
-  const { data, error } = await supabase
+async function fetchInnovationMetrics(startDate?: Date, endDate?: Date): Promise<InnovationMetric[]> {
+  let query = supabase
     .from('innovation_metrics')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(10);
+    .select('*');
+  
+  // Apply date filters for innovation metrics
+  if (startDate) {
+    query = query.gte('created_at', formatDateForQuery(startDate));
+  }
+  if (endDate) {
+    query = query.lte('created_at', formatDateForQuery(endDate));
+  }
+  
+  query = query.order('created_at', { ascending: false }).limit(10);
+  
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
   
@@ -168,7 +234,8 @@ async function fetchInnovationMetrics(): Promise<InnovationMetric[]> {
 }
 
 // Generate mock data for demo purposes
-function generateMockRevenueContributors(): RevenueContributor[] {
+function generateMockRevenueContributors(startDate?: Date, endDate?: Date): RevenueContributor[] {
+  // In a real implementation, we would filter this data based on the date range
   return [
     { name: 'Product Sales', amount: 245000, percentage: 45 },
     { name: 'Services', amount: 150000, percentage: 28 },
@@ -178,7 +245,8 @@ function generateMockRevenueContributors(): RevenueContributor[] {
   ];
 }
 
-function generateMockYearlyTrends(): YearlyTrend[] {
+function generateMockYearlyTrends(startDate?: Date, endDate?: Date): YearlyTrend[] {
+  // This could be filtered based on the date range in a real implementation
   return [
     { 
       year: '2020', 
@@ -211,7 +279,8 @@ function generateMockYearlyTrends(): YearlyTrend[] {
   ];
 }
 
-function generateMockExpenseBreakdown(): ExpenseBreakdown[] {
+function generateMockExpenseBreakdown(startDate?: Date, endDate?: Date): ExpenseBreakdown[] {
+  // This could be filtered based on the date range in a real implementation
   return [
     { category: 'Fixed Expenses', amount: 250000, expected: 245000, percentage: 39 },
     { category: 'Variable Expenses', amount: 180000, expected: 190000, percentage: 28 },
@@ -231,7 +300,7 @@ function generateMockDepartments(): DepartmentData[] {
 }
 
 // Main function to fetch all dashboard data
-async function fetchDashboardData(): Promise<BSCDashboardData> {
+async function fetchDashboardData(startDate?: Date, endDate?: Date): Promise<BSCDashboardData> {
   try {
     const [
       financialSummary,
@@ -240,17 +309,17 @@ async function fetchDashboardData(): Promise<BSCDashboardData> {
       customerMetrics,
       innovationMetrics
     ] = await Promise.all([
-      fetchFinancialSummary(),
-      fetchCompanyGoals(),
-      fetchOperationalMetrics(),
-      fetchCustomerMetrics(),
-      fetchInnovationMetrics()
+      fetchFinancialSummary(startDate, endDate),
+      fetchCompanyGoals(startDate, endDate),
+      fetchOperationalMetrics(startDate, endDate),
+      fetchCustomerMetrics(startDate, endDate),
+      fetchInnovationMetrics(startDate, endDate)
     ]);
     
     // For now, we'll generate some mock data for demonstration
-    const revenueContributors = generateMockRevenueContributors();
-    const yearlyTrends = generateMockYearlyTrends();
-    const expenseBreakdowns = generateMockExpenseBreakdown();
+    const revenueContributors = generateMockRevenueContributors(startDate, endDate);
+    const yearlyTrends = generateMockYearlyTrends(startDate, endDate);
+    const expenseBreakdowns = generateMockExpenseBreakdown(startDate, endDate);
     const departments = generateMockDepartments();
     
     return {
@@ -270,12 +339,12 @@ async function fetchDashboardData(): Promise<BSCDashboardData> {
   }
 }
 
-export function useDashboardData() {
+export function useDashboardData(startDate?: Date, endDate?: Date) {
   const { organization } = useOrganization();
   
   return useQuery({
-    queryKey: ['dashboardData', organization?.id],
-    queryFn: fetchDashboardData,
+    queryKey: ['dashboardData', organization?.id, startDate?.toISOString(), endDate?.toISOString()],
+    queryFn: () => fetchDashboardData(startDate, endDate),
     enabled: !!organization?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false

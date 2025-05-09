@@ -1,26 +1,12 @@
 
-export interface FinancialMetric {
-  id: string;
-  name: string;
-  value: number;
-  target?: number;
-  unit: string;
-  change?: number;
-  trend?: 'up' | 'down' | 'neutral';
-}
+// Date Range Type
+export type DateRangeType = {
+  from: Date;
+  to: Date;
+};
 
-export interface Transaction {
-  id: string;
-  type: 'income' | 'expense' | 'debt_payment';
-  amount: number;
-  description?: string;
-  department_id?: string;
-  category?: string;
-  transaction_date: string;
-  created_at: string;
-}
-
-export interface FinancialSummary {
+// Financial Summary Types
+export type FinancialSummary = {
   totalRevenue: number;
   totalExpenses: number;
   cashFlow: number;
@@ -29,86 +15,97 @@ export interface FinancialSummary {
   debtTotal: number;
   debtToAssetRatio: number;
   upcomingDebtPayments: DebtPayment[];
-}
+};
 
-export interface DebtPayment {
+export type DebtPayment = {
   id: string;
   description: string;
   amount: number;
   dueDate: string;
   daysRemaining: number;
   isPriority: boolean;
-}
+};
 
-export interface CompanyGoal {
+// Company Goal Types
+export type CompanyGoal = {
   id: string;
   name: string;
   targetAmount: number;
   currentProgress: number;
   deadline: string;
   isCritical: boolean;
-  status: 'active' | 'completed' | 'cancelled';
+  status: "active" | "completed" | "cancelled";
   icon?: string;
   description?: string;
-}
+};
 
-export interface OperationalMetric {
+// Operational Metric Types
+export type OperationalMetric = {
   id: string;
-  type: 'productivity' | 'quality' | 'inventory';
+  type: "productivity" | "quality" | "inventory";
   name: string;
   value: number;
   targetValue?: number;
   unit?: string;
   departmentId?: string;
-}
+};
 
-export interface CustomerMetric {
+// Customer Metric Types
+export type CustomerMetric = {
   id: string;
-  type: 'satisfaction' | 'retention' | 'feedback';
+  type: "satisfaction" | "retention" | "feedback";
   name: string;
   value: number;
   category?: string;
   feedbackText?: string;
-}
+};
 
-export interface InnovationMetric {
+// Innovation Metric Types
+export type InnovationMetric = {
   id: string;
-  type: 'training' | 'innovation' | 'technology';
+  type: "training" | "innovation" | "technology";
   name: string;
   value: number;
   details?: string;
-}
+};
 
-export interface RevenueContributor {
+// Revenue Contributor Type
+export type RevenueContributor = {
   name: string;
   amount: number;
   percentage: number;
-}
+};
 
-export interface YearlyTrend {
+// Yearly Trend Type
+export type YearlyTrend = {
   year: string;
   revenue: number;
   expenses: number;
-  events?: Array<{
-    name: string;
-    date: string;
-    description?: string;
-  }>;
-}
+  events?: YearlyEvent[];
+};
 
-export interface ExpenseBreakdown {
+export type YearlyEvent = {
+  name: string;
+  date: string;
+  description?: string;
+};
+
+// Expense Breakdown Type
+export type ExpenseBreakdown = {
   category: string;
   amount: number;
   expected: number;
   percentage: number;
-}
+};
 
-export interface DepartmentData {
+// Department Data Type
+export type DepartmentData = {
   id: string;
   name: string;
-}
+};
 
-export interface BSCDashboardData {
+// BSC Dashboard Data Type
+export type BSCDashboardData = {
   financialSummary: FinancialSummary;
   companyGoals: CompanyGoal[];
   operationalMetrics: OperationalMetric[];
@@ -118,4 +115,4 @@ export interface BSCDashboardData {
   yearlyTrends: YearlyTrend[];
   expenseBreakdowns: ExpenseBreakdown[];
   departments: DepartmentData[];
-}
+};

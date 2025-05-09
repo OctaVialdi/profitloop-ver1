@@ -7,7 +7,9 @@ import { Download, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useOrganization } from '@/hooks/useOrganization';
-import { CompanyGoal } from '@/types/dashboard';
+import { CompanyGoal, DateRangeType } from '@/types/dashboard';
+import { useDateRangeFilter } from '@/hooks/useDateRangeFilter';
+import { DashboardFilter } from './DashboardFilter';
 
 // Import dashboard sections
 import { FinancialSummarySection } from './FinancialSummarySection';
@@ -18,7 +20,8 @@ import { AIRecommendationCard } from './AIRecommendationCard';
 import { toast } from '@/components/ui/sonner';
 
 export function BSCDashboard() {
-  const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
+  const { dateRange, updateDateRange } = useDateRangeFilter();
+  const { data: dashboardData, isLoading, error, refetch } = useDashboardData(dateRange.from, dateRange.to);
   const { organization, userProfile } = useOrganization();
   const [activeTab, setActiveTab] = useState('financial');
   
@@ -82,6 +85,11 @@ export function BSCDashboard() {
     toast.success("Dashboard report will be downloaded shortly.");
     // In a real implementation, this would generate and download a PDF
   };
+
+  // Handle date range changes
+  const handleDateRangeChange = (range: DateRangeType) => {
+    updateDateRange(range);
+  };
   
   if (isLoading) {
     return (
@@ -124,15 +132,18 @@ export function BSCDashboard() {
             </p>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Button onClick={handleExportDashboard}>
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <DashboardFilter onRangeChange={handleDateRangeChange} initialRange={dateRange} />
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={handleExportDashboard}>
+              <Download className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+          </div>
         </div>
       </div>
       
