@@ -28,18 +28,48 @@ const BillingHistory = () => {
       try {
         setLoading(true);
         
-        // Use the new RPC function we created
-        const { data, error: rpcError } = await supabase
-          .rpc('get_billing_history', { org_id: organization.id });
-        
-        if (rpcError) {
-          console.error("Error fetching billing history:", rpcError);
-          setBillingHistory([]);
-        } else if (data) {
-          // Transform to billing records if needed
-          setBillingHistory(data as BillingRecord[]);
+        // Use RPC function as workaround for TypeScript issues
+        const { data, error } = await supabase.rpc('get_billing_history', {
+          org_id: organization.id
+        });
+
+        if (error) {
+          console.error('Error fetching billing history:', error);
+          
+          // Fallback - try direct query despite TypeScript errors
+          const directQuery = await supabase.from('subscription_audit_logs')
+            .select('*')
+            .eq('organization_id', organization.id)
+            .eq('action', 'payment_succeeded')
+            .order('created_at', { ascending: false });
+            
+          if (directQuery.error) throw directQuery.error;
+          
+          // Transform to billing records
+          const records: BillingRecord[] = (directQuery.data || []).map((record: any) => ({
+            id: record.id,
+            created_at: record.created_at,
+            type: 'subscription_payment',
+            amount: record.data?.amount_paid || 0,
+            status: 'paid',
+            invoice_url: record.data?.invoice_url,
+            details: record.data
+          }));
+          
+          setBillingHistory(records);
         } else {
-          setBillingHistory([]);
+          // Transform to billing records
+          const records: BillingRecord[] = (data || []).map((record: any) => ({
+            id: record.id,
+            created_at: record.created_at,
+            type: 'subscription_payment',
+            amount: record.data?.amount_paid || 0,
+            status: 'paid',
+            invoice_url: record.data?.invoice_url,
+            details: record.data
+          }));
+          
+          setBillingHistory(records);
         }
       } catch (err) {
         console.error('Error fetching billing history:', err);

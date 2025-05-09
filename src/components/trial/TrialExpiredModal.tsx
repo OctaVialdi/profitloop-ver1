@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { robustSignOut } from '@/utils/authUtils';
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import TrialExtensionRequestForm from "./TrialExtensionRequestForm";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,7 +24,7 @@ const TrialExpiredModal = ({
   const [userEmail, setUserEmail] = useState('');
   
   // Get user email
-  useEffect(() => {
+  useState(() => {
     const getUserEmail = async () => {
       const { data } = await supabase.auth.getUser();
       if (data?.user?.email) {
