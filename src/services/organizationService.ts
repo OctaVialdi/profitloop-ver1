@@ -21,11 +21,18 @@ export async function getOrganization(organizationId: string): Promise<Organizat
       return null;
     }
     
-    // Ensure trial_expired exists (default to false if not present)
-    return {
-      ...orgData as Organization,
+    // Cast to Organization type with proper defaults for new fields
+    const organization: Organization = {
+      ...orgData as any,
+      // Ensure the required fields from our type exist
+      subscription_status: orgData.subscription_status || 'trial',
+      trial_start_date: orgData.trial_start_date || null,
+      trial_end_date: orgData.trial_end_date || null,
+      grace_period_end: orgData.grace_period_end || null,
       trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false
     };
+    
+    return organization;
   } catch (error) {
     console.error("Error fetching organization:", error);
     throw error;

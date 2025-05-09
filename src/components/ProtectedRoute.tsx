@@ -16,6 +16,11 @@ interface ProfileData {
   has_seen_welcome?: boolean;
 }
 
+interface OrganizationStatus {
+  subscription_status?: 'active' | 'trial' | 'expired';
+  trial_end_date?: string | null;
+}
+
 export const ProtectedRoute = ({
   children,
   redirectTo = "/auth/login",
@@ -24,10 +29,7 @@ export const ProtectedRoute = ({
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [organizationStatus, setOrganizationStatus] = useState<{
-    subscription_status?: 'active' | 'trial' | 'expired';
-    trial_end_date?: string | null;
-  } | null>(null);
+  const [organizationStatus, setOrganizationStatus] = useState<OrganizationStatus | null>(null);
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -68,13 +70,13 @@ export const ProtectedRoute = ({
             // Also fetch the organization subscription status
             if (session.user.user_metadata.organization_id) {
               try {
-                const { data: orgData } = await supabase
+                const { data: orgData, error } = await supabase
                   .from('organizations')
                   .select('subscription_status, trial_end_date')
                   .eq('id', session.user.user_metadata.organization_id)
                   .maybeSingle();
                 
-                if (orgData) {
+                if (orgData && !error) {
                   setOrganizationStatus(orgData);
                 }
               } catch (error) {
@@ -115,13 +117,13 @@ export const ProtectedRoute = ({
                 // Fetch organization status if we have an organization ID
                 if (profileData[0].organization_id) {
                   try {
-                    const { data: orgData } = await supabase
+                    const { data: orgData, error } = await supabase
                       .from('organizations')
                       .select('subscription_status, trial_end_date')
                       .eq('id', profileData[0].organization_id)
                       .maybeSingle();
                     
-                    if (orgData) {
+                    if (orgData && !error) {
                       setOrganizationStatus(orgData);
                     }
                   } catch (error) {
@@ -193,13 +195,13 @@ export const ProtectedRoute = ({
                 if (!isMounted) return;
                 
                 try {
-                  const { data: orgData } = await supabase
+                  const { data: orgData, error } = await supabase
                     .from('organizations')
                     .select('subscription_status, trial_end_date')
                     .eq('id', session.user.user_metadata.organization_id)
                     .maybeSingle();
                   
-                  if (orgData && isMounted) {
+                  if (orgData && !error && isMounted) {
                     setOrganizationStatus(orgData);
                   }
                 } catch (error) {
@@ -228,13 +230,13 @@ export const ProtectedRoute = ({
                     // Fetch organization status if we have an organization ID
                     if (profileData[0].organization_id) {
                       try {
-                        const { data: orgData } = await supabase
+                        const { data: orgData, error } = await supabase
                           .from('organizations')
                           .select('subscription_status, trial_end_date')
                           .eq('id', profileData[0].organization_id)
                           .maybeSingle();
                         
-                        if (orgData) {
+                        if (orgData && !error) {
                           setOrganizationStatus(orgData);
                         }
                       } catch (error) {

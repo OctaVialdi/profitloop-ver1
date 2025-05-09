@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -163,8 +162,7 @@ const TrialBanner = () => {
         <div className="h-1 w-full bg-gray-100">
           <Progress 
             value={((3 - Math.min(daysLeftInTrial, 3)) / 3) * 100} 
-            className="h-1 transition-all duration-500" 
-            indicatorClassName="bg-blue-700"
+            className="h-1 transition-all duration-500"
           />
         </div>
       )}

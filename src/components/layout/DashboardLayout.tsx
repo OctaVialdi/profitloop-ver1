@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import ProfileDropdown from "@/components/ProfileDropdown";
-import OrganizationSwitcher from "@/components/OrganizationSwitcher";
-import NotificationSystem from "@/components/NotificationSystem";
+import { ProfileDropdown } from "@/components/ProfileDropdown";
+import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
+import { NotificationSystem } from "@/components/NotificationSystem";
 import TrialBanner from "@/components/TrialBanner";
 import { useOrganization } from "@/hooks/useOrganization";
 import { checkAndUpdateTrialStatus } from "@/services/subscriptionService";
