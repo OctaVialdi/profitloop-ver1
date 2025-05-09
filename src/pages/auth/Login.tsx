@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +66,9 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
+  // Add debugging log
+  console.log("Login component rendered. Current URL:", window.location.href);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
@@ -109,10 +112,28 @@ const Login = () => {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-600">
             Belum memiliki akun?{" "}
-            <Link to="/auth/register" className="text-blue-500 hover:text-blue-700">
+            {/* PURE HTML link - most reliable for cross-page navigation */}
+            <a 
+              href="/auth/register" 
+              className="text-blue-500 hover:text-blue-700 font-medium cursor-pointer"
+              onClick={(e) => {
+                console.log("Register link clicked");
+              }}
+            >
               Daftar sekarang
-            </Link>
+            </a>
           </div>
+          
+          {/* Pure HTML anchor for register - using href with hash to ensure browser navigation */}
+          <a 
+            href="/auth/register"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full"
+            onClick={(e) => {
+              console.log("Register button clicked");
+            }}
+          >
+            Buat akun baru
+          </a>
         </CardFooter>
       </Card>
     </div>

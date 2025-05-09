@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { ensureProfileExists } from "@/services/profileService";
+import { safeRegisterNavigation } from "@/utils/authCleanup";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -19,6 +19,9 @@ const Register = () => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Add debug log
+  console.log("Register page rendered. Current URL:", window.location.href);
   
   // Check if we have invitation data from redirect
   const invitationEmail = location.state?.invitationEmail || "";
@@ -35,6 +38,8 @@ const Register = () => {
   const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
       setIsCheckingEmail(true);
+      console.log("Checking if email exists:", email);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
@@ -46,6 +51,7 @@ const Register = () => {
         return false;
       }
       
+      console.log("Email check result:", !!data);
       return !!data; // Return true if data exists (email found)
     } catch (error) {
       console.error("Exception checking email:", error);
@@ -66,6 +72,17 @@ const Register = () => {
     setIsLoading(true);
     
     try {
+      // Use the safer register navigation function - minimal cleanup
+      safeRegisterNavigation();
+      
+      // Attempt to sign out first to ensure clean state, but keep it minimal
+      try {
+        console.log("Attempting minimal sign out before registration");
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.log("Pre-signout failed, continuing with registration");
+      }
+      
       // Check if email already exists - never skip this check
       const emailExists = await checkEmailExists(email);
       if (emailExists) {
@@ -99,14 +116,18 @@ const Register = () => {
             email: email,
             role: role, // Set the role in metadata
           },
+          emailRedirectTo: window.location.origin + '/auth/login?verified=true'
         },
       });
 
       if (error) throw error;
 
       if (data && data.user) {
+        console.log("User registered successfully:", data.user.id);
+        
         // Directly create profile entry - CRITICAL FIX
         try {
+          console.log("Creating profile for new user");
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -173,17 +194,20 @@ const Register = () => {
               <Label htmlFor="fullName">Nama Lengkap</Label>
               <Input
                 id="fullName"
+                name="fullName"
                 type="text"
                 placeholder="Nama lengkap Anda"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
+                autoComplete="name"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="nama@perusahaan.com"
                 value={email}
@@ -191,26 +215,31 @@ const Register = () => {
                 readOnly={!!invitationEmail}
                 className={invitationEmail ? "bg-gray-100" : ""}
                 required
+                autoComplete="username"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="new-password"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
               <Input
                 id="confirmPassword"
+                name="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                autoComplete="new-password"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading || isCheckingEmail}>
@@ -228,9 +257,10 @@ const Register = () => {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-600">
             Sudah memiliki akun?{" "}
-            <Link to="/auth/login" className="text-blue-500 hover:text-blue-700">
+            {/* Use direct href for more reliable navigation */}
+            <a href="/auth/login" className="text-blue-500 hover:text-blue-700">
               Login disini
-            </Link>
+            </a>
           </div>
         </CardFooter>
       </Card>

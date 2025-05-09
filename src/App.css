@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +40,14 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Add styles for trial expired state */
+body.trial-expired:not(.subscription-page) .app-content {
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+body.trial-expired:not(.subscription-page) {
+  overflow: hidden;
 }

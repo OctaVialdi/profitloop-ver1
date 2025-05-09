@@ -1285,6 +1285,72 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          due_date: string
+          id: string
+          invoice_number: string
+          invoice_pdf_url: string | null
+          organization_id: string
+          payment_details: Json | null
+          status: string
+          subscription_plan_id: string | null
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          due_date: string
+          id?: string
+          invoice_number: string
+          invoice_pdf_url?: string | null
+          organization_id: string
+          payment_details?: Json | null
+          status: string
+          subscription_plan_id?: string | null
+          tax_amount?: number
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          due_date?: string
+          id?: string
+          invoice_number?: string
+          invoice_pdf_url?: string | null
+          organization_id?: string
+          payment_details?: Json | null
+          status?: string
+          subscription_plan_id?: string | null
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_plan_id_fkey"
+            columns: ["subscription_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_positions: {
         Row: {
           created_at: string
@@ -1596,14 +1662,19 @@ export type Database = {
           created_at: string | null
           creator_email: string | null
           employee_count: number | null
+          grace_period_end: string | null
           id: string
           logo_path: string | null
           name: string
           phone: string | null
           subscription_plan_id: string | null
+          subscription_status: string | null
           theme_settings: Json | null
           trial_end_date: string | null
           trial_expired: boolean | null
+          trial_extension_reason: string | null
+          trial_extension_requested: boolean | null
+          trial_start_date: string | null
         }
         Insert: {
           address?: string | null
@@ -1611,14 +1682,19 @@ export type Database = {
           created_at?: string | null
           creator_email?: string | null
           employee_count?: number | null
+          grace_period_end?: string | null
           id?: string
           logo_path?: string | null
           name: string
           phone?: string | null
           subscription_plan_id?: string | null
+          subscription_status?: string | null
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
+          trial_extension_reason?: string | null
+          trial_extension_requested?: boolean | null
+          trial_start_date?: string | null
         }
         Update: {
           address?: string | null
@@ -1626,14 +1702,19 @@ export type Database = {
           created_at?: string | null
           creator_email?: string | null
           employee_count?: number | null
+          grace_period_end?: string | null
           id?: string
           logo_path?: string | null
           name?: string
           phone?: string | null
           subscription_plan_id?: string | null
+          subscription_status?: string | null
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
+          trial_extension_reason?: string | null
+          trial_extension_requested?: boolean | null
+          trial_start_date?: string | null
         }
         Relationships: [
           {
@@ -1641,6 +1722,118 @@ export type Database = {
             columns: ["subscription_plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          code: string
+          configuration: Json | null
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          provider: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          provider: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          provider?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          expires_at: string | null
+          id: string
+          invoice_id: string | null
+          organization_id: string
+          payment_details: Json | null
+          payment_method_id: string | null
+          payment_provider: string
+          payment_url: string | null
+          provider_reference: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          organization_id: string
+          payment_details?: Json | null
+          payment_method_id?: string | null
+          payment_provider: string
+          payment_url?: string | null
+          provider_reference?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          organization_id?: string
+          payment_details?: Json | null
+          payment_method_id?: string | null
+          payment_provider?: string
+          payment_url?: string | null
+          provider_reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]
@@ -1836,6 +2029,99 @@ export type Database = {
           },
         ]
       }
+      subscription_analytics: {
+        Row: {
+          additional_data: Json | null
+          created_at: string | null
+          event_type: string
+          id: string
+          organization_id: string
+          payment_method: string | null
+          plan_id: string | null
+          previous_plan_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          additional_data?: Json | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          organization_id: string
+          payment_method?: string | null
+          plan_id?: string | null
+          previous_plan_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          additional_data?: Json | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          organization_id?: string
+          payment_method?: string | null
+          plan_id?: string | null
+          previous_plan_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_analytics_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_analytics_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_analytics_previous_plan_id_fkey"
+            columns: ["previous_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          data: Json | null
+          id: string
+          organization_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          organization_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          organization_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string | null
@@ -1868,6 +2154,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_trial_expirations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       check_user_has_organization: {
         Args: { user_id: string }
         Returns: {
@@ -1926,6 +2216,14 @@ export type Database = {
         Args: { employee_id: string }
         Returns: boolean
       }
+      extend_organization_trial: {
+        Args: { org_id: string; days_to_add: number }
+        Returns: Json
+      }
+      generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_magic_link_invitation: {
         Args: { email_address: string; org_id: string; user_role?: string }
         Returns: Json
@@ -1937,6 +2235,18 @@ export type Database = {
           p_expires_in_days?: number
         }
         Returns: string
+      }
+      get_billing_history: {
+        Args: { org_id: string }
+        Returns: {
+          id: string
+          created_at: string
+          type: string
+          amount: number
+          status: string
+          invoice_url: string
+          data: Json
+        }[]
       }
       get_recruitment_link_info: {
         Args: { p_token: string }
@@ -1955,6 +2265,17 @@ export type Database = {
           value: string
           label: string
           is_system: boolean
+        }[]
+      }
+      get_subscription_audit_logs: {
+        Args: { org_id: string }
+        Returns: {
+          action: string
+          created_at: string
+          data: Json | null
+          id: string
+          organization_id: string
+          user_id: string | null
         }[]
       }
       get_unique_organization_names: {

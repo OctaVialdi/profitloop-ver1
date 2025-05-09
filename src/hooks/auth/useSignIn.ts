@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { ensureProfileExists } from "@/services/profileService";
 import { AuthCredentials, AuthSignInResult } from "./types";
+import { cleanupAuthState } from "@/utils/authCleanup";
 
 /**
  * Hook to handle user sign-in with email and password
@@ -17,19 +18,37 @@ export function useSignIn() {
     setLoginError(null);
     
     try {
+      // Clean up existing auth state to prevent issues
+      cleanupAuthState();
+      
+      // Attempt to sign out first to ensure clean state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if sign out fails
+        console.log("Pre-signout failed, continuing with login");
+      }
+      
+      console.log("Attempting to sign in with email:", credentials.email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
       });
 
       if (error) {
+        console.error("Authentication error:", error);
         throw error;
       }
+      
+      console.log("Sign in successful, session established:", !!data.session);
       
       // After successful login, make sure profile exists and set email as verified
       if (data.user) {
         const fullName = data.user.user_metadata?.full_name || null;
         const emailVerified = data.user.email_confirmed_at !== null;
+        
+        console.log("Creating/updating profile for user:", data.user.id, "Email verified:", emailVerified);
         
         // Create or update profile
         await ensureProfileExists(data.user.id, {
@@ -47,6 +66,8 @@ export function useSignIn() {
             
           if (updateError) {
             console.error("Error marking email as verified:", updateError);
+          } else {
+            console.log("Profile updated: email marked as verified");
           }
         }
       }

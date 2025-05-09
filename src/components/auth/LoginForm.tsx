@@ -55,6 +55,7 @@ const LoginForm = ({
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="nama@perusahaan.com"
             value={email}
@@ -62,6 +63,7 @@ const LoginForm = ({
             readOnly={isEmailReadOnly}
             className={isEmailReadOnly ? "bg-gray-100" : ""}
             required
+            autoComplete="username" 
           />
         </div>
         <div className="space-y-2">
@@ -73,10 +75,12 @@ const LoginForm = ({
           </div>
           <Input
             id="password"
+            name="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="current-password"
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>

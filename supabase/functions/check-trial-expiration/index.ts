@@ -1,164 +1,151 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Create Supabase client
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  const supabase = createClient(supabaseUrl, supabaseKey);
-  
   try {
-    const now = new Date();
+    // Create a Supabase client with the admin role
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    // Call the function to update trial expirations
+    const { data, error } = await supabase.rpc('check_trial_expirations');
     
-    // Fetch organizations with expired trials - notice we check if trial_end_date is in the past
-    // regardless of the trial_expired flag
-    const { data: expiredTrials, error } = await supabase
+    // Check for errors
+    if (error) throw error;
+    
+    // Now send email reminders to organizations with trials ending soon or already ended
+    // Get organizations with trials ending in 1, 3 days or already ended
+    const { data: orgsNeedingReminders, error: orgsError } = await supabase
       .from('organizations')
-      .select('id, name, subscription_plan_id')
-      .lt('trial_end_date', now.toISOString())
-      .eq('trial_expired', false);
+      .select(`
+        id,
+        name,
+        trial_end_date,
+        subscription_status,
+        profiles!inner(id, email, full_name, role)
+      `)
+      .in('subscription_status', ['trial', 'expired'])
+      .gte('trial_end_date', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Include those expired in the last 24h
+      .lte('trial_end_date', new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString()); // Include those expiring in the next 4 days
+      
+    const emailResults = [];
     
-    if (error) {
-      throw error;
-    }
-    
-    console.log(`Found ${expiredTrials?.length || 0} organizations with newly expired trials`);
-    
-    // Process expired trials
-    if (expiredTrials && expiredTrials.length > 0) {
-      for (const org of expiredTrials) {
-        console.log(`Processing expired trial for organization: ${org.id} (${org.name})`);
+    if (orgsError) {
+      console.error("Error fetching organizations for reminders:", orgsError);
+    } else if (orgsNeedingReminders) {
+      // Process each organization
+      for (const org of orgsNeedingReminders) {
+        const trialEndDate = new Date(org.trial_end_date);
+        const now = new Date();
+        const diffTime = trialEndDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        // Get organization admins to notify them
-        const { data: admins } = await supabase
-          .from('profiles')
-          .select('id, email')
+        // Only send reminders for 0, 1, or 3 days
+        if (![0, 1, 3].includes(diffDays)) continue;
+        
+        // Check if reminder has been sent in the last 24 hours
+        const { data: recentReminders } = await supabase
+          .from('subscription_audit_logs')
+          .select('*')
           .eq('organization_id', org.id)
-          .in('role', ['super_admin', 'admin']);
+          .eq('action', `trial_reminder_email_${diffDays}_days`)
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .limit(1);
           
-        console.log(`Found ${admins?.length || 0} admins to notify for organization ${org.id}`);
+        // Skip if reminder was already sent in the last 24h
+        if (recentReminders && recentReminders.length > 0) {
+          console.log(`Skipping reminder for org ${org.id} (${diffDays} days) - already sent in last 24h`);
+          continue;
+        }
         
-        // Get basic plan ID for default plan after trial
-        const basicPlanId = await getBasicPlanId(supabase);
+        // Send reminder to each admin in the organization
+        const admins = org.profiles.filter(p => ['super_admin', 'admin'].includes(p.role));
         
-        // Mark the organization as expired
-        const { error: updateError } = await supabase
-          .from('organizations')
-          .update({ 
-            trial_expired: true,
-            // If they don't have a subscription plan, set to the basic free plan
-            subscription_plan_id: org.subscription_plan_id || basicPlanId
-          })
-          .eq('id', org.id);
-          
-        if (updateError) {
-          console.error(`Error updating organization ${org.id}:`, updateError);
-        } else {
-          console.log(`Marked organization ${org.id} as trial expired`);
-          
-          // Create notifications for all organization admins
-          if (admins && admins.length > 0) {
-            for (const admin of admins) {
-              // Add a notification in the notifications table
-              const { error: notificationError } = await supabase
-                .from('notifications')
-                .insert({
-                  user_id: admin.id,
-                  organization_id: org.id,
-                  title: 'Masa Trial Berakhir',
-                  message: `Masa trial untuk organisasi ${org.name} telah berakhir. Silakan berlangganan untuk terus menggunakan semua fitur premium.`,
-                  type: 'warning',
-                  action_url: '/subscription'
-                });
-                
-              if (notificationError) {
-                console.error(`Error creating notification for admin ${admin.email}:`, notificationError);
-              } else {
-                console.log(`Created notification for admin ${admin.email}`);
-              }
-            }
+        for (const admin of admins) {
+          try {
+            // Call the send-trial-reminder function
+            const response = await fetch(`${supabaseUrl}/functions/v1/send-trial-reminder`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseKey}`
+              },
+              body: JSON.stringify({
+                organizationId: org.id,
+                email: admin.email,
+                name: admin.full_name,
+                daysLeft: diffDays
+              })
+            });
+            
+            const result = await response.json();
+            emailResults.push({
+              organization: org.id,
+              admin: admin.email,
+              days_left: diffDays,
+              success: result.success,
+              email_id: result.email_id
+            });
+            
+          } catch (emailError) {
+            console.error(`Error sending reminder to ${admin.email}:`, emailError);
+            emailResults.push({
+              organization: org.id,
+              admin: admin.email,
+              days_left: diffDays,
+              success: false,
+              error: emailError.message
+            });
           }
         }
       }
     }
     
-    // Also update any organization where trial_end_date is in the past but trial_expired is still false
-    // This handles cases where the function wasn't triggered at the exact time
-    const { error: manualUpdateError } = await supabase
-      .from('organizations')
-      .update({ trial_expired: true })
-      .lt('trial_end_date', now.toISOString())
-      .eq('trial_expired', false);
-      
-    if (manualUpdateError) {
-      console.error("Error during manual update of expired trials:", manualUpdateError);
-    }
-    
+    // Return success response
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        processed: expiredTrials?.length || 0
+      JSON.stringify({
+        success: true,
+        message: "Trial expiration check and reminders sent successfully",
+        db_result: data,
+        email_results: emailResults
       }),
-      { 
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders 
-        } 
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
       }
     );
   } catch (error) {
-    console.error("Error processing trial expirations:", error);
+    // Return error response
+    console.error("Error in trial expiration check:", error);
     
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
+      JSON.stringify({
+        success: false,
+        error: error.message,
       }),
-      { 
-        status: 500, 
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders 
-        } 
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
       }
     );
   }
 });
-
-// Helper function to get the basic plan ID
-async function getBasicPlanId(supabase) {
-  const { data, error } = await supabase
-    .from('subscription_plans')
-    .select('id')
-    .eq('name', 'Basic')
-    .single();
-  
-  if (error || !data) {
-    // If no Basic plan exists, create one
-    const { data: newPlan } = await supabase
-      .from('subscription_plans')
-      .insert({
-        name: 'Basic',
-        max_members: 5,
-        price: 0,
-        features: { storage: '1GB', api_calls: 1000 }
-      })
-      .select()
-      .single();
-    
-    return newPlan?.id;
-  }
-  
-  return data.id;
-}

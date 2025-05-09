@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Calendar, AlertTriangle, CreditCard, Sparkles, Shield, Clock, Building, X } from "lucide-react";
+import { Check, Calendar, AlertTriangle, CreditCard, Sparkles, Shield, Clock, Building, X, HelpCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -12,6 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { TrialPersonalizedRecommendation } from "@/components/trial/TrialPersonalizedRecommendation";
+import { requestTrialExtension, trackSubscriptionEvent, getTrialStatus } from "@/utils/subscriptionUtils";
+import TrialExtensionRequestDialog from "@/components/trial/TrialExtensionRequestDialog";
+import TrialProgressIndicator from "@/components/trial/TrialProgressIndicator";
 
 interface Plan {
   id: string;
@@ -31,12 +36,86 @@ interface BillingHistory {
   status: 'paid' | 'pending' | 'failed';
 }
 
+interface PaymentMethod {
+  id: string;
+  name: string;
+  logo: string;
+  type: 'bank_transfer' | 'e_wallet' | 'credit_card' | 'retail';
+  isPopular: boolean;
+}
+
 const Subscription = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isExtending, setIsExtending] = useState(false);
   const [activeTab, setActiveTab] = useState("plans");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+  const [extensionReason, setExtensionReason] = useState("");
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [showTrialExtensionDialog, setShowTrialExtensionDialog] = useState(false);
   const { organization, refreshData, isTrialActive, daysLeftInTrial, hasPaidSubscription } = useOrganization();
+  
+  // Indonesian payment methods
+  const paymentMethods: PaymentMethod[] = [
+    { 
+      id: 'midtrans_cc',
+      name: 'Kartu Kredit/Debit', 
+      logo: 'https://midtrans.com/assets/images/logo-midtrans-color.png', 
+      type: 'credit_card',
+      isPopular: true
+    },
+    { 
+      id: 'xendit_va_bca',
+      name: 'Bank Transfer BCA', 
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/2560px-Bank_Central_Asia.svg.png', 
+      type: 'bank_transfer',
+      isPopular: true
+    },
+    { 
+      id: 'xendit_va_mandiri',
+      name: 'Bank Transfer Mandiri', 
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg', 
+      type: 'bank_transfer',
+      isPopular: false
+    },
+    { 
+      id: 'xendit_va_bni',
+      name: 'Bank Transfer BNI', 
+      logo: 'https://upload.wikimedia.org/wikipedia/id/5/55/BNI_logo.svg', 
+      type: 'bank_transfer',
+      isPopular: false
+    },
+    { 
+      id: 'xendit_ovo',
+      name: 'OVO', 
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Logo_ovo_purple.svg/2560px-Logo_ovo_purple.svg.png', 
+      type: 'e_wallet',
+      isPopular: true
+    },
+    { 
+      id: 'xendit_dana',
+      name: 'DANA', 
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/7/72/Logo_dana_blue.svg', 
+      type: 'e_wallet',
+      isPopular: false
+    },
+    { 
+      id: 'xendit_gopay',
+      name: 'GoPay', 
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/2560px-Gopay_logo.svg.png', 
+      type: 'e_wallet',
+      isPopular: true
+    },
+    { 
+      id: 'xendit_alfamart',
+      name: 'Alfamart', 
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_of_Alfamart.png', 
+      type: 'retail',
+      isPopular: false 
+    }
+  ];
   
   // Mock billing history for UI demonstration
   const [billingHistory] = useState<BillingHistory[]>([
@@ -57,8 +136,16 @@ const Subscription = () => {
   ]);
 
   useEffect(() => {
+    // Debug logs to check what's happening with trial information
+    console.log("Subscription component - organization data:", {
+      organization,
+      isTrialActive,
+      daysLeftInTrial,
+      hasPaidSubscription
+    });
+
     fetchSubscriptionPlans();
-  }, []);
+  }, [organization]);
 
   const fetchSubscriptionPlans = async () => {
     setIsLoading(true);
@@ -103,16 +190,19 @@ const Subscription = () => {
   };
 
   const handleSubscribe = async (planId: string) => {
-    if (!organization) return;
-    
-    // Prevent switching to the same plan
-    if (organization.subscription_plan_id === planId) {
-      toast.info("Anda sudah berlangganan paket ini");
+    // Set the selected plan and show payment methods
+    setSelectedPlanId(planId);
+    setShowPaymentMethods(true);
+  };
+
+  const handleProcessPayment = async () => {
+    if (!organization || !selectedPlanId || !selectedPaymentMethod) {
+      toast.error("Silakan pilih metode pembayaran");
       return;
     }
     
     // Get the plan details
-    const selectedPlan = plans.find(p => p.id === planId);
+    const selectedPlan = plans.find(p => p.id === selectedPlanId);
     
     if (!selectedPlan) {
       toast.error("Paket berlangganan tidak ditemukan");
@@ -121,23 +211,42 @@ const Subscription = () => {
     
     setIsUpgrading(true);
     try {
-      // For demonstration, we're directly updating the subscription plan
-      // In a real application, you'd integrate with a payment gateway here
+      // Here we would integrate with the Indonesian payment gateway API
+      // For this example, we'll simulate a successful payment
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Update organization subscription plan
       const { error } = await supabase
         .from('organizations')
         .update({ 
-          subscription_plan_id: planId,
+          subscription_plan_id: selectedPlanId,
           // If moving to a paid plan, clear trial expiration data
           ...(selectedPlan.price > 0 ? {
             trial_expired: false,
-            trial_end_date: null
+            trial_end_date: null,
+            subscription_status: 'active'
           } : {})
         })
         .eq('id', organization.id);
       
       if (error) throw error;
+      
+      // Log the subscription change in audit logs
+      await supabase
+        .from('subscription_audit_logs')
+        .insert({
+          organization_id: organization.id,
+          action: 'subscription_changed',
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          data: {
+            previous_plan_id: organization.subscription_plan_id,
+            new_plan_id: selectedPlanId,
+            payment_method: selectedPaymentMethod,
+            amount: selectedPlan.price
+          }
+        });
       
       // Create notification for all organization admins
       const { data: admins } = await supabase
@@ -156,12 +265,29 @@ const Subscription = () => {
               title: 'Paket Berlangganan Diperbarui',
               message: `Paket berlangganan organisasi Anda telah diubah ke ${selectedPlan.name}.`,
               type: 'success',
-              action_url: '/subscription'
+              action_url: '/settings/subscription'
             });
         }
       }
       
+      // Track the upgrade event for analytics
+      try {
+        await supabase.functions.invoke('track-event', {
+          body: {
+            event_type: 'subscription_upgraded',
+            organization_id: organization.id,
+            plan_id: selectedPlanId,
+            previous_plan_id: organization.subscription_plan_id,
+            payment_method: selectedPaymentMethod
+          }
+        });
+      } catch (err) {
+        console.error("Failed to track upgrade event:", err);
+      }
+      
       toast.success(`Berlangganan paket ${selectedPlan.name} berhasil!`);
+      setShowPaymentMethods(false);
+      setSelectedPaymentMethod(null);
       await refreshData();
     } catch (error) {
       console.error("Error subscribing to plan:", error);
@@ -177,18 +303,33 @@ const Subscription = () => {
     setIsUpgrading(true);
     try {
       const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 30);
+      trialEndDate.setDate(trialEndDate.getDate() + 14); // 14-day trial
       
       // Update organization trial data
       const { error } = await supabase
         .from('organizations')
         .update({ 
+          trial_start_date: new Date().toISOString(),
           trial_end_date: trialEndDate.toISOString(),
-          trial_expired: false
+          trial_expired: false,
+          subscription_status: 'trial'
         })
         .eq('id', organization.id);
       
       if (error) throw error;
+      
+      // Log the trial start in audit logs
+      await supabase
+        .from('subscription_audit_logs')
+        .insert({
+          organization_id: organization.id,
+          action: 'trial_started',
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          data: {
+            trial_start_date: new Date().toISOString(),
+            trial_end_date: trialEndDate.toISOString()
+          }
+        });
       
       // Create notification for all organization admins
       const { data: admins } = await supabase
@@ -205,14 +346,14 @@ const Subscription = () => {
               user_id: admin.id,
               organization_id: organization.id,
               title: 'Periode Trial Dimulai',
-              message: 'Periode trial 30 hari Anda telah dimulai. Nikmati semua fitur premium!',
+              message: 'Periode trial 14 hari Anda telah dimulai. Nikmati semua fitur premium!',
               type: 'info',
-              action_url: '/subscription'
+              action_url: '/settings/subscription'
             });
         }
       }
       
-      toast.success("Periode trial 30 hari berhasil dimulai!");
+      toast.success("Periode trial 14 hari berhasil dimulai!");
       await refreshData();
     } catch (error) {
       console.error("Error starting trial:", error);
@@ -261,7 +402,7 @@ const Subscription = () => {
               title: 'Langganan Dibatalkan',
               message: 'Langganan Anda telah dibatalkan. Anda sekarang menggunakan paket Basic.',
               type: 'warning',
-              action_url: '/subscription'
+              action_url: '/settings/subscription'
             });
         }
       }
@@ -273,6 +414,31 @@ const Subscription = () => {
       toast.error("Gagal membatalkan langganan. Silakan coba lagi.");
     } finally {
       setIsUpgrading(false);
+    }
+  };
+
+  const handleRequestTrialExtension = async () => {
+    if (!organization || !extensionReason.trim()) {
+      toast.error("Alasan perpanjangan trial harus diisi");
+      return;
+    }
+    
+    setIsExtending(true);
+    try {
+      const result = await requestTrialExtension(organization.id, extensionReason);
+      
+      if (result.success) {
+        toast.success(result.message);
+        setExtensionReason("");
+        await refreshData();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error("Error requesting trial extension:", error);
+      toast.error("Gagal mengirim permintaan perpanjangan trial");
+    } finally {
+      setIsExtending(false);
     }
   };
 
@@ -437,15 +603,25 @@ const Subscription = () => {
 
   const isTrialExpired = organization?.trial_expired && !organization?.subscription_plan_id;
   const currentPlan = plans.find(p => p.current);
+  const isTrialExtensionRequested = organization?.trial_extension_requested;
+  const trialStatus = getTrialStatus(organization);
+
+  // Get appropriate class for the trial progress bar
+  const getTrialProgressClass = () => {
+    if (daysLeftInTrial <= 1) return "bg-red-500";
+    if (daysLeftInTrial <= 3) return "bg-amber-500";
+    return "bg-blue-500";
+  };
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Kelola Subscription</h1>
-          <p className="text-gray-600">Pilih paket yang sesuai dengan kebutuhan organisasi Anda</p>
-        </header>
-
+        <h1 className="text-3xl font-bold mb-2">Subscription Management</h1>
+        <p className="text-gray-600 mb-8">Kelola paket berlangganan dan detail pembayaran Anda</p>
+        
+        {/* Always render the TrialPersonalizedRecommendation to check if it displays */}
+        <TrialPersonalizedRecommendation className="mb-8" />
+        
         {currentPlan && (
           <Card className="mb-8">
             <CardHeader className="pb-2">
@@ -533,49 +709,119 @@ const Subscription = () => {
                 </div>
               </div>
               
-              {isTrialActive && (
+              {/* Always show trial progress indicator if there's trial data */}
+              {(isTrialActive || (organization?.trial_end_date && !hasPaidSubscription)) && (
                 <div className="mt-4 space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span>0 hari</span>
-                    <span>30 hari</span>
-                  </div>
-                  <Progress value={(daysLeftInTrial / 30) * 100} className="h-2" />
+                  <TrialProgressIndicator />
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {isTrialActive && (
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-8 flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-blue-600 shrink-0" />
-            <p className="text-blue-800">
-              <span className="font-medium">Periode Trial: </span>
-              {daysLeftInTrial} hari lagi sebelum trial berakhir. Berlangganan untuk terus menggunakan semua fitur.
-            </p>
-          </div>
-        )}
-
-        {isTrialExpired && (
-          <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-8 flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
-            <div>
-              <p className="text-amber-800 font-medium">
-                Periode trial Anda telah berakhir
-              </p>
-              <p className="text-amber-700">
-                Pilih paket berlangganan di bawah untuk melanjutkan menggunakan semua fitur.
-              </p>
+        {/* Show Trial Information Section */}
+        {(isTrialActive || isTrialExpired || (!hasPaidSubscription && organization?.trial_end_date)) && (
+          <div className={`border p-4 rounded-lg mb-8 ${
+            isTrialActive 
+              ? "bg-blue-50 border-blue-200" 
+              : "bg-amber-50 border-amber-200"
+          }`}>
+            <div className="flex items-start gap-3">
+              {isTrialActive ? (
+                <Calendar className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              )}
+              
+              <div className="w-full">
+                {isTrialActive ? (
+                  <>
+                    <p className="font-medium">
+                      Periode Trial: {daysLeftInTrial} hari lagi sebelum trial berakhir
+                    </p>
+                    <p className="text-sm mb-3">
+                      Berlangganan untuk terus menggunakan semua fitur.
+                    </p>
+                    
+                    {/* Trial Progress Bar */}
+                    <div className="space-y-1 mb-3">
+                      <Progress 
+                        value={(daysLeftInTrial / 14) * 100} 
+                        className="h-2"
+                        indicatorClassName={getTrialProgressClass()} 
+                      />
+                      <div className="flex justify-between text-xs">
+                        <span>0 hari</span>
+                        <span>14 hari</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Berlangganan Sekarang
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-amber-800 font-medium">
+                      Periode trial Anda telah berakhir
+                    </p>
+                    <p className="text-amber-700 mb-3">
+                      Pilih paket berlangganan di bawah untuk melanjutkan menggunakan semua fitur.
+                    </p>
+                    
+                    {!isTrialExtensionRequested && (
+                      <div className="bg-white rounded p-4 border border-amber-100">
+                        <h4 className="font-medium text-amber-800 mb-2 flex items-center">
+                          <HelpCircle className="h-4 w-4 mr-1" />
+                          Butuh waktu tambahan?
+                        </h4>
+                        <textarea
+                          className="w-full p-2 border border-amber-200 rounded mb-2 text-sm"
+                          rows={2}
+                          placeholder="Alasan perpanjangan trial..."
+                          value={extensionReason}
+                          onChange={(e) => setExtensionReason(e.target.value)}
+                        ></textarea>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-amber-700 border-amber-200"
+                          onClick={handleRequestTrialExtension}
+                          disabled={isExtending || !extensionReason.trim()}
+                        >
+                          {isExtending ? "Mengirim..." : "Minta Perpanjangan Trial"}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {isTrialExtensionRequested && (
+                      <div className="bg-blue-50 p-3 rounded border border-blue-100 text-blue-700 text-sm">
+                        <div className="flex items-center">
+                          <Check className="h-4 w-4 mr-2 text-blue-500" />
+                          Permintaan perpanjangan trial Anda telah dikirim dan sedang dalam peninjauan.
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
 
-        {!isTrialActive && !hasPaidSubscription && !isTrialExpired && (
+        {/* New Trial Section */}
+        {!isTrialActive && !hasPaidSubscription && !isTrialExpired && !organization?.trial_end_date && (
           <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-8 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-blue-600 shrink-0" />
               <p className="text-blue-800">
-                <span className="font-medium">Mulai trial 30 hari gratis!</span> Akses semua fitur premium selama periode trial.
+                <span className="font-medium">Mulai trial 14 hari gratis!</span> Akses semua fitur premium selama periode trial.
               </p>
             </div>
             <Button onClick={handleStartTrial} disabled={isUpgrading}>
@@ -705,6 +951,71 @@ const Subscription = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Payment Methods Dialog */}
+      <Dialog open={showPaymentMethods} onOpenChange={setShowPaymentMethods}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pilih Metode Pembayaran</DialogTitle>
+            <DialogDescription>
+              Silakan pilih metode pembayaran yang ingin Anda gunakan untuk berlangganan.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-2 py-4">
+            {paymentMethods.map((method) => (
+              <TooltipProvider key={method.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div 
+                      className={`border rounded-lg p-3 cursor-pointer transition-all flex flex-col items-center justify-center h-24
+                      ${selectedPaymentMethod === method.id ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'}
+                      ${method.isPopular ? 'relative' : ''}`}
+                      onClick={() => setSelectedPaymentMethod(method.id)}
+                    >
+                      {method.isPopular && (
+                        <div className="absolute -top-2 -right-2">
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
+                            Populer
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="h-10 flex items-center justify-center mb-2">
+                        <img src={method.logo} alt={method.name} className="max-h-10 max-w-full" />
+                      </div>
+                      <span className="text-xs text-center font-medium">{method.name}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{method.type === 'bank_transfer' ? 'Transfer Bank' : 
+                        method.type === 'e_wallet' ? 'E-Wallet' : 
+                        method.type === 'credit_card' ? 'Kartu Kredit/Debit' : 'Ritel'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPaymentMethods(false)}>
+              Batal
+            </Button>
+            <Button 
+              onClick={handleProcessPayment}
+              disabled={isUpgrading || !selectedPaymentMethod}
+            >
+              {isUpgrading ? "Memproses..." : "Bayar Sekarang"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Trial Extension Request Dialog */}
+      <TrialExtensionRequestDialog 
+        open={showTrialExtensionDialog}
+        onOpenChange={setShowTrialExtensionDialog}
+        onRequestSuccess={() => refreshData()}
+      />
     </div>
   );
 };
