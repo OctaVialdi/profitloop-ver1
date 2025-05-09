@@ -69,5 +69,4 @@ export const routes: RouteObject[] = [
   }
 ];
 
-// Re-export routes so it can be imported as { routes } from '@/routes'
-export { routes };
+// Remove the duplicate export to fix the error
