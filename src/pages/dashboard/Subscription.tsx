@@ -13,10 +13,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { TrialPersonalizedRecommendation } from "@/components/trial/TrialPersonalizedRecommendation";
-import { requestTrialExtension, trackSubscriptionEvent, getTrialStatus } from "@/utils/subscriptionUtils";
-import TrialExtensionRequestDialog from "@/components/trial/TrialExtensionRequestDialog";
-import TrialProgressIndicator from "@/components/trial/TrialProgressIndicator";
 
 interface Plan {
   id: string;
@@ -54,7 +50,6 @@ const Subscription = () => {
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [extensionReason, setExtensionReason] = useState("");
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [showTrialExtensionDialog, setShowTrialExtensionDialog] = useState(false);
   const { organization, refreshData, isTrialActive, daysLeftInTrial, hasPaidSubscription } = useOrganization();
   
   // Indonesian payment methods
@@ -136,16 +131,8 @@ const Subscription = () => {
   ]);
 
   useEffect(() => {
-    // Debug logs to check what's happening with trial information
-    console.log("Subscription component - organization data:", {
-      organization,
-      isTrialActive,
-      daysLeftInTrial,
-      hasPaidSubscription
-    });
-
     fetchSubscriptionPlans();
-  }, [organization]);
+  }, []);
 
   const fetchSubscriptionPlans = async () => {
     setIsLoading(true);
@@ -425,15 +412,52 @@ const Subscription = () => {
     
     setIsExtending(true);
     try {
-      const result = await requestTrialExtension(organization.id, extensionReason);
+      // Update organization with extension request
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          trial_extension_requested: true,
+          trial_extension_reason: extensionReason
+        })
+        .eq('id', organization.id);
       
-      if (result.success) {
-        toast.success(result.message);
-        setExtensionReason("");
-        await refreshData();
-      } else {
-        toast.error(result.message);
+      if (error) throw error;
+      
+      // Log the extension request in audit logs
+      await supabase
+        .from('subscription_audit_logs')
+        .insert({
+          organization_id: organization.id,
+          action: 'trial_extension_requested',
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          data: {
+            reason: extensionReason,
+            requested_at: new Date().toISOString()
+          }
+        });
+      
+      // Create notification for super admins
+      const { data: admins } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'super_admin');
+        
+      if (admins && admins.length > 0) {
+        for (const admin of admins) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: admin.id,
+              organization_id: organization.id,
+              title: 'Permintaan Perpanjangan Trial',
+              message: `Organisasi ${organization.name} meminta perpanjangan masa trial dengan alasan: ${extensionReason}`,
+              type: 'info'
+            });
+        }
       }
+      
+      toast.success("Permintaan perpanjangan trial telah dikirim");
+      setExtensionReason("");
     } catch (error) {
       console.error("Error requesting trial extension:", error);
       toast.error("Gagal mengirim permintaan perpanjangan trial");
@@ -604,24 +628,15 @@ const Subscription = () => {
   const isTrialExpired = organization?.trial_expired && !organization?.subscription_plan_id;
   const currentPlan = plans.find(p => p.current);
   const isTrialExtensionRequested = organization?.trial_extension_requested;
-  const trialStatus = getTrialStatus(organization);
-
-  // Get appropriate class for the trial progress bar
-  const getTrialProgressClass = () => {
-    if (daysLeftInTrial <= 1) return "bg-red-500";
-    if (daysLeftInTrial <= 3) return "bg-amber-500";
-    return "bg-blue-500";
-  };
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Subscription Management</h1>
-        <p className="text-gray-600 mb-8">Kelola paket berlangganan dan detail pembayaran Anda</p>
-        
-        {/* Always render the TrialPersonalizedRecommendation to check if it displays */}
-        <TrialPersonalizedRecommendation className="mb-8" />
-        
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Kelola Subscription</h1>
+          <p className="text-gray-600">Pilih paket yang sesuai dengan kebutuhan organisasi Anda</p>
+        </header>
+
         {currentPlan && (
           <Card className="mb-8">
             <CardHeader className="pb-2">
@@ -709,114 +724,80 @@ const Subscription = () => {
                 </div>
               </div>
               
-              {/* Always show trial progress indicator if there's trial data */}
-              {(isTrialActive || (organization?.trial_end_date && !hasPaidSubscription)) && (
+              {isTrialActive && (
                 <div className="mt-4 space-y-1">
-                  <TrialProgressIndicator />
+                  <div className="flex justify-between text-xs">
+                    <span>0 hari</span>
+                    <span>14 hari</span>
+                  </div>
+                  <Progress value={(daysLeftInTrial / 14) * 100} className="h-2" />
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* Show Trial Information Section */}
-        {(isTrialActive || isTrialExpired || (!hasPaidSubscription && organization?.trial_end_date)) && (
-          <div className={`border p-4 rounded-lg mb-8 ${
-            isTrialActive 
-              ? "bg-blue-50 border-blue-200" 
-              : "bg-amber-50 border-amber-200"
-          }`}>
+        {isTrialActive && (
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-8 flex items-center gap-3">
+            <Calendar className="h-5 w-5 text-blue-600 shrink-0" />
+            <p className="text-blue-800">
+              <span className="font-medium">Periode Trial: </span>
+              {daysLeftInTrial} hari lagi sebelum trial berakhir. Berlangganan untuk terus menggunakan semua fitur.
+            </p>
+          </div>
+        )}
+
+        {isTrialExpired && (
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-8">
             <div className="flex items-start gap-3">
-              {isTrialActive ? (
-                <Calendar className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-              ) : (
-                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-              )}
-              
-              <div className="w-full">
-                {isTrialActive ? (
-                  <>
-                    <p className="font-medium">
-                      Periode Trial: {daysLeftInTrial} hari lagi sebelum trial berakhir
-                    </p>
-                    <p className="text-sm mb-3">
-                      Berlangganan untuk terus menggunakan semua fitur.
-                    </p>
-                    
-                    {/* Trial Progress Bar */}
-                    <div className="space-y-1 mb-3">
-                      <Progress 
-                        value={(daysLeftInTrial / 14) * 100} 
-                        className="h-2"
-                        indicatorClassName={getTrialProgressClass()} 
-                      />
-                      <div className="flex justify-between text-xs">
-                        <span>0 hari</span>
-                        <span>14 hari</span>
-                      </div>
+              <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-amber-800 font-medium">
+                  Periode trial Anda telah berakhir
+                </p>
+                <p className="text-amber-700 mb-3">
+                  Pilih paket berlangganan di bawah untuk melanjutkan menggunakan semua fitur.
+                </p>
+                
+                {!isTrialExtensionRequested && (
+                  <div className="bg-white rounded p-4 border border-amber-100">
+                    <h4 className="font-medium text-amber-800 mb-2 flex items-center">
+                      <HelpCircle className="h-4 w-4 mr-1" />
+                      Butuh waktu tambahan?
+                    </h4>
+                    <textarea
+                      className="w-full p-2 border border-amber-200 rounded mb-2 text-sm"
+                      rows={2}
+                      placeholder="Alasan perpanjangan trial..."
+                      value={extensionReason}
+                      onChange={(e) => setExtensionReason(e.target.value)}
+                    ></textarea>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-amber-700 border-amber-200"
+                      onClick={handleRequestTrialExtension}
+                      disabled={isExtending || !extensionReason.trim()}
+                    >
+                      {isExtending ? "Mengirim..." : "Minta Perpanjangan Trial"}
+                    </Button>
+                  </div>
+                )}
+                
+                {isTrialExtensionRequested && (
+                  <div className="bg-blue-50 p-3 rounded border border-blue-100 text-blue-700 text-sm">
+                    <div className="flex items-center">
+                      <Check className="h-4 w-4 mr-2 text-blue-500" />
+                      Permintaan perpanjangan trial Anda telah dikirim dan sedang dalam peninjauan.
                     </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Berlangganan Sekarang
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-amber-800 font-medium">
-                      Periode trial Anda telah berakhir
-                    </p>
-                    <p className="text-amber-700 mb-3">
-                      Pilih paket berlangganan di bawah untuk melanjutkan menggunakan semua fitur.
-                    </p>
-                    
-                    {!isTrialExtensionRequested && (
-                      <div className="bg-white rounded p-4 border border-amber-100">
-                        <h4 className="font-medium text-amber-800 mb-2 flex items-center">
-                          <HelpCircle className="h-4 w-4 mr-1" />
-                          Butuh waktu tambahan?
-                        </h4>
-                        <textarea
-                          className="w-full p-2 border border-amber-200 rounded mb-2 text-sm"
-                          rows={2}
-                          placeholder="Alasan perpanjangan trial..."
-                          value={extensionReason}
-                          onChange={(e) => setExtensionReason(e.target.value)}
-                        ></textarea>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-amber-700 border-amber-200"
-                          onClick={handleRequestTrialExtension}
-                          disabled={isExtending || !extensionReason.trim()}
-                        >
-                          {isExtending ? "Mengirim..." : "Minta Perpanjangan Trial"}
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {isTrialExtensionRequested && (
-                      <div className="bg-blue-50 p-3 rounded border border-blue-100 text-blue-700 text-sm">
-                        <div className="flex items-center">
-                          <Check className="h-4 w-4 mr-2 text-blue-500" />
-                          Permintaan perpanjangan trial Anda telah dikirim dan sedang dalam peninjauan.
-                        </div>
-                      </div>
-                    )}
-                  </>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         )}
 
-        {/* New Trial Section */}
-        {!isTrialActive && !hasPaidSubscription && !isTrialExpired && !organization?.trial_end_date && (
+        {!isTrialActive && !hasPaidSubscription && !isTrialExpired && (
           <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-8 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-blue-600 shrink-0" />
@@ -1009,13 +990,6 @@ const Subscription = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {/* Trial Extension Request Dialog */}
-      <TrialExtensionRequestDialog 
-        open={showTrialExtensionDialog}
-        onOpenChange={setShowTrialExtensionDialog}
-        onRequestSuccess={() => refreshData()}
-      />
     </div>
   );
 };
