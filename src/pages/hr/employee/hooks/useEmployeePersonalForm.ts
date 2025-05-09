@@ -39,7 +39,8 @@ export function useEmployeePersonalForm() {
     religion: employee?.religion || '',
     nik: employee?.nik || '',
     passportNumber: employee?.passport_number || '',
-    passportExpiry: employee?.passport_expiry || '',
+    // Fix: Don't assign string to passportExpiry since it expects a Date in FormValues
+    passportExpiry: undefined, // We handle this separately with the passportExpiry state
     postalCode: employee?.postal_code || '',
     citizenAddress: employee?.citizen_address || '',
     residentialAddress: employee?.address || '',
@@ -49,7 +50,8 @@ export function useEmployeePersonalForm() {
     groupStructure: '',
     employmentStatus: employee?.status || '',
     branch: employee?.branch || '',
-    organization: employee?.organization || '',
+    // Fix: Employee doesn't have 'organization' property, use organization_name instead
+    organization: employee?.organization_name || '',
     jobPosition: employee?.job_position || '',
     jobLevel: employee?.job_level || '',
     grade: '',
@@ -68,6 +70,8 @@ export function useEmployeePersonalForm() {
     parentPosition: '',
     levelCode: '',
     levelName: '',
+    // Fix: Add the birthdate property to match FormValues type
+    birthdate: undefined, // We handle this separately with the birthdate state
   });
 
   // Handle save changes
