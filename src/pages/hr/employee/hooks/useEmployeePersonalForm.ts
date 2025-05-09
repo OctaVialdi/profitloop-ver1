@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEmployees } from "@/hooks/useEmployees";
 import { updateEmployeePersonalDetails, updateEmployeeIdentityAddress } from "@/services/employeeService";
+import { FormValues } from "../types";
 
 export function useEmployeePersonalForm() {
   const { id } = useParams<{ id: string }>();
@@ -24,8 +25,8 @@ export function useEmployeePersonalForm() {
   );
   const [useResidentialAddress, setUseResidentialAddress] = useState(false);
 
-  // Handle form state
-  const [formValues, setFormValues] = useState({
+  // Handle form state - initialize with all required FormValues properties
+  const [formValues, setFormValues] = useState<FormValues>({
     firstName: employee?.name?.split(' ')[0] || '',
     lastName: employee?.name?.split(' ').slice(1).join(' ') || '',
     email: employee?.email || '',
@@ -41,7 +42,32 @@ export function useEmployeePersonalForm() {
     passportExpiry: employee?.passport_expiry || '',
     postalCode: employee?.postal_code || '',
     citizenAddress: employee?.citizen_address || '',
-    residentialAddress: employee?.address || ''
+    residentialAddress: employee?.address || '',
+    // Include all the required properties from FormValues that were missing
+    employeeId: employee?.employee_id || '',
+    barcode: employee?.barcode || '',
+    groupStructure: '',
+    employmentStatus: employee?.status || '',
+    branch: employee?.branch || '',
+    organization: employee?.organization || '',
+    jobPosition: employee?.job_position || '',
+    jobLevel: employee?.job_level || '',
+    grade: '',
+    class: '',
+    schedule: '',
+    approvalLine: '',
+    manager: '',
+    // Dialog form fields with defaults
+    statusName: '',
+    statusHasEndDate: false,
+    orgCode: '',
+    orgName: '',
+    parentOrg: '',
+    positionCode: '',
+    positionName: '',
+    parentPosition: '',
+    levelCode: '',
+    levelName: '',
   });
 
   // Handle save changes
