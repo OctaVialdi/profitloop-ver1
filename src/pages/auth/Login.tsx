@@ -67,10 +67,11 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
-  // Handle direct navigation to register page using window.location
+  // Simple direct navigation to register page without any auth cleanup
   const goToRegister = () => {
-    console.log("Forcibly navigating to register page via window.location");
-    window.location.href = "/auth/register";
+    console.log("Direct navigation to register page");
+    // Use direct navigation without any auth cleanup
+    window.location.replace("/auth/register");
   };
 
   return (
@@ -116,17 +117,16 @@ const Login = () => {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-600">
             Belum memiliki akun?{" "}
-            {/* Replace Link with direct button that uses window.location */}
-            <button 
-              onClick={goToRegister}
-              className="text-blue-500 hover:text-blue-700 font-medium bg-transparent border-none p-0 cursor-pointer"
-              type="button"
+            {/* Use a direct link with href attribute for most reliable navigation */}
+            <a 
+              href="/auth/register" 
+              className="text-blue-500 hover:text-blue-700 font-medium cursor-pointer"
             >
               Daftar sekarang
-            </button>
+            </a>
           </div>
           
-          {/* More visible registration button */}
+          {/* More visible registration button with direct href navigation */}
           <Button 
             variant="outline" 
             type="button" 

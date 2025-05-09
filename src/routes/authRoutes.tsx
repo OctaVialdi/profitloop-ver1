@@ -7,6 +7,7 @@ import VerificationSent from "@/pages/auth/VerificationSent";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
 import MagicLinkJoin from "@/pages/auth/MagicLinkJoin";
 
+// Ensure all auth routes are publicly accessible
 export const authRoutes = [
   <Route key="auth-layout" path="/auth" element={<AuthLayout />}>
     <Route index element={<Navigate to="/auth/login" replace />} />

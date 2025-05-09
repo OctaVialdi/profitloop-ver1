@@ -2,12 +2,19 @@
 /**
  * Utility to thoroughly clean up authentication state
  * Prevents auth limbo states by removing all Supabase auth tokens
+ * @param {boolean} [preserveForNavigation=false] - If true, preserves minimal state needed for navigation
  */
-export const cleanupAuthState = () => {
-  console.log("Cleaning up auth state...");
+export const cleanupAuthState = (preserveForNavigation = false) => {
+  console.log("Cleaning up auth state...", preserveForNavigation ? "(preserving navigation state)" : "");
   
   // Log the caller function if possible
   console.log("Auth cleanup called from:", new Error().stack);
+  
+  if (preserveForNavigation) {
+    // Minimal cleanup that won't interrupt navigation
+    console.log("Performing minimal cleanup to preserve navigation");
+    return;
+  }
   
   // Remove standard auth tokens
   localStorage.removeItem('supabase.auth.token');
