@@ -12,23 +12,16 @@ import { operationsRoutes } from "./operationsRoutes";
 import { financeRoutes, paymentRoutes } from "./financeRoutes";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
-import AppLayout from "@/components/layout/AppLayout";
 
 // Application Routes
 const applicationRoutes: RouteObject[] = [
   {
     path: "/",
-    element: <AppLayout />,
-    children: [
-      {
-        index: true,
-        element: <Index />
-      },
-      {
-        path: "*",
-        element: <NotFound />
-      }
-    ]
+    element: <Index />
+  },
+  {
+    path: "*",
+    element: <NotFound />
   }
 ];
 
