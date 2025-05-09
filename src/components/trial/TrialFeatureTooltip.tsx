@@ -1,4 +1,3 @@
-
 import { useOrganization } from "@/hooks/useOrganization";
 import {
   Tooltip,
@@ -123,7 +122,7 @@ const TrialFeatureTooltip = ({
             className="max-w-[320px] p-4 bg-white border border-blue-100 shadow-lg rounded-lg 
                      animate-in fade-in zoom-in-95 duration-200"
             onPointerDownOutside={(e) => e.preventDefault()}
-            onOpenAutoFocus={handleTooltipOpen}
+            onFocus={handleTooltipOpen}
           >
             <div className="text-sm space-y-3">
               <div className="flex items-center justify-between">
