@@ -1,22 +1,15 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, X, Timer, AlertTriangle } from "lucide-react";
+import { CalendarClock, X, AlertTriangle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { checkAndUpdateTrialStatus } from '@/services/subscriptionService';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/sonner";
+import { robustSignOut } from '@/utils/authUtils';
 
 const TrialBanner = () => {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
@@ -32,6 +25,7 @@ const TrialBanner = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(100);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
@@ -213,7 +207,7 @@ const TrialBanner = () => {
             {
               action: {
                 label: "Upgrade",
-                onClick: () => navigate("/subscription")
+                onClick: () => navigate("/settings/subscription")
               },
               duration: 10000 // 10 seconds
             }
@@ -244,7 +238,7 @@ const TrialBanner = () => {
   
   // Handle subscription navigation
   const handleSubscribe = () => {
-    navigate("/subscription");
+    navigate("/settings/subscription");
     setShowSubscriptionDialog(false);
     // Remove blur when navigating to subscription page
     document.body.classList.remove('trial-expired');
@@ -252,7 +246,7 @@ const TrialBanner = () => {
 
   // Handle sign out
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await robustSignOut();
     navigate("/auth/login");
     document.body.classList.remove('trial-expired');
   };
@@ -320,7 +314,7 @@ const TrialBanner = () => {
               <Button 
                 variant="link" 
                 className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
-                onClick={() => navigate("/subscription")}
+                onClick={() => navigate("/settings/subscription")}
               >
                 Berlangganan sekarang
               </Button>
@@ -340,7 +334,3 @@ const TrialBanner = () => {
 };
 
 export default TrialBanner;
-
-function navigate(path: string): void {
-  window.location.href = path;
-}

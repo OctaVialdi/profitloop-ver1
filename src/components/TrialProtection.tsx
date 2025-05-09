@@ -34,14 +34,23 @@ const TrialProtection = ({ children, requiredSubscription = false }: TrialProtec
   useEffect(() => {
     if (blockAccess) {
       setShowDialog(true);
+      
+      // Add blur to page content when trial expired
+      document.body.classList.add('trial-expired');
     } else {
       setShowDialog(false);
+      document.body.classList.remove('trial-expired');
     }
+    
+    return () => {
+      // Clean up blur class when component unmounts
+      document.body.classList.remove('trial-expired');
+    };
   }, [blockAccess, location.pathname]);
   
   // Navigate to subscription page
   const handleUpgrade = () => {
-    navigate('/subscription');
+    navigate('/settings/subscription');
     setShowDialog(false);
   };
   

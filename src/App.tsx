@@ -4,6 +4,7 @@ import { AppRoutes } from "./routes";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/QueryProvider";
 import { useAssetStorage } from "./hooks/useAssetStorage";
+import TrialBanner from "./components/TrialBanner";
 
 function App() {
   // Initialize asset storage
@@ -12,6 +13,7 @@ function App() {
   return (
     <QueryProvider>
       <BrowserRouter>
+        <TrialBanner />
         <AppRoutes />
         <Toaster />
       </BrowserRouter>

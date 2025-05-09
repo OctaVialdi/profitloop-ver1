@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 /**
  * Force updates the trial status for the current organization
@@ -71,6 +72,39 @@ export async function triggerTrialExpirationCheck(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("Error in triggerTrialExpirationCheck:", error);
+    return false;
+  }
+}
+
+/**
+ * Request a trial extension
+ */
+export async function requestTrialExtension(
+  organizationId: string, 
+  reason: string, 
+  contactEmail: string
+): Promise<boolean> {
+  try {
+    // Create a notification for admins (this would normally go to system administrators)
+    const { error } = await supabase
+      .from('notifications')
+      .insert([
+        {
+          organization_id: organizationId,
+          title: 'Trial Extension Request',
+          message: `A trial extension has been requested. Reason: ${reason}. Contact: ${contactEmail}`,
+          user_id: (await supabase.auth.getUser()).data.user?.id || '',
+          type: 'info'
+        }
+      ]);
+
+    if (error) throw error;
+    
+    toast.success("Your trial extension request has been submitted. We'll contact you soon.");
+    return true;
+  } catch (error) {
+    console.error("Error requesting trial extension:", error);
+    toast.error("Failed to submit trial extension request. Please try again.");
     return false;
   }
 }
