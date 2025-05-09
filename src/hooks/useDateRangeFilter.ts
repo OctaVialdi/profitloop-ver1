@@ -1,20 +1,16 @@
 
 import { useState, useEffect } from 'react';
 import { startOfDay, endOfDay, subDays } from 'date-fns';
+import { DateRangeType } from '@/types/dashboard';
 
-export type DateRange = {
-  from: Date;
-  to: Date;
-};
-
-export const useDateRangeFilter = (initialRange?: DateRange) => {
+export const useDateRangeFilter = (initialRange?: DateRangeType) => {
   const today = new Date();
-  const defaultRange: DateRange = {
+  const defaultRange: DateRangeType = {
     from: subDays(today, 30), // Default to last 30 days
     to: today,
   };
 
-  const [dateRange, setDateRange] = useState<DateRange>(initialRange || defaultRange);
+  const [dateRange, setDateRange] = useState<DateRangeType>(initialRange || defaultRange);
 
   // Load from localStorage on initial render
   useEffect(() => {
@@ -33,7 +29,7 @@ export const useDateRangeFilter = (initialRange?: DateRange) => {
   }, [initialRange]);
 
   // Update date range with normalization
-  const updateDateRange = (range: DateRange) => {
+  const updateDateRange = (range: DateRangeType) => {
     const normalizedRange = {
       from: startOfDay(range.from),
       to: endOfDay(range.to),

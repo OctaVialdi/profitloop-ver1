@@ -7,11 +7,7 @@ import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, startO
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-export type DateRangeType = {
-  from: Date;
-  to: Date;
-};
+import { DateRangeType } from '@/types/dashboard';
 
 export type PresetOption = {
   label: string;
@@ -142,7 +138,7 @@ export function DashboardFilter({ onRangeChange, initialRange }: DashboardFilter
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="justify-start text-sm w-full sm:w-[240px]"
+            className="justify-start text-sm w-full sm:w-[240px] font-normal"
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {buttonText}
