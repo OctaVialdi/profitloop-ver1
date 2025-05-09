@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,21 +17,26 @@ import { OperationalMetricsSection } from './OperationalMetricsSection';
 import { CustomerInnovationSection } from './CustomerInnovationSection';
 import { AIRecommendationCard } from './AIRecommendationCard';
 import { toast } from '@/components/ui/sonner';
-
 export function BSCDashboard() {
-  const { dateRange, updateDateRange } = useDateRangeFilter();
-  const { data: dashboardData, isLoading, error, refetch } = useDashboardData(dateRange.from, dateRange.to);
-  const { organization, userProfile } = useOrganization();
+  const {
+    dateRange,
+    updateDateRange
+  } = useDateRangeFilter();
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+    refetch
+  } = useDashboardData(dateRange.from, dateRange.to);
+  const {
+    organization,
+    userProfile
+  } = useOrganization();
   const [activeTab, setActiveTab] = useState('financial');
-  
+
   // AI Recommendations (simulated)
-  const aiRecommendations = [
-    "Based on current cash flow trends, allocate 15% more budget to marketing to capitalize on growth opportunities.",
-    "Your inventory turnover is below industry average. Consider reducing stock levels of slow-moving items.",
-    "Employee training hours are 20% below target. Investing in training could improve productivity metrics.",
-    "Customer feedback shows pricing concerns. Consider a customer loyalty program to improve retention."
-  ];
-  
+  const aiRecommendations = ["Based on current cash flow trends, allocate 15% more budget to marketing to capitalize on growth opportunities.", "Your inventory turnover is below industry average. Consider reducing stock levels of slow-moving items.", "Employee training hours are 20% below target. Investing in training could improve productivity metrics.", "Customer feedback shows pricing concerns. Consider a customer loyalty program to improve retention."];
+
   // Get time-appropriate greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -40,7 +44,7 @@ export function BSCDashboard() {
     if (hour < 18) return "Good afternoon";
     return "Good evening";
   };
-  
+
   // Count goals near deadline
   const goalsNearDeadline = dashboardData?.companyGoals.filter(goal => {
     const today = new Date();
@@ -49,7 +53,7 @@ export function BSCDashboard() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 && diffDays <= 7; // Within next 7 days
   }).length || 0;
-  
+
   // Handle adding a new goal
   const handleAddGoal = async (goal: Partial<CompanyGoal>) => {
     try {
@@ -57,8 +61,9 @@ export function BSCDashboard() {
         toast.error("Organization data not available.");
         return;
       }
-      
-      const { error } = await supabase.from('company_goals').insert({
+      const {
+        error
+      } = await supabase.from('company_goals').insert({
         organization_id: organization.id,
         name: goal.name,
         target_amount: goal.targetAmount,
@@ -69,9 +74,7 @@ export function BSCDashboard() {
         created_by: userProfile?.id,
         status: 'active'
       });
-      
       if (error) throw error;
-      
       toast.success("Goal added successfully!");
       refetch(); // Refresh dashboard data
     } catch (error: any) {
@@ -79,7 +82,7 @@ export function BSCDashboard() {
       toast.error(`Failed to add goal: ${error.message}`);
     }
   };
-  
+
   // Handle updating target revenue
   const handleUpdateTargetRevenue = async (newTarget: number) => {
     try {
@@ -87,23 +90,20 @@ export function BSCDashboard() {
         toast.error("Organization data not available.");
         return;
       }
-      
+
       // Check if there's an existing financial_summary record
-      const { data: existingRecord, error: fetchError } = await supabase
-        .from('financial_summary')
-        .select('*')
-        .eq('organization_id', organization.id)
-        .limit(1);
-      
+      const {
+        data: existingRecord,
+        error: fetchError
+      } = await supabase.from('financial_summary').select('*').eq('organization_id', organization.id).limit(1);
       if (fetchError) throw fetchError;
-      
       if (existingRecord && existingRecord.length > 0) {
         // Update existing record
-        const { error } = await supabase
-          .from('financial_summary')
-          .update({ target_revenue: newTarget })
-          .eq('id', existingRecord[0].id);
-        
+        const {
+          error
+        } = await supabase.from('financial_summary').update({
+          target_revenue: newTarget
+        }).eq('id', existingRecord[0].id);
         if (error) throw error;
       } else {
         // Create new record
@@ -114,17 +114,13 @@ export function BSCDashboard() {
           month: currentDate,
           total_revenue: dashboardData?.financialSummary.totalRevenue || 0,
           total_expenses: dashboardData?.financialSummary.totalExpenses || 0,
-          net_cashflow: (dashboardData?.financialSummary.totalRevenue || 0) - 
-                        (dashboardData?.financialSummary.totalExpenses || 0)
+          net_cashflow: (dashboardData?.financialSummary.totalRevenue || 0) - (dashboardData?.financialSummary.totalExpenses || 0)
         };
-        
-        const { error } = await supabase
-          .from('financial_summary')
-          .insert(newRecord);
-        
+        const {
+          error
+        } = await supabase.from('financial_summary').insert(newRecord);
         if (error) throw error;
       }
-      
       refetch(); // Refresh dashboard data
       toast.success("Target revenue updated successfully!");
     } catch (error: any) {
@@ -132,7 +128,7 @@ export function BSCDashboard() {
       toast.error(`Failed to update target revenue: ${error.message}`);
     }
   };
-  
+
   // Handle exporting dashboard as PDF
   const handleExportDashboard = () => {
     toast.success("Dashboard report will be downloaded shortly.");
@@ -143,21 +139,16 @@ export function BSCDashboard() {
   const handleDateRangeChange = (range: DateRangeType) => {
     updateDateRange(range);
   };
-  
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 mt-8">
+    return <div className="flex items-center justify-center h-64 mt-8">
         <div className="text-center">
           <div className="animate-spin h-10 w-10 border-4 border-primary/20 border-t-primary rounded-full mx-auto mb-6"></div>
           <p className="text-muted-foreground font-medium">Loading your dashboard data...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-  
   if (error || !dashboardData) {
-    return (
-      <Card className="border-destructive/20 mt-8">
+    return <Card className="border-destructive/20 mt-8">
         <CardContent className="p-8">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-600 mb-4">
@@ -171,22 +162,17 @@ export function BSCDashboard() {
             </Button>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-  
-  return (
-    <div className="space-y-8 py-4 px-2">
+  return <div className="space-y-8 py-4 px-2">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20 p-6 rounded-lg border shadow-sm">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             {getGreeting()}, {userProfile?.full_name || 'User'}!
           </h2>
-          {goalsNearDeadline > 0 && (
-            <p className="text-amber-600 dark:text-amber-500 mt-1 font-medium">
+          {goalsNearDeadline > 0 && <p className="text-amber-600 dark:text-amber-500 mt-1 font-medium">
               You have {goalsNearDeadline} goal{goalsNearDeadline > 1 ? 's' : ''} approaching deadline soon.
-            </p>
-          )}
+            </p>}
         </div>
         <div className="flex flex-col sm:flex-row gap-4">
           <DashboardFilter onRangeChange={handleDateRangeChange} initialRange={dateRange} />
@@ -207,69 +193,35 @@ export function BSCDashboard() {
       <AIRecommendationCard recommendations={aiRecommendations} />
       
       {/* Dashboard Tabs */}
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-6"
-      >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-muted/50 p-1 w-full md:w-auto border rounded-lg">
-          <TabsTrigger 
-            value="financial" 
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="financial" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">
             Financial
           </TabsTrigger>
-          <TabsTrigger 
-            value="goals" 
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm"
-          >
-            Company Goals
-          </TabsTrigger>
-          <TabsTrigger 
-            value="operations" 
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="goals" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">Business Process</TabsTrigger>
+          <TabsTrigger value="operations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">
             Operational
           </TabsTrigger>
-          <TabsTrigger 
-            value="customer" 
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="customer" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm">
             Customer & Innovation
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="financial" className="space-y-6">
-          <FinancialSummarySection
-            financialSummary={dashboardData.financialSummary}
-            yearlyTrends={dashboardData.yearlyTrends}
-            revenueContributors={dashboardData.revenueContributors}
-            expenseBreakdowns={dashboardData.expenseBreakdowns}
-            onUpdateTargetRevenue={handleUpdateTargetRevenue}
-          />
+          <FinancialSummarySection financialSummary={dashboardData.financialSummary} yearlyTrends={dashboardData.yearlyTrends} revenueContributors={dashboardData.revenueContributors} expenseBreakdowns={dashboardData.expenseBreakdowns} onUpdateTargetRevenue={handleUpdateTargetRevenue} />
         </TabsContent>
         
         <TabsContent value="goals" className="space-y-6">
-          <CompanyGoalsSection
-            goals={dashboardData.companyGoals}
-            onAddGoal={handleAddGoal}
-          />
+          <CompanyGoalsSection goals={dashboardData.companyGoals} onAddGoal={handleAddGoal} />
         </TabsContent>
         
         <TabsContent value="operations" className="space-y-6">
-          <OperationalMetricsSection
-            metrics={dashboardData.operationalMetrics}
-            departments={dashboardData.departments}
-          />
+          <OperationalMetricsSection metrics={dashboardData.operationalMetrics} departments={dashboardData.departments} />
         </TabsContent>
         
         <TabsContent value="customer" className="space-y-6">
-          <CustomerInnovationSection
-            customerMetrics={dashboardData.customerMetrics}
-            innovationMetrics={dashboardData.innovationMetrics}
-          />
+          <CustomerInnovationSection customerMetrics={dashboardData.customerMetrics} innovationMetrics={dashboardData.innovationMetrics} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }
