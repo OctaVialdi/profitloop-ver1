@@ -1,35 +1,21 @@
 
 import { Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import OperationsLayout from "@/components/layout/OperationsLayout";
-import OperationsDashboard from "@/pages/operations/Dashboard";
-import CustomerServicePage from "@/pages/operations/CustomerService";
-import SalesPage from "@/pages/operations/Sales";
-import LogisticsPage from "@/pages/operations/Logistics";
-import { Outlet } from "react-router-dom";
+import Dashboard from "@/pages/operations/Dashboard";
+import CustomerService from "@/pages/operations/CustomerService";
+import Logistics from "@/pages/operations/Logistics";
+import Sales from "@/pages/operations/Sales";
 
-export const operationsRoutes = (
+export const operationsRoutes = [
   <Route
     key="operations"
     path="/operations"
-    element={
-      <ProtectedRoute>
-        <DashboardLayout>
-          <OperationsLayout>
-            <Outlet />
-          </OperationsLayout>
-        </DashboardLayout>
-      </ProtectedRoute>
-    }
+    element={<OperationsLayout />}
   >
-    <Route path="dashboard" element={<OperationsDashboard />} />
-    <Route path="customer-service" element={<CustomerServicePage />} />
-    <Route path="customer-service/tickets" element={<CustomerServicePage />} />
-    <Route path="customer-service/kanban" element={<CustomerServicePage />} />
-    <Route path="sales" element={<SalesPage />} />
-    <Route path="logistics" element={<LogisticsPage />} />
-    {/* Redirect to dashboard if no path matches */}
-    <Route path="" element={<Navigate to="/operations/dashboard" replace />} />
+    <Route index element={<Navigate to="/operations/dashboard" replace />} />
+    <Route path="dashboard" element={<Dashboard />} />
+    <Route path="customer-service" element={<CustomerService />} />
+    <Route path="logistics" element={<Logistics />} />
+    <Route path="sales" element={<Sales />} />
   </Route>
-);
+];

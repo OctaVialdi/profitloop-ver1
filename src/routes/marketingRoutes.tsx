@@ -1,37 +1,25 @@
 
 import { Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import MarketingLayout from "@/components/layout/MarketingLayout";
-import AdsPerformance from "@/pages/marketing/AdsPerformance";
 import SocialMediaManagement from "@/pages/marketing/SocialMediaManagement";
-import KolManagement from "@/pages/marketing/KolManagement";
 import SeoManagement from "@/pages/marketing/SeoManagement";
+import AdsPerformance from "@/pages/marketing/AdsPerformance";
+import KolManagement from "@/pages/marketing/KolManagement";
 import RatingPerformance from "@/pages/marketing/RatingPerformance";
 import AgencyComparison from "@/pages/marketing/AgencyComparison";
-import { Outlet } from "react-router-dom";
 
-export const marketingRoutes = (
+export const marketingRoutes = [
   <Route
     key="marketing"
     path="/marketing"
-    element={
-      <ProtectedRoute>
-        <DashboardLayout>
-          <MarketingLayout>
-            <Outlet />
-          </MarketingLayout>
-        </DashboardLayout>
-      </ProtectedRoute>
-    }
+    element={<MarketingLayout />}
   >
-    <Route path="ads-performance" element={<AdsPerformance />} />
+    <Route index element={<Navigate to="/marketing/social-media" replace />} />
     <Route path="social-media" element={<SocialMediaManagement />} />
-    <Route path="kol" element={<KolManagement />} />
     <Route path="seo" element={<SeoManagement />} />
-    <Route path="ratings" element={<RatingPerformance />} />
+    <Route path="ads" element={<AdsPerformance />} />
+    <Route path="kol" element={<KolManagement />} />
+    <Route path="rating" element={<RatingPerformance />} />
     <Route path="agency-comparison" element={<AgencyComparison />} />
-    {/* Redirect to ads performance if no path matches */}
-    <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
   </Route>
-);
+];

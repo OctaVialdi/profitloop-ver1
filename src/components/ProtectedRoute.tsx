@@ -70,14 +70,14 @@ export const ProtectedRoute = ({
             // Also fetch the organization subscription status
             if (session.user.user_metadata.organization_id) {
               try {
-                const { data: orgData, error } = await supabase
+                const { data, error } = await supabase
                   .from('organizations')
                   .select('subscription_status, trial_end_date')
                   .eq('id', session.user.user_metadata.organization_id)
                   .maybeSingle();
                 
-                if (orgData && !error) {
-                  setOrganizationStatus(orgData);
+                if (!error && data) {
+                  setOrganizationStatus(data as OrganizationStatus);
                 }
               } catch (error) {
                 console.error("Error fetching organization status:", error);
@@ -117,14 +117,14 @@ export const ProtectedRoute = ({
                 // Fetch organization status if we have an organization ID
                 if (profileData[0].organization_id) {
                   try {
-                    const { data: orgData, error } = await supabase
+                    const { data, error } = await supabase
                       .from('organizations')
                       .select('subscription_status, trial_end_date')
                       .eq('id', profileData[0].organization_id)
                       .maybeSingle();
                     
-                    if (orgData && !error) {
-                      setOrganizationStatus(orgData);
+                    if (!error && data) {
+                      setOrganizationStatus(data as OrganizationStatus);
                     }
                   } catch (error) {
                     console.error("Error fetching organization status:", error);
@@ -195,14 +195,14 @@ export const ProtectedRoute = ({
                 if (!isMounted) return;
                 
                 try {
-                  const { data: orgData, error } = await supabase
+                  const { data, error } = await supabase
                     .from('organizations')
                     .select('subscription_status, trial_end_date')
                     .eq('id', session.user.user_metadata.organization_id)
                     .maybeSingle();
                   
-                  if (orgData && !error && isMounted) {
-                    setOrganizationStatus(orgData);
+                  if (!error && data && isMounted) {
+                    setOrganizationStatus(data as OrganizationStatus);
                   }
                 } catch (error) {
                   console.error("Error fetching organization status:", error);
@@ -230,14 +230,14 @@ export const ProtectedRoute = ({
                     // Fetch organization status if we have an organization ID
                     if (profileData[0].organization_id) {
                       try {
-                        const { data: orgData, error } = await supabase
+                        const { data, error } = await supabase
                           .from('organizations')
                           .select('subscription_status, trial_end_date')
                           .eq('id', profileData[0].organization_id)
                           .maybeSingle();
                         
-                        if (orgData && !error) {
-                          setOrganizationStatus(orgData);
+                        if (!error && data) {
+                          setOrganizationStatus(data as OrganizationStatus);
                         }
                       } catch (error) {
                         console.error("Error fetching organization status:", error);
