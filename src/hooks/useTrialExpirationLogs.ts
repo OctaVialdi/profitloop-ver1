@@ -18,25 +18,19 @@ export function useTrialExpirationLogs(organizationId: string | null) {
       try {
         setLoading(true);
         
-        // Use custom RPC function as workaround since the table might not exist in the TypeScript types
-        const { data, error } = await supabase
-          .rpc('get_subscription_audit_logs', { org_id: organizationId })
-          .limit(50);
+        // Use the new RPC function we created
+        const { data, error: rpcError } = await supabase
+          .rpc('get_subscription_audit_logs', { org_id: organizationId });
         
-        if (error) {
-          // Fallback - try to query the table directly despite TypeScript errors
-          console.log("Falling back to direct query:", error);
-          const directQuery = await supabase
-            .from('subscription_audit_logs')
-            .select('*')
-            .eq('organization_id', organizationId)
-            .order('created_at', { ascending: false })
-            .limit(50);
-            
-          if (directQuery.error) throw directQuery.error;
-          setLogs(directQuery.data as unknown as SubscriptionAuditLog[]);
-        } else {
+        if (rpcError) {
+          console.error("Error fetching subscription logs:", rpcError);
+          throw rpcError;
+        }
+        
+        if (data) {
           setLogs(data as SubscriptionAuditLog[]);
+        } else {
+          setLogs([]);
         }
         
         setError(null);

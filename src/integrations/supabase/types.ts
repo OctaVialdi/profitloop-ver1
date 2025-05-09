@@ -1845,6 +1845,41 @@ export type Database = {
           },
         ]
       }
+      subscription_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          data: Json | null
+          id: string
+          organization_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          organization_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          organization_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string | null
@@ -1951,6 +1986,18 @@ export type Database = {
         }
         Returns: string
       }
+      get_billing_history: {
+        Args: { org_id: string }
+        Returns: {
+          id: string
+          created_at: string
+          type: string
+          amount: number
+          status: string
+          invoice_url: string
+          data: Json
+        }[]
+      }
       get_recruitment_link_info: {
         Args: { p_token: string }
         Returns: {
@@ -1968,6 +2015,17 @@ export type Database = {
           value: string
           label: string
           is_system: boolean
+        }[]
+      }
+      get_subscription_audit_logs: {
+        Args: { org_id: string }
+        Returns: {
+          action: string
+          created_at: string
+          data: Json | null
+          id: string
+          organization_id: string
+          user_id: string | null
         }[]
       }
       get_unique_organization_names: {
