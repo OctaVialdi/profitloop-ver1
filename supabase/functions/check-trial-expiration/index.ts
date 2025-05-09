@@ -1,151 +1,113 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+// Edge function to check trial expiration and update status
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req: Request) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Create a Supabase client with the admin role
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
+      );
+    }
 
-    // Call the function to update trial expirations
-    const { data, error } = await supabase.rpc('check_trial_expirations');
+    // Initialize Supabase client with service role key to bypass RLS
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Check for errors
-    if (error) throw error;
-    
-    // Now send email reminders to organizations with trials ending soon or already ended
-    // Get organizations with trials ending in 1, 3 days or already ended
-    const { data: orgsNeedingReminders, error: orgsError } = await supabase
+    console.log("Starting trial expiration check");
+
+    // Update organizations where trial has expired but not marked as expired
+    const { data: expiredOrgs, error: expiredError } = await supabase
       .from('organizations')
-      .select(`
-        id,
-        name,
-        trial_end_date,
-        subscription_status,
-        profiles!inner(id, email, full_name, role)
-      `)
-      .in('subscription_status', ['trial', 'expired'])
-      .gte('trial_end_date', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Include those expired in the last 24h
-      .lte('trial_end_date', new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString()); // Include those expiring in the next 4 days
-      
-    const emailResults = [];
+      .update({ 
+        subscription_status: 'expired',
+        trial_expired: true 
+      })
+      .eq('subscription_status', 'trial')
+      .lt('trial_end_date', new Date().toISOString())
+      .select('id, name');
     
-    if (orgsError) {
-      console.error("Error fetching organizations for reminders:", orgsError);
-    } else if (orgsNeedingReminders) {
-      // Process each organization
-      for (const org of orgsNeedingReminders) {
-        const trialEndDate = new Date(org.trial_end_date);
-        const now = new Date();
-        const diffTime = trialEndDate.getTime() - now.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        // Only send reminders for 0, 1, or 3 days
-        if (![0, 1, 3].includes(diffDays)) continue;
-        
-        // Check if reminder has been sent in the last 24 hours
-        const { data: recentReminders } = await supabase
-          .from('subscription_audit_logs')
-          .select('*')
+    if (expiredError) {
+      console.error("Error updating expired trials:", expiredError);
+      throw expiredError;
+    }
+    
+    console.log(`Updated ${expiredOrgs?.length || 0} expired trials`);
+    
+    // Create notifications for organizations approaching expiration (3 days)
+    const { data: approachingOrgs, error: approachingError } = await supabase
+      .from('organizations')
+      .select('id, name')
+      .eq('subscription_status', 'trial')
+      .gt('trial_end_date', new Date().toISOString())
+      .lt('trial_end_date', new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString());
+      
+    if (approachingError) {
+      console.error("Error finding approaching expirations:", approachingError);
+      throw approachingError;
+    }
+    
+    console.log(`Found ${approachingOrgs?.length || 0} organizations approaching trial expiration`);
+    
+    // Create notifications for users in those organizations
+    if (approachingOrgs && approachingOrgs.length > 0) {
+      for (const org of approachingOrgs) {
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
           .eq('organization_id', org.id)
-          .eq('action', `trial_reminder_email_${diffDays}_days`)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .limit(1);
+          .in('role', ['super_admin', 'admin']);
           
-        // Skip if reminder was already sent in the last 24h
-        if (recentReminders && recentReminders.length > 0) {
-          console.log(`Skipping reminder for org ${org.id} (${diffDays} days) - already sent in last 24h`);
-          continue;
-        }
-        
-        // Send reminder to each admin in the organization
-        const admins = org.profiles.filter(p => ['super_admin', 'admin'].includes(p.role));
-        
-        for (const admin of admins) {
-          try {
-            // Call the send-trial-reminder function
-            const response = await fetch(`${supabaseUrl}/functions/v1/send-trial-reminder`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${supabaseKey}`
-              },
-              body: JSON.stringify({
-                organizationId: org.id,
-                email: admin.email,
-                name: admin.full_name,
-                daysLeft: diffDays
-              })
-            });
+        if (admins && admins.length > 0) {
+          const notifications = admins.map(admin => ({
+            user_id: admin.id,
+            organization_id: org.id,
+            title: 'Trial Expiring Soon',
+            message: `Your trial will expire in less than 3 days. Upgrade to continue using all features.`,
+            type: 'warning',
+            action_url: '/settings/subscription'
+          }));
+          
+          const { error: notifError } = await supabase
+            .from('notifications')
+            .insert(notifications);
             
-            const result = await response.json();
-            emailResults.push({
-              organization: org.id,
-              admin: admin.email,
-              days_left: diffDays,
-              success: result.success,
-              email_id: result.email_id
-            });
-            
-          } catch (emailError) {
-            console.error(`Error sending reminder to ${admin.email}:`, emailError);
-            emailResults.push({
-              organization: org.id,
-              admin: admin.email,
-              days_left: diffDays,
-              success: false,
-              error: emailError.message
-            });
+          if (notifError) {
+            console.error("Error creating notifications:", notifError);
+          } else {
+            console.log(`Created ${notifications.length} notifications for org ${org.id}`);
           }
         }
       }
     }
-    
-    // Return success response
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Trial expiration check and reminders sent successfully",
-        db_result: data,
-        email_results: emailResults
+      JSON.stringify({ 
+        success: true, 
+        expiredCount: expiredOrgs?.length || 0,
+        approachingCount: approachingOrgs?.length || 0
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 200 }
     );
   } catch (error) {
-    // Return error response
-    console.error("Error in trial expiration check:", error);
-    
+    console.error('Error in check-trial-expiration function:', error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
+      JSON.stringify({ error: error.message || 'Unknown error occurred' }),
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
     );
   }
 });

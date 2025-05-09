@@ -1,15 +1,12 @@
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
-import './styles/trial.css'  // Import trial-specific styles
-import { ThemeProvider } from '@/components/ThemeProvider'
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App.tsx';
+import './index.css';
+import "./css/trial-styles.css";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ThemeProvider defaultTheme="light" storageKey="app-theme">
-      <App />
-    </ThemeProvider>
-  </React.StrictMode>,
-)
+createRoot(document.getElementById("root")!).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);

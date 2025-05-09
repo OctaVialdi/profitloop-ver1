@@ -21,17 +21,13 @@ export interface Organization {
   address: string | null;
   phone: string | null;
   subscription_plan_id: string | null;
+  trial_start_date: string | null;
   trial_end_date: string | null;
   trial_expired: boolean;
   logo_path: string | null;
   theme_settings: any;
-  // Trial fields
-  trial_start_date: string | null;
-  subscription_status: 'active' | 'trial' | 'expired';
+  subscription_status: 'trial' | 'active' | 'expired';
   grace_period_end: string | null;
-  // Extension request field
-  trial_extension_requested: boolean | null;
-  trial_extension_reason: string | null;
 }
 
 export interface SubscriptionPlan {

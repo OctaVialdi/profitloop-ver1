@@ -1,83 +1,39 @@
 
-import { BrowserRouter } from "react-router-dom";
-import router from "./routes";
-import { Toaster } from "@/components/ui/sonner";
-import { QueryProvider } from "@/components/QueryProvider";
-import { useAssetStorage } from "./hooks/useAssetStorage";
-import TrialBanner from "@/components/TrialBanner";
-import { useEffect } from "react";
-import { useOrganization } from "@/hooks/useOrganization";
-import { checkAndUpdateTrialStatus } from "@/services/subscriptionService";
-import { trackSubscriptionEvent } from "@/utils/subscriptionUtils";
-import { RouterProvider } from "react-router-dom";
-import "@/styles/trial.css"; // Import trial styles explicitly
+import { useEffect } from 'react';
+import { Routes, Route, useLocation, useRoutes } from 'react-router-dom';
+import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from '@/components/theme-provider';
+import { routes } from '@/routes';
+import { useOrganization } from '@/hooks/useOrganization';
+import TrialBanner from '@/components/TrialBanner';
+import { checkAndUpdateTrialStatus } from '@/services/subscriptionService';
+import '@/css/trial-styles.css';
 
-function AppContent() {
-  const { isTrialActive, organization } = useOrganization();
+function App() {
+  const { organization } = useOrganization();
+  const location = useLocation();
+  const routeElements = useRoutes(routes);
   
-  // Force check trial status on app load
+  // Check trial status on app load
   useEffect(() => {
-    const updateTrialStatus = async () => {
+    const checkTrialStatus = async () => {
       if (organization?.id) {
         await checkAndUpdateTrialStatus(organization.id);
       }
     };
     
-    updateTrialStatus();
+    checkTrialStatus();
   }, [organization?.id]);
   
-  // Track app session start for analytics
-  useEffect(() => {
-    const trackSession = async () => {
-      if (organization?.id) {
-        await trackSubscriptionEvent('app_session_start', organization.id, {
-          trial_active: isTrialActive,
-          subscription_status: organization.subscription_status
-        });
-      }
-    };
-    
-    trackSession();
-    
-    return () => {
-      // Track session end on unmount
-      if (organization?.id) {
-        trackSubscriptionEvent('app_session_end', organization.id);
-      }
-    };
-  }, [organization?.id, isTrialActive, organization?.subscription_status]);
-  
-  // Add or remove trial-expired class based on trial status
-  useEffect(() => {
-    if (organization?.trial_expired && organization?.subscription_status === 'expired') {
-      document.body.classList.add('trial-expired');
-    } else {
-      document.body.classList.remove('trial-expired');
-    }
-    
-    // Clean up on unmount
-    return () => {
-      document.body.classList.remove('trial-expired');
-    };
-  }, [organization?.trial_expired, organization?.subscription_status]);
+  // Don't show trial banner on auth pages
+  const isAuthPage = location.pathname.startsWith('/auth/');
   
   return (
-    <>
-      <TrialBanner />
-      <RouterProvider router={router} />
-    </>
-  );
-}
-
-function App() {
-  // Initialize asset storage
-  useAssetStorage();
-
-  return (
-    <QueryProvider>
-      <AppContent />
-      <Toaster />
-    </QueryProvider>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      {!isAuthPage && <TrialBanner />}
+      {routeElements}
+      <Toaster position="top-right" expand={true} closeButton richColors />
+    </ThemeProvider>
   );
 }
 

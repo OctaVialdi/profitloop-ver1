@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 /**
  * Force updates the trial status for the current organization
@@ -10,7 +11,7 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
     // Get organization details
     const { data: orgData } = await supabase
       .from('organizations')
-      .select('trial_end_date, trial_expired')
+      .select('trial_end_date, trial_expired, subscription_status')
       .eq('id', organizationId)
       .single();
       
@@ -22,11 +23,14 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
     const isTrialExpiredByDate = trialEndDate && trialEndDate < now;
     
     // If trial is expired by date but not flagged, update it
-    if (isTrialExpiredByDate && !orgData.trial_expired) {
+    if (isTrialExpiredByDate && (orgData.subscription_status === 'trial' || !orgData.trial_expired)) {
       console.log("Trial has expired by date but not flagged. Updating flag.");
       const { error } = await supabase
         .from('organizations')
-        .update({ trial_expired: true })
+        .update({ 
+          trial_expired: true,
+          subscription_status: 'expired' 
+        })
         .eq('id', organizationId);
         
       if (error) {
@@ -68,6 +72,39 @@ export async function triggerTrialExpirationCheck(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("Error in triggerTrialExpirationCheck:", error);
+    return false;
+  }
+}
+
+/**
+ * Request a trial extension
+ */
+export async function requestTrialExtension(
+  organizationId: string, 
+  reason: string, 
+  contactEmail: string
+): Promise<boolean> {
+  try {
+    // Create a notification for admins (this would normally go to system administrators)
+    const { error } = await supabase
+      .from('notifications')
+      .insert([
+        {
+          organization_id: organizationId,
+          title: 'Trial Extension Request',
+          message: `A trial extension has been requested. Reason: ${reason}. Contact: ${contactEmail}`,
+          user_id: (await supabase.auth.getUser()).data.user?.id || '',
+          type: 'info'
+        }
+      ]);
+
+    if (error) throw error;
+    
+    toast.success("Your trial extension request has been submitted. We'll contact you soon.");
+    return true;
+  } catch (error) {
+    console.error("Error requesting trial extension:", error);
+    toast.error("Failed to submit trial extension request. Please try again.");
     return false;
   }
 }

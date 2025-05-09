@@ -64,8 +64,8 @@ const MagicLinkJoin = () => {
 
   // Process the magic link invitation
   const { isLoading, error, success, organizationName } = useMagicLink({
-    token,
     email,
+    token,
     accessToken,
     refreshToken,
     errorCode,
