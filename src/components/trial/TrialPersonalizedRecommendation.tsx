@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useOrganization } from "@/hooks/useOrganization";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock, Sparkles } from 'lucide-react';
-import { trackTrialEvent } from '@/services/analyticsService';
+import { trackSubscriptionEvent } from '@/utils/subscriptionUtils';
 import { Progress } from "@/components/ui/progress";
 import { formatTrialCountdown } from "@/utils/organizationUtils";
 
@@ -89,7 +89,7 @@ const TrialPersonalizedRecommendation: React.FC<TrialPersonalizedRecommendationP
     
     // Track that recommendations were shown
     if (organization?.id) {
-      trackTrialEvent('recommendations_viewed', organization.id, {
+      trackSubscriptionEvent('recommendations_viewed', organization.id, {
         days_left: daysLeftInTrial,
         features_shown: filteredRecommendations.map(f => f.id).join(',')
       });
@@ -98,7 +98,7 @@ const TrialPersonalizedRecommendation: React.FC<TrialPersonalizedRecommendationP
 
   const handleFeatureClick = (featureId: string) => {
     if (organization?.id) {
-      trackTrialEvent('recommendation_clicked', organization.id, {
+      trackSubscriptionEvent('recommendation_clicked', organization.id, {
         feature_id: featureId,
         days_left: daysLeftInTrial
       });

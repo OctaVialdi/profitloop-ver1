@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { TrialPersonalizedRecommendation } from "@/components/TrialPersonalizedRecommendation";
 
 interface Plan {
   id: string;
@@ -632,11 +633,13 @@ const Subscription = () => {
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Kelola Subscription</h1>
-          <p className="text-gray-600">Pilih paket yang sesuai dengan kebutuhan organisasi Anda</p>
-        </header>
-
+        <h1 className="text-3xl font-bold mb-2">Subscription Management</h1>
+        <p className="text-gray-600 mb-8">Manage your subscription plan and billing details</p>
+        
+        {isTrialActive && (
+          <TrialPersonalizedRecommendation className="mb-8" />
+        )}
+        
         {currentPlan && (
           <Card className="mb-8">
             <CardHeader className="pb-2">
