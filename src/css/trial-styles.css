@@ -87,3 +87,40 @@ body.trial-expired::before {
   border-width: 2px;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
+
+/* Premium badge styles */
+.premium-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 9999px;
+  padding: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+/* Animate the sparkles */
+@keyframes sparkle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+.premium-sparkle {
+  animation: sparkle 2s infinite ease-in-out;
+}
+
+/* Trial expired modal styles */
+.trial-expired-modal {
+  background: linear-gradient(135deg, #fff, #f9fafb);
+}
+
+/* Trial progress bar animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.trial-progress-urgent {
+  animation: pulse 2s infinite;
+}
