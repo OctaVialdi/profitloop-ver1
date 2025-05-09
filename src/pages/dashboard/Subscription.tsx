@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TrialPersonalizedRecommendation } from "@/components/trial/TrialPersonalizedRecommendation";
+import { requestTrialExtension, trackSubscriptionEvent, getTrialStatus } from "@/utils/subscriptionUtils";
 
 interface Plan {
   id: string;
@@ -413,52 +414,15 @@ const Subscription = () => {
     
     setIsExtending(true);
     try {
-      // Update organization with extension request
-      const { error } = await supabase
-        .from('organizations')
-        .update({
-          trial_extension_requested: true,
-          trial_extension_reason: extensionReason
-        })
-        .eq('id', organization.id);
+      const result = await requestTrialExtension(organization.id, extensionReason);
       
-      if (error) throw error;
-      
-      // Log the extension request in audit logs
-      await supabase
-        .from('subscription_audit_logs')
-        .insert({
-          organization_id: organization.id,
-          action: 'trial_extension_requested',
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          data: {
-            reason: extensionReason,
-            requested_at: new Date().toISOString()
-          }
-        });
-      
-      // Create notification for super admins
-      const { data: admins } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('role', 'super_admin');
-        
-      if (admins && admins.length > 0) {
-        for (const admin of admins) {
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: admin.id,
-              organization_id: organization.id,
-              title: 'Permintaan Perpanjangan Trial',
-              message: `Organisasi ${organization.name} meminta perpanjangan masa trial dengan alasan: ${extensionReason}`,
-              type: 'info'
-            });
-        }
+      if (result.success) {
+        toast.success(result.message);
+        setExtensionReason("");
+        await refreshData();
+      } else {
+        toast.error(result.message);
       }
-      
-      toast.success("Permintaan perpanjangan trial telah dikirim");
-      setExtensionReason("");
     } catch (error) {
       console.error("Error requesting trial extension:", error);
       toast.error("Gagal mengirim permintaan perpanjangan trial");
@@ -629,12 +593,20 @@ const Subscription = () => {
   const isTrialExpired = organization?.trial_expired && !organization?.subscription_plan_id;
   const currentPlan = plans.find(p => p.current);
   const isTrialExtensionRequested = organization?.trial_extension_requested;
+  const trialStatus = getTrialStatus(organization);
+
+  // Get appropriate class for the trial progress bar
+  const getTrialProgressClass = () => {
+    if (daysLeftInTrial <= 1) return "bg-red-500";
+    if (daysLeftInTrial <= 3) return "bg-amber-500";
+    return "bg-blue-500";
+  };
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Subscription Management</h1>
-        <p className="text-gray-600 mb-8">Manage your subscription plan and billing details</p>
+        <p className="text-gray-600 mb-8">Kelola paket berlangganan dan detail pembayaran Anda</p>
         
         {isTrialActive && (
           <TrialPersonalizedRecommendation className="mb-8" />
@@ -733,7 +705,11 @@ const Subscription = () => {
                     <span>0 hari</span>
                     <span>14 hari</span>
                   </div>
-                  <Progress value={(daysLeftInTrial / 14) * 100} className="h-2" />
+                  <Progress 
+                    value={(daysLeftInTrial / 14) * 100} 
+                    className="h-2"
+                    indicatorClassName={getTrialProgressClass()} 
+                  />
                 </div>
               )}
             </CardContent>
