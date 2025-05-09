@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,7 +7,7 @@ import { Download, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useOrganization } from '@/hooks/useOrganization';
-import { DateRangeType } from '@/types/dashboard';
+import { DateRangeType, CompanyGoal } from '@/types/dashboard';
 import { useDateRangeFilter } from '@/hooks/useDateRangeFilter';
 import { DashboardFilter } from './DashboardFilter';
 
@@ -90,7 +91,7 @@ export function BSCDashboard() {
       // Check if there's an existing financial_summary record
       const { data: existingRecord, error: fetchError } = await supabase
         .from('financial_summary')
-        .select('id')
+        .select('*')
         .eq('organization_id', organization.id)
         .limit(1);
       
@@ -101,7 +102,7 @@ export function BSCDashboard() {
         const { error } = await supabase
           .from('financial_summary')
           .update({ target_revenue: newTarget })
-          .eq('id', existingRecord[0].id);
+          .eq('organization_id', organization.id);
         
         if (error) throw error;
       } else {
@@ -222,7 +223,7 @@ export function BSCDashboard() {
         <TabsContent value="goals" className="space-y-4">
           <CompanyGoalsSection
             goals={dashboardData.companyGoals}
-            onAddGoal={() => {}}
+            onAddGoal={handleAddGoal}
           />
         </TabsContent>
         

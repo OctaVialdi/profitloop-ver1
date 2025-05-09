@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,8 +11,6 @@ import { MonthlyRevenueTrendCard } from './MonthlyRevenueTrendCard';
 import { TopRevenueContributorsCard } from './TopRevenueContributorsCard';
 import { ExpensesTrendCard } from './ExpensesTrendCard';
 import { toast } from '@/components/ui/sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/hooks/useOrganization';
 
 interface FinancialSummarySectionProps {
   financialSummary: FinancialSummary;
@@ -30,7 +27,6 @@ export function FinancialSummarySection({
   expenseBreakdowns,
   onUpdateTargetRevenue
 }: FinancialSummarySectionProps) {
-  const { organization } = useOrganization();
   const [targetRevenue, setTargetRevenue] = useState(financialSummary.targetRevenue || 21500000);
   
   const formatCurrency = (amount: number) => {
@@ -68,17 +64,8 @@ export function FinancialSummarySection({
       
       if (onUpdateTargetRevenue) {
         await onUpdateTargetRevenue(newTarget);
-      } else if (organization?.id) {
-        // Default implementation if no callback is provided
-        const { error } = await supabase
-          .from('financial_summary')
-          .update({ target_revenue: newTarget })
-          .eq('organization_id', organization.id);
-        
-        if (error) throw error;
+        toast.success("Target revenue updated successfully");
       }
-      
-      toast.success("Target revenue updated successfully");
     } catch (error) {
       console.error('Error updating target revenue:', error);
       toast.error("Failed to update target revenue");
