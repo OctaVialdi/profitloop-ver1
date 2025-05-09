@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, X, Timer } from "lucide-react";
+import { CalendarClock, X, Timer, HelpCircle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -14,6 +14,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "@/components/ui/sonner";
 
 const TrialBanner = () => {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
@@ -21,6 +24,9 @@ const TrialBanner = () => {
   const [isDismissed, setIsDismissed] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+  const [showExtensionDialog, setShowExtensionDialog] = useState(false);
+  const [extensionReason, setExtensionReason] = useState('');
+  const [isRequestingExtension, setIsRequestingExtension] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
@@ -30,7 +36,7 @@ const TrialBanner = () => {
   // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
   const isOnboardingPage = location.pathname === '/onboarding' || location.pathname === '/organizations';
-  const isSubscriptionPage = location.pathname === '/subscription';
+  const isSubscriptionPage = location.pathname === '/subscription' || location.pathname.includes('/settings/subscription');
   
   // Update countdown every minute when we have a trial end date
   useEffect(() => {
@@ -265,7 +271,7 @@ const TrialBanner = () => {
   
   // Handle subscription navigation
   const handleSubscribe = () => {
-    navigate("/subscription");
+    navigate("/settings/subscription");
     setShowSubscriptionDialog(false);
     // Remove blur when navigating to subscription page
     document.body.classList.remove('trial-expired');
@@ -278,13 +284,69 @@ const TrialBanner = () => {
     document.body.classList.remove('trial-expired');
   };
   
+  // Handle trial extension request
+  const handleRequestExtension = async () => {
+    if (!organizationId || !extensionReason.trim()) {
+      toast.error("Alasan perpanjangan trial harus diisi");
+      return;
+    }
+    
+    setIsRequestingExtension(true);
+    try {
+      // Update organization with extension request
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          trial_extension_requested: true,
+          trial_extension_reason: extensionReason
+        })
+        .eq('id', organizationId);
+      
+      if (error) throw error;
+      
+      // Create notification for super admins
+      const { data: admins } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'super_admin');
+        
+      if (admins && admins.length > 0) {
+        for (const admin of admins) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: admin.id,
+              organization_id: organizationId,
+              title: 'Permintaan Perpanjangan Trial',
+              message: `Organisasi dengan ID ${organizationId} meminta perpanjangan masa trial dengan alasan: ${extensionReason}`,
+              type: 'info'
+            });
+        }
+      }
+      
+      toast.success("Permintaan perpanjangan trial telah dikirim");
+      setShowExtensionDialog(false);
+      
+      // Close the subscription dialog too if it was open
+      if (showSubscriptionDialog) {
+        setShowSubscriptionDialog(false);
+      }
+      
+    } catch (error) {
+      console.error("Error requesting trial extension:", error);
+      toast.error("Gagal mengirim permintaan perpanjangan trial");
+    } finally {
+      setIsRequestingExtension(false);
+    }
+  };
+  
   // Don't show anything if not authenticated or on auth pages or if still loading
   if (!isAuthenticated || isAuthPage || isOnboardingPage || isDismissed || daysLeft === null || isLoading) return null;
   
   return (
     <>
       {!isTrialExpired && (
-        <Alert className="sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 flex items-center justify-between bg-blue-50 border-blue-100">
+        <Alert className="sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 flex items-center justify-between bg-blue-50 border-blue-100 animate-in fade-in duration-300">
           <div className="flex items-center">
             <CalendarClock className="h-4 w-4 text-blue-600 mr-2" />
             <AlertDescription className="text-blue-700 font-medium text-sm">
@@ -296,7 +358,7 @@ const TrialBanner = () => {
               <Button 
                 variant="link" 
                 className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
-                onClick={() => navigate("/subscription")}
+                onClick={() => navigate("/settings/subscription")}
               >
                 Berlangganan sekarang
               </Button>
@@ -310,7 +372,7 @@ const TrialBanner = () => {
       
       {/* Fullscreen Subscription Modal - Using the "bottom" side and custom styling to center it */}
       <Sheet open={isTrialExpired && showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
-        <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white shadow-lg p-0">
+        <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white shadow-lg p-0 animate-in slide-in-from-bottom duration-300">
           <div className="flex flex-col items-center p-6">
             {/* Timer Icon */}
             <div className="w-28 h-28 bg-blue-50 rounded-full flex items-center justify-center mb-6">
@@ -327,10 +389,19 @@ const TrialBanner = () => {
             
             <div className="w-full space-y-4">
               <Button 
-                className="w-full py-6 text-base font-medium bg-[#9b87f5] hover:bg-[#8a72f3]"
+                className="w-full py-6 text-base font-medium bg-[#9b87f5] hover:bg-[#8a72f3] animate-pulse"
                 onClick={handleSubscribe}
               >
                 Upgrade Sekarang
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full py-6 text-base font-medium"
+                onClick={() => setShowExtensionDialog(true)}
+              >
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Minta Perpanjangan Trial
               </Button>
               
               <Button 
@@ -344,6 +415,39 @@ const TrialBanner = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Trial Extension Request Dialog */}
+      <Dialog open={showExtensionDialog} onOpenChange={setShowExtensionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Minta Perpanjangan Trial</DialogTitle>
+            <DialogDescription>
+              Ceritakan kepada kami mengapa Anda membutuhkan perpanjangan masa trial. Tim kami akan meninjau permintaan Anda.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Textarea
+              placeholder="Alasan permintaan perpanjangan trial..."
+              className="min-h-[120px]"
+              value={extensionReason}
+              onChange={(e) => setExtensionReason(e.target.value)}
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowExtensionDialog(false)}>
+              Batal
+            </Button>
+            <Button 
+              onClick={handleRequestExtension}
+              disabled={isRequestingExtension || !extensionReason.trim()}
+            >
+              {isRequestingExtension ? "Mengirim..." : "Kirim Permintaan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

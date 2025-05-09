@@ -1,4 +1,3 @@
-
 export interface UserProfile {
   id: string;
   organization_id?: string;
@@ -25,10 +24,13 @@ export interface Organization {
   trial_expired: boolean;
   logo_path: string | null;
   theme_settings: any;
-  // New trial fields
+  // Trial fields
   trial_start_date: string | null;
   subscription_status: 'active' | 'trial' | 'expired';
   grace_period_end: string | null;
+  // Extension request field
+  trial_extension_requested: boolean | null;
+  trial_extension_reason: string | null;
 }
 
 export interface SubscriptionPlan {
