@@ -20,14 +20,24 @@ export interface AuthSignInResult {
 }
 
 export interface MagicLinkParams {
-  email: string;
+  email?: string;
+  token?: string;
   redirectTo?: string;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  // Add missing properties that are being used in useMagicLink.ts
+  accessToken?: string;
+  refreshToken?: string;
+  errorCode?: string | null;
+  errorDescription?: string | null;
+  type?: string;
 }
 
 export interface MagicLinkResult {
-  loading: boolean;
+  // Change to match the return value in useMagicLink.ts
+  isLoading: boolean; // Changed from loading to isLoading
   error: string | null;
-  sendMagicLink: (params: MagicLinkParams) => Promise<void>;
+  success?: boolean; // Added success property
+  organizationName?: string; // Added organizationName property
+  sendMagicLink?: (params: MagicLinkParams) => Promise<void>;
 }
