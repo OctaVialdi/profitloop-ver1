@@ -226,12 +226,18 @@ const TrialBanner = () => {
           console.log("Updating trial_expired flag to true");
           
           try {
-            supabase
-              .from('organizations')
-              .update({ trial_expired: true })
-              .eq('id', organizationId)
-              .then(() => console.log("Trial expired flag updated"))
-              .catch(err => console.error("Error updating trial expired flag:", err));
+            // Using async/await with try/catch instead of Promise.catch()
+            (async () => {
+              try {
+                await supabase
+                  .from('organizations')
+                  .update({ trial_expired: true })
+                  .eq('id', organizationId);
+                console.log("Trial expired flag updated");
+              } catch (err) {
+                console.error("Error updating trial expired flag:", err);
+              }
+            })();
           } catch (err) {
             console.error("Error setting up update promise:", err);
           }
@@ -265,16 +271,18 @@ const TrialBanner = () => {
           if (organizationId) {
             console.log("Trial has ended, updating trial_expired flag");
             
-            try {
-              supabase
-                .from('organizations')
-                .update({ trial_expired: true })
-                .eq('id', organizationId)
-                .then(() => console.log("Trial expired flag updated"))
-                .catch(err => console.error("Error updating trial expired flag:", err));
-            } catch (err) {
-              console.error("Error setting up update promise:", err);
-            }
+            // Using async/await with try/catch instead of Promise.catch()
+            (async () => {
+              try {
+                await supabase
+                  .from('organizations')
+                  .update({ trial_expired: true })
+                  .eq('id', organizationId);
+                console.log("Trial expired flag updated");
+              } catch (err) {
+                console.error("Error updating trial expired flag:", err);
+              }
+            })();
           }
         }
       } else {
