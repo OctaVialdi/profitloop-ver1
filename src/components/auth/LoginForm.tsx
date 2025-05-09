@@ -63,7 +63,7 @@ const LoginForm = ({
             readOnly={isEmailReadOnly}
             className={isEmailReadOnly ? "bg-gray-100" : ""}
             required
-            autoComplete="username"
+            autoComplete="username" 
           />
         </div>
         <div className="space-y-2">

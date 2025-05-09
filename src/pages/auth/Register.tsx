@@ -9,6 +9,7 @@ import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { ensureProfileExists } from "@/services/profileService";
+import { cleanupAuthState } from "@/utils/authCleanup";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -35,6 +36,8 @@ const Register = () => {
   const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
       setIsCheckingEmail(true);
+      console.log("Checking if email exists:", email);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
@@ -46,6 +49,7 @@ const Register = () => {
         return false;
       }
       
+      console.log("Email check result:", !!data);
       return !!data; // Return true if data exists (email found)
     } catch (error) {
       console.error("Exception checking email:", error);
@@ -66,6 +70,17 @@ const Register = () => {
     setIsLoading(true);
     
     try {
+      // Clean up existing auth state to prevent issues
+      cleanupAuthState();
+      
+      // Attempt to sign out first to ensure clean state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if sign out fails
+        console.log("Pre-signout failed, continuing with registration");
+      }
+      
       // Check if email already exists - never skip this check
       const emailExists = await checkEmailExists(email);
       if (emailExists) {
@@ -106,8 +121,11 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
+        console.log("User registered successfully:", data.user.id);
+        
         // Directly create profile entry - CRITICAL FIX
         try {
+          console.log("Creating profile for new user");
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({

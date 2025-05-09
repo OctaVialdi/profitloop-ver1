@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { ensureProfileExists } from "@/services/profileService";
 import { AuthCredentials, AuthSignInResult } from "./types";
+import { cleanupAuthState } from "@/utils/authCleanup";
 
 /**
  * Hook to handle user sign-in with email and password
@@ -17,6 +18,17 @@ export function useSignIn() {
     setLoginError(null);
     
     try {
+      // Clean up existing auth state to prevent issues
+      cleanupAuthState();
+      
+      // Attempt to sign out first to ensure clean state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if sign out fails
+        console.log("Pre-signout failed, continuing with login");
+      }
+      
       console.log("Attempting to sign in with email:", credentials.email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
