@@ -6,6 +6,9 @@
 export const cleanupAuthState = () => {
   console.log("Cleaning up auth state...");
   
+  // Log the caller function if possible
+  console.log("Auth cleanup called from:", new Error().stack);
+  
   // Remove standard auth tokens
   localStorage.removeItem('supabase.auth.token');
   
