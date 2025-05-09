@@ -122,10 +122,15 @@ export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
                 throw processError;
               }
               
-              if (result && result.success) {
-                setSuccess(true);
+              // Fix for typing issues - check if result is an object with success property
+              if (result && typeof result === 'object' && 'success' in result) {
+                if (result.success === true) {
+                  setSuccess(true);
+                } else {
+                  setError(result.message?.toString() || "Failed to process invitation");
+                }
               } else {
-                setError(result?.message || "Failed to process invitation");
+                setError("Unexpected response format from invitation processing");
               }
             } else {
               // Not authenticated, but valid invitation

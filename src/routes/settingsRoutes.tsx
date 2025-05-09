@@ -29,6 +29,6 @@ export const settingsRoutes = (
     <Route path="invite" element={<InviteMembers />} />
     <Route path="subscription" element={<Subscription />} />
     <Route path="profile" element={<ProfileSettings />} />
-    <Route path="" element={<Navigate to="/settings/dashboard" replace />} />
+    <Route path="" element={<Navigate to="/settings/subscription" replace />} />
   </Route>
 );
