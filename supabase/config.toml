@@ -67,3 +67,5 @@ postgres_webhooks = false
 verify_jwt = true
 [edge_functions.track-event]
 verify_jwt = true
+[edge_functions.send-trial-reminder]
+verify_jwt = true

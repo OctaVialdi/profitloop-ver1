@@ -1,0 +1,117 @@
+
+/* Styles for trial-related UI states */
+
+/* Blur effect for expired trials */
+body.trial-expired .app-content:not(.subscription-page) {
+  filter: blur(0);
+  transition: filter 0.3s ease-in-out;
+}
+
+/* Premium feature indicators */
+.premium-feature {
+  position: relative;
+}
+
+.premium-feature::after {
+  content: '✨';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-size: 12px;
+  background: linear-gradient(45deg, #9b87f5, #65b8f9);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Trial banner animations */
+.trial-countdown {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Progress indicator colors */
+.trial-progress-high {
+  background-color: #4ade80; /* Green */
+}
+
+.trial-progress-medium {
+  background-color: #facc15; /* Yellow */
+}
+
+.trial-progress-low {
+  background-color: #f87171; /* Red */
+}
+
+/* Modal overlay for trial expiration */
+.trial-expired-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Premium feature locked state */
+.feature-locked {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-locked::before {
+  content: "🔒";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  z-index: 10;
+}
+
+.feature-locked::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.5);
+  z-index: 9;
+}
+
+/* Feature tooltip */
+.feature-tooltip {
+  position: absolute;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-width: 250px;
+  font-size: 14px;
+}

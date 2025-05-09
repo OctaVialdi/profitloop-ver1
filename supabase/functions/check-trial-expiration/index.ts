@@ -26,17 +26,71 @@ serve(async (req: Request) => {
       },
     });
 
-    // Call the function
+    // Call the function to update trial expirations
     const { data, error } = await supabase.rpc('check_trial_expirations');
     
     // Check for errors
     if (error) throw error;
     
+    // Now let's send email reminders to organizations with trials ending soon
+    // Get organizations with trials ending in 1, 3 days or already ended
+    const { data: orgsNeedingReminders, error: orgsError } = await supabase
+      .from('organizations')
+      .select(`
+        id,
+        name,
+        trial_end_date,
+        subscription_status,
+        profiles!inner(id, email, full_name, role)
+      `)
+      .in('subscription_status', ['trial', 'expired'])
+      .gte('trial_end_date', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Include those expired in the last 24h
+      .lte('trial_end_date', new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString()); // Include those expiring in the next 4 days
+      
+    if (orgsError) {
+      console.error("Error fetching organizations for reminders:", orgsError);
+    } else if (orgsNeedingReminders) {
+      // Process each organization
+      for (const org of orgsNeedingReminders) {
+        const trialEndDate = new Date(org.trial_end_date);
+        const now = new Date();
+        const diffTime = trialEndDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Only send reminders for 0, 1, or 3 days
+        if (![0, 1, 3].includes(diffDays)) continue;
+        
+        // Send reminder to each admin in the organization
+        const admins = org.profiles.filter(p => ['super_admin', 'admin'].includes(p.role));
+        
+        for (const admin of admins) {
+          try {
+            // Call the send-trial-reminder function
+            await fetch(`${supabaseUrl}/functions/v1/send-trial-reminder`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseKey}`
+              },
+              body: JSON.stringify({
+                organizationId: org.id,
+                email: admin.email,
+                name: admin.full_name,
+                daysLeft: diffDays
+              })
+            });
+          } catch (emailError) {
+            console.error(`Error sending reminder to ${admin.email}:`, emailError);
+          }
+        }
+      }
+    }
+    
     // Return success response
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Trial expiration check completed successfully",
+        message: "Trial expiration check and reminders sent successfully",
         result: data,
       }),
       {

@@ -14,9 +14,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/sonner";
+import TrialExtensionRequestDialog from './trial/TrialExtensionRequestDialog';
+import { trackSubscriptionEvent } from '@/utils/subscriptionUtils';
 
 const TrialBanner = () => {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
@@ -25,18 +26,35 @@ const TrialBanner = () => {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
-  const [extensionReason, setExtensionReason] = useState('');
-  const [isRequestingExtension, setIsRequestingExtension] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const location = useLocation();
+  const [progressPercent, setProgressPercent] = useState(100);
+  location = useLocation();
   
   // Skip on auth pages
   const isAuthPage = location.pathname.startsWith('/auth/');
   const isOnboardingPage = location.pathname === '/onboarding' || location.pathname === '/organizations';
   const isSubscriptionPage = location.pathname === '/subscription' || location.pathname.includes('/settings/subscription');
+  
+  // Track user engagement with trial banner
+  const trackBannerEvent = async (action: string) => {
+    if (organizationId) {
+      await trackSubscriptionEvent(`trial_banner_${action}`, organizationId);
+    }
+  };
+
+  // Handle successful trial extension request
+  const handleExtensionRequestSuccess = () => {
+    toast.success("Permintaan perpanjangan trial telah dikirim ke tim kami");
+    if (isTrialExpired) {
+      // Close subscription dialog if it was open
+      setShowSubscriptionDialog(false);
+    }
+    // Track the event
+    trackBannerEvent('extension_requested');
+  };
   
   // Update countdown every minute when we have a trial end date
   useEffect(() => {
@@ -45,6 +63,15 @@ const TrialBanner = () => {
     const updateCountdown = () => {
       const now = new Date();
       const diffTime = trialEndDate.getTime() - now.getTime();
+      
+      // Calculate total trial days (assuming 14 days)
+      const trialStartDate = new Date(trialEndDate.getTime() - (14 * 24 * 60 * 60 * 1000));
+      const totalTrialTime = trialEndDate.getTime() - trialStartDate.getTime();
+      const elapsedTime = now.getTime() - trialStartDate.getTime();
+      
+      // Calculate progress percentage (reversed - starts at 100, goes to 0)
+      const calculatedProgress = 100 - Math.min(100, Math.max(0, (elapsedTime / totalTrialTime) * 100));
+      setProgressPercent(calculatedProgress);
       
       if (diffTime <= 0) {
         setCountdownString('0 hari 00:00:00');
@@ -187,6 +214,9 @@ const TrialBanner = () => {
           
           // Add blur class to body when trial has expired
           document.body.classList.add('trial-expired');
+          
+          // Track the expired trial view event
+          trackBannerEvent('expired_view');
         }
         
         // If the trial is expired by date but not flagged as expired, update the flag
@@ -194,20 +224,12 @@ const TrialBanner = () => {
           console.log("Updating trial_expired flag to true");
           
           try {
-            const updatePromise = supabase
+            supabase
               .from('organizations')
               .update({ trial_expired: true })
-              .eq('id', organizationId);
-              
-            // Use await instead of .then().catch()
-            (async () => {
-              try {
-                await updatePromise;
-                console.log("Trial expired flag updated");
-              } catch (err) {
-                console.error("Error updating trial expired flag:", err);
-              }
-            })();
+              .eq('id', organizationId)
+              .then(() => console.log("Trial expired flag updated"))
+              .catch(err => console.error("Error updating trial expired flag:", err));
           } catch (err) {
             console.error("Error setting up update promise:", err);
           }
@@ -224,30 +246,30 @@ const TrialBanner = () => {
         setIsTrialExpired(diffDays <= 0);
         setIsLoading(false);
         
+        // Track banner view for active trial
+        if (diffDays <= 3) {
+          trackBannerEvent('active_view');
+        }
+        
         // Trial has ended but not marked as expired yet
         if (diffDays <= 0 && !isSubscriptionPage) {
           setShowSubscriptionDialog(true);
           document.body.classList.add('trial-expired');
+          
+          // Track expired view
+          trackBannerEvent('expired_view');
           
           // Update the trial_expired flag
           if (organizationId) {
             console.log("Trial has ended, updating trial_expired flag");
             
             try {
-              const updatePromise = supabase
+              supabase
                 .from('organizations')
                 .update({ trial_expired: true })
-                .eq('id', organizationId);
-                
-              // Use await instead of .then().catch()
-              (async () => {
-                try {
-                  await updatePromise;
-                  console.log("Trial expired flag updated");
-                } catch (err) {
-                  console.error("Error updating trial expired flag:", err);
-                }
-              })();
+                .eq('id', organizationId)
+                .then(() => console.log("Trial expired flag updated"))
+                .catch(err => console.error("Error updating trial expired flag:", err));
             } catch (err) {
               console.error("Error setting up update promise:", err);
             }
@@ -271,6 +293,8 @@ const TrialBanner = () => {
   
   // Handle subscription navigation
   const handleSubscribe = () => {
+    // Track the click event
+    trackBannerEvent('upgrade_click');
     navigate("/settings/subscription");
     setShowSubscriptionDialog(false);
     // Remove blur when navigating to subscription page
@@ -279,98 +303,66 @@ const TrialBanner = () => {
 
   // Handle sign out
   const handleSignOut = async () => {
+    // Track the sign out event
+    trackBannerEvent('signout_click');
     await supabase.auth.signOut();
     navigate("/auth/login");
     document.body.classList.remove('trial-expired');
   };
   
-  // Handle trial extension request
-  const handleRequestExtension = async () => {
-    if (!organizationId || !extensionReason.trim()) {
-      toast.error("Alasan perpanjangan trial harus diisi");
-      return;
-    }
-    
-    setIsRequestingExtension(true);
-    try {
-      // Update organization with extension request
-      const { error } = await supabase
-        .from('organizations')
-        .update({
-          trial_extension_requested: true,
-          trial_extension_reason: extensionReason
-        })
-        .eq('id', organizationId);
-      
-      if (error) throw error;
-      
-      // Create notification for super admins
-      const { data: admins } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('role', 'super_admin');
-        
-      if (admins && admins.length > 0) {
-        for (const admin of admins) {
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: admin.id,
-              organization_id: organizationId,
-              title: 'Permintaan Perpanjangan Trial',
-              message: `Organisasi dengan ID ${organizationId} meminta perpanjangan masa trial dengan alasan: ${extensionReason}`,
-              type: 'info'
-            });
-        }
-      }
-      
-      toast.success("Permintaan perpanjangan trial telah dikirim");
-      setShowExtensionDialog(false);
-      
-      // Close the subscription dialog too if it was open
-      if (showSubscriptionDialog) {
-        setShowSubscriptionDialog(false);
-      }
-      
-    } catch (error) {
-      console.error("Error requesting trial extension:", error);
-      toast.error("Gagal mengirim permintaan perpanjangan trial");
-    } finally {
-      setIsRequestingExtension(false);
-    }
-  };
-  
   // Don't show anything if not authenticated or on auth pages or if still loading
   if (!isAuthenticated || isAuthPage || isOnboardingPage || isDismissed || daysLeft === null || isLoading) return null;
   
+  const bannerBackgroundColor = daysLeft <= 1 ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'; 
+  const progressColor = daysLeft <= 1 ? 'bg-amber-500' : 'bg-blue-600';
+  
   return (
     <>
-      {!isTrialExpired && (
-        <Alert className="sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 flex items-center justify-between bg-blue-50 border-blue-100 animate-in fade-in duration-300">
-          <div className="flex items-center">
-            <CalendarClock className="h-4 w-4 text-blue-600 mr-2" />
-            <AlertDescription className="text-blue-700 font-medium text-sm">
-              {daysLeft > 0 ? (
-                <>Masa trial Anda berakhir dalam <span className="font-semibold">{countdownString}</span>. </>
-              ) : (
-                <>Masa trial Anda telah berakhir. </>
-              )}
-              <Button 
-                variant="link" 
-                className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
-                onClick={() => navigate("/settings/subscription")}
-              >
-                Berlangganan sekarang
-              </Button>
-            </AlertDescription>
+      {!isTrialExpired && daysLeft <= 3 && (
+        <Alert className={`sticky top-0 z-50 rounded-none border-b mb-0 py-2 px-4 animate-in fade-in duration-300 ${bannerBackgroundColor}`}>
+          <div className="w-full flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <CalendarClock className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
+                <AlertDescription className="text-blue-700 font-medium text-sm">
+                  {daysLeft > 0 ? (
+                    <>Masa trial Anda berakhir dalam <span className="font-semibold">{countdownString}</span></>
+                  ) : (
+                    <>Masa trial Anda telah berakhir</>
+                  )}
+                </AlertDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="link" 
+                  className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
+                  onClick={() => {
+                    trackBannerEvent('upgrade_click');
+                    navigate("/settings/subscription");
+                  }}
+                >
+                  Berlangganan
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                  setIsDismissed(true);
+                  trackBannerEvent('dismiss_click');
+                }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="w-full">
+              <Progress 
+                value={progressPercent} 
+                className="h-1" 
+                indicatorClassName={progressColor}
+              />
+            </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsDismissed(true)}>
-            <X className="h-4 w-4" />
-          </Button>
         </Alert>
       )}
       
-      {/* Fullscreen Subscription Modal - Using the "bottom" side and custom styling to center it */}
+      {/* Fullscreen Subscription Modal */}
       <Sheet open={isTrialExpired && showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
         <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white shadow-lg p-0 animate-in slide-in-from-bottom duration-300">
           <div className="flex flex-col items-center p-6">
@@ -417,37 +409,11 @@ const TrialBanner = () => {
       </Sheet>
 
       {/* Trial Extension Request Dialog */}
-      <Dialog open={showExtensionDialog} onOpenChange={setShowExtensionDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Minta Perpanjangan Trial</DialogTitle>
-            <DialogDescription>
-              Ceritakan kepada kami mengapa Anda membutuhkan perpanjangan masa trial. Tim kami akan meninjau permintaan Anda.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <Textarea
-              placeholder="Alasan permintaan perpanjangan trial..."
-              className="min-h-[120px]"
-              value={extensionReason}
-              onChange={(e) => setExtensionReason(e.target.value)}
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowExtensionDialog(false)}>
-              Batal
-            </Button>
-            <Button 
-              onClick={handleRequestExtension}
-              disabled={isRequestingExtension || !extensionReason.trim()}
-            >
-              {isRequestingExtension ? "Mengirim..." : "Kirim Permintaan"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TrialExtensionRequestDialog 
+        open={showExtensionDialog} 
+        onOpenChange={setShowExtensionDialog}
+        onSuccessfulRequest={handleExtensionRequestSuccess}
+      />
     </>
   );
 };
