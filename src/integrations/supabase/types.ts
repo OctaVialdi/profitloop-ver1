@@ -503,6 +503,59 @@ export type Database = {
         }
         Relationships: []
       }
+      company_goals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_progress: number | null
+          deadline: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_critical: boolean | null
+          name: string
+          organization_id: string
+          status: string | null
+          target_amount: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_progress?: number | null
+          deadline?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_critical?: boolean | null
+          name: string
+          organization_id: string
+          status?: string | null
+          target_amount: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_progress?: number | null
+          deadline?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_critical?: boolean | null
+          name?: string
+          organization_id?: string
+          status?: string | null
+          target_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_goals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_mission_vision: {
         Row: {
           created_at: string
@@ -619,6 +672,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "company_values_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_metrics: {
+        Row: {
+          category: string | null
+          created_at: string
+          customer_id: string | null
+          feedback_text: string | null
+          id: string
+          metric_name: string
+          metric_type: string
+          metric_value: number | null
+          organization_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          customer_id?: string | null
+          feedback_text?: string | null
+          id?: string
+          metric_name: string
+          metric_type: string
+          metric_value?: number | null
+          organization_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          customer_id?: string | null
+          feedback_text?: string | null
+          id?: string
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number | null
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_metrics_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1244,6 +1341,47 @@ export type Database = {
           },
         ]
       }
+      innovation_metrics: {
+        Row: {
+          created_at: string
+          details: string | null
+          employee_id: string | null
+          id: string
+          metric_name: string
+          metric_type: string
+          metric_value: number | null
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          employee_id?: string | null
+          id?: string
+          metric_name: string
+          metric_type: string
+          metric_value?: number | null
+          organization_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          employee_id?: string | null
+          id?: string
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number | null
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "innovation_metrics_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           created_at: string | null
@@ -1564,6 +1702,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operational_metrics: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          id: string
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          organization_id: string
+          period: string | null
+          period_end: string | null
+          period_start: string | null
+          target_value: number | null
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          organization_id: string
+          period?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          target_value?: number | null
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          organization_id?: string
+          period?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          target_value?: number | null
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_metrics_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -2149,9 +2340,76 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          description: string | null
+          goal_id: string | null
+          id: string
+          organization_id: string
+          transaction_date: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          description?: string | null
+          goal_id?: string | null
+          id?: string
+          organization_id: string
+          transaction_date?: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          description?: string | null
+          goal_id?: string | null
+          id?: string
+          organization_id?: string
+          transaction_date?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      financial_summary: {
+        Row: {
+          month: string | null
+          net_cashflow: number | null
+          organization_id: string | null
+          total_expenses: number | null
+          total_revenue: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_trial_expirations: {
