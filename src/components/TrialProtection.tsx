@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,17 +9,20 @@ interface TrialProtectionProps {
   children: React.ReactNode;
   premiumFeature?: boolean;
   featureName?: string;
+  showPreview?: boolean;
 }
 
 // This component protects content based on trial/subscription status
 const TrialProtection: React.FC<TrialProtectionProps> = ({ 
   children, 
   premiumFeature = false,
-  featureName = "Fitur Premium"
+  featureName = "Fitur Premium",
+  showPreview = false
 }) => {
   const organizationData = useOrganization();
   const { toast } = useToast();
   const location = useLocation();
+  const [hasShownToast, setHasShownToast] = useState(false);
   
   const isSubscriptionPage = location.pathname === '/subscription' || 
                              location.pathname === '/settings/subscription';
@@ -31,7 +34,7 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
 
   useEffect(() => {
     // Show toast only once when a premium feature is attempted to be accessed but restricted
-    if (shouldRestrict) {
+    if (shouldRestrict && !hasShownToast) {
       toast({
         title: "Fitur Premium",
         description: "Fitur ini hanya tersedia untuk pengguna berbayar atau selama masa trial.",
@@ -42,8 +45,9 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
           </a>
         ),
       });
+      setHasShownToast(true);
     }
-  }, [shouldRestrict]);
+  }, [shouldRestrict, hasShownToast, toast]);
   
   // Always allow access to the subscription page
   if (isSubscriptionPage) {
@@ -56,18 +60,35 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
     return (
       <TrialFeatureTooltip featureName={featureName} isPremiumOnly={premiumFeature}>
         {organizationData.hasPaidSubscription || organizationData.isTrialActive ? (
-          // Access granted
-          <>{children}</>
+          // Access granted - show with premium indicator
+          <div className="relative premium-feature">
+            {children}
+          </div>
         ) : (
-          // Access restricted
-          <div className="p-4 border border-dashed rounded-md bg-gray-50 text-center">
-            <p className="text-gray-500 mb-2">Fitur premium tidak tersedia</p>
-            <a 
-              href="/settings/subscription" 
-              className="text-blue-600 hover:underline text-sm"
-            >
-              Upgrade untuk mengakses fitur ini
-            </a>
+          // Access restricted - show locked state or preview
+          <div className={`relative ${showPreview ? 'feature-preview' : 'feature-locked'}`}>
+            {showPreview ? (
+              // Show a previewed/watermarked version
+              <div className="opacity-70 pointer-events-none">
+                {children}
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-200 to-transparent flex items-end justify-center pb-2">
+                  <div className="bg-gray-800 text-white text-xs py-1 px-2 rounded-full">
+                    Fitur Premium
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Complete lockout with upgrade prompt
+              <div className="p-4 border border-dashed rounded-md bg-gray-50 text-center">
+                <p className="text-gray-500 mb-2">Fitur premium tidak tersedia</p>
+                <a 
+                  href="/settings/subscription" 
+                  className="text-blue-600 hover:underline text-sm"
+                >
+                  Upgrade untuk mengakses fitur ini
+                </a>
+              </div>
+            )}
           </div>
         )}
       </TrialFeatureTooltip>

@@ -31,6 +31,8 @@ const TrialBanner = () => {
   const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [progressPercent, setProgressPercent] = useState(100);
+  const [secondsLeft, setSecondsLeft] = useState<number>(0);
+  const [isPulsing, setIsPulsing] = useState(false);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,7 +60,7 @@ const TrialBanner = () => {
     trackBannerEvent('extension_requested');
   };
   
-  // Update countdown every minute when we have a trial end date
+  // Update countdown every second when we have a trial end date
   useEffect(() => {
     if (!trialEndDate || isDismissed || isAuthPage || isOnboardingPage) return;
 
@@ -78,6 +80,7 @@ const TrialBanner = () => {
       if (diffTime <= 0) {
         setCountdownString('0 hari 00:00:00');
         setDaysLeft(0);
+        setSecondsLeft(0);
         setIsTrialExpired(true);
         return;
       }
@@ -92,14 +95,18 @@ const TrialBanner = () => {
       const formattedTime = `${days} hari ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       setCountdownString(formattedTime);
       setDaysLeft(days);
+      setSecondsLeft(Math.floor(diffTime / 1000));
       setIsTrialExpired(false);
+      
+      // Enable pulsing effect for last 24 hours
+      setIsPulsing(days === 0);
     };
     
     // Initial update
     updateCountdown();
     
-    // Set up interval for updating the countdown (update every 60 seconds instead of every second)
-    const interval = setInterval(updateCountdown, 60000);
+    // Set up interval for updating the countdown every second for a more dynamic experience
+    const interval = setInterval(updateCountdown, 1000);
     
     // Clean up on unmount
     return () => clearInterval(interval);
@@ -320,11 +327,39 @@ const TrialBanner = () => {
     document.body.classList.remove('trial-expired');
   };
   
+  // Helper function to get color class based on days left
+  const getProgressColorClass = () => {
+    if (daysLeft === null) return 'bg-blue-600';
+    if (daysLeft <= 1) return 'trial-progress-low';
+    if (daysLeft <= 3) return 'trial-progress-medium';
+    return 'trial-progress-high';
+  };
+
+  // Format seconds for display
+  const formatTimeRemaining = () => {
+    if (secondsLeft <= 0) return "Waktu habis";
+    
+    const days = Math.floor(secondsLeft / (60 * 60 * 24));
+    const hours = Math.floor((secondsLeft % (60 * 60 * 24)) / (60 * 60));
+    const minutes = Math.floor((secondsLeft % (60 * 60)) / 60);
+    const seconds = secondsLeft % 60;
+    
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+  
   // Don't show anything if not authenticated or on auth pages or if still loading
   if (!isAuthenticated || isAuthPage || isOnboardingPage || isDismissed || daysLeft === null || isLoading) return null;
   
   const bannerBackgroundColor = daysLeft <= 1 ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'; 
-  const progressColor = daysLeft <= 1 ? 'bg-amber-500' : 'bg-blue-600';
+  const progressColor = getProgressColorClass();
   
   return (
     <>
@@ -336,9 +371,9 @@ const TrialBanner = () => {
                 <CalendarClock className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
                 <AlertDescription className="text-blue-700 font-medium text-sm">
                   {daysLeft > 0 ? (
-                    <>Masa trial Anda berakhir dalam <span className="font-semibold">{countdownString}</span></>
+                    <>Masa trial Anda berakhir dalam </>
                   ) : (
-                    <>Masa trial Anda telah berakhir</>
+                    <>Masa trial Anda hampir berakhir</>
                   )}
                 </AlertDescription>
               </div>
@@ -361,23 +396,33 @@ const TrialBanner = () => {
                 </Button>
               </div>
             </div>
+            
+            <div className={`text-center font-mono ${isPulsing ? 'trial-countdown' : ''}`}>
+              <span className="font-bold text-lg">
+                {formatTimeRemaining()}
+              </span>
+            </div>
+            
             <div className="w-full">
               <Progress 
                 value={progressPercent} 
-                className={`h-1 ${progressColor}`}
+                className={`h-2 ${progressColor}`}
               />
             </div>
           </div>
         </Alert>
       )}
       
-      {/* Fullscreen Subscription Modal */}
+      {/* Fullscreen Subscription Modal with Enhanced UI */}
       <Sheet open={isTrialExpired && showSubscriptionDialog && !isSubscriptionPage} onOpenChange={setShowSubscriptionDialog}>
-        <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white shadow-lg p-0 animate-in slide-in-from-bottom duration-300">
-          <div className="flex flex-col items-center p-6">
-            {/* Timer Icon */}
-            <div className="w-28 h-28 bg-blue-50 rounded-full flex items-center justify-center mb-6">
-              <Timer className="w-14 h-14 text-blue-600" />
+        <SheetContent side="bottom" className="w-full sm:max-w-md mx-auto h-auto max-h-[90vh] rounded-t-lg bg-white shadow-lg p-0 animate-in slide-in-from-bottom duration-500">
+          <div className="flex flex-col items-center p-6 relative">
+            {/* Added animated background accent */}
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-500 via-amber-500 to-red-500 rounded-t-lg animate-pulse"></div>
+            
+            {/* Timer Icon with enhanced styling */}
+            <div className="w-28 h-28 bg-blue-50 rounded-full flex items-center justify-center mb-6 border-4 border-red-100 animate-pulse">
+              <Timer className="w-14 h-14 text-red-600" />
             </div>
             
             <h2 className="text-2xl font-bold text-center mb-2">

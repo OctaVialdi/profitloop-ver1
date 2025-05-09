@@ -3,8 +3,8 @@
 
 /* Blur effect for expired trials */
 body.trial-expired .app-content:not(.subscription-page) {
-  filter: blur(0);
-  transition: filter 0.3s ease-in-out;
+  filter: blur(3px);
+  transition: filter 0.5s ease-in-out;
 }
 
 /* Premium feature indicators */
@@ -27,6 +27,7 @@ body.trial-expired .app-content:not(.subscription-page) {
   justify-content: center;
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: sparkle 1.5s infinite alternate;
 }
 
 /* Trial banner animations */
@@ -46,6 +47,21 @@ body.trial-expired .app-content:not(.subscription-page) {
   }
 }
 
+@keyframes sparkle {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.8;
+  }
+}
+
 /* Progress indicator colors */
 .trial-progress-high {
   background-color: #4ade80; /* Green */
@@ -57,6 +73,12 @@ body.trial-expired .app-content:not(.subscription-page) {
 
 .trial-progress-low {
   background-color: #f87171; /* Red */
+  animation: pulse-progress 1s infinite alternate;
+}
+
+@keyframes pulse-progress {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
 }
 
 /* Modal overlay for trial expiration */
@@ -72,6 +94,12 @@ body.trial-expired .app-content:not(.subscription-page) {
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: fade-in 0.5s ease-in-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Premium feature locked state */
@@ -80,6 +108,7 @@ body.trial-expired .app-content:not(.subscription-page) {
   pointer-events: none;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .feature-locked::before {
@@ -90,6 +119,12 @@ body.trial-expired .app-content:not(.subscription-page) {
   transform: translate(-50%, -50%);
   font-size: 24px;
   z-index: 10;
+  animation: lock-bounce 1s ease infinite alternate;
+}
+
+@keyframes lock-bounce {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.1); }
 }
 
 .feature-locked::after {
@@ -103,6 +138,32 @@ body.trial-expired .app-content:not(.subscription-page) {
   z-index: 9;
 }
 
+/* Feature preview styling */
+.feature-preview {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.feature-preview:hover::after {
+  content: "Upgrade untuk akses penuh";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  color: white;
+  font-size: 12px;
+  padding: 8px;
+  text-align: center;
+  animation: slide-up 0.3s ease;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
 /* Feature tooltip */
 .feature-tooltip {
   position: absolute;
@@ -110,8 +171,14 @@ body.trial-expired .app-content:not(.subscription-page) {
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   padding: 8px 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 100;
-  max-width: 250px;
+  max-width: 280px;
   font-size: 14px;
+  animation: tooltip-appear 0.2s ease;
+}
+
+@keyframes tooltip-appear {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
