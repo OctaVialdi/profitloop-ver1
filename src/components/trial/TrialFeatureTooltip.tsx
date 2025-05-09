@@ -1,3 +1,4 @@
+
 import { useOrganization } from "@/hooks/useOrganization";
 import {
   Tooltip,
@@ -6,11 +7,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { InfoIcon, Sparkles, Clock, Calendar, CheckCircle, AlertTriangle } from "lucide-react";
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState } from "react";
 import { formatTrialCountdown } from "@/utils/organizationUtils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { trackTrialEvent } from "@/services/analyticsService";
 
 interface TrialFeatureTooltipProps {
   children: ReactNode;
@@ -27,20 +27,6 @@ const TrialFeatureTooltip = ({
 }: TrialFeatureTooltipProps) => {
   const { isTrialActive, organization, hasPaidSubscription, daysLeftInTrial } = useOrganization();
   const [isHovering, setIsHovering] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // Check for mobile screen size
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-    
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-    return () => {
-      window.removeEventListener('resize', checkIsMobile);
-    };
-  }, []);
   
   // If user has active subscription or feature is not premium-only, just show the children
   if (hasPaidSubscription || !isPremiumOnly) {
@@ -72,28 +58,6 @@ const TrialFeatureTooltip = ({
     return 'trial-progress-high';
   };
 
-  // Track tooltip interactions
-  const handleTooltipOpen = () => {
-    if (organization?.id && isPremiumOnly) {
-      trackTrialEvent('tooltip_viewed', organization.id, {
-        feature_name: featureName,
-        days_left: daysLeftInTrial,
-        is_expired: isTrialExpired
-      });
-    }
-  };
-
-  // Track upgrade button click
-  const handleUpgradeClick = () => {
-    if (organization?.id) {
-      trackTrialEvent('tooltip_upgrade_click', organization.id, {
-        feature_name: featureName,
-        days_left: daysLeftInTrial,
-        is_expired: isTrialExpired
-      });
-    }
-  };
-
   return (
     <TooltipProvider>
       <Tooltip delayDuration={300}>
@@ -117,12 +81,10 @@ const TrialFeatureTooltip = ({
             </div>
           </TooltipTrigger>
           <TooltipContent 
-            side={isMobile ? "bottom" : "top"}
-            align={isMobile ? "center" : "center"}
+            side="top" 
+            align="center"
             className="max-w-[320px] p-4 bg-white border border-blue-100 shadow-lg rounded-lg 
                      animate-in fade-in zoom-in-95 duration-200"
-            onPointerDownOutside={(e) => e.preventDefault()}
-            onFocus={handleTooltipOpen}
           >
             <div className="text-sm space-y-3">
               <div className="flex items-center justify-between">
@@ -170,21 +132,11 @@ const TrialFeatureTooltip = ({
                         className={`h-2 ${getProgressColorClass()}`} 
                       />
                     </div>
-
-                    {daysLeftInTrial <= 3 && (
-                      <div className="text-xs text-amber-600 flex items-center mt-1">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        {daysLeftInTrial <= 1 
-                          ? "Trial berakhir dalam kurang dari 24 jam!" 
-                          : `Trial berakhir dalam ${daysLeftInTrial} hari!`}
-                      </div>
-                    )}
                   </div>
                   
                   <div className="pt-1">
                     <a 
                       href="/settings/subscription"
-                      onClick={handleUpgradeClick}
                       className="block w-full text-center bg-gradient-to-r from-blue-500 to-purple-500 
                                hover:from-blue-600 hover:to-purple-600 text-white text-xs py-2 
                                rounded-md transition-colors"
@@ -210,7 +162,6 @@ const TrialFeatureTooltip = ({
                   <div className="pt-1 flex gap-2">
                     <a 
                       href="/settings/subscription"
-                      onClick={handleUpgradeClick}
                       className="block flex-1 text-center bg-gradient-to-r from-blue-500 to-purple-500 
                                hover:from-blue-600 hover:to-purple-600 text-white text-xs py-2 
                                rounded-md transition-colors"

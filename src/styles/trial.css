@@ -276,25 +276,6 @@ body.trial-expired .trial-banner {
   .feature-locked::before {
     font-size: 18px;
   }
-
-  /* Mobile optimized tooltips */
-  [data-radix-popper-content-wrapper] {
-    max-width: 95vw !important;
-  }
-
-  /* Make premium badges more visible on small screens */
-  .premium-feature::after {
-    width: 22px;
-    height: 22px;
-    font-size: 14px;
-  }
-
-  /* Ensure trial banner is always easily readable on mobile */
-  .trial-banner-high,
-  .trial-banner-medium,
-  .trial-banner-low {
-    padding: 0.75rem !important;
-  }
 }
 
 /* Interactive premium feature previews */
@@ -343,71 +324,4 @@ body.trial-expired .trial-banner {
 @keyframes milestone-appear {
   from { opacity: 0; transform: translate(-50%, 5px); }
   to { opacity: 1; transform: translate(-50%, 0); }
-}
-
-/* Feature discovery tour highlight */
-.feature-highlight {
-  position: relative;
-  z-index: 50;
-}
-
-.feature-highlight::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
-  border: 2px dashed #3b82f6;
-  border-radius: 8px;
-  animation: highlight-pulse 2s infinite;
-  z-index: -1;
-}
-
-@keyframes highlight-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-}
-
-/* Enhanced milestone tooltips */
-.milestone-tooltip {
-  position: absolute;
-  background: linear-gradient(135deg, #4f46e5, #3b82f6);
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
-  animation: tooltip-float 3s ease-in-out infinite;
-  z-index: 100;
-}
-
-@keyframes tooltip-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-/* Trial recommendations card */
-.trial-recommendations {
-  border-color: rgba(59, 130, 246, 0.2);
-  background-color: rgba(239, 246, 255, 0.5);
-  transition: all 0.3s ease;
-}
-
-.trial-recommendations:hover {
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-/* Animated countdown timer for trial expiration */
-.animated-countdown {
-  font-variant-numeric: tabular-nums;
-  font-weight: bold;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-  padding: 2px 8px;
-  border-radius: 4px;
-  animation: countdown-pulse 1s infinite alternate;
-}
-
-@keyframes countdown-pulse {
-  from { background: rgba(239, 68, 68, 0.1); }
-  to { background: rgba(239, 68, 68, 0.2); }
 }
