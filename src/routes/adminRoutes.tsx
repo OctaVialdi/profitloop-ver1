@@ -1,10 +1,10 @@
 
-import { Route } from "react-router-dom";
+import { RouteObject } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import TrialManagementPage from "@/pages/admin/TrialManagementPage";
 
-export const adminRoutes = {
+export const adminRoutes: RouteObject = {
   path: "/admin",
   element: (
     <ProtectedRoute requiredRoles={["super_admin"]}>

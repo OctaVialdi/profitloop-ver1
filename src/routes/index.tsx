@@ -1,7 +1,7 @@
 
 import { RouteObject } from "react-router-dom";
 import { authRoutes } from "./authRoutes";
-import { dashboardRoutes } from "./dashboardRoutes";
+import { dashboardRoutes, catatanMeetingsRoute, devRoutes } from "./dashboardRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { onboardingRoutes } from "./onboardingRoutes";
 import { hrRoutes } from "./hrRoutes";
@@ -56,8 +56,11 @@ export const routes: RouteObject[] = [
     path: "/dev/premium-features",
     element: <PremiumFeatureDemo />
   },
+  // Add our routes as proper RouteObjects - no type casting needed
+  dashboardRoutes,
+  catatanMeetingsRoute,
+  devRoutes,
   authRoutes as RouteObject,
-  dashboardRoutes as RouteObject,
   onboardingRoutes as RouteObject,
   hrRoutes as RouteObject,
   financeRoutes as RouteObject,

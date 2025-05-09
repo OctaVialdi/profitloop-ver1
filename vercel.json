@@ -3,6 +3,8 @@
   "rewrites": [
     { "source": "/apply/preview/:token", "destination": "/index.html" },
     { "source": "/apply/:token", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/index.html" },
+    { "source": "/dashboard/(.*)", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
