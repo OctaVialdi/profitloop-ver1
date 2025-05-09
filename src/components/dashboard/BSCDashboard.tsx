@@ -98,27 +98,29 @@ export function BSCDashboard() {
       if (fetchError) throw fetchError;
       
       if (existingRecord && existingRecord.length > 0) {
-        // Update existing record - fix for the ID property
+        // Update existing record
         const { error } = await supabase
           .from('financial_summary')
           .update({ target_revenue: newTarget })
-          .eq('organization_id', organization.id);
+          .eq('id', existingRecord[0].id);
         
         if (error) throw error;
       } else {
-        // Create new record with proper typing
+        // Create new record
         const currentDate = new Date().toISOString();
+        const newRecord = {
+          organization_id: organization.id,
+          target_revenue: newTarget,
+          month: currentDate,
+          total_revenue: dashboardData?.financialSummary.totalRevenue || 0,
+          total_expenses: dashboardData?.financialSummary.totalExpenses || 0,
+          net_cashflow: (dashboardData?.financialSummary.totalRevenue || 0) - 
+                        (dashboardData?.financialSummary.totalExpenses || 0)
+        };
+        
         const { error } = await supabase
           .from('financial_summary')
-          .insert({
-            organization_id: organization.id,
-            target_revenue: newTarget,
-            month: currentDate,
-            total_revenue: dashboardData?.financialSummary.totalRevenue || 0,
-            total_expenses: dashboardData?.financialSummary.totalExpenses || 0,
-            net_cashflow: (dashboardData?.financialSummary.totalRevenue || 0) - 
-                          (dashboardData?.financialSummary.totalExpenses || 0)
-          });
+          .insert(newRecord);
         
         if (error) throw error;
       }
@@ -144,10 +146,10 @@ export function BSCDashboard() {
   
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64 mt-8">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary/30 border-t-primary rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard data...</p>
+          <div className="animate-spin h-10 w-10 border-4 border-primary/20 border-t-primary rounded-full mx-auto mb-6"></div>
+          <p className="text-muted-foreground font-medium">Loading your dashboard data...</p>
         </div>
       </div>
     );
@@ -155,12 +157,15 @@ export function BSCDashboard() {
   
   if (error || !dashboardData) {
     return (
-      <Card className="border-destructive/20">
-        <CardContent className="p-6">
+      <Card className="border-destructive/20 mt-8">
+        <CardContent className="p-8">
           <div className="text-center">
-            <p className="text-destructive mb-2">Failed to load dashboard data.</p>
-            <p className="text-muted-foreground mb-4">{error instanceof Error ? error.message : "Unknown error occurred"}</p>
-            <Button onClick={() => refetch()} variant="outline">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-600 mb-4">
+              <RefreshCw className="h-8 w-8" />
+            </div>
+            <p className="text-destructive text-lg font-medium mb-2">Failed to load dashboard data</p>
+            <p className="text-muted-foreground mb-6">{error instanceof Error ? error.message : "Unknown error occurred"}</p>
+            <Button onClick={() => refetch()} variant="outline" size="lg" className="font-medium">
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
@@ -171,19 +176,19 @@ export function BSCDashboard() {
   }
   
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-card p-4 rounded-lg border shadow-sm">
+    <div className="space-y-8 py-4 px-2">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20 p-6 rounded-lg border shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             {getGreeting()}, {userProfile?.full_name || 'User'}!
-          </h1>
+          </h2>
           {goalsNearDeadline > 0 && (
             <p className="text-amber-600 dark:text-amber-500 mt-1 font-medium">
               You have {goalsNearDeadline} goal{goalsNearDeadline > 1 ? 's' : ''} approaching deadline soon.
             </p>
           )}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-4">
           <DashboardFilter onRangeChange={handleDateRangeChange} initialRange={dateRange} />
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => refetch()} className="group">
@@ -205,16 +210,36 @@ export function BSCDashboard() {
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
-        className="space-y-4"
+        className="space-y-6"
       >
-        <TabsList className="bg-muted/50 p-1 w-full md:w-auto">
-          <TabsTrigger value="financial" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10">Financial</TabsTrigger>
-          <TabsTrigger value="goals" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10">Company Goals</TabsTrigger>
-          <TabsTrigger value="operations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10">Operational</TabsTrigger>
-          <TabsTrigger value="customer" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10">Customer & Innovation</TabsTrigger>
+        <TabsList className="bg-muted/50 p-1 w-full md:w-auto border rounded-lg">
+          <TabsTrigger 
+            value="financial" 
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm"
+          >
+            Financial
+          </TabsTrigger>
+          <TabsTrigger 
+            value="goals" 
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm"
+          >
+            Company Goals
+          </TabsTrigger>
+          <TabsTrigger 
+            value="operations" 
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm"
+          >
+            Operational
+          </TabsTrigger>
+          <TabsTrigger 
+            value="customer" 
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:shadow-sm"
+          >
+            Customer & Innovation
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="financial" className="space-y-4">
+        <TabsContent value="financial" className="space-y-6">
           <FinancialSummarySection
             financialSummary={dashboardData.financialSummary}
             yearlyTrends={dashboardData.yearlyTrends}
@@ -224,21 +249,21 @@ export function BSCDashboard() {
           />
         </TabsContent>
         
-        <TabsContent value="goals" className="space-y-4">
+        <TabsContent value="goals" className="space-y-6">
           <CompanyGoalsSection
             goals={dashboardData.companyGoals}
             onAddGoal={handleAddGoal}
           />
         </TabsContent>
         
-        <TabsContent value="operations" className="space-y-4">
+        <TabsContent value="operations" className="space-y-6">
           <OperationalMetricsSection
             metrics={dashboardData.operationalMetrics}
             departments={dashboardData.departments}
           />
         </TabsContent>
         
-        <TabsContent value="customer" className="space-y-4">
+        <TabsContent value="customer" className="space-y-6">
           <CustomerInnovationSection
             customerMetrics={dashboardData.customerMetrics}
             innovationMetrics={dashboardData.innovationMetrics}
