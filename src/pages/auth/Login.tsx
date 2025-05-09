@@ -66,6 +66,14 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
+  // Handle navigation to register page
+  const handleNavigateToRegister = (e: React.MouseEvent) => {
+    // Prevent default link behavior for more control
+    e.preventDefault();
+    // Navigate programmatically 
+    navigate("/auth/register");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
@@ -109,7 +117,11 @@ const Login = () => {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-600">
             Belum memiliki akun?{" "}
-            <Link to="/auth/register" className="text-blue-500 hover:text-blue-700">
+            <Link 
+              to="/auth/register" 
+              className="text-blue-500 hover:text-blue-700"
+              onClick={handleNavigateToRegister}
+            >
               Daftar sekarang
             </Link>
           </div>
