@@ -5,10 +5,29 @@ export function calculateTrialStatus(organization: Organization | null): {
   isTrialActive: boolean;
   daysLeftInTrial: number;
 } {
-  // Always return inactive trial since we're removing trial functionality
+  if (!organization || !organization.trial_end_date) {
+    return {
+      isTrialActive: false,
+      daysLeftInTrial: 0
+    };
+  }
+
+  const now = new Date();
+  const trialEndDate = new Date(organization.trial_end_date);
+  
+  // Check if trial is active based on trial_expired flag and date comparison
+  const isActive = 
+    organization.subscription_status === 'trial' && 
+    !organization.trial_expired && 
+    trialEndDate > now;
+  
+  // Calculate days left
+  const diffTime = trialEndDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
   return {
-    isTrialActive: false,
-    daysLeftInTrial: 0
+    isTrialActive: isActive,
+    daysLeftInTrial: diffDays > 0 ? diffDays : 0
   };
 }
 

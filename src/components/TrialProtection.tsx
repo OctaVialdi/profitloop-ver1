@@ -6,13 +6,12 @@ interface TrialProtectionProps {
   children: React.ReactNode;
 }
 
-// This component previously managed trial protection,
-// but now just passes through children since trial functionality is removed
+// This component will render children only if the user's organization has an active subscription or trial
 const TrialProtection: React.FC<TrialProtectionProps> = ({ children }) => {
-  // We still use the organization data hook but don't enforce trial-related redirects
   const organizationData = useOrganization();
   
   // Always render children, regardless of trial status
+  // The actual blocking is handled by the TrialBanner component which shows a modal overlay
   return <>{children}</>;
 };
 

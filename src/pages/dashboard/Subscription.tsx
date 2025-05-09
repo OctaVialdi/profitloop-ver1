@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -177,14 +176,15 @@ const Subscription = () => {
     setIsUpgrading(true);
     try {
       const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 30);
+      trialEndDate.setDate(trialEndDate.getDate() + 14); // 14-day trial
       
       // Update organization trial data
       const { error } = await supabase
         .from('organizations')
         .update({ 
           trial_end_date: trialEndDate.toISOString(),
-          trial_expired: false
+          trial_expired: false,
+          subscription_status: 'trial'
         })
         .eq('id', organization.id);
       
@@ -205,14 +205,14 @@ const Subscription = () => {
               user_id: admin.id,
               organization_id: organization.id,
               title: 'Periode Trial Dimulai',
-              message: 'Periode trial 30 hari Anda telah dimulai. Nikmati semua fitur premium!',
+              message: 'Periode trial 14 hari Anda telah dimulai. Nikmati semua fitur premium!',
               type: 'info',
               action_url: '/subscription'
             });
         }
       }
       
-      toast.success("Periode trial 30 hari berhasil dimulai!");
+      toast.success("Periode trial 14 hari berhasil dimulai!");
       await refreshData();
     } catch (error) {
       console.error("Error starting trial:", error);
@@ -575,7 +575,7 @@ const Subscription = () => {
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-blue-600 shrink-0" />
               <p className="text-blue-800">
-                <span className="font-medium">Mulai trial 30 hari gratis!</span> Akses semua fitur premium selama periode trial.
+                <span className="font-medium">Mulai trial 14 hari gratis!</span> Akses semua fitur premium selama periode trial.
               </p>
             </div>
             <Button onClick={handleStartTrial} disabled={isUpgrading}>

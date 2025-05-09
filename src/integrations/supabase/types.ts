@@ -1596,14 +1596,17 @@ export type Database = {
           created_at: string | null
           creator_email: string | null
           employee_count: number | null
+          grace_period_end: string | null
           id: string
           logo_path: string | null
           name: string
           phone: string | null
           subscription_plan_id: string | null
+          subscription_status: string | null
           theme_settings: Json | null
           trial_end_date: string | null
           trial_expired: boolean | null
+          trial_start_date: string | null
         }
         Insert: {
           address?: string | null
@@ -1611,14 +1614,17 @@ export type Database = {
           created_at?: string | null
           creator_email?: string | null
           employee_count?: number | null
+          grace_period_end?: string | null
           id?: string
           logo_path?: string | null
           name: string
           phone?: string | null
           subscription_plan_id?: string | null
+          subscription_status?: string | null
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
+          trial_start_date?: string | null
         }
         Update: {
           address?: string | null
@@ -1626,14 +1632,17 @@ export type Database = {
           created_at?: string | null
           creator_email?: string | null
           employee_count?: number | null
+          grace_period_end?: string | null
           id?: string
           logo_path?: string | null
           name?: string
           phone?: string | null
           subscription_plan_id?: string | null
+          subscription_status?: string | null
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
+          trial_start_date?: string | null
         }
         Relationships: [
           {
@@ -1836,6 +1845,41 @@ export type Database = {
           },
         ]
       }
+      subscription_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          data: Json | null
+          id: string
+          organization_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          organization_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          organization_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string | null
@@ -1868,6 +1912,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_trial_expirations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       check_user_has_organization: {
         Args: { user_id: string }
         Returns: {
@@ -1926,6 +1974,10 @@ export type Database = {
         Args: { employee_id: string }
         Returns: boolean
       }
+      extend_organization_trial: {
+        Args: { org_id: string; days_to_add: number }
+        Returns: Json
+      }
       generate_magic_link_invitation: {
         Args: { email_address: string; org_id: string; user_role?: string }
         Returns: Json
@@ -1937,6 +1989,18 @@ export type Database = {
           p_expires_in_days?: number
         }
         Returns: string
+      }
+      get_billing_history: {
+        Args: { org_id: string }
+        Returns: {
+          id: string
+          created_at: string
+          type: string
+          amount: number
+          status: string
+          invoice_url: string
+          data: Json
+        }[]
       }
       get_recruitment_link_info: {
         Args: { p_token: string }
@@ -1955,6 +2019,17 @@ export type Database = {
           value: string
           label: string
           is_system: boolean
+        }[]
+      }
+      get_subscription_audit_logs: {
+        Args: { org_id: string }
+        Returns: {
+          action: string
+          created_at: string
+          data: Json | null
+          id: string
+          organization_id: string
+          user_id: string | null
         }[]
       }
       get_unique_organization_names: {

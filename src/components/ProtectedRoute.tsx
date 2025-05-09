@@ -244,6 +244,18 @@ export const ProtectedRoute = ({
       return <Navigate to="/auth/login" state={{ from: location, requireVerification: true }} replace />;
     }
     
+    // Add specific exemption for subscription page when trial has expired
+    if (currentPath === '/subscription') {
+      // Always allow access to the subscription page even if trial expired
+      // Add a class to the body to exempt this page from the blur effect
+      document.body.classList.add('subscription-page');
+      // Make sure to return and render the children
+      return children ? <>{children}</> : <Outlet />;
+    } else {
+      // Remove the class when not on the subscription page
+      document.body.classList.remove('subscription-page');
+    }
+    
     // Specific route handling for organizations page
     if (currentPath.startsWith('/organizations') || currentPath === '/onboarding') {
       // If already has organization, redirect to welcome page if not seen
