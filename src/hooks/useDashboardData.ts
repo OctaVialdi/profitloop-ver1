@@ -112,7 +112,7 @@ async function fetchFinancialSummary(startDate?: Date, endDate?: Date): Promise<
     roiTarget,
     debtTotal,
     debtToAssetRatio,
-    targetRevenue,
+    targetRevenue, // Make sure this is included
     upcomingDebtPayments
   };
 }

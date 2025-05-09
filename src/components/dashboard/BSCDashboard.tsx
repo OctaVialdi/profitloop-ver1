@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -106,13 +106,14 @@ export function BSCDashboard() {
         
         if (error) throw error;
       } else {
-        // Create new record
+        // Create new record - using explicit types to match the database schema
+        const currentDate = new Date().toISOString();
         const { error } = await supabase
           .from('financial_summary')
           .insert({
             organization_id: organization.id,
             target_revenue: newTarget,
-            month: new Date().toISOString(),
+            month: currentDate,
             total_revenue: dashboardData?.financialSummary.totalRevenue || 0,
             total_expenses: dashboardData?.financialSummary.totalExpenses || 0
           });
