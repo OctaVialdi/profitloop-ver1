@@ -5,6 +5,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { useToast } from "@/components/ui/use-toast";
 import TrialFeatureTooltip from "@/components/trial/TrialFeatureTooltip";
 import { Sparkles, Lock } from "lucide-react";
+import { trackFeatureAccess } from "@/services/analyticsService";
 
 interface TrialProtectionProps {
   children: React.ReactNode;
@@ -62,17 +63,28 @@ const TrialProtection: React.FC<TrialProtectionProps> = ({
           location: location.pathname
         };
         // Use analytics service if available
-        if (window.dataLayer) {
-          window.dataLayer.push({
+        const dataLayer = window.dataLayer;
+        if (dataLayer) {
+          dataLayer.push({
             event: 'premium_feature_access_attempt',
             ...eventData
           });
+        }
+        
+        // Also track via the analytics service if we have organization ID
+        if (organizationData.organization?.id) {
+          trackFeatureAccess(
+            featureName,
+            false,
+            'trial_expired',
+            organizationData.organization.id
+          );
         }
       } catch (error) {
         console.error('Failed to track feature access:', error);
       }
     }
-  }, [shouldRestrict, hasShownToast, toast, featureName, location.pathname]);
+  }, [shouldRestrict, hasShownToast, toast, featureName, location.pathname, organizationData]);
   
   // Always allow access to the subscription page
   if (isSubscriptionPage) {

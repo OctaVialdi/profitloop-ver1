@@ -17,8 +17,9 @@ export async function trackFeatureAccess(
 ): Promise<void> {
   try {
     // Track locally first (for immediate analytics)
-    if (window.dataLayer) {
-      window.dataLayer.push({
+    const dataLayer = window.dataLayer;
+    if (dataLayer) {
+      dataLayer.push({
         event: 'feature_access',
         feature_name: featureName,
         access_granted: accessGranted,
@@ -62,8 +63,9 @@ export async function trackTrialEvent(
 ): Promise<void> {
   try {
     // Track locally
-    if (window.dataLayer) {
-      window.dataLayer.push({
+    const dataLayer = window.dataLayer;
+    if (dataLayer) {
+      dataLayer.push({
         event: `trial_${eventType}`,
         organization_id: organizationId,
         ...additionalData,
@@ -162,8 +164,9 @@ export function trackTrialFeatureEngagement(
     if (!organizationId) return;
     
     // Track client-side first for immediate analytics
-    if (window.dataLayer) {
-      window.dataLayer.push({
+    const dataLayer = window.dataLayer;
+    if (dataLayer) {
+      dataLayer.push({
         event: 'trial_feature_engagement',
         feature_name: featureName,
         engagement_type: engagementType,
