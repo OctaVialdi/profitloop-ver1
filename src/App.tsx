@@ -7,6 +7,7 @@ import { useAssetStorage } from "./hooks/useAssetStorage";
 import TrialBanner from "./components/TrialBanner";
 import { useEffect } from "react";
 import { supabase } from "./integrations/supabase/client";
+import { fixOrganizationTrialPeriod } from "./services/subscriptionService";
 
 function App() {
   // Initialize asset storage
@@ -24,8 +25,7 @@ function App() {
           const orgId = session.user.user_metadata?.organization_id;
           
           if (orgId) {
-            // Import function dynamically to avoid circular dependencies
-            const { fixOrganizationTrialPeriod } = await import('./services/subscriptionService');
+            // Fix organization trial period
             await fixOrganizationTrialPeriod(orgId);
             console.log("Trial period check completed on app load");
           }
