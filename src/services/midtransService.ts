@@ -14,29 +14,37 @@ export const midtransService = {
    */
   createPayment: async (planId: string): Promise<{ token: string, redirectUrl: string, orderId: string } | null> => {
     try {
-      // Use hardcoded URL for standard_plan
-      if (planId === 'standard_plan') {
+      // Get user organization from profiles
+      const { data: profileData } = await supabase.auth.getUser();
+      
+      if (!profileData?.user) {
+        throw new Error("User not authenticated");
+      }
+      
+      const { data: userData } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", profileData.user.id)
+        .single();
+        
+      if (!userData?.organization_id) {
+        throw new Error("User organization not found");
+      }
+      
+      // First, check if this plan has a direct payment URL
+      const { data: planData } = await supabase
+        .from("subscription_plans")
+        .select("direct_payment_url, price, name")
+        .eq("slug", planId)
+        .eq("is_active", true)
+        .single();
+        
+      // If plan has a direct payment URL, use it
+      if (planData?.direct_payment_url) {
         const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         
         // Log the direct URL usage
-        console.log("Using direct Midtrans URL for standard_plan with orderId:", orderId);
-        
-        // Get user organization from profiles
-        const { data: profileData } = await supabase.auth.getUser();
-        
-        if (!profileData?.user) {
-          throw new Error("User not authenticated");
-        }
-        
-        const { data: userData } = await supabase
-          .from("profiles")
-          .select("organization_id")
-          .eq("id", profileData.user.id)
-          .single();
-          
-        if (!userData?.organization_id) {
-          throw new Error("User organization not found");
-        }
+        console.log("Using direct Midtrans URL for plan", planId, "with orderId:", orderId);
         
         // Store transaction in database to track it
         const { error: transactionError } = await supabase
@@ -47,10 +55,10 @@ export const midtransService = {
             subscription_plan_id: planId,
             payment_gateway: "midtrans",
             payment_provider: "midtrans",
-            amount: 299000,
+            amount: planData.price || 0,
             currency: "IDR",
             status: "pending",
-            payment_url: "https://app.midtrans.com/payment-links/1746870370812"
+            payment_url: planData.direct_payment_url
           });
           
         if (transactionError) {
@@ -60,12 +68,12 @@ export const midtransService = {
         
         return {
           token: "direct-url-token",
-          redirectUrl: "https://app.midtrans.com/payment-links/1746870370812",
+          redirectUrl: planData.direct_payment_url,
           orderId: orderId
         };
       }
       
-      // For other plans, use the normal flow with edge function
+      // For plans without direct URL, use the normal flow with edge function
       const { data, error } = await supabase.functions.invoke("create-midtrans-payment", {
         body: { planId }
       });

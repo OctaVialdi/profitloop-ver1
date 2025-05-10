@@ -2388,8 +2388,10 @@ export type Database = {
       subscription_plans: {
         Row: {
           created_at: string | null
+          direct_payment_url: string | null
           features: Json | null
           id: string
+          is_active: boolean | null
           max_members: number | null
           name: string
           price: number | null
@@ -2397,8 +2399,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          direct_payment_url?: string | null
           features?: Json | null
           id?: string
+          is_active?: boolean | null
           max_members?: number | null
           name: string
           price?: number | null
@@ -2406,8 +2410,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          direct_payment_url?: string | null
           features?: Json | null
           id?: string
+          is_active?: boolean | null
           max_members?: number | null
           name?: string
           price?: number | null

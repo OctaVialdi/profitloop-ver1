@@ -5,9 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { useOrganization } from "@/hooks/useOrganization";
 import SubscriptionAnalytics from '@/components/admin/SubscriptionAnalytics';
-import { AlertTriangle, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Package2 } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { useNavigate } from 'react-router-dom';
+import SubscriptionPlansManagement from './admin/SubscriptionPlansManagement';
 
 const AdminPage = () => {
   const { organization } = useOrganization();
@@ -58,6 +59,7 @@ const AdminPage = () => {
         <TabsList>
           <TabsTrigger value="analytics">Analitik Langganan</TabsTrigger>
           <TabsTrigger value="trials">Manajemen Trial</TabsTrigger>
+          <TabsTrigger value="plans">Kelola Paket</TabsTrigger>
         </TabsList>
         
         <TabsContent value="analytics">
@@ -80,6 +82,10 @@ const AdminPage = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="plans">
+          <SubscriptionPlansManagement />
         </TabsContent>
       </Tabs>
     </div>
