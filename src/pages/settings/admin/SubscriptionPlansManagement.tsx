@@ -1,17 +1,18 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Check, Edit, Plus, Trash, XCircle, ArrowUpDown, Link as LinkIcon } from 'lucide-react';
+import { Check, Edit, Plus, Trash, Link as LinkIcon, XCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/utils/formatUtils";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 // Define subscription plan type that matches database structure
 interface SubscriptionPlan {
@@ -38,8 +39,6 @@ const SubscriptionPlansManagement = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [sortColumn, setSortColumn] = useState<string>('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan | null>(null);
   const [formData, setFormData] = useState({
@@ -66,7 +65,7 @@ const SubscriptionPlansManagement = () => {
       const { data, error } = await supabase
         .from('subscription_plans')
         .select('*')
-        .order(sortColumn, { ascending: sortDirection === 'asc' });
+        .order('price', { ascending: true });
         
       if (error) throw error;
       
@@ -85,20 +84,11 @@ const SubscriptionPlansManagement = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [sortColumn, sortDirection]);
+  }, []);
   
   useEffect(() => {
     fetchPlans();
   }, [fetchPlans]);
-  
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
   
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
@@ -345,6 +335,21 @@ const SubscriptionPlansManagement = () => {
     setCurrentPlan(plan);
     setIsDeleteDialogOpen(true);
   };
+
+  const renderFeaturesList = (planFeatures: Record<string, any> | null) => {
+    if (!planFeatures || Object.keys(planFeatures).length === 0) return "-";
+    
+    return (
+      <div className="space-y-1">
+        {Object.entries(planFeatures).map(([key, value]) => (
+          <div key={key} className="flex items-center text-sm">
+            <span className="font-medium mr-1">{key}:</span> 
+            <span>{value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
   
   return (
     <Card>
@@ -366,118 +371,88 @@ const SubscriptionPlansManagement = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead 
-                    onClick={() => handleSort('name')} 
-                    className="cursor-pointer hover:bg-muted"
-                  >
-                    <div className="flex items-center">
-                      Nama
-                      {sortColumn === 'name' && (
-                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    onClick={() => handleSort('slug')} 
-                    className="cursor-pointer hover:bg-muted"
-                  >
-                    <div className="flex items-center">
-                      Slug
-                      {sortColumn === 'slug' && (
-                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    onClick={() => handleSort('price')} 
-                    className="cursor-pointer hover:bg-muted text-right"
-                  >
-                    <div className="flex items-center justify-end">
-                      Harga
-                      {sortColumn === 'price' && (
-                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead>Max Anggota</TableHead>
-                  <TableHead>Deskripsi</TableHead>
-                  <TableHead>Fitur</TableHead>
-                  <TableHead>URL Midtrans</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {plans.map((plan) => (
-                  <TableRow key={plan.id}>
-                    <TableCell className="font-medium">{plan.name}</TableCell>
-                    <TableCell>{plan.slug}</TableCell>
-                    <TableCell className="text-right">{formatRupiah(plan.price)}</TableCell>
-                    <TableCell>{plan.max_members || 'Tidak dibatasi'}</TableCell>
-                    <TableCell>
-                      <div className="max-w-[200px] truncate">
-                        {plan.deskripsi || '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-[200px]">
-                        {plan.features ? (
-                          <div className="text-xs">
-                            {Object.entries(plan.features).map(([key, value]) => (
-                              <div key={key} className="mb-1">
-                                <span className="font-medium">{key}:</span> {value}
-                              </div>
-                            ))}
-                          </div>
-                        ) : '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {plan.direct_payment_url ? (
-                        <div className="flex items-center">
-                          <LinkIcon className="h-4 w-4 mr-1 text-green-500" />
-                          <span className="truncate max-w-[150px]">Terkonfigurasi</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center">
-                          <XCircle className="h-4 w-4 mr-1 text-gray-400" />
-                          <span className="text-gray-500">Tidak diatur</span>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
+          <div className="space-y-4">
+            {plans.map((plan) => (
+              <Card key={plan.id} className="border-base overflow-hidden">
+                <div className="grid grid-cols-12 items-center p-4 gap-4">
+                  {/* Nama & Slug */}
+                  <div className="col-span-3">
+                    <div className="font-semibold">{plan.name}</div>
+                    <div className="text-xs text-muted-foreground">{plan.slug}</div>
+                  </div>
+                  
+                  {/* Harga */}
+                  <div className="col-span-1 font-medium">
+                    {formatRupiah(plan.price)}
+                  </div>
+                  
+                  {/* Max Anggota */}
+                  <div className="col-span-1 text-center">
+                    {plan.max_members || '∞'}
+                  </div>
+                  
+                  {/* Deskripsi */}
+                  <div className="col-span-2 truncate">
+                    {plan.deskripsi || '-'}
+                  </div>
+                  
+                  {/* Fitur */}
+                  <div className="col-span-2">
+                    {renderFeaturesList(plan.features)}
+                  </div>
+                  
+                  {/* URL Midtrans */}
+                  <div className="col-span-1">
+                    {plan.direct_payment_url ? (
                       <div className="flex items-center">
-                        <Switch 
-                          checked={plan.is_active} 
-                          onCheckedChange={() => handleToggleActive(plan.id, plan.is_active)}
-                          className="mr-2"
-                        />
-                        <span className={plan.is_active ? "text-green-600" : "text-gray-400"}>
-                          {plan.is_active ? "Aktif" : "Nonaktif"}
-                        </span>
+                        <LinkIcon className="h-4 w-4 mr-1 text-green-500" />
+                        <span className="text-xs">Ada</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => handleOpenDialog(plan)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-red-600" 
-                        onClick={() => openDeleteDialog(plan)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    ) : (
+                      <div className="flex items-center">
+                        <XCircle className="h-4 w-4 mr-1 text-gray-400" />
+                        <span className="text-xs text-gray-500">Tidak ada</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Status */}
+                  <div className="col-span-1">
+                    <div className="flex items-center">
+                      <Switch 
+                        checked={plan.is_active} 
+                        onCheckedChange={() => handleToggleActive(plan.id, plan.is_active)}
+                        className="mr-2"
+                      />
+                      <Badge variant={plan.is_active ? "success" : "secondary"} className="text-xs">
+                        {plan.is_active ? "Aktif" : "Nonaktif"}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Aksi */}
+                  <div className="col-span-1 flex justify-end space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenDialog(plan)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-destructive hover:bg-destructive/10" 
+                      onClick={() => openDeleteDialog(plan)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+            
+            {plans.length === 0 && !isLoading && (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Belum ada paket langganan. Klik tombol "Tambah Paket" untuk membuat paket baru.</p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
@@ -663,7 +638,7 @@ const SubscriptionPlansManagement = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePlan} className="bg-red-600 text-white hover:bg-red-700">
+            <AlertDialogAction onClick={handleDeletePlan} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
