@@ -57,12 +57,19 @@ export const useAppThemeManager = () => {
         setOrganization(org);
         
         // Apply theme settings if available
-        if (org.theme_settings) {
+        if (org.theme_settings && typeof org.theme_settings === 'object') {
+          const themeSettings = org.theme_settings as {
+            primary_color?: string;
+            secondary_color?: string;
+            accent_color?: string;
+            sidebar_color?: string;
+          };
+          
           setColors({
-            primary: org.theme_settings.primary_color || defaultColors.primary,
-            secondary: org.theme_settings.secondary_color || defaultColors.secondary,
-            accent: org.theme_settings.accent_color || defaultColors.accent,
-            sidebar: org.theme_settings.sidebar_color || defaultColors.sidebar,
+            primary: themeSettings.primary_color || defaultColors.primary,
+            secondary: themeSettings.secondary_color || defaultColors.secondary,
+            accent: themeSettings.accent_color || defaultColors.accent,
+            sidebar: themeSettings.sidebar_color || defaultColors.sidebar,
           });
         }
       } catch (error) {

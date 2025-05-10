@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +21,10 @@ const Subscription = () => {
 
   useEffect(() => {
     if (organization && organization.subscription_plan_id) {
-      setCurrentPlan(plans.find(plan => plan.id === organization.subscription_plan_id) || null);
+      const foundPlan = plans.find(plan => plan.id === organization.subscription_plan_id);
+      if (foundPlan) {
+        setCurrentPlan(foundPlan);
+      }
     }
   }, [organization, plans]);
 
@@ -48,17 +52,28 @@ const Subscription = () => {
           const current = subscriptionPlans.find(
             plan => plan.id === organization.subscription_plan_id
           ) || null;
-          setCurrentPlan(current);
+          
+          if (current) {
+            // Transform JSON features to Record type if needed
+            const transformedCurrent: SubscriptionPlan = {
+              ...current,
+              features: current.features as Record<string, any> | null
+            };
+            setCurrentPlan(transformedCurrent);
+          }
         }
         
         // Format plans for display
-        const formattedPlans = subscriptionPlans?.map(plan => ({
-          ...plan,
-          current: plan.id === organization?.subscription_plan_id,
-          popular: plan.slug === 'standard_plan'
-        })) || [];
-        
-        setPlans(formattedPlans);
+        if (subscriptionPlans) {
+          const formattedPlans: SubscriptionPlan[] = subscriptionPlans.map(plan => ({
+            ...plan,
+            features: plan.features as Record<string, any> | null,
+            current: plan.id === organization?.subscription_plan_id,
+            popular: plan.slug === 'standard_plan'
+          }));
+          
+          setPlans(formattedPlans);
+        }
       } catch (error) {
         console.error("Error loading subscription data:", error);
         toast.error("Failed to load subscription information");

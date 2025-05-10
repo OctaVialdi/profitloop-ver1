@@ -9,7 +9,7 @@ import { useSignOut } from "./useSignOut";
  * Main authentication hook that combines auth state, sign-in, and sign-out functionality
  */
 export function useAuth() {
-  const { session, user } = useAuthState();
+  const { user, session } = useAuthState();
   const { signInWithEmailPassword, isLoading: isSigningIn, loginError, setLoginError } = useSignIn();
   const { signOut, isLoading: isSigningOut } = useSignOut();
   

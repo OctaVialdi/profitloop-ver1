@@ -1,135 +1,78 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { checkAndUpdateTrialStatus, fixOrganizationTrialPeriod } from '@/services/subscriptionService';
 
-interface TrialStatus {
-  isTrialActive: boolean;
-  isTrialExpired: boolean;
-  daysLeftInTrial: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  progress: number;
-  trialEndDate: Date | null;
-  trialStartDate: Date | null;
-  trialDuration: number;
-  subscriptionStatus: string | null;
-}
-
-export function useTrialStatus(organizationId: string | null, skipCheck: boolean = false) {
-  const [status, setStatus] = useState<TrialStatus>({
-    isTrialActive: false,
-    isTrialExpired: false,
-    daysLeftInTrial: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    progress: 0,
-    trialEndDate: null,
-    trialStartDate: null,
-    trialDuration: 14, // Default to 14 days
-    subscriptionStatus: null
-  });
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+export function useTrialStatus(organizationId: string | null) {
+  const [isTrialActive, setIsTrialActive] = useState<boolean>(false);
+  const [isTrialExpired, setIsTrialExpired] = useState<boolean>(false);
+  const [daysLeftInTrial, setDaysLeftInTrial] = useState<number>(0);
+  const [progress, setProgress] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (skipCheck || !organizationId) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchStatus = async () => {
+    const getTrialStatus = async () => {
+      if (!organizationId) {
+        setIsLoading(false);
+        return;
+      }
+      
       try {
-        setLoading(true);
+        setIsLoading(true);
         
-        // First fix any inconsistent trial periods
-        await fixOrganizationTrialPeriod(organizationId);
-        
-        // Force check and update trial status
-        await checkAndUpdateTrialStatus(organizationId);
-        
-        // Fetch current trial data
-        const { data: orgData, error } = await supabase
+        // Fetch organization details
+        const { data: organization, error } = await supabase
           .from('organizations')
-          .select('trial_end_date, trial_expired, trial_start_date, subscription_status')
+          .select('trial_start_date, trial_end_date, trial_expired, subscription_status')
           .eq('id', organizationId)
           .single();
           
-        if (error) throw error;
-        if (!orgData) throw new Error("Organization not found");
-
-        // Process trial data
-        const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
-        const trialStartDate = orgData.trial_start_date ? new Date(orgData.trial_start_date) : null;
-        const now = new Date();
-        
-        // Calculate trial duration
-        let trialDuration = 14; // Default to 14 days
-        if (trialStartDate && trialEndDate) {
-          const diffTime = trialEndDate.getTime() - trialStartDate.getTime();
-          trialDuration = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        if (error || !organization) {
+          console.error('Error fetching trial status:', error);
+          setIsLoading(false);
+          return;
         }
         
-        // Calculate time left
-        const isExpired = orgData.trial_expired || 
-                         (trialEndDate && trialEndDate < now) || 
-                         orgData.subscription_status === 'expired';
-                         
-        let daysLeft = 0;
-        let hours = 0;
-        let minutes = 0;
-        let seconds = 0;
-        let progress = 0;
+        // Calculate days left in trial
+        const now = new Date();
+        const trialEnd = organization.trial_end_date ? new Date(organization.trial_end_date) : null;
+        const trialStart = organization.trial_start_date ? new Date(organization.trial_start_date) : null;
         
-        if (trialEndDate && !isExpired) {
-          const diffTime = trialEndDate.getTime() - now.getTime();
-          daysLeft = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-          seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+        if (trialEnd && trialStart) {
+          // Check if trial is active
+          const isActive = !organization.trial_expired && trialEnd > now;
+          setIsTrialActive(isActive);
+          setIsTrialExpired(organization.trial_expired || false);
           
-          // Calculate progress percentage if trial start date is available
-          if (trialStartDate) {
-            const totalTrialTime = trialEndDate.getTime() - trialStartDate.getTime();
-            const elapsedTime = now.getTime() - trialStartDate.getTime();
-            progress = Math.max(0, Math.min(100, 100 - (elapsedTime / totalTrialTime * 100)));
+          // Calculate days left and progress
+          if (isActive) {
+            const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 3600 * 24));
+            setDaysLeftInTrial(daysLeft);
+            
+            const totalDays = Math.ceil((trialEnd.getTime() - trialStart.getTime()) / (1000 * 3600 * 24));
+            const daysUsed = totalDays - daysLeft;
+            const progressPercentage = (daysUsed / totalDays) * 100;
+            
+            setProgress(progressPercentage);
+          } else {
+            setDaysLeftInTrial(0);
+            setProgress(100);
           }
         }
-        
-        setStatus({
-          isTrialActive: !isExpired && orgData.subscription_status === 'trial',
-          isTrialExpired: isExpired,
-          daysLeftInTrial: daysLeft,
-          hours,
-          minutes,
-          seconds,
-          progress,
-          trialEndDate,
-          trialStartDate,
-          trialDuration,
-          subscriptionStatus: orgData.subscription_status
-        });
-        
-        setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Unknown error occurred'));
-        console.error('Error fetching trial status:', err);
+        console.error('Error in useTrialStatus:', err);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
     
-    // Initial fetch
-    fetchStatus();
-    
-    // Set up interval to update every second
-    const intervalId = setInterval(fetchStatus, 1000);
-    
-    // Clean up
-    return () => clearInterval(intervalId);
-  }, [organizationId, skipCheck]);
-
-  return { ...status, loading, error };
+    getTrialStatus();
+  }, [organizationId]);
+  
+  return {
+    isTrialActive,
+    isTrialExpired,
+    daysLeftInTrial,
+    progress,
+    isLoading
+  };
 }

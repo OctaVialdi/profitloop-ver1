@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
@@ -12,10 +11,39 @@ import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { Badge } from "@/components/ui/badge";
 import { Info, CreditCard, Users, Calendar } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
+import { SubscriptionPlan } from '@/types/organization';
 
 const SubscriptionDashboard = () => {
-  const { organization, subscriptionPlan, hasPaidSubscription } = useOrganization();
+  const { organization, hasPaidSubscription } = useOrganization();
   const { isTrialActive, daysLeftInTrial, progress } = useTrialStatus(organization?.id || null);
+  const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan | null>(null);
+  
+  // Fetch current subscription plan
+  useEffect(() => {
+    const fetchCurrentPlan = async () => {
+      if (organization?.subscription_plan_id) {
+        try {
+          const { data, error } = await supabase
+            .from('subscription_plans')
+            .select('*')
+            .eq('id', organization.subscription_plan_id)
+            .single();
+            
+          if (!error && data) {
+            setCurrentPlan({
+              ...data,
+              features: data.features as Record<string, any> | null
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching subscription plan:', err);
+        }
+      }
+    };
+    
+    fetchCurrentPlan();
+  }, [organization]);
   
   // Calculate subscription status
   const subscriptionStatus = () => {
@@ -80,7 +108,7 @@ const SubscriptionDashboard = () => {
               </Badge>
             </div>
             <h3 className="text-2xl font-bold mt-2">
-              {subscriptionPlan?.name || (isTrialActive ? "Trial" : "Basic")}
+              {currentPlan?.name || (isTrialActive ? "Trial" : "Basic")}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
               {hasPaidSubscription 
@@ -101,7 +129,7 @@ const SubscriptionDashboard = () => {
               <Users className="h-6 w-6 text-blue-600" />
               <Badge variant="outline">Member</Badge>
             </div>
-            <h3 className="text-2xl font-bold mt-2">3 / {subscriptionPlan?.max_members || 'Unlimited'}</h3>
+            <h3 className="text-2xl font-bold mt-2">3 / {currentPlan?.max_members || 'Unlimited'}</h3>
             <p className="text-sm text-gray-500 mt-1">Anggota aktif dalam organisasi</p>
           </CardContent>
         </Card>

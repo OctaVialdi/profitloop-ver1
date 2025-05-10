@@ -213,7 +213,7 @@ const SubscriptionPlansManagement = () => {
         <CardContent>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="primary">Add Subscription Plan</Button>
+              <Button variant="default">Add Subscription Plan</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>

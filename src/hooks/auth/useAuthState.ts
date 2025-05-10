@@ -8,6 +8,7 @@ export function useAuthState(): AuthState {
   const [state, setState] = useState<AuthState>({
     user: null,
     profile: null,
+    session: null, // Added session property
     isLoading: true,
     isAuthenticated: false,
     error: null,
@@ -40,11 +41,12 @@ export function useAuthState(): AuthState {
   }, []);
 
   const handleAuthStateChange = useCallback(
-    async (_: string, session: Session | null) => {
+    async (event: string, session: Session | null) => {
       if (!session) {
         setState({
           user: null,
           profile: null,
+          session: null,
           isLoading: false,
           isAuthenticated: false,
           error: null,
@@ -54,7 +56,7 @@ export function useAuthState(): AuthState {
 
       try {
         const user = session.user;
-        setState((prev) => ({ ...prev, user, isLoading: true }));
+        setState((prev) => ({ ...prev, user, session, isLoading: true }));
         await fetchUserProfile(user);
       } catch (error: any) {
         console.error("Error handling auth state change:", error);
@@ -70,13 +72,14 @@ export function useAuthState(): AuthState {
         const { data } = await supabase.auth.getSession();
         if (data && data.session) {
           const user = data.session.user;
-          setState((prev) => ({ ...prev, user, isLoading: true }));
+          setState((prev) => ({ ...prev, user, session: data.session, isLoading: true }));
           await fetchUserProfile(user);
         } else {
           setState((prev) => ({
             ...prev,
             user: null,
             profile: null,
+            session: null,
             isLoading: false,
             isAuthenticated: false,
           }));

@@ -21,7 +21,12 @@ export interface Organization {
   address: string | null;
   phone: string | null;
   logo_path: string | null;
-  theme_settings: any;
+  theme_settings: {
+    primary_color: string;
+    secondary_color: string;
+    accent_color: string;
+    sidebar_color: string;
+  };
   subscription_status?: string;
   subscription_plan_id?: string;
   trial_end_date?: string;
@@ -48,6 +53,8 @@ export interface SubscriptionPlan {
   is_active: boolean;
   stripe_price_id?: string;
   created_at?: string;
+  current?: boolean; // Added for UI display
+  popular?: boolean; // Added for UI display
 }
 
 export type OrganizationData = {
@@ -61,5 +68,6 @@ export type OrganizationData = {
   isTrialActive?: boolean;
   daysLeftInTrial?: number;
   hasPaidSubscription?: boolean;
+  subscriptionPlan?: SubscriptionPlan | null;  // Added to store current plan details
   refreshData: () => Promise<void>;
 };

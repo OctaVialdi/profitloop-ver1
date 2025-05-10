@@ -35,6 +35,7 @@ export interface AuthSignInResult {
 export interface AuthState {
   user: any | null;
   profile: any | null;
+  session: any | null; // Added session property
   isLoading: boolean;
   isAuthenticated: boolean;
   error: Error | null;

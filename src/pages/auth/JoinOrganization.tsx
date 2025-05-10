@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -87,8 +88,17 @@ const JoinOrganization = () => {
     setIsLoading(true);
 
     try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Anda harus login terlebih dahulu");
+        navigate("/auth/login");
+        return;
+      }
+
       const { data, error } = await supabase.rpc("join_organization", {
-        user_id: supabase.auth.currentUser?.id,
+        user_id: user.id,
         invitation_token: invitationToken,
       });
 

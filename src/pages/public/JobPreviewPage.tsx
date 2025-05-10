@@ -13,17 +13,17 @@ export default function JobPreviewPage() {
   console.log("JobPreviewPage: Token from URL:", token);
   
   // Use our custom hook to fetch job data
-  const { loading, error, jobData } = useJobPreviewData(token);
+  const { isLoading, error, jobData } = useJobPreviewData(token || '');
   
-  console.log("JobPreviewPage: Job data loading status:", loading);
+  console.log("JobPreviewPage: Job data loading status:", isLoading);
   console.log("JobPreviewPage: Job data:", jobData);
   
-  if (loading) {
+  if (isLoading) {
     return <LoadingState />;
   }
 
   if (error || !jobData) {
-    return <ErrorState error={error || "Invalid invitation link"} />;
+    return <ErrorState error={error?.message || "Invalid invitation link"} />;
   }
 
   return <JobDetails jobData={jobData} />;

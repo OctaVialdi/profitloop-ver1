@@ -1,7 +1,7 @@
 
 import { Dispatch, SetStateAction } from "react";
 import { NavigateFunction } from "react-router-dom";
-import { OrganizationData, UserProfile } from "@/types/organization";
+import { OrganizationData, UserProfile, SubscriptionPlan } from "@/types/organization";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -104,6 +104,23 @@ export async function fetchOrganizationData(
         Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 3600 * 24)) : 0;
       const hasPaidSubscription = organization.subscription_status === 'active';
 
+      // Fetch subscription plan if available
+      let subscriptionPlan: SubscriptionPlan | null = null;
+      if (organization.subscription_plan_id) {
+        const { data: planData, error: planError } = await supabase
+          .from("subscription_plans")
+          .select("*")
+          .eq("id", organization.subscription_plan_id)
+          .single();
+          
+        if (!planError && planData) {
+          subscriptionPlan = {
+            ...planData,
+            features: planData.features as Record<string, any> | null
+          };
+        }
+      }
+
       setOrganizationData({
         organization,
         userProfile: userProfileData as UserProfile,
@@ -115,6 +132,7 @@ export async function fetchOrganizationData(
         isTrialActive,
         daysLeftInTrial,
         hasPaidSubscription,
+        subscriptionPlan,
         refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate),
       });
     } else {
@@ -127,6 +145,7 @@ export async function fetchOrganizationData(
         isSuperAdmin: false,
         isAdmin: false,
         isEmployee: false,
+        subscriptionPlan: null,
         refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate),
       });
     }
