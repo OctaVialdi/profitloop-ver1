@@ -1,8 +1,9 @@
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from "@/components/ui/table";
-import { ArrowDown, ChartPie, Table as TableIcon, ChevronDown, Calendar, Users, Filter } from "lucide-react";
+import { ArrowDown, ArrowUp, ChartPie, Table as TableIcon, ChevronDown, Calendar, Users, Filter, Search, Download } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -13,6 +14,7 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -26,9 +28,9 @@ export default function Expenses() {
   
   // Sample data for the charts and tables
   const expenseBreakdownData = [
-    { name: "Equipment", value: 66.7, color: "#FFBA2C", amount: "Rp 15.000.000" },
-    { name: "Office Supplies", value: 11.1, color: "#42B96A", amount: "Rp 2.500.000" },
-    { name: "Advertising", value: 22.2, color: "#4192F7", amount: "Rp 5.000.000" },
+    { name: "Equipment", value: 66.7, color: "#4C6FFF", amount: "Rp 15.000.000" },
+    { name: "Office Supplies", value: 11.1, color: "#50D1B2", amount: "Rp 2.500.000" },
+    { name: "Advertising", value: 22.2, color: "#FFB547", amount: "Rp 5.000.000" },
   ];
 
   // Updated monthly comparison data with more months
@@ -116,38 +118,47 @@ export default function Expenses() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Expenses</h2>
-        <p className="text-muted-foreground">
-          Manage and track your organization's expenses
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Expenses</h2>
+          <p className="text-muted-foreground">
+            Manage and track your organization's expenses
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700">New Expense</Button>
+        </div>
       </div>
 
       {/* Top Navigation Tabs */}
-      <div className="flex overflow-auto pb-2">
+      <div className="flex overflow-auto">
         <Tabs defaultValue="overview" className="w-full" onValueChange={handleTabChange}>
-          <TabsList className="bg-muted h-11">
+          <TabsList className="bg-card rounded-xl p-1 border">
             <TabsTrigger 
               value="overview" 
-              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+              className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="budget" 
-              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+              className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
               Budget
             </TabsTrigger>
             <TabsTrigger 
               value="compliance" 
-              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+              className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
               Compliance
             </TabsTrigger>
             <TabsTrigger 
               value="approvals" 
-              className="h-9 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-6"
+              className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
               Approvals
             </TabsTrigger>
@@ -158,13 +169,15 @@ export default function Expenses() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Current Month Total */}
-        <Card className="overflow-hidden">
-          <CardContent className="p-6">
+        <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-white to-blue-50">
+          <CardHeader className="pb-2">
+            <p className="text-sm text-muted-foreground">Current Month Total</p>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Current Month Total</p>
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold">Rp 0</h3>
-                <span className="flex items-center text-xs text-red-500">
+                <span className="flex items-center text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
                   <ArrowDown className="h-3 w-3 mr-1" /> 100.0%
                 </span>
               </div>
@@ -174,70 +187,92 @@ export default function Expenses() {
         </Card>
 
         {/* Total Expenses YTD */}
-        <Card className="overflow-hidden">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Total Expenses YTD</p>
-                <span className="bg-blue-50 text-blue-600 text-xs py-1 px-1.5 rounded">$</span>
-              </div>
-              <h3 className="text-2xl font-bold">Rp 22.500.000</h3>
-              <p className="text-xs text-muted-foreground">3 transactions</p>
+        <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-white to-blue-50">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Total Expenses YTD</p>
+              <span className="bg-blue-100 text-blue-600 text-xs py-1 px-2 rounded-full">$</span>
             </div>
+          </CardHeader>
+          <CardContent>
+            <h3 className="text-2xl font-bold">Rp 22.500.000</h3>
+            <p className="text-xs text-muted-foreground mt-1">3 transactions</p>
           </CardContent>
         </Card>
 
         {/* Highest Expense */}
-        <Card className="overflow-hidden">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Highest Expense</p>
-              <h3 className="text-2xl font-bold">Rp 15.000.000</h3>
-              <p className="text-xs">New laptops for IT team</p>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <span className="inline-block w-3 h-3 rounded-full border mr-1"></span> 10 Apr 2025
-              </p>
-            </div>
+        <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-white to-blue-50">
+          <CardHeader className="pb-2">
+            <p className="text-sm text-muted-foreground">Highest Expense</p>
+          </CardHeader>
+          <CardContent>
+            <h3 className="text-2xl font-bold">Rp 15.000.000</h3>
+            <p className="text-xs mt-1">New laptops for IT team</p>
+            <p className="text-xs text-muted-foreground flex items-center mt-1">
+              <span className="inline-block w-3 h-3 rounded-full bg-blue-600 mr-1"></span> 10 Apr 2025
+            </p>
           </CardContent>
         </Card>
 
         {/* Latest Transaction */}
-        <Card className="overflow-hidden">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Latest Transaction</p>
-              <h3 className="text-lg font-bold">Monthly office supplies restock</h3>
-              <h4 className="text-xl font-bold">Rp 2.500.000</h4>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <span className="inline-block w-3 h-3 rounded-full border mr-1"></span> 15 Apr 2025
-              </p>
-            </div>
+        <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-white to-blue-50">
+          <CardHeader className="pb-2">
+            <p className="text-sm text-muted-foreground">Latest Transaction</p>
+          </CardHeader>
+          <CardContent>
+            <h3 className="text-lg font-medium">Monthly office supplies restock</h3>
+            <h4 className="text-xl font-bold mt-1">Rp 2.500.000</h4>
+            <p className="text-xs text-muted-foreground flex items-center mt-1">
+              <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span> 15 Apr 2025
+            </p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Total Expenses Summary */}
+      <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-lg font-medium">Total Expenses</p>
+              <p className="text-sm opacity-80">3 total transactions</p>
+            </div>
+            <h2 className="text-3xl font-bold">Rp 22.500.000</h2>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Recurring Expenses */}
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold">Recurring Expenses</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold">Recurring Expenses</h3>
+          <Button variant="outline" size="sm" className="text-blue-600">
+            View All
+          </Button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {recurringExpenses.map((expense, index) => (
-            <Card key={index} className="overflow-hidden border">
-              <CardContent className="p-6">
-                <div className="space-y-4">
+            <Card key={index} className="overflow-hidden hover:shadow-md transition-all duration-200">
+              <CardContent className="p-5">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm">{expense.title}</p>
-                    <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">
+                    <p className="font-medium">{expense.title}</p>
+                    <span className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full">
                       {expense.frequency}
                     </span>
                   </div>
                   <h3 className="text-xl font-bold">{expense.amount}</h3>
                   <p className="text-xs text-muted-foreground">{expense.category}</p>
                   <p className="text-xs text-muted-foreground flex items-center">
-                    <span className="inline-block w-3 h-3 rounded-full border mr-1"></span> {expense.date}
+                    <span className="inline-block w-3 h-3 rounded-full bg-blue-200 mr-1"></span> {expense.date}
                   </p>
-                  <div className={`flex items-center justify-center py-2 ${expense.isPaid ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-600'} rounded`}>
+                  <Button 
+                    variant={expense.isPaid ? "secondary" : "outline"} 
+                    className={`w-full ${expense.isPaid ? 'bg-green-50 text-green-600 hover:bg-green-100' : ''}`}
+                    size="sm"
+                  >
                     {expense.isPaid ? '✓ Mark Paid' : 'Mark Paid'}
-                  </div>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -245,23 +280,18 @@ export default function Expenses() {
         </div>
       </div>
 
-      {/* Total Expenses Summary */}
-      <div className="bg-blue-600 text-white p-6 rounded-lg">
-        <div className="space-y-2">
-          <p className="text-lg font-medium">Total Expenses</p>
-          <p className="text-sm opacity-80">3 total transactions</p>
-          <h2 className="text-3xl font-bold">Rp 22.500.000</h2>
-        </div>
-      </div>
-
       {/* Expenses Table */}
-      <div className="space-y-4">
-        <div className="bg-white rounded-lg border shadow-sm">
-          {/* Filters */}
-          <div className="p-4 flex flex-col sm:flex-row gap-2">
-            <div className="flex-1">
+      <Card className="overflow-hidden shadow-md border">
+        <CardHeader className="bg-gray-50 border-b p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input className="pl-10" placeholder="Search expenses..." />
+            </div>
+            
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Select>
-                <SelectTrigger className="w-full bg-white border rounded-md">
+                <SelectTrigger className="w-[140px] bg-white">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-500" />
                     <SelectValue placeholder="All Time" />
@@ -274,10 +304,9 @@ export default function Expenses() {
                   <SelectItem value="this-year">This Year</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex-1">
+              
               <Select>
-                <SelectTrigger className="w-full bg-white border rounded-md">
+                <SelectTrigger className="w-[160px] bg-white">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-gray-500" />
                     <SelectValue placeholder="All Departments" />
@@ -290,10 +319,9 @@ export default function Expenses() {
                   <SelectItem value="marketing">Marketing</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex-1">
+              
               <Select>
-                <SelectTrigger className="w-full bg-white border rounded-md">
+                <SelectTrigger className="w-[140px] bg-white">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4 text-gray-500" />
                     <SelectValue placeholder="All Types" />
@@ -308,59 +336,67 @@ export default function Expenses() {
               </Select>
             </div>
           </div>
+        </CardHeader>
 
-          {/* Table */}
-          <div className="w-full">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-100">
-                  <TableHead className="text-gray-600 font-medium">Date <ArrowDown className="inline h-4 w-4" /></TableHead>
-                  <TableHead className="text-gray-600 font-medium">Description</TableHead>
-                  <TableHead className="text-gray-600 font-medium">Category</TableHead>
-                  <TableHead className="text-gray-600 font-medium text-right">Amount</TableHead>
-                  <TableHead className="text-gray-600 font-medium">Department</TableHead>
-                  <TableHead className="text-gray-600 font-medium">Type</TableHead>
-                  <TableHead className="text-gray-600 font-medium">Status</TableHead>
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50">
+                <TableHead className="text-gray-600 font-medium">Date <ArrowDown className="inline h-3 w-3" /></TableHead>
+                <TableHead className="text-gray-600 font-medium">Description</TableHead>
+                <TableHead className="text-gray-600 font-medium">Category</TableHead>
+                <TableHead className="text-gray-600 font-medium text-right">Amount</TableHead>
+                <TableHead className="text-gray-600 font-medium">Department</TableHead>
+                <TableHead className="text-gray-600 font-medium">Type</TableHead>
+                <TableHead className="text-gray-600 font-medium">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {expenseTransactions.map((expense, index) => (
+                <TableRow key={index} className="border-b hover:bg-gray-50">
+                  <TableCell className="font-medium">{expense.date}</TableCell>
+                  <TableCell>{expense.description}</TableCell>
+                  <TableCell>{expense.category}</TableCell>
+                  <TableCell className={`text-right ${expense.category === "Equipment" ? "text-red-500 font-medium" : ""}`}>
+                    {expense.amount}
+                  </TableCell>
+                  <TableCell>{expense.department}</TableCell>
+                  <TableCell>{expense.type}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      expense.status === "operational" ? "bg-green-50 text-green-600" :
+                      expense.status === "fixed" ? "bg-blue-50 text-blue-600" :
+                      "bg-amber-50 text-amber-600"
+                    }`}>
+                      {expense.type}
+                    </span>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expenseTransactions.map((expense, index) => (
-                  <TableRow key={index} className="border-b">
-                    <TableCell className="font-medium">{expense.date}</TableCell>
-                    <TableCell>{expense.description}</TableCell>
-                    <TableCell>{expense.category}</TableCell>
-                    <TableCell className={`text-right ${expense.category === "Equipment" ? "text-red-500" : ""}`}>
-                      {expense.amount}
-                    </TableCell>
-                    <TableCell>{expense.department}</TableCell>
-                    <TableCell>{expense.type}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-md text-sm ${
-                        expense.status === "operational" ? "bg-green-50 text-green-600" :
-                        expense.status === "fixed" ? "bg-blue-50 text-blue-600" :
-                        "bg-amber-50 text-amber-600"
-                      }`}>
-                        {expense.type}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        
+        <div className="p-4 border-t flex justify-between items-center">
+          <p className="text-sm text-gray-500">Showing 3 of 3 expenses</p>
+          <div className="flex gap-1">
+            <Button variant="outline" size="sm" disabled>Previous</Button>
+            <Button variant="outline" size="sm" disabled>Next</Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Bottom Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Expense Breakdown - Updated with Table View option */}
-        <Card className="p-6">
-          <div className="space-y-6">
+        <Card className="overflow-hidden shadow-md">
+          <CardHeader className="pb-2 border-b">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-semibold">Expense Breakdown</h3>
+              <CardTitle>Expense Breakdown</CardTitle>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="px-4 py-2 border rounded-md flex items-center gap-2">
+                  <Button variant="outline" className="px-3 py-1.5 h-auto text-sm border rounded-lg flex items-center gap-2">
                     <span>Category</span>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
@@ -373,26 +409,28 @@ export default function Expenses() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            
-            <div className="grid grid-cols-2 bg-gray-50 rounded-md overflow-hidden">
+          </CardHeader>
+          
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 bg-gray-50 rounded-lg overflow-hidden mb-4">
               <Button 
                 variant="ghost" 
-                className={`flex-1 rounded-none flex items-center justify-center gap-2 h-12 ${expenseView === 'chart' ? 'bg-white' : ''}`}
+                className={`flex-1 rounded-none flex items-center justify-center gap-2 h-10 ${expenseView === 'chart' ? 'bg-white shadow-sm' : ''}`}
                 onClick={() => setExpenseView('chart')}
               >
-                <ChartPie className="h-5 w-5" /> Chart
+                <ChartPie className="h-4 w-4" /> Chart
               </Button>
               <Button 
                 variant="ghost" 
-                className={`flex-1 rounded-none flex items-center justify-center gap-2 h-12 ${expenseView === 'table' ? 'bg-white' : ''}`}
+                className={`flex-1 rounded-none flex items-center justify-center gap-2 h-10 ${expenseView === 'table' ? 'bg-white shadow-sm' : ''}`}
                 onClick={() => setExpenseView('table')}
               >
-                <TableIcon className="h-5 w-5" /> Table
+                <TableIcon className="h-4 w-4" /> Table
               </Button>
             </div>
             
             {expenseView === 'chart' ? (
-              <div className="h-[400px] relative">
+              <div className="h-[350px] relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -400,7 +438,7 @@ export default function Expenses() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      outerRadius={150}
+                      outerRadius={130}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -408,125 +446,125 @@ export default function Expenses() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
+                    <Tooltip 
+                      formatter={(value) => [`${value}%`, 'Percentage']}
+                      contentStyle={{
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
                 
-                {/* Category Labels With Percentages */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {/* Equipment Label (Left) */}
-                  <div className="absolute left-6 text-xl font-semibold" style={{ color: "#FFBA2C" }}>
-                    Equipment: {expenseBreakdownData[0].value}%
-                  </div>
-                  
-                  {/* Office Supplies Label (Right Top) */}
-                  <div className="absolute right-6 top-1/3 text-xl font-semibold" style={{ color: "#42B96A" }}>
-                    Office Supplies: {expenseBreakdownData[1].value}%
-                  </div>
-                  
-                  {/* Advertising Label (Right Bottom) */}
-                  <div className="absolute right-6 bottom-1/3 text-xl font-semibold" style={{ color: "#4192F7" }}>
-                    Advertising: {expenseBreakdownData[2].value}%
-                  </div>
+                <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-6 pb-4">
+                  {expenseBreakdownData.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                      <span className="text-sm">{item.name}: {item.value}%</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : (
-              <div className="pt-4">
-                <div className="grid grid-cols-3 border-b pb-4">
-                  <div className="text-lg font-bold">Category</div>
-                  <div className="text-lg font-bold text-right">Amount</div>
-                  <div className="text-lg font-bold text-right">%</div>
+              <div className="pt-2">
+                <div className="grid grid-cols-3 pb-3 mb-2 border-b">
+                  <div className="text-sm font-semibold text-gray-600">Category</div>
+                  <div className="text-sm font-semibold text-gray-600 text-right">Amount</div>
+                  <div className="text-sm font-semibold text-gray-600 text-right">%</div>
                 </div>
                 
                 {expenseBreakdownData.map((category, index) => (
-                  <div key={index} className="grid grid-cols-3 py-5 border-b">
+                  <div key={index} className="grid grid-cols-3 py-3 border-b">
                     <div className="flex items-center gap-2">
-                      <span className="inline-block w-4 h-4 rounded-full" style={{ backgroundColor: category.color }}></span>
-                      <span className="text-lg">{category.name}</span>
+                      <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: category.color }}></span>
+                      <span className="text-sm">{category.name}</span>
                     </div>
-                    <div className="text-lg text-right">{category.amount}</div>
-                    <div className="text-lg text-right">{category.value}%</div>
+                    <div className="text-sm text-right">{category.amount}</div>
+                    <div className="text-sm text-right font-medium">{category.value}%</div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </CardContent>
         </Card>
 
         {/* Month-over-Month Comparison - UPDATED UI */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden shadow-md">
+          <CardHeader className="pb-2 border-b">
+            <div className="flex items-center justify-between">
+              <CardTitle>Monthly Comparison</CardTitle>
+              <Select defaultValue="6months">
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Time Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3months">Last 3 Months</SelectItem>
+                  <SelectItem value="6months">Last 6 Months</SelectItem>
+                  <SelectItem value="12months">Last 12 Months</SelectItem>
+                  <SelectItem value="ytd">Year to Date</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          
           <CardContent className="p-6">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-semibold">Month-over-Month Comparison</h3>
-                <Select defaultValue="6months">
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Time Period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3months">Last 3 Months</SelectItem>
-                    <SelectItem value="6months">Last 6 Months</SelectItem>
-                    <SelectItem value="12months">Last 12 Months</SelectItem>
-                    <SelectItem value="ytd">Year to Date</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={monthlyComparisonData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                  <YAxis 
+                    tickFormatter={(value) => `${value}k`}
+                    tickLine={false} 
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{ 
+                      backgroundColor: "white",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "8px", 
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      padding: "8px" 
+                    }}
+                    formatter={(value) => [`${value}k`, ""]}
+                  />
+                  <Legend 
+                    verticalAlign="top" 
+                    height={36}
+                    align="right"
+                    iconSize={10}
+                    iconType="circle"
+                  />
+                  <Bar 
+                    name="Income" 
+                    dataKey="income" 
+                    fill="#4C6FFF" 
+                    radius={[4, 4, 0, 0]} 
+                    barSize={14}
+                  />
+                  <Bar 
+                    name="Expenses" 
+                    dataKey="expense" 
+                    fill="#FFB547" 
+                    radius={[4, 4, 0, 0]} 
+                    barSize={14}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div className="flex items-center justify-center gap-6 mt-2">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#4C6FFF]"></div>
+                <span className="text-sm">Income</span>
               </div>
-              
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthlyComparisonData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                    <YAxis 
-                      tickFormatter={(value) => `${value}k`}
-                      tickLine={false} 
-                      axisLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{ 
-                        backgroundColor: "white",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "0.5rem", 
-                        padding: "0.5rem" 
-                      }}
-                      formatter={(value) => [`${value}k`, ""]}
-                    />
-                    <Legend 
-                      verticalAlign="top" 
-                      height={36}
-                      align="right"
-                      iconSize={10}
-                      iconType="circle"
-                    />
-                    <Bar 
-                      name="Income" 
-                      dataKey="income" 
-                      fill="#4192F7" 
-                      radius={[4, 4, 0, 0]} 
-                      barSize={16}
-                    />
-                    <Bar 
-                      name="Expenses" 
-                      dataKey="expense" 
-                      fill="#FFBA2C" 
-                      radius={[4, 4, 0, 0]} 
-                      barSize={16}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div className="flex items-center justify-center gap-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#4192F7]"></div>
-                  <span className="text-sm">Income</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#FFBA2C]"></div>
-                  <span className="text-sm">Expenses</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#FFB547]"></div>
+                <span className="text-sm">Expenses</span>
               </div>
             </div>
           </CardContent>
