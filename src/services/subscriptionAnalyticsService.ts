@@ -1,192 +1,152 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
 
 export type SubscriptionEventType = 
-  | 'subscription_page_view'
-  | 'plan_selected'
-  | 'checkout_initiated'
-  | 'subscription_activated'
-  | 'trial_started'
-  | 'trial_banner_clicked'
-  | 'trial_extension_requested'
-  | 'premium_feature_clicked'
-  | 'subscription_cancelled'
-  | 'subscription_upgraded'
-  | 'payment_status'       // Add this
-  | 'customer_portal_access'; // Add this
-
-interface AnalyticsEventPayload {
-  eventType: SubscriptionEventType;
-  organizationId?: string;
-  planId?: string;
-  previousPlanId?: string;
-  additionalData?: Record<string, any>;
-}
+  | "trial_started" 
+  | "trial_extended" 
+  | "subscription_started" 
+  | "subscription_cancelled" 
+  | "subscription_changed"
+  | "payment_status"
+  | "customer_portal_access"
+  | "payment_failed";
 
 /**
- * Service to track subscription-related analytics events
+ * Service for tracking subscription-related events
  */
 export const subscriptionAnalyticsService = {
   /**
-   * Track a subscription-related analytics event
+   * Track when a trial starts
+   * @param organizationId The organization ID
    */
-  async trackEvent({
-    eventType,
-    organizationId,
-    planId,
-    previousPlanId,
-    additionalData
-  }: AnalyticsEventPayload): Promise<boolean> {
+  trackTrialStarted: async (organizationId: string): Promise<void> => {
     try {
-      // Get current authenticated user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.error("Cannot track event: No authenticated user");
-        return false;
-      }
-      
-      // If organization ID is not provided, try to get from user metadata
-      const finalOrgId = organizationId || user.user_metadata?.organization_id;
-      
-      if (!finalOrgId) {
-        console.error("Cannot track event: No organization ID available");
-        return false;
-      }
-
-      // Insert analytics event into Supabase table
-      const { error } = await supabase.from('subscription_analytics').insert({
-        event_type: eventType,
-        organization_id: finalOrgId,
-        user_id: user.id,
-        plan_id: planId,
-        previous_plan_id: previousPlanId,
-        additional_data: additionalData
-      });
-
-      if (error) {
-        console.error("Error tracking subscription analytics event:", error);
-        return false;
-      }
-
-      return true;
+      await supabase
+        .from('subscription_analytics')
+        .insert({
+          organization_id: organizationId,
+          event_type: 'trial_started'
+        });
     } catch (error) {
-      console.error("Failed to track subscription analytics event:", error);
-      return false;
+      console.error('Error tracking trial start:', error);
     }
   },
 
   /**
-   * Track when the subscription page is viewed
+   * Track when a user starts a subscription
+   * @param organizationId The organization ID
+   * @param planId The plan ID
+   * @param paymentMethod Optional payment method info
    */
-  trackSubscriptionPageView(orgId?: string, additionalData?: Record<string, any>): void {
-    this.trackEvent({
-      eventType: 'subscription_page_view',
-      organizationId: orgId,
-      additionalData
-    }).catch(err => console.error("Failed to track subscription page view:", err));
-  },
-
-  /**
-   * Track when a plan is selected
-   */
-  trackPlanSelected(planId: string, orgId?: string, additionalData?: Record<string, any>): void {
-    this.trackEvent({
-      eventType: 'plan_selected',
-      organizationId: orgId,
-      planId,
-      additionalData
-    }).catch(err => console.error("Failed to track plan selection:", err));
-  },
-
-  /**
-   * Track when a trial is started
-   */
-  trackTrialStarted(orgId?: string, additionalData?: Record<string, any>): void {
-    this.trackEvent({
-      eventType: 'trial_started',
-      organizationId: orgId,
-      additionalData
-    }).catch(err => console.error("Failed to track trial start:", err));
-  },
-
-  /**
-   * Track when a premium feature is clicked
-   */
-  trackPremiumFeatureClicked(featureName: string, orgId?: string): void {
-    this.trackEvent({
-      eventType: 'premium_feature_clicked',
-      organizationId: orgId,
-      additionalData: { featureName }
-    }).catch(err => console.error("Failed to track premium feature click:", err));
-  },
-
-  /**
-   * Track when checkout process is initiated
-   */
-  trackCheckoutInitiated(planId: string, orgId?: string): void {
-    this.trackEvent({
-      eventType: 'checkout_initiated',
-      organizationId: orgId,
-      planId,
-    }).catch(err => console.error("Failed to track checkout initiation:", err));
-  },
-
-  /**
-   * Track when trial extension is requested
-   */
-  trackTrialExtensionRequested(reason: string, orgId?: string): void {
-    this.trackEvent({
-      eventType: 'trial_extension_requested',
-      organizationId: orgId,
-      additionalData: { reason }
-    }).catch(err => console.error("Failed to track trial extension request:", err));
-  },
-
-  /**
-   * Track when a subscription is activated
-   */
-  trackSubscriptionActivated(planId: string, orgId?: string): void {
-    this.trackEvent({
-      eventType: 'subscription_activated',
-      organizationId: orgId,
-      planId
-    }).catch(err => console.error("Failed to track subscription activation:", err));
+  trackSubscriptionStarted: async (
+    organizationId: string, 
+    planId: string,
+    paymentMethod?: string
+  ): Promise<void> => {
+    try {
+      await supabase
+        .from('subscription_analytics')
+        .insert({
+          organization_id: organizationId,
+          event_type: 'subscription_started',
+          plan_id: planId,
+          payment_method: paymentMethod
+        });
+    } catch (error) {
+      console.error('Error tracking subscription start:', error);
+    }
   },
   
   /**
-   * Track when a subscription is upgraded
+   * Track when a user cancels their subscription
+   * @param organizationId The organization ID
+   * @param planId The plan ID being canceled
    */
-  trackSubscriptionUpgraded(newPlanId: string, previousPlanId: string, orgId?: string): void {
-    this.trackEvent({
-      eventType: 'subscription_upgraded',
-      organizationId: orgId,
-      planId: newPlanId,
-      previousPlanId
-    }).catch(err => console.error("Failed to track subscription upgrade:", err));
+  trackSubscriptionCancelled: async (
+    organizationId: string,
+    planId: string
+  ): Promise<void> => {
+    try {
+      await supabase
+        .from('subscription_analytics')
+        .insert({
+          organization_id: organizationId,
+          event_type: 'subscription_cancelled',
+          plan_id: planId
+        });
+    } catch (error) {
+      console.error('Error tracking subscription cancellation:', error);
+    }
   },
   
   /**
-   * Track when a subscription is cancelled
+   * Track when a user changes their subscription plan
+   * @param organizationId The organization ID
+   * @param planId The new plan ID
+   * @param previousPlanId The previous plan ID
    */
-  trackSubscriptionCancelled(planId: string, orgId?: string, reason?: string): void {
-    this.trackEvent({
-      eventType: 'subscription_cancelled',
-      organizationId: orgId,
-      planId,
-      additionalData: reason ? { reason } : undefined
-    }).catch(err => console.error("Failed to track subscription cancellation:", err));
+  trackSubscriptionChanged: async (
+    organizationId: string,
+    planId: string,
+    previousPlanId: string
+  ): Promise<void> => {
+    try {
+      await supabase
+        .from('subscription_analytics')
+        .insert({
+          organization_id: organizationId,
+          event_type: 'subscription_changed',
+          plan_id: planId,
+          previous_plan_id: previousPlanId
+        });
+    } catch (error) {
+      console.error('Error tracking subscription change:', error);
+    }
   },
   
   /**
-   * Track when a trial banner is clicked
+   * Track when a trial is extended
+   * @param organizationId The organization ID
+   * @param additionalData Additional data about the extension
    */
-  trackTrialBannerClicked(daysLeft: number, orgId?: string): void {
-    this.trackEvent({
-      eventType: 'trial_banner_clicked',
-      organizationId: orgId,
-      additionalData: { daysLeft }
-    }).catch(err => console.error("Failed to track trial banner click:", err));
+  trackTrialExtended: async (
+    organizationId: string,
+    additionalData?: Record<string, any>
+  ): Promise<void> => {
+    try {
+      await supabase
+        .from('subscription_analytics')
+        .insert({
+          organization_id: organizationId,
+          event_type: 'trial_extended',
+          additional_data: additionalData
+        });
+    } catch (error) {
+      console.error('Error tracking trial extension:', error);
+    }
+  },
+  
+  /**
+   * Track generic subscription event
+   * @param organizationId The organization ID
+   * @param eventType The event type
+   * @param additionalData Additional data to store with the event
+   */
+  trackEvent: async (
+    organizationId: string,
+    eventType: SubscriptionEventType,
+    additionalData?: Record<string, any>
+  ): Promise<void> => {
+    try {
+      await supabase
+        .from('subscription_analytics')
+        .insert({
+          organization_id: organizationId,
+          event_type: eventType,
+          additional_data: additionalData
+        });
+    } catch (error) {
+      console.error(`Error tracking ${eventType} event:`, error);
+    }
   }
 };

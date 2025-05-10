@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthState } from '@/hooks/useAuthState';
 import { businessFieldOptions, employeeCountOptions } from '@/data/formOptions';
@@ -51,8 +52,8 @@ const Onboarding = () => {
         .from('organizations')
         .insert({
           name: organizationName,
-          business_field: businessField,
-          employee_count: employeeCount,
+          business_field: businessField || null,
+          employee_count: employeeCount || null
         })
         .select('id')
         .single();
