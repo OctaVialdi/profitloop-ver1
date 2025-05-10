@@ -24,7 +24,7 @@ interface SubscriptionPlan {
   features: Record<string, any> | null;
   is_active: boolean;
   direct_payment_url?: string | null;
-  description?: string | null;
+  deskripsi?: string | null;
   created_at?: string;
 }
 
@@ -50,7 +50,7 @@ const SubscriptionPlansManagement = () => {
     max_members: 0,
     is_active: true,
     direct_payment_url: '',
-    description: '',
+    deskripsi: '',
   });
   const [features, setFeatures] = useState<FeatureItem[]>([
     { name: 'storage', value: '1GB', enabled: true },
@@ -143,7 +143,7 @@ const SubscriptionPlansManagement = () => {
       max_members: 0,
       is_active: true,
       direct_payment_url: '',
-      description: '',
+      deskripsi: '',
     });
     setFeatures([
       { name: 'storage', value: '1GB', enabled: true },
@@ -167,7 +167,7 @@ const SubscriptionPlansManagement = () => {
         max_members: plan.max_members || 0,
         is_active: plan.is_active,
         direct_payment_url: plan.direct_payment_url || '',
-        description: plan.description || '',
+        deskripsi: plan.deskripsi || '',
       });
       setFeatures(initializeFeaturesFromPlan(plan.features));
     } else {
@@ -249,7 +249,7 @@ const SubscriptionPlansManagement = () => {
         max_members: formData.max_members || null,
         is_active: formData.is_active,
         direct_payment_url: formData.direct_payment_url || null,
-        description: formData.description || null,
+        deskripsi: formData.deskripsi || null,
         features: buildFeaturesObject()
       };
       
@@ -381,7 +381,7 @@ const SubscriptionPlansManagement = () => {
                     <TableCell>{plan.max_members || 'Tidak dibatasi'}</TableCell>
                     <TableCell>
                       <div className="max-w-[200px] truncate">
-                        {plan.description || '-'}
+                        {plan.deskripsi || '-'}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -496,13 +496,13 @@ const SubscriptionPlansManagement = () => {
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
+                <Label htmlFor="deskripsi" className="text-right">
                   Deskripsi
                 </Label>
                 <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
+                  id="deskripsi"
+                  name="deskripsi"
+                  value={formData.deskripsi}
                   onChange={handleInputChange}
                   className="col-span-3"
                   placeholder="Deskripsi singkat tentang paket langganan"

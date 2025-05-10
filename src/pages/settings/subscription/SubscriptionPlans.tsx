@@ -24,7 +24,7 @@ interface SubscriptionPlan {
   features: Record<string, any> | null;
   is_active: boolean;
   direct_payment_url?: string | null;
-  description?: string | null;
+  deskripsi?: string | null;
 }
 
 export const SubscriptionPlans = () => {
@@ -227,7 +227,7 @@ export const SubscriptionPlans = () => {
                       <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
                     )}
                   </div>
-                  <CardDescription>{basicPlan.description || 'Paket dasar untuk organisasi kecil'}</CardDescription>
+                  <CardDescription>{basicPlan.deskripsi || 'Paket dasar untuk organisasi kecil'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">
                       {basicPlan.price === 0 ? "Gratis" : formatRupiah(basicPlan.price)}
@@ -275,7 +275,7 @@ export const SubscriptionPlans = () => {
                       <Badge variant="outline" className="bg-green-50 text-green-700">Populer</Badge>
                     )}
                   </div>
-                  <CardDescription>{standardPlan.description || 'Solusi lengkap untuk sebagian besar organisasi'}</CardDescription>
+                  <CardDescription>{standardPlan.deskripsi || 'Solusi lengkap untuk sebagian besar organisasi'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">{formatRupiah(standardPlan.price)}</span>
                     <span className="text-gray-500">/bulan</span>
@@ -328,7 +328,7 @@ export const SubscriptionPlans = () => {
                       <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
                     )}
                   </div>
-                  <CardDescription>{premiumPlan.description || 'Solusi lengkap untuk organisasi besar'}</CardDescription>
+                  <CardDescription>{premiumPlan.deskripsi || 'Solusi lengkap untuk organisasi besar'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">{formatRupiah(premiumPlan.price)}</span>
                     <span className="text-gray-500">/bulan</span>
@@ -376,7 +376,7 @@ export const SubscriptionPlans = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>{basicPlan.name}</CardTitle>
-                  <CardDescription>{basicPlan.description || 'Paket dasar untuk organisasi kecil'}</CardDescription>
+                  <CardDescription>{basicPlan.deskripsi || 'Paket dasar untuk organisasi kecil'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">
                       {basicPlan.price === 0 ? "Gratis" : formatRupiah(basicPlan.price * 12)}
@@ -410,7 +410,7 @@ export const SubscriptionPlans = () => {
                     <CardTitle>{standardPlan.name}</CardTitle>
                     <Badge variant="outline" className="bg-green-50 text-green-700">Populer</Badge>
                   </div>
-                  <CardDescription>{standardPlan.description || 'Solusi lengkap untuk sebagian besar organisasi'}</CardDescription>
+                  <CardDescription>{standardPlan.deskripsi || 'Solusi lengkap untuk sebagian besar organisasi'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">
                       {formatRupiah(calculateYearlyPrice(standardPlan.price))}
@@ -455,7 +455,7 @@ export const SubscriptionPlans = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>{premiumPlan.name}</CardTitle>
-                  <CardDescription>{premiumPlan.description || 'Solusi lengkap untuk organisasi besar'}</CardDescription>
+                  <CardDescription>{premiumPlan.deskripsi || 'Solusi lengkap untuk organisasi besar'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">
                       {formatRupiah(calculateYearlyPrice(premiumPlan.price))}
