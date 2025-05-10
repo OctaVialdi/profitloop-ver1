@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/QueryProvider";
 import { useAssetStorage } from "./hooks/useAssetStorage";
 import TrialBanner from "./components/TrialBanner";
-import TrialProtection from "./components/TrialProtection";
 
 function App() {
   // Initialize asset storage
@@ -15,9 +14,7 @@ function App() {
     <QueryProvider>
       <BrowserRouter>
         <TrialBanner />
-        <TrialProtection>
-          <AppRoutes />
-        </TrialProtection>
+        <AppRoutes />
         <Toaster />
       </BrowserRouter>
     </QueryProvider>

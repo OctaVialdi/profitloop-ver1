@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +21,7 @@ interface ProfileData {
 export const ProtectedRoute = ({
   children,
   redirectTo = "/auth/login",
-  publicRoutes = ["/join-organization", "/accept-invitation", "/trial-expired"],
+  publicRoutes = ["/join-organization", "/accept-invitation"],
   requiresSubscription = false
 }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
@@ -40,8 +41,7 @@ export const ProtectedRoute = ({
     currentPath === '/subscription' || 
     currentPath === '/settings/subscription' || 
     currentPath.startsWith('/employee-welcome') ||
-    currentPath.startsWith('/organizations') ||
-    currentPath === '/trial-expired';
+    currentPath.startsWith('/organizations');
 
   useEffect(() => {
     // Skip authentication check for public routes
@@ -346,9 +346,9 @@ export const ProtectedRoute = ({
       organizationData && 
       (organizationData.subscription_status === 'expired' || organizationData.trial_expired) && 
       !isSubscriptionRoute) {
-    // Redirect to the trial expired page instead of subscription page
-    console.log("Trial has expired, redirecting to trial expired page");
-    return <Navigate to="/trial-expired" state={{ from: location }} replace />;
+    // Redirect to the subscription page
+    toast.error("Masa trial Anda telah berakhir. Silakan upgrade untuk melanjutkan.");
+    return <Navigate to="/subscription" state={{ from: location }} replace />;
   }
 
   // Handle specific redirections based on the flowchart
