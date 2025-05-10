@@ -1,24 +1,6 @@
 
-import { Session, User } from '@supabase/supabase-js';
-
-export interface AuthCredentials {
-  email: string;
-  password: string;
-}
-
-export interface AuthSignInResult {
-  data: {
-    user: User | null;
-    session: Session | null;
-  } | null;
-  error: Error | null;
-}
-
-export interface AuthState {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-}
+import { Session, User } from "@supabase/supabase-js";
+import { Json } from "@/types/supabase";
 
 export interface MagicLinkParams {
   email?: string;
@@ -41,10 +23,18 @@ export interface MagicLinkResult {
   sendMagicLink?: (params: MagicLinkParams) => Promise<void>;
 }
 
-export interface PasswordPolicy {
-  minLength: number;
-  requireUppercase: boolean;
-  requireLowercase: boolean;
-  requireNumbers: boolean;
-  requireSpecialChars: boolean;
+export interface AuthState {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+}
+
+export interface AuthCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthSignInResult {
+  data: any;
+  error: any;
 }

@@ -1,79 +1,95 @@
 
-import { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { useOrganization } from "@/hooks/useOrganization";
-import { SubscriptionAnalytics } from "@/components/admin/SubscriptionAnalytics";
-import { analyticsService } from "@/services/analyticsService";
+import SubscriptionAnalytics from '@/components/admin/SubscriptionAnalytics';
+import { AlertTriangle, ShieldAlert, Package2 } from 'lucide-react';
+import { useAuth } from '@/hooks/auth';
+import { useNavigate } from 'react-router-dom';
+import SubscriptionPlansManagement from './admin/SubscriptionPlansManagement';
 
-export default function AdminPage() {
-  const { organization, isAdmin, isSuperAdmin } = useOrganization();
+const AdminPage = () => {
+  const { organization } = useOrganization();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Check if user has admin access (only papadhanta@gmail.com)
+  const hasAdminAccess = user?.email === 'papadhanta@gmail.com';
   
   useEffect(() => {
-    // Track admin panel view
-    if (organization?.id) {
-      analyticsService.trackEvent({
-        eventType: "admin_panel_view",
-        organizationId: organization.id
-      });
+    // Redirect if no admin access
+    if (user && !hasAdminAccess) {
+      navigate('/settings/subscription');
     }
-  }, [organization?.id]);
+    
+    // Track admin panel view
+    if (hasAdminAccess) {
+      subscriptionAnalyticsService.trackAdminPanelView('main', organization?.id);
+    }
+  }, [user, hasAdminAccess, navigate, organization?.id]);
   
-  // If not an admin, show error
-  if (!isAdmin) {
+  if (!hasAdminAccess) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Access Denied</CardTitle>
-          <CardDescription>
-            You don't have permission to access the admin panel.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Please contact your organization administrator for access.</p>
+      <Card className="mt-8">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <ShieldAlert className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-bold text-center mb-2">Akses Terbatas</h2>
+          <p className="text-gray-600 text-center max-w-md">
+            Maaf, halaman ini hanya tersedia untuk administrator sistem.
+          </p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Admin Panel</h2>
+    <div className="container mx-auto py-8" data-admin-page="true">
+      <div className="mb-8 space-y-2">
+        <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <p className="text-gray-600">
+          Panel monitoring dan analitik untuk administrator sistem
+        </p>
       </div>
       
-      <Tabs defaultValue="analytics">
+      <Tabs defaultValue="analytics" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="user-management">User Management</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="analytics">Analitik Langganan</TabsTrigger>
+          <TabsTrigger value="trials">Manajemen Trial</TabsTrigger>
+          <TabsTrigger value="plans">Kelola Paket</TabsTrigger>
         </TabsList>
-        <TabsContent value="analytics" className="mt-6">
+        
+        <TabsContent value="analytics">
           <SubscriptionAnalytics />
         </TabsContent>
-        <TabsContent value="user-management" className="mt-6">
+        
+        <TabsContent value="trials">
           <Card>
             <CardHeader>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>Manage your organization's users</CardDescription>
+              <CardTitle>Manajemen Trial</CardTitle>
+              <CardDescription>Monitor dan kelola status trial pengguna</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>User management features will be available soon.</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <AlertTriangle className="h-16 w-16 text-amber-500 mb-4" />
+                <h3 className="text-xl font-bold">Fitur Sedang Dibangun</h3>
+                <p className="text-gray-600 mt-2 max-w-md">
+                  Fitur ini sedang dalam tahap pengembangan dan akan segera tersedia.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="settings" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Admin Settings</CardTitle>
-              <CardDescription>Configure global settings for your organization</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Admin settings will be available soon.</p>
-            </CardContent>
-          </Card>
+        
+        <TabsContent value="plans">
+          <SubscriptionPlansManagement />
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   );
-}
+};
+
+export default AdminPage;

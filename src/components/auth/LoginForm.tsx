@@ -34,28 +34,10 @@ const LoginForm = ({
   onSubmit,
   isEmailReadOnly = false
 }: LoginFormProps) => {
-  // Determine alert variant based on error content
-  const getAlertVariant = () => {
-    if (!loginError) return "destructive";
-    
-    // If it's an email not found error
-    if (loginError.includes("Email tidak terdaftar")) {
-      return "default"; // Use default style for redirecting to registration
-    }
-    
-    // If it's a password change notification
-    if (loginError.includes("Password untuk akun ini telah diubah")) {
-      return "default"; // Use default style for password changed message
-    }
-    
-    // Default error style
-    return "destructive";
-  };
-
   return (
     <>
       {loginError && (
-        <Alert variant={getAlertVariant()} className="mb-4">
+        <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{loginError}</AlertDescription>
         </Alert>

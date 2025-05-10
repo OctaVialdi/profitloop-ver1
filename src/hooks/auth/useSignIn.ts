@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import { ensureProfileExists, getAuthErrorMessage } from "@/utils/authUtils";
+import { ensureProfileExists } from "@/services/profileService";
 import { AuthCredentials, AuthSignInResult } from "./types";
 import { cleanupAuthState } from "@/utils/authUtils";
 
@@ -77,10 +77,18 @@ export function useSignIn() {
     } catch (error: any) {
       console.error("Authentication error:", error);
       
-      // Get user-friendly error message
-      const errorMessage = getAuthErrorMessage(error);
-      setLoginError(errorMessage);
+      // Format user-friendly error message
+      let errorMessage = error.message || "Gagal login. Periksa email dan password Anda.";
       
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Email atau password salah. Mohon periksa kembali.";
+      } else if (error.message.includes("Database error")) {
+        errorMessage = "Terjadi masalah server saat login. Mohon coba lagi dalam beberapa saat.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Email belum diverifikasi. Mohon verifikasi email terlebih dahulu.";
+      }
+      
+      setLoginError(errorMessage);
       return { data: null, error };
     } finally {
       setIsLoading(false);

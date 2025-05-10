@@ -1,132 +1,125 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft } from "lucide-react";
-import { subscriptionService } from "@/services/subscriptionService";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { requestTrialExtension } from "@/services/subscriptionService";
+import { supabase } from "@/integrations/supabase/client";
+import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { useOrganization } from "@/hooks/useOrganization";
-import { analyticsService } from "@/services/analyticsService";
 
-export default function SubscriptionExtension() {
-  const [reason, setReason] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { organization } = useOrganization();
-  const { toast } = useToast();
+const SubscriptionExtension = () => {
   const navigate = useNavigate();
+  const { organization } = useOrganization();
+  const [extensionReason, setExtensionReason] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleSubmitRequest = async () => {
-    if (!reason.trim()) {
-      toast({
-        title: "Reason Required",
-        description: "Please provide a reason for your trial extension request",
-        variant: "destructive"
-      });
+  // Get user email on component mount
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user?.email) {
+        setContactEmail(data.user.email);
+      }
+    };
+    
+    getUser();
+  }, []);
+  
+  const handleTrialExtensionRequest = async () => {
+    if (!extensionReason.trim()) {
+      toast.error("Mohon berikan alasan untuk perpanjangan trial");
       return;
     }
-    
-    if (!organization?.id) {
-      toast({
-        title: "Error",
-        description: "Organization data is missing",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+
     setIsSubmitting(true);
     try {
-      // Track the event
-      analyticsService.trackEvent({
-        eventType: "trial_extension_requested",
-        organizationId: organization.id,
-        additionalData: { reason }
-      });
+      if (!organization?.id) throw new Error("Organization ID not found");
       
-      // Submit the extension request
-      const result = await subscriptionService.requestTrialExtension(organization.id, reason);
+      // Track trial extension request
+      subscriptionAnalyticsService.trackTrialExtensionRequested(extensionReason, organization.id);
       
-      if (result.success) {
-        toast({
-          title: "Extension Request Submitted",
-          description: "We have received your trial extension request. We'll review it and get back to you soon."
-        });
-        
-        navigate("/settings/subscription");
-      } else {
-        toast({
-          title: "Request Failed",
-          description: result.message || "Failed to submit extension request. Please try again later.",
-          variant: "destructive"
-        });
+      const success = await requestTrialExtension(
+        organization.id, 
+        extensionReason, 
+        contactEmail
+      );
+      
+      if (success) {
+        toast.success("Permintaan perpanjangan trial berhasil dikirim!");
+        navigate('/settings/subscription');
       }
     } catch (error) {
       console.error("Error requesting trial extension:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again later.",
-        variant: "destructive"
-      });
+      toast.error("Gagal mengirim permintaan perpanjangan trial");
     } finally {
       setIsSubmitting(false);
     }
   };
   
   return (
-    <div className="space-y-6">
-      <Button 
-        variant="ghost" 
-        className="flex items-center gap-2" 
-        onClick={() => navigate("/settings/subscription")}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        <span>Back to Subscription</span>
-      </Button>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Request Trial Extension</CardTitle>
-          <CardDescription>
-            Let us know why you need more time with our trial
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+    <div className="container mx-auto py-8">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6">Minta Perpanjangan Trial</h1>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Form Permintaan Perpanjangan</CardTitle>
+            <CardDescription>
+              Isi form berikut untuk meminta perpanjangan masa trial Anda
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="reason" className="block text-sm font-medium">
-                Reason for Extension
+              <label htmlFor="extension-reason" className="text-sm font-medium">
+                Alasan Perpanjangan
               </label>
               <Textarea
-                id="reason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Please explain why you need additional time with our trial..."
-                className="min-h-[120px]"
+                id="extension-reason"
+                placeholder="Ceritakan mengapa Anda memerlukan perpanjangan trial..."
+                value={extensionReason}
+                onChange={(e) => setExtensionReason(e.target.value)}
+                rows={4}
               />
-              <p className="text-xs text-muted-foreground">
-                Please provide details about why you need more time to evaluate our service.
-                Our team will review your request and respond within 24 hours.
-              </p>
             </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => navigate("/settings/subscription")}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmitRequest}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Submitting..." : "Submit Request"}
-          </Button>
-        </CardFooter>
-      </Card>
+            
+            <div className="space-y-2">
+              <label htmlFor="contact-email" className="text-sm font-medium">
+                Email Kontak
+              </label>
+              <Input
+                id="contact-email"
+                type="email"
+                placeholder="Email untuk dihubungi"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/settings/subscription')}
+            >
+              Kembali
+            </Button>
+            <Button 
+              onClick={handleTrialExtensionRequest} 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Mengirim..." : "Kirim Permintaan"}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
-}
+};
+
+export default SubscriptionExtension;

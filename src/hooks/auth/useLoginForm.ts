@@ -8,7 +8,6 @@ import { useMagicLinkHandler } from "./useMagicLinkHandler";
 import { useUserProfile } from "./useUserProfile";
 import { useEmailCheck } from "./useEmailCheck";
 import { supabase } from "@/integrations/supabase/client";
-import { formatRelativeTime } from "@/utils/formatUtils";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -90,8 +89,9 @@ export function useLoginForm() {
       const emailExists = await checkEmailExists(email);
       
       if (!emailExists) {
-        // If email doesn't exist, show specific error message
-        setLoginError("Email tidak terdaftar. Silakan daftar terlebih dahulu.");
+        // If email doesn't exist, redirect to registration
+        toast.info("Email tidak ditemukan. Silakan daftar terlebih dahulu.");
+        navigate("/auth/register", { state: { email } });
         return;
       }
       
@@ -107,19 +107,6 @@ export function useLoginForm() {
           setIsEmailUnverified(true);
           throw new Error("Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.");
         }
-        
-        // Check if the error is about invalid credentials (password)
-        if (error.message && 
-            (error.message.includes("Invalid login credentials") ||
-             error.message.includes("invalid_credentials"))) {
-             
-          // Try to check if this could be a changed password scenario
-          await checkForPasswordChange(email);
-          
-          // If no password change detected, show generic message
-          throw new Error("Password salah. Mohon periksa kembali.");
-        }
-        
         throw error;
       }
       
@@ -204,30 +191,6 @@ export function useLoginForm() {
         setIsEmailUnverified(true);
       }
       // Database errors are already handled in useAuth hook
-    }
-  };
-
-  // Helper function to check if password was recently changed
-  const checkForPasswordChange = async (email: string) => {
-    try {
-      // Mock audit log data for demonstration
-      // In a real app, you might query a real audit log table
-      const auditLogs = {
-        action: 'password_change',
-        user_email: email,
-        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1 day ago
-      };
-
-      if (auditLogs) {
-        const timeAgo = formatRelativeTime(new Date(auditLogs.created_at));
-        setLoginError(`Password salah. Password untuk akun ini telah diubah ${timeAgo}. Silakan gunakan password baru.`);
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error("Error checking for password change:", error);
-      return false;
     }
   };
 

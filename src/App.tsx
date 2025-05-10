@@ -1,65 +1,51 @@
 
+import { BrowserRouter } from "react-router-dom";
+import { AppRoutes } from "./routes";
+import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/components/QueryProvider";
+import { useAssetStorage } from "./hooks/useAssetStorage";
+import TrialBanner from "./components/TrialBanner";
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useAuth } from "@/hooks/auth/useAuth";
-import { useOrganization } from "@/hooks/useOrganization";
-import { toast } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { subscriptionService } from "@/services/subscriptionService";
-
-// Import pages
-import Login from "@/pages/auth/Login";
-import Dashboard from "@/pages/Dashboard";
+import { supabase } from "./integrations/supabase/client";
+import { fixOrganizationTrialPeriod } from "./services/subscriptionService";
 
 function App() {
-  const { user } = useAuth();
-  const { organization } = useOrganization();
-  
-  // Check for trial expiry on startup
+  // Initialize asset storage
+  const assetStorage = useAssetStorage();
+
+  // Run trial period fix on app load
   useEffect(() => {
-    const checkTrialStatus = async () => {
-      if (user && organization?.id) {
-        try {
-          // Check if organization trial needs fixing
-          const result = await subscriptionService.fixOrganizationTrialPeriod(organization.id);
+    const fixTrialPeriods = async () => {
+      try {
+        // Check if the user is authenticated
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Get organization ID from user metadata
+          const orgId = session.user.user_metadata?.organization_id;
           
-          if (result.success) {
-            toast.info(result.message || "Your trial period has been adjusted based on your activity.");
+          if (orgId) {
+            // Fix organization trial period
+            await fixOrganizationTrialPeriod(orgId);
+            console.log("Trial period check completed on app load");
           }
-        } catch (error) {
-          console.error("Error checking trial status:", error);
         }
+      } catch (error) {
+        console.error("Error fixing trial periods on app load:", error);
       }
     };
-    
-    checkTrialStatus();
-  }, [user, organization?.id]);
-  
+
+    fixTrialPeriods();
+  }, []);
+
   return (
-    <ThemeProvider defaultTheme="light">
-      <Router>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/auth/login" element={<Login />} />
-          
-          {/* Protected routes */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Default route */}
-          <Route path="*" element={<Login />} />
-        </Routes>
+    <QueryProvider>
+      <BrowserRouter>
+        <TrialBanner />
+        <AppRoutes />
         <Toaster />
-      </Router>
-    </ThemeProvider>
+      </BrowserRouter>
+    </QueryProvider>
   );
 }
 

@@ -1,32 +1,11 @@
 
-import { supabase } from "@/integrations/supabase/client";
-
 /**
- * A robust sign out function that handles edge cases and cleans up auth state
+ * Utility functions for authentication state management
  */
-export async function robustSignOut(): Promise<void> {
-  try {
-    // Clear any local storage items that might contain auth state
-    cleanupAuthState();
-    
-    // Clear cookies that might contain auth info
-    document.cookie.split(";").forEach((c) => {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
-    
-    // Call Supabase signOut method
-    await supabase.auth.signOut();
-  } catch (error) {
-    console.error("Error during sign out:", error);
-    // Force a page reload if needed to clear React state
-    window.location.href = '/auth/login';
-  }
-}
 
 /**
- * Clean up auth state from localStorage
+ * Cleans up all authentication-related data from localStorage and sessionStorage
+ * This helps prevent authentication limbo states when session tokens become invalid
  */
 export const cleanupAuthState = () => {
   // Remove standard auth tokens
@@ -45,141 +24,32 @@ export const cleanupAuthState = () => {
       sessionStorage.removeItem(key);
     }
   });
+  
+  console.log("Authentication state cleaned up");
 };
 
 /**
- * Validate password against security policy
+ * Performs a robust sign out operation that ensures all auth state is properly cleared
  */
-export function validatePassword(password: string): { 
-  valid: boolean; 
-  errors: string[];
-} {
-  const errors: string[] = [];
-  
-  // Check minimum length
-  if (password.length < 8) {
-    errors.push("Password must be at least 8 characters long");
-  }
-  
-  // Check if contains uppercase letter
-  if (!/[A-Z]/.test(password)) {
-    errors.push("Password must contain at least one uppercase letter");
-  }
-  
-  // Check if contains lowercase letter
-  if (!/[a-z]/.test(password)) {
-    errors.push("Password must contain at least one lowercase letter");
-  }
-  
-  // Check if contains number
-  if (!/\d/.test(password)) {
-    errors.push("Password must contain at least one number");
-  }
-  
-  // Check if contains special character
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    errors.push("Password must contain at least one special character");
-  }
-  
-  return {
-    valid: errors.length === 0,
-    errors
-  };
-}
-
-/**
- * Clean email input (trim and lowercase)
- */
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
-/**
- * Get user-friendly auth error message
- */
-export function getAuthErrorMessage(error: any): string {
-  // If it's a string already, return it
-  if (typeof error === 'string') return error;
-  
-  // Check for common Supabase error messages
-  const message = error?.message || error?.error_description || 'An unknown error occurred';
-  
-  // Map to user-friendly messages
-  if (message.includes('Email not confirmed')) {
-    return 'Please verify your email address before logging in';
-  }
-  
-  if (message.includes('Invalid login credentials')) {
-    return 'Invalid email or password';
-  }
-  
-  if (message.includes('Email already registered')) {
-    return 'This email is already registered. Please log in instead';
-  }
-  
-  if (message.includes('JWT expired')) {
-    return 'Your session has expired. Please log in again';
-  }
-  
-  return message;
-}
-
-/**
- * Create or update user profile after login
- */
-export async function ensureProfileExists(userId: string, userData: {
-  email: string;
-  full_name: string | null;
-  email_verified?: boolean;
-}) {
+export const robustSignOut = async () => {
   try {
-    // First check if profile exists
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', userId)
-      .single();
+    // Import supabase client directly to avoid circular dependencies
+    const { supabase } = await import('@/integrations/supabase/client');
     
-    if (existingProfile) {
-      // If profile exists, update it
-      await supabase
-        .from('profiles')
-        .update({
-          email: userData.email,
-          full_name: userData.full_name,
-          email_verified: userData.email_verified || false,
-          last_active: new Date().toISOString()
-        })
-        .eq('id', userId);
-    } else {
-      // If profile doesn't exist, create it
-      await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: userData.email,
-          full_name: userData.full_name,
-          email_verified: userData.email_verified || false,
-          created_at: new Date().toISOString(),
-          last_active: new Date().toISOString()
-        });
+    // Clean up existing auth state first
+    cleanupAuthState();
+    
+    // Attempt global sign out
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (err) {
+      console.error("Global sign out failed, but cleanup was performed:", err);
+      // Continue even if this fails since we've already cleaned up local state
     }
+    
+    return true;
   } catch (error) {
-    console.error('Error updating profile:', error);
-    // Don't throw - just log the error since this is not critical
+    console.error("Error during robust sign out:", error);
+    return false;
   }
-}
-
-/**
- * Get password last change date
- */
-export async function getPasswordLastChangeDate(userId: string): Promise<Date | null> {
-  try {
-    // This would normally query the auth_audit_logs table
-    // For now, return the current date - 5 days
-    return new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-  } catch (error) {
-    console.error("Error getting password change date:", error);
-    return null;
-  }
-}
+};

@@ -1,57 +1,55 @@
 
-import { Organization, SubscriptionPlan } from "@/types/organization";
+import { Organization, SubscriptionPlan, UserProfile } from "@/types/organization";
 
-/**
- * Calculate if a trial is active and how many days are left
- */
-export const calculateTrialStatus = (organization: Organization) => {
-  if (!organization.trial_end_date) {
-    return { isTrialActive: false, daysLeftInTrial: 0, isTrialExpired: true };
+export function calculateTrialStatus(organization: Organization | null): {
+  isTrialActive: boolean;
+  daysLeftInTrial: number;
+} {
+  if (!organization || !organization.trial_end_date || organization.trial_expired) {
+    return {
+      isTrialActive: false,
+      daysLeftInTrial: 0
+    };
   }
-  
+
+  // Check if subscription is active
+  if (organization.subscription_status === 'active') {
+    return {
+      isTrialActive: false,
+      daysLeftInTrial: 0
+    };
+  }
+
+  // Calculate days left in trial
+  const trialEnd = new Date(organization.trial_end_date);
   const now = new Date();
-  const trialEndDate = new Date(organization.trial_end_date);
-  
-  // Check if trial has expired
-  if (organization.trial_expired || now > trialEndDate) {
-    return { isTrialActive: false, daysLeftInTrial: 0, isTrialExpired: true };
-  }
-  
-  // Calculate days left
-  const diffTime = trialEndDate.getTime() - now.getTime();
+  const diffTime = trialEnd.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  return { 
-    isTrialActive: true, 
-    daysLeftInTrial: diffDays,
-    isTrialExpired: false
+
+  return {
+    isTrialActive: diffDays > 0 && organization.subscription_status === 'trial',
+    daysLeftInTrial: diffDays > 0 ? diffDays : 0
   };
-};
+}
 
-/**
- * Calculate if the organization has a paid subscription
- */
-export const calculateSubscriptionStatus = (organization: Organization, subscriptionPlan: SubscriptionPlan | null) => {
-  // Check if the organization has a paid subscription
-  return organization.subscription_status === 'active' || organization.subscription_status === 'paid';
-};
+export function calculateSubscriptionStatus(
+  organization: Organization | null,
+  subscriptionPlan: SubscriptionPlan | null
+): boolean {
+  return !!subscriptionPlan && 
+         subscriptionPlan.name !== 'Basic' && 
+         !!organization?.subscription_plan_id &&
+         organization.subscription_status === 'active';
+}
 
-/**
- * Calculate percentage progress between two dates
- */
-export const calculateProgressPercentage = (startDateStr: string, endDateStr: string) => {
-  const startDate = new Date(startDateStr);
-  const endDate = new Date(endDateStr);
-  const today = new Date();
-  
-  // Get total duration in milliseconds
-  const totalDuration = endDate.getTime() - startDate.getTime();
-  
-  // Get elapsed duration in milliseconds
-  const elapsedDuration = today.getTime() - startDate.getTime();
-  
-  // Calculate percentage (ensure between 0 and 100)
-  const percentage = Math.min(100, Math.max(0, Math.floor((elapsedDuration / totalDuration) * 100)));
-  
-  return percentage;
-};
+export function calculateUserRoles(userProfile: UserProfile | null): {
+  isSuperAdmin: boolean;
+  isAdmin: boolean;
+  isEmployee: boolean;
+} {
+  const isSuperAdmin = userProfile?.role === 'super_admin';
+  const isAdmin = userProfile?.role === 'admin' || isSuperAdmin;
+  const isEmployee = !!userProfile?.role;
+
+  return { isSuperAdmin, isAdmin, isEmployee };
+}

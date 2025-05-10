@@ -1,36 +1,32 @@
 
 import { useEffect } from "react";
-import { OrganizationData } from "@/types/organization";
 import { supabase } from "@/integrations/supabase/client";
+import { OrganizationData } from "@/types/organization";
 
-// This is a simplified version for monitoring organization subscription changes
 export function useOrganizationSubscription(
   organizationData: OrganizationData,
-  refreshFn: () => Promise<void>
+  refreshData: () => Promise<void>
 ) {
   useEffect(() => {
-    if (!organizationData.organization?.id || organizationData.isLoading) {
-      return;
-    }
-    
-    console.log("Setting up organization subscription listener");
-    
-    // Set up a channel to listen for organization table changes
+    // Set up listener for subscription changes
     const channel = supabase
-      .channel(`organization-${organizationData.organization.id}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'organizations',
-        filter: `id=eq.${organizationData.organization.id}`
-      }, () => {
-        console.log("Organization updated, refreshing data");
-        refreshFn();
-      })
+      .channel('org-changes')
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'organizations',
+          filter: organizationData.userProfile?.organization_id ? 
+            `id=eq.${organizationData.userProfile.organization_id}` : undefined
+        }, 
+        () => {
+          refreshData();
+        }
+      )
       .subscribe();
-    
+      
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [organizationData.organization?.id, organizationData.isLoading, refreshFn]);
+  }, [organizationData.userProfile?.organization_id, refreshData]);
 }

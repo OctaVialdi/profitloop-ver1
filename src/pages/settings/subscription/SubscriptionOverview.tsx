@@ -1,152 +1,301 @@
 
+import { useState, useEffect } from 'react';
+import { 
+  Card, CardHeader, CardTitle, CardContent 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { 
+  CreditCard, AlertTriangle, Loader2, Calendar
+} from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
-import { calculateProgressPercentage } from "@/utils/organizationUtils";
-import { Calendar, Check, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useTrialStatus } from "@/hooks/useTrialStatus";
+import { stripeService } from "@/services/stripeService";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Check } from "lucide-react";
 
-export function SubscriptionOverview() {
-  const { organization, isTrialActive, daysLeftInTrial, hasPaidSubscription, subscriptionPlan } = useOrganization();
+export const SubscriptionOverview = () => {
+  const navigate = useNavigate();
+  const { organization, refreshData } = useOrganization();
+  const { isTrialActive, daysLeftInTrial, progress, isTrialExpired } = 
+    useTrialStatus(organization?.id || null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  
+  // Enhanced effect for payment status handling
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    const sessionId = searchParams.get('session_id');
+    
+    const handlePaymentStatus = async () => {
+      if (success === 'true' && sessionId) {
+        // Verify payment status with the backend
+        const paymentStatus = await stripeService.verifyPaymentStatus(sessionId);
+        
+        if (paymentStatus.success) {
+          toast.success('Pembayaran berhasil! Langganan Anda telah diaktifkan.');
+        } else {
+          toast.warning('Pembayaran sedang diproses. Status akan diperbarui segera.');
+        }
+        
+        // Refresh organization data
+        await refreshData();
+        
+        // Track payment status
+        subscriptionAnalyticsService.trackEvent({
+          eventType: 'payment_status',
+          organizationId: organization?.id,
+          additionalData: { 
+            status: paymentStatus.success ? 'success' : 'processing',
+            source: 'stripe_redirect',
+            sessionId
+          }
+        });
+      } else if (canceled === 'true') {
+        toast.error('Pembayaran dibatalkan. Silakan coba lagi jika Anda ingin berlangganan.');
+        
+        // Track canceled payment
+        subscriptionAnalyticsService.trackEvent({
+          eventType: 'payment_status',
+          organizationId: organization?.id,
+          additionalData: { 
+            status: 'canceled',
+            source: 'stripe_redirect'
+          }
+        });
+      }
+    };
+    
+    if (success === 'true' || canceled === 'true') {
+      handlePaymentStatus();
+    }
+  }, [searchParams, organization?.id, refreshData]);
 
-  // Calculate trial progress percentage
-  const trialProgressPercentage = organization ? 
-    calculateProgressPercentage(organization.trial_start_date, organization.trial_end_date) : 0;
+  const handleManageSubscription = async () => {
+    try {
+      setIsSubmitting(true);
+      const portalUrl = await stripeService.createPortalSession();
+      
+      if (portalUrl) {
+        // Track portal access
+        subscriptionAnalyticsService.trackEvent({
+          eventType: 'customer_portal_access',
+          organizationId: organization?.id
+        });
+        
+        // Redirect to Stripe Customer Portal
+        window.location.href = portalUrl;
+      } else {
+        throw new Error("Failed to create customer portal session");
+      }
+    } catch (error) {
+      console.error("Error accessing customer portal:", error);
+      toast.error("Gagal mengakses portal pelanggan");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Define plans for reference
+  const plans = [
+    { id: "basic_plan", name: "Basic" },
+    { id: "standard_plan", name: "Standard" },
+    { id: "premium_plan", name: "Premium" },
+  ];
 
   return (
-    <div className="space-y-8">
-      {/* Subscription Status */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">Current Plan</p>
-          <h3 className="text-xl font-bold">
-            {subscriptionPlan?.name || "Basic Plan"}
-            {isTrialActive && 
-              <span className="ml-2 text-sm font-normal text-primary-foreground rounded-full bg-primary px-2 py-0.5">
+    <>
+      <Card className="mb-8">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-blue-600" />
+              Status Langganan
+            </CardTitle>
+            
+            {organization?.subscription_status === 'active' && (
+              <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                Aktif
+              </Badge>
+            )}
+            
+            {isTrialActive && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700">
                 Trial
-              </span>
-            }
-          </h3>
-        </div>
-
-        <Button asChild variant="outline">
-          <Link to="/settings/subscription/management">
-            Manage Subscription
-          </Link>
-        </Button>
-      </div>
-
-      {/* Trial Status (only if on trial) */}
-      {isTrialActive && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-primary mt-0.5" />
+              </Badge>
+            )}
+            
+            {isTrialExpired && (
+              <Badge variant="outline" className="bg-amber-50 text-amber-700">
+                Trial Berakhir
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        
+        <CardContent className="pb-2">
+          {isTrialActive && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h4 className="font-medium">Your free trial is active</h4>
-                  <p className="text-sm text-muted-foreground">
-                    You have {daysLeftInTrial} {daysLeftInTrial === 1 ? 'day' : 'days'} left in your trial
+                  <h3 className="text-lg font-semibold">
+                    Mode Trial {organization?.subscription_plan_id ? `(${plans.find(p => p.id === organization.subscription_plan_id)?.name || 'Basic'})` : ''}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Trial Anda berakhir dalam {daysLeftInTrial} hari
+                  </p>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => navigate('/settings/subscription/request-extension')}
+                  >
+                    Minta Perpanjangan
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-gray-600">
+                  <span>0 hari</span>
+                  <span>14 hari</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
+            </div>
+          )}
+          
+          {organization?.subscription_status === 'active' && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {plans.find(p => p.id === organization.subscription_plan_id)?.name || 'Paket Tidak Diketahui'}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Aktif | Diperpanjang otomatis setiap bulan
+                </p>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleManageSubscription}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    Memproses...
+                  </>
+                ) : 'Kelola Metode Pembayaran'}
+              </Button>
+            </div>
+          )}
+          
+          {isTrialExpired && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="text-lg font-semibold">
+                    Trial Anda Telah Berakhir
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Pilih paket di bawah untuk melanjutkan menggunakan layanan
                   </p>
                 </div>
               </div>
               
-              <Button asChild size="sm">
-                <Link to="/settings/subscription/plans">
-                  Upgrade Now
-                </Link>
-              </Button>
-            </div>
-            
-            {/* Trial progress bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Trial Progress</span>
-                <span className="font-medium">{trialProgressPercentage}%</span>
-              </div>
-              <Progress value={trialProgressPercentage} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Plan Features */}
-      <div>
-        <h4 className="font-medium mb-4">Plan Features</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="flex items-start gap-2 p-3 border rounded-lg">
-            <Check className="h-5 w-5 text-primary mt-0.5" />
-            <div>
-              <p className="font-medium">Storage</p>
-              <p className="text-sm text-muted-foreground">{subscriptionPlan?.features.storage || "5 GB"}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 p-3 border rounded-lg">
-            <Check className="h-5 w-5 text-primary mt-0.5" />
-            <div>
-              <p className="font-medium">Team Members</p>
-              <p className="text-sm text-muted-foreground">{subscriptionPlan?.features.members || "Up to 5 members"}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 p-3 border rounded-lg">
-            <Check className="h-5 w-5 text-primary mt-0.5" />
-            <div>
-              <p className="font-medium">Support</p>
-              <p className="text-sm text-muted-foreground">{subscriptionPlan?.features.support || "Email support"}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 p-3 border rounded-lg">
-            <Check className="h-5 w-5 text-primary mt-0.5" />
-            <div>
-              <p className="font-medium">Advanced Analytics</p>
-              <p className="text-sm text-muted-foreground">
-                {subscriptionPlan?.features.advanced_analytics ? "Included" : "Not included"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Billing Information */}
-      <div>
-        <h4 className="font-medium mb-4">Billing Information</h4>
-        
-        <div className="p-4 border rounded-lg">
-          {hasPaidSubscription ? (
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Next billing date</span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-                </span>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Amount</span>
-                <span className="font-medium">
-                  Rp {subscriptionPlan?.price.toLocaleString() || "99,000"} / month
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-4">
-              <p className="text-center text-muted-foreground mb-3">
-                {isTrialActive 
-                  ? "You're currently on a free trial. No billing information available." 
-                  : "No active subscription. Select a plan to continue using premium features."}
-              </p>
-              <Button asChild variant="outline">
-                <Link to="/settings/subscription/plans">
-                  View Plans
-                </Link>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => navigate('/settings/subscription/request-extension')}
+              >
+                Minta Perpanjangan
               </Button>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+      
+      {/* Payment status alert */}
+      {location.search.includes('success=true') && (
+        <Alert className="mb-8 bg-green-50 border-green-200">
+          <Check className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800">Pembayaran Berhasil</AlertTitle>
+          <AlertDescription className="text-green-700">
+            Terima kasih! Langganan Anda telah berhasil diaktifkan. Anda sekarang memiliki akses ke semua fitur premium.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {location.search.includes('canceled=true') && (
+        <Alert className="mb-8 bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">Pembayaran Dibatalkan</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            Proses pembayaran telah dibatalkan. Anda dapat mencoba kembali kapan saja dengan memilih paket yang diinginkan.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Trial information */}
+      {!isTrialExpired && !isTrialActive && !organization?.subscription_plan_id && (
+        <Alert className="mb-8 bg-blue-50 border-blue-200">
+          <Calendar className="h-4 w-4 text-blue-700" />
+          <AlertTitle className="text-blue-700">Trial 14 Hari Gratis</AlertTitle>
+          <AlertDescription className="text-blue-700">
+            Mulai trial 14 hari gratis dan akses semua fitur premium. Tidak ada kartu kredit yang diperlukan.
+          </AlertDescription>
+          <div className="mt-2">
+            <Button 
+              className="bg-blue-700 hover:bg-blue-800" 
+              onClick={async () => {
+                try {
+                  if (!organization?.id) return;
+                  
+                  // Track trial start
+                  subscriptionAnalyticsService.trackTrialStarted(organization.id);
+                  
+                  // Set trial start date to now and end date to 14 days later
+                  const trialStartDate = new Date();
+                  const trialEndDate = new Date();
+                  trialEndDate.setDate(trialEndDate.getDate() + 14);
+                  
+                  const { error } = await supabase
+                    .from('organizations')
+                    .update({
+                      trial_start_date: trialStartDate.toISOString(),
+                      trial_end_date: trialEndDate.toISOString(),
+                      trial_expired: false,
+                      subscription_status: 'trial'
+                    })
+                    .eq('id', organization.id);
+                    
+                  if (error) throw error;
+                  
+                  toast.success("Trial 14 hari berhasil dimulai!");
+                  refreshData();
+                } catch (error) {
+                  console.error("Error starting trial:", error);
+                  toast.error("Gagal memulai trial");
+                }
+              }}
+            >
+              Mulai Trial Sekarang
+            </Button>
+          </div>
+        </Alert>
+      )}
+    </>
   );
-}
+};

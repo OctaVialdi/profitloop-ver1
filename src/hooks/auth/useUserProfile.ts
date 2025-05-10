@@ -1,38 +1,24 @@
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 export function useUserProfile() {
-  const [isLoading, setIsLoading] = useState(false);
-  
+  // Check if user has organization
   const getUserOrganization = async (userId: string) => {
-    if (!userId) return null;
-    
-    setIsLoading(true);
     try {
-      // Fetch user profile with organization data
-      const { data, error } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
-        .select('organization_id, role')
+        .select('organization_id')
         .eq('id', userId)
-        .single();
-        
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
-      }
+        .maybeSingle();
       
-      return data;
-    } catch (error) {
-      console.error('Error in getUserOrganization:', error);
+      return profileData?.organization_id || null;
+    } catch (err) {
+      console.error("Error fetching profile:", err);
       return null;
-    } finally {
-      setIsLoading(false);
     }
   };
   
   return {
-    getUserOrganization,
-    isLoading
+    getUserOrganization
   };
 }

@@ -1,109 +1,101 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
 
-export function useJobPreviewData(linkToken: string) {
-  const [isLoading, setIsLoading] = useState(true);
+interface JobPreviewData {
+  position: {
+    title: string;
+    description: string | null;
+    requirements: string | null;
+    location: string | null;
+  };
+  organization: {
+    name: string;
+    logo_url: string | null;
+  };
+  token: string;
+}
+
+export const useJobPreviewData = (token: string | undefined) => {
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [jobData, setJobData] = useState<any | null>(null);
-  const [organizationData, setOrganizationData] = useState<any | null>(null);
-  const [linkData, setLinkData] = useState<any | null>(null);
-  
+  const [jobData, setJobData] = useState<JobPreviewData | null>(null);
+
   useEffect(() => {
-    if (!linkToken) {
-      setError("No link token provided");
-      setIsLoading(false);
-      return;
-    }
-
     const fetchJobData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+      if (!token) {
+        setError("Invalid link");
+        setLoading(false);
+        return;
+      }
 
-        // First get the link details
+      try {
+        // First, get the recruitment link data
         const { data: linkData, error: linkError } = await supabase
           .from("recruitment_links")
-          .select("*, job_position_id, organization_id")
-          .eq("token", linkToken)
+          .select(`
+            id,
+            token,
+            job_position_id,
+            organization_id,
+            clicks
+          `)
+          .eq("token", token)
+          .eq("status", "active")
           .single();
 
-        if (linkError) {
-          throw new Error("Invalid or expired link");
+        if (linkError || !linkData) {
+          throw new Error("Invalid or expired invitation link");
         }
 
-        if (linkData.status !== "active") {
-          throw new Error("This invitation link is no longer active");
-        }
-
-        if (linkData.expires_at && new Date(linkData.expires_at) < new Date()) {
-          throw new Error("This invitation link has expired");
-        }
-
-        setLinkData(linkData);
-
-        // Fetch the job position
-        if (linkData.job_position_id) {
-          const { data: jobData, error: jobError } = await supabase
-            .from("job_positions")
-            .select("*")
-            .eq("id", linkData.job_position_id)
-            .single();
-
-          if (jobError) {
-            throw new Error("Error fetching job position data");
-          }
-
-          setJobData(jobData);
-        }
-
-        // Fetch the organization
-        if (linkData.organization_id) {
-          const { data: orgData, error: orgError } = await supabase
-            .from("organizations")
-            .select("*")
-            .eq("id", linkData.organization_id)
-            .single();
-
-          if (orgError) {
-            throw new Error("Error fetching organization data");
-          }
-
-          // Handle potentially missing name and logo_path properties
-          setOrganizationData({
-            ...orgData,
-            name: orgData?.name || "Organization", 
-            logo_path: orgData?.logo_path || null
-          });
-        }
-
-        // Update clicks count
-        const { error: updateError } = await supabase
+        // Record the click on the link
+        await supabase
           .from("recruitment_links")
-          .update({ clicks: (linkData.clicks || 0) + 1 })
+          .update({ clicks: linkData.clicks ? linkData.clicks + 1 : 1 })
           .eq("id", linkData.id);
 
-        if (updateError) {
-          console.error("Failed to update click count:", updateError);
+        // Get position details
+        const { data: positionData, error: positionError } = await supabase
+          .from("job_positions")
+          .select("title, description, requirements, location")
+          .eq("id", linkData.job_position_id)
+          .single();
+
+        if (positionError || !positionData) {
+          throw new Error("Position not found");
         }
+
+        // Get organization details
+        const { data: orgData, error: orgError } = await supabase
+          .from("organizations")
+          .select("name, logo_path")
+          .eq("id", linkData.organization_id)
+          .single();
+
+        // Create organization data with the correct structure
+        // Using logo_path from the database as logo_url in our interface
+        const organizationData = {
+          name: orgError || !orgData ? "Organization" : orgData.name,
+          logo_url: orgError || !orgData ? null : orgData.logo_path
+        };
+
+        // Set job data with complete, valid structure
+        setJobData({
+          position: positionData,
+          organization: organizationData,
+          token: token
+        });
       } catch (err: any) {
         console.error("Error fetching job data:", err);
-        setError(err.message || "Failed to load job data");
-        toast.error(err.message || "Failed to load job data");
+        setError(err.message || "An error occurred while loading the job details");
+        // Do NOT set jobData here as we don't have complete data
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     fetchJobData();
-  }, [linkToken]);
+  }, [token]);
 
-  return {
-    isLoading,
-    error,
-    jobData,
-    organizationData,
-    linkData,
-  };
-}
+  return { loading, error, jobData };
+};

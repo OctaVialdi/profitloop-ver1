@@ -1,59 +1,70 @@
 
-import { useEffect, useState } from "react";
-import { Organization } from "@/types/organization";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-export const useTrialStatus = (organization: Organization | null) => {
-  const [daysLeftInTrial, setDaysLeftInTrial] = useState<number | null>(null);
-  const [isTrialActive, setIsTrialActive] = useState(false);
-  const [isTrialExpired, setIsTrialExpired] = useState(false);
-  const [hasPaidSubscription, setHasPaidSubscription] = useState(false);
-  const [progress, setProgress] = useState<number>(0);
+interface TrialStatus {
+  isTrialActive: boolean;
+  daysLeftInTrial: number;
+  progress: number;
+  isTrialExpired: boolean;
+}
+
+export function useTrialStatus(organizationId: string | null): TrialStatus {
+  const [status, setStatus] = useState<TrialStatus>({
+    isTrialActive: false,
+    daysLeftInTrial: 0,
+    progress: 0,
+    isTrialExpired: false
+  });
 
   useEffect(() => {
-    if (!organization) return;
+    if (!organizationId) return;
 
-    // Check if the organization has a paid subscription
-    const hasSubscription = organization.subscription_status === 'active' && 
-                           organization.subscription_plan_id !== null;
-    setHasPaidSubscription(hasSubscription);
+    const fetchTrialStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('organizations')
+          .select('trial_end_date, trial_expired, subscription_status')
+          .eq('id', organizationId)
+          .single();
 
-    // Calculate trial days left if trial_end_date is available
-    if (organization.trial_end_date) {
-      const now = new Date();
-      const trialEnd = new Date(organization.trial_end_date);
-      
-      if (trialEnd > now && !organization.trial_expired) {
-        const diffTime = trialEnd.getTime() - now.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (error || !data) {
+          console.error("Error fetching trial status:", error);
+          return;
+        }
+
+        // Check if trial is active
+        const trialActive = data.subscription_status === 'trial' && !data.trial_expired;
         
-        setDaysLeftInTrial(diffDays);
-        setIsTrialActive(true);
-        setIsTrialExpired(false);
+        // Calculate days left in trial
+        let daysLeft = 0;
+        let progress = 0;
         
-        // Calculate trial progress
-        const trialStart = new Date(organization.trial_start_date || now);
-        const totalTrialDays = Math.ceil((trialEnd.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
-        const daysUsed = totalTrialDays - diffDays;
-        const progressPercent = (daysUsed / totalTrialDays) * 100;
-        setProgress(Math.min(progressPercent, 100));
-      } else {
-        setDaysLeftInTrial(0);
-        setIsTrialActive(false);
-        setIsTrialExpired(true);
-        setProgress(100);
+        if (data.trial_end_date) {
+          const trialEnd = new Date(data.trial_end_date);
+          const now = new Date();
+          const diffTime = trialEnd.getTime() - now.getTime();
+          daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          // Calculate progress (assuming 14-day trial)
+          const totalDays = 14;
+          const daysUsed = totalDays - daysLeft;
+          progress = Math.min(100, Math.max(0, (daysUsed / totalDays) * 100));
+        }
+
+        setStatus({
+          isTrialActive: trialActive,
+          daysLeftInTrial: Math.max(0, daysLeft),
+          progress: 100 - progress, // Invert to show days left
+          isTrialExpired: !!data.trial_expired
+        });
+      } catch (err) {
+        console.error("Error in useTrialStatus:", err);
       }
-    } else {
-      setIsTrialActive(false);
-      setDaysLeftInTrial(null);
-      setProgress(0);
-    }
-  }, [organization]);
+    };
 
-  return {
-    daysLeftInTrial,
-    isTrialActive,
-    isTrialExpired,
-    hasPaidSubscription,
-    progress
-  };
-};
+    fetchTrialStatus();
+  }, [organizationId]);
+
+  return status;
+}

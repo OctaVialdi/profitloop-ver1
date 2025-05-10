@@ -1,55 +1,72 @@
 
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { formatRupiah } from "@/utils/formatUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Loader2, ExternalLink } from "lucide-react";
+import { midtransService } from "@/services/midtransService";
+import { toast } from "sonner";
 
 interface MidtransPaymentModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  paymentUrl: string;
+  isOpen: boolean;
+  onClose: () => void;
+  redirectUrl: string;
   planName: string;
-  planPrice: number;
-  onContinue: () => void;
-  loading?: boolean;
 }
 
-export function MidtransPaymentModal({
-  open,
-  onOpenChange,
-  paymentUrl,
-  planName,
-  planPrice,
-  onContinue,
-  loading = false
+export function MidtransPaymentModal({ 
+  isOpen, 
+  onClose, 
+  redirectUrl,
+  planName
 }: MidtransPaymentModalProps) {
+  useEffect(() => {
+    if (isOpen && redirectUrl) {
+      // We'll automatically redirect after a short delay
+      const timer = setTimeout(() => {
+        handleRedirect();
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, redirectUrl]);
+
+  const handleRedirect = () => {
+    if (!redirectUrl) {
+      toast.error("URL pembayaran tidak tersedia");
+      onClose();
+      return;
+    }
+    
+    // Redirect to Midtrans payment page
+    midtransService.redirectToPayment(redirectUrl);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Konfirmasi Pembayaran</DialogTitle>
+          <DialogTitle>Pembayaran {planName}</DialogTitle>
           <DialogDescription>
-            Anda akan berlangganan paket {planName} dengan harga {formatRupiah(planPrice)}
+            Mengalihkan ke halaman pembayaran Midtrans...
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="py-4">
-          <p className="text-sm text-muted-foreground">
-            Anda akan diarahkan ke halaman pembayaran Midtrans untuk menyelesaikan transaksi.
-            Pembayaran dapat dilakukan melalui berbagai metode seperti transfer bank, e-wallet, dan kartu kredit.
-          </p>
+
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="flex flex-col items-center space-y-2">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <p className="text-sm text-gray-500">Mengalihkan ke halaman pembayaran</p>
+            <p className="text-xs text-gray-400">Mohon tunggu sebentar</p>
+          </div>
+          
+          <Button onClick={handleRedirect} className="mt-6">
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Buka Halaman Pembayaran Sekarang
+          </Button>
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
-          <Button onClick={onContinue} disabled={loading}>
-            {loading ? 'Memproses...' : 'Lanjutkan ke Pembayaran'}
+          <Button variant="outline" onClick={onClose}>
+            Batalkan
           </Button>
         </DialogFooter>
       </DialogContent>

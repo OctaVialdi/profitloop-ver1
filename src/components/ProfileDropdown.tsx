@@ -1,105 +1,146 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { useAuth } from "@/hooks/auth/useAuth";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
+import { supabase, robustSignOut } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
-import { Loader2 } from "lucide-react";
-import { robustSignOut } from "@/utils/authUtils";
+import { UserCircle, Settings, LogOut, ChevronDown } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-export default function ProfileDropdown() {
-  const { user, signOut } = useAuth();
-  const { userProfile } = useOrganization();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const [initials, setInitials] = useState("...");
+export const ProfileDropdown = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (userProfile?.full_name) {
-      const nameParts = userProfile.full_name.split(' ');
-      if (nameParts.length > 0) {
-        let initials = nameParts[0][0] || '';
-        if (nameParts.length > 1) {
-          initials += nameParts[nameParts.length - 1][0] || '';
-        }
-        setInitials(initials.toUpperCase());
-      }
-    } else if (user?.email) {
-      setInitials(user.email.substring(0, 2).toUpperCase());
-    }
-  }, [user, userProfile]);
-
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
+  const { userProfile, isSuperAdmin, isAdmin } = useOrganization();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  const handleLogout = async () => {
     try {
-      // Use robustSignOut to clean up auth state
-      await robustSignOut();
+      setIsLoggingOut(true);
       
-      // Also call the signOut method from useAuth
-      await signOut();
+      // Use the robust sign out utility
+      const success = await robustSignOut();
       
-      // Navigate to login page
-      navigate('/auth/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    } finally {
-      setIsSigningOut(false);
+      if (success) {
+        toast.success("Berhasil logout");
+        // Force full page refresh to ensure clean state
+        window.location.href = "/auth/login";
+      } else {
+        throw new Error("Gagal logout");
+      }
+    } catch (error: any) {
+      console.error("Error signing out:", error);
+      toast.error(error.message || "Gagal logout");
+      setIsLoggingOut(false);
     }
   };
 
+  // Get the user's role label
+  const getRoleLabel = () => {
+    if (isSuperAdmin) return "Super Admin";
+    if (isAdmin) return "Admin";
+    return "Employee";
+  };
+
+  // Get initials for avatar fallback
+  const getInitials = () => {
+    if (!userProfile?.full_name) return "U";
+    return userProfile.full_name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <button
+          className="flex items-center gap-2 rounded-md p-1.5 hover:bg-gray-100 transition-colors focus:outline-none"
+          aria-label="User profile"
+        >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={userProfile?.profile_image || ""} alt="Profile" />
-            <AvatarFallback>{initials}</AvatarFallback>
+            <AvatarImage 
+              src="" 
+              alt={userProfile?.full_name || "User"} 
+            />
+            <AvatarFallback className="bg-blue-100 text-blue-600">
+              {getInitials()}
+            </AvatarFallback>
           </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{userProfile?.full_name || user?.email}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {userProfile?.email || user?.email}
-            </p>
+          <div className="hidden md:flex flex-col text-left">
+            <span className="text-sm font-medium truncate max-w-[150px]">
+              {userProfile?.full_name || userProfile?.email || "User"}
+            </span>
+            <span className="text-xs text-gray-500 truncate max-w-[150px]">
+              {getRoleLabel()}
+            </span>
           </div>
-        </DropdownMenuLabel>
+          <ChevronDown className="h-4 w-4 text-gray-500" />
+        </button>
+      </DropdownMenuTrigger>
+      
+      <DropdownMenuContent 
+        align="end" 
+        className="w-[240px] p-2 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200"
+      >
+        {/* User Info Section */}
+        <div className="px-2 py-1.5 mb-2">
+          <div className="font-medium truncate">
+            {userProfile?.full_name || "User"}
+          </div>
+          <div className="text-xs text-gray-500 truncate">
+            {userProfile?.email || ""}
+          </div>
+          <div className="text-xs text-blue-600 mt-1 font-medium">
+            {getRoleLabel()}
+          </div>
+        </div>
+        
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/settings/organization')}>
-            Organization
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/settings/subscription')}>
-            Subscription
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
+        
+        {/* Menu Items */}
+        <DropdownMenuItem asChild className="cursor-pointer flex items-center gap-2 py-2">
+          <Link to="/settings/profile">
+            <UserCircle className="h-4 w-4 mr-2" />
+            Profil User
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem asChild className="cursor-pointer flex items-center gap-2 py-2">
+          <Link to="/settings/account">
+            <Settings className="h-4 w-4 mr-2" />
+            Pengaturan
+          </Link>
+        </DropdownMenuItem>
+        
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled={isSigningOut} onClick={handleSignOut}>
-          {isSigningOut ? (
+        
+        <DropdownMenuItem 
+          className="cursor-pointer flex items-center gap-2 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 focus:bg-red-50"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing out...
+              <span className="h-4 w-4 mr-2 animate-spin">○</span>
+              Logging out...
             </>
           ) : (
-            "Log out"
+            <>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </>
           )}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};

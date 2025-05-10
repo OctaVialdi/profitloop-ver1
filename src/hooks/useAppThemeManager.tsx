@@ -1,208 +1,131 @@
 
 import { useState, useEffect } from "react";
-import { useOrganization } from "./useOrganization";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { useTheme, saveThemeToStorage } from "@/components/theme-provider";
-import { Json } from "@/integrations/supabase/types";
+import { useOrganization } from "./useOrganization";
+import { toast } from "@/components/ui/sonner";
 
-export function useAppThemeManager() {
-  const { organization, userProfile } = useOrganization();
-  const { toast } = useToast();
+export type ThemeSettings = {
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  sidebar_color: string;
+};
+
+const defaultTheme: ThemeSettings = {
+  primary_color: "#1E40AF",
+  secondary_color: "#3B82F6",
+  accent_color: "#60A5FA",
+  sidebar_color: "#F1F5F9"
+};
+
+export const useAppThemeManager = () => {
+  const { organization, isAdmin, refreshData } = useOrganization();
+  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultTheme);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [themeSettings, setThemeSettings] = useState<Record<string, any>>({
-    primary_color: "#0369a1",
-    secondary_color: "#6366f1",
-    accent_color: "#ec4899",
-    sidebar_color: "#1e293b"
-  });
 
-  // Initialize theme settings from organization data
+  // Get theme settings from organization
   useEffect(() => {
-    if (organization?.theme_settings) {
-      try {
-        // Handle both string and object theme settings
-        const settings = typeof organization.theme_settings === 'string'
-          ? JSON.parse(organization.theme_settings as string)
-          : organization.theme_settings;
-
-        // Use default values if settings don't exist
-        setThemeSettings({
-          primary_color: settings.primary_color || "#0369a1",
-          secondary_color: settings.secondary_color || "#6366f1",
-          accent_color: settings.accent_color || "#ec4899",
-          sidebar_color: settings.sidebar_color || "#1e293b"
-        });
-      } catch (error) {
-        console.error("Failed to parse theme settings:", error);
+    if (organization) {
+      const savedTheme = organization.theme_settings as ThemeSettings;
+      setThemeSettings(savedTheme || defaultTheme);
+      
+      if (organization.logo_path) {
+        fetchLogoUrl(organization.logo_path);
       }
-    }
-    
-    // Set logo preview from organization data
-    if (organization?.logo_path) {
-      setLogoPreview(organization.logo_path);
     }
   }, [organization]);
 
-  // Handle file input change for logo
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setLogoFile(file);
-      
-      // Create a preview URL
-      const fileReader = new FileReader();
-      fileReader.onload = (e) => {
-        if (e.target?.result) {
-          setLogoPreview(e.target.result as string);
-        }
-      };
-      fileReader.readAsDataURL(file);
-    }
-  };
-
-  // Handle color changes in the theme
-  const handleColorChange = (colorKey: string, value: string) => {
-    setThemeSettings((prev) => ({
-      ...prev,
-      [colorKey]: value
-    }));
-  };
-
-  // Save theme settings to database
-  const saveThemeSettings = async () => {
-    if (!organization?.id || !userProfile?.id) {
-      toast({
-        title: "Error",
-        description: "Organization or user profile not found",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSaving(true);
+  // Fetch logo URL from storage
+  const fetchLogoUrl = async (path: string) => {
     try {
-      // First, save the theme settings
-      const { error: themeError } = await supabase
+      const { data } = await supabase.storage
+        .from('org_logos')
+        .getPublicUrl(path);
+      
+      if (data?.publicUrl) {
+        setLogoUrl(data.publicUrl);
+      }
+    } catch (error) {
+      console.error("Error fetching logo URL:", error);
+    }
+  };
+
+  // Function to update theme settings
+  const saveThemeSettings = async (newSettings: ThemeSettings) => {
+    if (!organization || !isAdmin) return;
+    
+    setIsSaving(true);
+    
+    try {
+      const { error } = await supabase
         .from('organizations')
-        .update({
-          theme_settings: themeSettings as Json
-        })
+        .update({ theme_settings: newSettings })
         .eq('id', organization.id);
-
-      if (themeError) {
-        throw new Error(`Failed to save theme settings: ${themeError.message}`);
-      }
-
-      // Then, if there's a logo file, upload it to storage
-      let logoPath = organization.logo_path;
-      if (logoFile) {
-        const filename = `${organization.id}/logo-${Date.now()}.${logoFile.name.split('.').pop()}`;
-        const { error: uploadError } = await supabase.storage
-          .from('organization-assets')
-          .upload(filename, logoFile);
-
-        if (uploadError) {
-          throw new Error(`Failed to upload logo: ${uploadError.message}`);
-        }
-
-        // Get the public URL
-        const { data: publicUrlData } = supabase.storage
-          .from('organization-assets')
-          .getPublicUrl(filename);
-        
-        logoPath = publicUrlData.publicUrl;
-        
-        // Update the organization with the new logo path
-        const { error: logoUpdateError } = await supabase
-          .from('organizations')
-          .update({ logo_path: logoPath })
-          .eq('id', organization.id);
-
-        if (logoUpdateError) {
-          throw new Error(`Failed to update logo path: ${logoUpdateError.message}`);
-        }
-      }
-
-      // Save theme to local storage for immediate use
-      saveThemeToStorage(themeSettings, logoPath);
-
-      toast({
-        title: "Success",
-        description: "Theme settings saved successfully",
-      });
-
+      
+      if (error) throw error;
+      
+      setThemeSettings(newSettings);
+      await refreshData();
+      toast.success("Pengaturan tema berhasil disimpan");
     } catch (error: any) {
-      console.error('Error saving theme settings:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save theme settings",
-        variant: "destructive"
-      });
+      console.error("Error saving theme settings:", error);
+      toast.error("Gagal menyimpan pengaturan tema");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Update this function to properly handle the logo_path property
-  const findAnAlternativeFor = (objectWithKeys: Record<string, any>, keyToFind: string): boolean => {
-    for (const key of Object.keys(objectWithKeys)) {
-      if (key.toLowerCase().includes(keyToFind.toLowerCase())) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  // In the updateOrgTheme function
-  const updateOrgTheme = async (orgId: string, themeData: Record<string, any>) => {
+  // Function to upload logo
+  const uploadLogo = async (file: File) => {
+    if (!organization || !isAdmin) return;
+    
+    setIsLoading(true);
+    
     try {
-      // Only include the logo_path if it exists in the themeData
-      const updatePayload: Record<string, any> = {
-        theme_settings: themeData
-      };
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${organization.id}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
       
-      if ('logo_path' in themeData) {
-        // In a real implementation you'd need to modify your DB schema
-        // For now we'll just log that this field was attempted to be updated
-        console.log('Updating logo_path is not supported in this version');
-      }
+      // Upload file
+      const { error: uploadError } = await supabase.storage
+        .from('org_logos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
       
-      const { error } = await supabase
+      if (uploadError) throw uploadError;
+      
+      // Update organization record with logo path
+      const { error: updateError } = await supabase
         .from('organizations')
-        .update(updatePayload)
-        .eq('id', orgId);
+        .update({ logo_path: filePath })
+        .eq('id', organization.id);
       
-      if (error) {
-        throw error;
-      }
+      if (updateError) throw updateError;
       
-      toast({
-        title: "Theme updated",
-        description: "Your theme settings have been updated",
-      });
-      
-    } catch (err) {
-      console.error('Error updating theme:', err);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update theme settings",
-      });
+      // Get public URL
+      fetchLogoUrl(filePath);
+      await refreshData();
+      toast.success("Logo berhasil diupload");
+    } catch (error: any) {
+      console.error("Error uploading logo:", error);
+      toast.error("Gagal mengupload logo");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
     themeSettings,
-    logoPreview,
+    logoUrl,
     isLoading,
     isSaving,
-    handleLogoChange,
-    handleColorChange,
     saveThemeSettings,
-    updateOrgTheme
+    uploadLogo,
+    isAdmin
   };
-}
+};
