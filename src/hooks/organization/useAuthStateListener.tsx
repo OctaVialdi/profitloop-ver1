@@ -1,29 +1,31 @@
 
 import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { OrganizationData } from "@/types/organization";
+import { supabase } from "@/integrations/supabase/client";
 
+// This is a simplified version for handling authentication state changes in the organization context
 export function useAuthStateListener(
-  organizationData: OrganizationData,
-  refreshData: () => Promise<void>
+  organizationData: OrganizationData, 
+  refreshFn: () => Promise<void>
 ) {
   useEffect(() => {
-    // Set up listener for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-        // If the user's token was refreshed or user was updated, 
-        // check if organization_id in metadata has changed
-        if (session && 
-            session.user.user_metadata?.organization_id !== 
-            organizationData.organization?.id) {
-          console.log("Organization changed in user metadata, refreshing data");
-          refreshData();
-        }
+    // If there's no organization data loaded yet, no need to set up listener
+    if (organizationData.isLoading) return;
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // On auth state changes that affect user identity, refresh organization data
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        console.log(`Auth state changed: ${event}, refreshing organization data`);
+        
+        // When auth state changes, refresh organization data
+        setTimeout(() => {
+          refreshFn();
+        }, 500); // Small delay to avoid race conditions
       }
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, [organizationData.organization?.id, refreshData]);
+  }, [organizationData.isLoading, refreshFn]);
 }

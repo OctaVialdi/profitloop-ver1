@@ -1761,7 +1761,6 @@ export type Database = {
           created_at: string | null
           creator_email: string | null
           employee_count: number | null
-          grace_period_end: string | null
           id: string
           logo_path: string | null
           name: string
@@ -1771,8 +1770,6 @@ export type Database = {
           theme_settings: Json | null
           trial_end_date: string | null
           trial_expired: boolean | null
-          trial_extension_reason: string | null
-          trial_extension_requested: boolean | null
           trial_start_date: string | null
         }
         Insert: {
@@ -1781,7 +1778,6 @@ export type Database = {
           created_at?: string | null
           creator_email?: string | null
           employee_count?: number | null
-          grace_period_end?: string | null
           id?: string
           logo_path?: string | null
           name: string
@@ -1791,8 +1787,6 @@ export type Database = {
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
-          trial_extension_reason?: string | null
-          trial_extension_requested?: boolean | null
           trial_start_date?: string | null
         }
         Update: {
@@ -1801,7 +1795,6 @@ export type Database = {
           created_at?: string | null
           creator_email?: string | null
           employee_count?: number | null
-          grace_period_end?: string | null
           id?: string
           logo_path?: string | null
           name?: string
@@ -1811,8 +1804,6 @@ export type Database = {
           theme_settings?: Json | null
           trial_end_date?: string | null
           trial_expired?: boolean | null
-          trial_extension_reason?: string | null
-          trial_extension_requested?: boolean | null
           trial_start_date?: string | null
         }
         Relationships: []

@@ -1,11 +1,50 @@
 
-/**
- * Utility functions for authentication state management
- */
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Cleans up all authentication-related data from localStorage and sessionStorage
- * This helps prevent authentication limbo states when session tokens become invalid
+ * Ensures a user profile exists in the database
+ */
+export const ensureProfileExists = async (userId: string, userData: {
+  email: string;
+  full_name?: string | null;
+  email_verified?: boolean;
+}) => {
+  try {
+    // Check if profile exists
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+      
+    if (existingProfile) {
+      // Profile exists, update it if needed
+      await supabase
+        .from('profiles')
+        .update({
+          email: userData.email,
+          full_name: userData.full_name || null,
+          email_verified: userData.email_verified || false
+        })
+        .eq('id', userId);
+    } else {
+      // Profile doesn't exist, create it
+      await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: userData.email,
+          full_name: userData.full_name || null,
+          email_verified: userData.email_verified || false
+        });
+    }
+  } catch (error) {
+    console.error("Error ensuring profile exists:", error);
+  }
+};
+
+/**
+ * Cleans up auth state to prevent auth limbo
  */
 export const cleanupAuthState = () => {
   // Remove standard auth tokens
@@ -24,32 +63,4 @@ export const cleanupAuthState = () => {
       sessionStorage.removeItem(key);
     }
   });
-  
-  console.log("Authentication state cleaned up");
-};
-
-/**
- * Performs a robust sign out operation that ensures all auth state is properly cleared
- */
-export const robustSignOut = async () => {
-  try {
-    // Import supabase client directly to avoid circular dependencies
-    const { supabase } = await import('@/integrations/supabase/client');
-    
-    // Clean up existing auth state first
-    cleanupAuthState();
-    
-    // Attempt global sign out
-    try {
-      await supabase.auth.signOut({ scope: 'global' });
-    } catch (err) {
-      console.error("Global sign out failed, but cleanup was performed:", err);
-      // Continue even if this fails since we've already cleaned up local state
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error during robust sign out:", error);
-    return false;
-  }
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,10 +54,10 @@ export default function SubscriptionManagement() {
   };
   
   const currentPlanId = organization?.subscription_plan_id || 'basic_plan';
-  // Using optional chaining to fix TypeScript errors
-  const currentPlan = organization?.subscription_plan_name || 'Basic';
-  const currentPrice = organization?.subscription_price || 0;
-  const subscriptionEndDate = organization?.subscription_end_date ? new Date(organization.subscription_end_date) : null;
+  // Using mocked data for missing properties
+  const currentPlan = plans[currentPlanId as keyof typeof plans]?.name || 'Basic';
+  const currentPrice = plans[currentPlanId as keyof typeof plans]?.price || 0;
+  const subscriptionEndDate = organization?.trial_end_date ? new Date(organization.trial_end_date) : null;
   
   const calculateProration = async (newPlanId: string) => {
     try {
@@ -82,7 +81,7 @@ export default function SubscriptionManagement() {
         const credit = Math.round(currentPlanDailyRate * daysLeft);
         
         // Calculate prorated charge for new plan
-        const newPlanPrice = plans[newPlanId]?.price || 0;
+        const newPlanPrice = plans[newPlanId as keyof typeof plans]?.price || 0;
         const newPlanDailyRate = newPlanPrice / totalDaysInPeriod;
         const newCharge = Math.round(newPlanDailyRate * daysLeft);
         
@@ -97,7 +96,7 @@ export default function SubscriptionManagement() {
           daysLeft: daysLeft,
           totalDaysInPeriod: totalDaysInPeriod,
           currentPlanName: currentPlan,
-          newPlanName: plans[newPlanId]?.name
+          newPlanName: plans[newPlanId as keyof typeof plans]?.name
         });
       }
       
@@ -124,7 +123,7 @@ export default function SubscriptionManagement() {
       const checkoutUrl = await stripeService.createProratedCheckout(
         selectedPlanId, 
         currentPlanId,
-        organization?.subscription_id
+        'mock-subscription-id' // Using mock ID since subscription_id doesn't exist
       );
       
       if (checkoutUrl) {

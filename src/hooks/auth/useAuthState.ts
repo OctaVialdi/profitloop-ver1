@@ -1,13 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { AuthState } from './types';
+import { cleanupAuthState, ensureProfileExists } from "@/utils/authUtils";
 
 /**
  * Hook to manage authentication state and listen for auth changes
  */
 export function useAuthState(): AuthState {
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -67,7 +69,7 @@ export function useAuthState(): AuthState {
           if (isMounted) {
             setSession(null);
             setUser(null);
-            setIsLoading(false);
+            setLoading(false);
             // Additional cleanup to ensure clean state
             cleanupAuthState();
           }
@@ -77,7 +79,7 @@ export function useAuthState(): AuthState {
         if (isMounted) {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
-          setIsLoading(false);
+          setLoading(false);
           
           // If user is logged in, ensure profile exists but don't block the UI
           if (currentSession?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
@@ -101,7 +103,7 @@ export function useAuthState(): AuthState {
           cleanupAuthState(); // Clean up if there's an error
           if (isMounted) {
             setLoginError(error.message);
-            setIsLoading(false);
+            setLoading(false);
             setAuthInitialized(true);
           }
           return;
@@ -123,13 +125,13 @@ export function useAuthState(): AuthState {
             console.log("No active session found");
           }
           
-          setIsLoading(false);
+          setLoading(false);
           setAuthInitialized(true);
         }
       } catch (err) {
         console.error("Exception in checkExistingSession:", err);
         if (isMounted) {
-          setIsLoading(false);
+          setLoading(false);
           setAuthInitialized(true);
         }
       }
@@ -144,10 +146,8 @@ export function useAuthState(): AuthState {
   }, []);
 
   return {
-    isLoading,
-    loginError,
+    loading,
     session,
-    user,
-    authInitialized
+    user
   };
 }

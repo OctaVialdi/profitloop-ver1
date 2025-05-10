@@ -1,6 +1,5 @@
 
 import { Session, User } from "@supabase/supabase-js";
-import { Json } from "@/types/supabase";
 
 export interface MagicLinkParams {
   email?: string;

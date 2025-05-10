@@ -25,9 +25,15 @@ export interface Organization {
   trial_end_date?: string | null;
   trial_start_date?: string | null;
   trial_expired?: boolean;
-  subscription_status?: 'trial' | 'active' | 'expired';
+  subscription_status?: 'trial' | 'active' | 'expired' | string;
   subscription_plan_id?: string;
   grace_period_end?: string | null;
+  
+  // Additional properties for subscription management
+  subscription_plan_name?: string;
+  subscription_price?: number;
+  subscription_end_date?: string;
+  subscription_id?: string;
 }
 
 export interface SubscriptionPlan {
@@ -39,6 +45,7 @@ export interface SubscriptionPlan {
   features: Record<string, any> | null;
   is_active: boolean;
   created_at?: string;
+  direct_payment_url?: string;
 }
 
 export interface UserPreferences {
