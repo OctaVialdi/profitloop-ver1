@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,7 +136,8 @@ const SubscriptionPlansManagement = () => {
     resetForm();
   };
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Update the input change handler to work with both Input and Textarea elements
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     
     // Handle numeric inputs
