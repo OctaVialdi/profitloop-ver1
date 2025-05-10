@@ -51,7 +51,7 @@ export const useDashboardData = () => {
         month: item.month,
         revenue: item.total_revenue,
         expenses: item.total_expenses,
-        targetRevenue: item.target_revenue || item.total_revenue,
+        targetRevenue: item.target_revenue,
       }));
       
       setMonthlyRevenue(monthlyData);

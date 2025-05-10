@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -132,10 +131,10 @@ export const BSCDashboard = () => {
         }
       ];
       
-      // Insert sample data
+      // Insert sample data with proper typing
       const { error: insertError } = await supabase
         .from('financial_summary')
-        .insert(sampleFinancialData);
+        .insert(sampleFinancialData as any[]);
         
       if (insertError) throw insertError;
       
