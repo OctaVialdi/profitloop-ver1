@@ -19,7 +19,6 @@ import JobPreviewPage from "@/pages/public/JobPreviewPage";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Components from "@/pages/dev/Components";
 import HeaderOnlyLayout from "@/components/layout/HeaderOnlyLayout";
-import SubscriptionSuccess from "@/pages/subscription/SubscriptionSuccess";
 import { Navigate } from "react-router-dom";
 
 export const AppRoutes = () => {
@@ -35,18 +34,6 @@ export const AppRoutes = () => {
       <Route path="/apply/preview/:token" element={<JobPreviewPage />} />
       <Route path="/apply/:token" element={<JobApplicationForm />} />
       <Route path="/apply/success" element={<ApplicationSuccess />} />
-      
-      {/* Subscription Success page with header-only layout */}
-      <Route
-        path="/subscription/success"
-        element={
-          <ProtectedRoute>
-            <HeaderOnlyLayout>
-              <SubscriptionSuccess />
-            </HeaderOnlyLayout>
-          </ProtectedRoute>
-        }
-      />
       
       {/* Dev Routes */}
       <Route path="/dev" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>

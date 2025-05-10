@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useSearchParams, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { SubscriptionOverview } from './subscription/SubscriptionOverview';
 import { SubscriptionPlans } from './subscription/SubscriptionPlans';
 import { SubscriptionHistory } from './subscription/SubscriptionHistory';
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, HelpCircle, FileText, CheckCircle, ArrowUpDown, Loader2, AlertCircle } from "lucide-react";
+import { LayoutDashboard, HelpCircle, ArrowUpDown, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { midtransService } from '@/services/midtransService';
 import { stripeService } from '@/services/stripeService';
 import { toast } from 'sonner';
@@ -173,12 +174,6 @@ const Subscription = () => {
           <Link to="/settings/subscription/dashboard">
             <LayoutDashboard className="h-4 w-4" />
             Dashboard Langganan
-          </Link>
-        </Button>
-        <Button variant="outline" asChild className="flex items-center gap-2">
-          <Link to="/settings/subscription/success">
-            <CheckCircle className="h-4 w-4" />
-            Halaman Sukses
           </Link>
         </Button>
         <Button variant="outline" asChild className="flex items-center gap-2">

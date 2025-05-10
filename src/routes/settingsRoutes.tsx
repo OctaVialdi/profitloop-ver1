@@ -3,7 +3,6 @@ import { Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SettingsLayout from "@/components/layout/SettingsLayout";
-import MemberManagement from "@/pages/dashboard/MemberManagement";
 import Subscription from "@/pages/settings/SubscriptionPage";
 import SubscriptionExtension from "@/pages/settings/subscription/SubscriptionExtension";
 import ProfileSettings from "@/pages/settings/ProfileSettings";
@@ -27,7 +26,6 @@ export const settingsRoutes = (
       </ProtectedRoute>
     }
   >
-    <Route path="members" element={<MemberManagement />} />
     <Route path="subscription" element={<Subscription />} />
     <Route path="subscription/dashboard" element={<SubscriptionDashboard />} />
     <Route path="subscription/request-extension" element={<SubscriptionExtension />} />
