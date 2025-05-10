@@ -8,19 +8,14 @@ import {
   CardDescription
 } from "@/components/ui/card";
 import { useOrganization } from "@/hooks/useOrganization";
-import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
 
 const Dashboard = () => {
   const { organization } = useOrganization();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4 md:p-6">
       <div className="flex flex-col gap-2">
-        <BreadcrumbNav 
-          rootLabel="Home"
-          showHomeIcon={true}
-        />
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold">Home</h1>
         <p className="text-muted-foreground">
           Welcome to {organization?.name || "your organization"}'s dashboard
         </p>
