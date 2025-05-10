@@ -34,36 +34,26 @@ export async function createBucket(bucketName: string, isPublic: boolean = false
     const exists = await checkBucketExists(bucketName);
     
     if (!exists) {
-      try {
-        const { data, error } = await supabase.storage.createBucket(bucketName, {
-          public: isPublic,
-        });
-        
-        if (error) {
-          if (error.message.includes('Permission denied')) {
-            console.log(`Insufficient permissions to create the '${bucketName}' bucket.`);
-            // Assume bucket exists and was created by admin - don't show error to users
-            return { success: true };
-          } else if (error.message.includes('already exists') || error.message.includes('violates row-level security policy')) {
-            console.log(`Bucket '${bucketName}' already exists or is managed by RLS.`);
-            return { success: true }; // Consider it a success if bucket already exists
-          } else {
-            console.error(`Error creating ${bucketName} bucket:`, error);
-            toast.error(`Failed to create ${bucketName} bucket: ${error.message}`);
-            return { success: false, error: error.message };
-          }
+      const { data, error } = await supabase.storage.createBucket(bucketName, {
+        public: isPublic,
+      });
+      
+      if (error) {
+        if (error.message.includes('Permission denied')) {
+          console.log(`Insufficient permissions to create the '${bucketName}' bucket.`);
+          toast.warning(`You don't have permission to create storage buckets. Please contact your administrator to create the '${bucketName}' bucket.`);
+        } else if (error.message.includes('already exists')) {
+          console.log(`Bucket '${bucketName}' already exists.`);
+          return { success: true }; // Consider it a success if bucket already exists
+        } else {
+          console.error(`Error creating ${bucketName} bucket:`, error);
+          toast.error(`Failed to create ${bucketName} bucket: ${error.message}`);
         }
-        
-        console.log(`Successfully created '${bucketName}' bucket.`);
-        return { success: true };
-      } catch (error: any) {
-        // If there's an RLS error, assume bucket exists and continue
-        if (error.message?.includes('violates row-level security policy')) {
-          console.log(`RLS prevents creating bucket, assuming '${bucketName}' bucket exists.`);
-          return { success: true };
-        }
-        throw error;
+        return { success: false, error: error.message };
       }
+      
+      console.log(`Successfully created '${bucketName}' bucket.`);
+      return { success: true };
     }
     
     return { success: true }; // Bucket already exists
@@ -108,8 +98,8 @@ export async function getUploadFileURL(filePath: string, file: File, bucketName:
     const bucketExists = await checkBucketExists(bucketName);
     
     if (!bucketExists) {
-      // Try to handle gracefully - assume bucket exists even if we can't verify
-      console.log(`Storage bucket '${bucketName}' not found, but continuing anyway.`);
+      toast.error(`Storage bucket '${bucketName}' not found. Contact your administrator.`);
+      return null;
     }
     
     // Get the public URL
@@ -139,7 +129,17 @@ export async function uploadFileToBucket(
   file: File
 ): Promise<{ url: string | null; error: Error | null }> {
   try {
-    // We'll assume the bucket exists to avoid RLS issues with checking/creating
+    // Verify bucket exists first
+    const bucketExists = await checkBucketExists(bucketName);
+    
+    if (!bucketExists) {
+      // Just log the issue rather than trying to create the bucket
+      console.log(`Storage bucket '${bucketName}' does not exist.`);
+      return { 
+        url: null, 
+        error: new Error(`Storage bucket '${bucketName}' not found. Contact your administrator.`) 
+      };
+    }
     
     // Upload the file
     const { error: uploadError } = await supabase.storage
