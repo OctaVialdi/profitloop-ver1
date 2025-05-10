@@ -76,7 +76,47 @@ export async function ensureProfileExists(userId: string, userData: { email: str
   try {
     console.log("Ensuring profile exists for:", userId, userData);
     
-    // First, check if a profile already exists
+    // First try the edge function for most reliable profile creation
+    try {
+      const { data, error } = await supabase.functions.invoke('create-profile-if-not-exists', {
+        body: {
+          user_id: userId,
+          user_email: userData.email.toLowerCase(),
+          user_full_name: userData.full_name,
+          is_email_verified: userData.email_verified
+        }
+      });
+      
+      if (!error && data && (data.status === 'created' || data.status === 'exists' || data.status === 'updated')) {
+        console.log("Profile created/updated via edge function:", data);
+        return true;
+      } else if (error) {
+        console.error("Edge function error:", error);
+      }
+    } catch (edgeFuncError) {
+      console.error("Edge function call failed:", edgeFuncError);
+    }
+    
+    // Fallback to database function
+    try {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('create_profile_if_not_exists', {
+        user_id: userId,
+        user_email: userData.email.toLowerCase(),
+        user_full_name: userData.full_name,
+        is_email_verified: userData.email_verified
+      });
+      
+      if (!rpcError && rpcResult === true) {
+        console.log("Profile created via database function");
+        return true;
+      } else if (rpcError) {
+        console.error("Database function error:", rpcError);
+      }
+    } catch (rpcFuncError) {
+      console.error("Database function call failed:", rpcFuncError);
+    }
+    
+    // Second fallback: check if a profile already exists
     const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
       .select('id, email_verified')
@@ -103,51 +143,42 @@ export async function ensureProfileExists(userId: string, userData: { email: str
       return true;
     }
     
-    // Direct insert as primary method
-    try {
-      const { error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: userData.email.toLowerCase(),
-          full_name: userData.full_name || null,
-          email_verified: userData.email_verified || false,
-        });
-        
-      if (!insertError) {
-        console.log("Profile created via direct insert");
-        return true;
-      } else if (insertError.code === '23505') { // Unique violation (profile already exists)
-        console.log("Profile already exists (conflict during insert)");
-        return true;
-      } else {
-        console.error("Direct insert failed:", insertError);
-      }
-    } catch (insertErr) {
-      console.error("Direct insert failed:", insertErr);
-    }
-    
-    // Use auth metadata as a fallback - this won't fix the profile 
-    // but will at least let the user proceed past organization creation
-    try {
-      const { error: metadataError } = await supabase.auth.updateUser({
-        data: {
-          email: userData.email,
-          full_name: userData.full_name,
-          email_verified: userData.email_verified
-        }
+    // Last resort: Direct insert
+    const { error: insertError } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email: userData.email.toLowerCase(),
+        full_name: userData.full_name || null,
+        email_verified: userData.email_verified || false,
       });
       
-      if (!metadataError) {
-        console.log("User metadata updated as a fallback");
-        return true;
+    if (!insertError) {
+      console.log("Profile created via direct insert");
+      return true;
+    } else if (insertError.code === '23505') { // Unique violation (profile already exists)
+      console.log("Profile already exists (conflict during insert)");
+      return true;
+    } else {
+      console.error("Direct insert failed:", insertError);
+    }
+    
+    // Use auth metadata as a final fallback
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: {
+        email: userData.email,
+        full_name: userData.full_name,
+        email_verified: userData.email_verified
       }
-    } catch (metadataErr) {
-      console.error("Metadata update failed:", metadataErr);
+    });
+    
+    if (!metadataError) {
+      console.log("User metadata updated as a fallback");
+      return true;
     }
     
     // If we get here, all methods failed
-    console.log("All profile creation methods failed, but proceeding anyway");
+    console.log("All profile creation methods failed");
     return false;
   } catch (err) {
     console.error("Exception ensuring profile exists:", err);

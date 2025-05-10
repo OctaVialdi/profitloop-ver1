@@ -31,10 +31,32 @@ const Register = () => {
     }
   }, [invitationEmail]);
 
+  // Email validation function
+  const isValidEmail = (email: string): boolean => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailPattern.test(email);
+  };
+
   // Check if email already exists in the profiles table
   const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
       setIsCheckingEmail(true);
+      console.log("Checking if email exists:", email);
+      
+      // First check auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithOtp({
+        email: email.toLowerCase(),
+        options: {
+          shouldCreateUser: false
+        }
+      });
+      
+      if (!authError) {
+        console.log("Email exists in auth system");
+        return true;
+      }
+      
+      // Then check profiles directly
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
@@ -46,6 +68,7 @@ const Register = () => {
         return false;
       }
       
+      console.log("Email exists check result:", !!data);
       return !!data; // Return true if data exists (email found)
     } catch (error) {
       console.error("Exception checking email:", error);
@@ -55,8 +78,43 @@ const Register = () => {
     }
   };
 
+  const createProfileViaEdgeFunction = async (userId: string, userData: { 
+    email: string, 
+    full_name?: string | null, 
+    is_email_verified?: boolean 
+  }) => {
+    try {
+      console.log("Creating profile via edge function for user:", userId);
+      const { data, error } = await supabase.functions.invoke('create-profile-if-not-exists', {
+        body: {
+          user_id: userId,
+          user_email: userData.email.toLowerCase(),
+          user_full_name: userData.full_name,
+          is_email_verified: userData.is_email_verified
+        }
+      });
+      
+      if (error) {
+        console.error("Error creating profile via edge function:", error);
+        return false;
+      }
+      
+      console.log("Edge function response:", data);
+      return data.success;
+    } catch (funcError) {
+      console.error("Exception calling edge function:", funcError);
+      return false;
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate email format
+    if (!isValidEmail(email)) {
+      toast.error("Format email tidak valid. Mohon periksa kembali.");
+      return;
+    }
     
     if (password !== confirmPassword) {
       toast.error("Password dan konfirmasi password tidak sama");
@@ -66,7 +124,7 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Check if email already exists - never skip this check
+      // Check if email already exists
       const emailExists = await checkEmailExists(email);
       if (emailExists) {
         toast.error("Email sudah terdaftar. Silakan gunakan email lain atau login.");
@@ -89,6 +147,23 @@ const Register = () => {
       
       console.log(`Registering user with role: ${role} (isFirstUser: ${isFirstUser}, count: ${count})`);
 
+      // Clean up any existing auth state to prevent conflicts
+      try {
+        // Clear local storage
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+            localStorage.removeItem(key);
+          }
+        });
+        
+        // Try a global sign out to ensure clean slate
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (cleanupError) {
+        console.log("Pre-registration cleanup:", cleanupError);
+      }
+
+      console.log("Registering new user with email:", email);
+      
       // Register with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -97,7 +172,7 @@ const Register = () => {
           data: {
             full_name: fullName,
             email: email,
-            role: role, // Set the role in metadata
+            role: role,
           },
         },
       });
@@ -105,8 +180,11 @@ const Register = () => {
       if (error) throw error;
 
       if (data && data.user) {
-        // Directly create profile entry - CRITICAL FIX
+        console.log("User created successfully:", data.user.id);
+        
+        // Method 1: Directly create profile entry
         try {
+          console.log("Attempting direct profile creation");
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -119,14 +197,26 @@ const Register = () => {
             
           if (profileError) {
             console.error("Failed to create profile directly:", profileError);
-            // Try fallback method
+            
+            // Method 2: Use helper function
+            console.log("Trying fallback profile creation method");
             const profileCreated = await ensureProfileExists(data.user.id, {
               email: email,
               full_name: fullName,
               email_verified: false
             });
             
-            console.log("Profile creation via helper function:", profileCreated);
+            console.log("Profile creation via helper function result:", profileCreated);
+            
+            // Method 3: Edge function approach
+            if (!profileCreated) {
+              console.log("Trying edge function profile creation");
+              await createProfileViaEdgeFunction(data.user.id, {
+                email: email,
+                full_name: fullName,
+                is_email_verified: false
+              });
+            }
           } else {
             console.log("Profile created successfully via direct insert");
           }

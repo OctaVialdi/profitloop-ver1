@@ -19,3 +19,15 @@ export interface MagicLinkResult {
   organizationName?: string;
   sendMagicLink?: (params: MagicLinkParams) => Promise<void>;
 }
+
+// Add the missing AuthCredentials interface
+export interface AuthCredentials {
+  email: string;
+  password: string;
+}
+
+// Add the missing AuthSignInResult interface
+export interface AuthSignInResult {
+  data: any | null;
+  error: Error | null;
+}
