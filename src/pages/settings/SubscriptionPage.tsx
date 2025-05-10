@@ -7,13 +7,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Calendar, AlertTriangle, Clock, Sparkles } from "lucide-react";
+import { Check, CreditCard, Calendar, AlertTriangle, Clock, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { requestTrialExtension } from "@/services/subscriptionService";
+import { stripeService } from "@/services/stripeService";
 import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { toast } from "@/components/ui/sonner";
+import { useLocation, useSearchParams } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -33,9 +35,10 @@ interface PlanProps {
   isActive: boolean;
   isPopular?: boolean;
   onSelect: () => void;
+  isLoading?: boolean;
 }
 
-const PlanCard = ({ name, price, features, isActive, isPopular, onSelect }: PlanProps) => {
+const PlanCard = ({ name, price, features, isActive, isPopular, onSelect, isLoading = false }: PlanProps) => {
   return (
     <Card className={`relative flex flex-col ${isActive ? 'subscription-tier-current' : ''} ${isPopular ? 'shadow-lg' : ''}`}>
       {isPopular && (
@@ -80,9 +83,14 @@ const PlanCard = ({ name, price, features, isActive, isPopular, onSelect }: Plan
           className="w-full" 
           variant={isPopular ? "default" : isActive ? "outline" : "secondary"}
           onClick={onSelect}
-          disabled={isActive}
+          disabled={isActive || isLoading}
         >
-          {isActive ? 'Paket Anda Saat Ini' : 'Pilih Paket'}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Memproses...
+            </>
+          ) : isActive ? 'Paket Anda Saat Ini' : 'Pilih Paket'}
         </Button>
       </CardFooter>
     </Card>
@@ -98,6 +106,34 @@ const SubscriptionPage = () => {
   const [extensionReason, setExtensionReason] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  // Handling payment status from URL parameters
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    
+    if (success === 'true') {
+      toast.success('Pembayaran berhasil! Langganan Anda telah diaktifkan.');
+      refreshData();
+    } else if (canceled === 'true') {
+      toast.error('Pembayaran dibatalkan. Silakan coba lagi jika Anda ingin berlangganan.');
+    }
+    
+    // If we have payment status in URL, track it
+    if (success === 'true' || canceled === 'true') {
+      subscriptionAnalyticsService.trackEvent({
+        eventType: 'payment_status',
+        organizationId: organization?.id,
+        additionalData: { 
+          status: success === 'true' ? 'success' : 'canceled',
+          source: 'stripe_redirect'
+        }
+      });
+    }
+  }, [searchParams, organization?.id, refreshData]);
 
   // Track page view when component mounts
   useEffect(() => {
@@ -121,29 +157,50 @@ const SubscriptionPage = () => {
       // Track plan selection
       subscriptionAnalyticsService.trackPlanSelected(planId, organization?.id);
       
-      // Temporary simulation before Stripe integration
       if (!organization) return;
       
-      // Update organization subscription plan
-      const { error } = await supabase
-        .from('organizations')
-        .update({ 
-          subscription_plan_id: planId,
-          subscription_status: 'active', // In real implementation, wait for Stripe webhook
-          trial_expired: false // Reset trial expired status when paying
-        })
-        .eq('id', organization.id);
+      // Show loading state for the selected plan
+      setIsCheckoutLoading(planId);
       
-      if (error) throw error;
+      // Call Stripe checkout
+      const checkoutUrl = await stripeService.createCheckout(planId);
       
-      // Track successful subscription activation
-      subscriptionAnalyticsService.trackSubscriptionActivated(planId, organization.id);
-      
-      toast.success("Paket berlangganan berhasil diperbarui!");
-      refreshData();
+      if (checkoutUrl) {
+        // Redirect to Stripe Checkout
+        window.location.href = checkoutUrl;
+      } else {
+        throw new Error("Failed to create checkout session");
+      }
     } catch (error) {
       console.error("Error selecting plan:", error);
       toast.error("Terjadi kesalahan saat memilih paket");
+    } finally {
+      setIsCheckoutLoading(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      setIsSubmitting(true);
+      const portalUrl = await stripeService.createPortalSession();
+      
+      if (portalUrl) {
+        // Track portal access
+        subscriptionAnalyticsService.trackEvent({
+          eventType: 'customer_portal_access',
+          organizationId: organization?.id
+        });
+        
+        // Redirect to Stripe Customer Portal
+        window.location.href = portalUrl;
+      } else {
+        throw new Error("Failed to create customer portal session");
+      }
+    } catch (error) {
+      console.error("Error accessing customer portal:", error);
+      toast.error("Gagal mengakses portal pelanggan");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -306,8 +363,18 @@ const SubscriptionPage = () => {
                 </p>
               </div>
               
-              <Button variant="outline" size="sm">
-                Kelola Metode Pembayaran
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleManageSubscription}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    Memproses...
+                  </>
+                ) : 'Kelola Metode Pembayaran'}
               </Button>
             </div>
           )}
@@ -337,6 +404,27 @@ const SubscriptionPage = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Payment status alert */}
+      {location.search.includes('success=true') && (
+        <Alert className="mb-8 bg-green-50 border-green-200">
+          <Check className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800">Pembayaran Berhasil</AlertTitle>
+          <AlertDescription className="text-green-700">
+            Terima kasih! Langganan Anda telah berhasil diaktifkan. Anda sekarang memiliki akses ke semua fitur premium.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {location.search.includes('canceled=true') && (
+        <Alert className="mb-8 bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">Pembayaran Dibatalkan</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            Proses pembayaran telah dibatalkan. Anda dapat mencoba kembali kapan saja dengan memilih paket yang diinginkan.
+          </AlertDescription>
+        </Alert>
+      )}
       
       {/* Trial information */}
       {!isTrialExpired && !isTrialActive && !organization?.subscription_plan_id && (
@@ -431,6 +519,7 @@ const SubscriptionPage = () => {
                 isActive={organization?.subscription_plan_id === plan.id}
                 isPopular={plan.isPopular}
                 onSelect={() => handleSelectPlan(plan.id)}
+                isLoading={isCheckoutLoading === plan.id}
               />
             ))}
           </div>

@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, X, AlertTriangle } from "lucide-react";
+import { CalendarClock, X, AlertTriangle, Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { checkAndUpdateTrialStatus, fixOrganizationTrialPeriod } from '@/services/subscriptionService';
+import { stripeService } from '@/services/stripeService';
 import { subscriptionAnalyticsService } from '@/services/subscriptionAnalyticsService';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
@@ -26,6 +27,7 @@ const TrialBanner = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(100);
   const [trialDuration, setTrialDuration] = useState(14); // Default to 14 days
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -260,6 +262,40 @@ const TrialBanner = () => {
     document.body.classList.remove('trial-expired');
   };
 
+  // Handle checkout for premium plan
+  const handleCheckout = async (planId: string) => {
+    try {
+      setIsCheckoutLoading(true);
+      
+      if (!organizationId) {
+        toast.error("Tidak dapat menemukan ID organisasi");
+        return;
+      }
+      
+      // Track checkout attempt
+      subscriptionAnalyticsService.trackEvent({
+        eventType: 'checkout_initiated',
+        organizationId: organizationId,
+        additionalData: { planId, source: 'trial_banner' }
+      });
+      
+      // Get checkout URL from Stripe
+      const checkoutUrl = await stripeService.createCheckout(planId);
+      
+      if (checkoutUrl) {
+        // Redirect to Stripe checkout
+        window.location.href = checkoutUrl;
+      } else {
+        throw new Error("Tidak bisa membuat sesi checkout");
+      }
+    } catch (error) {
+      console.error("Error initiating checkout:", error);
+      toast.error("Gagal memulai proses checkout. Silakan coba lagi.");
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  };
+
   // Handle sign out
   const handleSignOut = async () => {
     await robustSignOut();
@@ -301,9 +337,23 @@ const TrialBanner = () => {
             <div className="w-full space-y-4">
               <Button 
                 className="w-full py-6 text-base font-medium bg-[#9b87f5] hover:bg-[#8a72f3]"
+                onClick={() => handleCheckout('standard_plan')}
+                disabled={isCheckoutLoading}
+              >
+                {isCheckoutLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Memproses...
+                  </>
+                ) : "Upgrade ke Standard Plan"}
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full py-6 text-base font-medium"
                 onClick={handleSubscribe}
               >
-                Upgrade Sekarang
+                Lihat Semua Paket
               </Button>
               
               <Button 
