@@ -408,7 +408,9 @@ export const subscriptionAnalyticsService = {
       // Group feature clicks by user
       (featureClicks || []).forEach(click => {
         const userId = click.user_id;
-        const feature = click.additional_data?.featureName;
+        const additionalData = click.additional_data as Record<string, any> | null;
+        const feature = additionalData?.featureName;
+        
         if (!feature) return;
         
         if (!featureClicksByUser[userId]) {
@@ -495,7 +497,7 @@ export const subscriptionAnalyticsService = {
   /**
    * Helper: Aggregate analytics by event type
    */
-  private aggregateByEventType(data: any[]): Record<string, number> {
+  aggregateByEventType(data: any[]): Record<string, number> {
     return data.reduce((acc: Record<string, number>, event) => {
       const eventType = event.event_type;
       acc[eventType] = (acc[eventType] || 0) + 1;
