@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import {
@@ -39,6 +38,8 @@ const routeLabels: Record<string, string> = {
   "kinerja": "Performance",
   "okr": "OKR",
   "catatan-meetings": "Meeting Notes",
+  "subscription": "Subscription",
+  "admin": "Admin",
 };
 
 interface BreadcrumbNavProps {
