@@ -1,14 +1,17 @@
+
 import { ReactNode, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOrganization } from "@/hooks/useOrganization";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAuth } from "@/hooks/auth";
 
 interface Tab {
   name: string;
   href: string;
   requiredRole?: "admin" | "super_admin";
+  adminOnly?: boolean;
 }
 
 interface SettingsLayoutProps {
@@ -18,6 +21,10 @@ interface SettingsLayoutProps {
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const location = useLocation();
   const { isAdmin, isSuperAdmin } = useOrganization();
+  const { user } = useAuth();
+  
+  // Only allow papadhanta@gmail.com to access admin panel
+  const isSystemAdmin = user?.email === 'papadhanta@gmail.com';
   
   const tabs: Tab[] = [
     { name: "Dashboard", href: "/settings/dashboard" },
@@ -25,9 +32,14 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
     { name: "Team Members", href: "/settings/members" },
     { name: "Subscription", href: "/settings/subscription", requiredRole: "admin" },
     { name: "Profile", href: "/settings/profile" },
+    { name: "Admin", href: "/settings/admin", adminOnly: true },
   ];
   
   const filteredTabs = tabs.filter(tab => {
+    // Filter out admin tab if user is not system admin
+    if (tab.adminOnly && !isSystemAdmin) return false;
+    
+    // Filter based on roles
     if (!tab.requiredRole) return true;
     if (tab.requiredRole === "admin" && (isAdmin || isSuperAdmin)) return true;
     if (tab.requiredRole === "super_admin" && isSuperAdmin) return true;
@@ -54,7 +66,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
               <TabsTrigger 
                 key={tab.href} 
                 value={tab.href} 
-                className="min-w-[100px] transition-all duration-200 ease-in-out" 
+                className={`min-w-[100px] transition-all duration-200 ease-in-out ${tab.adminOnly ? 'text-red-600' : ''}`}
                 asChild
               >
                 <Link to={tab.href}>{tab.name}</Link>
