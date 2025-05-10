@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,8 +54,13 @@ export const SubscriptionPlans = () => {
       }
       
       if (data) {
-        setPlans(data as SubscriptionPlan[]);
-        console.log('Fetched subscription plans:', data);
+        // Ensure proper type conversion
+        const typedPlans: SubscriptionPlan[] = data.map(plan => ({
+          ...plan,
+          features: plan.features as Record<string, any> | null
+        }));
+        setPlans(typedPlans);
+        console.log('Fetched subscription plans:', typedPlans);
       }
     } catch (error) {
       console.error("Error fetching subscription plans:", error);
@@ -520,4 +524,3 @@ export const SubscriptionPlans = () => {
     </>
   );
 };
-

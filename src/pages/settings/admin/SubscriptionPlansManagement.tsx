@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,8 +70,15 @@ const SubscriptionPlansManagement = () => {
         
       if (error) throw error;
       
-      setPlans(data as SubscriptionPlan[]);
-      console.log('Subscription plans fetched:', data);
+      if (data) {
+        // Ensure proper type conversion
+        const typedPlans: SubscriptionPlan[] = data.map(plan => ({
+          ...plan,
+          features: plan.features as Record<string, any> | null
+        }));
+        setPlans(typedPlans);
+        console.log('Subscription plans fetched:', typedPlans);
+      }
     } catch (error) {
       console.error('Error fetching plans:', error);
       toast.error('Gagal memuat data paket langganan');
@@ -269,10 +275,15 @@ const SubscriptionPlansManagement = () => {
         
         // Update local state to ensure UI is up-to-date
         if (data && data.length > 0) {
+          const updatedPlan: SubscriptionPlan = {
+            ...data[0],
+            features: data[0].features as Record<string, any> | null
+          };
+          
           setPlans(prev => prev.map(plan => 
-            plan.id === currentPlan.id ? data[0] : plan
+            plan.id === currentPlan.id ? updatedPlan : plan
           ));
-          console.log('Plan updated in state:', data[0]);
+          console.log('Plan updated in state:', updatedPlan);
         }
         
         toast.success('Paket berhasil diperbarui');
@@ -287,8 +298,13 @@ const SubscriptionPlansManagement = () => {
         
         // Add new plan to local state
         if (data && data.length > 0) {
-          setPlans(prev => [...prev, data[0]]);
-          console.log('New plan added to state:', data[0]);
+          const newPlan: SubscriptionPlan = {
+            ...data[0],
+            features: data[0].features as Record<string, any> | null
+          };
+          
+          setPlans(prev => [...prev, newPlan]);
+          console.log('New plan added to state:', newPlan);
         }
         
         toast.success('Paket baru berhasil dibuat');
@@ -658,4 +674,3 @@ const SubscriptionPlansManagement = () => {
 };
 
 export default SubscriptionPlansManagement;
-
