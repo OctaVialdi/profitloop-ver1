@@ -71,9 +71,15 @@ export const ProfilePhotoUploader: React.FC<ProfilePhotoUploaderProps> = ({
         throw new Error('Gagal mendapatkan URL foto profil');
       }
       
-      // Update the user's profile with custom update for profile image
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: urlData.publicUrl }
+      // Update the user's profile with the new profile_image URL
+      const { error: updateError } = await supabase.rpc('update_user_profile_with_password', {
+        user_id: userId,
+        full_name: null,  // Don't update other fields
+        timezone: null,
+        preferences: null,
+        profile_image: urlData.publicUrl,
+        current_password: null,
+        new_password: null
       });
         
       if (updateError) {

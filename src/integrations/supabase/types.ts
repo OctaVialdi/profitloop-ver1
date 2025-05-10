@@ -2000,6 +2000,7 @@ export type Database = {
           last_active: string | null
           organization_id: string | null
           preferences: Json | null
+          profile_image: string | null
           role: string | null
           timezone: string | null
         }
@@ -2014,6 +2015,7 @@ export type Database = {
           last_active?: string | null
           organization_id?: string | null
           preferences?: Json | null
+          profile_image?: string | null
           role?: string | null
           timezone?: string | null
         }
@@ -2028,6 +2030,7 @@ export type Database = {
           last_active?: string | null
           organization_id?: string | null
           preferences?: Json | null
+          profile_image?: string | null
           role?: string | null
           timezone?: string | null
         }
@@ -2461,6 +2464,7 @@ export type Database = {
           last_active: string | null
           organization_id: string | null
           preferences: Json | null
+          profile_image: string | null
           role: string | null
           timezone: string | null
         }[]
@@ -2529,14 +2533,24 @@ export type Database = {
         Returns: undefined
       }
       update_user_profile_with_password: {
-        Args: {
-          user_id: string
-          full_name: string
-          timezone: string
-          preferences: Json
-          current_password: string
-          new_password: string
-        }
+        Args:
+          | {
+              user_id: string
+              full_name: string
+              timezone: string
+              preferences: Json
+              current_password: string
+              new_password: string
+            }
+          | {
+              user_id: string
+              full_name: string
+              timezone: string
+              preferences: Json
+              profile_image?: string
+              current_password?: string
+              new_password?: string
+            }
         Returns: Json
       }
       validate_invitation: {

@@ -68,7 +68,7 @@ export const ProfileDropdown = () => {
         >
           <Avatar className="h-8 w-8">
             <AvatarImage 
-              src="" 
+              src={userProfile?.profile_image || ""} 
               alt={userProfile?.full_name || "User"} 
             />
             <AvatarFallback className="bg-blue-100 text-blue-600">

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -98,7 +97,7 @@ const ProfileSettings = () => {
     refreshData();
   };
 
-  // Update the timezone handling in the updateUserProfile function
+  // Update the updateUserProfile function to handle profile image
   const updateUserProfile = async (formData: ProfileFormData) => {
     setIsSaving(true);
     
@@ -121,6 +120,7 @@ const ProfileSettings = () => {
           ...(userProfile?.preferences || {}),
           dark_mode: formData.darkMode
         },
+        profile_image: formData.profileImage, // Add profile image to the function call
         current_password: null,  // Not updating password
         new_password: null       // Not updating password
       });
@@ -263,16 +263,6 @@ const ProfileSettings = () => {
                 <h3 className="font-medium text-lg mb-4">Ubah Password</h3>
                 <PasswordChangeForm />
               </div>
-              
-              {/* <div className="border-t pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">Google Authentication</h3>
-                    <p className="text-sm text-muted-foreground">Masuk menggunakan akun Google</p>
-                  </div>
-                  <Switch disabled />
-                </div>
-              </div> */}
               
               <div className="border-t pt-6">
                 <div className="flex items-center justify-between">
