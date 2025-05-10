@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { subscriptionAnalyticsService } from "./subscriptionAnalyticsService";
@@ -128,7 +129,6 @@ export async function requestTrialExtension(
 
 /**
  * Update existing organization to ensure the correct trial period
- * This will fix organizations with inconsistent trial periods
  */
 export async function fixOrganizationTrialPeriod(organizationId: string): Promise<boolean> {
   try {
@@ -178,18 +178,26 @@ export async function sendPaymentFailureNotification(
   reason: string
 ): Promise<boolean> {
   try {
+    // Get the current user ID
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id;
+    
+    if (!userId) {
+      console.error("Error sending payment failure notification: No authenticated user");
+      return false;
+    }
+    
     // Create a notification for admins
     const { error } = await supabase
       .from('notifications')
-      .insert([
-        {
-          organization_id: organizationId,
-          title: 'Pembayaran Gagal',
-          message: `Pembayaran untuk paket berlangganan Anda gagal. Alasan: ${reason}`,
-          type: 'error',
-          action_url: '/settings/subscription'
-        }
-      ]);
+      .insert({
+        organization_id: organizationId,
+        user_id: userId,
+        title: 'Pembayaran Gagal',
+        message: `Pembayaran untuk paket berlangganan Anda gagal. Alasan: ${reason}`,
+        type: 'error',
+        action_url: '/settings/subscription'
+      });
 
     if (error) throw error;
     
@@ -211,14 +219,15 @@ export async function sendSubscriptionConfirmation(
   planId: string
 ): Promise<boolean> {
   try {
-    // Create a notification for all members
+    // Get all profiles in the organization
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id')
       .eq('organization_id', organizationId);
       
-    if (!profiles) return false;
+    if (!profiles || profiles.length === 0) return false;
     
+    // Create notifications for each user in the organization
     const notifications = profiles.map(profile => ({
       user_id: profile.id,
       organization_id: organizationId,
