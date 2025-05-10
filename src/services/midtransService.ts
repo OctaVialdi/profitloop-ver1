@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -83,90 +82,37 @@ export const midtransService = {
   },
   
   /**
-   * Open Midtrans Snap payment page with the given token
-   * @param snapToken The Midtrans Snap token
+   * Open Midtrans payment page directly by redirecting to the URL
+   * @param redirectUrl The Midtrans payment redirect URL
    */
-  openPaymentPage: (snapToken: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Check if we're in a browser environment
-      if (typeof window === 'undefined') {
-        reject(new Error("Not in browser environment"));
-        return;
-      }
-      
-      // Check if Midtrans Snap library is loaded
-      if (window.snap) {
-        window.snap.pay(snapToken, {
-          onSuccess: function(result){
-            console.log("Payment success!", result);
-            toast.success("Pembayaran berhasil!");
-            // Redirect to success page
-            window.location.href = `/settings/subscription?success=true&order_id=${result.order_id}`;
-            resolve();
-          },
-          onPending: function(result){
-            console.log("Payment pending", result);
-            toast.info("Pembayaran sedang diproses.");
-            // Redirect to pending page
-            window.location.href = `/settings/subscription?pending=true&order_id=${result.order_id}`;
-            resolve();
-          },
-          onError: function(result){
-            console.error("Payment failed!", result);
-            toast.error("Pembayaran gagal. Silakan coba lagi.");
-            window.location.href = "/settings/subscription?canceled=true";
-            reject(new Error("Payment failed"));
-          },
-          onClose: function(){
-            console.log("Customer closed the payment window");
-            toast.info("Jendela pembayaran ditutup.");
-            reject(new Error("Payment window closed"));
-          }
-        });
-      } else {
-        // If Snap library isn't loaded, reject with error
-        toast.error("Midtrans library not loaded. Redirecting to payment page.");
-        reject(new Error("Midtrans Snap library not loaded"));
-      }
-    });
+  redirectToPayment: (redirectUrl: string): void => {
+    if (!redirectUrl) {
+      toast.error("URL pembayaran tidak valid");
+      return;
+    }
+    
+    // Log redirection
+    console.log("Redirecting to Midtrans payment page:", redirectUrl);
+    
+    // Redirect the browser to the Midtrans payment page
+    window.location.href = redirectUrl;
   },
   
   /**
-   * Load Midtrans Snap library
+   * Load Midtrans Snap library - kept for backward compatibility
    * @returns Promise that resolves when the library is loaded
    */
   loadSnapLibrary: (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Skip if already loaded or not in browser
-      if (typeof window === 'undefined') {
-        reject(new Error("Not in browser environment"));
-        return;
-      }
-      
-      if (window.snap) {
-        console.log("Midtrans library already loaded");
-        resolve();
-        return;
-      }
-      
-      console.log("Loading Midtrans Snap library...");
-      const script = document.createElement('script');
-      script.src = 'https://app.midtrans.com/snap/snap.js';
-      script.async = true;
-      script.onload = () => {
-        console.log("Midtrans library loaded successfully");
-        resolve();
-      };
-      script.onerror = (err) => {
-        console.error("Failed to load Midtrans library:", err);
-        reject(new Error('Failed to load Midtrans Snap library'));
-      };
-      document.head.appendChild(script);
+    return new Promise((resolve) => {
+      // This function is mostly for backward compatibility
+      // Direct redirection is now preferred
+      console.log("Note: Direct redirection is now the preferred payment method");
+      resolve();
     });
   }
 };
 
-// Add TypeScript interface for global window object with Snap
+// Keep TypeScript interface for global window object with Snap
 declare global {
   interface Window {
     snap?: {

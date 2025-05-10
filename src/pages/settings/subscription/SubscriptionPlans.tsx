@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, CreditCard, Loader2, Package } from "lucide-react";
 import { useNavigate, Link } from 'react-router-dom';
 import { useOrganization } from "@/hooks/useOrganization";
-import { stripeService } from "@/services/stripeService";
 import { midtransService } from "@/services/midtransService"; 
 import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { toast } from "sonner";
@@ -18,17 +17,10 @@ export const SubscriptionPlans = () => {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentData, setPaymentData] = useState<{
-    token: string;
     redirectUrl: string;
     planName: string;
   } | null>(null);
   const { organization, refreshData } = useOrganization();
-  
-  useEffect(() => {
-    // Load Midtrans Snap library when component mounts
-    midtransService.loadSnapLibrary()
-      .catch(error => console.error("Failed to load Midtrans library:", error));
-  }, []);
   
   const handleCheckout = async (planId: string, planName: string) => {
     try {
@@ -43,7 +35,6 @@ export const SubscriptionPlans = () => {
       
       if (result) {
         setPaymentData({
-          token: result.token,
           redirectUrl: result.redirectUrl,
           planName: planName
         });
@@ -426,13 +417,12 @@ export const SubscriptionPlans = () => {
         </div>
       </Tabs>
       
-      {/* Payment Modal */}
+      {/* Payment Modal - Now uses the direct URL approach */}
       {paymentData && (
         <MidtransPaymentModal
           isOpen={paymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
-          token={paymentData.token}
-          fallbackUrl={paymentData.redirectUrl}
+          redirectUrl={paymentData.redirectUrl}
           planName={paymentData.planName}
         />
       )}

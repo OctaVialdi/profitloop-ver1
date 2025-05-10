@@ -39,6 +39,21 @@ const logPaymentAttempt = async (
   }
 };
 
+// Format a date for Midtrans according to their required format
+const formatDateForMidtrans = () => {
+  const date = new Date();
+  
+  // Format: YYYY-MM-DD HH:MM:SS +TZTZ
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} +0000`;
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -160,12 +175,8 @@ serve(async (req) => {
     // Generate a unique order ID
     const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
-    // Create a timestamp for 24 hours from now (expiry time)
-    const expiryTime = new Date();
-    expiryTime.setHours(expiryTime.getHours() + 24);
-    
-    // Set up the payment amount based on plan price
-    const paymentAmount = planData.price;
+    // Set up the payment amount based on plan price - ensure it's an integer for IDR
+    const paymentAmount = Math.round(planData.price);
     
     // Encode Midtrans server key to Base64 for Authorization header
     const encodedServerKey = btoa(`${midtransServerKey}:`);
@@ -197,7 +208,7 @@ serve(async (req) => {
         pending: `${req.headers.get("Origin")}/settings/subscription?pending=true&order_id=${orderId}`
       },
       expiry: {
-        start_time: new Date().toISOString(),
+        start_time: formatDateForMidtrans(),
         unit: "hour",
         duration: 24
       }
@@ -275,7 +286,8 @@ serve(async (req) => {
         amount: paymentAmount,
         currency: "IDR",
         status: "pending",
-        gateway_data: midtransData
+        gateway_data: midtransData,
+        payment_url: midtransData.redirect_url
       });
       
     if (transactionError) {
