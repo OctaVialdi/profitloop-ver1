@@ -4,7 +4,6 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { useOrganization } from "@/hooks/useOrganization";
 import { NotificationSystem } from "@/components/NotificationSystem";
 import { useAppTheme } from "@/components/ThemeProvider";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
 import { 
   SidebarProviderWithTooltip as SidebarProvider, 
@@ -21,31 +20,7 @@ interface DashboardLayoutProps {
   children?: ReactNode;
 }
 
-// Use memo to prevent unnecessary re-renders of the HeaderContent
-const HeaderContent = memo(({ organization, logoUrl }: { 
-  organization: any, 
-  logoUrl: string | undefined 
-}) => (
-  <div className="flex items-center gap-2">
-    <Link to="/dashboard" className="flex items-center gap-2">
-      {logoUrl ? (
-        <Avatar className="h-8 w-8 hidden md:flex">
-          <AvatarImage src={logoUrl} alt={organization?.name || "Logo"} />
-          <AvatarFallback>
-            {organization?.name?.charAt(0) || "O"}
-          </AvatarFallback>
-        </Avatar>
-      ) : null}
-      <span className="text-xl font-semibold text-blue-600">
-        {organization?.name || "Multi-Tenant"}
-      </span>
-    </Link>
-  </div>
-));
-
-HeaderContent.displayName = "HeaderContent";
-
-// Use memo for the right side of the header to prevent unnecessary re-renders
+// Use memo to prevent unnecessary re-renders of the HeaderActions
 const HeaderActions = memo(() => (
   <div className="flex items-center gap-3">
     <OrganizationSwitcher />
@@ -73,7 +48,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   // Determine if we should show breadcrumbs based on the current path
   const shouldShowBreadcrumbs = location.pathname !== "/dashboard";
-
+  const hideBreadcrumbsOnSpecificPages = location.pathname === "/hr/company";
+  
   // Determine custom breadcrumb labels based on the path
   const customLabels: Record<string, string> = {};
   
@@ -139,7 +115,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Top navigation - Modified to be full width without scroll constraints */}
         <header className="bg-white border-b sticky top-0 z-10 w-full shadow-sm">
           <div className="px-4 h-16 flex items-center justify-between">
-            <HeaderContent organization={organization} logoUrl={logoUrl} />
+            {shouldShowBreadcrumbs && !hideBreadcrumbsOnSpecificPages && (
+              <BreadcrumbNav 
+                customLabels={customLabels}
+              />
+            )}
             <HeaderActions />
           </div>
         </header>
@@ -147,12 +127,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Page content with direct overflow handling */}
         <div className="flex-1 overflow-auto bg-gray-50">
           <div className="p-4 md:p-6">
-            {shouldShowBreadcrumbs && (
-              <BreadcrumbNav 
-                customLabels={customLabels}
-              />
-            )}
-            
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={location.pathname}

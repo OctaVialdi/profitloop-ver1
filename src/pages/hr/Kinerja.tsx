@@ -1,15 +1,15 @@
 
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import ReprimandTab from "@/components/hr/company/ReprimandTab";
 import KinerjaDashboardTab from "@/components/hr/kinerja/KinerjaDashboardTab";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 
 export default function HRKinerja() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const tabs = [
     { id: "dashboard", label: "Dashboard" },
-    { id: "reprimand", label: "Reprimand" },
     { id: "settings", label: "Pengaturan" },
   ];
 
@@ -35,8 +35,6 @@ export default function HRKinerja() {
           </div>
           
           {activeTab === "dashboard" && <KinerjaDashboardTab />}
-          
-          {activeTab === "reprimand" && <ReprimandTab />}
           
           {activeTab === "settings" && (
             <div className="p-4 border rounded-md">
@@ -83,7 +81,3 @@ export default function HRKinerja() {
     </div>
   );
 }
-
-// Import the Switch component for the settings tab
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";

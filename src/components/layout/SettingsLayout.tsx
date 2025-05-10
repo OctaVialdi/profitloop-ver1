@@ -27,8 +27,6 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const isSystemAdmin = user?.email === 'papadhanta@gmail.com';
   
   const tabs: Tab[] = [
-    { name: "Dashboard", href: "/settings/dashboard" },
-    { name: "Invite Members", href: "/settings/invite", requiredRole: "admin" },
     { name: "Team Members", href: "/settings/members" },
     { name: "Subscription", href: "/settings/subscription", requiredRole: "admin" },
     { name: "Profile", href: "/settings/profile" },
