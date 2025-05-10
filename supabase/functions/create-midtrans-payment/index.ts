@@ -168,7 +168,7 @@ serve(async (req) => {
       redirectUrl: midtransData.redirect_url 
     });
     
-    // Store transaction in database
+    // Store transaction in database with the updated schema
     const { error: transactionError } = await supabaseAdmin
       .from("payment_transactions")
       .insert({

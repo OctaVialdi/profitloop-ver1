@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useSearchParams, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { SubscriptionOverview } from './subscription/SubscriptionOverview';
 import { SubscriptionPlans } from './subscription/SubscriptionPlans';
 import { SubscriptionHistory } from './subscription/SubscriptionHistory';
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, HelpCircle, FileText, CheckCircle, ArrowUpDown } from "lucide-react";
+import { LayoutDashboard, HelpCircle, FileText, CheckCircle, ArrowUpDown, Loader2 } from "lucide-react";
 import { midtransService } from '@/services/midtransService';
 import { stripeService } from '@/services/stripeService';
 import { toast } from 'sonner';

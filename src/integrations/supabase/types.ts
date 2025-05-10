@@ -1962,48 +1962,63 @@ export type Database = {
           created_at: string
           currency: string
           expires_at: string | null
+          gateway_data: Json | null
           id: string
           invoice_id: string | null
+          order_id: string | null
           organization_id: string
           payment_details: Json | null
+          payment_gateway: string | null
           payment_method_id: string | null
           payment_provider: string
           payment_url: string | null
           provider_reference: string | null
           status: string
+          subscription_plan_id: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           amount: number
           created_at?: string
           currency?: string
           expires_at?: string | null
+          gateway_data?: Json | null
           id?: string
           invoice_id?: string | null
+          order_id?: string | null
           organization_id: string
           payment_details?: Json | null
+          payment_gateway?: string | null
           payment_method_id?: string | null
           payment_provider: string
           payment_url?: string | null
           provider_reference?: string | null
           status: string
+          subscription_plan_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
           created_at?: string
           currency?: string
           expires_at?: string | null
+          gateway_data?: Json | null
           id?: string
           invoice_id?: string | null
+          order_id?: string | null
           organization_id?: string
           payment_details?: Json | null
+          payment_gateway?: string | null
           payment_method_id?: string | null
           payment_provider?: string
           payment_url?: string | null
           provider_reference?: string | null
           status?: string
+          subscription_plan_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -2025,6 +2040,13 @@ export type Database = {
             columns: ["payment_method_id"]
             isOneToOne: false
             referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_subscription_plan_id_fkey"
+            columns: ["subscription_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
         ]
