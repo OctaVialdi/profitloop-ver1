@@ -6,7 +6,7 @@ import { SubscriptionOverview } from './subscription/SubscriptionOverview';
 import { SubscriptionPlans } from './subscription/SubscriptionPlans';
 import { SubscriptionHistory } from './subscription/SubscriptionHistory';
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, HelpCircle, FileText } from "lucide-react";
+import { LayoutDashboard, HelpCircle, FileText, CheckCircle } from "lucide-react";
 
 const Subscription = () => {
   const [searchParams] = useSearchParams();
@@ -50,6 +50,12 @@ const Subscription = () => {
           <Link to="/settings/subscription/dashboard">
             <LayoutDashboard className="h-4 w-4" />
             Dashboard Langganan
+          </Link>
+        </Button>
+        <Button variant="outline" asChild className="flex items-center gap-2">
+          <Link to="/settings/subscription/success">
+            <CheckCircle className="h-4 w-4" />
+            Halaman Sukses
           </Link>
         </Button>
         <Button variant="outline" asChild className="flex items-center gap-2">
