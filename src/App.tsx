@@ -15,11 +15,11 @@ import { subscriptionRoutes } from '@/routes/subscriptionRoutes';
 import { NotificationSystem } from '@/components/NotificationSystem';
 
 // Public pages
+import LandingPage from '@/pages/Index';
 import WelcomePage from '@/pages/WelcomePage';
-import LandingPage from '@/pages/LandingPage';
-import PublicApplicationForm from '@/pages/public/ApplicationForm'; 
-import PublicJobPreview from '@/pages/public/JobPreview';
-import NotFoundPage from '@/pages/NotFoundPage';
+import PublicApplicationForm from '@/pages/public/JobApplicationForm'; 
+import PublicJobPreview from '@/pages/public/JobPreviewPage';
+import NotFoundPage from '@/pages/NotFound';
 
 import './App.css';
 import './css/trial-styles.css';
