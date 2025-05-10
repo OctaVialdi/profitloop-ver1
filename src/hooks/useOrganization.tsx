@@ -19,32 +19,12 @@ export function useOrganization(): OrganizationData {
     isTrialActive: false,
     daysLeftInTrial: 0,
     hasPaidSubscription: false,
-    refreshData: async () => {
-      try {
-        // Safe way to get navigate function, only if we're in a Router context
-        let navFunction = undefined;
-        try {
-          navFunction = navigate;
-        } catch (e) {
-          console.warn("Navigation not available in current context");
-        }
-        return await fetchOrganizationData(setOrganizationData, navFunction);
-      } catch (error) {
-        console.error("Error refreshing organization data:", error);
-      }
-    }
+    refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate)
   });
   
-  // Use a try-catch block to safely get the navigate function
-  let navigate;
-  try {
-    navigate = useNavigate();
-  } catch (e) {
-    // This will catch the error if useNavigate is called outside a Router context
-    console.warn("useNavigate must be used within a Router. Some organization features may be limited.");
-  }
+  const navigate = useNavigate();
   
-  // Initialize data fetching, only if navigate is available
+  // Initialize data fetching
   useEffect(() => {
     fetchOrganizationData(setOrganizationData, navigate);
   }, [navigate]);

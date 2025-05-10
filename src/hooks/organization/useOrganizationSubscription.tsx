@@ -3,30 +3,30 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { OrganizationData } from "@/types/organization";
 
-export function useOrganizationSubscription(organizationData: OrganizationData, refreshCallback: () => Promise<void>) {
+export function useOrganizationSubscription(
+  organizationData: OrganizationData,
+  refreshData: () => Promise<void>
+) {
   useEffect(() => {
-    if (!organizationData.organization?.id) return;
-    
-    // Set up subscription for real-time organization updates
-    const subscription = supabase
-      .channel(`organization-${organizationData.organization.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*', 
-          schema: 'public',
+    // Set up listener for subscription changes
+    const channel = supabase
+      .channel('org-changes')
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
           table: 'organizations',
-          filter: `id=eq.${organizationData.organization.id}`
-        },
-        (payload) => {
-          console.log('Organization changed:', payload);
-          refreshCallback();
+          filter: organizationData.userProfile?.organization_id ? 
+            `id=eq.${organizationData.userProfile.organization_id}` : undefined
+        }, 
+        () => {
+          refreshData();
         }
       )
       .subscribe();
       
     return () => {
-      supabase.removeChannel(subscription);
+      supabase.removeChannel(channel);
     };
-  }, [organizationData.organization?.id, refreshCallback]);
+  }, [organizationData.userProfile?.organization_id, refreshData]);
 }

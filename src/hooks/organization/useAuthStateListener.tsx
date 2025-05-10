@@ -3,23 +3,27 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { OrganizationData } from "@/types/organization";
 
-export function useAuthStateListener(organizationData: OrganizationData, refreshCallback: () => Promise<void>) {
+export function useAuthStateListener(
+  organizationData: OrganizationData,
+  refreshData: () => Promise<void>
+) {
   useEffect(() => {
-    // Set up auth state change listener
+    // Set up listener for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event);
-      
-      // Only refresh on specific auth events to avoid unnecessary refreshes
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-        // Use setTimeout to prevent potential auth state deadlocks
-        setTimeout(() => {
-          refreshCallback();
-        }, 0);
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        // If the user's token was refreshed or user was updated, 
+        // check if organization_id in metadata has changed
+        if (session && 
+            session.user.user_metadata?.organization_id !== 
+            organizationData.organization?.id) {
+          console.log("Organization changed in user metadata, refreshing data");
+          refreshData();
+        }
       }
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, [refreshCallback]);
+  }, [organizationData.organization?.id, refreshData]);
 }

@@ -1,10 +1,13 @@
+
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { LegacyEmployee } from '@/hooks/useEmployees';
+import { useNavigate } from 'react-router-dom';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar } from "@/components/ui/avatar";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { EmployeeActions } from "../EmployeeActions";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 import { EmployeeColumnState, ColumnOrder } from '../EmployeeColumnManager';
-import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { Users } from 'lucide-react';
 
 interface EmployeeTableViewProps {
   data: LegacyEmployee[];
@@ -12,134 +15,190 @@ interface EmployeeTableViewProps {
   columnOrder: ColumnOrder;
 }
 
-export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
-  data,
-  visibleColumns,
-  columnOrder,
+export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({ 
+  data, 
+  visibleColumns, 
+  columnOrder 
 }) => {
+  const navigate = useNavigate();
+
+  // Column label mapping
+  const columnLabels: Record<keyof EmployeeColumnState, string> = {
+    name: "Employee name",
+    employeeId: "Employee ID", 
+    email: "Email",
+    branch: "Branch",
+    organization: "Organization",
+    jobPosition: "Job position",
+    jobLevel: "Job level",
+    employmentStatus: "Employment status",
+    joinDate: "Join date",
+    endDate: "End date",
+    signDate: "Sign date",
+    resignDate: "Resign date",
+    barcode: "Barcode",
+    birthDate: "Birth date",
+    birthPlace: "Birth place",
+    address: "Address",
+    mobilePhone: "Mobile phone",
+    religion: "Religion",
+    gender: "Gender",
+    maritalStatus: "Marital status"
+  };
+  
+  // Filter the column order to only include visible columns
+  const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
+  
+  // Important: We need exactly 5 data columns (plus checkbox and actions columns) for a total of 7
+  const limitedVisibleColumnsOrder: Array<keyof EmployeeColumnState> = (() => {
+    const maxDataColumns = 5; // Maximum number of data columns to display
+    
+    // If name is in the visible columns, we need to ensure it's included
+    const nameIndex = visibleColumnsOrder.indexOf('name');
+    
+    if (nameIndex === -1) {
+      // If name is not in the visible columns, just take the first 5
+      return visibleColumnsOrder.slice(0, maxDataColumns) as Array<keyof EmployeeColumnState>;
+    } else {
+      // Remove "name" from the array for now
+      const withoutName = [...visibleColumnsOrder];
+      withoutName.splice(nameIndex, 1);
+      
+      // Take the name column plus up to (maxDataColumns-1) more columns
+      return ['name' as keyof EmployeeColumnState, 
+        ...withoutName.slice(0, maxDataColumns - 1) as Array<keyof EmployeeColumnState>];
+    }
+  })();
+  
+  // Check if we need horizontal scrolling (more columns exist than are shown)
+  const needsHorizontalScroll = visibleColumnsOrder.length > limitedVisibleColumnsOrder.length;
+
+  // Handle click on employee name to navigate to employee detail with new route pattern
+  const handleEmployeeClick = (employee: LegacyEmployee) => {
+    navigate(`/my-info/personal?id=${employee.id}`);
+  };
+  
+  // Format date for display
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
+    if (!dateString) return "-";
+    
     try {
-      return format(new Date(dateString), 'dd MMM yyyy');
-    } catch {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (error) {
       return dateString;
     }
   };
+  
+  // Render cell content based on column key
+  const renderCellContent = (employee: LegacyEmployee, columnKey: keyof EmployeeColumnState) => {
+    if (columnKey === 'name') {
+      return (
+        <div 
+          className="flex items-center gap-2 cursor-pointer" 
+          onClick={() => handleEmployeeClick(employee)}
+        >
+          <Avatar className="h-8 w-8">
+            <div className="bg-gray-100 h-full w-full rounded-full flex items-center justify-center">
+              {employee.name.charAt(0)}
+            </div>
+          </Avatar>
+          <div className="text-blue-600 hover:underline">{employee.name}</div>
+        </div>
+      );
+    }
+    
+    // Special handling for employeeId field - use stored employee_id
+    if (columnKey === 'employeeId') {
+      return employee.employee_id || employee.employeeId || '-';
+    }
+    
+    // Special handling for date fields
+    if (columnKey === 'birthDate' || columnKey === 'joinDate' || columnKey === 'signDate') {
+      return formatDate(employee[columnKey]);
+    }
+    
+    // For all other columns, render the value or a dash if not available
+    return employee[columnKey as keyof LegacyEmployee] || '-';
+  };
 
-  const visibleColumnsArray = columnOrder.filter(c => visibleColumns[c]);
+  // Calculate width for columns to ensure alignment
+  const getColumnWidth = (colKey: keyof EmployeeColumnState) => {
+    if (colKey === 'name') return 'w-[220px]';
+    if (colKey === 'employeeId') return 'w-[140px]';
+    if (colKey === 'email') return 'w-[200px]';
+    return 'w-[180px]';
+  };
 
   return (
-    <Card className="border border-muted/60 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-muted/50 border-b">
-              {visibleColumnsArray.includes('name') && (
-                <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">Name</th>
-              )}
-              {visibleColumnsArray.includes('employeeId') && (
-                <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">Employee ID</th>
-              )}
-              {visibleColumnsArray.includes('email') && (
-                <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">Email</th>
-              )}
-              {visibleColumnsArray.includes('jobPosition') && (
-                <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">Position</th>
-              )}
-              {visibleColumnsArray.includes('employmentStatus') && (
-                <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">Status</th>
-              )}
-              {visibleColumnsArray.includes('branch') && (
-                <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">Branch</th>
-              )}
-              {visibleColumnsArray.includes('organization') && (
-                <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">Department</th>
-              )}
-              {visibleColumnsArray.includes('joinDate') && (
-                <th className="text-left py-2.5 px-3 text-xs font-medium text-muted-foreground">Join Date</th>
-              )}
-              <th className="text-right py-2.5 px-3 text-xs font-medium text-muted-foreground">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((employee, index) => (
-              <tr 
-                key={employee.id || index} 
-                className="border-b last:border-0 transition-colors hover:bg-muted/20"
-              >
-                {visibleColumnsArray.includes('name') && (
-                  <td className="p-3 text-sm">
-                    <div className="font-medium">{employee.name}</div>
-                  </td>
+    <div className="border rounded-md">
+      <div className="relative">
+        {/* Using a single table structure for better alignment */}
+        <ScrollArea className="w-full" type={needsHorizontalScroll ? "always" : "auto"}>
+          <div className={needsHorizontalScroll ? "min-w-max" : "w-full"}>
+            <Table>
+              <TableHeader className="sticky top-0 z-20 bg-white">
+                <TableRow>
+                  <TableHead className="w-[40px] sticky left-0 z-30 bg-white">
+                    <Checkbox />
+                  </TableHead>
+                  
+                  {limitedVisibleColumnsOrder.map((colKey) => {
+                    const isNameColumn = colKey === 'name';
+                    const columnWidth = getColumnWidth(colKey);
+                    return (
+                      <TableHead 
+                        key={colKey}
+                        className={`${isNameColumn ? "sticky left-[40px] z-30 bg-white" : ""} ${columnWidth}`}
+                      >
+                        {columnLabels[colKey]}
+                      </TableHead>
+                    );
+                  })}
+                  
+                  <TableHead className="text-right sticky right-0 z-30 bg-white w-[100px]">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="relative">
+                {data.map(employee => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="sticky left-0 z-20 bg-white">
+                      <Checkbox />
+                    </TableCell>
+                    
+                    {limitedVisibleColumnsOrder.map((colKey) => {
+                      const isNameColumn = colKey === 'name';
+                      const columnWidth = getColumnWidth(colKey);
+                      return (
+                        <TableCell 
+                          key={colKey}
+                          className={`${isNameColumn ? "sticky left-[40px] z-20 bg-white" : ""} ${columnWidth}`}
+                        >
+                          {renderCellContent(employee, colKey)}
+                        </TableCell>
+                      );
+                    })}
+                    
+                    <TableCell className="text-right sticky right-0 z-20 bg-white w-[100px]">
+                      <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {data.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={limitedVisibleColumnsOrder.length + 2} className="text-center py-8">
+                      No employee data found
+                    </TableCell>
+                  </TableRow>
                 )}
-                {visibleColumnsArray.includes('employeeId') && (
-                  <td className="p-3 text-sm text-muted-foreground">
-                    {employee.employeeId || employee.employee_id || '-'}
-                  </td>
-                )}
-                {visibleColumnsArray.includes('email') && (
-                  <td className="p-3 text-sm text-muted-foreground">
-                    {employee.email || '-'}
-                  </td>
-                )}
-                {visibleColumnsArray.includes('jobPosition') && (
-                  <td className="p-3 text-sm text-muted-foreground">
-                    {employee.jobPosition || '-'}
-                  </td>
-                )}
-                {visibleColumnsArray.includes('employmentStatus') && (
-                  <td className="p-3">
-                    <Badge variant="outline" className={employee.employmentStatus === 'Full Time' ? 
-                      'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:border-green-800/30 dark:text-green-400' : 
-                      'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/30 dark:text-blue-400'
-                    }>
-                      {employee.employmentStatus || 'Unknown'}
-                    </Badge>
-                  </td>
-                )}
-                {visibleColumnsArray.includes('branch') && (
-                  <td className="p-3 text-sm text-muted-foreground">
-                    {employee.branch || '-'}
-                  </td>
-                )}
-                {visibleColumnsArray.includes('organization') && (
-                  <td className="p-3 text-sm text-muted-foreground">
-                    {employee.organization || '-'}
-                  </td>
-                )}
-                {visibleColumnsArray.includes('joinDate') && (
-                  <td className="p-3 text-sm text-muted-foreground">
-                    {formatDate(employee.joinDate)}
-                  </td>
-                )}
-                <td className="p-3 text-right">
-                  <div className="flex items-center justify-end space-x-1">
-                    <a 
-                      href={`/hr/data/employee/${employee.id}`} 
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-muted bg-transparent text-sm font-medium ring-offset-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {data.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <div className="rounded-full bg-muted p-3 mb-3">
-              <Users className="h-6 w-6 text-muted-foreground/60" />
-            </div>
-            <h3 className="text-base font-medium">No employees found</h3>
-            <p className="text-sm text-muted-foreground mt-1">Try adjusting your filters or search term</p>
+              </TableBody>
+            </Table>
           </div>
-        )}
+          {needsHorizontalScroll && <ScrollBar orientation="horizontal" />}
+        </ScrollArea>
       </div>
-    </Card>
+    </div>
   );
 };

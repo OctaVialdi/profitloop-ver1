@@ -4,123 +4,144 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfileExists } from "@/services/profileService";
 import { AuthState } from "./types";
+import { cleanupAuthState } from "@/utils/authUtils";
 
 /**
  * Hook to manage authentication state and listen for auth changes
  */
 export function useAuthState(): AuthState {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   // Listen for auth state changes
   useEffect(() => {
+    console.log("Setting up auth state listener");
+    let isMounted = true;
+    
+    // Function to handle profile creation with debounce protection
+    const handleProfileCreation = async (userId: string, email: string, metadata: any) => {
+      if (!isMounted) return;
+      
+      try {
+        // Use setTimeout to avoid potential auth state deadlocks
+        setTimeout(async () => {
+          if (!isMounted) return;
+          
+          const isEmailVerified = metadata?.email_confirmed_at !== null;
+          
+          try {
+            // First check if profile exists
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('id, email_verified')
+              .eq('id', userId)
+              .maybeSingle();
+              
+            if (profileData) {
+              console.log("Profile already exists, no need to create");
+              return;
+            }
+            
+            // Only try to create profile if it doesn't exist
+            await ensureProfileExists(userId, {
+              email: email || '',
+              full_name: metadata?.full_name || null,
+              email_verified: isEmailVerified
+            });
+          } catch (err) {
+            console.error("Error in profile creation:", err);
+          }
+        }, 500); // Add slight delay to avoid race conditions
+      } catch (err) {
+        console.error("Error in auth listener profile handling:", err);
+      }
+    };
+
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session) => {
-        console.log("Auth state changed:", event, session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
+      async (event: string, currentSession) => {
+        console.log("Auth state changed:", event, currentSession?.user?.id);
         
-        // If user is logged in or just signed up, ensure profile exists and email verification is synced
-        if (session?.user) {
-          // Use setTimeout to avoid potential auth state deadlocks
-          setTimeout(async () => {
-            try {
-              // Check if user's email is verified in auth system
-              const isEmailVerified = session.user.email_confirmed_at !== null;
-              
-              // Handle auth events using string type comparison instead
-              if (event === 'SIGNED_UP' || 
-                  event === 'SIGNED_IN' || 
-                  event === 'USER_UPDATED') {
-                console.log(`${event} detected, ensuring profile and verification status`);
-                
-                try {
-                  // First check if profile exists
-                  const { data: profileData } = await supabase
-                    .from('profiles')
-                    .select('id, email_verified')
-                    .eq('id', session.user.id)
-                    .maybeSingle();
-                    
-                  if (profileData) {
-                    // Profile exists, update email verification if needed
-                    if (isEmailVerified && !profileData.email_verified) {
-                      const { error: updateError } = await supabase
-                        .from('profiles')
-                        .update({ email_verified: true })
-                        .eq('id', session.user.id);
-                        
-                      if (updateError) {
-                        console.error("Error updating email verification status:", updateError);
-                      } else {
-                        console.log("Profile email_verified set to true");
-                      }
-                    }
-                  } else {
-                    // Profile doesn't exist, create it
-                    console.log("Profile not found, creating new profile");
-                    
-                    // Direct insert for new signups - most reliable method
-                    try {
-                      const { error: directError } = await supabase
-                        .from('profiles')
-                        .insert({
-                          id: session.user.id,
-                          email: session.user.email || '',
-                          full_name: session.user.user_metadata?.full_name || null,
-                          email_verified: isEmailVerified,
-                          role: session.user.user_metadata?.role || 'employee'
-                        });
-                        
-                      if (directError) {
-                        console.error("Direct profile creation error:", directError);
-                      } else {
-                        console.log("Direct profile creation success on auth event");
-                      }
-                    } catch (insertErr) {
-                      console.error("Direct insert failed, trying fallback:", insertErr);
-                      
-                      // Fallback to helper function
-                      await ensureProfileExists(session.user.id, {
-                        email: session.user.email || '',
-                        full_name: session.user.user_metadata?.full_name || null,
-                        email_verified: isEmailVerified
-                      });
-                    }
-                  }
-                } catch (err) {
-                  console.error("Error in profile verification check:", err);
-                }
-              }
-            } catch (err) {
-              console.error("Error in auth listener profile creation/update:", err);
-            }
-          }, 0);
+        // Clean up if we're signing out
+        if (event === 'SIGNED_OUT') {
+          if (isMounted) {
+            setSession(null);
+            setUser(null);
+            setIsLoading(false);
+            // Additional cleanup to ensure clean state
+            cleanupAuthState();
+          }
+          return;
+        }
+        
+        if (isMounted) {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          setIsLoading(false);
+          
+          // If user is logged in, ensure profile exists but don't block the UI
+          if (currentSession?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+            handleProfileCreation(
+              currentSession.user.id,
+              currentSession.user.email || '',
+              currentSession.user.user_metadata
+            );
+          }
         }
       }
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // If user is logged in, ensure profile exists
-      if (session?.user) {
-        const isEmailVerified = session.user.email_confirmed_at !== null;
+    const checkExistingSession = async () => {
+      try {
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
         
-        ensureProfileExists(session.user.id, {
-          email: session.user.email || '',
-          full_name: session.user.user_metadata?.full_name || null,
-          email_verified: isEmailVerified
-        });
+        if (error) {
+          console.error("Error getting session:", error);
+          cleanupAuthState(); // Clean up if there's an error
+          if (isMounted) {
+            setLoginError(error.message);
+            setIsLoading(false);
+            setAuthInitialized(true);
+          }
+          return;
+        }
+        
+        if (isMounted) {
+          setSession(existingSession);
+          setUser(existingSession?.user ?? null);
+          
+          // If user is logged in, ensure profile exists
+          if (existingSession?.user) {
+            console.log("Found existing session for user:", existingSession.user.id);
+            handleProfileCreation(
+              existingSession.user.id,
+              existingSession.user.email || '',
+              existingSession.user.user_metadata
+            );
+          } else {
+            console.log("No active session found");
+          }
+          
+          setIsLoading(false);
+          setAuthInitialized(true);
+        }
+      } catch (err) {
+        console.error("Exception in checkExistingSession:", err);
+        if (isMounted) {
+          setIsLoading(false);
+          setAuthInitialized(true);
+        }
       }
-    });
+    };
+
+    checkExistingSession();
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -129,6 +150,7 @@ export function useAuthState(): AuthState {
     isLoading,
     loginError,
     session,
-    user
+    user,
+    authInitialized
   };
 }
