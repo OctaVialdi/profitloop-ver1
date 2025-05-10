@@ -1,6 +1,4 @@
 
-import { Json } from "./supabase";
-
 export interface UserProfile {
   id: string;
   organization_id?: string;
@@ -18,30 +16,12 @@ export interface UserProfile {
 export interface Organization {
   id: string;
   name: string;
-  business_field: string;
-  employee_count: number;
-  address: string;
-  phone: string;
-  subscription_plan_id: string;
-  trial_start_date: string;
-  trial_end_date: string;
-  grace_period_end: string;
-  trial_expired: boolean;
-  subscription_status: string;
-  created_at: string;
-  theme_settings: Json;
-  logo_path: string;
-}
-
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  max_members: number | null;
-  features: Record<string, any> | null;
-  is_active: boolean;
-  created_at?: string;
+  business_field: string | null;
+  employee_count: number | null;
+  address: string | null;
+  phone: string | null;
+  logo_path: string | null;
+  theme_settings: any;
 }
 
 export interface UserPreferences {
@@ -58,8 +38,4 @@ export type OrganizationData = {
   isAdmin: boolean;
   isEmployee: boolean;
   refreshData: () => Promise<void>;
-  isTrialActive?: boolean;
-  daysLeftInTrial?: number;
-  hasPaidSubscription?: boolean;
-  subscriptionPlan?: SubscriptionPlan | null;
 };

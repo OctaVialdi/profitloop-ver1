@@ -1,5 +1,4 @@
 
-// Import statement fix
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";

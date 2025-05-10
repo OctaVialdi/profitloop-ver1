@@ -5,7 +5,6 @@ import { toast } from "@/components/ui/sonner";
 import { ensureProfileExists } from "@/services/profileService";
 import { AuthCredentials, AuthSignInResult } from "./types";
 import { cleanupAuthState } from "@/utils/authUtils";
-import { forceSignIn } from "@/integrations/supabase/auth/signIn";
 
 /**
  * Hook to handle user sign-in with email and password
@@ -33,31 +32,11 @@ export function useSignIn() {
       // Small delay to ensure clean state
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Try to use standard sign-in first
-      console.log("Attempting standard sign in for:", credentials.email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
       });
 
-      // If we get an email verification error, we can try force sign-in for testing purposes
-      if (error && error.message.includes("Email not confirmed")) {
-        console.log("Email not confirmed, attempting force sign in");
-        
-        // Try force sign-in which can bypass email verification requirements
-        const forceSignInResult = await forceSignIn(credentials.email, credentials.password);
-        
-        if (forceSignInResult.error) {
-          throw forceSignInResult.error;
-        }
-        
-        // If force sign-in succeeds, use that result
-        if (forceSignInResult.data) {
-          console.log("Force sign in succeeded");
-          return { data: forceSignInResult.data, error: null };
-        }
-      }
-      
       if (error) {
         throw error;
       }
@@ -106,7 +85,7 @@ export function useSignIn() {
       } else if (error.message.includes("Database error")) {
         errorMessage = "Terjadi masalah server saat login. Mohon coba lagi dalam beberapa saat.";
       } else if (error.message.includes("Email not confirmed")) {
-        errorMessage = "Email belum diverifikasi. Mohon verifikasi email terlebih dahulu atau gunakan alternatif login.";
+        errorMessage = "Email belum diverifikasi. Mohon verifikasi email terlebih dahulu.";
       }
       
       setLoginError(errorMessage);

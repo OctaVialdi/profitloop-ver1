@@ -1,29 +1,21 @@
 
-import { Session, User } from "@supabase/supabase-js";
-import { UserProfile } from "@/types/organization";
-import { Json } from "@/types/supabase";
-
-export interface AuthState {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
+export interface MagicLinkParams {
+  email?: string;
+  token?: string;
+  redirectTo?: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  accessToken?: string;
+  refreshToken?: string;
+  errorCode?: string | null;
+  errorDescription?: string | null;
+  type?: string;
 }
 
-export interface AuthResponse {
-  user: User | null;
-  session: Session | null;
-  error: Error | null;
-}
-
-export interface MagicLinkState {
+export interface MagicLinkResult {
   isLoading: boolean;
-  error: Error | null;
-  success: boolean;
-  user: User | null;
-}
-
-export interface EmailVerificationState {
-  message: string;
-  status: 'idle' | 'loading' | 'success' | 'error';
   error: string | null;
+  success?: boolean;
+  organizationName?: string;
+  sendMagicLink?: (params: MagicLinkParams) => Promise<void>;
 }

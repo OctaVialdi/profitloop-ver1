@@ -1,86 +1,651 @@
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SubscriptionPlan } from "@/types/organization";
 
-export default function SubscriptionPlansManagement() {
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Check, Edit, Plus, Trash, Link as LinkIcon, XCircle } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { formatRupiah } from "@/utils/formatUtils";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+
+// Define subscription plan type that matches database structure
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  max_members: number | null;
+  features: Record<string, any> | null;
+  is_active: boolean;
+  direct_payment_url?: string | null;
+  deskripsi?: string | null;
+  created_at?: string;
+}
+
+// Define feature item interface for the features form
+interface FeatureItem {
+  name: string;
+  value: string;
+  enabled: boolean;
+}
+
+const SubscriptionPlansManagement = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    price: 0,
+    max_members: 0,
+    is_active: true,
+    direct_payment_url: '',
+    deskripsi: '',
+  });
+  const [features, setFeatures] = useState<FeatureItem[]>([
+    { name: 'storage', value: '1GB', enabled: true },
+    { name: 'api_calls', value: '1000', enabled: false },
+    { name: 'support', value: 'Basic', enabled: false },
+    { name: 'collaboration', value: 'Limited', enabled: false },
+    { name: 'security', value: 'Standard', enabled: false }
+  ]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  useEffect(() => {
-    // Mock subscription plans data
-    const mockPlans: SubscriptionPlan[] = [
-      {
-        id: "basic_plan",
-        name: "Basic",
-        slug: "basic",
-        price: 0,
-        max_members: 3,
-        features: {
-          storage: "1GB",
-          api_calls: "100"
-        },
-        is_active: true
-      },
-      {
-        id: "standard_plan",
-        name: "Standard",
-        slug: "standard",
-        price: 249000,
-        max_members: 10,
-        features: {
-          storage: "10GB",
-          api_calls: "1000"
-        },
-        is_active: true
-      },
-      {
-        id: "premium_plan",
-        name: "Premium",
-        slug: "premium",
-        price: 499000,
-        max_members: 25,
-        features: {
-          storage: "100GB",
-          api_calls: "Unlimited"
-        },
-        is_active: true
+  const fetchPlans = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .order('price', { ascending: true });
+        
+      if (error) throw error;
+      
+      if (data) {
+        // Ensure proper type conversion
+        const typedPlans: SubscriptionPlan[] = data.map(plan => ({
+          ...plan,
+          features: plan.features as Record<string, any> | null
+        }));
+        setPlans(typedPlans);
+        console.log('Subscription plans fetched:', typedPlans);
       }
-    ];
-    
-    setPlans(mockPlans);
-    setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      toast.error('Gagal memuat data paket langganan');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
   
-  return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Subscription Plans Management</h1>
+  useEffect(() => {
+    fetchPlans();
+  }, [fetchPlans]);
+  
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('subscription_plans')
+        .update({ is_active: !currentStatus })
+        .eq('id', id);
+        
+      if (error) throw error;
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Plans</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p>Loading plans...</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {plans.map((plan) => (
-                <Card key={plan.id} className="border-t-4 border-t-blue-500">
-                  <CardHeader>
-                    <CardTitle>{plan.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xl font-bold">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(plan.price)}</p>
-                    <p className="text-sm text-muted-foreground">Max users: {plan.max_members}</p>
-                    <p className="text-sm">Storage: {plan.features?.storage}</p>
-                    <p className="text-sm">API calls: {plan.features?.api_calls}</p>
-                  </CardContent>
-                </Card>
-              ))}
+      // Update local state to reflect the change
+      setPlans(plans.map(plan => 
+        plan.id === id ? { ...plan, is_active: !currentStatus } : plan
+      ));
+      
+      toast.success(`Paket ${currentStatus ? 'dinonaktifkan' : 'diaktifkan'}`);
+    } catch (error) {
+      console.error('Error updating plan status:', error);
+      toast.error('Gagal mengubah status paket');
+    }
+  };
+  
+  // Initialize features from plan data
+  const initializeFeaturesFromPlan = (planFeatures: Record<string, any> | null) => {
+    const defaultFeatures = [
+      { name: 'storage', value: '1GB', enabled: false },
+      { name: 'api_calls', value: '1000', enabled: false },
+      { name: 'support', value: 'Basic', enabled: false },
+      { name: 'collaboration', value: 'Limited', enabled: false },
+      { name: 'security', value: 'Standard', enabled: false }
+    ];
+    
+    if (!planFeatures) return defaultFeatures;
+    
+    return defaultFeatures.map(feature => {
+      const featureExists = planFeatures[feature.name] !== undefined;
+      return {
+        name: feature.name,
+        value: featureExists ? String(planFeatures[feature.name]) : feature.value,
+        enabled: featureExists
+      };
+    });
+  };
+  
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      slug: '',
+      price: 0,
+      max_members: 0,
+      is_active: true,
+      direct_payment_url: '',
+      deskripsi: '',
+    });
+    setFeatures([
+      { name: 'storage', value: '1GB', enabled: true },
+      { name: 'api_calls', value: '1000', enabled: false },
+      { name: 'support', value: 'Basic', enabled: false },
+      { name: 'collaboration', value: 'Limited', enabled: false },
+      { name: 'security', value: 'Standard', enabled: false }
+    ]);
+    setIsEditMode(false);
+    setCurrentPlan(null);
+  };
+  
+  const handleOpenDialog = (plan?: SubscriptionPlan) => {
+    if (plan) {
+      setIsEditMode(true);
+      setCurrentPlan(plan);
+      setFormData({
+        name: plan.name,
+        slug: plan.slug || '',
+        price: plan.price || 0,
+        max_members: plan.max_members || 0,
+        is_active: plan.is_active,
+        direct_payment_url: plan.direct_payment_url || '',
+        deskripsi: plan.deskripsi || '',
+      });
+      setFeatures(initializeFeaturesFromPlan(plan.features));
+    } else {
+      resetForm();
+    }
+    setIsDialogOpen(true);
+  };
+  
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    resetForm();
+  };
+  
+  // Update the input change handler to work with both Input and Textarea elements
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    
+    // Handle numeric inputs
+    if (type === 'number') {
+      setFormData({
+        ...formData,
+        [name]: parseFloat(value) || 0,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
+  };
+  
+  const handleFeatureChange = (index: number, field: 'value' | 'enabled', value: string | boolean) => {
+    const updatedFeatures = [...features];
+    updatedFeatures[index] = {
+      ...updatedFeatures[index],
+      [field]: value
+    };
+    setFeatures(updatedFeatures);
+  };
+  
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData({
+      ...formData,
+      is_active: checked,
+    });
+  };
+  
+  const buildFeaturesObject = () => {
+    const featuresObject: Record<string, any> = {};
+    
+    features.forEach(feature => {
+      if (feature.enabled) {
+        featuresObject[feature.name] = feature.value;
+      }
+    });
+    
+    return featuresObject;
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form data
+    if (!formData.name) {
+      toast.error('Nama paket harus diisi');
+      return;
+    }
+    
+    if (!formData.slug) {
+      // Generate slug from name if not provided
+      formData.slug = formData.name.toLowerCase().replace(/\s+/g, '_') + '_plan';
+    }
+    
+    try {
+      const planData = {
+        name: formData.name,
+        slug: formData.slug,
+        price: formData.price,
+        max_members: formData.max_members || null,
+        is_active: formData.is_active,
+        direct_payment_url: formData.direct_payment_url || null,
+        deskripsi: formData.deskripsi || null,
+        features: buildFeaturesObject()
+      };
+      
+      console.log('Saving plan data:', planData);
+      
+      if (isEditMode && currentPlan) {
+        // Update existing plan
+        const { data, error } = await supabase
+          .from('subscription_plans')
+          .update(planData)
+          .eq('id', currentPlan.id)
+          .select();
+          
+        if (error) throw error;
+        
+        // Update local state to ensure UI is up-to-date
+        if (data && data.length > 0) {
+          const updatedPlan: SubscriptionPlan = {
+            ...data[0],
+            features: data[0].features as Record<string, any> | null
+          };
+          
+          setPlans(prev => prev.map(plan => 
+            plan.id === currentPlan.id ? updatedPlan : plan
+          ));
+          console.log('Plan updated in state:', updatedPlan);
+        }
+        
+        toast.success('Paket berhasil diperbarui');
+      } else {
+        // Create new plan
+        const { data, error } = await supabase
+          .from('subscription_plans')
+          .insert([planData])
+          .select();
+          
+        if (error) throw error;
+        
+        // Add new plan to local state
+        if (data && data.length > 0) {
+          const newPlan: SubscriptionPlan = {
+            ...data[0],
+            features: data[0].features as Record<string, any> | null
+          };
+          
+          setPlans(prev => [...prev, newPlan]);
+          console.log('New plan added to state:', newPlan);
+        }
+        
+        toast.success('Paket baru berhasil dibuat');
+      }
+      
+      handleCloseDialog();
+      // Explicitly fetch the latest data to ensure UI is synchronized
+      fetchPlans();
+    } catch (error) {
+      console.error('Error saving plan:', error);
+      toast.error('Gagal menyimpan paket');
+    }
+  };
+  
+  const handleDeletePlan = async () => {
+    if (!currentPlan) return;
+    
+    try {
+      const { error } = await supabase
+        .from('subscription_plans')
+        .delete()
+        .eq('id', currentPlan.id);
+        
+      if (error) throw error;
+      
+      // Remove the deleted plan from the local state
+      setPlans(plans.filter(plan => plan.id !== currentPlan.id));
+      
+      toast.success('Paket berhasil dihapus');
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      toast.error('Gagal menghapus paket');
+    }
+  };
+  
+  const openDeleteDialog = (plan: SubscriptionPlan) => {
+    setCurrentPlan(plan);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const renderFeaturesList = (planFeatures: Record<string, any> | null) => {
+    if (!planFeatures || Object.keys(planFeatures).length === 0) return "-";
+    
+    return (
+      <div className="space-y-1">
+        {Object.entries(planFeatures).map(([key, value]) => (
+          <div key={key} className="flex items-center text-sm">
+            <span className="font-medium mr-1">{key}:</span> 
+            <span>{value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Kelola Paket Langganan</CardTitle>
+            <CardDescription>Menambah, mengedit, atau menghapus paket langganan</CardDescription>
+          </div>
+          <Button onClick={() => handleOpenDialog()} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Tambah Paket Baru
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {plans.map((plan) => (
+              <Card key={plan.id} className="border-base overflow-hidden">
+                <div className="grid grid-cols-12 items-center p-4 gap-4">
+                  {/* Nama & Slug */}
+                  <div className="col-span-3">
+                    <div className="font-semibold">{plan.name}</div>
+                    <div className="text-xs text-muted-foreground">{plan.slug}</div>
+                  </div>
+                  
+                  {/* Harga */}
+                  <div className="col-span-1 font-medium">
+                    {formatRupiah(plan.price)}
+                  </div>
+                  
+                  {/* Max Anggota */}
+                  <div className="col-span-1 text-center">
+                    {plan.max_members || '∞'}
+                  </div>
+                  
+                  {/* Deskripsi */}
+                  <div className="col-span-2 truncate">
+                    {plan.deskripsi || '-'}
+                  </div>
+                  
+                  {/* Fitur */}
+                  <div className="col-span-2">
+                    {renderFeaturesList(plan.features)}
+                  </div>
+                  
+                  {/* URL Midtrans */}
+                  <div className="col-span-1">
+                    {plan.direct_payment_url ? (
+                      <div className="flex items-center">
+                        <LinkIcon className="h-4 w-4 mr-1 text-green-500" />
+                        <span className="text-xs">Ada</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <XCircle className="h-4 w-4 mr-1 text-gray-400" />
+                        <span className="text-xs text-gray-500">Tidak ada</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Status */}
+                  <div className="col-span-1">
+                    <div className="flex items-center">
+                      <Switch 
+                        checked={plan.is_active} 
+                        onCheckedChange={() => handleToggleActive(plan.id, plan.is_active)}
+                        className="mr-2"
+                      />
+                      <Badge variant={plan.is_active ? "success" : "secondary"} className="text-xs">
+                        {plan.is_active ? "Aktif" : "Nonaktif"}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Aksi */}
+                  <div className="col-span-1 flex justify-end space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenDialog(plan)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-destructive hover:bg-destructive/10" 
+                      onClick={() => openDeleteDialog(plan)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+            
+            {plans.length === 0 && !isLoading && (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Belum ada paket langganan. Klik tombol "Tambah Paket Baru" untuk membuat paket baru.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="flex justify-between border-t pt-5">
+        <p className="text-sm text-muted-foreground">
+          Total {plans.length} paket {plans.filter(p => p.is_active).length > 0 && `(${plans.filter(p => p.is_active).length} aktif)`}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Perubahan paket akan langsung terlihat di halaman pelanggan
+        </p>
+      </CardFooter>
+      
+      {/* Add/Edit Plan Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>{isEditMode ? 'Edit Paket Langganan' : 'Tambah Paket Langganan'}</DialogTitle>
+            <DialogDescription>
+              {isEditMode 
+                ? 'Ubah detail paket langganan yang sudah ada' 
+                : 'Tambahkan paket langganan baru ke dalam sistem'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Nama Paket
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="slug" className="text-right">
+                  Slug
+                </Label>
+                <div className="col-span-3 flex items-center">
+                  <Input
+                    id="slug"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleInputChange}
+                    className="flex-grow"
+                    placeholder="nama_paket_plan"
+                  />
+                  <div className="ml-2 text-xs text-gray-500">
+                    <span title="Digunakan sebagai identifier paket di dalam sistem">ℹ️</span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="deskripsi" className="text-right">
+                  Deskripsi
+                </Label>
+                <Textarea
+                  id="deskripsi"
+                  name="deskripsi"
+                  value={formData.deskripsi}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  placeholder="Deskripsi singkat tentang paket langganan"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="price" className="text-right">
+                  Harga
+                </Label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="max_members" className="text-right">
+                  Max Anggota
+                </Label>
+                <Input
+                  id="max_members"
+                  name="max_members"
+                  type="number"
+                  value={formData.max_members}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  placeholder="0 untuk tidak terbatas"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="direct_payment_url" className="text-right">
+                  URL Midtrans
+                </Label>
+                <Input
+                  id="direct_payment_url"
+                  name="direct_payment_url"
+                  value={formData.direct_payment_url || ''}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  placeholder="https://app.midtrans.com/snap/..."
+                />
+              </div>
+              
+              {/* Features section */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">
+                  Fitur Paket
+                </Label>
+                <div className="col-span-3 space-y-3 border p-3 rounded-md">
+                  {features.map((feature, index) => (
+                    <div key={feature.name} className="flex items-center space-x-3">
+                      <Switch
+                        checked={feature.enabled}
+                        onCheckedChange={(checked) => handleFeatureChange(index, 'enabled', checked)}
+                      />
+                      <span className="w-24">{feature.name}:</span>
+                      <Input
+                        value={feature.value}
+                        onChange={(e) => handleFeatureChange(index, 'value', e.target.value)}
+                        className="flex-1"
+                        disabled={!feature.enabled}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="is_active" className="text-right">
+                  Status
+                </Label>
+                <div className="flex items-center space-x-2 col-span-3">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={handleSwitchChange}
+                  />
+                  <Label htmlFor="is_active" className="cursor-pointer">
+                    {formData.is_active ? 'Aktif' : 'Nonaktif'}
+                  </Label>
+                </div>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                Batal
+              </Button>
+              <Button type="submit">
+                {isEditMode ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Simpan Perubahan
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Tambah Paket
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Hapus Paket</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus paket "{currentPlan?.name}"? 
+              Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePlan} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
   );
-}
+};
+
+export default SubscriptionPlansManagement;
