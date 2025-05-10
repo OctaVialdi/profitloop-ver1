@@ -41,31 +41,32 @@ export const SubscriptionPlans = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   // Fetch plans from the database
-  useEffect(() => {
-    const fetchPlans = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('subscription_plans')
-          .select('*')
-          .eq('is_active', true)
-          .order('price');
-        
-        if (error) {
-          throw error;
-        }
-        
-        if (data) {
-          setPlans(data as SubscriptionPlan[]);
-        }
-      } catch (error) {
-        console.error("Error fetching subscription plans:", error);
-        toast.error("Gagal memuat data paket langganan");
-      } finally {
-        setIsLoading(false);
+  const fetchPlans = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('price');
+      
+      if (error) {
+        throw error;
       }
-    };
-    
+      
+      if (data) {
+        setPlans(data as SubscriptionPlan[]);
+        console.log('Fetched subscription plans:', data);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      toast.error("Gagal memuat data paket langganan");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchPlans();
   }, []);
   
@@ -519,3 +520,4 @@ export const SubscriptionPlans = () => {
     </>
   );
 };
+

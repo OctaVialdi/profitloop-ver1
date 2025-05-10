@@ -72,6 +72,7 @@ const SubscriptionPlansManagement = () => {
       if (error) throw error;
       
       setPlans(data as SubscriptionPlan[]);
+      console.log('Subscription plans fetched:', data);
     } catch (error) {
       console.error('Error fetching plans:', error);
       toast.error('Gagal memuat data paket langganan');
@@ -102,6 +103,7 @@ const SubscriptionPlansManagement = () => {
         
       if (error) throw error;
       
+      // Update local state to reflect the change
       setPlans(plans.map(plan => 
         plan.id === id ? { ...plan, is_active: !currentStatus } : plan
       ));
@@ -253,28 +255,47 @@ const SubscriptionPlansManagement = () => {
         features: buildFeaturesObject()
       };
       
+      console.log('Saving plan data:', planData);
+      
       if (isEditMode && currentPlan) {
         // Update existing plan
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('subscription_plans')
           .update(planData)
-          .eq('id', currentPlan.id);
+          .eq('id', currentPlan.id)
+          .select();
           
         if (error) throw error;
+        
+        // Update local state to ensure UI is up-to-date
+        if (data && data.length > 0) {
+          setPlans(prev => prev.map(plan => 
+            plan.id === currentPlan.id ? data[0] : plan
+          ));
+          console.log('Plan updated in state:', data[0]);
+        }
         
         toast.success('Paket berhasil diperbarui');
       } else {
         // Create new plan
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('subscription_plans')
-          .insert([planData]);
+          .insert([planData])
+          .select();
           
         if (error) throw error;
+        
+        // Add new plan to local state
+        if (data && data.length > 0) {
+          setPlans(prev => [...prev, data[0]]);
+          console.log('New plan added to state:', data[0]);
+        }
         
         toast.success('Paket baru berhasil dibuat');
       }
       
       handleCloseDialog();
+      // Explicitly fetch the latest data to ensure UI is synchronized
       fetchPlans();
     } catch (error) {
       console.error('Error saving plan:', error);
@@ -293,9 +314,11 @@ const SubscriptionPlansManagement = () => {
         
       if (error) throw error;
       
+      // Remove the deleted plan from the local state
+      setPlans(plans.filter(plan => plan.id !== currentPlan.id));
+      
       toast.success('Paket berhasil dihapus');
       setIsDeleteDialogOpen(false);
-      fetchPlans();
     } catch (error) {
       console.error('Error deleting plan:', error);
       toast.error('Gagal menghapus paket');
@@ -635,3 +658,4 @@ const SubscriptionPlansManagement = () => {
 };
 
 export default SubscriptionPlansManagement;
+
