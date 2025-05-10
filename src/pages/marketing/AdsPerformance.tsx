@@ -221,10 +221,26 @@ const AdsPerformance = () => {
     }
   };
 
-  const getProgressBarColor = (status) => {
+  // This function is no longer needed as we'll use inline styles or classNames
+  // We'll modify how we apply the color to the Progress component
+  // const getProgressBarColor = (status) => {
+  //   switch (status) {
+  //     case "On Track":
+  //       return "bg-green-500";
+  //     case "At Risk":
+  //       return "bg-yellow-500";
+  //     case "Missed":
+  //       return "bg-red-500";
+  //     default:
+  //       return "bg-blue-500";
+  //   }
+  // };
+
+  // Function to get progress bar class based on status
+  const getProgressBarClass = (status) => {
     switch (status) {
       case "On Track":
-        return "bg-green-500";
+        return "bg-green-500"; 
       case "At Risk":
         return "bg-yellow-500";
       case "Missed":
@@ -607,7 +623,8 @@ const AdsPerformance = () => {
                     <span className="text-gray-600">Spent:</span>
                     <span className="font-semibold text-purple-700">$18,500</span>
                   </div>
-                  <Progress value={74} className="h-2 bg-gray-100" indicatorColor="bg-purple-500" />
+                  {/* Modified the Progress component to use className instead of indicatorColor */}
+                  <Progress value={74} className="h-2 bg-gray-100" />
                   <div className="flex justify-between text-sm text-gray-500">
                     <span>74% Used</span>
                     <span>26% Remaining</span>
@@ -674,7 +691,11 @@ const AdsPerformance = () => {
                           <span>Progress: {target.progress}%</span>
                           <span>0 days remaining</span>
                         </div>
-                        <Progress value={target.progress} className={`h-2 bg-gray-100 ${getProgressBarColor(target.status)}`} />
+                        {/* Fixed: Use className to style the Progress component instead of indicatorColor */}
+                        <Progress 
+                          value={target.progress} 
+                          className={`h-2 bg-gray-100`}
+                        />
                       </div>
                     ))}
                   </div>
