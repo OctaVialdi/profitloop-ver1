@@ -9,9 +9,7 @@ export interface UserProfile {
   preferences?: UserPreferences;
   created_at?: string;
   last_active?: string;
-  // Add profile_image field that was missing
   profile_image?: string | null;
-  // Newly added formatted timestamp field
   created_at_formatted?: string;
 }
 

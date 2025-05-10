@@ -1,7 +1,7 @@
 
 import { Dispatch, SetStateAction } from "react";
 import { NavigateFunction } from "react-router-dom";
-import { OrganizationData } from "@/types/organization";
+import { OrganizationData, UserProfile } from "@/types/organization";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -21,7 +21,7 @@ export async function fetchOrganizationData(
     }
 
     // Get the user's profile which includes organization relationship
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfileData, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", user.id)
@@ -53,7 +53,7 @@ export async function fetchOrganizationData(
           // Set data with the new profile
           setOrganizationData((prev) => ({
             ...prev,
-            userProfile: newProfile || null,
+            userProfile: newProfile as UserProfile || null,
             isLoading: false,
           }));
           
@@ -73,12 +73,12 @@ export async function fetchOrganizationData(
     }
 
     // Check if user has an organization
-    if (userProfile?.organization_id) {
+    if (userProfileData?.organization_id) {
       // Get organization data
       const { data: organization, error: orgError } = await supabase
         .from("organizations")
         .select("*")
-        .eq("id", userProfile.organization_id)
+        .eq("id", userProfileData.organization_id)
         .single();
 
       if (orgError) {
@@ -92,13 +92,13 @@ export async function fetchOrganizationData(
       }
       
       // Determine user roles based on profile role
-      const isSuperAdmin = userProfile.role === "super_admin";
-      const isAdmin = userProfile.role === "admin" || isSuperAdmin;
-      const isEmployee = userProfile.role === "employee" || isAdmin;
+      const isSuperAdmin = userProfileData.role === "super_admin";
+      const isAdmin = userProfileData.role === "admin" || isSuperAdmin;
+      const isEmployee = userProfileData.role === "employee" || isAdmin;
 
       setOrganizationData({
         organization,
-        userProfile,
+        userProfile: userProfileData as UserProfile,
         isLoading: false,
         error: null,
         isSuperAdmin,
@@ -110,7 +110,7 @@ export async function fetchOrganizationData(
       // User doesn't have an org yet
       setOrganizationData({
         organization: null,
-        userProfile,
+        userProfile: userProfileData as UserProfile,
         isLoading: false,
         error: null,
         isSuperAdmin: false,

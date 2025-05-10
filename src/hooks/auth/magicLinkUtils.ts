@@ -55,34 +55,7 @@ export async function processMagicLinkToken(userId: string, token: string) {
  */
 export async function validateInvitationToken(token: string, email: string) {
   try {
-    // First try validating against magic_link_invitations table directly
-    const { data: magicLinkData, error: magicLinkError } = await supabase
-      .from('magic_link_invitations')
-      .select('id, organization_id, role, email, status, expires_at')
-      .eq('token', token)
-      .eq('status', 'pending')
-      .gt('expires_at', new Date().toISOString())
-      .maybeSingle();
-
-    if (!magicLinkError && magicLinkData) {
-      console.log("Magic link found directly in table:", magicLinkData);
-      
-      // Check if email matches if provided
-      if (email && email !== magicLinkData.email) {
-        return {
-          valid: false,
-          message: "Email undangan tidak sesuai"
-        };
-      }
-      
-      return {
-        valid: true,
-        organizationId: magicLinkData.organization_id,
-        role: magicLinkData.role
-      };
-    }
-    
-    // If not found in direct table check, try the RPC function
+    // Use the RPC function to validate token
     const { data: validationResult, error: validationError } = await supabase.rpc(
       'validate_invitation',
       { 
@@ -91,7 +64,7 @@ export async function validateInvitationToken(token: string, email: string) {
       }
     );
 
-    console.log("Magic link validation result:", validationResult, validationError);
+    console.log("Invitation validation result:", validationResult, validationError);
 
     if (validationError) {
       return { 

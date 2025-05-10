@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -65,6 +64,8 @@ const InviteMembers = () => {
   const [magicLinkError, setMagicLinkError] = useState<string | null>(null);
   const [inviteFilter, setInviteFilter] = useState("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   // Fetch user's organization id and existing invitations
   useEffect(() => {
@@ -633,7 +634,39 @@ const InviteMembers = () => {
       setIsLoading(false);
     }
   };
-  
+
+  // Update the sendInvitation function:
+  const sendInvitation = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Use the RPC function to generate and send invitation
+      const { data, error } = await supabase.rpc(
+        'generate_magic_link_invitation',
+        { 
+          email_address: email,
+          org_id: organization?.id,
+          user_role: role
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      setSuccess(true);
+      setEmail("");
+      setRole("employee");
+      toast.success("Undangan berhasil dikirim");
+      
+    } catch (err: any) {
+      console.error("Error sending invitation:", err);
+      toast.error(err.message || "Gagal mengirim undangan");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto">

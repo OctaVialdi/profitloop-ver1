@@ -1,478 +1,213 @@
-
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
-import { UserPlus, Building, X, AlertCircle, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/hooks/auth/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-// Define the schema for the registration form
-const registerSchema = z.object({
-  fullName: z.string().min(2, {
-    message: "Nama harus mengandung minimal 2 karakter",
-  }),
-  password: z.string().min(8, {
-    message: "Password harus mengandung minimal 8 karakter",
-  }),
-  confirmPassword: z.string().min(8, {
-    message: "Konfirmasi password harus mengandung minimal 8 karakter",
-  }),
-}).refine((data) => data.password === data.confirmPassword, {
-  path: ["confirmPassword"],
-  message: "Password dan konfirmasi password tidak sama",
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { useOrganization } from "@/hooks/useOrganization";
 
 const AcceptInvitation = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [invitation, setInvitation] = useState<any | null>(null);
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
-  
-  // Extract token from the URL query parameters
-  const searchParams = new URLSearchParams(location.search);
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
-
-  // Form for registration
-  const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      fullName: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const { refreshData } = useOrganization();
+  const [searchParams] = useSearchParams();
+  const { token } = useParams<{ token: string }>();
+  const [organizationName, setOrganizationName] = useState<string>("");
+  const [organizationId, setOrganizationId] = useState<string>("");
+  const [role, setRole] = useState<string>("employee");
+  const [isInvitationValid, setInvitationValid] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isJoining, setIsJoining] = useState<boolean>(false);
+  const [isValidating, setIsValidating] = useState<boolean>(true);
+  const [password, setPassword] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      if (!token) {
-        setError("Token undangan tidak ditemukan");
-        setIsLoading(false);
-        return;
-      }
+    if (!token) {
+      setInvitationValid(false);
+      setValidationError("Token tidak valid");
+      setIsValidating(false);
+      return;
+    }
 
-      if (!email) {
-        setError("Email tidak ditemukan dalam URL");
-        setIsLoading(false);
-        return;
-      }
+    if (!isAuthLoading && user) {
+      validateToken();
+    }
+  }, [token, user, isAuthLoading]);
 
-      try {
-        console.log("Validating invitation with token:", token, "and email:", email);
-        
-        // Call the validate_invitation RPC function to verify the token
-        const { data: validationResult, error: validationError } = await supabase
-          .rpc('validate_invitation', { 
-            invitation_token: token,
-            invitee_email: email 
-          });
-        
-        console.log("Validation result:", validationResult);
-        console.log("Validation error:", validationError);
-
-        if (validationError) {
-          throw new Error(validationError.message);
-        }
-
-        if (!validationResult || validationResult.length === 0) {
-          throw new Error("Undangan tidak ditemukan");
-        }
-
-        const invitationData = validationResult[0];
-
-        if (!invitationData.valid) {
-          throw new Error(invitationData.message || "Undangan tidak valid");
-        }
-
-        // Check if the user with this email already exists
-        const { data: userCheck, error: userCheckError } = await supabase.auth.signInWithOtp({
-          email: email,
-          options: {
-            shouldCreateUser: false,
-          }
-        });
-
-        // If error contains "Email not found", the user doesn't exist yet
-        if (userCheckError && userCheckError.message.includes("Email not found")) {
-          console.log("User doesn't exist, showing register form");
-          setShowRegisterForm(true);
-          setInvitation({
-            ...invitationData,
-            email,
-            token
-          });
-        } else {
-          console.log("User exists, showing accept invitation form");
-          // User exists, get organization details
-          const { data: orgData, error: orgError } = await supabase
-            .from('organizations')
-            .select('name')
-            .eq('id', invitationData.organization_id)
-            .single();
-
-          if (orgError) {
-            throw new Error("Gagal mendapatkan informasi organisasi");
-          }
-
-          setInvitation({
-            ...invitationData,
-            email,
-            token,
-            organizationName: orgData.name
-          });
-        }
-      } catch (error: any) {
-        console.error("Error verifying invitation:", error);
-        setError(error.message || "Terjadi kesalahan saat memverifikasi undangan");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    verifyToken();
-  }, [token, email]);
-
-  const handleRegister = async (values: RegisterFormValues) => {
-    if (!email || !token) return;
-    
-    setIsSubmitting(true);
-    
+  const validateToken = async () => {
+    setIsValidating(true);
     try {
-      // Register the user
-      const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: values.password,
-        options: {
-          data: {
-            full_name: values.fullName,
-          }
+      // Use RPC function to validate invitation directly
+      const { data: validationResult, error: validationError } = await supabase.rpc(
+        'validate_invitation',
+        { 
+          invitation_token: token,
+          invitee_email: user?.email || ""
         }
-      });
+      );
 
-      if (error) throw error;
-      
-      if (data?.user) {
-        toast.success("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
-        
-        // Join the organization once registered
-        const { data: joinResult, error: joinError } = await supabase
-          .rpc('join_organization', { 
-            user_id: data.user.id, 
-            invitation_token: token 
-          });
-        
-        if (joinError) {
-          throw joinError;
-        }
-        
-        if (!joinResult || !joinResult[0].success) {
-          throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
-        }
-        
-        // Redirect to verification sent page with invitation context
-        navigate("/auth/verification-sent", { 
-          state: { 
-            email,
-            isInvitation: true,
-            organizationName: invitation?.organizationName || "Organisasi" 
-          } 
-        });
+      if (validationError || !validationResult || !validationResult.length) {
+        setInvitationValid(false);
+        setValidationError("Token undangan tidak valid atau kadaluarsa");
+        setIsValidating(false);
+        return;
       }
+
+      const validationData = validationResult[0];
+      if (!validationData.valid) {
+        setInvitationValid(false);
+        setValidationError(validationData.message || "Token undangan tidak valid");
+        setIsValidating(false);
+        return;
+      }
+
+      // If token is valid, get the organization name
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('name')
+        .eq('id', validationData.organization_id)
+        .single();
+
+      setOrganizationName(orgData?.name || "");
+      setOrganizationId(validationData.organization_id);
+      setRole(validationData.role || "employee");
+      setInvitationValid(true);
     } catch (error: any) {
-      console.error("Registration error:", error);
-      toast.error(error.message || "Gagal mendaftar. Silakan coba lagi.");
+      console.error("Error validating invitation:", error);
+      setInvitationValid(false);
+      setValidationError("Terjadi kesalahan saat memvalidasi undangan");
     } finally {
-      setIsSubmitting(false);
+      setIsValidating(false);
     }
   };
-  
-  const handleAcceptInvitation = async () => {
-    if (!invitation) return;
-    
-    setIsSubmitting(true);
-    
+
+  const handleJoinOrganization = async () => {
+    setIsJoining(true);
     try {
-      // First, check if the user is already logged in
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
-        // If user is not logged in, redirect to login page with invitation data
-        navigate('/auth/login', { 
-          state: { 
-            invitationEmail: invitation.email,
-            invitationToken: token
-          } 
-        });
+        toast.error("Tidak ada pengguna yang terautentikasi.");
         return;
       }
-      
-      // If user is logged in, check if email matches
-      if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
-        throw new Error(`Anda perlu login dengan email ${invitation.email} untuk menerima undangan ini`);
+
+      // If the user doesn't have a password, set it
+      if (!password) {
+        toast.error("Password is required to join the organization.");
+        return;
       }
-      
-      // Join the organization
-      const { data: joinResult, error: joinError } = await supabase
-        .rpc('join_organization', { 
-          user_id: user.id, 
-          invitation_token: token 
-        });
-      
+
+      // Update the user's password
+      const { error: passwordError } = await supabase.auth.updateUser({ password: password });
+
+      if (passwordError) {
+        throw passwordError;
+      }
+
+      // Process the magic link invitation
+      const { data: result, error: joinError } = await supabase.rpc(
+        'process_magic_link_invitation',
+        { 
+          invitation_token: token,
+          user_id: user.id
+        }
+      );
+
       if (joinError) {
-        throw joinError;
+        console.error("Error processing invitation:", joinError);
+        toast.error(joinError.message || "Gagal memproses undangan");
+        return;
       }
-      
-      if (!joinResult || !joinResult[0].success) {
-        throw new Error(joinResult[0].message || "Gagal bergabung dengan organisasi");
+
+      // Handle the response as JSON object
+      const invitationResult = result as { 
+        success: boolean, 
+        message: string, 
+        organization_id?: string, 
+        role?: string 
+      };
+
+      if (!invitationResult.success) {
+        toast.error(invitationResult.message || "Gagal bergabung dengan organisasi");
+        return;
       }
-      
-      toast.success("Undangan berhasil diterima!");
-      
-      // Redirect to onboarding page for employees
-      navigate("/employee-welcome", { 
-        state: { 
-          organizationName: invitation.organizationName || "Organisasi",
-          role: invitation.role || "karyawan" 
-        } 
-      });
-    } catch (error: any) {
-      console.error("Error accepting invitation:", error);
-      toast.error(error.message || "Gagal menerima undangan");
+
+      toast.success("Berhasil bergabung dengan organisasi!");
+      await refreshData();
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error("Error joining organization:", err);
+      toast.error(err.message || "Terjadi kesalahan saat bergabung dengan organisasi");
     } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  const handleRejectInvitation = async () => {
-    if (!invitation || !token) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      const { error: updateError } = await supabase
-        .from('invitations')
-        .update({ status: 'rejected' })
-        .eq('token', token);
-      
-      if (updateError) throw updateError;
-      
-      toast.success("Undangan telah ditolak");
-      navigate('/auth/login');
-    } catch (error: any) {
-      console.error("Error rejecting invitation:", error);
-      toast.error(error.message || "Gagal menolak undangan");
-    } finally {
-      setIsSubmitting(false);
+      setIsJoining(false);
     }
   };
 
-  // Render loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-            <p className="mt-2">Memverifikasi undangan...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (isValidating) {
+    return <div className="container mx-auto p-8 text-center">Memvalidasi undangan...</div>;
   }
-  
-  // Render error state
-  if (error) {
+
+  if (validationError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
+      <div className="container mx-auto p-8 text-center">
+        <Card>
           <CardHeader>
-            <div className="flex justify-center mb-2">
-              <div className="bg-red-100 p-3 rounded-full">
-                <AlertCircle className="h-6 w-6 text-red-600" />
-              </div>
-            </div>
-            <CardTitle className="text-center">Undangan Tidak Valid</CardTitle>
-            <CardDescription className="text-center">
-              {error}
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex justify-center">
-            <Button asChild>
-              <a href="/auth/login">Kembali ke Halaman Login</a>
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-  
-  // Render registration form for new users
-  if (showRegisterForm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <div className="flex justify-center mb-4">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <UserPlus className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-            <CardTitle className="text-center">Buat Akun Baru</CardTitle>
-            <CardDescription className="text-center">
-              Anda diundang untuk bergabung sebagai anggota tim. Buat akun untuk melanjutkan.
-            </CardDescription>
+            <CardTitle>Undangan Tidak Valid</CardTitle>
+            <CardDescription>{validationError}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-4">
-                <div className="space-y-2">
-                  <FormLabel>Email</FormLabel>
-                  <Input
-                    type="email"
-                    value={email || ""}
-                    disabled
-                    className="bg-gray-100"
-                  />
-                  <p className="text-sm text-gray-500">Email tidak dapat diubah</p>
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nama Lengkap</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Masukkan nama lengkap Anda" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="Buat password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Konfirmasi Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="Ulangi password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Memproses...
-                    </>
-                  ) : (
-                    "Daftar"
-                  )}
-                </Button>
-              </form>
-            </Form>
+            <Button onClick={() => navigate("/auth/login")}>Kembali ke Login</Button>
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <Button variant="link" onClick={() => navigate("/auth/login")}>
-              Sudah punya akun? Login
-            </Button>
-          </CardFooter>
         </Card>
       </div>
     );
   }
-  
-  // Render invitation acceptance for existing users
+
+  if (!isInvitationValid) {
+    return <div className="container mx-auto p-8 text-center">Undangan tidak valid.</div>;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
+    <div className="container mx-auto p-8">
+      <Card>
         <CardHeader>
-          <div className="flex justify-center mb-4">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <UserPlus className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-          <CardTitle className="text-center">Undangan Organisasi</CardTitle>
-          <CardDescription className="text-center">
-            Anda diundang untuk bergabung dengan organisasi
+          <CardTitle>Terima Undangan</CardTitle>
+          <CardDescription>
+            Anda telah diundang untuk bergabung dengan organisasi <strong>{organizationName}</strong>.
           </CardDescription>
         </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Building className="h-5 w-5 text-blue-600" />
-            <span className="text-xl font-bold">{invitation?.organizationName}</span>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input type="email" id="email" value={user?.email || ""} disabled />
           </div>
-          
-          <p className="text-gray-600">
-            Undangan ini dikirim ke email:{" "}
-            <span className="font-semibold">{invitation?.email}</span>
-          </p>
-          
-          <div className="mt-6">
-            <p className="text-sm text-gray-500 mb-2">
-              Dengan menerima undangan ini, Anda akan bergabung dengan organisasi tersebut dan dapat mengakses semua fitur dan data yang dibagikan kepada Anda.
-            </p>
+          <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Masukkan password Anda"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </Button>
+            </div>
           </div>
+          <Button onClick={handleJoinOrganization} disabled={isJoining}>
+            {isJoining ? "Bergabung..." : "Bergabung dengan Organisasi"}
+          </Button>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-3">
-          <Button 
-            onClick={handleAcceptInvitation}
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Memproses...
-              </>
-            ) : (
-              <>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Terima Undangan
-              </>
-            )}
-          </Button>
-          
-          <Button 
-            onClick={handleRejectInvitation}
-            disabled={isSubmitting}
-            variant="outline" 
-            className="w-full"
-          >
-            <X className="mr-2 h-4 w-4" />
-            Tolak Undangan
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );
