@@ -9,7 +9,6 @@ import SubscriptionExtension from "@/pages/settings/subscription/SubscriptionExt
 import ProfileSettings from "@/pages/settings/ProfileSettings";
 import { Outlet } from "react-router-dom";
 import SubscriptionDashboard from "@/pages/settings/subscription/SubscriptionDashboard";
-import SubscriptionSuccess from "@/pages/settings/subscription/SubscriptionSuccess";
 import SubscriptionFaq from "@/pages/settings/subscription/SubscriptionFaq";
 import AdminPage from "@/pages/settings/AdminPage";
 import SubscriptionManagement from "@/pages/settings/subscription/SubscriptionManagement";
@@ -32,7 +31,6 @@ export const settingsRoutes = (
     <Route path="subscription" element={<Subscription />} />
     <Route path="subscription/dashboard" element={<SubscriptionDashboard />} />
     <Route path="subscription/request-extension" element={<SubscriptionExtension />} />
-    <Route path="subscription/success" element={<SubscriptionSuccess />} />
     <Route path="subscription/faq" element={<SubscriptionFaq />} />
     <Route path="subscription/management" element={<SubscriptionManagement />} />
     <Route path="profile" element={<ProfileSettings />} />

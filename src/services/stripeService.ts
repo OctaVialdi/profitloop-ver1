@@ -15,7 +15,10 @@ export const stripeService = {
   createCheckout: async (planId: string): Promise<string | null> => {
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { planId }
+        body: { 
+          planId,
+          successUrl: window.location.origin + "/subscription/success"
+        }
       });
       
       if (error) throw new Error(`Error creating checkout: ${error.message}`);
@@ -47,7 +50,8 @@ export const stripeService = {
           planId: newPlanId,
           currentPlanId: currentPlanId,
           subscriptionId: subscriptionId,
-          prorate: true
+          prorate: true,
+          successUrl: window.location.origin + "/subscription/success"
         }
       });
       
