@@ -42,13 +42,20 @@ body.trial-expired::before {
   position: relative;
 }
 
-.premium-feature::after {
-  content: "⭐";
+.premium-feature::before {
+  content: "";
   position: absolute;
   top: -2px;
-  right: -10px;
-  font-size: 10px;
-  color: gold;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+.premium-feature:hover::before {
+  transform: scale(1.2);
 }
 
 .premium-tooltip {
@@ -56,18 +63,18 @@ body.trial-expired::before {
   top: calc(100% + 5px);
   left: 50%;
   transform: translateX(-50%);
-  background-color: #f8f9fa;
+  background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  padding: 8px 12px;
+  border-radius: 8px;
+  padding: 12px 16px;
   font-size: 12px;
   z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 200px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 250px;
   text-align: center;
   visibility: hidden;
   opacity: 0;
-  transition: opacity 0.2s, visibility 0.2s;
+  transition: opacity 0.3s, visibility 0.3s;
 }
 
 .premium-feature:hover .premium-tooltip {
@@ -75,10 +82,51 @@ body.trial-expired::before {
   opacity: 1;
 }
 
+/* Premium feature badge styles */
+.premium-feature .premium-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  transition: transform 0.2s ease;
+}
+
+.premium-feature:hover .premium-badge {
+  transform: scale(1.2);
+}
+
+/* Trial preview badge */
+.trial-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
 /* Trial countdown styles */
 .trial-countdown {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 600;
 }
 
 /* Subscription page highlight */

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/integrations/supabase/client";
 import { FinancialSummaryRecord } from '@/types/dashboard';
+import PremiumFeature from '@/components/PremiumFeature';
 
 export const BSCDashboard = () => {
   const { toast } = useToast();
@@ -220,7 +220,12 @@ export const BSCDashboard = () => {
           
           {/* AI Recommendations and Operational Highlights */}
           <div className="grid gap-6 md:grid-cols-2">
-            <AIRecommendationCard recommendations={recommendations} />
+            <PremiumFeature 
+              featureName="AI Recommendations" 
+              description="Get strategic insights tailored to your business data and industry trends with our advanced AI recommendation engine."
+            >
+              <AIRecommendationCard recommendations={recommendations} />
+            </PremiumFeature>
             
             <Card>
               <CardHeader>
@@ -260,39 +265,49 @@ export const BSCDashboard = () => {
         </TabsContent>
 
         <TabsContent value="financial" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Performance</CardTitle>
-              <CardDescription>Detailed financial analysis</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FinancialSummarySection
-                totalRevenue={totalRevenue}
-                totalExpenses={totalExpenses}
-                netCashflow={netCashflow}
-                profitMargin={profitMargin}
-                revenueChange={revenueChange}
-                expenseChange={expenseChange}
-                cashflowChange={cashflowChange}
-                profitChange={profitChange}
-                monthlyRevenue={monthlyRevenue}
-                expenseBreakdown={expenseBreakdown}
-                loading={loading}
-              />
-            </CardContent>
-          </Card>
+          <PremiumFeature 
+            featureName="Detailed Financial Analysis" 
+            description="Get in-depth financial metrics with advanced visualizations and trend analysis for better decision making"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Financial Performance</CardTitle>
+                <CardDescription>Detailed financial analysis</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FinancialSummarySection
+                  totalRevenue={totalRevenue}
+                  totalExpenses={totalExpenses}
+                  netCashflow={netCashflow}
+                  profitMargin={profitMargin}
+                  revenueChange={revenueChange}
+                  expenseChange={expenseChange}
+                  cashflowChange={cashflowChange}
+                  profitChange={profitChange}
+                  monthlyRevenue={monthlyRevenue}
+                  expenseBreakdown={expenseBreakdown}
+                  loading={loading}
+                />
+              </CardContent>
+            </Card>
+          </PremiumFeature>
         </TabsContent>
 
         <TabsContent value="operational" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Operational Metrics</CardTitle>
-              <CardDescription>Performance indicators across departments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <OperationalMetricsSection metrics={operationalMetrics} />
-            </CardContent>
-          </Card>
+          <PremiumFeature 
+            featureName="Operational Metrics Dashboard" 
+            description="Monitor and analyze key performance indicators across all departments with customizable views and alerts"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Operational Metrics</CardTitle>
+                <CardDescription>Performance indicators across departments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <OperationalMetricsSection metrics={operationalMetrics} />
+              </CardContent>
+            </Card>
+          </PremiumFeature>
         </TabsContent>
       </Tabs>
     </div>
