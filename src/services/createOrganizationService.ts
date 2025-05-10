@@ -41,11 +41,11 @@ export async function createOrganization(formData: OrganizationFormData & { crea
       // The result is a JSON object, so we need to cast it properly
       const organizationData = orgData as { id: string };
       
-      // Set a trial_end_date to 30 days from now (instead of just 1 minute)
+      // Set a trial_end_date to 14 days from now (instead of 30 days)
       const { error: updateError } = await supabase
         .from('organizations')
         .update({
-          trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+          trial_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days from now
         })
         .eq('id', organizationData.id);
         

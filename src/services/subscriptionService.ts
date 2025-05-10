@@ -11,7 +11,7 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
     // Get organization details
     const { data: orgData } = await supabase
       .from('organizations')
-      .select('trial_end_date, trial_expired, subscription_status')
+      .select('trial_end_date, trial_expired, subscription_status, trial_start_date')
       .eq('id', organizationId)
       .single();
       
@@ -47,6 +47,23 @@ export async function checkAndUpdateTrialStatus(organizationId: string): Promise
       }
       
       return true;
+    }
+    
+    // If trial_start_date is missing, set it to 14 days before trial_end_date
+    if (!orgData.trial_start_date && trialEndDate) {
+      const calculatedStartDate = new Date(trialEndDate);
+      calculatedStartDate.setDate(calculatedStartDate.getDate() - 14); // 14-day trial
+      
+      const { error } = await supabase
+        .from('organizations')
+        .update({ 
+          trial_start_date: calculatedStartDate.toISOString()
+        })
+        .eq('id', organizationId);
+      
+      if (error) {
+        console.error("Error updating trial_start_date:", error);
+      }
     }
     
     return false;

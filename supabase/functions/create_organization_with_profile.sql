@@ -33,8 +33,8 @@ BEGIN
     RETURNING id INTO plan_id;
   END IF;
   
-  -- Set trial_end_date to 30 days from now
-  trial_end_date := now() + interval '30 days';
+  -- Set trial_end_date to 14 days from now (changed from 30)
+  trial_end_date := now() + interval '14 days';
   
   -- Use provided creator email or fetch from auth.users if not provided
   IF creator_email IS NULL THEN

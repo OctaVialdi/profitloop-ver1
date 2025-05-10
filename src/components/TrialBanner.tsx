@@ -32,7 +32,7 @@ const TrialBanner = () => {
   const isOnboardingPage = location.pathname === '/onboarding' || location.pathname === '/organizations';
   const isSubscriptionPage = location.pathname === '/subscription' || location.pathname === '/settings/subscription';
   
-  // Update countdown every minute when we have a trial end date
+  // Update countdown every second when we have a trial end date
   useEffect(() => {
     if (!trialEndDate || isDismissed || isAuthPage || isOnboardingPage) return;
 
@@ -71,8 +71,8 @@ const TrialBanner = () => {
     // Initial update
     updateCountdown();
     
-    // Set up interval for updating the countdown (update every minute)
-    const interval = setInterval(updateCountdown, 60000);
+    // Set up interval for updating the countdown (update every second instead of every minute)
+    const interval = setInterval(updateCountdown, 1000);
     
     // Clean up on unmount
     return () => clearInterval(interval);
@@ -201,9 +201,9 @@ const TrialBanner = () => {
         
         // If we're close to expiration (3 days or less), let's show a toast
         if (diffDays <= 3 && diffDays > 0 && orgData.subscription_status === 'trial') {
-          const daysText = diffDays === 1 ? 'day' : 'days';
+          const daysText = diffDays === 1 ? 'hari' : 'hari';
           toast.warning(
-            `Your trial ends in ${diffDays} ${daysText}. Upgrade now to continue using all features.`,
+            `Masa trial Anda akan berakhir dalam ${diffDays} ${daysText}. Upgrade sekarang untuk terus menggunakan semua fitur.`,
             {
               action: {
                 label: "Upgrade",
