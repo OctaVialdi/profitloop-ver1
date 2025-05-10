@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Download, 
   FileSpreadsheet,
-  FilePdf,
+  FileText,
   FileJson,
   Upload,
   Settings
@@ -55,7 +55,7 @@ export const EmployeeHeader: React.FC = () => {
                 <span>CSV (.csv)</span>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <FilePdf className="mr-2 h-4 w-4" />
+                <FileText className="mr-2 h-4 w-4" />
                 <span>PDF (.pdf)</span>
               </DropdownMenuItem>
               <DropdownMenuItem>

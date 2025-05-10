@@ -64,7 +64,8 @@ async function fetchFinancialSummary(startDate?: Date, endDate?: Date): Promise<
   const cashFlow = totalRevenue - totalExpenses;
   
   // Get target revenue if available, add default if not found
-  const targetRevenue = financialData?.[0]?.target_revenue || 0;
+  // Fix: Read target_revenue from financialData if available, otherwise use default
+  const targetRevenue = financialData?.[0]?.target_revenue !== undefined ? financialData[0].target_revenue : 5000000;
   
   // Calculate ROI
   const roi = totalExpenses > 0 

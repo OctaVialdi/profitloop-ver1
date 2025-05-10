@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { OperationalMetric } from '@/types/dashboard';
+
 interface OperationalMetricsSectionProps {
   metrics: OperationalMetric[];
   departments: Array<{
@@ -10,6 +12,7 @@ interface OperationalMetricsSectionProps {
     name: string;
   }>;
 }
+
 export function OperationalMetricsSection({
   metrics,
   departments
@@ -34,5 +37,33 @@ export function OperationalMetricsSection({
     if (!target) return 0;
     return Math.min(100, Math.round(value / target * 100));
   };
-  return;
+  
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Operational Metrics</CardTitle>
+          <CardDescription>Productivity and efficiency metrics across departments</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <h3 className="font-medium">Productivity by Department</h3>
+            <div className="h-[300px]">
+              <ChartContainer>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={productivityByDepartment}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="value" fill="#4f46e5" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
