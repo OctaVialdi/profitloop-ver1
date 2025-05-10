@@ -28,10 +28,7 @@ const HeaderOnlyLayout = ({ children }: HeaderOnlyLayoutProps) => {
   const location = useLocation();
   const { organization } = useOrganization();
   const { logoUrl } = useAppTheme();
-  
-  // Determine if we should show breadcrumbs based on the current path
-  const shouldShowBreadcrumbs = location.pathname !== "/";
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Top navigation */}
@@ -45,14 +42,7 @@ const HeaderOnlyLayout = ({ children }: HeaderOnlyLayoutProps) => {
                 {organization?.name?.charAt(0) || 'O'}
               </div>
             )}
-            {shouldShowBreadcrumbs ? (
-              <BreadcrumbNav 
-                rootLabel="Home"
-                showHomeIcon={true}
-              />
-            ) : (
-              <span className="text-lg font-medium">{organization?.name}</span>
-            )}
+            <span className="text-lg font-medium">{organization?.name}</span>
           </div>
           <HeaderActions />
         </div>
