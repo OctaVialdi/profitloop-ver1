@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation, useSearchParams, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
 import { SubscriptionOverview } from './subscription/SubscriptionOverview';
 import { SubscriptionPlans } from './subscription/SubscriptionPlans';
@@ -109,15 +109,6 @@ const Subscription = () => {
     }
   }, [location.pathname, searchParams]);
 
-  // Handle nested routes within the subscription page
-  if (location.pathname !== '/settings/subscription') {
-    return (
-      <Routes>
-        <Route path="*" element={<Navigate to="/settings/subscription" replace />} />
-      </Routes>
-    );
-  }
-
   return (
     <div className="container mx-auto py-8" data-subscription-page="true">
       <div className="mb-8 space-y-2">
@@ -168,7 +159,7 @@ const Subscription = () => {
         </Alert>
       )}
       
-      {/* Quick Links to New Pages */}
+      {/* Quick Links to Other Pages */}
       <div className="flex flex-wrap gap-3 mb-8">
         <Button variant="outline" asChild className="flex items-center gap-2">
           <Link to="/settings/subscription/dashboard">
