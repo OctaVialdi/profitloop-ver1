@@ -35,7 +35,10 @@ export const useDashboardData = () => {
         .eq('organization_id', organization.id);
         
       if (financialError) throw financialError;
-      setFinancialData(financialSummary as FinancialSummaryRecord[] || []);
+      
+      // Explicitly type the financial summary data
+      const typedFinancialSummary = financialSummary as FinancialSummaryRecord[];
+      setFinancialData(typedFinancialSummary || []);
       
       // Fetch operational metrics
       const { data: metrics, error: metricsError } = await supabase
@@ -47,7 +50,7 @@ export const useDashboardData = () => {
       setOperationalMetrics(metrics || []);
       
       // Transform financial data for monthly revenue chart
-      const monthlyData = (financialSummary || []).map(item => ({
+      const monthlyData = (typedFinancialSummary || []).map(item => ({
         month: item.month,
         revenue: item.total_revenue,
         expenses: item.total_expenses,
