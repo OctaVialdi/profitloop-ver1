@@ -1759,10 +1759,8 @@ export type Database = {
           address: string | null
           business_field: string | null
           created_at: string | null
-          creator_email: string | null
           employee_count: number | null
           id: string
-          logo_path: string | null
           name: string
           phone: string | null
           subscription_plan_id: string | null
@@ -1776,10 +1774,8 @@ export type Database = {
           address?: string | null
           business_field?: string | null
           created_at?: string | null
-          creator_email?: string | null
           employee_count?: number | null
           id?: string
-          logo_path?: string | null
           name: string
           phone?: string | null
           subscription_plan_id?: string | null
@@ -1793,10 +1789,8 @@ export type Database = {
           address?: string | null
           business_field?: string | null
           created_at?: string | null
-          creator_email?: string | null
           employee_count?: number | null
           id?: string
-          logo_path?: string | null
           name?: string
           phone?: string | null
           subscription_plan_id?: string | null

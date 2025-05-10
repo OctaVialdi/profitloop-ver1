@@ -8,6 +8,7 @@ import { useMagicLinkHandler } from "./useMagicLinkHandler";
 import { useUserProfile } from "./useUserProfile";
 import { useEmailCheck } from "./useEmailCheck";
 import { supabase } from "@/integrations/supabase/client";
+import { formatRelativeTime } from "@/utils/formatUtils";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -89,9 +90,8 @@ export function useLoginForm() {
       const emailExists = await checkEmailExists(email);
       
       if (!emailExists) {
-        // If email doesn't exist, redirect to registration
-        toast.info("Email tidak ditemukan. Silakan daftar terlebih dahulu.");
-        navigate("/auth/register", { state: { email } });
+        // If email doesn't exist, show specific error message
+        setLoginError("Email tidak terdaftar. Silakan daftar terlebih dahulu.");
         return;
       }
       
@@ -107,6 +107,19 @@ export function useLoginForm() {
           setIsEmailUnverified(true);
           throw new Error("Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.");
         }
+        
+        // Check if the error is about invalid credentials (password)
+        if (error.message && 
+            (error.message.includes("Invalid login credentials") ||
+             error.message.includes("invalid_credentials"))) {
+             
+          // Try to check if this could be a changed password scenario
+          await checkForPasswordChange(email);
+          
+          // If no password change detected, show generic message
+          throw new Error("Password salah. Mohon periksa kembali.");
+        }
+        
         throw error;
       }
       
@@ -191,6 +204,32 @@ export function useLoginForm() {
         setIsEmailUnverified(true);
       }
       // Database errors are already handled in useAuth hook
+    }
+  };
+
+  // Helper function to check if password was recently changed
+  const checkForPasswordChange = async (email: string) => {
+    try {
+      // Check auth logs to see if there's a recent password change
+      const { data: auditLogs } = await supabase
+        .from('auth_audit_logs')
+        .select('action, created_at')
+        .eq('user_email', email)
+        .eq('action', 'password_change')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (auditLogs) {
+        const timeAgo = formatRelativeTime(new Date(auditLogs.created_at));
+        setLoginError(`Password salah. Password untuk akun ini telah diubah ${timeAgo}. Silakan gunakan password baru.`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Error checking for password change:", error);
+      return false;
     }
   };
 

@@ -88,3 +88,29 @@ export const robustSignOut = async (): Promise<void> => {
     console.error("Error in robustSignOut:", error);
   }
 };
+
+/**
+ * Helper function to check common authentication errors
+ */
+export const getAuthErrorMessage = (error: any): string => {
+  const errorMessage = error?.message || '';
+  
+  if (errorMessage.includes('Email not confirmed') || 
+      errorMessage.includes('not confirmed') || 
+      errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('confirm')) {
+    return 'Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.';
+  }
+  
+  if (errorMessage.includes('Invalid login credentials') || 
+      errorMessage.includes('invalid_credentials')) {
+    return 'Password salah. Mohon periksa kembali.';
+  }
+  
+  if (errorMessage.includes('Email not found') || 
+      errorMessage.includes('user not found')) {
+    return 'Email tidak terdaftar. Silakan daftar terlebih dahulu.';
+  }
+  
+  // Default error message
+  return 'Gagal login. Periksa email dan password Anda.';
+};
