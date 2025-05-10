@@ -1,178 +1,129 @@
 
-import { ReactNode, memo } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useOrganization } from "@/hooks/useOrganization";
-import { NotificationSystem } from "@/components/NotificationSystem";
-import { useAppTheme } from "@/components/ThemeProvider";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
-import { 
-  SidebarProviderWithTooltip as SidebarProvider, 
-  SidebarInset
-} from "@/components/ui/sidebar";
-import { ProfileDropdown } from "@/components/ProfileDropdown";
-import { AnimatePresence, motion } from "framer-motion";
-import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { Sparkles } from "lucide-react";
 
-// Import your sidebar navigation component
-import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
+export function DashboardLayout({ children }: { children?: React.ReactNode }) {
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
+  const { organization, isTrialActive, isTrialExpired } = useOrganization();
+  const { initiateCheckout, isLoading } = useStripeCheckout();
 
-interface DashboardLayoutProps {
-  children?: ReactNode;
-}
-
-// Use memo to prevent unnecessary re-renders of the HeaderContent
-const HeaderContent = memo(({ organization, logoUrl }: { 
-  organization: any, 
-  logoUrl: string | undefined 
-}) => (
-  <div className="flex items-center gap-2">
-    <Link to="/dashboard" className="flex items-center gap-2">
-      {logoUrl ? (
-        <Avatar className="h-8 w-8 hidden md:flex">
-          <AvatarImage src={logoUrl} alt={organization?.name || "Logo"} />
-          <AvatarFallback>
-            {organization?.name?.charAt(0) || "O"}
-          </AvatarFallback>
-        </Avatar>
-      ) : null}
-      <span className="text-xl font-semibold text-blue-600">
-        {organization?.name || "Multi-Tenant"}
-      </span>
-    </Link>
-  </div>
-));
-
-HeaderContent.displayName = "HeaderContent";
-
-// Use memo for the right side of the header to prevent unnecessary re-renders
-const HeaderActions = memo(() => (
-  <div className="flex items-center gap-3">
-    <OrganizationSwitcher />
-    <NotificationSystem />
-    <ProfileDropdown />
-  </div>
-));
-
-HeaderActions.displayName = "HeaderActions";
-
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const location = useLocation();
-  const { organization, userProfile, isLoading, isAdmin, isSuperAdmin } = useOrganization();
-  const { logoUrl } = useAppTheme();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <div className="flex-1 flex justify-center items-center">
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Determine if we should show breadcrumbs based on the current path
-  const shouldShowBreadcrumbs = location.pathname !== "/dashboard";
-
-  // Determine custom breadcrumb labels based on the path
-  const customLabels: Record<string, string> = {};
-  
-  // Add support for dev section
-  if (location.pathname.startsWith('/dev')) {
-    customLabels["dev"] = "Developer";
+  // Show subscription modal if trial expired and no active subscription
+  useEffect(() => {
+    const checkIfSubscriptionRequired = async () => {
+      if (isTrialExpired && organization?.subscription_status !== 'active') {
+        const lastShownTime = localStorage.getItem('subscription_modal_last_shown');
+        const now = Date.now();
+        
+        // Show only if never shown before or if it's been more than 1 hour
+        if (!lastShownTime || (now - parseInt(lastShownTime)) > 3600000) {
+          setShowSubscribeModal(true);
+          localStorage.setItem('subscription_modal_last_shown', now.toString());
+        }
+      }
+    };
     
-    if (location.pathname.includes('/components')) {
-      customLabels["components"] = "UI Components";
-    }
-  }
-  
-  // Add support for finance section
-  if (location.pathname.startsWith('/finance')) {
-    customLabels["finance"] = "Finance";
-    
-    if (location.pathname.includes('/dashboard')) {
-      customLabels["dashboard"] = "Overview";
-    }
-  }
-  
-  // Add support for HR section
-  if (location.pathname.startsWith('/hr')) {
-    customLabels["hr"] = "Human Resources";
-    
-    if (location.pathname.includes('/dashboard')) {
-      customLabels["dashboard"] = "Overview";
-    }
-    
-    // Handle company section
-    if (location.pathname.includes('/company')) {
-      customLabels["company"] = "Company Profile";
-    }
+    checkIfSubscriptionRequired();
+  }, [isTrialExpired, organization?.subscription_status]);
 
-    // Handle training section
-    if (location.pathname.includes('/training')) {
-      customLabels["training"] = "Training & Development";
-    }
-
-    // Handle recruitment section
-    if (location.pathname.includes('/recruitment')) {
-      customLabels["recruitment"] = "Recruitment";
-    }
-  }
-  
-  // Support for meeting notes
-  if (location.pathname.startsWith('/catatan-meetings')) {
-    customLabels["catatan-meetings"] = "Meeting Notes";
-  }
+  const handleSubscribe = async (planId: string) => {
+    await initiateCheckout(planId);
+    setShowSubscribeModal(false);
+  };
 
   return (
-    <SidebarProvider defaultOpen={true} className="group/sidebar-wrapper flex min-h-screen w-full">
-      <DashboardSidebar
-        organization={organization}
-        isAdmin={isAdmin}
-        isSuperAdmin={isSuperAdmin}
-        logoUrl={logoUrl}
-        currentPath={location.pathname}
-      />
+    <>
+      {children || <Outlet />}
+      <Toaster />
       
-      {/* Main content */}
-      <SidebarInset className="flex flex-col">
-        {/* Top navigation - Modified to be full width without scroll constraints */}
-        <header className="bg-white border-b sticky top-0 z-10 w-full shadow-sm">
-          <div className="px-4 h-16 flex items-center justify-between">
-            <HeaderContent organization={organization} logoUrl={logoUrl} />
-            <HeaderActions />
+      {/* Trial Expired Subscription Modal */}
+      <Dialog open={showSubscribeModal} onOpenChange={setShowSubscribeModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-500" />
+              Masa Trial Anda Telah Berakhir
+            </DialogTitle>
+            <DialogDescription>
+              Untuk terus menggunakan semua fitur premium, silakan berlangganan salah satu paket kami.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <h4 className="font-medium">Pilih Paket Langganan:</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4 flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <h5 className="font-medium">Standard</h5>
+                    <span className="text-sm text-blue-600 font-semibold">Populer</span>
+                  </div>
+                  <p className="text-2xl font-bold">Rp299.000<span className="text-sm font-normal text-gray-500">/bulan</span></p>
+                  <ul className="text-sm space-y-1 mt-2 text-gray-600">
+                    <li>• Hingga 15 anggota</li>
+                    <li>• Penyimpanan 10GB</li>
+                    <li>• Priority support</li>
+                  </ul>
+                  <Button 
+                    className="mt-auto" 
+                    onClick={() => handleSubscribe('standard_plan')}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Memproses..." : "Pilih Standard"}
+                  </Button>
+                </div>
+                
+                <div className="border rounded-lg p-4 flex flex-col gap-2">
+                  <h5 className="font-medium">Premium</h5>
+                  <p className="text-2xl font-bold">Rp599.000<span className="text-sm font-normal text-gray-500">/bulan</span></p>
+                  <ul className="text-sm space-y-1 mt-2 text-gray-600">
+                    <li>• Anggota tidak terbatas</li>
+                    <li>• Penyimpanan 50GB</li>
+                    <li>• Support 24/7</li>
+                  </ul>
+                  <Button 
+                    variant="outline" 
+                    className="mt-auto"
+                    onClick={() => handleSubscribe('premium_plan')}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Memproses..." : "Pilih Premium"}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-        </header>
-        
-        {/* Page content with direct overflow handling */}
-        <div className="flex-1 overflow-auto bg-gray-50">
-          <div className="p-4 md:p-6">
-            {shouldShowBreadcrumbs && (
-              <BreadcrumbNav 
-                customLabels={customLabels}
-              />
-            )}
+          
+          <DialogFooter className="flex-col sm:flex-row sm:justify-between">
+            <Button 
+              variant="ghost" 
+              onClick={() => window.location.href = '/settings/subscription'}
+              className="order-2 sm:order-1"
+            >
+              Lihat Detail Paket
+            </Button>
             
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ 
-                  duration: 0.15,
-                  ease: "easeInOut"
-                }}
-                className="will-change-transform"
+            {/* Allow closing only during trial or if there's an active subscription */}
+            {(isTrialActive || organization?.subscription_status === 'active') && (
+              <Button 
+                variant="secondary" 
+                onClick={() => setShowSubscribeModal(false)}
+                className="order-1 sm:order-2"
               >
-                {children || <Outlet />}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+                Tutup
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
-};
+}
 
 export default DashboardLayout;
