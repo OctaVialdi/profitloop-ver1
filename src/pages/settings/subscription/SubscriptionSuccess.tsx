@@ -18,7 +18,7 @@ const SubscriptionSuccess = () => {
     // Track successful subscription
     if (organization?.id && sessionId) {
       subscriptionAnalyticsService.trackEvent({
-        eventType: 'subscription_success_view',
+        eventType: 'subscription_activated', // Changed to a valid event type
         organizationId: organization.id,
         additionalData: { sessionId }
       });

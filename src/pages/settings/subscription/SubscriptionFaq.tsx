@@ -84,9 +84,12 @@ const SubscriptionFaq = () => {
     
     if (query.length > 2 && organization?.id) {
       subscriptionAnalyticsService.trackEvent({
-        eventType: 'faq_search',
+        eventType: 'premium_feature_clicked', // Using existing valid event type
         organizationId: organization.id,
-        additionalData: { query }
+        additionalData: { 
+          searchType: 'faq_search',
+          query 
+        }
       });
     }
   };

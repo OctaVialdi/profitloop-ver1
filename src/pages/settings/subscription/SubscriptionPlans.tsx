@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, CreditCard, Loader2, Package } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useOrganization } from "@/hooks/useOrganization";
 import { stripeService } from "@/services/stripeService";
 import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
@@ -23,7 +23,7 @@ export const SubscriptionPlans = () => {
       setSelectedPlanId(planId);
       
       // Track analytics for checkout initiation
-      subscriptionAnalyticsService.trackCheckoutStarted(planId, organization?.id || '');
+      subscriptionAnalyticsService.trackCheckoutInitiated(planId, organization?.id || '');
       
       const checkoutUrl = await stripeService.createCheckout(planId);
       
