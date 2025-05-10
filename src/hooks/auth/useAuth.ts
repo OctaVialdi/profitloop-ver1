@@ -26,6 +26,3 @@ export function useAuth() {
     setLoginError
   };
 }
-
-// Remove duplicate interface and re-export from types
-export type { AuthCredentials } from "./types";

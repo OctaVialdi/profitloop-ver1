@@ -22,6 +22,23 @@ export interface Organization {
   phone: string | null;
   logo_path: string | null;
   theme_settings: any;
+  trial_end_date?: string | null;
+  trial_start_date?: string | null;
+  trial_expired?: boolean;
+  subscription_status?: 'trial' | 'active' | 'expired';
+  subscription_plan_id?: string;
+  grace_period_end?: string | null;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  max_members: number | null;
+  features: Record<string, any> | null;
+  is_active: boolean;
+  created_at?: string;
 }
 
 export interface UserPreferences {
@@ -38,4 +55,8 @@ export type OrganizationData = {
   isAdmin: boolean;
   isEmployee: boolean;
   refreshData: () => Promise<void>;
+  isTrialActive?: boolean;
+  daysLeftInTrial?: number;
+  hasPaidSubscription?: boolean;
+  subscriptionPlan?: SubscriptionPlan | null;
 };

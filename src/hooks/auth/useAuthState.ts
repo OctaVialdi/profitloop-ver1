@@ -1,10 +1,7 @@
-
-import { useState, useEffect } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { ensureProfileExists } from "@/services/profileService";
-import { AuthState } from "./types";
-import { cleanupAuthState } from "@/utils/authUtils";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
+import { AuthState } from './types';
 
 /**
  * Hook to manage authentication state and listen for auth changes

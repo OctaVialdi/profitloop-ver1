@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SubscriptionPlan } from "@/types/organization";
 
 interface Plan {
   id: string;
@@ -57,50 +57,49 @@ const Subscription = () => {
   ]);
 
   useEffect(() => {
-    fetchSubscriptionPlans();
-  }, []);
-
-  const fetchSubscriptionPlans = async () => {
-    setIsLoading(true);
-    try {
-      const { data: plansData, error } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .order('price', { ascending: true });
-
-      if (error) throw error;
-
-      // Format plans with proper pricing and mark current plan
-      if (plansData) {
-        const formattedPlans: Plan[] = plansData.map(plan => ({
-          ...plan,
-          price: plan.price || 0,
-          current: organization?.subscription_plan_id === plan.id,
-          features: plan.features as Record<string, any> | null,
-          popular: false
-        }));
-
-        // Sort by price
-        formattedPlans.sort((a, b) => a.price - b.price);
-        
-        // Find the middle plan to mark as popular (if there are at least 3 plans)
-        if (formattedPlans.length >= 3) {
-          const middleIndex = Math.floor(formattedPlans.length / 2);
-          formattedPlans[middleIndex] = {
-            ...formattedPlans[middleIndex],
-            popular: true
-          };
-        }
-
-        setPlans(formattedPlans);
+    // Mock subscription plans
+    const mockPlans: Plan[] = [
+      {
+        id: "basic_plan",
+        name: "Basic",
+        price: 0,
+        max_members: 3,
+        features: {
+          storage: "1GB",
+          api_calls: "100"
+        },
+        current: !organization?.subscription_plan_id || organization.subscription_plan_id === "basic_plan",
+        popular: false
+      },
+      {
+        id: "standard_plan",
+        name: "Standard",
+        price: 249000,
+        max_members: 10,
+        features: {
+          storage: "10GB",
+          api_calls: "1000"
+        },
+        current: organization?.subscription_plan_id === "standard_plan",
+        popular: true
+      },
+      {
+        id: "premium_plan",
+        name: "Premium",
+        price: 499000,
+        max_members: 25,
+        features: {
+          storage: "100GB",
+          api_calls: "Unlimited"
+        },
+        current: organization?.subscription_plan_id === "premium_plan",
+        popular: false
       }
-    } catch (error) {
-      console.error("Error fetching subscription plans:", error);
-      toast.error("Gagal memuat data paket berlangganan");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    ];
+    
+    setPlans(mockPlans);
+    setIsLoading(false);
+  }, [organization?.subscription_plan_id]);
 
   const handleSubscribe = async (planId: string) => {
     if (!organization) return;
