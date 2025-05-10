@@ -14,6 +14,15 @@ import { formatCurrency } from '@/utils/formatUtils';
 
 type PaymentMethod = 'card' | 'id_bank_transfer' | 'qris' | 'ovo' | 'dana' | 'gopay';
 
+interface ProrationData {
+  amountDue: number;
+  credit: number; 
+  newAmount: number;
+  daysLeft: number;
+  totalDaysInPeriod: number;
+  prorationDate: string | Date;
+}
+
 const SubscriptionManagement = () => {
   const { organization, subscriptionPlan, refreshData, hasPaidSubscription } = useOrganization();
   const navigate = useNavigate();
@@ -23,7 +32,7 @@ const SubscriptionManagement = () => {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [targetPlanId, setTargetPlanId] = useState<string | null>(null);
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
-  const [prorationData, setProrationData] = useState<any>(null);
+  const [prorationData, setProrationData] = useState<ProrationData | null>(null);
   const [showProrateConfirm, setShowProrateConfirm] = useState(false);
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<PaymentMethod[]>(['card']);
 
@@ -137,11 +146,8 @@ const SubscriptionManagement = () => {
     setSelectedPaymentMethods(methods);
   };
 
-  // Format price for display
-  const formatPrice = (price: number) => formatCurrency(price, 'IDR', 'id-ID');
-
   // Format date for display
-  const formatDate = (dateString: string) => {
+  const formatDateDisplay = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       year: 'numeric',
       month: 'long',
@@ -176,7 +182,7 @@ const SubscriptionManagement = () => {
         <CardHeader className="pb-3">
           <CardTitle>Paket Anda Saat Ini</CardTitle>
           <CardDescription>
-            {currentPlan ? `Paket ${currentPlan.name} - ${formatPrice(currentPlan.price)}/bulan` : 'Tidak ada paket aktif'}
+            {currentPlan ? `Paket ${currentPlan.name} - ${formatCurrency(currentPlan.price, 'IDR', 'id-ID')}/bulan` : 'Tidak ada paket aktif'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -192,7 +198,7 @@ const SubscriptionManagement = () => {
               {organization.subscription_end_date && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Perpanjangan berikutnya:</span>
-                  <span>{formatDate(organization.subscription_end_date)}</span>
+                  <span>{formatDateDisplay(organization.subscription_end_date)}</span>
                 </div>
               )}
               
@@ -250,7 +256,7 @@ const SubscriptionManagement = () => {
                     )}
                   </CardTitle>
                   <CardDescription className="text-lg font-bold">
-                    {formatPrice(plan.price)}/bulan
+                    {formatCurrency(plan.price, 'IDR', 'id-ID')}/bulan
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -262,7 +268,7 @@ const SubscriptionManagement = () => {
                     {plan.features && Object.entries(plan.features).map(([key, value]) => (
                       <li key={key} className="flex items-center">
                         <Check size={16} className="mr-2 text-green-500" />
-                        {key === 'storage' ? `${value} penyimpanan` : value}
+                        {key === 'storage' ? `${value} penyimpanan` : String(value)}
                       </li>
                     ))}
                   </ul>
@@ -300,13 +306,13 @@ const SubscriptionManagement = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium">Dari: {currentPlan?.name}</p>
-                      <p className="text-sm text-muted-foreground">{formatPrice(currentPlan?.price || 0)}/bulan</p>
+                      <p className="font-medium">Dari: {currentPlan?.name || ''}</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(currentPlan?.price || 0, 'IDR', 'id-ID')}/bulan</p>
                     </div>
                     <ArrowRight className="h-5 w-5" />
                     <div>
-                      <p className="font-medium">Ke: {targetPlan?.name}</p>
-                      <p className="text-sm text-muted-foreground">{formatPrice(targetPlan?.price || 0)}/bulan</p>
+                      <p className="font-medium">Ke: {targetPlan?.name || ''}</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(targetPlan?.price || 0, 'IDR', 'id-ID')}/bulan</p>
                     </div>
                   </div>
                   
@@ -325,16 +331,16 @@ const SubscriptionManagement = () => {
                       </div>
                       <div className="flex justify-between">
                         <span>Kredit dari paket saat ini:</span>
-                        <span className="text-green-600">-{formatPrice(prorationData.credit || 0)}</span>
+                        <span className="text-green-600">-{formatCurrency(prorationData.credit || 0, 'IDR', 'id-ID')}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Biaya paket baru (prorata):</span>
-                        <span>{formatPrice(prorationData.newAmount || 0)}</span>
+                        <span>{formatCurrency(prorationData.newAmount || 0, 'IDR', 'id-ID')}</span>
                       </div>
                       <Separator className="my-1" />
                       <div className="flex justify-between font-medium">
                         <span>Total yang perlu dibayar:</span>
-                        <span>{formatPrice(prorationData.amountDue || 0)}</span>
+                        <span>{formatCurrency(prorationData.amountDue || 0, 'IDR', 'id-ID')}</span>
                       </div>
                     </div>
                   </div>

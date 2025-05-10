@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Bank, CreditCard, QrCode, Smartphone } from 'lucide-react';
+import { BanknoteIcon, CreditCard, QrCode, Smartphone } from 'lucide-react';
 
 type PaymentMethod = 'card' | 'id_bank_transfer' | 'qris' | 'ovo' | 'dana' | 'gopay';
 
@@ -61,7 +61,7 @@ const PaymentMethodOptions = ({ onSelectionChange, defaultMethod = 'card' }: Pay
               htmlFor="id_bank_transfer"
               className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
             >
-              <Bank className="mb-3 h-6 w-6" />
+              <BanknoteIcon className="mb-3 h-6 w-6" />
               <p className="text-sm font-medium">Transfer Bank</p>
             </Label>
           </div>
