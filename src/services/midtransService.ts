@@ -1,44 +1,85 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { subscriptionService } from "./subscriptionService";
 
 /**
- * Mock service for Midtrans payment gateway integration
+ * Mock Midtrans payment service
  */
 export const midtransService = {
-  createTransaction: async (planId: string, organizationId: string, userId: string): Promise<{
-    token: string;
-    redirect_url: string;
+  generatePaymentUrl: async (planId: string): Promise<string> => {
+    // Mock payment URL
+    return `https://midtrans.example.com/pay/${planId}`;
+  },
+  
+  getPaymentStatus: async (orderId: string): Promise<{
+    status: 'pending' | 'success' | 'failed';
+    message?: string;
   }> => {
-    console.log(`Creating Midtrans transaction for plan ${planId}, org ${organizationId}, user ${userId}`);
-    
-    // Get plan details from the mock service
-    const plans = await subscriptionService.getSubscriptionPlans();
-    const selectedPlan = plans.find(p => p.id === planId);
-    
-    if (!selectedPlan) {
-      throw new Error("Selected plan not found");
+    // Mock payment status
+    return { status: 'success' };
+  },
+  
+  getCurrencyConversion: async (amount: number, fromCurrency: string, toCurrency: string): Promise<number> => {
+    // Mock currency conversion (1 USD = ~15,000 IDR)
+    if (fromCurrency === 'USD' && toCurrency === 'IDR') {
+      return amount * 15000;
+    } else if (fromCurrency === 'IDR' && toCurrency === 'USD') {
+      return amount / 15000;
     }
-
-    // Mock response
-    return {
-      token: `mock-midtrans-token-${Date.now()}`,
-      redirect_url: `https://app.midtrans.com/snap/v3/redirection/${Date.now()}`
+    return amount;
+  },
+  
+  // Mock subscription plan data
+  getPlanPaymentDetails: async (planId: string): Promise<{
+    amount: number;
+    currency: string;
+    name: string;
+    description: string;
+    directPaymentUrl: string;
+  }> => {
+    // Mock plan details based on plan ID
+    const plans: Record<string, any> = {
+      'basic-plan': {
+        amount: 0,
+        currency: 'IDR',
+        name: 'Basic Plan',
+        description: 'Basic features with up to 5 members',
+        directPaymentUrl: 'https://midtrans.example.com/pay/basic-free'
+      },
+      'standard-plan': {
+        amount: 299000,
+        currency: 'IDR',
+        name: 'Standard Plan',
+        description: 'Standard features with up to 20 members',
+        directPaymentUrl: 'https://midtrans.example.com/pay/standard'
+      },
+      'premium-plan': {
+        amount: 599000,
+        currency: 'IDR',
+        name: 'Premium Plan',
+        description: 'Premium features with up to 50 members',
+        directPaymentUrl: 'https://midtrans.example.com/pay/premium'
+      }
+    };
+    
+    return plans[planId] || {
+      amount: 0,
+      currency: 'IDR',
+      name: 'Unknown Plan',
+      description: 'Unknown plan details',
+      directPaymentUrl: 'https://midtrans.example.com/pay/default'
     };
   },
   
-  checkTransactionStatus: async (orderId: string): Promise<{
-    status_code: string;
-    transaction_status: string;
-    order_id: string;
+  getProratedAmount: async (newPlanId: string, currentPlanId: string): Promise<{
+    prorated_amount: number;
+    total: number;
+    currency: string;
   }> => {
-    console.log(`Checking Midtrans transaction status for order ${orderId}`);
-    
-    // Mock response
+    // Mock prorated amount calculation
     return {
-      status_code: "200",
-      transaction_status: "settlement",
-      order_id: orderId
+      prorated_amount: 150000,
+      total: 449000,
+      currency: 'IDR'
     };
   }
 };

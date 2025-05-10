@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Mock subscription service for handling subscription related operations
+ * Subscription service for handling subscription related operations
  */
 export const subscriptionService = {
   getSubscriptionPlans: async () => {
@@ -60,6 +60,7 @@ export const subscriptionService = {
     return {
       id: "standard-plan",
       name: "Standard",
+      slug: "standard",
       price: 299000,
       max_members: 20,
       features: {
@@ -111,5 +112,18 @@ export const subscriptionService = {
       success: true, 
       message: "Trial extension requested successfully" 
     };
+  },
+
+  sendTrialReminderEmail: async (organizationId: string) => {
+    // Mock trial reminder email
+    return {
+      success: true,
+      message: "Trial reminder email sent successfully"
+    };
+  },
+  
+  createCheckout: async (planId: string) => {
+    // Mock checkout URL
+    return `https://checkout.example.com/checkout/${planId}`;
   }
 };

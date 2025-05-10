@@ -1,62 +1,50 @@
 
-// Mock Stripe service for subscription management
+import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Mock Stripe service for payment processing
+ */
 export const stripeService = {
   createCheckoutSession: async (planId: string): Promise<string> => {
-    console.log(`Creating checkout session for plan: ${planId}`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return `https://checkout.stripe.com/mock-checkout/${planId}`;
+    // Mock creating a checkout session URL
+    return `https://checkout.example.com/${planId}`;
   },
   
   createPortalSession: async (): Promise<string> => {
-    console.log('Creating customer portal session');
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return 'https://billing.stripe.com/mock-portal';
+    // Mock creating a customer portal URL
+    return `https://billing.example.com/portal`;
   },
   
   verifyPaymentStatus: async (sessionId: string): Promise<{ success: boolean }> => {
-    console.log(`Verifying payment status for session: ${sessionId}`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Mock verifying payment status
     return { success: true };
   },
   
-  getProratedCalculation: async (newPlanId: string, currentPlanId: string): Promise<{
-    prorated_amount: number;
-    total: number;
-    currency: string;
+  getProratedCalculation: async (newPlanId: string, currentPlanId: string): Promise<{ 
+    prorationDate: Date; 
+    amountDue: number; 
+    credit: number; 
+    newAmount: number; 
+    daysLeft: number;
+    totalDaysInPeriod: number;
+    currentPlanName?: string;
+    newPlanName?: string;
   }> => {
-    console.log(`Getting prorated calculation from ${currentPlanId} to ${newPlanId}`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Mock prorated calculation
     return {
-      prorated_amount: 15000,
-      total: 45000,
-      currency: 'IDR'
+      prorationDate: new Date(),
+      amountDue: 200000,
+      credit: 100000,
+      newAmount: 300000,
+      daysLeft: 15,
+      totalDaysInPeriod: 30,
+      currentPlanName: "Standard",
+      newPlanName: "Premium"
     };
   },
   
   createProratedCheckout: async (newPlanId: string, currentPlanId: string): Promise<string> => {
-    console.log(`Creating prorated checkout from ${currentPlanId} to ${newPlanId}`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return `https://checkout.stripe.com/mock-prorated-checkout/${newPlanId}`;
-  },
-  
-  // Added missing methods
-  createCheckout: async (planId: string): Promise<string> => {
-    console.log(`Creating checkout for plan: ${planId}`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return `https://checkout.stripe.com/mock-checkout/${planId}`;
-  },
-  
-  sendTrialReminderEmail: async (daysLeft: number): Promise<boolean> => {
-    console.log(`Sending trial reminder email for ${daysLeft} days left`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return true;
+    // Mock prorated checkout URL
+    return `https://checkout.example.com/prorate/${currentPlanId}/${newPlanId}`;
   }
 };

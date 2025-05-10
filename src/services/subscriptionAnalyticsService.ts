@@ -1,72 +1,94 @@
 
-// Mock analytics service for subscription events
-
+/**
+ * Subscription analytics service for tracking subscription-related events and metrics
+ */
 export const subscriptionAnalyticsService = {
-  trackEvent: (eventData: {
+  // Basic event tracking function
+  trackEvent: async (eventData: {
     eventType: string;
     organizationId?: string;
     additionalData?: Record<string, any>;
   }) => {
-    console.log('Analytics event tracked:', eventData);
-  },
-
-  trackTrialStarted: (organizationId: string) => {
-    console.log(`Analytics: Trial started for organization ${organizationId}`);
-  },
-
-  trackPlanSelected: (planId: string, organizationId?: string) => {
-    console.log(`Analytics: Plan ${planId} selected for organization ${organizationId}`);
-  },
-
-  trackFeatureImpression: (featureId: string, context: string, organizationId?: string) => {
-    console.log(`Analytics: Feature impression ${featureId} in ${context}`);
-  },
-
-  trackAdminPanelView: (section: string, organizationId?: string) => {
-    console.log(`Analytics: Admin panel ${section} viewed`);
+    // Mock event tracking
+    console.log('Event tracked:', eventData);
+    return { success: true };
   },
   
-  // Added missing methods
-  trackTrialBannerClicked: (daysLeft: number, organizationId?: string) => {
-    console.log(`Analytics: Trial banner clicked with ${daysLeft} days left for organization ${organizationId}`);
+  // Specific event tracking functions
+  trackTrialStarted: async (organizationId: string) => {
+    // Track trial started event
+    console.log('Trial started:', organizationId);
+    return { success: true };
   },
   
-  trackCheckoutInitiated: (planId: string, source: string, organizationId?: string) => {
-    console.log(`Analytics: Checkout initiated for plan ${planId} from ${source} for organization ${organizationId}`);
+  trackPlanSelected: async (planId: string, organizationId?: string) => {
+    // Track plan selection event
+    console.log('Plan selected:', planId, organizationId);
+    return { success: true };
   },
   
-  trackTrialExtensionRequested: (organizationId: string, reason: string) => {
-    console.log(`Analytics: Trial extension requested for organization ${organizationId} with reason: ${reason}`);
+  trackFeatureImpression: async (featureId: string, context: string, organizationId?: string) => {
+    // Track feature impression event
+    console.log('Feature impression:', featureId, context, organizationId);
+    return { success: true };
   },
   
-  // Mock analytics data retrieval functions
-  getAnalyticsByEventType: (eventType: string, period: string = '30d') => {
-    return Promise.resolve({
+  // Track trial banner clicks
+  trackTrialBannerClicked: async (organizationId: string, action: string) => {
+    // Track trial banner click event
+    console.log('Trial banner clicked:', organizationId, action);
+    return { success: true };
+  },
+  
+  // Track checkout initiated
+  trackCheckoutInitiated: async (planId: string, organizationId?: string) => {
+    // Track checkout initiated event
+    console.log('Checkout initiated:', planId, organizationId);
+    return { success: true };
+  },
+  
+  // Track trial extension requested
+  trackTrialExtensionRequested: async (organizationId: string, reason: string) => {
+    // Track trial extension request event
+    console.log('Trial extension requested:', organizationId, reason);
+    return { success: true };
+  },
+  
+  // Analytics functions
+  
+  getAnalyticsByEventType: async (eventType: string, period?: string) => {
+    // Mock analytics data
+    return {
       data: [
-        { date: '2023-01-01', count: 10 },
-        { date: '2023-01-02', count: 15 },
-        { date: '2023-01-03', count: 8 }
+        { date: '2023-01-01', count: 5 },
+        { date: '2023-01-02', count: 7 },
+        { date: '2023-01-03', count: 10 },
+        { date: '2023-01-04', count: 8 },
+        { date: '2023-01-05', count: 12 }
       ]
-    });
+    };
   },
   
-  getFeatureConversionAnalytics: () => {
-    return Promise.resolve({
+  getFeatureConversionAnalytics: async () => {
+    // Mock feature conversion data
+    return {
       data: [
-        { feature: 'Employee Management', impressions: 120, conversions: 45 },
-        { feature: 'Recruitment', impressions: 80, conversions: 30 },
-        { feature: 'Payroll', impressions: 60, conversions: 20 }
+        { feature: 'Advanced Analytics', impressions: 120, conversions: 45 },
+        { feature: 'Team Collaboration', impressions: 200, conversions: 72 },
+        { feature: 'Custom Reports', impressions: 85, conversions: 30 },
+        { feature: 'API Access', impressions: 60, conversions: 22 }
       ]
-    });
+    };
   },
   
-  getTrialConversionMetrics: () => {
-    return Promise.resolve({
+  getTrialConversionMetrics: async () => {
+    // Mock trial conversion metrics
+    return {
       trialStarted: 100,
       trialCompleted: 85,
       converted: 42,
       conversionRate: 49.4,
-      averageTimeToConversion: 8.3
-    });
+      averageTimeToConversion: 12
+    };
   }
 };

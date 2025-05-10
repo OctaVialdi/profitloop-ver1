@@ -1,125 +1,116 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { requestTrialExtension } from "@/services/subscriptionService";
-import { supabase } from "@/integrations/supabase/client";
-import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
+import { subscriptionService } from "@/services/subscriptionService";
+import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
+import { toast } from "@/components/ui/sonner";
 
-const SubscriptionExtension = () => {
-  const navigate = useNavigate();
+export default function SubscriptionExtension() {
   const { organization } = useOrganization();
-  const [extensionReason, setExtensionReason] = useState("");
+  const [reason, setReason] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Get user email on component mount
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user?.email) {
-        setContactEmail(data.user.email);
-      }
-    };
+  const requestExtension = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    getUser();
-  }, []);
-  
-  const handleTrialExtensionRequest = async () => {
-    if (!extensionReason.trim()) {
-      toast.error("Mohon berikan alasan untuk perpanjangan trial");
+    if (!organization?.id) {
+      toast.error("Organization ID not found");
       return;
     }
-
-    setIsSubmitting(true);
+    
+    if (!reason) {
+      toast.error("Please provide a reason for requesting extension");
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      if (!organization?.id) throw new Error("Organization ID not found");
+      // Request extension
+      const result = await subscriptionService.requestTrialExtension(organization.id, reason);
       
-      // Track trial extension request
-      subscriptionAnalyticsService.trackTrialExtensionRequested(extensionReason, organization.id);
-      
-      const success = await requestTrialExtension(
-        organization.id, 
-        extensionReason, 
-        contactEmail
-      );
-      
-      if (success) {
-        toast.success("Permintaan perpanjangan trial berhasil dikirim!");
-        navigate('/settings/subscription');
+      if (result.success) {
+        // Track event
+        await subscriptionAnalyticsService.trackTrialExtensionRequested(organization.id, reason);
+        
+        toast.success("Trial extension request submitted successfully");
+        setReason("");
+        setContactEmail("");
+      } else {
+        throw new Error("Failed to submit request");
       }
-    } catch (error) {
-      console.error("Error requesting trial extension:", error);
-      toast.error("Gagal mengirim permintaan perpanjangan trial");
+    } catch (error: any) {
+      console.error("Error requesting extension:", error);
+      toast.error(error.message || "Failed to submit request");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
   
   return (
-    <div className="container mx-auto py-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Minta Perpanjangan Trial</h1>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Form Permintaan Perpanjangan</CardTitle>
-            <CardDescription>
-              Isi form berikut untuk meminta perpanjangan masa trial Anda
-            </CardDescription>
-          </CardHeader>
-          
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Request Trial Extension</h2>
+        <p className="text-muted-foreground">
+          Need more time to evaluate our platform? Submit a request for trial extension.
+        </p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Extension Request</CardTitle>
+          <CardDescription>
+            Tell us why you need more time and we'll review your request.
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={requestExtension}>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="extension-reason" className="text-sm font-medium">
-                Alasan Perpanjangan
-              </label>
+            <div className="space-y-1">
+              <Label htmlFor="reason">Reason for extension</Label>
               <Textarea
-                id="extension-reason"
-                placeholder="Ceritakan mengapa Anda memerlukan perpanjangan trial..."
-                value={extensionReason}
-                onChange={(e) => setExtensionReason(e.target.value)}
+                id="reason"
+                placeholder="Please explain why you need more time with our platform..."
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
                 rows={4}
+                required
               />
             </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="contact-email" className="text-sm font-medium">
-                Email Kontak
-              </label>
+            <div className="space-y-1">
+              <Label htmlFor="email">Contact email (optional)</Label>
               <Input
-                id="contact-email"
+                id="email"
                 type="email"
-                placeholder="Email untuk dihubungi"
+                placeholder="Your email for follow-up"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                If different from your account email
+              </p>
             </div>
           </CardContent>
-          
-          <CardFooter className="flex justify-end gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/settings/subscription')}
-            >
-              Kembali
-            </Button>
-            <Button 
-              onClick={handleTrialExtensionRequest} 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Mengirim..." : "Kirim Permintaan"}
+          <CardFooter>
+            <Button type="submit" disabled={isLoading} className="ml-auto">
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Request"
+              )}
             </Button>
           </CardFooter>
-        </Card>
-      </div>
+        </form>
+      </Card>
     </div>
   );
-};
-
-export default SubscriptionExtension;
+}

@@ -40,12 +40,12 @@ const LoginForm = ({
     
     // If it's an email not found error
     if (loginError.includes("Email tidak terdaftar")) {
-      return "info"; // Use info style for redirecting to registration
+      return "default"; // Use default style for redirecting to registration
     }
     
     // If it's a password change notification
     if (loginError.includes("Password untuk akun ini telah diubah")) {
-      return "warning"; // Use warning style for password changed message
+      return "default"; // Use default style for password changed message
     }
     
     // Default error style

@@ -1,141 +1,156 @@
 
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useContext, createContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Organization, OrganizationData, UserProfile } from "@/types/organization";
-import { useAuthState } from "@/hooks/useAuthState";
-import { useTrialStatus } from "@/hooks/useTrialStatus";
-import { subscriptionService } from "@/services/subscriptionService";
+import { useAuth } from "../auth/useAuth";
+import { Organization, OrganizationData, SubscriptionPlan, UserProfile } from "@/types/organization";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
+import { useTrialStatus } from "../useTrialStatus";
 
-export const useOrganization = (): { 
-  organizationData: OrganizationData,
-  loading: boolean 
-} => {
-  const { user } = useAuthState();
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
+// Context for organization data
+const OrganizationContext = createContext<OrganizationData>({
+  organization: null,
+  userProfile: null,
+  isLoading: true,
+  error: null,
+  isSuperAdmin: false,
+  isAdmin: false,
+  isEmployee: false,
+  refreshData: async () => {},
+});
+
+// Provider component
+export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<SubscriptionPlan | null>(null);
   
-  // Get the organization ID from user metadata or profile
-  useEffect(() => {
-    const fetchOrgId = async () => {
-      if (!user) return;
-      
-      // Try to get from user metadata first (faster)
-      const orgId = user.user_metadata?.organization_id;
-      
-      if (orgId) {
-        setOrganizationId(orgId);
-        return;
-      }
-      
-      // Fallback to profile query
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('organization_id')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (profile?.organization_id) {
-          setOrganizationId(profile.organization_id);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-    
-    fetchOrgId();
-  }, [user]);
-
-  // Get organization data
-  const { 
-    data: organization, 
-    isLoading: orgLoading, 
-    error: orgError,
-    refetch: refetchOrg
-  } = useQuery({
-    queryKey: ['organization', organizationId],
-    queryFn: async () => {
-      if (!organizationId) return null;
-      
-      const { data } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', organizationId)
-        .maybeSingle();
-        
-      return data as Organization;
-    },
-    enabled: !!organizationId
-  });
-
-  // Get user profile data
-  const { 
-    data: userProfile, 
-    isLoading: profileLoading
-  } = useQuery({
-    queryKey: ['userProfile', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-        
-      return data as UserProfile;
-    },
-    enabled: !!user?.id
-  });
-
-  // Get trial status
-  const { 
-    daysLeftInTrial, 
-    isTrialActive, 
-    hasPaidSubscription 
-  } = useTrialStatus(organization || null);
-
-  // Get current subscription plan
-  const { 
-    data: subscriptionPlan,
-    isLoading: planLoading
-  } = useQuery({
-    queryKey: ['subscriptionPlan', organization?.subscription_plan_id],
-    queryFn: async () => {
-      if (!organization?.id || !organization?.subscription_plan_id) return null;
-      return subscriptionService.getCurrentPlan(organization.id);
-    },
-    enabled: !!organization?.subscription_plan_id
-  });
-
-  // Role-based permissions
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Calculate user roles
   const isSuperAdmin = userProfile?.role === 'super_admin';
   const isAdmin = userProfile?.role === 'admin' || isSuperAdmin;
-  const isEmployee = !!userProfile;
+  const isEmployee = !!userProfile?.role;
+  
+  // Get trial and subscription status
+  const { isTrialActive, daysLeftInTrial, isTrialExpired, hasPaidSubscription, progress } = useTrialStatus(organization);
+  
+  // Load organization data
+  const loadOrganizationData = async () => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
-  // Refresh data function
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch user profile with organization_id
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        throw new Error(`Failed to load user profile: ${profileError.message}`);
+      }
+
+      setUserProfile(profileData);
+
+      // Check if this user is part of an organization
+      if (!profileData.organization_id) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch organization details
+      const { data: orgData, error: orgError } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", profileData.organization_id)
+        .single();
+
+      if (orgError) {
+        throw new Error(`Failed to load organization: ${orgError.message}`);
+      }
+
+      // Add the logo_path property if it doesn't exist
+      const orgWithLogoPath: Organization = {
+        ...orgData,
+        logo_path: orgData.logo_path || null
+      };
+
+      setOrganization(orgWithLogoPath);
+
+      // Fetch subscription plan if available
+      if (orgData.subscription_plan_id) {
+        try {
+          // For this example, we'll use a mock plan
+          const mockPlan: SubscriptionPlan = {
+            id: "standard-plan",
+            name: "Standard",
+            slug: "standard",
+            price: 299000,
+            max_members: 20,
+            features: {
+              storage: "10GB",
+              members: "20 members",
+              support: "Priority support",
+              advanced_analytics: true
+            },
+            is_active: true
+          };
+          
+          setSubscriptionPlan(mockPlan);
+        } catch (subscriptionError) {
+          console.error("Error fetching subscription plan:", subscriptionError);
+        }
+      }
+    } catch (err: any) {
+      console.error("Error loading organization data:", err);
+      setError(err);
+      toast.error("Error loading organization data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to refresh data
   const refreshData = async () => {
-    await refetchOrg();
+    await loadOrganizationData();
   };
 
-  // Combine all data into one object
-  const organizationData: OrganizationData = {
-    organization,
-    userProfile,
-    isLoading: orgLoading || profileLoading || planLoading,
-    error: orgError as Error,
-    isSuperAdmin,
-    isAdmin,
-    isEmployee,
-    refreshData,
-    isTrialActive,
-    daysLeftInTrial,
-    hasPaidSubscription,
-    subscriptionPlan
-  };
+  // Load organization data on mount or when user changes
+  useEffect(() => {
+    loadOrganizationData();
+  }, [user?.id]);
 
-  return { 
-    organizationData,
-    loading: orgLoading || profileLoading 
-  };
+  return (
+    <OrganizationContext.Provider
+      value={{
+        organization,
+        userProfile,
+        isLoading,
+        error,
+        isSuperAdmin,
+        isAdmin,
+        isEmployee,
+        refreshData,
+        isTrialActive,
+        daysLeftInTrial,
+        hasPaidSubscription,
+        subscriptionPlan
+      }}
+    >
+      {children}
+    </OrganizationContext.Provider>
+  );
 };
+
+// Hook to use organization data
+export const useOrganization = () => useContext(OrganizationContext);
