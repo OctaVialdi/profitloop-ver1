@@ -2,248 +2,246 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, AlertTriangle, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { formatRupiah } from "@/utils/formatUtils";
+import { useToast } from "@/components/ui/toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrganization } from "@/hooks/useOrganization";
 import { stripeService } from "@/services/stripeService";
-import { midtransService } from "@/services/midtransService";
-import { toast } from "@/components/ui/sonner";
-import { formatDate } from "@/utils/formatUtils";
+import { analyticsService } from "@/services/analyticsService";
+import { ExternalLink, CheckCircle2 } from "lucide-react";
 
 export default function SubscriptionManagement() {
   const { organization, subscriptionPlan } = useOrganization();
   const [isLoading, setIsLoading] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [prorationDetails, setProrationDetails] = useState<{
+    prorationDate: Date;
+    amountDue: number;
+    credit: number;
+    newAmount: number;
+    daysLeft: number;
+    totalDaysInPeriod: number;
+    currentPlanName?: string;
+    newPlanName?: string;
+  } | null>(null);
+  const [newPlanId, setNewPlanId] = useState<string | null>(null);
+  const { toast } = useToast();
   const navigate = useNavigate();
-  
-  // State for prorated calculation
-  const [proratedCalc, setProratedCalc] = useState({
-    prorationDate: new Date(),
-    amountDue: 0,
-    credit: 0,
-    newAmount: 0,
-    daysLeft: 0,
-    totalDaysInPeriod: 30,
-    currentPlanName: "",
-    newPlanName: ""
-  });
 
-  // Calculate upgrade cost when component mounts
+  // Get plan details from query params if available
   useEffect(() => {
-    if (organization?.subscription_plan_id) {
-      calculateUpgradeCost();
+    const queryParams = new URLSearchParams(window.location.search);
+    const planId = queryParams.get('plan');
+    
+    if (planId && organization?.id && organization?.subscription_plan_id) {
+      setNewPlanId(planId);
+      loadProrationDetails(planId, organization.subscription_plan_id);
     }
-  }, [organization?.subscription_plan_id]);
+  }, [organization?.id, organization?.subscription_plan_id]);
 
-  // Calculate upgrade cost
-  const calculateUpgradeCost = async () => {
+  // Load proration details when changing plans
+  const loadProrationDetails = async (newPlanId: string, currentPlanId: string) => {
     try {
-      if (!organization?.subscription_plan_id) return;
-      
       setIsLoading(true);
-      
-      // Mock prorated calculation for demonstration
-      const data = await midtransService.getProratedAmount(
-        "premium-plan", 
-        organization.subscription_plan_id
-      );
-      
-      // Convert the midtrans format to our expected format
-      const formattedCalc = {
-        prorationDate: new Date(),
-        amountDue: data.total,
-        credit: data.prorated_amount,
-        newAmount: data.total - data.prorated_amount,
-        daysLeft: 15,  // Mock value
-        totalDaysInPeriod: 30,  // Standard month period
-        currentPlanName: organization.subscription_plan_name || "Standard",
-        newPlanName: "Premium"
-      };
-      
-      setProratedCalc(formattedCalc);
+      const details = await stripeService.getProratedCalculation(newPlanId, currentPlanId);
+      setProrationDetails(details);
     } catch (error) {
       console.error("Error calculating proration:", error);
-      toast.error("Failed to calculate upgrade cost");
+      toast({
+        title: "Calculation Error",
+        description: "Failed to calculate subscription change details.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Cancel subscription handler
-  const handleCancelSubscription = async () => {
-    setIsLoading(true);
+  // Handle opening the billing portal
+  const handleOpenBillingPortal = async () => {
     try {
-      // Create billing portal session for cancellation
+      setPortalLoading(true);
       const portalUrl = await stripeService.createPortalSession();
       window.location.href = portalUrl;
     } catch (error) {
-      console.error("Error navigating to billing portal:", error);
-      toast.error("Failed to open billing portal");
-      setIsLoading(false);
+      console.error("Error opening billing portal:", error);
+      toast({
+        title: "Portal Error",
+        description: "Failed to open billing portal. Please try again later.",
+        variant: "destructive",
+      });
+      setPortalLoading(false);
     }
   };
 
-  // Upgrade subscription handler
-  const handleUpgradeSubscription = async () => {
-    setIsLoading(true);
+  // Handle subscription change confirmation
+  const handleConfirmChange = async () => {
+    if (!newPlanId || !organization?.subscription_plan_id) return;
+    
     try {
-      if (!organization?.subscription_plan_id) {
-        throw new Error("No current subscription plan found");
-      }
+      setIsLoading(true);
+      // Track checkout initiated event
+      analyticsService.trackEvent({
+        eventType: "subscription_change_initiated",
+        organizationId: organization?.id,
+        additionalData: { 
+          currentPlanId: organization?.subscription_plan_id,
+          newPlanId
+        }
+      });
       
-      // Create checkout for upgrade
+      // Create checkout session for prorated amount
       const checkoutUrl = await stripeService.createProratedCheckout(
-        "premium-plan", 
+        newPlanId, 
         organization.subscription_plan_id
       );
       
+      // Redirect to checkout
       window.location.href = checkoutUrl;
     } catch (error) {
-      console.error("Error upgrading subscription:", error);
-      toast.error("Failed to upgrade subscription");
+      console.error("Error creating checkout:", error);
+      toast({
+        title: "Checkout Error",
+        description: "Failed to create checkout session. Please try again later.",
+        variant: "destructive",
+      });
       setIsLoading(false);
     }
   };
 
-  if (!organization) {
+  // Handle cancel change
+  const handleCancelChange = () => {
+    navigate("/settings/subscription");
+  };
+
+  // If no proration details and no newPlanId, show current subscription
+  if (!prorationDetails && !newPlanId) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Subscription Management</h1>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Current Subscription</CardTitle>
+            <CardDescription>Manage your current subscription plan</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium">
+                  {subscriptionPlan?.name || "Basic Plan"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {subscriptionPlan?.price ? `Rp ${subscriptionPlan.price.toLocaleString()}` : "Free"} / month
+                </p>
+              </div>
+              
+              <Button 
+                onClick={handleOpenBillingPortal} 
+                disabled={portalLoading} 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                {portalLoading ? "Opening..." : "Manage Billing"}
+                <ExternalLink size={16} />
+              </Button>
+              
+              <div className="border-t pt-4 mt-6">
+                <Button
+                  onClick={() => navigate("/settings/subscription/plans")}
+                  variant="outline"
+                >
+                  Change Subscription Plan
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  // Show proration details when changing plans
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Subscription Management</h2>
-        <p className="text-muted-foreground">
-          Manage your current subscription plan and payment details
-        </p>
-      </div>
-
-      <div className="grid gap-6">
-        {/* Current Subscription Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Plan</CardTitle>
-            <CardDescription>
-              Your organization is currently on the {organization.subscription_plan_name || "Standard"} plan
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="font-medium">Price</span>
-                <span>{formatRupiah(organization.subscription_price || 299000)}/month</span>
+      <h1 className="text-2xl font-bold">Change Subscription</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscription Change Details</CardTitle>
+          <CardDescription>Review the details of your subscription change</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="py-8 flex justify-center">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Current and new plan */}
+              <div className="flex flex-col md:flex-row md:justify-between gap-4">
+                <div className="p-4 border rounded-md">
+                  <p className="text-sm text-muted-foreground">Current Plan</p>
+                  <h3 className="font-medium text-lg">
+                    {prorationDetails?.currentPlanName || subscriptionPlan?.name || "Basic Plan"}
+                  </h3>
+                </div>
+                <div className="p-4 border rounded-md bg-muted/10">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <p className="text-sm text-muted-foreground">New Plan</p>
+                  </div>
+                  <h3 className="font-medium text-lg">
+                    {prorationDetails?.newPlanName || "Premium Plan"}
+                  </h3>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Billing period</span>
-                <span>Monthly</span>
+              
+              {/* Billing summary */}
+              <div className="border rounded-md p-4">
+                <h3 className="font-medium mb-4">Billing Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Credit from current plan</span>
+                    <span>-Rp {prorationDetails?.credit.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>New plan amount</span>
+                    <span>Rp {prorationDetails?.newAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="border-t pt-2 mt-2 font-medium flex justify-between">
+                    <span>Amount due now</span>
+                    <span>Rp {prorationDetails?.amountDue.toLocaleString()}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-4 text-xs text-muted-foreground">
+                  <p>
+                    Your current billing cycle has {prorationDetails?.daysLeft || 0} days remaining 
+                    out of {prorationDetails?.totalDaysInPeriod || 30} days.
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Next billing date</span>
-                <span>
-                  {organization.subscription_end_date 
-                    ? formatDate(organization.subscription_end_date) 
-                    : "N/A"}
-                </span>
+              
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button 
+                  onClick={handleConfirmChange} 
+                  disabled={isLoading} 
+                  className="flex-1"
+                >
+                  Confirm Change
+                </Button>
+                <Button 
+                  onClick={handleCancelChange} 
+                  variant="outline" 
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
-              Cancel subscription
-            </Button>
-            <Button onClick={() => navigate("/settings/subscription/plans")}>
-              Change plan
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* Upgrade to Premium Card */}
-        {organization.subscription_plan_id && 
-         organization.subscription_plan_id !== "premium-plan" && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle>Upgrade to Premium</CardTitle>
-              <CardDescription>
-                Get access to all premium features and increase your team limit
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="font-medium">Current plan credit</span>
-                  <span>{formatRupiah(proratedCalc.credit)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Premium plan (prorated)</span>
-                  <span>{formatRupiah(proratedCalc.amountDue)}</span>
-                </div>
-                <div className="border-t border-blue-200 my-2" />
-                <div className="flex justify-between">
-                  <span className="font-medium">Amount due now</span>
-                  <span className="font-bold">{formatRupiah(proratedCalc.newAmount)}</span>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                className="w-full" 
-                onClick={handleUpgradeSubscription}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Upgrade to Premium"
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
-      </div>
-
-      {/* Cancel Confirmation Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-              Cancel Subscription
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Keep subscription
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleCancelSubscription}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                "Confirm cancellation"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,69 +1,80 @@
 
-export interface UserProfile {
-  id: string;
-  organization_id?: string;
-  role?: string;
-  email?: string;
-  full_name?: string;
-  timezone?: string;
-  preferences?: UserPreferences;
-  created_at?: string;
-  last_active?: string;
-  profile_image?: string | null;
-  created_at_formatted?: string;
+import { Json } from "@/integrations/supabase/types";
+
+// Define the UserPreferences interface
+export interface UserPreferences {
+  theme?: string;
+  notifications?: {
+    email?: boolean;
+    push?: boolean;
+  };
+  [key: string]: any;
 }
 
+// Define UserProfile interface
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  email_verified: boolean;
+  organization_id: string;
+  role: string;
+  created_at: string;
+  profile_image?: string;
+  invited_by?: string;
+  preferences: UserPreferences;
+  has_seen_welcome: boolean;
+  last_active: string;
+  timezone: string;
+}
+
+// Define Organization interface
 export interface Organization {
   id: string;
   name: string;
-  business_field: string | null;
-  employee_count: number | null;
-  address: string | null;
-  phone: string | null;
+  address: string;
+  phone: string;
+  business_field: string;
+  employee_count: number;
+  trial_start_date: string;
+  trial_end_date: string;
+  trial_expired: boolean;
+  subscription_status: string;
+  subscription_plan_id: string;
+  created_at: string;
+  theme_settings: Json;
   logo_path: string | null;
-  theme_settings: any;
-  trial_end_date?: string | null;
-  trial_start_date?: string | null;
-  trial_expired?: boolean;
-  subscription_status?: 'trial' | 'active' | 'expired' | string;
-  subscription_plan_id?: string;
-  grace_period_end?: string | null;
-  
-  // Additional properties for subscription management
-  subscription_plan_name?: string;
-  subscription_price?: number;
-  subscription_end_date?: string;
-  subscription_id?: string;
 }
 
+// Define SubscriptionPlan interface
 export interface SubscriptionPlan {
   id: string;
   name: string;
   slug: string;
   price: number;
-  max_members: number | null;
-  features: Record<string, any> | null;
+  max_members: number;
+  features: {
+    storage: string;
+    members: string;
+    support: string;
+    advanced_analytics: boolean;
+    [key: string]: any;
+  };
   is_active: boolean;
-  created_at?: string;
-  direct_payment_url?: string;
 }
 
-export interface UserPreferences {
-  dark_mode?: boolean;
-  [key: string]: any;
-}
-
-export type OrganizationData = {
+// Define OrganizationData interface for the hook
+export interface OrganizationData {
   organization: Organization | null;
   userProfile: UserProfile | null;
   isLoading: boolean;
   error: Error | null;
+  refreshData: () => Promise<void>;
   isSuperAdmin: boolean;
   isAdmin: boolean;
   isEmployee: boolean;
-  refreshData: () => Promise<void>;
-  isTrialActive?: boolean;
-  daysLeftInTrial?: number;
-  hasPaidSubscription?: boolean;
-  subscriptionPlan?: SubscriptionPlan | null;
-};
+  isTrialActive: boolean;
+  daysLeftInTrial: number;
+  hasPaidSubscription: boolean;
+  subscriptionPlan: SubscriptionPlan | null;
+}

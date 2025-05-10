@@ -2,115 +2,90 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Ensures a user profile exists in the database
+ * A robust sign out function that handles edge cases and cleans up auth state
  */
-export const ensureProfileExists = async (userId: string, userData: {
-  email: string;
-  full_name?: string | null;
-  email_verified?: boolean;
-}) => {
+export async function robustSignOut(): Promise<void> {
   try {
-    // Check if profile exists
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', userId)
-      .maybeSingle();
-      
-    if (existingProfile) {
-      // Profile exists, update it if needed
-      await supabase
-        .from('profiles')
-        .update({
-          email: userData.email,
-          full_name: userData.full_name || null,
-          email_verified: userData.email_verified || false
-        })
-        .eq('id', userId);
-    } else {
-      // Profile doesn't exist, create it
-      await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: userData.email,
-          full_name: userData.full_name || null,
-          email_verified: userData.email_verified || false
-        });
-    }
+    // Clear any local storage items that might contain auth state
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('auth-token');
+    
+    // Clear cookies that might contain auth info
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    
+    // Call Supabase signOut method
+    await supabase.auth.signOut();
+    
+    // Force a page reload if needed to clear React state
+    // window.location.href = '/auth/login';
   } catch (error) {
-    console.error("Error ensuring profile exists:", error);
+    console.error("Error during sign out:", error);
+    // Force sign out even if the API call failed
+    window.location.href = '/auth/login';
   }
-};
+}
 
 /**
- * Cleans up auth state to prevent auth limbo
+ * Validate password against security policy
  */
-export const cleanupAuthState = () => {
-  // Remove standard auth tokens
-  localStorage.removeItem('supabase.auth.token');
+export function validatePassword(password: string): { 
+  valid: boolean; 
+  errors: string[];
+} {
+  const errors: string[] = [];
   
-  // Remove all Supabase auth keys from localStorage
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      localStorage.removeItem(key);
-    }
-  });
+  // Check minimum length
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
+  }
   
-  // Remove from sessionStorage if in use
-  Object.keys(sessionStorage || {}).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      sessionStorage.removeItem(key);
-    }
-  });
-};
+  // Check if contains uppercase letter
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+  
+  // Check if contains lowercase letter
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+  
+  // Check if contains number
+  if (!/\d/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+  
+  // Check if contains special character
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push("Password must contain at least one special character");
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
 
 /**
- * Robust sign out function that handles all cleanup
+ * Clean email input (trim and lowercase)
  */
-export const robustSignOut = async (): Promise<void> => {
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+/**
+ * Get password last change date
+ */
+export async function getPasswordLastChangeDate(userId: string): Promise<Date | null> {
   try {
-    // Clean up auth state first
-    cleanupAuthState();
-    
-    // Attempt global sign out
-    try {
-      await supabase.auth.signOut({ scope: 'global' });
-    } catch (err) {
-      console.error("Error during sign out:", err);
-      // Continue even if this fails
-    }
-    
-    // Add a small delay to ensure sign out completes
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    // This would normally query the auth_audit_logs table
+    // For now, return the current date - 5 days
+    return new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
   } catch (error) {
-    console.error("Error in robustSignOut:", error);
+    console.error("Error getting password change date:", error);
+    return null;
   }
-};
-
-/**
- * Helper function to check common authentication errors
- */
-export const getAuthErrorMessage = (error: any): string => {
-  const errorMessage = error?.message || '';
-  
-  if (errorMessage.includes('Email not confirmed') || 
-      errorMessage.includes('not confirmed') || 
-      errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('confirm')) {
-    return 'Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.';
-  }
-  
-  if (errorMessage.includes('Invalid login credentials') || 
-      errorMessage.includes('invalid_credentials')) {
-    return 'Password salah. Mohon periksa kembali.';
-  }
-  
-  if (errorMessage.includes('Email not found') || 
-      errorMessage.includes('user not found')) {
-    return 'Email tidak terdaftar. Silakan daftar terlebih dahulu.';
-  }
-  
-  // Default error message
-  return 'Gagal login. Periksa email dan password Anda.';
-};
+}

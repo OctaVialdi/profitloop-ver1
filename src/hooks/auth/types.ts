@@ -40,3 +40,11 @@ export interface MagicLinkResult {
   organizationName?: string;
   sendMagicLink?: (params: MagicLinkParams) => Promise<void>;
 }
+
+export interface PasswordPolicy {
+  minLength: number;
+  requireUppercase: boolean;
+  requireLowercase: boolean;
+  requireNumbers: boolean;
+  requireSpecialChars: boolean;
+}

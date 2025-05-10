@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "../auth/useAuth";
-import { Organization, UserProfile } from "@/types/organization";
+import { Organization, UserProfile, SubscriptionPlan, UserPreferences } from "@/types/organization";
+import { calculateTrialStatus, calculateSubscriptionStatus } from "@/utils/organizationUtils";
 
 export interface OrganizationData {
   organization: Organization | null;
@@ -12,6 +14,11 @@ export interface OrganizationData {
   refreshData: () => Promise<void>;
   isSuperAdmin: boolean;
   isAdmin: boolean;
+  isEmployee: boolean;
+  isTrialActive: boolean;
+  daysLeftInTrial: number;
+  hasPaidSubscription: boolean;
+  subscriptionPlan: SubscriptionPlan | null;
 }
 
 export function useOrganizationData(): OrganizationData {
@@ -19,12 +26,18 @@ export function useOrganizationData(): OrganizationData {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isTrialActive, setIsTrialActive] = useState<boolean>(false);
+  const [daysLeftInTrial, setDaysLeftInTrial] = useState<number>(0);
+  const [hasPaidSubscription, setHasPaidSubscription] = useState<boolean>(false);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<SubscriptionPlan | null>(null);
   
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // Calculate roles
   const isSuperAdmin = userProfile?.role === 'super_admin';
   const isAdmin = userProfile?.role === 'admin' || isSuperAdmin;
+  const isEmployee = userProfile?.role === 'employee' || isAdmin;
   
   const loadOrganizationData = async () => {
     if (!user) {
@@ -47,7 +60,19 @@ export function useOrganizationData(): OrganizationData {
         throw new Error(`Failed to load user profile: ${profileError.message}`);
       }
       
-      setUserProfile(profileData);
+      // Convert JSON preferences to UserPreferences object
+      const preferences: UserPreferences = 
+        (typeof profileData.preferences === 'string' && profileData.preferences) 
+          ? JSON.parse(profileData.preferences) 
+          : profileData.preferences || {};
+      
+      // Create UserProfile with proper preferences type
+      const userProfileWithTypes: UserProfile = {
+        ...profileData,
+        preferences
+      };
+      
+      setUserProfile(userProfileWithTypes);
       
       // Check if user has organization
       if (!profileData.organization_id) {
@@ -73,6 +98,36 @@ export function useOrganizationData(): OrganizationData {
       };
       
       setOrganization(completeOrgData);
+      
+      // Calculate trial status
+      if (completeOrgData) {
+        const { isTrialActive, daysLeftInTrial } = calculateTrialStatus(completeOrgData);
+        setIsTrialActive(isTrialActive);
+        setDaysLeftInTrial(daysLeftInTrial);
+        
+        // Mock subscription plan for demo purposes
+        const mockSubscriptionPlan: SubscriptionPlan = {
+          id: "basic-plan",
+          name: "Basic Plan",
+          slug: "basic",
+          price: 9900,
+          max_members: 5,
+          features: {
+            storage: "5 GB",
+            members: "5 members",
+            support: "Email support",
+            advanced_analytics: false
+          },
+          is_active: true
+        };
+        
+        setSubscriptionPlan(mockSubscriptionPlan);
+        
+        // Calculate subscription status
+        const hasPaidSub = calculateSubscriptionStatus(completeOrgData, mockSubscriptionPlan);
+        setHasPaidSubscription(hasPaidSub);
+      }
+      
     } catch (err: any) {
       console.error('Error loading organization data:', err);
       setError(err);
@@ -96,6 +151,20 @@ export function useOrganizationData(): OrganizationData {
     error,
     refreshData,
     isSuperAdmin,
-    isAdmin
+    isAdmin,
+    isEmployee,
+    isTrialActive,
+    daysLeftInTrial,
+    hasPaidSubscription,
+    subscriptionPlan
   };
 }
+
+export const fetchOrganizationData = async (
+  setOrganizationData: React.Dispatch<React.SetStateAction<any>>, 
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  // This function is here for backward compatibility
+  // The actual implementation is now in useOrganizationData
+  console.log("fetchOrganizationData is deprecated, use useOrganizationData hook instead");
+};

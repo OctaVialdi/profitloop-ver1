@@ -25,8 +25,8 @@ function App() {
           // Check if organization trial needs fixing
           const result = await subscriptionService.fixOrganizationTrialPeriod(organization.id);
           
-          if (result.updated) {
-            toast.info("Your trial period has been adjusted based on your activity.");
+          if (result.success) {
+            toast.info(result.message || "Your trial period has been adjusted based on your activity.");
           }
         } catch (error) {
           console.error("Error checking trial status:", error);

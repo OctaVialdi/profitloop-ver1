@@ -1,34 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OrganizationData, SubscriptionPlan } from "@/types/organization";
-import { fetchOrganizationData } from "./organization/useOrganizationData";
+import { useOrganizationData } from "./organization/useOrganizationData";
 import { useAuthStateListener } from "./organization/useAuthStateListener";
 import { useOrganizationSubscription } from "./organization/useOrganizationSubscription";
 import { calculateTrialStatus, calculateSubscriptionStatus } from "@/utils/organizationUtils";
 
 export function useOrganization(): OrganizationData {
-  const [organizationData, setOrganizationData] = useState<OrganizationData>({
-    organization: null,
-    userProfile: null,
-    isLoading: true,
-    error: null,
-    isSuperAdmin: false,
-    isAdmin: false,
-    isEmployee: false,
-    isTrialActive: false,
-    daysLeftInTrial: 0,
-    hasPaidSubscription: false,
-    subscriptionPlan: null,
-    refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate)
-  });
-  
+  const organizationData = useOrganizationData();
   const navigate = useNavigate();
-  
-  // Initialize data fetching
-  useEffect(() => {
-    fetchOrganizationData(setOrganizationData, navigate);
-  }, [navigate]);
   
   // Calculate trial and subscription status whenever organization data changes
   useEffect(() => {
@@ -44,12 +24,7 @@ export function useOrganization(): OrganizationData {
         daysLeftInTrial !== organizationData.daysLeftInTrial ||
         hasPaidSubscription !== organizationData.hasPaidSubscription
       ) {
-        setOrganizationData(prevData => ({
-          ...prevData,
-          isTrialActive,
-          daysLeftInTrial,
-          hasPaidSubscription
-        }));
+        // Values will be updated in useOrganizationData
       }
     }
   }, [organizationData.organization, organizationData.subscriptionPlan]);

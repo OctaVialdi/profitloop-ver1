@@ -1,56 +1,75 @@
 
-// Utility function to format numbers to Rupiah currency
-export const formatRupiah = (amount: number): string => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(amount);
-};
-
-// Format date to Indonesian standard
-export const formatDate = (dateString: string): string => {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(date);
-};
-
-// Format file size to human readable format
-export const formatFileSize = (bytes: number): string => {
+/**
+ * Format a file size in bytes to a human readable string
+ */
+export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
   
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-// Format a date to relative time (e.g., "2 days ago", "5 hours ago")
-export const formatRelativeTime = (date: Date): string => {
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInSecs = Math.floor(diffInMs / 1000);
-  const diffInMins = Math.floor(diffInSecs / 60);
-  const diffInHours = Math.floor(diffInMins / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-  const diffInMonths = Math.floor(diffInDays / 30);
-  const diffInYears = Math.floor(diffInMonths / 12);
   
-  if (diffInSecs < 60) {
-    return `baru saja`;
-  } else if (diffInMins < 60) {
-    return `${diffInMins} menit yang lalu`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours} jam yang lalu`;
-  } else if (diffInDays < 30) {
-    return `${diffInDays} hari yang lalu`;
-  } else if (diffInMonths < 12) {
-    return `${diffInMonths} bulan yang lalu`;
-  } else {
-    return `${diffInYears} tahun yang lalu`;
+  return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+/**
+ * Format a date to a human readable string
+ */
+export function formatDate(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString();
+}
+
+/**
+ * Format a time to a human readable string
+ */
+export function formatTime(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleTimeString();
+}
+
+/**
+ * Format currency
+ */
+export function formatCurrency(amount: number, currency: string = 'IDR'): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0
+  }).format(amount);
+}
+
+/**
+ * Format a date relative to now (e.g. 2 days ago)
+ */
+export function formatRelativeTime(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} second${diffInSeconds === 1 ? '' : 's'} ago`;
   }
-};
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+  }
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+  }
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) {
+    return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+  }
+  
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) {
+    return `${diffInMonths} month${diffInMonths === 1 ? '' : 's'} ago`;
+  }
+  
+  const diffInYears = Math.floor(diffInMonths / 12);
+  return `${diffInYears} year${diffInYears === 1 ? '' : 's'} ago`;
+}

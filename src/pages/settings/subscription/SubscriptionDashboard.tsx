@@ -9,8 +9,6 @@ import { Link } from "react-router-dom";
 export default function SubscriptionDashboard() {
   const { organization, isTrialActive, daysLeftInTrial, hasPaidSubscription } = useOrganization();
 
-  // Progress is now part of useTrialStatus via useOrganization
-  // We can safely access the trial data from useOrganization
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
