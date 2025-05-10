@@ -18,6 +18,8 @@ import ApplicationSuccess from "@/pages/public/ApplicationSuccess";
 import JobPreviewPage from "@/pages/public/JobPreviewPage";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Components from "@/pages/dev/Components";
+import TrialExpiredPage from "@/pages/TrialExpiredPage";
+import TrialProtection from "@/components/TrialProtection";
 
 export const AppRoutes = () => {
   return (
@@ -27,6 +29,9 @@ export const AppRoutes = () => {
 
       {/* Auth Routes */}
       {authRoutes}
+      
+      {/* Trial Expired Page */}
+      <Route path="/trial-expired" element={<TrialExpiredPage />} />
       
       {/* Public Routes - Ensuring these are registered BEFORE protected routes for priority */}
       <Route path="/join-organization" element={<JoinOrganization />} />
