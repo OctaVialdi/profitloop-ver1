@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -336,11 +335,14 @@ const SubscriptionPlansManagement = () => {
                       <Button variant="outline" size="sm" onClick={() => handleOpenDialog(plan)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="text-red-600" onClick={() => openDeleteDialog(plan)}>
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600" 
+                        onClick={() => openDeleteDialog(plan)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
