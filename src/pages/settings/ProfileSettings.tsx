@@ -1,7 +1,7 @@
 
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,12 +11,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ProfilePhotoUploader } from "@/components/settings/ProfilePhotoUploader";
+import { PasswordChangeForm } from "@/components/settings/PasswordChangeForm";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProfileFormData {
   fullName: string;
   email: string;
   timezone: string;
   darkMode: boolean;
+  profileImage?: string | null;
 }
 
 const ProfileSettings = () => {
@@ -28,9 +32,11 @@ const ProfileSettings = () => {
     email: userProfile?.email || "",
     timezone: userProfile?.timezone || "Asia/Jakarta",
     darkMode: userProfile?.preferences?.dark_mode || false,
+    profileImage: userProfile?.profile_image || null,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
 
   useEffect(() => {
     if (userProfile) {
@@ -39,25 +45,18 @@ const ProfileSettings = () => {
         email: userProfile.email || "",
         timezone: userProfile.timezone || "Asia/Jakarta",
         darkMode: userProfile.preferences?.dark_mode || false,
+        profileImage: userProfile.profile_image || null,
       });
     }
   }, [userProfile]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    const target = e.target as HTMLInputElement;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
     
-    if (target.type === "checkbox") {
-      setFormData(prev => ({
-        ...prev,
-        [name]: target.checked
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,6 +88,14 @@ const ProfileSettings = () => {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleProfilePhotoUpdated = (newPhotoUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      profileImage: newPhotoUrl
+    }));
+    refreshData();
   };
 
   // Update the timezone handling in the updateUserProfile function
@@ -138,83 +145,150 @@ const ProfileSettings = () => {
 
   return (
     <div className="container mx-auto py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Pengaturan Profil</CardTitle>
-          <CardDescription>Atur informasi profil Anda.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <form onSubmit={handleSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="fullName">Nama Lengkap</Label>
-              <Input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="timezone">Zona Waktu</Label>
-              <Select value={formData.timezone} onValueChange={(value) => setFormData(prev => ({ ...prev, timezone: value }))}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pilih zona waktu" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timezones.map((timezone) => (
-                    <SelectItem key={timezone.value} value={timezone.value}>
-                      {timezone.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="darkMode">Mode Gelap</Label>
-              <Switch
-                id="darkMode"
-                name="darkMode"
-                checked={formData.darkMode}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, darkMode: checked }))}
-              />
-            </div>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="authentication">Autentikasi</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="profile">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pengaturan Profil</CardTitle>
+              <CardDescription>Atur informasi profil Anda.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="w-full md:w-1/3">
+                  <ProfilePhotoUploader 
+                    userId={user?.id || ''}
+                    currentPhotoUrl={formData.profileImage}
+                    fullName={formData.fullName}
+                    onPhotoUpdated={handleProfilePhotoUpdated}
+                  />
+                </div>
+                
+                <form onSubmit={handleSubmit} className="grid gap-4 w-full md:w-2/3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fullName">Nama Lengkap</Label>
+                    <Input
+                      type="text"
+                      id="fullName"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      disabled
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="timezone">Zona Waktu</Label>
+                    <Select value={formData.timezone} onValueChange={(value) => setFormData(prev => ({ ...prev, timezone: value }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Pilih zona waktu" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timezones.map((timezone) => (
+                          <SelectItem key={timezone.value} value={timezone.value}>
+                            {timezone.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="darkMode"
+                      name="darkMode"
+                      checked={formData.darkMode}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, darkMode: checked }))}
+                    />
+                    <Label htmlFor="darkMode">Mode Gelap</Label>
+                  </div>
+                  <Button type="submit" disabled={isSaving} className="w-full md:w-auto md:self-end mt-2">
+                    {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
+                  </Button>
+                </form>
+              </div>
+            </CardContent>
+          </Card>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Hapus Akun</CardTitle>
-          <CardDescription>
-            Setelah Anda menghapus akun, tidak ada jalan untuk kembali. Harap
-            dipastikan.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            variant="destructive"
-            onClick={handleDeleteAccount}
-            disabled={isDeleting}
-          >
-            {isDeleting ? "Menghapus..." : "Hapus Akun"}
-          </Button>
-        </CardContent>
-      </Card>
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Hapus Akun</CardTitle>
+              <CardDescription>
+                Setelah Anda menghapus akun, tidak ada jalan untuk kembali. Harap
+                dipastikan.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Menghapus..." : "Hapus Akun"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="authentication">
+          <Card>
+            <CardHeader>
+              <CardTitle>Autentikasi</CardTitle>
+              <CardDescription>Perubahan pada autentikasi akan berlaku untuk semua akun Anda.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-2">
+                <Label htmlFor="email-auth">Email</Label>
+                <Input
+                  type="email"
+                  id="email-auth"
+                  value={formData.email}
+                  disabled
+                />
+              </div>
+              
+              <div className="border-t pt-6">
+                <h3 className="font-medium text-lg mb-4">Ubah Password</h3>
+                <PasswordChangeForm />
+              </div>
+              
+              {/* <div className="border-t pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">Google Authentication</h3>
+                    <p className="text-sm text-muted-foreground">Masuk menggunakan akun Google</p>
+                  </div>
+                  <Switch disabled />
+                </div>
+              </div> */}
+              
+              <div className="border-t pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">Keluar dari Semua Sesi Aktif</h3>
+                    <p className="text-sm text-muted-foreground">Paksa logout dari semua perangkat dan sesi Anda</p>
+                  </div>
+                  <Button variant="outline" onClick={() => supabase.auth.signOut({ scope: 'global' })}>
+                    Keluar
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
