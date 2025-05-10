@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Sparkles, ArrowRight, Clock, Send, InfoCircle } from "lucide-react";
+import { Sparkles, ArrowRight, Clock, Send, Info } from "lucide-react";
 import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { useOrganization } from "@/hooks/useOrganization";
 import { robustSignOut } from "@/utils/authUtils";
@@ -113,7 +113,7 @@ const TrialExpiredPage = () => {
 
                   <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
                     <div className="flex items-start gap-3">
-                      <InfoCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <Info className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-amber-800 text-sm">
                           Your account is currently limited. Upgrade now to regain access to all features
