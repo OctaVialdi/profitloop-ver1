@@ -53,23 +53,38 @@ export const useAppThemeManager = () => {
           setIsLoading(false);
           return;
         }
+
+        // Process theme settings
+        let themeSettings = org.theme_settings;
+        if (typeof themeSettings === 'string') {
+          try {
+            themeSettings = JSON.parse(themeSettings);
+          } catch (e) {
+            themeSettings = null;
+          }
+        }
         
-        setOrganization(org);
+        // Create a proper organization object with processed theme settings
+        const processedOrg: Organization = {
+          ...org,
+          theme_settings: themeSettings || {
+            primary_color: defaultColors.primary,
+            secondary_color: defaultColors.secondary,
+            accent_color: defaultColors.accent,
+            sidebar_color: defaultColors.sidebar,
+          }
+        };
+        
+        setOrganization(processedOrg);
         
         // Apply theme settings if available
-        if (org.theme_settings && typeof org.theme_settings === 'object') {
-          const themeSettings = org.theme_settings as {
-            primary_color?: string;
-            secondary_color?: string;
-            accent_color?: string;
-            sidebar_color?: string;
-          };
-          
+        const settings = processedOrg.theme_settings;
+        if (settings) {
           setColors({
-            primary: themeSettings.primary_color || defaultColors.primary,
-            secondary: themeSettings.secondary_color || defaultColors.secondary,
-            accent: themeSettings.accent_color || defaultColors.accent,
-            sidebar: themeSettings.sidebar_color || defaultColors.sidebar,
+            primary: settings.primary_color || defaultColors.primary,
+            secondary: settings.secondary_color || defaultColors.secondary,
+            accent: settings.accent_color || defaultColors.accent,
+            sidebar: settings.sidebar_color || defaultColors.sidebar,
           });
         }
       } catch (error) {

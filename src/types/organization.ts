@@ -26,9 +26,13 @@ export interface Organization {
     secondary_color: string;
     accent_color: string;
     sidebar_color: string;
-  };
+  } | any; // Adding 'any' to handle Json type from database
   subscription_status?: string;
   subscription_plan_id?: string;
+  subscription_plan_name?: string; // Added for SubscriptionManagement.tsx
+  subscription_price?: number; // Added for SubscriptionManagement.tsx
+  subscription_end_date?: string; // Added for SubscriptionManagement.tsx
+  subscription_id?: string; // Added for SubscriptionManagement.tsx
   trial_end_date?: string;
   trial_expired?: boolean;
   trial_start_date?: string;
@@ -47,7 +51,7 @@ export interface SubscriptionPlan {
   slug?: string;
   price: number;
   max_members: number;
-  features: Record<string, any> | null;
+  features: Record<string, any> | null | any; // Added 'any' to handle Json type
   direct_payment_url?: string;
   deskripsi?: string;
   is_active: boolean;

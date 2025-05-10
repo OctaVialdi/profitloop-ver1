@@ -8,19 +8,19 @@ import { supabase } from './client';
  * @param isPublic Whether the bucket should be public or private
  * @returns A boolean indicating success
  */
-export async function ensureBucketExists(bucketName: string, isPublic: boolean = false): Promise<boolean> {
+export async function ensureBucketExists(bucketName: string, isPublic: boolean = false): Promise<{ success: boolean; error?: string }> {
   try {
     // First check if the bucket already exists
     const { data: buckets, error: getBucketsError } = await supabase.storage.listBuckets();
     
     if (getBucketsError) {
       console.error('Error checking if bucket exists:', getBucketsError);
-      return false;
+      return { success: false, error: getBucketsError.message };
     }
     
     // If bucket already exists, we're done
     if (buckets?.find(bucket => bucket.name === bucketName)) {
-      return true;
+      return { success: true };
     }
     
     // Bucket doesn't exist, create it
@@ -32,7 +32,7 @@ export async function ensureBucketExists(bucketName: string, isPublic: boolean =
     
     if (createBucketError) {
       console.error('Error creating bucket:', createBucketError);
-      return false;
+      return { success: false, error: createBucketError.message };
     }
     
     // If public bucket, update bucket policy
@@ -45,9 +45,48 @@ export async function ensureBucketExists(bucketName: string, isPublic: boolean =
       }
     }
     
-    return true;
-  } catch (error) {
+    return { success: true };
+  } catch (error: any) {
     console.error('Exception ensuring bucket exists:', error);
-    return false;
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
+/**
+ * Uploads a file to a specified bucket
+ * 
+ * @param bucketName The name of the bucket to upload to
+ * @param filePath The path/name for the file in the bucket
+ * @param file The file to upload
+ * @returns Object containing the URL and any error that occurred
+ */
+export async function uploadFileToBucket(
+  bucketName: string, 
+  filePath: string, 
+  file: File
+): Promise<{ url?: string; error?: Error }> {
+  try {
+    // Upload the file to the specified bucket path
+    const { error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Error uploading file:', uploadError);
+      return { error: uploadError };
+    }
+
+    // Get the public URL for the uploaded file
+    const { data: urlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+
+    return { url: urlData.publicUrl };
+  } catch (error: any) {
+    console.error('Exception uploading file:', error);
+    return { error: error };
   }
 }

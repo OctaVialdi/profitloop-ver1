@@ -21,9 +21,32 @@ export async function getOrganization(organizationId: string): Promise<Organizat
       return null;
     }
     
-    // Ensure trial_expired exists (default to false if not present)
+    // Ensure theme_settings matches our interface structure
+    let themeSettings = orgData.theme_settings || {
+      primary_color: "#1E40AF",
+      secondary_color: "#3B82F6",
+      accent_color: "#60A5FA",
+      sidebar_color: "#F1F5F9",
+    };
+    
+    // Convert from JSON string if needed
+    if (typeof themeSettings === 'string') {
+      try {
+        themeSettings = JSON.parse(themeSettings);
+      } catch (e) {
+        console.warn('Could not parse theme_settings JSON:', e);
+        themeSettings = {
+          primary_color: "#1E40AF",
+          secondary_color: "#3B82F6",
+          accent_color: "#60A5FA",
+          sidebar_color: "#F1F5F9",
+        };
+      }
+    }
+    
     return {
-      ...orgData as Organization,
+      ...orgData as unknown as Organization,
+      theme_settings: themeSettings,
       trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false,
       subscription_status: orgData.subscription_status as 'trial' | 'active' | 'expired' || 'trial',
       trial_start_date: orgData.trial_start_date || null,
@@ -47,7 +70,21 @@ export async function getSubscriptionPlan(planId: string): Promise<SubscriptionP
       return null;
     }
     
-    return planData as SubscriptionPlan;
+    // Parse features from JSON if needed
+    let features = planData.features;
+    if (typeof features === 'string') {
+      try {
+        features = JSON.parse(features);
+      } catch (e) {
+        console.warn('Could not parse features JSON:', e);
+        features = null;
+      }
+    }
+    
+    return {
+      ...planData,
+      features
+    } as SubscriptionPlan;
   } catch (error) {
     console.error("Error fetching subscription plan:", error);
     return null;

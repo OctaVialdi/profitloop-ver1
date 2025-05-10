@@ -75,7 +75,7 @@ export async function fetchOrganizationData(
     // Check if user has an organization
     if (userProfileData?.organization_id) {
       // Get organization data
-      const { data: organization, error: orgError } = await supabase
+      const { data: orgData, error: orgError } = await supabase
         .from("organizations")
         .select("*")
         .eq("id", userProfileData.organization_id)
@@ -90,6 +90,35 @@ export async function fetchOrganizationData(
         }));
         return;
       }
+      
+      // Process theme_settings
+      let themeSettings = orgData.theme_settings || {
+        primary_color: "#1E40AF",
+        secondary_color: "#3B82F6",
+        accent_color: "#60A5FA",
+        sidebar_color: "#F1F5F9",
+      };
+      
+      // Handle theme_settings if it's a string (JSON)
+      if (typeof themeSettings === 'string') {
+        try {
+          themeSettings = JSON.parse(themeSettings);
+        } catch (e) {
+          console.warn("Failed to parse theme_settings JSON", e);
+          themeSettings = {
+            primary_color: "#1E40AF",
+            secondary_color: "#3B82F6",
+            accent_color: "#60A5FA",
+            sidebar_color: "#F1F5F9",
+          };
+        }
+      }
+      
+      // Create organization object with processed theme_settings
+      const organization = {
+        ...orgData,
+        theme_settings: themeSettings
+      };
       
       // Determine user roles based on profile role
       const isSuperAdmin = userProfileData.role === "super_admin";
@@ -114,9 +143,19 @@ export async function fetchOrganizationData(
           .single();
           
         if (!planError && planData) {
+          // Process features if it's a string
+          let features = planData.features;
+          if (typeof features === 'string') {
+            try {
+              features = JSON.parse(features);
+            } catch (e) {
+              features = {};
+            }
+          }
+          
           subscriptionPlan = {
             ...planData,
-            features: planData.features as Record<string, any> | null
+            features: features
           };
         }
       }
