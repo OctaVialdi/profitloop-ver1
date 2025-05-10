@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Card,
@@ -32,6 +31,8 @@ import {
   Legend,
 } from "recharts";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import PremiumBadge from "@/components/subscription/PremiumBadge";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -96,11 +97,11 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <Button>Download Report</Button>
-      </div>
-
+      <DashboardHeader 
+        title="Dashboard" 
+        description="Analisis performa organisasi Anda"
+      />
+      
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -175,9 +176,12 @@ const Dashboard = () => {
 
             {/* Pie Chart */}
             <Card>
-              <CardHeader>
-                <CardTitle>Task Distribution</CardTitle>
-                <CardDescription>Status breakdown</CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>Task Distribution</CardTitle>
+                  <CardDescription>Status breakdown</CardDescription>
+                </div>
+                <PremiumBadge featureName="Advanced Charts" />
               </CardHeader>
               <CardContent>
                 <ChartContainer config={{ 
@@ -213,9 +217,12 @@ const Dashboard = () => {
 
         <TabsContent value="analytics">
           <Card>
-            <CardHeader>
-              <CardTitle>Analytics</CardTitle>
-              <CardDescription>Detailed metrics and analysis</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle>Analytics</CardTitle>
+                <CardDescription>Detailed metrics and analysis</CardDescription>
+              </div>
+              <PremiumBadge featureName="Analytics Dashboard" />
             </CardHeader>
             <CardContent>
               <div className="text-center py-10">
@@ -227,9 +234,12 @@ const Dashboard = () => {
 
         <TabsContent value="reports">
           <Card>
-            <CardHeader>
-              <CardTitle>Reports</CardTitle>
-              <CardDescription>Generated reports and statements</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle>Reports</CardTitle>
+                <CardDescription>Generated reports and statements</CardDescription>
+              </div>
+              <PremiumBadge featureName="Custom Reports" />
             </CardHeader>
             <CardContent>
               <div className="text-center py-10">
