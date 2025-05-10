@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { requestTrialExtension } from "@/services/subscriptionService";
+import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { toast } from "@/components/ui/sonner";
 import {
   Dialog,
@@ -98,6 +99,11 @@ const SubscriptionPage = () => {
   const [contactEmail, setContactEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Track page view when component mounts
+  useEffect(() => {
+    subscriptionAnalyticsService.trackSubscriptionPageView(organization?.id);
+  }, [organization?.id]);
+
   useEffect(() => {
     // Set contact email from auth user
     const getUser = async () => {
@@ -112,6 +118,9 @@ const SubscriptionPage = () => {
 
   const handleSelectPlan = async (planId: string) => {
     try {
+      // Track plan selection
+      subscriptionAnalyticsService.trackPlanSelected(planId, organization?.id);
+      
       // Temporary simulation before Stripe integration
       if (!organization) return;
       
@@ -126,6 +135,9 @@ const SubscriptionPage = () => {
         .eq('id', organization.id);
       
       if (error) throw error;
+      
+      // Track successful subscription activation
+      subscriptionAnalyticsService.trackSubscriptionActivated(planId, organization.id);
       
       toast.success("Paket berlangganan berhasil diperbarui!");
       refreshData();
@@ -144,6 +156,9 @@ const SubscriptionPage = () => {
     setIsSubmitting(true);
     try {
       if (!organization?.id) throw new Error("Organization ID not found");
+      
+      // Track trial extension request
+      subscriptionAnalyticsService.trackTrialExtensionRequested(extensionReason, organization.id);
       
       const success = await requestTrialExtension(
         organization.id, 
@@ -338,6 +353,9 @@ const SubscriptionPage = () => {
                 try {
                   if (!organization?.id) return;
                   
+                  // Track trial start
+                  subscriptionAnalyticsService.trackTrialStarted(organization.id);
+                  
                   // Set trial start date to now and end date to 14 days later
                   const trialStartDate = new Date();
                   const trialEndDate = new Date();
@@ -373,7 +391,22 @@ const SubscriptionPage = () => {
       <Tabs 
         defaultValue={activeTab} 
         value={activeTab} 
-        onValueChange={setActiveTab}
+        onValueChange={(value) => {
+          setActiveTab(value);
+          if (value === "plans") {
+            subscriptionAnalyticsService.trackEvent({
+              eventType: 'subscription_page_view',
+              organizationId: organization?.id,
+              additionalData: { view: 'plans' }
+            });
+          } else if (value === "history") {
+            subscriptionAnalyticsService.trackEvent({
+              eventType: 'subscription_page_view',
+              organizationId: organization?.id,
+              additionalData: { view: 'history' }
+            });
+          }
+        }}
         className="space-y-8"
       >
         <TabsList>

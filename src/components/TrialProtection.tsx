@@ -5,6 +5,7 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
+import { subscriptionAnalyticsService } from '@/services/subscriptionAnalyticsService';
 
 interface TrialProtectionProps {
   children: ReactNode;
@@ -35,6 +36,18 @@ const TrialProtection = ({ children, requiredSubscription = false }: TrialProtec
     if (blockAccess) {
       setShowDialog(true);
       
+      // Track analytics event for blocked access
+      if (organization?.id) {
+        subscriptionAnalyticsService.trackEvent({
+          eventType: 'premium_feature_clicked',
+          organizationId: organization.id,
+          additionalData: {
+            blockedPath: location.pathname,
+            requiredSubscription
+          }
+        });
+      }
+      
       // Add blur to page content when trial expired
       document.body.classList.add('trial-expired');
     } else {
@@ -46,7 +59,7 @@ const TrialProtection = ({ children, requiredSubscription = false }: TrialProtec
       // Clean up blur class when component unmounts
       document.body.classList.remove('trial-expired');
     };
-  }, [blockAccess, location.pathname]);
+  }, [blockAccess, location.pathname, organization?.id, requiredSubscription]);
   
   // Navigate to subscription page
   const handleUpgrade = () => {
@@ -60,7 +73,7 @@ const TrialProtection = ({ children, requiredSubscription = false }: TrialProtec
       
       {/* Blocking dialog for expired trial */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] trial-expired-dialog">
           <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mb-4">
               <AlertTriangle className="h-10 w-10 text-amber-500" />

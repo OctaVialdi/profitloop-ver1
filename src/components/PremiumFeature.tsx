@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import { subscriptionAnalyticsService } from '@/services/subscriptionAnalyticsService';
 
 interface PremiumFeatureProps {
   children: ReactNode;
@@ -83,7 +84,11 @@ const PremiumFeature = ({ children, featureName, description }: PremiumFeaturePr
     <>
       <div 
         className="premium-feature cursor-pointer relative" 
-        onClick={() => setShowDialog(true)}
+        onClick={() => {
+          // Track premium feature click
+          subscriptionAnalyticsService.trackPremiumFeatureClicked(featureName, organization?.id);
+          setShowDialog(true);
+        }}
       >
         {children}
         <div className="absolute -top-1 -right-1 bg-amber-400 rounded-full p-0.5 text-[10px] shadow-sm">
@@ -114,7 +119,17 @@ const PremiumFeature = ({ children, featureName, description }: PremiumFeaturePr
                 Nanti Saja
               </Button>
               <Button 
-                onClick={() => navigate('/settings/subscription')} 
+                onClick={() => {
+                  navigate('/settings/subscription');
+                  subscriptionAnalyticsService.trackEvent({
+                    eventType: 'premium_feature_clicked',
+                    organizationId: organization?.id,
+                    additionalData: { 
+                      featureName,
+                      action: 'navigate_to_subscription' 
+                    }
+                  });
+                }} 
                 className="w-full sm:w-auto"
               >
                 Berlangganan Sekarang

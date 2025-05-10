@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarClock, X, AlertTriangle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { checkAndUpdateTrialStatus } from '@/services/subscriptionService';
+import { subscriptionAnalyticsService } from '@/services/subscriptionAnalyticsService';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/sonner";
@@ -238,6 +238,9 @@ const TrialBanner = () => {
   
   // Handle subscription navigation
   const handleSubscribe = () => {
+    if (daysLeft !== null) {
+      subscriptionAnalyticsService.trackTrialBannerClicked(daysLeft, organizationId);
+    }
     navigate("/settings/subscription");
     setShowSubscriptionDialog(false);
     // Remove blur when navigating to subscription page
@@ -314,7 +317,10 @@ const TrialBanner = () => {
               <Button 
                 variant="link" 
                 className="h-auto p-0 text-blue-700 underline font-semibold text-sm"
-                onClick={() => navigate("/settings/subscription")}
+                onClick={() => {
+                  subscriptionAnalyticsService.trackTrialBannerClicked(daysLeft, organizationId);
+                  navigate("/settings/subscription");
+                }}
               >
                 Berlangganan sekarang
               </Button>
