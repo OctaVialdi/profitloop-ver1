@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { subscriptionAnalyticsService } from '@/services/subscriptionAnalyticsService';
+import PremiumBadge from './subscription/PremiumBadge';
 
 interface PremiumFeatureProps {
   children: ReactNode;
@@ -36,8 +37,8 @@ const PremiumFeature = ({ children, featureName, description }: PremiumFeaturePr
           <TooltipTrigger asChild>
             <div className="premium-feature relative group">
               {children}
-              <div className="absolute -top-1 -right-1 bg-amber-400 rounded-full p-0.5 text-[10px] shadow-sm">
-                {isTrialActive ? "⭐" : "✓"}
+              <div className="absolute -top-1 -right-1">
+                <PremiumBadge featureName={featureName} size="sm" />
               </div>
             </div>
           </TooltipTrigger>
@@ -91,8 +92,8 @@ const PremiumFeature = ({ children, featureName, description }: PremiumFeaturePr
         }}
       >
         {children}
-        <div className="absolute -top-1 -right-1 bg-amber-400 rounded-full p-0.5 text-[10px] shadow-sm">
-          ⭐
+        <div className="absolute -top-1 -right-1">
+          <PremiumBadge featureName={featureName} size="sm" />
         </div>
       </div>
 
