@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -215,19 +214,22 @@ const TrialBanner = () => {
         setIsTrialExpired(diffDays <= 0);
         
         // If we're close to expiration, send trial reminder email
-        if (diffDays <= 3 && diffDays > 0 && orgData.subscription_status === 'trial' && organizationId) {
+        if (diffDays <= 7 && diffDays > 0 && orgData.subscription_status === 'trial' && organizationId) {
           // Check if we should send a reminder email (we'll use localStorage to avoid sending too many)
           const lastReminderKey = `trial_reminder_${organizationId}_${diffDays}`;
           const lastReminder = localStorage.getItem(lastReminderKey);
           const today = new Date().toDateString();
           
-          if (!lastReminder || lastReminder !== today) {
+          // Only send reminders on 7, 3, and 1 days before expiration
+          if ((diffDays === 7 || diffDays === 3 || diffDays === 1) && 
+              (!lastReminder || lastReminder !== today)) {
             // Send reminder email
             stripeService.sendTrialReminderEmail(diffDays)
               .then(success => {
                 if (success) {
                   // Store the date of this reminder to avoid sending duplicates
                   localStorage.setItem(lastReminderKey, today);
+                  console.log(`Trial reminder email sent for ${diffDays} days left`);
                 }
               });
           }

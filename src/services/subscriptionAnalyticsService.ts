@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 
@@ -14,7 +13,9 @@ export type SubscriptionEventType =
   | 'subscription_cancelled'
   | 'subscription_upgraded'
   | 'payment_status'
-  | 'customer_portal_access';
+  | 'customer_portal_access'
+  | 'email_notification_sent'
+  | 'payment_failed';
 
 interface AnalyticsEventPayload {
   eventType: SubscriptionEventType;
@@ -188,5 +189,41 @@ export const subscriptionAnalyticsService = {
       organizationId: orgId,
       additionalData: { daysLeft }
     }).catch(err => console.error("Failed to track trial banner click:", err));
+  },
+  
+  /**
+   * Track when a payment fails
+   */
+  trackPaymentFailed(planId: string, reason: string, orgId?: string): void {
+    this.trackEvent({
+      eventType: 'payment_failed',
+      organizationId: orgId,
+      planId,
+      additionalData: { reason }
+    }).catch(err => console.error("Failed to track payment failure:", err));
+  },
+  
+  /**
+   * Track when a customer accesses the customer portal
+   */
+  trackCustomerPortalAccess(orgId?: string): void {
+    this.trackEvent({
+      eventType: 'customer_portal_access',
+      organizationId: orgId
+    }).catch(err => console.error("Failed to track customer portal access:", err));
+  },
+  
+  /**
+   * Track when an email notification is sent
+   */
+  trackEmailNotificationSent(type: string, orgId?: string, daysLeft?: number): void {
+    this.trackEvent({
+      eventType: 'email_notification_sent',
+      organizationId: orgId,
+      additionalData: { 
+        type, 
+        daysLeft: daysLeft !== undefined ? daysLeft : null
+      }
+    }).catch(err => console.error("Failed to track email notification:", err));
   }
 };

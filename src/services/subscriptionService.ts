@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
+import { subscriptionAnalyticsService } from "./subscriptionAnalyticsService";
 
 /**
  * Force updates the trial status for the current organization
@@ -165,6 +165,84 @@ export async function fixOrganizationTrialPeriod(organizationId: string): Promis
     return true;
   } catch (error) {
     console.error("Error in fixOrganizationTrialPeriod:", error);
+    return false;
+  }
+}
+
+/**
+ * Send payment failure notification
+ */
+export async function sendPaymentFailureNotification(
+  organizationId: string,
+  planId: string,
+  reason: string
+): Promise<boolean> {
+  try {
+    // Create a notification for admins
+    const { error } = await supabase
+      .from('notifications')
+      .insert([
+        {
+          organization_id: organizationId,
+          title: 'Pembayaran Gagal',
+          message: `Pembayaran untuk paket berlangganan Anda gagal. Alasan: ${reason}`,
+          type: 'error',
+          action_url: '/settings/subscription'
+        }
+      ]);
+
+    if (error) throw error;
+    
+    // Track payment failure event
+    subscriptionAnalyticsService.trackPaymentFailed(planId, reason, organizationId);
+    
+    return true;
+  } catch (error) {
+    console.error("Error sending payment failure notification:", error);
+    return false;
+  }
+}
+
+/**
+ * Send subscription confirmation notification
+ */
+export async function sendSubscriptionConfirmation(
+  organizationId: string,
+  planId: string
+): Promise<boolean> {
+  try {
+    // Create a notification for all members
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('organization_id', organizationId);
+      
+    if (!profiles) return false;
+    
+    const notifications = profiles.map(profile => ({
+      user_id: profile.id,
+      organization_id: organizationId,
+      title: 'Berlangganan Berhasil',
+      message: 'Paket berlangganan Anda telah aktif. Terima kasih telah berlangganan!',
+      type: 'success',
+      action_url: '/settings/subscription'
+    }));
+    
+    if (notifications.length > 0) {
+      const { error } = await supabase
+        .from('notifications')
+        .insert(notifications);
+        
+      if (error) throw error;
+    }
+    
+    // Track subscription activated event
+    subscriptionAnalyticsService.trackSubscriptionActivated(planId, organizationId);
+    subscriptionAnalyticsService.trackEmailNotificationSent('subscription_confirmation', organizationId);
+    
+    return true;
+  } catch (error) {
+    console.error("Error sending subscription confirmation:", error);
     return false;
   }
 }
