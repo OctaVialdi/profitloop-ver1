@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -7,6 +8,15 @@ import { MainLayout } from "./layouts/MainLayout";
 import { useOrganization } from "./hooks/useOrganization";
 import { checkAndUpdateTrialStatus } from "./services/subscriptionService";
 import { trackAnalyticsEvent } from "@/services/subscriptionAnalyticsService";
+
+// Lazy load route components
+const Dashboard = React.lazy(() => import("@/pages/dashboard/Dashboard"));
+const OperationsRoutes = React.lazy(() => import("@/pages/operations/OperationsRoutes"));
+const HRRoutes = React.lazy(() => import("@/pages/hr/HRRoutes"));
+const SettingsRoutes = React.lazy(() => import("@/pages/settings/SettingsRoutes"));
+const EmployeeWelcomePage = React.lazy(() => import("@/pages/employee/EmployeeWelcomePage"));
+const AdminRoutes = React.lazy(() => import("@/pages/admin/AdminRoutes"));
+const TrialExpiredPage = React.lazy(() => import("@/pages/TrialExpiredPage"));
 
 function App() {
   const { isLoggedIn } = useAuth();
@@ -55,13 +65,41 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<React.lazy(() => import("@/pages/dashboard/Dashboard"))} />
-        <Route path="dashboard" element={<React.lazy(() => import("@/pages/dashboard/Dashboard"))} />
-        <Route path="operations/*" element={<React.lazy(() => import("@/pages/operations/OperationsRoutes"))} />
-        <Route path="hr/*" element={<React.lazy(() => import("@/pages/hr/HRRoutes"))} />
-        <Route path="settings/*" element={<React.lazy(() => import("@/pages/settings/SettingsRoutes"))} />
-        <Route path="employee-welcome" element={<React.lazy(() => import("@/pages/employee/EmployeeWelcomePage"))} />
-        <Route path="admin/*" element={<React.lazy(() => import("@/pages/admin/AdminRoutes"))} />
+        <Route index element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <Dashboard />
+          </Suspense>
+        } />
+        <Route path="dashboard" element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <Dashboard />
+          </Suspense>
+        } />
+        <Route path="operations/*" element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <OperationsRoutes />
+          </Suspense>
+        } />
+        <Route path="hr/*" element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <HRRoutes />
+          </Suspense>
+        } />
+        <Route path="settings/*" element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <SettingsRoutes />
+          </Suspense>
+        } />
+        <Route path="employee-welcome" element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <EmployeeWelcomePage />
+          </Suspense>
+        } />
+        <Route path="admin/*" element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <AdminRoutes />
+          </Suspense>
+        } />
       </Route>
       
       {/* Trial expired page */}
@@ -69,7 +107,9 @@ function App() {
         path="/trial-expired" 
         element={
           <ProtectedRoute>
-            <React.lazy(() => import("@/pages/TrialExpiredPage")) />
+            <Suspense fallback={<div>Loading...</div>}>
+              <TrialExpiredPage />
+            </Suspense>
           </ProtectedRoute>
         } 
       />
