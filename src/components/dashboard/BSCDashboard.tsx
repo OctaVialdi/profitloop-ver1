@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -131,10 +132,10 @@ export const BSCDashboard = () => {
         }
       ];
       
-      // Use a more specific type assertion for the insert operation
+      // Use type assertion for the insert operation
       const { error: insertError } = await supabase
         .from('financial_summary')
-        .insert(sampleFinancialData);
+        .insert(sampleFinancialData as any);
         
       if (insertError) throw insertError;
       
