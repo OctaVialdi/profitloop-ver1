@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, RefreshCw, Check } from "lucide-react";
+import { Mail, RefreshCw, Check, AlertTriangle } from "lucide-react";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
-import { EmailTips } from "@/components/auth/EmailTips";
+import { EmailTips, SpamFolderAlert } from "@/components/auth/EmailTips";
 import { VerificationStatus } from "@/components/auth/VerificationStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
@@ -20,11 +20,29 @@ const VerificationSent = () => {
   const isInvitation = location.state?.isInvitation || false;
   const organizationName = location.state?.organizationName || "";
   const [isVerified, setIsVerified] = useState(false);
+  const [emailParts, setEmailParts] = useState<{provider: string, domain: string} | null>(null);
+  const [showProviderLink, setShowProviderLink] = useState(false);
 
   // If no email is provided, redirect to login
   useEffect(() => {
     if (!email) {
       navigate("/auth/login");
+    } else {
+      // Extract email provider information for provider-specific tips
+      const parts = email.split('@');
+      if (parts.length === 2) {
+        const domain = parts[1];
+        let provider = 'default';
+        
+        if (domain.includes('gmail')) provider = 'gmail';
+        else if (domain.includes('yahoo')) provider = 'yahoo';
+        else if (domain.includes('outlook') || domain.includes('hotmail')) provider = 'outlook';
+        
+        setEmailParts({provider, domain});
+        
+        // Show provider link after 3 seconds
+        setTimeout(() => setShowProviderLink(true), 3000);
+      }
     }
   }, [email, navigate]);
 
@@ -44,12 +62,17 @@ const VerificationSent = () => {
   useEffect(() => {
     if (!email || isVerified) return;
     
+    console.log("Setting up verification status check for:", email);
+    
     const checkVerification = async () => {
       try {
+        console.log("Checking verification status...");
         const { data: { user } } = await supabase.auth.getUser();
         
         // Verify if the user exists, has the same email, and is email confirmed
         if (user && user.email === email && user.email_confirmed_at) {
+          console.log("Email verified! User:", user);
+          
           // Update the profile
           try {
             const { error: updateError } = await supabase
@@ -90,6 +113,21 @@ const VerificationSent = () => {
     return () => clearInterval(interval);
   }, [email, invitationToken, magicLinkToken, navigate, isVerified]);
 
+  const getEmailLink = () => {
+    if (!emailParts) return null;
+    
+    switch (emailParts.provider) {
+      case 'gmail': 
+        return 'https://mail.google.com';
+      case 'yahoo': 
+        return 'https://mail.yahoo.com';
+      case 'outlook': 
+        return 'https://outlook.live.com/mail';
+      default:
+        return null;
+    }
+  };
+
   if (!email) return null;
 
   return (
@@ -116,6 +154,8 @@ const VerificationSent = () => {
       <CardContent className="space-y-4">
         {!isVerified && (
           <>
+            <SpamFolderAlert />
+            
             <VerificationStatus isChecking={checkingVerification} />
             
             {/* Show info about joining organization if coming from invitation */}
@@ -133,6 +173,16 @@ const VerificationSent = () => {
                     {organizationName ? <strong> {organizationName}</strong> : ''}.
                   </p>
                 )}
+              </div>
+            )}
+            
+            {showProviderLink && getEmailLink() && (
+              <div className="text-center my-4">
+                <Button variant="outline" className="w-full" onClick={() => window.open(getEmailLink(), '_blank')}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Buka {emailParts?.provider.charAt(0).toUpperCase() + emailParts?.provider.slice(1)}
+                </Button>
+                <p className="text-xs text-gray-500 mt-1">Klik untuk membuka email Anda di tab baru</p>
               </div>
             )}
               
@@ -159,6 +209,20 @@ const VerificationSent = () => {
                   </>
                 )}
               </Button>
+            </div>
+
+            <div className="p-4 border border-amber-200 bg-amber-50 rounded-md">
+              <div className="flex items-start">
+                <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 mr-2" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium">Masalah umum dengan verifikasi email:</p>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li>Email masuk ke folder spam/junk</li>
+                    <li>Server email menolak pesan (coba email lain jika berlanjut)</li>
+                    <li>Alamat email salah ketik</li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             <EmailTips showTip={showTip} />

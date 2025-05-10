@@ -1,3 +1,4 @@
+import { Json } from "./supabase";
 
 export interface UserProfile {
   id: string;
@@ -16,18 +17,19 @@ export interface UserProfile {
 export interface Organization {
   id: string;
   name: string;
-  business_field: string | null;
-  employee_count: number | null;
-  address: string | null;
-  phone: string | null;
-  logo_path: string | null;
-  theme_settings: any;
-  trial_end_date?: string | null;
-  trial_start_date?: string | null;
-  trial_expired?: boolean;
-  subscription_status?: 'trial' | 'active' | 'expired';
-  subscription_plan_id?: string;
-  grace_period_end?: string | null;
+  business_field: string;
+  employee_count: number;
+  address: string;
+  phone: string;
+  subscription_plan_id: string;
+  trial_start_date: string;
+  trial_end_date: string;
+  grace_period_end: string;
+  trial_expired: boolean;
+  subscription_status: string;
+  created_at: string;
+  theme_settings: Json;
+  logo_path: string;
 }
 
 export interface SubscriptionPlan {

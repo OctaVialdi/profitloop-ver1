@@ -18,6 +18,16 @@ export function useEmailVerification() {
     setResendingVerification(true);
     
     try {
+      console.log("Attempting to resend verification email to:", email);
+      
+      // Before sending, check if the email format is valid
+      if (!isValidEmail(email)) {
+        throw new Error("Format email tidak valid. Mohon periksa kembali.");
+      }
+      
+      // Log the request to help with debugging
+      console.log(`Sending verification email to ${email} at ${new Date().toISOString()}`);
+      
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
@@ -25,7 +35,8 @@ export function useEmailVerification() {
       
       if (error) throw error;
       
-      toast.success("Email verifikasi berhasil dikirim ulang. Silakan cek kotak masuk email Anda.");
+      console.log("Verification email sent successfully");
+      toast.success("Email verifikasi berhasil dikirim ulang. Silakan cek kotak masuk email Anda dan folder spam juga.");
       
       // Try to update the profile's email verification status
       try {
@@ -74,6 +85,12 @@ export function useEmailVerification() {
     } finally {
       setResendingVerification(false);
     }
+  };
+  
+  // Helper function to validate email format
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   return {

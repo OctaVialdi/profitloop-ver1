@@ -1,55 +1,54 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Organization, SubscriptionPlan } from "@/types/organization";
-import { OrganizationFormData } from "@/types/onboarding";
+import { Organization } from "@/types/organization";
+import { SubscriptionPlan } from "@/types/subscription";
 
-export async function getOrganization(organizationId: string): Promise<Organization | null> {
+export const getOrganization = async (organizationId: string): Promise<Organization | null> => {
   try {
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
-      .select('*')
-      .eq('id', organizationId)
-      .maybeSingle();
-    
-    if (orgError) {
-      console.error("Organization fetch error:", orgError);
-      throw orgError;
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("id", organizationId)
+      .single();
+
+    if (error) {
+      throw error;
     }
-    
-    if (!orgData) {
-      console.error("No organization found with ID:", organizationId);
+
+    if (!data) {
       return null;
     }
-    
-    // Ensure trial_expired exists (default to false if not present)
-    return {
-      ...orgData as Organization,
-      trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false,
-      subscription_status: orgData.subscription_status as 'trial' | 'active' | 'expired' || 'trial',
-      trial_start_date: orgData.trial_start_date || null,
-      grace_period_end: orgData.grace_period_end || null
+
+    // Cast to Organization type and handle potential missing fields
+    const organization: Organization = {
+      ...data,
+      logo_path: data.logo_path || "", // Handle potentially missing logo_path
+      grace_period_end: data.grace_period_end || "", // Handle potentially missing grace_period_end
     };
+
+    return organization;
   } catch (error) {
     console.error("Error fetching organization:", error);
-    throw error;
+    return null;
   }
-}
+};
 
-export async function getSubscriptionPlan(planId: string): Promise<SubscriptionPlan | null> {
+export const getSubscriptionPlan = async (planId: string): Promise<SubscriptionPlan | null> => {
   try {
-    const { data: planData, error: planError } = await supabase
+    // Direct query to subscription_plans table
+    const { data: planData, error } = await supabase
       .from('subscription_plans')
       .select('*')
       .eq('id', planId)
-      .maybeSingle();
-        
-    if (planError || !planData) {
+      .single();
+
+    if (error || !planData) {
+      console.error("Error fetching subscription plan:", error);
       return null;
     }
-    
-    return planData as SubscriptionPlan;
+
+    return planData as unknown as SubscriptionPlan;
   } catch (error) {
-    console.error("Error fetching subscription plan:", error);
+    console.error("Error in getSubscriptionPlan:", error);
     return null;
   }
-}
+};
