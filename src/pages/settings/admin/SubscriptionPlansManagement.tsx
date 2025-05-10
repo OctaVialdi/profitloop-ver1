@@ -359,9 +359,9 @@ const SubscriptionPlansManagement = () => {
             <CardTitle>Kelola Paket Langganan</CardTitle>
             <CardDescription>Menambah, mengedit, atau menghapus paket langganan</CardDescription>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="ml-auto">
+          <Button onClick={() => handleOpenDialog()} className="bg-blue-600 hover:bg-blue-700">
             <Plus className="w-4 h-4 mr-2" />
-            Tambah Paket
+            Tambah Paket Baru
           </Button>
         </div>
       </CardHeader>
@@ -450,7 +450,7 @@ const SubscriptionPlansManagement = () => {
             
             {plans.length === 0 && !isLoading && (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">Belum ada paket langganan. Klik tombol "Tambah Paket" untuk membuat paket baru.</p>
+                <p className="text-muted-foreground">Belum ada paket langganan. Klik tombol "Tambah Paket Baru" untuk membuat paket baru.</p>
               </div>
             )}
           </div>
