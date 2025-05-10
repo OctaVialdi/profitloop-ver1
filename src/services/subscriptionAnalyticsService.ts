@@ -12,7 +12,9 @@ export type SubscriptionEventType =
   | 'trial_extension_requested'
   | 'premium_feature_clicked'
   | 'subscription_cancelled'
-  | 'subscription_upgraded';
+  | 'subscription_upgraded'
+  | 'payment_status'       // Add this
+  | 'customer_portal_access'; // Add this
 
 interface AnalyticsEventPayload {
   eventType: SubscriptionEventType;
