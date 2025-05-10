@@ -67,5 +67,48 @@ export const stripeService = {
       console.error("Error checking subscription status:", error);
       return { subscribed: false, subscription_tier: null, subscription_end: null };
     }
+  },
+
+  /**
+   * Verify the payment status using the checkout session ID
+   * @param sessionId The Stripe checkout session ID
+   * @returns Payment status information
+   */
+  verifyPaymentStatus: async (sessionId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-payment", {
+        body: { sessionId }
+      });
+      
+      if (error) throw new Error(`Error verifying payment: ${error.message}`);
+      
+      return {
+        success: data?.success || false,
+        status: data?.status || 'unknown',
+        subscription_tier: data?.subscription_tier || null
+      };
+    } catch (error) {
+      console.error("Error verifying payment status:", error);
+      return { success: false, status: 'error', subscription_tier: null };
+    }
+  },
+  
+  /**
+   * Send a trial expiration reminder email
+   * @param daysLeft Days left in the trial
+   * @returns Success status
+   */
+  sendTrialReminderEmail: async (daysLeft: number): Promise<boolean> => {
+    try {
+      const { error } = await supabase.functions.invoke("send-trial-reminder", {
+        body: { daysLeft }
+      });
+      
+      if (error) throw new Error(`Error sending trial reminder: ${error.message}`);
+      return true;
+    } catch (error) {
+      console.error("Error sending trial reminder email:", error);
+      return false;
+    }
   }
 };

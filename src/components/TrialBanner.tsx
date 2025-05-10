@@ -214,8 +214,25 @@ const TrialBanner = () => {
         setDaysLeft(diffDays > 0 ? diffDays : 0);
         setIsTrialExpired(diffDays <= 0);
         
-        // If we're close to expiration (3 days or less), let's show a toast
-        if (diffDays <= 3 && diffDays > 0 && orgData.subscription_status === 'trial') {
+        // If we're close to expiration, send trial reminder email
+        if (diffDays <= 3 && diffDays > 0 && orgData.subscription_status === 'trial' && organizationId) {
+          // Check if we should send a reminder email (we'll use localStorage to avoid sending too many)
+          const lastReminderKey = `trial_reminder_${organizationId}_${diffDays}`;
+          const lastReminder = localStorage.getItem(lastReminderKey);
+          const today = new Date().toDateString();
+          
+          if (!lastReminder || lastReminder !== today) {
+            // Send reminder email
+            stripeService.sendTrialReminderEmail(diffDays)
+              .then(success => {
+                if (success) {
+                  // Store the date of this reminder to avoid sending duplicates
+                  localStorage.setItem(lastReminderKey, today);
+                }
+              });
+          }
+          
+          // Show toast notification on page
           const daysText = diffDays === 1 ? 'hari' : 'hari';
           toast.warning(
             `Masa trial Anda akan berakhir dalam ${diffDays} ${daysText}. Upgrade sekarang untuk terus menggunakan semua fitur.`,

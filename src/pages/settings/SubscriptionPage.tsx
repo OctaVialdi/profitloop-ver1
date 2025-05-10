@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -110,28 +109,56 @@ const SubscriptionPage = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
 
-  // Handling payment status from URL parameters
+  // Enhanced effect for payment status handling
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
+    const sessionId = searchParams.get('session_id');
     
-    if (success === 'true') {
-      toast.success('Pembayaran berhasil! Langganan Anda telah diaktifkan.');
-      refreshData();
-    } else if (canceled === 'true') {
-      toast.error('Pembayaran dibatalkan. Silakan coba lagi jika Anda ingin berlangganan.');
-    }
+    // Track page view when component mounts
+    subscriptionAnalyticsService.trackSubscriptionPageView(organization?.id);
     
-    // If we have payment status in URL, track it
-    if (success === 'true' || canceled === 'true') {
-      subscriptionAnalyticsService.trackEvent({
-        eventType: 'payment_status',
-        organizationId: organization?.id,
-        additionalData: { 
-          status: success === 'true' ? 'success' : 'canceled',
-          source: 'stripe_redirect'
+    const handlePaymentStatus = async () => {
+      if (success === 'true' && sessionId) {
+        // Verify payment status with the backend
+        const paymentStatus = await stripeService.verifyPaymentStatus(sessionId);
+        
+        if (paymentStatus.success) {
+          toast.success('Pembayaran berhasil! Langganan Anda telah diaktifkan.');
+        } else {
+          toast.warning('Pembayaran sedang diproses. Status akan diperbarui segera.');
         }
-      });
+        
+        // Refresh organization data
+        await refreshData();
+        
+        // Track payment status
+        subscriptionAnalyticsService.trackEvent({
+          eventType: 'payment_status',
+          organizationId: organization?.id,
+          additionalData: { 
+            status: paymentStatus.success ? 'success' : 'processing',
+            source: 'stripe_redirect',
+            sessionId
+          }
+        });
+      } else if (canceled === 'true') {
+        toast.error('Pembayaran dibatalkan. Silakan coba lagi jika Anda ingin berlangganan.');
+        
+        // Track canceled payment
+        subscriptionAnalyticsService.trackEvent({
+          eventType: 'payment_status',
+          organizationId: organization?.id,
+          additionalData: { 
+            status: 'canceled',
+            source: 'stripe_redirect'
+          }
+        });
+      }
+    };
+    
+    if (success === 'true' || canceled === 'true') {
+      handlePaymentStatus();
     }
   }, [searchParams, organization?.id, refreshData]);
 
