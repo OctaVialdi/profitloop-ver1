@@ -11,7 +11,7 @@ import { fixOrganizationTrialPeriod } from "./services/subscriptionService";
 
 function App() {
   // Initialize asset storage
-  useAssetStorage();
+  const assetStorage = useAssetStorage();
 
   // Run trial period fix on app load
   useEffect(() => {
