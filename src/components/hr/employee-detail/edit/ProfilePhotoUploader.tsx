@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Loader2, Upload } from "lucide-react";
-import { updateEmployeeProfileImage } from "@/services/employeeService";
+import { supabase } from "@/integrations/supabase/client";
+import { ensureBucketExists } from "@/integrations/supabase/storage";
 
 interface ProfilePhotoUploaderProps {
   employeeId: string;
@@ -41,14 +42,49 @@ export const ProfilePhotoUploader: React.FC<ProfilePhotoUploaderProps> = ({
     setIsUploading(true);
     
     try {
-      const imageUrl = await updateEmployeeProfileImage(employeeId, file);
+      // Ensure the 'profile_photos' bucket exists
+      await ensureBucketExists('profile_photos', true);
       
-      if (imageUrl) {
-        toast.success('Profile photo updated successfully');
-        onPhotoUpdated(imageUrl);
-      } else {
-        throw new Error('Failed to upload profile photo');
+      // Create a unique file path
+      const fileExt = file.name.split('.').pop();
+      const fileName = `employee_${employeeId}_${Date.now()}.${fileExt}`;
+      const filePath = `employees/${fileName}`;
+      
+      // Upload the file
+      const { error: uploadError } = await supabase.storage
+        .from('profile_photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw uploadError;
       }
+
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('profile_photos')
+        .getPublicUrl(filePath);
+
+      if (!urlData.publicUrl) {
+        throw new Error('Failed to get profile photo URL');
+      }
+      
+      // Update the employee record with the new photo URL
+      const { error: updateError } = await supabase
+        .from('employees')
+        .update({
+          profile_image: urlData.publicUrl
+        })
+        .eq('id', employeeId);
+        
+      if (updateError) {
+        throw updateError;
+      }
+      
+      toast.success('Profile photo updated successfully');
+      onPhotoUpdated(urlData.publicUrl);
     } catch (error) {
       console.error('Error uploading profile photo:', error);
       toast.error('Failed to upload profile photo');

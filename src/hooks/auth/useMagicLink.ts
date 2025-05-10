@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MagicLinkParams, MagicLinkResult } from "./types";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
+import { MagicLinkInvitation } from "@/types/magic-link";
 
 export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
   const [isLoading, setIsLoading] = useState(true);
@@ -69,18 +70,27 @@ export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
         if (params.token) {
           try {
             // Check if the token is a valid magic link invitation
-            const { data: invitationData, error: invitationError } = await supabase
+            const { data, error: invitationError } = await supabase
               .from('magic_link_invitations')
-              .select('organization_id, email, role, status, expires_at, organizations(name)')
+              .select(`
+                organization_id, 
+                email, 
+                role, 
+                status, 
+                expires_at,
+                organizations(name)
+              `)
               .eq('token', params.token)
               .single();
 
-            if (invitationError || !invitationData) {
+            if (invitationError || !data) {
               // If not found or error, check if it might be a different type of token
               setError("Invalid or expired invitation token");
               setIsLoading(false);
               return;
             }
+
+            const invitationData = data as MagicLinkInvitation;
 
             // Check if invitation is valid
             if (invitationData.status !== 'pending') {
@@ -96,7 +106,7 @@ export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
             }
 
             // Store organization name for display
-            setOrganizationName(invitationData.organizations.name);
+            setOrganizationName(invitationData.organizations?.name);
             
             // If email is provided, check if it matches
             if (params.email && params.email !== invitationData.email) {

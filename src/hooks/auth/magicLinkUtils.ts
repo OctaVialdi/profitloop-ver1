@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { MagicLinkInvitation } from "@/types/magic-link";
 
 /**
  * Process a magic link invitation token
@@ -55,35 +56,65 @@ export async function processMagicLinkToken(userId: string, token: string) {
  */
 export async function validateInvitationToken(token: string, email: string) {
   try {
-    // Use the RPC function to validate token
-    const { data: validationResult, error: validationError } = await supabase.rpc(
-      'validate_invitation',
-      { 
-        invitation_token: token,
-        invitee_email: email || ""
-      }
-    );
-
-    console.log("Invitation validation result:", validationResult, validationError);
-
-    if (validationError) {
+    // Query the magic_link_invitations table directly
+    const { data, error } = await supabase
+      .from('magic_link_invitations')
+      .select(`
+        id, 
+        organization_id, 
+        email, 
+        role, 
+        status, 
+        expires_at,
+        organizations(name)
+      `)
+      .eq('token', token)
+      .maybeSingle();
+      
+    if (error) {
+      console.error("Error checking invitation:", error);
       return { 
         valid: false, 
-        message: validationError.message 
+        message: error.message 
       };
     }
-
-    if (validationResult && validationResult[0]?.valid) {
+    
+    if (!data) {
       return {
-        valid: true,
-        organizationId: validationResult[0].organization_id,
-        role: validationResult[0].role
+        valid: false,
+        message: "Token tidak valid"
       };
     }
-
+    
+    const invitation = data as MagicLinkInvitation;
+    
+    // Check if invitation is valid
+    if (email && invitation.email !== email) {
+      return {
+        valid: false,
+        message: "Email tidak sesuai dengan undangan"
+      };
+    }
+    
+    if (invitation.status !== 'pending') {
+      return {
+        valid: false,
+        message: "Undangan sudah digunakan"
+      };
+    }
+    
+    if (new Date(invitation.expires_at) < new Date()) {
+      return {
+        valid: false,
+        message: "Undangan sudah kadaluarsa"
+      };
+    }
+    
+    // Invitation is valid
     return {
-      valid: false,
-      message: validationResult?.[0]?.message || "Token tidak valid"
+      valid: true,
+      organizationId: invitation.organization_id,
+      role: invitation.role
     };
   } catch (error: any) {
     console.error("Error validating token:", error);
