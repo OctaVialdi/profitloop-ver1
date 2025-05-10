@@ -52,10 +52,16 @@ serve(async (req) => {
 
     // Parse request body to get plan ID or product information
     const body = await req.json();
-    const { planId, currentPlanId, prorate, subscriptionId } = body;
+    const { 
+      planId, 
+      currentPlanId, 
+      prorate, 
+      subscriptionId, 
+      paymentMethods = ["card", "id_bank_transfer", "qris", "ovo", "dana", "gopay"] 
+    } = body;
     
     if (!planId) throw new Error("Plan ID is required");
-    logStep("Request body parsed", { planId, currentPlanId, prorate, subscriptionId });
+    logStep("Request body parsed", { planId, currentPlanId, prorate, subscriptionId, paymentMethods });
 
     // Create Supabase client with service role for administrative operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
@@ -131,6 +137,25 @@ serve(async (req) => {
     if (!priceId) throw new Error("Plan does not have a valid Stripe price ID");
     
     const origin = req.headers.get("Origin") || "http://localhost:3000";
+
+    // Configure payment methods settings for Indonesian market
+    const paymentMethodTypes = [];
+    
+    // Add card payment as default
+    paymentMethodTypes.push("card");
+    
+    // Add specific payment methods based on request
+    if (paymentMethods.includes("id_bank_transfer")) {
+      paymentMethodTypes.push("customer_balance");
+    }
+    
+    // Add other local payment methods if supported and requested
+    if (paymentMethods.includes("qris")) paymentMethodTypes.push("wechat_pay");
+    if (paymentMethods.includes("gopay") || paymentMethods.includes("ovo") || paymentMethods.includes("dana")) {
+      paymentMethodTypes.push("grabpay");
+    }
+    
+    logStep("Payment methods configured", { paymentMethodTypes });
     
     // Handle proration for plan changes
     if (prorate && currentPlanId && orgData.subscription_id) {
@@ -144,7 +169,15 @@ serve(async (req) => {
       // This allows us to collect payment method if needed but doesn't create a new subscription
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
-        payment_method_types: ["card"],
+        payment_method_types: paymentMethodTypes,
+        payment_method_options: {
+          customer_balance: {
+            funding_type: "bank_transfer",
+            bank_transfer: {
+              type: "id_bank_transfer",
+            },
+          },
+        },
         mode: "setup",
         setup_intent_data: {
           metadata: {
@@ -162,7 +195,8 @@ serve(async (req) => {
           plan_id: planId,
           current_plan_id: currentPlanId,
           proration: "true"
-        }
+        },
+        locale: "id"
       });
       
       logStep("Created prorated checkout session", { sessionId: session.id, url: session.url });
@@ -177,7 +211,15 @@ serve(async (req) => {
       
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
-        payment_method_types: ["card"],
+        payment_method_types: paymentMethodTypes,
+        payment_method_options: {
+          customer_balance: {
+            funding_type: "bank_transfer",
+            bank_transfer: {
+              type: "id_bank_transfer",
+            },
+          },
+        },
         line_items: [
           {
             price: priceId,
@@ -191,7 +233,8 @@ serve(async (req) => {
           organization_id: profileData.organization_id,
           user_id: user.id,
           plan_id: planId
-        }
+        },
+        locale: "id" // Set locale to Indonesian
       });
       
       logStep("Created regular checkout session", { sessionId: session.id, url: session.url });

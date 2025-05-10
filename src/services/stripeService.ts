@@ -8,14 +8,37 @@ import { toast } from "@/components/ui/sonner";
  */
 export const stripeService = {
   /**
+   * Fetch all available subscription plans
+   * @returns List of subscription plans
+   */
+  fetchSubscriptionPlans: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .order('price', { ascending: true });
+      
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      return { data: null, error };
+    }
+  },
+
+  /**
    * Create a checkout session for a plan
    * @param planId The ID of the subscription plan
+   * @param paymentMethods Optional array of preferred payment methods
    * @returns The URL to redirect to for checkout
    */
-  createCheckout: async (planId: string): Promise<string | null> => {
+  createCheckout: async (planId: string, paymentMethods?: string[]): Promise<string | null> => {
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { planId }
+        body: { 
+          planId,
+          paymentMethods: paymentMethods || ["card", "id_bank_transfer", "qris", "ovo", "dana", "gopay"]
+        }
       });
       
       if (error) throw new Error(`Error creating checkout: ${error.message}`);
@@ -34,12 +57,14 @@ export const stripeService = {
    * @param newPlanId The ID of the new subscription plan
    * @param currentPlanId The ID of the current subscription plan
    * @param subscriptionId Optional subscription ID for direct subscription updates
+   * @param paymentMethods Optional array of preferred payment methods
    * @returns The URL to redirect to for checkout
    */
   createProratedCheckout: async (
     newPlanId: string, 
     currentPlanId: string,
-    subscriptionId?: string
+    subscriptionId?: string,
+    paymentMethods?: string[]
   ): Promise<string | null> => {
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -47,7 +72,8 @@ export const stripeService = {
           planId: newPlanId,
           currentPlanId: currentPlanId,
           subscriptionId: subscriptionId,
-          prorate: true
+          prorate: true,
+          paymentMethods: paymentMethods || ["card", "id_bank_transfer", "qris", "ovo", "dana", "gopay"]
         }
       });
       
