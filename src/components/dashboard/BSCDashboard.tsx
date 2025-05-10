@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -80,7 +81,7 @@ export const BSCDashboard = () => {
       }
       
       // Define sample financial data
-      const sampleFinancialData = [
+      const sampleFinancialData: Omit<FinancialSummaryRecord, 'id'>[] = [
         {
           organization_id: organization.id,
           month: 'Jan',
@@ -131,10 +132,11 @@ export const BSCDashboard = () => {
         }
       ];
       
-      // Insert sample data with proper typing
+      // Insert sample data with type assertion since Supabase types 
+      // might not be fully updated with our database changes
       const { error: insertError } = await supabase
         .from('financial_summary')
-        .insert(sampleFinancialData as any[]);
+        .insert(sampleFinancialData as unknown as Record<string, unknown>[]);
         
       if (insertError) throw insertError;
       
