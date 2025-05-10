@@ -14,6 +14,7 @@ import SubscriptionDashboard from "@/pages/settings/subscription/SubscriptionDas
 import SubscriptionSuccess from "@/pages/settings/subscription/SubscriptionSuccess";
 import SubscriptionFaq from "@/pages/settings/subscription/SubscriptionFaq";
 import AdminPage from "@/pages/settings/AdminPage";
+import SubscriptionManagement from "@/pages/settings/subscription/SubscriptionManagement";
 
 export const settingsRoutes = (
   <Route
@@ -37,6 +38,7 @@ export const settingsRoutes = (
     <Route path="subscription/request-extension" element={<SubscriptionExtension />} />
     <Route path="subscription/success" element={<SubscriptionSuccess />} />
     <Route path="subscription/faq" element={<SubscriptionFaq />} />
+    <Route path="subscription/management" element={<SubscriptionManagement />} />
     <Route path="profile" element={<ProfileSettings />} />
     <Route path="admin" element={<AdminPage />} />
     <Route path="" element={<Navigate to="/settings/subscription" replace />} />

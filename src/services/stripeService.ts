@@ -30,6 +30,33 @@ export const stripeService = {
   },
   
   /**
+   * Create a checkout session with proration for plan changes
+   * @param newPlanId The ID of the new subscription plan
+   * @param currentPlanId The ID of the current subscription plan
+   * @returns The URL to redirect to for checkout
+   */
+  createProratedCheckout: async (newPlanId: string, currentPlanId: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { 
+          planId: newPlanId,
+          currentPlanId: currentPlanId,
+          prorate: true
+        }
+      });
+      
+      if (error) throw new Error(`Error creating prorated checkout: ${error.message}`);
+      if (!data?.sessionUrl) throw new Error("No checkout URL returned");
+      
+      return data.sessionUrl;
+    } catch (error) {
+      console.error("Error creating prorated checkout session:", error);
+      toast.error("Gagal memuat halaman pembayaran prorata. Silakan coba lagi.");
+      return null;
+    }
+  },
+  
+  /**
    * Create a customer portal session
    * @returns The URL to redirect to for customer portal
    */

@@ -6,7 +6,7 @@ import { SubscriptionOverview } from './subscription/SubscriptionOverview';
 import { SubscriptionPlans } from './subscription/SubscriptionPlans';
 import { SubscriptionHistory } from './subscription/SubscriptionHistory';
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, HelpCircle, FileText, CheckCircle } from "lucide-react";
+import { LayoutDashboard, HelpCircle, FileText, CheckCircle, ArrowUpDown } from "lucide-react";
 
 const Subscription = () => {
   const [searchParams] = useSearchParams();
@@ -62,6 +62,12 @@ const Subscription = () => {
           <Link to="/settings/subscription/faq">
             <HelpCircle className="h-4 w-4" />
             FAQ Langganan
+          </Link>
+        </Button>
+        <Button variant="outline" asChild className="flex items-center gap-2">
+          <Link to="/settings/subscription/management">
+            <ArrowUpDown className="h-4 w-4" />
+            Upgrade/Downgrade Prorata
           </Link>
         </Button>
       </div>
