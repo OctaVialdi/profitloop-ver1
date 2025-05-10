@@ -13,6 +13,32 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-MIDTRANS-PAYMENT] ${step}${detailsStr}`);
 };
 
+// Helper function to log payment attempt
+const logPaymentAttempt = async (
+  supabase: any, 
+  organizationId: string, 
+  userId: string, 
+  planSlug: string, 
+  status: string, 
+  errorMessage?: string,
+  requestData?: any,
+  responseData?: any
+) => {
+  try {
+    await supabase.from("payment_logs").insert({
+      organization_id: organizationId,
+      user_id: userId,
+      attempted_plan_slug: planSlug,
+      status,
+      error_message: errorMessage,
+      request_data: requestData || {},
+      response_data: responseData || {}
+    });
+  } catch (logError) {
+    console.error("[CREATE-MIDTRANS-PAYMENT] Failed to log payment attempt:", logError);
+  }
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -54,25 +80,36 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Parse request body to get plan ID or product information
+    // Parse request body to get plan slug
     const body = await req.json();
-    const { planId, amount, name } = body;
+    const { planId } = body;
     
     if (!planId) throw new Error("Plan ID is required");
-    logStep("Request body parsed", { planId, amount, name });
+    logStep("Request body parsed", { planId });
 
     // Create Supabase client with service role for administrative operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Get the subscription plan details from Supabase
+    // Get the subscription plan details from Supabase by slug
     const { data: planData, error: planError } = await supabaseAdmin
       .from("subscription_plans")
       .select("*")
-      .eq("id", planId)
+      .eq("slug", planId)
       .single();
       
     if (planError || !planData) {
-      throw new Error(`Failed to fetch subscription plan: ${planError?.message || "Plan not found"}`);
+      const errorMsg = `Failed to fetch subscription plan: ${planError?.message || "Plan not found"}`;
+      // Log payment attempt failure
+      await logPaymentAttempt(
+        supabaseAdmin, 
+        "", // We don't have org ID yet
+        user.id, 
+        planId, 
+        "error", 
+        errorMsg,
+        body
+      );
+      throw new Error(errorMsg);
     }
     logStep("Retrieved plan details", planData);
 
@@ -84,7 +121,17 @@ serve(async (req) => {
       .single();
       
     if (profileError || !profileData?.organization_id) {
-      throw new Error("User profile or organization not found");
+      const errorMsg = "User profile or organization not found";
+      await logPaymentAttempt(
+        supabaseAdmin, 
+        profileData?.organization_id || "", 
+        user.id, 
+        planId, 
+        "error", 
+        errorMsg,
+        body
+      );
+      throw new Error(errorMsg);
     }
     logStep("Retrieved user profile", { organizationId: profileData.organization_id });
 
@@ -96,7 +143,17 @@ serve(async (req) => {
       .single();
       
     if (orgError || !orgData) {
-      throw new Error("Organization not found");
+      const errorMsg = "Organization not found";
+      await logPaymentAttempt(
+        supabaseAdmin, 
+        profileData.organization_id, 
+        user.id, 
+        planId, 
+        "error", 
+        errorMsg,
+        body
+      );
+      throw new Error(errorMsg);
     }
     logStep("Retrieved organization details", { orgName: orgData.name });
 
@@ -146,6 +203,30 @@ serve(async (req) => {
       }
     };
 
+    const requestLog = {
+      orderId,
+      planData: {
+        id: planData.id,
+        name: planData.name,
+        price: planData.price
+      },
+      organization: {
+        id: orgData.id,
+        name: orgData.name
+      }
+    };
+
+    // Log payment attempt initiated
+    await logPaymentAttempt(
+      supabaseAdmin,
+      profileData.organization_id,
+      user.id,
+      planId,
+      "initiated",
+      undefined,
+      requestLog
+    );
+
     // POST request to Midtrans Snap API
     const midtransResponse = await fetch("https://app.midtrans.com/snap/v1/transactions", {
       method: "POST",
@@ -159,7 +240,21 @@ serve(async (req) => {
 
     if (!midtransResponse.ok) {
       const errorText = await midtransResponse.text();
-      throw new Error(`Midtrans API error: ${midtransResponse.status} ${errorText}`);
+      const errorMsg = `Midtrans API error: ${midtransResponse.status} ${errorText}`;
+      
+      // Log payment attempt failure
+      await logPaymentAttempt(
+        supabaseAdmin,
+        profileData.organization_id,
+        user.id,
+        planId,
+        "api_error",
+        errorMsg,
+        requestLog,
+        { status: midtransResponse.status, response: errorText }
+      );
+      
+      throw new Error(errorMsg);
     }
 
     const midtransData = await midtransResponse.json();
@@ -187,6 +282,18 @@ serve(async (req) => {
       logStep("Error storing transaction", transactionError);
       // Continue anyway as this is not critical for user experience
     }
+
+    // Log successful payment attempt
+    await logPaymentAttempt(
+      supabaseAdmin,
+      profileData.organization_id,
+      user.id,
+      planId,
+      "success",
+      undefined,
+      requestLog,
+      midtransData
+    );
 
     return new Response(JSON.stringify({ 
       token: midtransData.token,

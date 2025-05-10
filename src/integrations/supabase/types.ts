@@ -1917,6 +1917,56 @@ export type Database = {
           },
         ]
       }
+      payment_logs: {
+        Row: {
+          attempted_plan_slug: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          organization_id: string | null
+          payment_gateway: string
+          plan_id: string | null
+          request_data: Json | null
+          response_data: Json | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          attempted_plan_slug?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          organization_id?: string | null
+          payment_gateway?: string
+          plan_id?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          attempted_plan_slug?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          organization_id?: string | null
+          payment_gateway?: string
+          plan_id?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_methods: {
         Row: {
           code: string
@@ -2343,6 +2393,7 @@ export type Database = {
           max_members: number | null
           name: string
           price: number | null
+          slug: string | null
         }
         Insert: {
           created_at?: string | null
@@ -2351,6 +2402,7 @@ export type Database = {
           max_members?: number | null
           name: string
           price?: number | null
+          slug?: string | null
         }
         Update: {
           created_at?: string | null
@@ -2359,6 +2411,7 @@ export type Database = {
           max_members?: number | null
           name?: string
           price?: number | null
+          slug?: string | null
         }
         Relationships: []
       }
