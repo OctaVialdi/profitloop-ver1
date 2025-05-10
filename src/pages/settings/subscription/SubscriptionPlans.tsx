@@ -24,6 +24,7 @@ interface SubscriptionPlan {
   features: Record<string, any> | null;
   is_active: boolean;
   direct_payment_url?: string;
+  description?: string;
 }
 
 export const SubscriptionPlans = () => {
@@ -160,6 +161,45 @@ export const SubscriptionPlans = () => {
     // If yearly plan exists, use its slug, otherwise use constructed yearly slug
     return yearlyPlan ? yearlyPlan.slug : yearlyPlanSlug;
   };
+
+  // Extract features from plan features object
+  const getPlanFeatures = (plan: SubscriptionPlan | undefined) => {
+    if (!plan || !plan.features) return [];
+    
+    const featuresList: string[] = [];
+    
+    // Add max members feature
+    if (plan.max_members) {
+      featuresList.push(`Maksimal ${plan.max_members} anggota`);
+    } else {
+      featuresList.push('Anggota tidak terbatas');
+    }
+    
+    // Add features from the features object
+    Object.entries(plan.features).forEach(([key, value]) => {
+      switch(key) {
+        case 'storage':
+          featuresList.push(`Penyimpanan ${value}`);
+          break;
+        case 'api_calls':
+          featuresList.push(`${value} API calls/bulan`);
+          break;
+        case 'support':
+          featuresList.push(`Dukungan ${value}`);
+          break;
+        case 'collaboration':
+          featuresList.push(`Kolaborasi ${value}`);
+          break;
+        case 'security':
+          featuresList.push(`Keamanan ${value}`);
+          break;
+        default:
+          featuresList.push(`${key}: ${value}`);
+      }
+    });
+    
+    return featuresList;
+  };
   
   return (
     <>
@@ -187,7 +227,7 @@ export const SubscriptionPlans = () => {
                       <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
                     )}
                   </div>
-                  <CardDescription>Paket dasar untuk organisasi kecil</CardDescription>
+                  <CardDescription>{basicPlan.description || 'Paket dasar untuk organisasi kecil'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">
                       {basicPlan.price === 0 ? "Gratis" : formatRupiah(basicPlan.price)}
@@ -197,24 +237,12 @@ export const SubscriptionPlans = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Maksimal {basicPlan.max_members || 3} anggota</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Manajemen karyawan dasar</span>
-                    </li>
-                    {basicPlan.features?.storage && (
-                      <li className="flex items-center">
+                    {getPlanFeatures(basicPlan).map((feature, index) => (
+                      <li key={index} className="flex items-center">
                         <Check className="mr-2 h-4 w-4 text-green-500" />
-                        <span>Penyimpanan {basicPlan.features.storage}</span>
+                        <span>{feature}</span>
                       </li>
-                    )}
-                    <li className="flex items-center opacity-50">
-                      <span className="mr-2 h-4 w-4">✗</span>
-                      <span>Fitur premium</span>
-                    </li>
+                    ))}
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -247,7 +275,7 @@ export const SubscriptionPlans = () => {
                       <Badge variant="outline" className="bg-green-50 text-green-700">Populer</Badge>
                     )}
                   </div>
-                  <CardDescription>Solusi lengkap untuk sebagian besar organisasi</CardDescription>
+                  <CardDescription>{standardPlan.description || 'Solusi lengkap untuk sebagian besar organisasi'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">{formatRupiah(standardPlan.price)}</span>
                     <span className="text-gray-500">/bulan</span>
@@ -255,28 +283,12 @@ export const SubscriptionPlans = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Hingga {standardPlan.max_members || 15} anggota</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Manajemen karyawan lengkap</span>
-                    </li>
-                    {standardPlan.features?.storage && (
-                      <li className="flex items-center">
+                    {getPlanFeatures(standardPlan).map((feature, index) => (
+                      <li key={index} className="flex items-center">
                         <Check className="mr-2 h-4 w-4 text-green-500" />
-                        <span>Penyimpanan {standardPlan.features.storage}</span>
+                        <span>{feature}</span>
                       </li>
-                    )}
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Fitur HR premium</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Dukungan prioritas</span>
-                    </li>
+                    ))}
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -316,7 +328,7 @@ export const SubscriptionPlans = () => {
                       <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
                     )}
                   </div>
-                  <CardDescription>Solusi lengkap untuk organisasi besar</CardDescription>
+                  <CardDescription>{premiumPlan.description || 'Solusi lengkap untuk organisasi besar'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">{formatRupiah(premiumPlan.price)}</span>
                     <span className="text-gray-500">/bulan</span>
@@ -324,32 +336,12 @@ export const SubscriptionPlans = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Anggota tidak terbatas</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Semua fitur Standard</span>
-                    </li>
-                    {premiumPlan.features?.storage && (
-                      <li className="flex items-center">
+                    {getPlanFeatures(premiumPlan).map((feature, index) => (
+                      <li key={index} className="flex items-center">
                         <Check className="mr-2 h-4 w-4 text-green-500" />
-                        <span>Penyimpanan {premiumPlan.features.storage}</span>
+                        <span>{feature}</span>
                       </li>
-                    )}
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Laporan analitik lanjutan</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>API integrasi khusus</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Dukungan 24/7</span>
-                    </li>
+                    ))}
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -384,7 +376,7 @@ export const SubscriptionPlans = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>{basicPlan.name}</CardTitle>
-                  <CardDescription>Paket dasar untuk organisasi kecil</CardDescription>
+                  <CardDescription>{basicPlan.description || 'Paket dasar untuk organisasi kecil'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">
                       {basicPlan.price === 0 ? "Gratis" : formatRupiah(basicPlan.price * 12)}
@@ -394,20 +386,12 @@ export const SubscriptionPlans = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Maksimal {basicPlan.max_members || 3} anggota</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Manajemen karyawan dasar</span>
-                    </li>
-                    {basicPlan.features?.storage && (
-                      <li className="flex items-center">
+                    {getPlanFeatures(basicPlan).map((feature, index) => (
+                      <li key={index} className="flex items-center">
                         <Check className="mr-2 h-4 w-4 text-green-500" />
-                        <span>Penyimpanan {basicPlan.features.storage}</span>
+                        <span>{feature}</span>
                       </li>
-                    )}
+                    ))}
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -426,7 +410,7 @@ export const SubscriptionPlans = () => {
                     <CardTitle>{standardPlan.name}</CardTitle>
                     <Badge variant="outline" className="bg-green-50 text-green-700">Populer</Badge>
                   </div>
-                  <CardDescription>Solusi lengkap untuk sebagian besar organisasi</CardDescription>
+                  <CardDescription>{standardPlan.description || 'Solusi lengkap untuk sebagian besar organisasi'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">
                       {formatRupiah(calculateYearlyPrice(standardPlan.price))}
@@ -439,28 +423,12 @@ export const SubscriptionPlans = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Hingga {standardPlan.max_members || 15} anggota</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Manajemen karyawan lengkap</span>
-                    </li>
-                    {standardPlan.features?.storage && (
-                      <li className="flex items-center">
+                    {getPlanFeatures(standardPlan).map((feature, index) => (
+                      <li key={index} className="flex items-center">
                         <Check className="mr-2 h-4 w-4 text-green-500" />
-                        <span>Penyimpanan {standardPlan.features.storage}</span>
+                        <span>{feature}</span>
                       </li>
-                    )}
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Fitur HR premium</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Dukungan prioritas</span>
-                    </li>
+                    ))}
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -487,7 +455,7 @@ export const SubscriptionPlans = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>{premiumPlan.name}</CardTitle>
-                  <CardDescription>Solusi lengkap untuk organisasi besar</CardDescription>
+                  <CardDescription>{premiumPlan.description || 'Solusi lengkap untuk organisasi besar'}</CardDescription>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-3xl font-bold">
                       {formatRupiah(calculateYearlyPrice(premiumPlan.price))}
@@ -500,32 +468,12 @@ export const SubscriptionPlans = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Anggota tidak terbatas</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Semua fitur Standard</span>
-                    </li>
-                    {premiumPlan.features?.storage && (
-                      <li className="flex items-center">
+                    {getPlanFeatures(premiumPlan).map((feature, index) => (
+                      <li key={index} className="flex items-center">
                         <Check className="mr-2 h-4 w-4 text-green-500" />
-                        <span>Penyimpanan {premiumPlan.features.storage}</span>
+                        <span>{feature}</span>
                       </li>
-                    )}
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Laporan analitik lanjutan</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>API integrasi khusus</span>
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
-                      <span>Dukungan 24/7</span>
-                    </li>
+                    ))}
                   </ul>
                 </CardContent>
                 <CardFooter>

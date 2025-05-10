@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,13 @@ interface SubscriptionPlan {
   created_at?: string;
 }
 
+// Define feature item interface for the features form
+interface FeatureItem {
+  name: string;
+  value: string;
+  enabled: boolean;
+}
+
 const SubscriptionPlansManagement = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +52,13 @@ const SubscriptionPlansManagement = () => {
     direct_payment_url: '',
     description: '',
   });
+  const [features, setFeatures] = useState<FeatureItem[]>([
+    { name: 'storage', value: '1GB', enabled: true },
+    { name: 'api_calls', value: '1000', enabled: false },
+    { name: 'support', value: 'Basic', enabled: false },
+    { name: 'collaboration', value: 'Limited', enabled: false },
+    { name: 'security', value: 'Standard', enabled: false }
+  ]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const fetchPlans = useCallback(async () => {
@@ -98,6 +113,28 @@ const SubscriptionPlansManagement = () => {
     }
   };
   
+  // Initialize features from plan data
+  const initializeFeaturesFromPlan = (planFeatures: Record<string, any> | null) => {
+    const defaultFeatures = [
+      { name: 'storage', value: '1GB', enabled: false },
+      { name: 'api_calls', value: '1000', enabled: false },
+      { name: 'support', value: 'Basic', enabled: false },
+      { name: 'collaboration', value: 'Limited', enabled: false },
+      { name: 'security', value: 'Standard', enabled: false }
+    ];
+    
+    if (!planFeatures) return defaultFeatures;
+    
+    return defaultFeatures.map(feature => {
+      const featureExists = planFeatures[feature.name] !== undefined;
+      return {
+        name: feature.name,
+        value: featureExists ? String(planFeatures[feature.name]) : feature.value,
+        enabled: featureExists
+      };
+    });
+  };
+  
   const resetForm = () => {
     setFormData({
       name: '',
@@ -108,6 +145,13 @@ const SubscriptionPlansManagement = () => {
       direct_payment_url: '',
       description: '',
     });
+    setFeatures([
+      { name: 'storage', value: '1GB', enabled: true },
+      { name: 'api_calls', value: '1000', enabled: false },
+      { name: 'support', value: 'Basic', enabled: false },
+      { name: 'collaboration', value: 'Limited', enabled: false },
+      { name: 'security', value: 'Standard', enabled: false }
+    ]);
     setIsEditMode(false);
     setCurrentPlan(null);
   };
@@ -125,6 +169,7 @@ const SubscriptionPlansManagement = () => {
         direct_payment_url: plan.direct_payment_url || '',
         description: plan.description || '',
       });
+      setFeatures(initializeFeaturesFromPlan(plan.features));
     } else {
       resetForm();
     }
@@ -154,11 +199,32 @@ const SubscriptionPlansManagement = () => {
     }
   };
   
+  const handleFeatureChange = (index: number, field: 'value' | 'enabled', value: string | boolean) => {
+    const updatedFeatures = [...features];
+    updatedFeatures[index] = {
+      ...updatedFeatures[index],
+      [field]: value
+    };
+    setFeatures(updatedFeatures);
+  };
+  
   const handleSwitchChange = (checked: boolean) => {
     setFormData({
       ...formData,
       is_active: checked,
     });
+  };
+  
+  const buildFeaturesObject = () => {
+    const featuresObject: Record<string, any> = {};
+    
+    features.forEach(feature => {
+      if (feature.enabled) {
+        featuresObject[feature.name] = feature.value;
+      }
+    });
+    
+    return featuresObject;
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -184,9 +250,7 @@ const SubscriptionPlansManagement = () => {
         is_active: formData.is_active,
         direct_payment_url: formData.direct_payment_url || null,
         description: formData.description || null,
-        features: {
-          storage: formData.max_members ? `${formData.max_members * 2}GB` : "1GB"
-        }
+        features: buildFeaturesObject()
       };
       
       if (isEditMode && currentPlan) {
@@ -302,6 +366,7 @@ const SubscriptionPlansManagement = () => {
                   </TableHead>
                   <TableHead>Max Anggota</TableHead>
                   <TableHead>Deskripsi</TableHead>
+                  <TableHead>Fitur</TableHead>
                   <TableHead>URL Midtrans</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
@@ -317,6 +382,19 @@ const SubscriptionPlansManagement = () => {
                     <TableCell>
                       <div className="max-w-[200px] truncate">
                         {plan.description || '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-[200px]">
+                        {plan.features ? (
+                          <div className="text-xs">
+                            {Object.entries(plan.features).map(([key, value]) => (
+                              <div key={key} className="mb-1">
+                                <span className="font-medium">{key}:</span> {value}
+                              </div>
+                            ))}
+                          </div>
+                        ) : '-'}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -471,6 +549,31 @@ const SubscriptionPlansManagement = () => {
                   placeholder="https://app.midtrans.com/snap/..."
                 />
               </div>
+              
+              {/* Features section */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">
+                  Fitur Paket
+                </Label>
+                <div className="col-span-3 space-y-3 border p-3 rounded-md">
+                  {features.map((feature, index) => (
+                    <div key={feature.name} className="flex items-center space-x-3">
+                      <Switch
+                        checked={feature.enabled}
+                        onCheckedChange={(checked) => handleFeatureChange(index, 'enabled', checked)}
+                      />
+                      <span className="w-24">{feature.name}:</span>
+                      <Input
+                        value={feature.value}
+                        onChange={(e) => handleFeatureChange(index, 'value', e.target.value)}
+                        className="flex-1"
+                        disabled={!feature.enabled}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="is_active" className="text-right">
                   Status
