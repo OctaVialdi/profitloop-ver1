@@ -108,10 +108,29 @@ const SubscriptionPage = () => {
     };
     
     getUser();
+    
+    // Track subscription page view
+    trackAnalyticsEvent({
+      organizationId: organization?.id,
+      eventType: 'subscription_page_view',
+      eventData: {
+        source: new URLSearchParams(window.location.search).get('source') || 'direct',
+        tab: activeTab
+      }
+    });
   }, []);
 
   const handleSelectPlan = async (planId: string) => {
     try {
+      // Track plan selection
+      trackAnalyticsEvent({
+        organizationId: organization?.id,
+        eventType: 'plan_selected',
+        eventData: {
+          plan_id: planId
+        }
+      });
+      
       // Temporary simulation before Stripe integration
       if (!organization) return;
       
@@ -129,6 +148,15 @@ const SubscriptionPage = () => {
       
       toast.success("Paket berlangganan berhasil diperbarui!");
       refreshData();
+      
+      // Track successful upgrade
+      trackAnalyticsEvent({
+        organizationId: organization?.id,
+        eventType: 'checkout_completed',
+        eventData: {
+          plan_id: planId
+        }
+      });
     } catch (error) {
       console.error("Error selecting plan:", error);
       toast.error("Terjadi kesalahan saat memilih paket");
