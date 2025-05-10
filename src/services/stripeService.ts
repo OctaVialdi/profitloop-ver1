@@ -33,14 +33,20 @@ export const stripeService = {
    * Create a checkout session with proration for plan changes
    * @param newPlanId The ID of the new subscription plan
    * @param currentPlanId The ID of the current subscription plan
+   * @param subscriptionId Optional subscription ID for direct subscription updates
    * @returns The URL to redirect to for checkout
    */
-  createProratedCheckout: async (newPlanId: string, currentPlanId: string): Promise<string | null> => {
+  createProratedCheckout: async (
+    newPlanId: string, 
+    currentPlanId: string,
+    subscriptionId?: string
+  ): Promise<string | null> => {
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { 
           planId: newPlanId,
           currentPlanId: currentPlanId,
+          subscriptionId: subscriptionId,
           prorate: true
         }
       });
@@ -117,6 +123,37 @@ export const stripeService = {
     } catch (error) {
       console.error("Error verifying payment status:", error);
       return { success: false, status: 'error', subscription_tier: null };
+    }
+  },
+  
+  /**
+   * Generate a proration preview to show what the customer will pay
+   * @param newPlanId New plan ID to switch to
+   * @param currentPlanId Current plan ID
+   * @returns Proration calculation details
+   */
+  getProratedCalculation: async (newPlanId: string, currentPlanId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("calculate-proration", {
+        body: { 
+          newPlanId,
+          currentPlanId
+        }
+      });
+      
+      if (error) throw new Error(`Error calculating proration: ${error.message}`);
+      
+      return {
+        amountDue: data?.amountDue || 0,
+        credit: data?.credit || 0,
+        newAmount: data?.newAmount || 0,
+        daysLeft: data?.daysLeft || 0,
+        totalDaysInPeriod: data?.totalDaysInPeriod || 30,
+        prorationDate: data?.prorationDate ? new Date(data.prorationDate) : new Date()
+      };
+    } catch (error) {
+      console.error("Error calculating proration:", error);
+      return null;
     }
   },
   

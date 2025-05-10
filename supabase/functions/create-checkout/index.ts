@@ -52,10 +52,10 @@ serve(async (req) => {
 
     // Parse request body to get plan ID or product information
     const body = await req.json();
-    const { planId } = body;
+    const { planId, currentPlanId, prorate, subscriptionId } = body;
     
     if (!planId) throw new Error("Plan ID is required");
-    logStep("Request body parsed", { planId });
+    logStep("Request body parsed", { planId, currentPlanId, prorate, subscriptionId });
 
     // Create Supabase client with service role for administrative operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
@@ -126,36 +126,81 @@ serve(async (req) => {
       logStep("Created new Stripe customer", { customerId });
     }
 
-    // Price ID handling - either look up from the plan or use default
+    // Get the Stripe price ID from the plan
     const priceId = planData.stripe_price_id;
-    const origin = req.headers.get("Origin") || "http://localhost:3000";
-
-    // Create Checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: "subscription", 
-      success_url: `${origin}/settings/subscription?success=true`,
-      cancel_url: `${origin}/settings/subscription?canceled=true`,
-      metadata: {
-        organization_id: profileData.organization_id,
-        user_id: user.id,
-        plan_id: planId
-      }
-    });
+    if (!priceId) throw new Error("Plan does not have a valid Stripe price ID");
     
-    logStep("Created checkout session", { sessionId: session.id, url: session.url });
+    const origin = req.headers.get("Origin") || "http://localhost:3000";
+    
+    // Handle proration for plan changes
+    if (prorate && currentPlanId && orgData.subscription_id) {
+      logStep("Creating prorated checkout for plan change", { 
+        currentPlanId, 
+        newPlanId: planId,
+        subscriptionId: orgData.subscription_id
+      });
+      
+      // For subscription updates, we create a checkout session in 'setup' mode
+      // This allows us to collect payment method if needed but doesn't create a new subscription
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        mode: "setup",
+        setup_intent_data: {
+          metadata: {
+            subscription_id: orgData.subscription_id,
+            customer_id: customerId,
+            current_plan_id: currentPlanId,
+            new_plan_id: planId
+          }
+        },
+        success_url: `${origin}/settings/subscription?success=true&proration=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/settings/subscription?canceled=true`,
+        metadata: {
+          organization_id: profileData.organization_id,
+          user_id: user.id,
+          plan_id: planId,
+          current_plan_id: currentPlanId,
+          proration: "true"
+        }
+      });
+      
+      logStep("Created prorated checkout session", { sessionId: session.id, url: session.url });
+      
+      return new Response(JSON.stringify({ sessionUrl: session.url }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    } else {
+      // Regular subscription checkout for new subscriptions
+      logStep("Creating regular subscription checkout");
+      
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: "subscription", 
+        success_url: `${origin}/settings/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/settings/subscription?canceled=true`,
+        metadata: {
+          organization_id: profileData.organization_id,
+          user_id: user.id,
+          plan_id: planId
+        }
+      });
+      
+      logStep("Created regular checkout session", { sessionId: session.id, url: session.url });
 
-    return new Response(JSON.stringify({ sessionUrl: session.url }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
+      return new Response(JSON.stringify({ sessionUrl: session.url }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
   } catch (error) {
     logStep("ERROR", { message: error.message });
     return new Response(JSON.stringify({ error: error.message }), {

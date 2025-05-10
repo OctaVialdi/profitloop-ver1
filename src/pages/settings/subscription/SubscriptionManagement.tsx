@@ -12,11 +12,21 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function SubscriptionManagement() {
   const { organization, refreshData, isLoading } = useOrganization();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [proratedCalculation, setProratedCalculation] = useState<{
     prorationDate: Date | null;
     amountDue: number | null;
@@ -24,6 +34,8 @@ export default function SubscriptionManagement() {
     newAmount: number | null;
     daysLeft: number | null;
     totalDaysInPeriod: number | null;
+    currentPlanName?: string;
+    newPlanName?: string;
   }>({
     prorationDate: null,
     amountDue: null,
@@ -43,55 +55,64 @@ export default function SubscriptionManagement() {
   };
   
   const currentPlanId = organization?.subscription_plan_id || 'basic_plan';
+  // Using optional chaining to fix TypeScript errors
   const currentPlan = organization?.subscription_plan_name || 'Basic';
   const currentPrice = organization?.subscription_price || 0;
   const subscriptionEndDate = organization?.subscription_end_date ? new Date(organization.subscription_end_date) : null;
   
   const calculateProration = async (newPlanId: string) => {
     try {
-      setIsProcessing(true);
+      setIsCalculating(true);
       setSelectedPlanId(newPlanId);
       
-      // In a real implementation, this would call a Stripe API via Supabase Edge Function
-      // For demo, we'll simulate the calculation
-      const today = new Date();
-      const endDate = subscriptionEndDate || new Date(today.setMonth(today.getMonth() + 1));
-      const daysLeft = Math.round((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-      const totalDaysInPeriod = 30; // Assuming 30 day billing cycles
+      // Call our new edge function to calculate accurate proration
+      const proratedResult = await stripeService.getProratedCalculation(newPlanId, currentPlanId);
       
-      // Calculate prorated credit for remaining time on current plan
-      const currentPlanDailyRate = currentPrice / totalDaysInPeriod;
-      const credit = Math.round(currentPlanDailyRate * daysLeft);
-      
-      // Calculate prorated charge for new plan
-      const newPlanPrice = plans[newPlanId]?.price || 0;
-      const newPlanDailyRate = newPlanPrice / totalDaysInPeriod;
-      const newCharge = Math.round(newPlanDailyRate * daysLeft);
-      
-      // Calculate amount due (could be positive or negative)
-      const amountDue = newCharge - credit;
-      
-      setProratedCalculation({
-        prorationDate: new Date(),
-        amountDue: amountDue > 0 ? amountDue : 0,
-        credit: credit,
-        newAmount: newPlanPrice,
-        daysLeft: daysLeft,
-        totalDaysInPeriod: totalDaysInPeriod
-      });
+      if (proratedResult) {
+        setProratedCalculation(proratedResult);
+      } else {
+        // Fallback to frontend calculation if API call fails
+        const today = new Date();
+        const endDate = subscriptionEndDate || new Date(today.setMonth(today.getMonth() + 1));
+        const daysLeft = Math.round((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        const totalDaysInPeriod = 30; // Assuming 30 day billing cycles
+        
+        // Calculate prorated credit for remaining time on current plan
+        const currentPlanDailyRate = currentPrice / totalDaysInPeriod;
+        const credit = Math.round(currentPlanDailyRate * daysLeft);
+        
+        // Calculate prorated charge for new plan
+        const newPlanPrice = plans[newPlanId]?.price || 0;
+        const newPlanDailyRate = newPlanPrice / totalDaysInPeriod;
+        const newCharge = Math.round(newPlanDailyRate * daysLeft);
+        
+        // Calculate amount due (could be positive or negative)
+        const amountDue = newCharge - credit;
+        
+        setProratedCalculation({
+          prorationDate: new Date(),
+          amountDue: amountDue > 0 ? amountDue : 0,
+          credit: credit,
+          newAmount: newPlanPrice,
+          daysLeft: daysLeft,
+          totalDaysInPeriod: totalDaysInPeriod,
+          currentPlanName: currentPlan,
+          newPlanName: plans[newPlanId]?.name
+        });
+      }
       
       subscriptionAnalyticsService.trackFeatureImpression('prorated_calculation', 'subscription_management', organization?.id);
-      
-      setIsProcessing(false);
     } catch (error) {
       console.error("Error calculating proration:", error);
       toast.error("Gagal menghitung biaya prorata. Silakan coba lagi.");
-      setIsProcessing(false);
+    } finally {
+      setIsCalculating(false);
     }
   };
   
   const handlePlanChange = async () => {
     if (!selectedPlanId) return;
+    setShowConfirmDialog(false);
     
     try {
       setIsProcessing(true);
@@ -99,10 +120,11 @@ export default function SubscriptionManagement() {
       // Track analytics
       subscriptionAnalyticsService.trackPlanSelected(selectedPlanId, organization?.id);
       
-      // In a real implementation, this would create a checkout session with proration
+      // Create a prorated checkout session
       const checkoutUrl = await stripeService.createProratedCheckout(
         selectedPlanId, 
-        currentPlanId
+        currentPlanId,
+        organization?.subscription_id
       );
       
       if (checkoutUrl) {
@@ -114,7 +136,6 @@ export default function SubscriptionManagement() {
     } catch (error) {
       console.error("Error during checkout:", error);
       toast.error("Gagal memproses perubahan paket. Silakan coba lagi.");
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -212,9 +233,9 @@ export default function SubscriptionManagement() {
                         variant={selectedPlanId === 'basic_plan' ? 'default' : 'outline'} 
                         className="w-full"
                         onClick={() => calculateProration('basic_plan')}
-                        disabled={isProcessing}
+                        disabled={isCalculating || isProcessing}
                       >
-                        {isProcessing && selectedPlanId === 'basic_plan' ? (
+                        {isCalculating && selectedPlanId === 'basic_plan' ? (
                           <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menghitung...</>
                         ) : (
                           <>
@@ -258,9 +279,9 @@ export default function SubscriptionManagement() {
                         variant={selectedPlanId === 'standard_plan' ? 'default' : 'outline'} 
                         className="w-full"
                         onClick={() => calculateProration('standard_plan')}
-                        disabled={isProcessing}
+                        disabled={isCalculating || isProcessing}
                       >
-                        {isProcessing && selectedPlanId === 'standard_plan' ? (
+                        {isCalculating && selectedPlanId === 'standard_plan' ? (
                           <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menghitung...</>
                         ) : currentPlanId === 'premium_plan' ? (
                           <>
@@ -309,9 +330,9 @@ export default function SubscriptionManagement() {
                         variant={selectedPlanId === 'premium_plan' ? 'default' : 'outline'} 
                         className="w-full"
                         onClick={() => calculateProration('premium_plan')}
-                        disabled={isProcessing}
+                        disabled={isCalculating || isProcessing}
                       >
-                        {isProcessing && selectedPlanId === 'premium_plan' ? (
+                        {isCalculating && selectedPlanId === 'premium_plan' ? (
                           <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menghitung...</>
                         ) : (
                           <>
@@ -358,9 +379,9 @@ export default function SubscriptionManagement() {
                         variant={selectedPlanId === 'basic_plan' ? 'default' : 'outline'} 
                         className="w-full"
                         onClick={() => calculateProration('basic_plan')}
-                        disabled={isProcessing}
+                        disabled={isCalculating || isProcessing}
                       >
-                        {isProcessing && selectedPlanId === 'basic_plan' ? (
+                        {isCalculating && selectedPlanId === 'basic_plan' ? (
                           <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menghitung...</>
                         ) : (
                           <>
@@ -405,9 +426,9 @@ export default function SubscriptionManagement() {
                         variant={selectedPlanId === 'standard_yearly_plan' ? 'default' : 'outline'} 
                         className="w-full"
                         onClick={() => calculateProration('standard_yearly_plan')}
-                        disabled={isProcessing}
+                        disabled={isCalculating || isProcessing}
                       >
-                        {isProcessing && selectedPlanId === 'standard_yearly_plan' ? (
+                        {isCalculating && selectedPlanId === 'standard_yearly_plan' ? (
                           <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menghitung...</>
                         ) : currentPlanId === 'premium_yearly_plan' ? (
                           <>
@@ -457,9 +478,9 @@ export default function SubscriptionManagement() {
                         variant={selectedPlanId === 'premium_yearly_plan' ? 'default' : 'outline'} 
                         className="w-full"
                         onClick={() => calculateProration('premium_yearly_plan')}
-                        disabled={isProcessing}
+                        disabled={isCalculating || isProcessing}
                       >
-                        {isProcessing && selectedPlanId === 'premium_yearly_plan' ? (
+                        {isCalculating && selectedPlanId === 'premium_yearly_plan' ? (
                           <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menghitung...</>
                         ) : (
                           <>
@@ -486,7 +507,7 @@ export default function SubscriptionManagement() {
           <CardHeader>
             <CardTitle>Perhitungan Prorata</CardTitle>
             <CardDescription>
-              Detail perubahan paket dari {currentPlan} ke {plans[selectedPlanId]?.name}
+              Detail perubahan paket dari {proratedCalculation.currentPlanName || currentPlan} ke {proratedCalculation.newPlanName || plans[selectedPlanId]?.name}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -520,12 +541,12 @@ export default function SubscriptionManagement() {
                 <hr />
                 
                 <div className="flex justify-between">
-                  <span>Paket Saat Ini ({currentPlan}):</span>
+                  <span>Paket Saat Ini ({proratedCalculation.currentPlanName || currentPlan}):</span>
                   <span>{currentPrice === 0 ? "Gratis" : `Rp ${currentPrice.toLocaleString('id')}`}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span>Paket Baru ({plans[selectedPlanId]?.name}):</span>
+                  <span>Paket Baru ({proratedCalculation.newPlanName || plans[selectedPlanId]?.name}):</span>
                   <span>Rp {plans[selectedPlanId]?.price.toLocaleString('id')}</span>
                 </div>
                 
@@ -544,7 +565,7 @@ export default function SubscriptionManagement() {
               
               <Button 
                 className="w-full" 
-                onClick={handlePlanChange}
+                onClick={() => setShowConfirmDialog(true)}
                 disabled={isProcessing}
               >
                 {isProcessing ? (
@@ -562,6 +583,37 @@ export default function SubscriptionManagement() {
           </CardContent>
         </Card>
       )}
+      
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Perubahan Paket</DialogTitle>
+            <DialogDescription>
+              Anda akan mengubah paket langganan dari {proratedCalculation.currentPlanName || currentPlan} ke {proratedCalculation.newPlanName || plans[selectedPlanId || '']?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="flex justify-between mb-2">
+              <span>Total Tagihan:</span>
+              <span className="font-semibold">Rp {proratedCalculation.amountDue?.toLocaleString('id')}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Anda akan diarahkan ke halaman pembayaran Stripe untuk menyelesaikan transaksi.
+              Perubahan paket akan segera berlaku setelah pembayaran selesai.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>Batal</Button>
+            <Button onClick={handlePlanChange} disabled={isProcessing}>
+              {isProcessing ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Memproses...</>
+              ) : (
+                'Lanjutkan ke Pembayaran'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

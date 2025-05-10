@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@12.18.0";
@@ -65,6 +64,12 @@ serve(async (req) => {
       case "checkout.session.completed": {
         const session = event.data.object;
         await handleCheckoutSessionCompleted(session, supabaseAdmin, stripe);
+        break;
+      }
+      
+      case "setup_intent.succeeded": {
+        const setupIntent = event.data.object;
+        await handleSetupIntentSucceeded(setupIntent, supabaseAdmin, stripe);
         break;
       }
       
@@ -168,6 +173,113 @@ async function handleCheckoutSessionCompleted(
     });
   } catch (error) {
     logEvent("Error handling checkout completion", { error: error.message });
+    throw error;
+  }
+}
+
+async function handleSetupIntentSucceeded(
+  setupIntent: any, 
+  supabaseAdmin: any, 
+  stripe: any
+): Promise<void> {
+  try {
+    const { metadata } = setupIntent;
+    if (!metadata || !metadata.subscription_id || !metadata.current_plan_id || !metadata.new_plan_id) {
+      logEvent("No required metadata found in setup intent");
+      return;
+    }
+    
+    const subscriptionId = metadata.subscription_id;
+    const currentPlanId = metadata.current_plan_id;
+    const newPlanId = metadata.new_plan_id;
+    const customerId = metadata.customer_id;
+    
+    logEvent("Processing setup intent for subscription change", { 
+      subscriptionId,
+      currentPlanId,
+      newPlanId
+    });
+    
+    // Get the new plan price ID from the database
+    const { data: planData } = await supabaseAdmin
+      .from("subscription_plans")
+      .select("stripe_price_id")
+      .eq("id", newPlanId)
+      .single();
+      
+    if (!planData || !planData.stripe_price_id) {
+      logEvent("Could not find stripe price ID for plan", { planId: newPlanId });
+      return;
+    }
+    
+    // Update the subscription to use the new price (proration happens automatically)
+    const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
+      proration_behavior: 'create_prorations',
+      items: [{
+        id: (await stripe.subscriptions.retrieve(subscriptionId)).items.data[0].id,
+        price: planData.stripe_price_id,
+      }],
+      metadata: {
+        previous_plan_id: currentPlanId,
+        upgraded_at: new Date().toISOString()
+      }
+    });
+    
+    // Find organization with this customer ID
+    const { data: orgData } = await supabaseAdmin
+      .from("organizations")
+      .select("id")
+      .eq("stripe_customer_id", customerId)
+      .single();
+      
+    if (!orgData) {
+      logEvent("No organization found for customer", { customerId });
+      return;
+    }
+    
+    const organizationId = orgData.id;
+    
+    // Update organization with new plan ID
+    await supabaseAdmin
+      .from("organizations")
+      .update({
+        subscription_plan_id: newPlanId,
+        subscription_status: "active",
+        subscription_updated_at: new Date().toISOString()
+      })
+      .eq("id", organizationId);
+    
+    // Log plan change in audit log
+    await createAuditLog(
+      supabaseAdmin,
+      organizationId,
+      metadata.user_id || null,
+      "plan_changed",
+      {
+        subscription_id: subscriptionId,
+        previous_plan_id: currentPlanId,
+        new_plan_id: newPlanId,
+        proration: true
+      }
+    );
+    
+    // Create notification for organization admins
+    await createNotificationForAdmins(
+      supabaseAdmin,
+      organizationId,
+      "Paket Berlangganan Diubah",
+      "Perubahan paket berlangganan Anda telah berhasil diproses. Penyesuaian biaya prorata telah diterapkan.",
+      "success",
+      "/settings/subscription"
+    );
+    
+    logEvent("Subscription plan changed successfully", { 
+      organizationId, 
+      subscriptionId,
+      newPlanId
+    });
+  } catch (error) {
+    logEvent("Error handling setup intent", { error: error.message });
     throw error;
   }
 }
