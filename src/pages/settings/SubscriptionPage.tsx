@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useSearchParams, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Card } from "@/components/ui/card";

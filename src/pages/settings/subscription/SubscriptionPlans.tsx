@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,17 @@ export const SubscriptionPlans = () => {
   } | null>(null);
   const { organization, refreshData } = useOrganization();
   
+  // Add effect to check for payment success and refresh data
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const success = searchParams.get('success');
+    
+    if (success === 'true') {
+      // Refresh organization data to reflect new subscription
+      refreshData();
+    }
+  }, [refreshData]);
+  
   const handleCheckout = async (planId: string, planName: string) => {
     try {
       setIsSubmitting(true);
@@ -34,11 +46,17 @@ export const SubscriptionPlans = () => {
       const result = await midtransService.createPayment(planId);
       
       if (result) {
-        setPaymentData({
-          redirectUrl: result.redirectUrl,
-          planName: planName
-        });
-        setPaymentModalOpen(true);
+        // For standard plan (direct URL), redirect immediately
+        if (planId === 'standard_plan') {
+          midtransService.redirectToPayment(result.redirectUrl);
+        } else {
+          // For other plans, show modal first
+          setPaymentData({
+            redirectUrl: result.redirectUrl,
+            planName: planName
+          });
+          setPaymentModalOpen(true);
+        }
       } else {
         throw new Error("Failed to create payment");
       }

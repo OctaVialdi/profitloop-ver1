@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -13,6 +14,39 @@ export const midtransService = {
    */
   createPayment: async (planId: string): Promise<{ token: string, redirectUrl: string, orderId: string } | null> => {
     try {
+      // Use hardcoded URL for standard_plan
+      if (planId === 'standard_plan') {
+        const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        
+        // Log the direct URL usage
+        console.log("Using direct Midtrans URL for standard_plan with orderId:", orderId);
+        
+        // Store transaction in database to track it
+        const { error: transactionError } = await supabase
+          .from("payment_transactions")
+          .insert({
+            order_id: orderId,
+            subscription_plan_id: planId,
+            payment_gateway: "midtrans",
+            amount: 299000,
+            currency: "IDR",
+            status: "pending",
+            payment_url: "https://app.midtrans.com/payment-links/1746870370812"
+          });
+          
+        if (transactionError) {
+          console.error("Error storing transaction:", transactionError);
+          // Continue anyway as this is not critical for user experience
+        }
+        
+        return {
+          token: "direct-url-token",
+          redirectUrl: "https://app.midtrans.com/payment-links/1746870370812",
+          orderId: orderId
+        };
+      }
+      
+      // For other plans, use the normal flow with edge function
       const { data, error } = await supabase.functions.invoke("create-midtrans-payment", {
         body: { planId }
       });
@@ -105,7 +139,7 @@ export const midtransService = {
   loadSnapLibrary: (): Promise<void> => {
     return new Promise((resolve) => {
       // This function is mostly for backward compatibility
-      // Direct redirection is now preferred
+      // Direct redirection is now the preferred payment method
       console.log("Note: Direct redirection is now the preferred payment method");
       resolve();
     });
