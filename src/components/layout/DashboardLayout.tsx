@@ -47,7 +47,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }
 
   // Determine if we should show breadcrumbs based on the current path
-  const shouldShowBreadcrumbs = location.pathname !== "/dashboard";
+  const shouldShowBreadcrumbs = location.pathname !== "/";
   const hideBreadcrumbsOnSpecificPages = location.pathname === "/hr/company";
   
   // Determine custom breadcrumb labels based on the path
@@ -115,11 +115,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Top navigation - Modified to be full width without scroll constraints */}
         <header className="bg-white border-b sticky top-0 z-10 w-full shadow-sm">
           <div className="px-4 h-16 flex items-center justify-between">
-            {shouldShowBreadcrumbs && !hideBreadcrumbsOnSpecificPages && (
-              <BreadcrumbNav 
-                customLabels={customLabels}
-              />
-            )}
+            <div className="flex-1">
+              {(!hideBreadcrumbsOnSpecificPages) && (
+                <BreadcrumbNav 
+                  customLabels={customLabels}
+                  rootLabel="Home"
+                />
+              )}
+            </div>
             <HeaderActions />
           </div>
         </header>

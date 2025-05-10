@@ -20,14 +20,12 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Components from "@/pages/dev/Components";
 import HeaderOnlyLayout from "@/components/layout/HeaderOnlyLayout";
 import SubscriptionSuccess from "@/pages/subscription/SubscriptionSuccess";
+import { Navigate } from "react-router-dom";
 
 export const AppRoutes = () => {
   return (
     <Routes>
-      {/* Root redirects to login */}
-      {rootRedirect}
-
-      {/* Auth Routes */}
+      {/* Root redirects to login if not logged in */}
       {authRoutes}
       
       {/* Public Routes - Ensuring these are registered BEFORE protected routes for priority */}
@@ -60,10 +58,14 @@ export const AppRoutes = () => {
         {onboardingRoutes}
       </Route>
 
-      {/* Dashboard Routes */}
+      {/* Dashboard Routes (now root routes) */}
       <Route element={<ProtectedRoute />}>
         {dashboardRoutes}
       </Route>
+      
+      {/* Redirect /dashboard to root */}
+      <Route path="/dashboard/*" element={<Navigate to="/" replace />} />
+      <Route path="/dashboard" element={<Navigate to="/" replace />} />
 
       {/* HR Routes */}
       <Route element={<ProtectedRoute />}>

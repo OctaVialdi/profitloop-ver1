@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, 
   Headset, Laptop, Users } from "lucide-react";
@@ -50,8 +49,8 @@ export function DashboardSidebar({
   // Navigation items in the specified order
   const navigationItems: NavigationItem[] = [
     {
-      name: "Dashboard",
-      href: "/dashboard",
+      name: "Home",
+      href: "/",
       icon: LayoutDashboard
     },
     {
@@ -160,7 +159,11 @@ export function DashboardSidebar({
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton 
                       tooltip={item.name} 
-                      isActive={currentPath.startsWith(item.href)}
+                      isActive={
+                        item.href === "/" 
+                          ? currentPath === "/" 
+                          : currentPath.startsWith(item.href)
+                      }
                       asChild
                       className={cn(
                         "flex items-center font-medium",

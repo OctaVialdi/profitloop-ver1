@@ -9,8 +9,8 @@ import Components from "@/pages/dev/Components";
 
 export const dashboardRoutes = [
   <Route
-    key="dashboard"
-    path="/dashboard"
+    key="root"
+    path="/"
     element={
       <ProtectedRoute>
         <DashboardLayout />
@@ -19,8 +19,6 @@ export const dashboardRoutes = [
   >
     <Route index element={<Dashboard />} />
     <Route path="notifications" element={<Notifications />} />
-    {/* Redirect any unknown dashboard routes to main dashboard */}
-    <Route path="*" element={<Navigate to="/dashboard" replace />} />
   </Route>,
   <Route
     key="catatan-meetings"

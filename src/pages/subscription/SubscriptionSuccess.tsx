@@ -88,7 +88,7 @@ const SubscriptionSuccess = () => {
           >
             Lihat Dashboard Langganan
           </Button>
-          <Button onClick={() => navigate('/dashboard')}>
+          <Button onClick={() => navigate('/')}>
             Home
           </Button>
         </CardFooter>

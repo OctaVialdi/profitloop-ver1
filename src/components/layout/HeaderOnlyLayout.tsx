@@ -34,15 +34,11 @@ const HeaderOnlyLayout = ({ children }: HeaderOnlyLayoutProps) => {
       {/* Top navigation */}
       <header className="bg-white border-b sticky top-0 z-10 w-full shadow-sm">
         <div className="px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {logoUrl ? (
-              <img src={logoUrl} alt="Logo" className="h-8 w-auto" />
-            ) : (
-              <div className="h-8 w-8 bg-blue-600 text-white flex items-center justify-center rounded-md font-bold">
-                {organization?.name?.charAt(0) || 'O'}
-              </div>
-            )}
-            <span className="text-lg font-medium">{organization?.name}</span>
+          <div className="flex-1">
+            <BreadcrumbNav 
+              rootLabel="Home"
+              showHomeIcon={true}
+            />
           </div>
           <HeaderActions />
         </div>
