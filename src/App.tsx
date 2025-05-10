@@ -16,10 +16,10 @@ import { NotificationSystem } from '@/components/NotificationSystem';
 
 // Public pages
 import WelcomePage from '@/pages/WelcomePage';
-import Index from '@/pages/Index'; // Fixed path
-import PublicJobApplicationForm from '@/pages/public/JobApplicationForm'; // Fixed path
-import JobPreviewPage from '@/pages/public/JobPreviewPage'; // Fixed path
-import NotFound from '@/pages/NotFound'; // Fixed path
+import LandingPage from '@/pages/LandingPage';
+import PublicApplicationForm from '@/pages/public/ApplicationForm'; 
+import PublicJobPreview from '@/pages/public/JobPreview';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 import './App.css';
 import './css/trial-styles.css';
@@ -46,13 +46,13 @@ function App() {
             {subscriptionRoutes}
             
             {/* Public routes */}
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/welcome" element={<WelcomePage />} />
-            <Route path="/application/:linkId" element={<PublicJobApplicationForm />} />
-            <Route path="/job/:linkId" element={<JobPreviewPage />} />
+            <Route path="/application/:linkId" element={<PublicApplicationForm />} />
+            <Route path="/job/:linkId" element={<PublicJobPreview />} />
             
             {/* Catch all route */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           
           {/* Global components */}
