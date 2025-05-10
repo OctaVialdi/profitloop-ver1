@@ -74,7 +74,9 @@ export const ProfilePhotoUploader: React.FC<ProfilePhotoUploaderProps> = ({
       // Update the user's profile with the new photo URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ profile_image: urlData.publicUrl })
+        .update({
+          profile_image: urlData.publicUrl
+        })
         .eq('id', userId);
         
       if (updateError) {

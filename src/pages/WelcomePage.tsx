@@ -2,12 +2,12 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Home, UserPlus, Building, Shield, CreditCard } from "lucide-react";
+import { User, Settings, Home, UserPlus, Building } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const WelcomePage = () => {
-  const { organization, isLoading, hasPaidSubscription, subscriptionPlan } = useOrganization();
+  const { organization, isLoading } = useOrganization();
   
   const features = [
     {
@@ -21,14 +21,6 @@ const WelcomePage = () => {
       description: "Bekerja sama dengan organisasi lain",
       icon: Building,
       path: "/collaborations",
-    },
-    {
-      name: "Paket Berlangganan",
-      description: hasPaidSubscription 
-        ? `Paket ${subscriptionPlan?.name} aktif`
-        : "Pilih paket berlangganan yang sesuai",
-      icon: CreditCard,
-      path: "/subscription",
     },
     {
       name: "Dashboard Terpadu",
@@ -105,9 +97,9 @@ const WelcomePage = () => {
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/subscription">
+              <Link to="/settings/profile">
                 <Settings className="mr-2 h-4 w-4" />
-                Kelola Subscription
+                Pengaturan Profil
               </Link>
             </Button>
             <Button asChild variant="secondary">
@@ -117,11 +109,6 @@ const WelcomePage = () => {
               </Link>
             </Button>
           </div>
-          <p className="text-center text-sm text-gray-500 mt-4">
-            {hasPaidSubscription 
-              ? `Anda menggunakan paket ${subscriptionPlan?.name || "Premium"}. Nikmati semua fitur tanpa batasan.`
-              : "Berlangganan untuk menikmati semua fitur premium."}
-          </p>
         </CardFooter>
       </Card>
     </div>

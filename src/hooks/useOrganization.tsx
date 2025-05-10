@@ -9,16 +9,12 @@ import { useOrganizationSubscription } from "./organization/useOrganizationSubsc
 export function useOrganization(): OrganizationData {
   const [organizationData, setOrganizationData] = useState<OrganizationData>({
     organization: null,
-    subscriptionPlan: null,
     userProfile: null,
     isLoading: true,
     error: null,
     isSuperAdmin: false,
     isAdmin: false,
     isEmployee: false,
-    isTrialActive: false,
-    daysLeftInTrial: 0,
-    hasPaidSubscription: false,
     refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate)
   });
   
