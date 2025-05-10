@@ -95,6 +95,14 @@ export async function fetchOrganizationData(
       const isSuperAdmin = userProfileData.role === "super_admin";
       const isAdmin = userProfileData.role === "admin" || isSuperAdmin;
       const isEmployee = userProfileData.role === "employee" || isAdmin;
+      
+      // Calculate trial status
+      const trialEndDate = new Date(organization.trial_end_date);
+      const now = new Date();
+      const isTrialActive = !organization.trial_expired && trialEndDate > now;
+      const daysLeftInTrial = isTrialActive ? 
+        Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 3600 * 24)) : 0;
+      const hasPaidSubscription = organization.subscription_status === 'active';
 
       setOrganizationData({
         organization,
@@ -104,6 +112,9 @@ export async function fetchOrganizationData(
         isSuperAdmin,
         isAdmin, 
         isEmployee,
+        isTrialActive,
+        daysLeftInTrial,
+        hasPaidSubscription,
         refreshData: async () => await fetchOrganizationData(setOrganizationData, navigate),
       });
     } else {

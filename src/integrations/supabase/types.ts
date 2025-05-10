@@ -1759,8 +1759,11 @@ export type Database = {
           address: string | null
           business_field: string | null
           created_at: string | null
+          creator_email: string | null
           employee_count: number | null
+          grace_period_end: string | null
           id: string
+          logo_path: string | null
           name: string
           phone: string | null
           subscription_plan_id: string | null
@@ -1774,8 +1777,11 @@ export type Database = {
           address?: string | null
           business_field?: string | null
           created_at?: string | null
+          creator_email?: string | null
           employee_count?: number | null
+          grace_period_end?: string | null
           id?: string
+          logo_path?: string | null
           name: string
           phone?: string | null
           subscription_plan_id?: string | null
@@ -1789,8 +1795,11 @@ export type Database = {
           address?: string | null
           business_field?: string | null
           created_at?: string | null
+          creator_email?: string | null
           employee_count?: number | null
+          grace_period_end?: string | null
           id?: string
+          logo_path?: string | null
           name?: string
           phone?: string | null
           subscription_plan_id?: string | null
@@ -2169,6 +2178,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          data: Json | null
+          id: string
+          organization_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          organization_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          organization_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          deskripsi: string | null
+          direct_payment_url: string | null
+          features: Json | null
+          id: string
+          is_active: boolean
+          max_members: number | null
+          name: string
+          price: number
+          slug: string | null
+          stripe_price_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          deskripsi?: string | null
+          direct_payment_url?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          max_members?: number | null
+          name: string
+          price?: number
+          slug?: string | null
+          stripe_price_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          deskripsi?: string | null
+          direct_payment_url?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          max_members?: number | null
+          name?: string
+          price?: number
+          slug?: string | null
+          stripe_price_id?: string | null
+        }
+        Relationships: []
       }
       transactions: {
         Row: {

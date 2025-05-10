@@ -31,3 +31,11 @@ export interface AuthSignInResult {
   data: any | null;
   error: Error | null;
 }
+
+export interface AuthState {
+  user: any | null;
+  profile: any | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  error: Error | null;
+}
