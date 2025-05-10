@@ -17,6 +17,7 @@ interface DashboardLayoutProps {
   defaultLayout?: number[];
   defaultCollapsed?: boolean;
   navCollapsible?: boolean;
+  children?: React.ReactNode;
 }
 
 function DashboardLayout({
@@ -45,7 +46,6 @@ function DashboardLayout({
             minSize={15}
             maxSize={25}
             collapsedSize={navCollapsible ? 4 : undefined}
-            defaultCollapsed={defaultCollapsed}
             className={cn(
               "hidden border-r bg-muted/40 md:block",
               defaultCollapsed ? "min-w-12" : "min-w-[50px]"

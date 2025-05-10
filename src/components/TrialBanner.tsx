@@ -76,7 +76,7 @@ export function TrialBanner() {
     try {
       // Send reminder email
       if (organization) {
-        await subscriptionService.sendTrialReminderEmail(organization.id);
+        await subscriptionService.sendTrialReminderEmail(organization.id, "trial_reminder");
         toast.success("Reminder email has been sent to your team");
       }
     } catch (error) {

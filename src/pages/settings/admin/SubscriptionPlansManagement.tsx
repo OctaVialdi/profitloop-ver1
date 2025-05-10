@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SubscriptionPlan } from "@/types/organization";
@@ -17,7 +18,10 @@ export default function SubscriptionPlansManagement() {
         max_members: 3,
         features: {
           storage: "1GB",
-          api_calls: "100"
+          api_calls: "100",
+          members: "3 members",
+          support: "Email support",
+          advanced_analytics: false
         },
         is_active: true
       },
@@ -29,7 +33,10 @@ export default function SubscriptionPlansManagement() {
         max_members: 10,
         features: {
           storage: "10GB",
-          api_calls: "1000"
+          api_calls: "1000",
+          members: "10 members",
+          support: "Priority support",
+          advanced_analytics: true
         },
         is_active: true
       },
@@ -41,7 +48,10 @@ export default function SubscriptionPlansManagement() {
         max_members: 25,
         features: {
           storage: "100GB",
-          api_calls: "Unlimited"
+          api_calls: "Unlimited",
+          members: "25 members",
+          support: "24/7 support",
+          advanced_analytics: true
         },
         is_active: true
       }

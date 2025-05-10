@@ -2,7 +2,7 @@
 import { useState, useEffect, useContext, createContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "../auth/useAuth";
-import { Organization, OrganizationData, SubscriptionPlan, UserProfile } from "@/types/organization";
+import { Organization, OrganizationData, SubscriptionPlan, UserProfile, UserPreferences } from "@/types/organization";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { useTrialStatus } from "../useTrialStatus";
@@ -17,6 +17,10 @@ const OrganizationContext = createContext<OrganizationData>({
   isAdmin: false,
   isEmployee: false,
   refreshData: async () => {},
+  isTrialActive: false,
+  daysLeftInTrial: 0,
+  hasPaidSubscription: false,
+  subscriptionPlan: null
 });
 
 // Provider component
@@ -36,7 +40,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const isEmployee = !!userProfile?.role;
   
   // Get trial and subscription status
-  const { isTrialActive, daysLeftInTrial, isTrialExpired, hasPaidSubscription, progress } = useTrialStatus(organization);
+  const { isTrialActive, daysLeftInTrial, isTrialExpired, hasPaidSubscription } = useTrialStatus(organization);
   
   // Load organization data
   const loadOrganizationData = async () => {
@@ -60,7 +64,19 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(`Failed to load user profile: ${profileError.message}`);
       }
 
-      setUserProfile(profileData);
+      // Convert JSON preferences to UserPreferences object
+      const preferences: UserPreferences = 
+        (typeof profileData.preferences === 'string' && profileData.preferences) 
+          ? JSON.parse(profileData.preferences) 
+          : profileData.preferences || {};
+      
+      // Create UserProfile with proper preferences type
+      const userProfileWithTypes: UserProfile = {
+        ...profileData,
+        preferences
+      };
+
+      setUserProfile(userProfileWithTypes);
 
       // Check if this user is part of an organization
       if (!profileData.organization_id) {

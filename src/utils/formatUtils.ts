@@ -39,6 +39,17 @@ export function formatCurrency(amount: number, currency: string = 'IDR'): string
 }
 
 /**
+ * Format currency in Rupiah
+ */
+export function formatRupiah(amount: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(amount);
+}
+
+/**
  * Format a date relative to now (e.g. 2 days ago)
  */
 export function formatRelativeTime(date: Date | string): string {

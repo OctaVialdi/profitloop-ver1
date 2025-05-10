@@ -2,12 +2,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrganization } from "@/hooks/useOrganization";
 import { stripeService } from "@/services/stripeService";
 import { analyticsService } from "@/services/analyticsService";
 import { ExternalLink, CheckCircle2 } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 export default function SubscriptionManagement() {
   const { organization, subscriptionPlan } = useOrganization();
@@ -24,7 +24,6 @@ export default function SubscriptionManagement() {
     newPlanName?: string;
   } | null>(null);
   const [newPlanId, setNewPlanId] = useState<string | null>(null);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Get plan details from query params if available
@@ -46,11 +45,7 @@ export default function SubscriptionManagement() {
       setProrationDetails(details);
     } catch (error) {
       console.error("Error calculating proration:", error);
-      toast({
-        title: "Calculation Error",
-        description: "Failed to calculate subscription change details.",
-        variant: "destructive",
-      });
+      toast.error("Failed to calculate subscription change details.");
     } finally {
       setIsLoading(false);
     }
@@ -64,11 +59,7 @@ export default function SubscriptionManagement() {
       window.location.href = portalUrl;
     } catch (error) {
       console.error("Error opening billing portal:", error);
-      toast({
-        title: "Portal Error",
-        description: "Failed to open billing portal. Please try again later.",
-        variant: "destructive",
-      });
+      toast.error("Failed to open billing portal. Please try again later.");
       setPortalLoading(false);
     }
   };
@@ -99,11 +90,7 @@ export default function SubscriptionManagement() {
       window.location.href = checkoutUrl;
     } catch (error) {
       console.error("Error creating checkout:", error);
-      toast({
-        title: "Checkout Error",
-        description: "Failed to create checkout session. Please try again later.",
-        variant: "destructive",
-      });
+      toast.error("Failed to create checkout session. Please try again later.");
       setIsLoading(false);
     }
   };
