@@ -1,10 +1,12 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation, useSearchParams, Routes, Route, Navigate } from 'react-router-dom';
+import { useLocation, useSearchParams, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
 import { SubscriptionOverview } from './subscription/SubscriptionOverview';
 import { SubscriptionPlans } from './subscription/SubscriptionPlans';
 import { SubscriptionHistory } from './subscription/SubscriptionHistory';
+import { Button } from "@/components/ui/button";
+import { LayoutDashboard, HelpCircle, FileText } from "lucide-react";
 
 const Subscription = () => {
   const [searchParams] = useSearchParams();
@@ -40,6 +42,22 @@ const Subscription = () => {
         <p className="text-gray-600">
           Pilih paket yang sesuai dengan kebutuhan organisasi Anda
         </p>
+      </div>
+      
+      {/* Quick Links to New Pages */}
+      <div className="flex flex-wrap gap-3 mb-8">
+        <Button variant="outline" asChild className="flex items-center gap-2">
+          <Link to="/settings/subscription/dashboard">
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard Langganan
+          </Link>
+        </Button>
+        <Button variant="outline" asChild className="flex items-center gap-2">
+          <Link to="/settings/subscription/faq">
+            <HelpCircle className="h-4 w-4" />
+            FAQ Langganan
+          </Link>
+        </Button>
       </div>
 
       {/* Current Plan Status */}

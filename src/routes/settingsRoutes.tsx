@@ -10,6 +10,9 @@ import Subscription from "@/pages/settings/SubscriptionPage";
 import SubscriptionExtension from "@/pages/settings/subscription/SubscriptionExtension";
 import ProfileSettings from "@/pages/settings/ProfileSettings";
 import { Outlet } from "react-router-dom";
+import SubscriptionDashboard from "@/pages/settings/subscription/SubscriptionDashboard";
+import SubscriptionSuccess from "@/pages/settings/subscription/SubscriptionSuccess";
+import SubscriptionFaq from "@/pages/settings/subscription/SubscriptionFaq";
 
 export const settingsRoutes = (
   <Route
@@ -29,7 +32,10 @@ export const settingsRoutes = (
     <Route path="members" element={<MemberManagement />} />
     <Route path="invite" element={<InviteMembers />} />
     <Route path="subscription" element={<Subscription />} />
+    <Route path="subscription/dashboard" element={<SubscriptionDashboard />} />
     <Route path="subscription/request-extension" element={<SubscriptionExtension />} />
+    <Route path="subscription/success" element={<SubscriptionSuccess />} />
+    <Route path="subscription/faq" element={<SubscriptionFaq />} />
     <Route path="profile" element={<ProfileSettings />} />
     <Route path="" element={<Navigate to="/settings/subscription" replace />} />
   </Route>

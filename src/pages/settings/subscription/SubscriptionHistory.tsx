@@ -2,17 +2,17 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock } from "lucide-react";
+import { Clock, Package } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 
 export const SubscriptionHistory = () => {
   const { organization } = useOrganization();
-  const [activeTab, setActiveTab] = useState("plans");
+  const [activeTab, setActiveTab] = useState("history");
 
   return (
     <Tabs 
-      defaultValue={activeTab} 
+      defaultValue="history" 
       value={activeTab} 
       onValueChange={(value) => {
         setActiveTab(value);
@@ -24,16 +24,18 @@ export const SubscriptionHistory = () => {
           });
         }
       }}
-      className="space-y-8"
+      className="space-y-4 pt-4 border-t"
     >
-      <TabsList>
-        <TabsTrigger value="history">
-          <Clock className="h-4 w-4 mr-2" />
-          Riwayat Transaksi
-        </TabsTrigger>
-      </TabsList>
+      <div className="flex justify-between items-center px-6">
+        <TabsList>
+          <TabsTrigger value="history" className="flex items-center">
+            <Clock className="h-4 w-4 mr-2" />
+            Riwayat Transaksi
+          </TabsTrigger>
+        </TabsList>
+      </div>
       
-      <TabsContent value="history">
+      <TabsContent value="history" className="px-6 pb-6">
         <Card>
           <CardHeader>
             <CardTitle>Riwayat Transaksi</CardTitle>
@@ -43,7 +45,7 @@ export const SubscriptionHistory = () => {
           </CardHeader>
           <CardContent>
             <div className="text-center py-12 text-gray-500">
-              <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>Belum ada riwayat transaksi</p>
               <p className="text-sm mt-2">Riwayat transaksi akan muncul di sini setelah Anda berlangganan</p>
             </div>
