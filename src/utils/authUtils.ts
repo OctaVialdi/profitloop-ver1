@@ -64,3 +64,27 @@ export const cleanupAuthState = () => {
     }
   });
 };
+
+/**
+ * Robust sign out function that handles all cleanup
+ */
+export const robustSignOut = async (): Promise<void> => {
+  try {
+    // Clean up auth state first
+    cleanupAuthState();
+    
+    // Attempt global sign out
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (err) {
+      console.error("Error during sign out:", err);
+      // Continue even if this fails
+    }
+    
+    // Add a small delay to ensure sign out completes
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+  } catch (error) {
+    console.error("Error in robustSignOut:", error);
+  }
+};

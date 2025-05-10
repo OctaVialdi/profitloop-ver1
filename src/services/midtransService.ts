@@ -1,52 +1,44 @@
-// Mock service for Midtrans integration since we don't have the actual implementation
-// This prevents build errors while keeping the UI functional
 
+import { supabase } from "@/integrations/supabase/client";
+import { subscriptionService } from "./subscriptionService";
+
+/**
+ * Mock service for Midtrans payment gateway integration
+ */
 export const midtransService = {
-  createPaymentTransaction: async (planId: string) => {
-    console.log(`Mock: Creating payment transaction for plan ${planId}`);
-    return Promise.resolve({
-      paymentUrl: `https://example.com/midtrans-pay/${planId}`,
-      orderId: `order-${Date.now()}`
-    });
-  },
-
-  validatePayment: async (orderId: string) => {
-    console.log(`Mock: Validating payment for order ${orderId}`);
-    return Promise.resolve({ success: true });
-  },
-
-  // Get plan details for a given plan ID
-  getPlanDetails: async (planId: string) => {
-    console.log(`Mock: Getting plan details for ${planId}`);
+  createTransaction: async (planId: string, organizationId: string, userId: string): Promise<{
+    token: string;
+    redirect_url: string;
+  }> => {
+    console.log(`Creating Midtrans transaction for plan ${planId}, org ${organizationId}, user ${userId}`);
     
-    // Mock plans data
-    const plans = {
-      'basic_plan': { name: 'Basic', price: 0, slug: 'basic' },
-      'standard_plan': { name: 'Standard', price: 299000, slug: 'standard' },
-      'premium_plan': { name: 'Premium', price: 599000, slug: 'premium' }
+    // Get plan details from the mock service
+    const plans = await subscriptionService.getSubscriptionPlans();
+    const selectedPlan = plans.find(p => p.id === planId);
+    
+    if (!selectedPlan) {
+      throw new Error("Selected plan not found");
+    }
+
+    // Mock response
+    return {
+      token: `mock-midtrans-token-${Date.now()}`,
+      redirect_url: `https://app.midtrans.com/snap/v3/redirection/${Date.now()}`
     };
+  },
+  
+  checkTransactionStatus: async (orderId: string): Promise<{
+    status_code: string;
+    transaction_status: string;
+    order_id: string;
+  }> => {
+    console.log(`Checking Midtrans transaction status for order ${orderId}`);
     
-    // Return the plan details or a default
-    return Promise.resolve(plans[planId as keyof typeof plans] || { name: 'Unknown', price: 0, slug: 'unknown' });
-  },
-
-  // Generate direct payment URL for a plan
-  generateDirectPaymentUrl: async (planId: string, organizationId: string) => {
-    console.log(`Mock: Generating direct payment URL for plan ${planId}`);
-    return Promise.resolve(`https://example.com/pay-direct/${planId}`);
-  },
-  
-  createPayment: async (planId: string) => {
-    console.log(`Mock: Creating payment for plan ${planId}`);
-    return Promise.resolve({
-      redirectUrl: `https://example.com/midtrans-checkout/${planId}`,
-      orderId: `order-${Date.now()}`
-    });
-  },
-  
-  redirectToPayment: (url: string) => {
-    console.log(`Mock: Redirecting to payment URL: ${url}`);
-    // In a real implementation, this would redirect the browser
-    window.location.href = url;
+    // Mock response
+    return {
+      status_code: "200",
+      transaction_status: "settlement",
+      order_id: orderId
+    };
   }
 };
