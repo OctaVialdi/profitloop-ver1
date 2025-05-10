@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, X, AlertTriangle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
-import { checkAndUpdateTrialStatus } from '@/services/subscriptionService';
+import { checkAndUpdateTrialStatus, fixOrganizationTrialPeriod } from '@/services/subscriptionService';
 import { subscriptionAnalyticsService } from '@/services/subscriptionAnalyticsService';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
@@ -24,6 +25,7 @@ const TrialBanner = () => {
   const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(100);
+  const [trialDuration, setTrialDuration] = useState(14); // Default to 14 days
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -142,6 +144,10 @@ const TrialBanner = () => {
         // Force check and update trial status first to ensure we have the latest status
         await checkAndUpdateTrialStatus(orgId);
         
+        // Fix any inconsistent trial periods
+        await fixOrganizationTrialPeriod(orgId);
+        
+        // Now fetch the updated organization data
         const { data: orgData } = await supabase
           .from('organizations')
           .select('trial_end_date, trial_expired, trial_start_date, subscription_status')
@@ -170,6 +176,13 @@ const TrialBanner = () => {
       setTrialStartDate(trialStartDate);
       setTrialEndDate(trialEndDate);
       setSubscriptionStatus(orgData.subscription_status);
+      
+      if (trialStartDate && trialEndDate) {
+        // Calculate actual trial duration in days
+        const diffTime = trialEndDate.getTime() - trialStartDate.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setTrialDuration(diffDays);
+      }
       
       const isExpired = orgData.trial_expired || 
                        (trialEndDate && trialEndDate < now) || 

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { checkAndUpdateTrialStatus } from '@/services/subscriptionService';
+import { checkAndUpdateTrialStatus, fixOrganizationTrialPeriod } from '@/services/subscriptionService';
 
 interface TrialStatus {
   isTrialActive: boolean;
@@ -12,6 +12,8 @@ interface TrialStatus {
   seconds: number;
   progress: number;
   trialEndDate: Date | null;
+  trialStartDate: Date | null;
+  trialDuration: number;
   subscriptionStatus: string | null;
 }
 
@@ -25,6 +27,8 @@ export function useTrialStatus(organizationId: string | null, skipCheck: boolean
     seconds: 0,
     progress: 0,
     trialEndDate: null,
+    trialStartDate: null,
+    trialDuration: 14, // Default to 14 days
     subscriptionStatus: null
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -39,6 +43,9 @@ export function useTrialStatus(organizationId: string | null, skipCheck: boolean
     const fetchStatus = async () => {
       try {
         setLoading(true);
+        
+        // First fix any inconsistent trial periods
+        await fixOrganizationTrialPeriod(organizationId);
         
         // Force check and update trial status
         await checkAndUpdateTrialStatus(organizationId);
@@ -57,6 +64,13 @@ export function useTrialStatus(organizationId: string | null, skipCheck: boolean
         const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
         const trialStartDate = orgData.trial_start_date ? new Date(orgData.trial_start_date) : null;
         const now = new Date();
+        
+        // Calculate trial duration
+        let trialDuration = 14; // Default to 14 days
+        if (trialStartDate && trialEndDate) {
+          const diffTime = trialEndDate.getTime() - trialStartDate.getTime();
+          trialDuration = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        }
         
         // Calculate time left
         const isExpired = orgData.trial_expired || 
@@ -93,6 +107,8 @@ export function useTrialStatus(organizationId: string | null, skipCheck: boolean
           seconds,
           progress,
           trialEndDate,
+          trialStartDate,
+          trialDuration,
           subscriptionStatus: orgData.subscription_status
         });
         
@@ -108,8 +124,8 @@ export function useTrialStatus(organizationId: string | null, skipCheck: boolean
     // Initial fetch
     fetchStatus();
     
-    // Set up interval to update every minute
-    const intervalId = setInterval(fetchStatus, 60000);
+    // Set up interval to update every second
+    const intervalId = setInterval(fetchStatus, 1000);
     
     // Clean up
     return () => clearInterval(intervalId);

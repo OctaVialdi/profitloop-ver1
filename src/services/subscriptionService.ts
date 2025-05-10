@@ -125,3 +125,46 @@ export async function requestTrialExtension(
     return false;
   }
 }
+
+/**
+ * Update existing organization to ensure the correct trial period
+ * This will fix organizations with inconsistent trial periods
+ */
+export async function fixOrganizationTrialPeriod(organizationId: string): Promise<boolean> {
+  try {
+    // Get organization details
+    const { data: orgData } = await supabase
+      .from('organizations')
+      .select('trial_end_date, trial_start_date')
+      .eq('id', organizationId)
+      .single();
+      
+    if (!orgData) return false;
+    
+    const trialStartDate = orgData.trial_start_date ? new Date(orgData.trial_start_date) : new Date();
+    
+    // Calculate the correct end date (14 days from start date)
+    const correctEndDate = new Date(trialStartDate);
+    correctEndDate.setDate(correctEndDate.getDate() + 14); // 14-day trial
+    
+    // Update the organization with the correct trial period
+    const { error } = await supabase
+      .from('organizations')
+      .update({ 
+        trial_end_date: correctEndDate.toISOString(),
+        trial_start_date: orgData.trial_start_date || trialStartDate.toISOString()
+      })
+      .eq('id', organizationId);
+      
+    if (error) {
+      console.error("Error fixing trial period:", error);
+      return false;
+    }
+    
+    console.log("Trial period fixed for organization:", organizationId);
+    return true;
+  } catch (error) {
+    console.error("Error in fixOrganizationTrialPeriod:", error);
+    return false;
+  }
+}

@@ -54,7 +54,8 @@ BEGIN
     phone,
     subscription_plan_id,
     trial_end_date,
-    creator_email
+    creator_email,
+    trial_start_date -- Adding trial_start_date
   )
   VALUES (
     org_name,
@@ -64,7 +65,8 @@ BEGIN
     org_phone,
     plan_id,
     trial_end_date,
-    creator_email_value
+    creator_email_value,
+    now() -- Set trial_start_date to now
   )
   RETURNING id INTO new_org_id;
   
@@ -98,7 +100,8 @@ BEGIN
     'phone', o.phone,
     'subscription_plan_id', o.subscription_plan_id,
     'trial_end_date', o.trial_end_date,
-    'creator_email', o.creator_email
+    'creator_email', o.creator_email,
+    'trial_start_date', o.trial_start_date
   ) INTO org_data
   FROM public.organizations o
   WHERE o.id = new_org_id;
