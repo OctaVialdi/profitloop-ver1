@@ -21,13 +21,32 @@ export const midtransService = {
         // Log the direct URL usage
         console.log("Using direct Midtrans URL for standard_plan with orderId:", orderId);
         
+        // Get user organization from profiles
+        const { data: profileData } = await supabase.auth.getUser();
+        
+        if (!profileData?.user) {
+          throw new Error("User not authenticated");
+        }
+        
+        const { data: userData } = await supabase
+          .from("profiles")
+          .select("organization_id")
+          .eq("id", profileData.user.id)
+          .single();
+          
+        if (!userData?.organization_id) {
+          throw new Error("User organization not found");
+        }
+        
         // Store transaction in database to track it
         const { error: transactionError } = await supabase
           .from("payment_transactions")
           .insert({
             order_id: orderId,
+            organization_id: userData.organization_id,
             subscription_plan_id: planId,
             payment_gateway: "midtrans",
+            payment_provider: "midtrans",
             amount: 299000,
             currency: "IDR",
             status: "pending",
