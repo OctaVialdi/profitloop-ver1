@@ -11,6 +11,20 @@ import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsSe
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { MidtransPaymentModal } from '@/components/subscription/MidtransPaymentModal';
+import { supabase } from "@/integrations/supabase/client";
+import { formatRupiah } from "@/utils/formatUtils";
+
+// Define our subscription plan type
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  max_members: number | null;
+  features: Record<string, any> | null;
+  is_active: boolean;
+  direct_payment_url?: string;
+}
 
 export const SubscriptionPlans = () => {
   const navigate = useNavigate();
@@ -22,6 +36,37 @@ export const SubscriptionPlans = () => {
     planName: string;
   } | null>(null);
   const { organization, refreshData } = useOrganization();
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch plans from the database
+  useEffect(() => {
+    const fetchPlans = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('is_active', true)
+          .order('price');
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setPlans(data as SubscriptionPlan[]);
+        }
+      } catch (error) {
+        console.error("Error fetching subscription plans:", error);
+        toast.error("Gagal memuat data paket langganan");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPlans();
+  }, []);
   
   // Add effect to check for payment success and refresh data
   useEffect(() => {
@@ -74,6 +119,47 @@ export const SubscriptionPlans = () => {
     return organization?.subscription_status === 'active' && 
            organization?.subscription_plan_id === planId;
   };
+
+  // Get yearly price (15% discount)
+  const calculateYearlyPrice = (monthlyPrice: number) => {
+    const yearlyPrice = monthlyPrice * 12 * 0.85; // 15% off for annual billing
+    return yearlyPrice;
+  };
+
+  // Calculate savings
+  const calculateYearlySavings = (monthlyPrice: number) => {
+    const normalYearlyPrice = monthlyPrice * 12;
+    const discountedYearlyPrice = calculateYearlyPrice(monthlyPrice);
+    return normalYearlyPrice - discountedYearlyPrice;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Filter for active plans only
+  const activePlans = plans.filter(plan => plan.is_active);
+  
+  // Find basic, standard and premium plans
+  const basicPlan = activePlans.find(plan => plan.slug === 'basic_plan' || plan.name.toLowerCase() === 'basic');
+  const standardPlan = activePlans.find(plan => plan.slug === 'standard_plan' || plan.name.toLowerCase() === 'standard');
+  const premiumPlan = activePlans.find(plan => plan.slug === 'premium_plan' || plan.name.toLowerCase() === 'premium');
+
+  // Find yearly plans or create slugs for them
+  const getYearlyPlanSlug = (monthlyPlan: SubscriptionPlan | undefined) => {
+    if (!monthlyPlan) return '';
+    
+    const yearlyPlanSlug = `${monthlyPlan.slug}_yearly`;
+    // Check if a yearly plan exists in the database
+    const yearlyPlan = plans.find(p => p.slug === yearlyPlanSlug);
+    
+    // If yearly plan exists, use its slug, otherwise use constructed yearly slug
+    return yearlyPlan ? yearlyPlan.slug : yearlyPlanSlug;
+  };
   
   return (
     <>
@@ -88,340 +174,378 @@ export const SubscriptionPlans = () => {
         <TabsContent value="monthly" className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Basic Plan */}
-            <Card className={
-              isSubscribedToPlan('basic_plan') 
-                ? "border-blue-500 ring-2 ring-blue-500 ring-opacity-50" 
-                : ""
-            }>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>Basic</CardTitle>
-                  {isSubscribedToPlan('basic_plan') && (
-                    <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
+            {basicPlan && (
+              <Card className={
+                isSubscribedToPlan(basicPlan.id) 
+                  ? "border-blue-500 ring-2 ring-blue-500 ring-opacity-50" 
+                  : ""
+              }>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>{basicPlan.name}</CardTitle>
+                    {isSubscribedToPlan(basicPlan.id) && (
+                      <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
+                    )}
+                  </div>
+                  <CardDescription>Paket dasar untuk organisasi kecil</CardDescription>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">
+                      {basicPlan.price === 0 ? "Gratis" : formatRupiah(basicPlan.price)}
+                    </span>
+                    {basicPlan.price > 0 && <span className="text-gray-500">/bulan</span>}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Maksimal {basicPlan.max_members || 3} anggota</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Manajemen karyawan dasar</span>
+                    </li>
+                    {basicPlan.features?.storage && (
+                      <li className="flex items-center">
+                        <Check className="mr-2 h-4 w-4 text-green-500" />
+                        <span>Penyimpanan {basicPlan.features.storage}</span>
+                      </li>
+                    )}
+                    <li className="flex items-center opacity-50">
+                      <span className="mr-2 h-4 w-4">✗</span>
+                      <span>Fitur premium</span>
+                    </li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  {isSubscribedToPlan(basicPlan.id) ? (
+                    <Button disabled className="w-full">
+                      Paket Anda Saat Ini
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="w-full" disabled={basicPlan.price === 0}>
+                      Paket Gratis
+                    </Button>
                   )}
-                </div>
-                <CardDescription>Paket dasar untuk organisasi kecil</CardDescription>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">Gratis</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Maksimal 3 anggota</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Manajemen karyawan dasar</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Penyimpanan 500MB</span>
-                  </li>
-                  <li className="flex items-center opacity-50">
-                    <span className="mr-2 h-4 w-4">✗</span>
-                    <span>Fitur premium</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {isSubscribedToPlan('basic_plan') ? (
-                  <Button disabled className="w-full">
-                    Paket Anda Saat Ini
-                  </Button>
-                ) : (
-                  <Button variant="outline" className="w-full" disabled>
-                    Paket Gratis
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
+                </CardFooter>
+              </Card>
+            )}
             
             {/* Standard Plan */}
-            <Card className={
-              isSubscribedToPlan('standard_plan') 
-                ? "border-blue-500 ring-2 ring-blue-500 ring-opacity-50" 
-                : ""
-            }>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>Standard</CardTitle>
-                  {isSubscribedToPlan('standard_plan') ? (
-                    <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
+            {standardPlan && (
+              <Card className={
+                isSubscribedToPlan(standardPlan.id) 
+                  ? "border-blue-500 ring-2 ring-blue-500 ring-opacity-50" 
+                  : ""
+              }>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>{standardPlan.name}</CardTitle>
+                    {isSubscribedToPlan(standardPlan.id) ? (
+                      <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-green-50 text-green-700">Populer</Badge>
+                    )}
+                  </div>
+                  <CardDescription>Solusi lengkap untuk sebagian besar organisasi</CardDescription>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">{formatRupiah(standardPlan.price)}</span>
+                    <span className="text-gray-500">/bulan</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Hingga {standardPlan.max_members || 15} anggota</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Manajemen karyawan lengkap</span>
+                    </li>
+                    {standardPlan.features?.storage && (
+                      <li className="flex items-center">
+                        <Check className="mr-2 h-4 w-4 text-green-500" />
+                        <span>Penyimpanan {standardPlan.features.storage}</span>
+                      </li>
+                    )}
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Fitur HR premium</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Dukungan prioritas</span>
+                    </li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  {isSubmitting && selectedPlanId === standardPlan.slug ? (
+                    <Button disabled className="w-full">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Memproses...
+                    </Button>
+                  ) : isSubscribedToPlan(standardPlan.id) ? (
+                    <Button disabled className="w-full">
+                      Paket Anda Saat Ini
+                    </Button>
                   ) : (
-                    <Badge variant="outline" className="bg-green-50 text-green-700">Populer</Badge>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleCheckout(standardPlan.slug, standardPlan.name)}
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Berlangganan
+                    </Button>
                   )}
-                </div>
-                <CardDescription>Solusi lengkap untuk sebagian besar organisasi</CardDescription>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">Rp 299.000</span>
-                  <span className="text-gray-500">/bulan</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Hingga 15 anggota</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Manajemen karyawan lengkap</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Penyimpanan 5GB</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Fitur HR premium</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Dukungan prioritas</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {isSubmitting && selectedPlanId === 'standard_plan' ? (
-                  <Button disabled className="w-full">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
-                  </Button>
-                ) : isSubscribedToPlan('standard_plan') ? (
-                  <Button disabled className="w-full">
-                    Paket Anda Saat Ini
-                  </Button>
-                ) : (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleCheckout('standard_plan', 'Standard')}
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Berlangganan
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
+                </CardFooter>
+              </Card>
+            )}
             
             {/* Premium Plan */}
-            <Card className={
-              isSubscribedToPlan('premium_plan') 
-                ? "border-blue-500 ring-2 ring-blue-500 ring-opacity-50" 
-                : ""
-            }>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>Premium</CardTitle>
-                  {isSubscribedToPlan('premium_plan') && (
-                    <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
+            {premiumPlan && (
+              <Card className={
+                isSubscribedToPlan(premiumPlan.id) 
+                  ? "border-blue-500 ring-2 ring-blue-500 ring-opacity-50" 
+                  : ""
+              }>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>{premiumPlan.name}</CardTitle>
+                    {isSubscribedToPlan(premiumPlan.id) && (
+                      <Badge className="bg-blue-100 text-blue-800">Paket Anda</Badge>
+                    )}
+                  </div>
+                  <CardDescription>Solusi lengkap untuk organisasi besar</CardDescription>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">{formatRupiah(premiumPlan.price)}</span>
+                    <span className="text-gray-500">/bulan</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Anggota tidak terbatas</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Semua fitur Standard</span>
+                    </li>
+                    {premiumPlan.features?.storage && (
+                      <li className="flex items-center">
+                        <Check className="mr-2 h-4 w-4 text-green-500" />
+                        <span>Penyimpanan {premiumPlan.features.storage}</span>
+                      </li>
+                    )}
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Laporan analitik lanjutan</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>API integrasi khusus</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Dukungan 24/7</span>
+                    </li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  {isSubmitting && selectedPlanId === premiumPlan.slug ? (
+                    <Button disabled className="w-full">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Memproses...
+                    </Button>
+                  ) : isSubscribedToPlan(premiumPlan.id) ? (
+                    <Button disabled className="w-full">
+                      Paket Anda Saat Ini
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleCheckout(premiumPlan.slug, premiumPlan.name)}
+                    >
+                      <Package className="mr-2 h-4 w-4" />
+                      Berlangganan
+                    </Button>
                   )}
-                </div>
-                <CardDescription>Solusi lengkap untuk organisasi besar</CardDescription>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">Rp 599.000</span>
-                  <span className="text-gray-500">/bulan</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Anggota tidak terbatas</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Semua fitur Standard</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Penyimpanan 50GB</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Laporan analitik lanjutan</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>API integrasi khusus</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Dukungan 24/7</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {isSubmitting && selectedPlanId === 'premium_plan' ? (
-                  <Button disabled className="w-full">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
-                  </Button>
-                ) : isSubscribedToPlan('premium_plan') ? (
-                  <Button disabled className="w-full">
-                    Paket Anda Saat Ini
-                  </Button>
-                ) : (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleCheckout('premium_plan', 'Premium')}
-                  >
-                    <Package className="mr-2 h-4 w-4" />
-                    Berlangganan
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
+                </CardFooter>
+              </Card>
+            )}
           </div>
         </TabsContent>
         
         <TabsContent value="yearly" className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Basic Plan (Yearly) */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic</CardTitle>
-                <CardDescription>Paket dasar untuk organisasi kecil</CardDescription>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">Gratis</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Maksimal 3 anggota</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Manajemen karyawan dasar</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Penyimpanan 500MB</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full" disabled>
-                  Paket Gratis
-                </Button>
-              </CardFooter>
-            </Card>
+            {basicPlan && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{basicPlan.name}</CardTitle>
+                  <CardDescription>Paket dasar untuk organisasi kecil</CardDescription>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">
+                      {basicPlan.price === 0 ? "Gratis" : formatRupiah(basicPlan.price * 12)}
+                    </span>
+                    {basicPlan.price > 0 && <span className="text-gray-500">/tahun</span>}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Maksimal {basicPlan.max_members || 3} anggota</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Manajemen karyawan dasar</span>
+                    </li>
+                    {basicPlan.features?.storage && (
+                      <li className="flex items-center">
+                        <Check className="mr-2 h-4 w-4 text-green-500" />
+                        <span>Penyimpanan {basicPlan.features.storage}</span>
+                      </li>
+                    )}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" className="w-full" disabled={basicPlan.price === 0}>
+                    Paket Gratis
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
             
             {/* Standard Plan (Yearly) */}
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>Standard</CardTitle>
-                  <Badge variant="outline" className="bg-green-50 text-green-700">Populer</Badge>
-                </div>
-                <CardDescription>Solusi lengkap untuk sebagian besar organisasi</CardDescription>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">Rp 3.049.000</span>
-                  <span className="text-gray-500">/tahun</span>
-                </div>
-                <p className="text-sm text-green-600 mt-1">Hemat Rp 539.000 (15%)</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Hingga 15 anggota</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Manajemen karyawan lengkap</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Penyimpanan 5GB</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Fitur HR premium</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Dukungan prioritas</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {isSubmitting && selectedPlanId === 'standard_yearly_plan' ? (
-                  <Button disabled className="w-full">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
-                  </Button>
-                ) : (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleCheckout('standard_yearly_plan', 'Standard')}
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Berlangganan
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
+            {standardPlan && (
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>{standardPlan.name}</CardTitle>
+                    <Badge variant="outline" className="bg-green-50 text-green-700">Populer</Badge>
+                  </div>
+                  <CardDescription>Solusi lengkap untuk sebagian besar organisasi</CardDescription>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">
+                      {formatRupiah(calculateYearlyPrice(standardPlan.price))}
+                    </span>
+                    <span className="text-gray-500">/tahun</span>
+                  </div>
+                  <p className="text-sm text-green-600 mt-1">
+                    Hemat {formatRupiah(calculateYearlySavings(standardPlan.price))} (15%)
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Hingga {standardPlan.max_members || 15} anggota</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Manajemen karyawan lengkap</span>
+                    </li>
+                    {standardPlan.features?.storage && (
+                      <li className="flex items-center">
+                        <Check className="mr-2 h-4 w-4 text-green-500" />
+                        <span>Penyimpanan {standardPlan.features.storage}</span>
+                      </li>
+                    )}
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Fitur HR premium</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Dukungan prioritas</span>
+                    </li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  {isSubmitting && selectedPlanId === getYearlyPlanSlug(standardPlan) ? (
+                    <Button disabled className="w-full">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Memproses...
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleCheckout(getYearlyPlanSlug(standardPlan), `${standardPlan.name} (Tahunan)`)}
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Berlangganan
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            )}
             
             {/* Premium Plan (Yearly) */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Premium</CardTitle>
-                <CardDescription>Solusi lengkap untuk organisasi besar</CardDescription>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">Rp 6.109.000</span>
-                  <span className="text-gray-500">/tahun</span>
-                </div>
-                <p className="text-sm text-green-600 mt-1">Hemat Rp 1.079.000 (15%)</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Anggota tidak terbatas</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Semua fitur Standard</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Penyimpanan 50GB</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Laporan analitik lanjutan</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>API integrasi khusus</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Dukungan 24/7</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {isSubmitting && selectedPlanId === 'premium_yearly_plan' ? (
-                  <Button disabled className="w-full">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
-                  </Button>
-                ) : (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleCheckout('premium_yearly_plan', 'Premium')}
-                  >
-                    <Package className="mr-2 h-4 w-4" />
-                    Berlangganan
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
+            {premiumPlan && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{premiumPlan.name}</CardTitle>
+                  <CardDescription>Solusi lengkap untuk organisasi besar</CardDescription>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">
+                      {formatRupiah(calculateYearlyPrice(premiumPlan.price))}
+                    </span>
+                    <span className="text-gray-500">/tahun</span>
+                  </div>
+                  <p className="text-sm text-green-600 mt-1">
+                    Hemat {formatRupiah(calculateYearlySavings(premiumPlan.price))} (15%)
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Anggota tidak terbatas</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Semua fitur Standard</span>
+                    </li>
+                    {premiumPlan.features?.storage && (
+                      <li className="flex items-center">
+                        <Check className="mr-2 h-4 w-4 text-green-500" />
+                        <span>Penyimpanan {premiumPlan.features.storage}</span>
+                      </li>
+                    )}
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Laporan analitik lanjutan</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>API integrasi khusus</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <span>Dukungan 24/7</span>
+                    </li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  {isSubmitting && selectedPlanId === getYearlyPlanSlug(premiumPlan) ? (
+                    <Button disabled className="w-full">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Memproses...
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleCheckout(getYearlyPlanSlug(premiumPlan), `${premiumPlan.name} (Tahunan)`)}
+                    >
+                      <Package className="mr-2 h-4 w-4" />
+                      Berlangganan
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            )}
           </div>
         </TabsContent>
         
