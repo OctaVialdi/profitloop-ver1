@@ -16,7 +16,7 @@ import {
   Legend 
 } from 'recharts';
 import { ChartContainer } from "@/components/ui/chart";
-import { CurrencyDollar, BarChart3, PieChart, TrendingUp, TrendingDown } from 'lucide-react';
+import { DollarSign, BarChart3, PieChart, TrendingUp, TrendingDown } from 'lucide-react';
 import { MonthlyRevenue, ExpenseBreakdown, TrendDirection } from '@/types/dashboard';
 import { formatCurrency } from '@/lib/utils';
 
@@ -151,7 +151,7 @@ export const FinancialSummarySection: React.FC<FinancialSummaryProps> = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <CurrencyDollar className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>

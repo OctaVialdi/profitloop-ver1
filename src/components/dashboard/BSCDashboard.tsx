@@ -10,7 +10,7 @@ import { FinancialSummarySection } from "./FinancialSummarySection";
 import { OperationalMetricsSection } from "./OperationalMetricsSection";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useOrganization } from "@/hooks/useOrganization";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { FinancialSummaryRecord } from '@/types/dashboard';
 
 export const BSCDashboard = () => {
