@@ -23,8 +23,8 @@ interface SubscriptionPlan {
   max_members: number | null;
   features: Record<string, any> | null;
   is_active: boolean;
-  direct_payment_url?: string;
-  description?: string;
+  direct_payment_url?: string | null;
+  description?: string | null;
 }
 
 export const SubscriptionPlans = () => {
@@ -146,9 +146,9 @@ export const SubscriptionPlans = () => {
   const activePlans = plans.filter(plan => plan.is_active);
   
   // Find basic, standard and premium plans
-  const basicPlan = activePlans.find(plan => plan.slug === 'basic_plan' || plan.name.toLowerCase() === 'basic');
-  const standardPlan = activePlans.find(plan => plan.slug === 'standard_plan' || plan.name.toLowerCase() === 'standard');
-  const premiumPlan = activePlans.find(plan => plan.slug === 'premium_plan' || plan.name.toLowerCase() === 'premium');
+  const basicPlan = activePlans.find(plan => plan.slug === 'basic_plan' || plan.name.toLowerCase().includes('basic'));
+  const standardPlan = activePlans.find(plan => plan.slug === 'standard_plan' || plan.name.toLowerCase().includes('standard'));
+  const premiumPlan = activePlans.find(plan => plan.slug === 'premium_plan' || plan.name.toLowerCase().includes('premium'));
 
   // Find yearly plans or create slugs for them
   const getYearlyPlanSlug = (monthlyPlan: SubscriptionPlan | undefined) => {

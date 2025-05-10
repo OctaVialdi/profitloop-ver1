@@ -2388,6 +2388,7 @@ export type Database = {
       subscription_plans: {
         Row: {
           created_at: string | null
+          deskripsi: string | null
           direct_payment_url: string | null
           features: Json | null
           id: string
@@ -2399,6 +2400,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          deskripsi?: string | null
           direct_payment_url?: string | null
           features?: Json | null
           id?: string
@@ -2410,6 +2412,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          deskripsi?: string | null
           direct_payment_url?: string | null
           features?: Json | null
           id?: string
