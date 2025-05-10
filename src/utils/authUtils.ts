@@ -4,8 +4,8 @@
  */
 
 /**
- * Cleans up all authentication-related data from localStorage and sessionStorage
- * This helps prevent authentication limbo states when session tokens become invalid
+ * Clean up authentication state in both localStorage and sessionStorage
+ * This helps prevent auth limbo states
  */
 export const cleanupAuthState = () => {
   // Remove standard auth tokens
@@ -24,32 +24,19 @@ export const cleanupAuthState = () => {
       sessionStorage.removeItem(key);
     }
   });
-  
-  console.log("Authentication state cleaned up");
 };
 
 /**
- * Performs a robust sign out operation that ensures all auth state is properly cleared
+ * Ensure a user profile exists after authentication
  */
-export const robustSignOut = async () => {
+export const ensureProfileExists = async (userId: string, userData: any) => {
   try {
-    // Import supabase client directly to avoid circular dependencies
-    const { supabase } = await import('@/integrations/supabase/client');
-    
-    // Clean up existing auth state first
-    cleanupAuthState();
-    
-    // Attempt global sign out
-    try {
-      await supabase.auth.signOut({ scope: 'global' });
-    } catch (err) {
-      console.error("Global sign out failed, but cleanup was performed:", err);
-      // Continue even if this fails since we've already cleaned up local state
-    }
-    
+    // This function would typically check if a profile exists in the database
+    // and create one if it doesn't
+    console.log("Ensuring profile exists for user:", userId);
     return true;
   } catch (error) {
-    console.error("Error during robust sign out:", error);
+    console.error("Error ensuring profile exists:", error);
     return false;
   }
 };

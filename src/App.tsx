@@ -4,7 +4,7 @@ import { AppRoutes } from "./routes";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/QueryProvider";
 import { useAssetStorage } from "./hooks/useAssetStorage";
-import TrialBanner from "./components/TrialBanner";
+import { TrialBanner } from "./components/TrialBanner";
 import { useEffect } from "react";
 import { supabase } from "./integrations/supabase/client";
 import { fixOrganizationTrialPeriod } from "./services/subscriptionService";

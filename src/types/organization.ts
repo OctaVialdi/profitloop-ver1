@@ -1,3 +1,4 @@
+
 import { Json } from "./supabase";
 
 export interface UserProfile {
