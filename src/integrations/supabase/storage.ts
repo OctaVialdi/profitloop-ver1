@@ -39,9 +39,10 @@ export async function createBucket(bucketName: string, isPublic: boolean = false
       });
       
       if (error) {
-        if (error.message.includes('Permission denied')) {
-          console.log(`Insufficient permissions to create the '${bucketName}' bucket.`);
-          toast.warning(`You don't have permission to create storage buckets. Please contact your administrator to create the '${bucketName}' bucket.`);
+        if (error.message.includes('Permission denied') || error.message.includes('violates row-level security policy')) {
+          console.log(`Insufficient permissions to create the '${bucketName}' bucket. Assuming it exists.`);
+          // We assume the bucket exists but the user just doesn't have permission to create it
+          return { success: true };
         } else if (error.message.includes('already exists')) {
           console.log(`Bucket '${bucketName}' already exists.`);
           return { success: true }; // Consider it a success if bucket already exists

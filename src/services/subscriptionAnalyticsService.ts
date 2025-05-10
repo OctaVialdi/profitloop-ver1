@@ -13,8 +13,8 @@ export type SubscriptionEventType =
   | 'premium_feature_clicked'
   | 'subscription_cancelled'
   | 'subscription_upgraded'
-  | 'payment_status'       // Add this
-  | 'customer_portal_access'; // Add this
+  | 'payment_status'
+  | 'customer_portal_access';
 
 interface AnalyticsEventPayload {
   eventType: SubscriptionEventType;

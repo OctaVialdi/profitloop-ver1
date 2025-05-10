@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,13 +47,16 @@ const Onboarding = () => {
     setIsSubmitting(true);
     
     try {
+      // Convert employeeCount to a number or null for the database
+      const employeeCountValue = employeeCount ? parseInt(employeeCount, 10) : null;
+      
       // Create organization
       const { data: org, error: orgError } = await supabase
         .from('organizations')
         .insert({
           name: organizationName,
-          business_field: businessField,
-          employee_count: employeeCount,
+          business_field: businessField || null,
+          employee_count: employeeCountValue,
         })
         .select('id')
         .single();
