@@ -11,11 +11,9 @@ import { Check, CreditCard, Calendar, AlertTriangle, Clock, Sparkles } from "luc
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
-import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { requestTrialExtension } from "@/services/subscriptionService";
 import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { toast } from "@/components/ui/sonner";
-import { useSearchParams } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -35,10 +33,9 @@ interface PlanProps {
   isActive: boolean;
   isPopular?: boolean;
   onSelect: () => void;
-  isLoading?: boolean;
 }
 
-const PlanCard = ({ name, price, features, isActive, isPopular, onSelect, isLoading }: PlanProps) => {
+const PlanCard = ({ name, price, features, isActive, isPopular, onSelect }: PlanProps) => {
   return (
     <Card className={`relative flex flex-col ${isActive ? 'subscription-tier-current' : ''} ${isPopular ? 'shadow-lg' : ''}`}>
       {isPopular && (
@@ -83,17 +80,9 @@ const PlanCard = ({ name, price, features, isActive, isPopular, onSelect, isLoad
           className="w-full" 
           variant={isPopular ? "default" : isActive ? "outline" : "secondary"}
           onClick={onSelect}
-          disabled={isActive || isLoading}
+          disabled={isActive}
         >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Memproses...
-            </span>
-          ) : isActive ? 'Paket Anda Saat Ini' : 'Pilih Paket'}
+          {isActive ? 'Paket Anda Saat Ini' : 'Pilih Paket'}
         </Button>
       </CardFooter>
     </Card>
@@ -101,38 +90,14 @@ const PlanCard = ({ name, price, features, isActive, isPopular, onSelect, isLoad
 };
 
 const SubscriptionPage = () => {
-  const [searchParams] = useSearchParams();
   const { organization, refreshData } = useOrganization();
   const { isTrialActive, daysLeftInTrial, progress, trialEndDate, isTrialExpired } = 
     useTrialStatus(organization?.id || null);
-  const { initiateCheckout, isLoading: isCheckoutLoading } = useStripeCheckout();
   const [activeTab, setActiveTab] = useState("plans");
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
   const [extensionReason, setExtensionReason] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<'success' | 'canceled' | null>(null);
-
-  // Check URL parameters for payment status
-  useEffect(() => {
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled');
-    
-    if (success === 'true') {
-      setPaymentStatus('success');
-      toast.success('Pembayaran berhasil! Langganan Anda telah diaktifkan.');
-      refreshData();
-    } else if (canceled === 'true') {
-      setPaymentStatus('canceled');
-      toast.error('Pembayaran dibatalkan. Anda dapat mencoba lagi nanti.');
-    }
-    
-    // Clear payment status from URL after processing
-    if (success || canceled) {
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  }, [searchParams, refreshData]);
 
   // Track page view when component mounts
   useEffect(() => {
@@ -156,8 +121,26 @@ const SubscriptionPage = () => {
       // Track plan selection
       subscriptionAnalyticsService.trackPlanSelected(planId, organization?.id);
       
-      // Initiate Stripe checkout
-      await initiateCheckout(planId);
+      // Temporary simulation before Stripe integration
+      if (!organization) return;
+      
+      // Update organization subscription plan
+      const { error } = await supabase
+        .from('organizations')
+        .update({ 
+          subscription_plan_id: planId,
+          subscription_status: 'active', // In real implementation, wait for Stripe webhook
+          trial_expired: false // Reset trial expired status when paying
+        })
+        .eq('id', organization.id);
+      
+      if (error) throw error;
+      
+      // Track successful subscription activation
+      subscriptionAnalyticsService.trackSubscriptionActivated(planId, organization.id);
+      
+      toast.success("Paket berlangganan berhasil diperbarui!");
+      refreshData();
     } catch (error) {
       console.error("Error selecting plan:", error);
       toast.error("Terjadi kesalahan saat memilih paket");
@@ -249,27 +232,6 @@ const SubscriptionPage = () => {
         </p>
       </div>
 
-      {/* Payment Status Alerts */}
-      {paymentStatus === 'success' && (
-        <Alert className="mb-8 bg-green-50 border-green-200">
-          <Check className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-600">Pembayaran Berhasil!</AlertTitle>
-          <AlertDescription className="text-green-600">
-            Terima kasih! Langganan Anda telah berhasil diaktifkan. Anda sekarang memiliki akses penuh ke semua fitur.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {paymentStatus === 'canceled' && (
-        <Alert className="mb-8 bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-600">Pembayaran Dibatalkan</AlertTitle>
-          <AlertDescription className="text-amber-600">
-            Anda telah membatalkan proses pembayaran. Jika Anda mengalami kesulitan, silakan hubungi tim dukungan kami.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Current Plan Status */}
       <Card className="mb-8">
         <CardHeader className="pb-3">
@@ -344,26 +306,7 @@ const SubscriptionPage = () => {
                 </p>
               </div>
               
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={async () => {
-                  try {
-                    const { data, error } = await supabase.functions.invoke('customer-portal');
-                    
-                    if (error) {
-                      throw error;
-                    }
-                    
-                    if (data && data.url) {
-                      window.location.href = data.url;
-                    }
-                  } catch (err) {
-                    console.error('Error opening customer portal:', err);
-                    toast.error('Gagal membuka portal manajemen langganan');
-                  }
-                }}
-              >
+              <Button variant="outline" size="sm">
                 Kelola Metode Pembayaran
               </Button>
             </div>
@@ -488,7 +431,6 @@ const SubscriptionPage = () => {
                 isActive={organization?.subscription_plan_id === plan.id}
                 isPopular={plan.isPopular}
                 onSelect={() => handleSelectPlan(plan.id)}
-                isLoading={isCheckoutLoading}
               />
             ))}
           </div>
