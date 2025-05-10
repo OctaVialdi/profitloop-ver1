@@ -1,4 +1,3 @@
-
 export interface UserProfile {
   id: string;
   organization_id?: string;
@@ -28,14 +27,12 @@ export interface Organization {
   theme_settings: any;
   subscription_status: 'trial' | 'active' | 'expired';
   grace_period_end: string | null;
-  // Fields needed for subscription management
+  // Add missing fields needed for subscription management
   subscription_plan_name?: string;
   subscription_price?: number;
   subscription_end_date?: string;
   subscription_id?: string;
   stripe_customer_id?: string;
-  // Preferred payment method, if any
-  preferred_payment_method?: string;
 }
 
 export interface SubscriptionPlan {
