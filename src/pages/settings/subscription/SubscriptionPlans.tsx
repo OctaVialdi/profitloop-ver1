@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Check, CreditCard, Loader2, Package } from "lucide-react";
 import { useNavigate, Link } from 'react-router-dom';
 import { useOrganization } from "@/hooks/useOrganization";
 import { stripeService } from "@/services/stripeService";
+import { midtransService } from "@/services/midtransService"; 
 import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,12 @@ export const SubscriptionPlans = () => {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const { organization, refreshData } = useOrganization();
   
+  useEffect(() => {
+    // Load Midtrans Snap library when component mounts
+    midtransService.loadSnapLibrary()
+      .catch(error => console.error("Failed to load Midtrans library:", error));
+  }, []);
+  
   const handleCheckout = async (planId: string) => {
     try {
       setIsSubmitting(true);
@@ -25,13 +32,20 @@ export const SubscriptionPlans = () => {
       // Track analytics for checkout initiation
       subscriptionAnalyticsService.trackCheckoutInitiated(planId, organization?.id || '');
       
-      const checkoutUrl = await stripeService.createCheckout(planId);
+      // Use Midtrans payment
+      const paymentData = await midtransService.createPayment(planId);
       
-      if (checkoutUrl) {
-        // Success! Redirect to Stripe checkout
-        window.location.href = checkoutUrl;
+      if (paymentData) {
+        try {
+          // Try to open Snap payment page
+          midtransService.openPaymentPage(paymentData.token);
+        } catch (snapError) {
+          console.error("Failed to open Snap payment page:", snapError);
+          // Fallback to redirect URL
+          window.location.href = paymentData.redirectUrl;
+        }
       } else {
-        throw new Error("Failed to create checkout session");
+        throw new Error("Failed to create payment");
       }
     } catch (error) {
       console.error("Error during checkout:", error);

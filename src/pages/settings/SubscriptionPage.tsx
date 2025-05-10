@@ -7,10 +7,14 @@ import { SubscriptionPlans } from './subscription/SubscriptionPlans';
 import { SubscriptionHistory } from './subscription/SubscriptionHistory';
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, HelpCircle, FileText, CheckCircle, ArrowUpDown } from "lucide-react";
+import { midtransService } from '@/services/midtransService';
+import { stripeService } from '@/services/stripeService';
+import { toast } from 'sonner';
 
 const Subscription = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // Track page view when component mounts
   useEffect(() => {
@@ -18,10 +22,45 @@ const Subscription = () => {
     if (location.pathname === '/settings/subscription') {
       const success = searchParams.get('success');
       const canceled = searchParams.get('canceled');
+      const pending = searchParams.get('pending');
+      const sessionId = searchParams.get('session_id'); // For Stripe
+      const orderId = searchParams.get('order_id'); // For Midtrans
       
-      if (success === 'true' || canceled === 'true') {
-        // Handle payment status notifications
-        // This is now handled in the main component to avoid missing status updates
+      // Verify payment status based on payment gateway
+      const verifyPayment = async () => {
+        setIsVerifying(true);
+        try {
+          if (success === 'true' && sessionId) {
+            // Verify Stripe payment
+            const result = await stripeService.verifyPaymentStatus(sessionId);
+            if (result.success) {
+              toast.success("Pembayaran berhasil diverifikasi! Langganan Anda telah aktif.");
+            } else {
+              toast.warning("Pembayaran sedang diproses. Status langganan akan diperbarui secara otomatis.");
+            }
+          } else if ((success === 'true' || pending === 'true') && orderId) {
+            // Verify Midtrans payment
+            const result = await midtransService.verifyPaymentStatus(orderId);
+            if (result.success) {
+              toast.success("Pembayaran berhasil diverifikasi! Langganan Anda telah aktif.");
+            } else if (result.status === 'pending') {
+              toast.info("Pembayaran sedang diproses. Status langganan akan diperbarui setelah pembayaran selesai.");
+            } else {
+              toast.warning("Menunggu verifikasi pembayaran. Status langganan akan diperbarui secara otomatis.");
+            }
+          } else if (canceled === 'true') {
+            toast.error("Proses pembayaran dibatalkan. Silakan coba lagi.");
+          }
+        } catch (error) {
+          console.error("Error verifying payment:", error);
+          toast.error("Gagal memverifikasi status pembayaran.");
+        } finally {
+          setIsVerifying(false);
+        }
+      };
+      
+      if (success === 'true' || pending === 'true' || canceled === 'true') {
+        verifyPayment();
       }
     }
   }, [location.pathname, searchParams]);
@@ -43,6 +82,16 @@ const Subscription = () => {
           Pilih paket yang sesuai dengan kebutuhan organisasi Anda
         </p>
       </div>
+      
+      {/* Payment verification indicator */}
+      {isVerifying && (
+        <Card className="mb-4 p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-center space-x-2 text-blue-700">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <p>Memverifikasi status pembayaran...</p>
+          </div>
+        </Card>
+      )}
       
       {/* Quick Links to New Pages */}
       <div className="flex flex-wrap gap-3 mb-8">

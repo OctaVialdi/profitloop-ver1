@@ -1,3 +1,4 @@
+
 /**
  * Formats a file size in bytes to a human-readable string
  */
@@ -25,4 +26,16 @@ export function formatDate(dateString: string | null): string {
  */
 export function hasItems(arr: any[] | null | undefined): boolean {
   return Array.isArray(arr) && arr.length > 0;
+}
+
+/**
+ * Formats a number as Indonesian Rupiah (IDR)
+ */
+export function formatRupiah(amount: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
 }

@@ -1,3 +1,4 @@
+
 export interface UserProfile {
   id: string;
   organization_id?: string;
@@ -33,6 +34,7 @@ export interface Organization {
   subscription_end_date?: string;
   subscription_id?: string;
   stripe_customer_id?: string;
+  midtrans_customer_id?: string; // Added for Midtrans integration
 }
 
 export interface SubscriptionPlan {
