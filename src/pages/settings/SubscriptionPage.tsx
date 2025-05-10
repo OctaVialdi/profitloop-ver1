@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { requestTrialExtension } from "@/services/subscriptionService";
+import { trackAnalyticsEvent } from "@/services/subscriptionAnalyticsService"; // Add this import
 import { toast } from "@/components/ui/sonner";
 import {
   Dialog,

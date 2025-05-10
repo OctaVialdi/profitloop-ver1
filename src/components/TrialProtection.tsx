@@ -100,7 +100,7 @@ const TrialProtection = ({ children, requiredSubscription = false }: TrialProtec
       {children}
       
       {/* Blocking dialog for expired trial */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog} className="trial-expired-dialog">
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mb-4">
