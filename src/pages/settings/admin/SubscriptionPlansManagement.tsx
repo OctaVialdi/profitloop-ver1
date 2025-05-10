@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/utils/formatUtils";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 // Define subscription plan type that matches database structure
 interface SubscriptionPlan {
@@ -22,6 +24,7 @@ interface SubscriptionPlan {
   features: Record<string, any> | null;
   is_active: boolean;
   direct_payment_url?: string | null;
+  description?: string | null;
   created_at?: string;
 }
 
@@ -40,6 +43,7 @@ const SubscriptionPlansManagement = () => {
     max_members: 0,
     is_active: true,
     direct_payment_url: '',
+    description: '',
   });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
@@ -103,6 +107,7 @@ const SubscriptionPlansManagement = () => {
       max_members: 0,
       is_active: true,
       direct_payment_url: '',
+      description: '',
     });
     setIsEditMode(false);
     setCurrentPlan(null);
@@ -119,6 +124,7 @@ const SubscriptionPlansManagement = () => {
         max_members: plan.max_members || 0,
         is_active: plan.is_active,
         direct_payment_url: plan.direct_payment_url || '',
+        description: plan.description || '',
       });
     } else {
       resetForm();
@@ -177,6 +183,7 @@ const SubscriptionPlansManagement = () => {
         max_members: formData.max_members || null,
         is_active: formData.is_active,
         direct_payment_url: formData.direct_payment_url || null,
+        description: formData.description || null,
         features: {
           storage: formData.max_members ? `${formData.max_members * 2}GB` : "1GB"
         }
@@ -294,6 +301,7 @@ const SubscriptionPlansManagement = () => {
                     </div>
                   </TableHead>
                   <TableHead>Max Anggota</TableHead>
+                  <TableHead>Deskripsi</TableHead>
                   <TableHead>URL Midtrans</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
@@ -306,6 +314,11 @@ const SubscriptionPlansManagement = () => {
                     <TableCell>{plan.slug}</TableCell>
                     <TableCell className="text-right">{formatRupiah(plan.price)}</TableCell>
                     <TableCell>{plan.max_members || 'Tidak dibatasi'}</TableCell>
+                    <TableCell>
+                      <div className="max-w-[200px] truncate">
+                        {plan.description || '-'}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {plan.direct_payment_url ? (
                         <div className="flex items-center">
@@ -403,6 +416,20 @@ const SubscriptionPlansManagement = () => {
                     <span title="Digunakan sebagai identifier paket di dalam sistem">ℹ️</span>
                   </div>
                 </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Deskripsi
+                </Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  placeholder="Deskripsi singkat tentang paket langganan"
+                  rows={3}
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="price" className="text-right">
