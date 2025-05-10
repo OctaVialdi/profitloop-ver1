@@ -80,8 +80,8 @@ export const BSCDashboard = () => {
         return;
       }
       
-      // Seed sample financial data
-      const sampleFinancialData: Omit<FinancialSummaryRecord, 'id'>[] = [
+      // Define sample financial data
+      const sampleFinancialData = [
         {
           organization_id: organization.id,
           month: 'Jan',
@@ -135,7 +135,7 @@ export const BSCDashboard = () => {
       // Insert sample data
       const { error: insertError } = await supabase
         .from('financial_summary')
-        .upsert(sampleFinancialData);
+        .insert(sampleFinancialData);
         
       if (insertError) throw insertError;
       

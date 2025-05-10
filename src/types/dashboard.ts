@@ -14,6 +14,7 @@ export interface MonthlyRevenue {
   month: string;
   revenue: number;
   expenses: number;
+  targetRevenue?: number;
 }
 
 export interface ExpenseBreakdown {

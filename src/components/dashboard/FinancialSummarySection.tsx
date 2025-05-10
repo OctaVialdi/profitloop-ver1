@@ -228,7 +228,10 @@ export const FinancialSummarySection: React.FC<FinancialSummaryProps> = ({
 
         <TabsContent value="monthly" className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-2">
-            <MonthlyRevenueTrendCard data={monthlyRevenue} year={new Date().getFullYear()} />
+            <MonthlyRevenueTrendCard 
+              data={monthlyRevenue} 
+              year={new Date().getFullYear()} 
+            />
           </div>
         </TabsContent>
 
