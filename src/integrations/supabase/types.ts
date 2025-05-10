@@ -1382,47 +1382,6 @@ export type Database = {
           },
         ]
       }
-      invitations: {
-        Row: {
-          created_at: string | null
-          email: string
-          expires_at: string | null
-          id: string
-          organization_id: string
-          role: string | null
-          status: string | null
-          token: string
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          expires_at?: string | null
-          id?: string
-          organization_id: string
-          role?: string | null
-          status?: string | null
-          token: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          expires_at?: string | null
-          id?: string
-          organization_id?: string
-          role?: string | null
-          status?: string | null
-          token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invitations_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       invoices: {
         Row: {
           amount: number
@@ -1480,13 +1439,6 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "invoices_subscription_plan_id_fkey"
-            columns: ["subscription_plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
         ]
       }
       job_positions: {
@@ -1535,50 +1487,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "job_positions_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      magic_link_invitations: {
-        Row: {
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          organization_id: string
-          role: string
-          status: string
-          token: string
-          used_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          organization_id: string
-          role?: string
-          status?: string
-          token: string
-          used_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          organization_id?: string
-          role?: string
-          status?: string
-          token?: string
-          used_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "magic_link_invitations_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1907,15 +1815,7 @@ export type Database = {
           trial_extension_requested?: boolean | null
           trial_start_date?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "organizations_subscription_plan_id_fkey"
-            columns: ["subscription_plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       payment_logs: {
         Row: {
@@ -2090,13 +1990,6 @@ export type Database = {
             columns: ["payment_method_id"]
             isOneToOne: false
             referencedRelation: "payment_methods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payment_transactions_subscription_plan_id_fkey"
-            columns: ["subscription_plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
         ]
@@ -2292,138 +2185,6 @@ export type Database = {
           },
         ]
       }
-      subscription_analytics: {
-        Row: {
-          additional_data: Json | null
-          created_at: string | null
-          event_type: string
-          id: string
-          organization_id: string
-          payment_method: string | null
-          plan_id: string | null
-          previous_plan_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          additional_data?: Json | null
-          created_at?: string | null
-          event_type: string
-          id?: string
-          organization_id: string
-          payment_method?: string | null
-          plan_id?: string | null
-          previous_plan_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          additional_data?: Json | null
-          created_at?: string | null
-          event_type?: string
-          id?: string
-          organization_id?: string
-          payment_method?: string | null
-          plan_id?: string | null
-          previous_plan_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subscription_analytics_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subscription_analytics_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subscription_analytics_previous_plan_id_fkey"
-            columns: ["previous_plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subscription_audit_logs: {
-        Row: {
-          action: string
-          created_at: string
-          data: Json | null
-          id: string
-          organization_id: string
-          user_id: string | null
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          data?: Json | null
-          id?: string
-          organization_id: string
-          user_id?: string | null
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          data?: Json | null
-          id?: string
-          organization_id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subscription_audit_logs_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subscription_plans: {
-        Row: {
-          created_at: string | null
-          deskripsi: string | null
-          direct_payment_url: string | null
-          features: Json | null
-          id: string
-          is_active: boolean | null
-          max_members: number | null
-          name: string
-          price: number | null
-          slug: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          deskripsi?: string | null
-          direct_payment_url?: string | null
-          features?: Json | null
-          id?: string
-          is_active?: boolean | null
-          max_members?: number | null
-          name: string
-          price?: number | null
-          slug?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          deskripsi?: string | null
-          direct_payment_url?: string | null
-          features?: Json | null
-          id?: string
-          is_active?: boolean | null
-          max_members?: number | null
-          name?: string
-          price?: number | null
-          slug?: string | null
-        }
-        Relationships: []
-      }
       transactions: {
         Row: {
           amount: number
@@ -2607,17 +2368,6 @@ export type Database = {
           value: string
           label: string
           is_system: boolean
-        }[]
-      }
-      get_subscription_audit_logs: {
-        Args: { org_id: string }
-        Returns: {
-          action: string
-          created_at: string
-          data: Json | null
-          id: string
-          organization_id: string
-          user_id: string | null
         }[]
       }
       get_unique_organization_names: {
