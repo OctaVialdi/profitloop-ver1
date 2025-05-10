@@ -2,9 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MagicLinkParams, MagicLinkResult } from "./types";
-import { Navigate, useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/sonner";
-import { MagicLinkInvitation } from "@/types/magic-link";
+import { useNavigate } from "react-router-dom";
 
 export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
   const [isLoading, setIsLoading] = useState(true);
@@ -66,91 +64,9 @@ export function useMagicLink(params: MagicLinkParams): MagicLinkResult {
           return;
         }
 
-        // Process magic link invitation with token
+        // Since magic_link_invitations table has been removed, we can't process tokens
         if (params.token) {
-          try {
-            // Check if the token is a valid magic link invitation
-            const { data, error: invitationError } = await supabase
-              .from('magic_link_invitations')
-              .select(`
-                organization_id, 
-                email, 
-                role, 
-                status, 
-                expires_at,
-                organizations(name)
-              `)
-              .eq('token', params.token)
-              .single();
-
-            if (invitationError || !data) {
-              // If not found or error, check if it might be a different type of token
-              setError("Invalid or expired invitation token");
-              setIsLoading(false);
-              return;
-            }
-
-            const invitationData = data as MagicLinkInvitation;
-
-            // Check if invitation is valid
-            if (invitationData.status !== 'pending') {
-              setError("This invitation has already been used");
-              setIsLoading(false);
-              return;
-            }
-
-            if (new Date(invitationData.expires_at) < new Date()) {
-              setError("This invitation has expired");
-              setIsLoading(false);
-              return;
-            }
-
-            // Store organization name for display
-            setOrganizationName(invitationData.organizations?.name);
-            
-            // If email is provided, check if it matches
-            if (params.email && params.email !== invitationData.email) {
-              setError("The email address does not match the invitation");
-              setIsLoading(false);
-              return;
-            }
-            
-            // Check if user is authenticated
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (session) {
-              // User is already logged in, process the invitation
-              const { data: result, error: processError } = await supabase.rpc(
-                'process_magic_link_invitation',
-                { 
-                  invitation_token: params.token,
-                  user_id: session.user.id
-                }
-              );
-              
-              if (processError) {
-                throw processError;
-              }
-              
-              // Fix for typing issues - check if result is an object with success property
-              if (result && typeof result === 'object' && 'success' in result) {
-                if (result.success === true) {
-                  setSuccess(true);
-                } else {
-                  setError(result.message?.toString() || "Failed to process invitation");
-                }
-              } else {
-                setError("Unexpected response format from invitation processing");
-              }
-            } else {
-              // Not authenticated, but valid invitation
-              // Let the UI handle this case (show login/register form)
-              setSuccess(false);
-            }
-          } catch (err) {
-            console.error("Error processing invitation:", err);
-            setError("An error occurred while processing the invitation");
-          }
+          setError("Magic link invitations are no longer supported");
         }
       } finally {
         setIsLoading(false);

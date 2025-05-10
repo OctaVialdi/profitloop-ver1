@@ -71,13 +71,10 @@ export const ProfilePhotoUploader: React.FC<ProfilePhotoUploaderProps> = ({
         throw new Error('Gagal mendapatkan URL foto profil');
       }
       
-      // Update the user's profile with the new photo URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          profile_image: urlData.publicUrl
-        })
-        .eq('id', userId);
+      // Update the user's profile with custom update for profile image
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: urlData.publicUrl }
+      });
         
       if (updateError) {
         throw updateError;
