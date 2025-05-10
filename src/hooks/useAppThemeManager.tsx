@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useOrganization } from "./useOrganization";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useAppTheme, saveThemeToStorage } from "@/components/theme-provider";
+import { useTheme, saveThemeToStorage } from "@/components/theme-provider";
 import { Json } from "@/integrations/supabase/types";
 
 export function useAppThemeManager() {
@@ -160,7 +161,7 @@ export function useAppThemeManager() {
   const updateOrgTheme = async (orgId: string, themeData: Record<string, any>) => {
     try {
       // Only include the logo_path if it exists in the themeData
-      const updatePayload = {
+      const updatePayload: Record<string, any> = {
         theme_settings: themeData
       };
       

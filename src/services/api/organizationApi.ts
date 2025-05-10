@@ -1,98 +1,108 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { OrganizationFormData } from "@/types/onboarding";
-import { toast } from "@/components/ui/sonner";
+import { Organization } from "@/types/organization";
 
-/**
- * Checks if the user already has an organization or has created one previously
- */
-export const checkExistingOrganization = async (userId: string, userEmail?: string | null) => {
-  try {
-    // First try to check session metadata - most reliable and avoids RLS
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.user_metadata?.organization_id) {
-      return { 
-        hasOrganization: true, 
-        emailVerified: true, 
-        organizationId: session.user.user_metadata.organization_id 
-      };
-    }
-    
-    // Check email verification using auth data directly
-    if (session?.user) {
-      const isEmailVerified = session.user.email_confirmed_at !== null;
-      
-      if (!isEmailVerified) {
-        return { hasOrganization: false, emailVerified: false, organizationId: null };
-      }
-    }
-    
-    // Skip profile querying and try a direct check on the organizations table
-    if (userEmail) {
-      try {
-        const { data: orgCreatorData, error: orgCreatorError } = await supabase
-          .from('organizations')
-          .select('id')
-          .eq('creator_email', userEmail.toLowerCase())
-          .maybeSingle();
-        
-        if (!orgCreatorError && orgCreatorData) {
-          console.log("This email has already created an organization:", orgCreatorData.id);
-          return { hasOrganization: true, emailVerified: true, organizationId: orgCreatorData.id };
-        }
-      } catch (error) {
-        console.error("Error checking organization by email:", error);
-      }
-    }
-
-    // Default to assuming email is verified if we got this far
-    return { hasOrganization: false, emailVerified: true, organizationId: null };
-  } catch (error) {
-    console.error("Error checking existing organization:", error);
-    // Return default fallback values
-    return { hasOrganization: false, emailVerified: true, organizationId: null };
-  }
-};
-
-/**
- * Updates user's profile with the given organization ID
- */
-export const updateUserWithOrganization = async (userId: string, organizationId: string, role: string = 'super_admin') => {
-  try {
-    // First update user metadata - this avoids RLS issues
-    const { error: metadataError } = await supabase.auth.updateUser({
-      data: {
-        organization_id: organizationId,
-        role: role
-      }
-    });
-      
-    if (metadataError) {
-      console.error("Error updating user metadata:", metadataError);
-    }
-    
-    // Try using the RPC function to update profile
+export const organizationApi = {
+  /**
+   * Create a new organization
+   */
+  createOrganization: async (organizationData: Partial<Organization>) => {
     try {
-      const { data, error } = await supabase.rpc('update_user_organization', {
-        user_id: userId,
-        org_id: organizationId,
-        user_role: role
-      });
-      
+      const { data, error } = await supabase
+        .from('organizations')
+        .insert([organizationData])
+        .select();
+
       if (error) {
-        console.error("Error using RPC to update profile:", error);
-        return false;
+        console.error("Error creating organization:", error);
+        throw error;
+      }
+
+      return data?.[0] as Organization;
+    } catch (error) {
+      console.error("Error in createOrganization:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update an organization
+   */
+  updateOrganization: async (id: string, updates: Partial<Organization>) => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .update(updates)
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error("Error updating organization:", error);
+        throw error;
+      }
+
+      return data?.[0] as Organization;
+    } catch (error) {
+      console.error("Error in updateOrganization:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get organization by ID
+   */
+  getOrganizationById: async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching organization:", error);
+        throw error;
+      }
+
+      return data as Organization;
+    } catch (error) {
+      console.error("Error in getOrganizationById:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update organization subscription status
+   */
+  updateSubscriptionStatus: async (
+    id: string, 
+    status: string, 
+    planId?: string
+  ) => {
+    try {
+      const updates: Partial<Organization> = { 
+        subscription_status: status 
+      };
+      
+      if (planId) {
+        updates.subscription_plan_id = planId;
       }
       
-      return true;
-    } catch (rpcError) {
-      console.error("RPC error updating organization:", rpcError);
+      const { data, error } = await supabase
+        .from('organizations')
+        .update(updates)
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error("Error updating subscription status:", error);
+        throw error;
+      }
+
+      return data?.[0] as Organization;
+    } catch (error) {
+      console.error("Error in updateSubscriptionStatus:", error);
+      throw error;
     }
-    
-    // Even if the profile update fails, user can still proceed with metadata
-    return true;
-  } catch (error) {
-    console.error("Error updating user with organization:", error);
-    return false;
   }
 };

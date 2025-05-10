@@ -28,7 +28,7 @@ export interface UserProfile {
   timezone: string;
 }
 
-// Define Organization interface
+// Define Organization interface with logo_path
 export interface Organization {
   id: string;
   name: string;
@@ -44,6 +44,7 @@ export interface Organization {
   created_at: string;
   theme_settings: Json;
   logo_path: string | null;
+  grace_period_end?: string | null;
 }
 
 // Define SubscriptionPlan interface

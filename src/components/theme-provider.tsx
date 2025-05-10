@@ -72,3 +72,14 @@ export const useTheme = () => {
 
   return context
 }
+
+// Add the saveThemeToStorage function
+export const saveThemeToStorage = (
+  themeSettings: Record<string, any>,
+  logoPath?: string
+) => {
+  localStorage.setItem('theme-settings', JSON.stringify(themeSettings));
+  if (logoPath) {
+    localStorage.setItem('org-logo-path', logoPath);
+  }
+};
