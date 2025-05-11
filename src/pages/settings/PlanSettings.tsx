@@ -6,13 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, Info, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Info, AlertTriangle, CreditCard, ShieldCheck } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { TrialProgressIndicator } from "@/components/subscription/TrialProgressIndicator";
 import { TrialExpiredModal } from "@/components/subscription/TrialExpiredModal";
+import { PricingDisplay } from "@/components/subscription/PricingDisplay"; 
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionPlan } from "@/types/organization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
+import { stripeService } from "@/services/stripeService";
+import { toast } from "sonner";
 
 const PlanSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -27,14 +30,37 @@ const PlanSettings: React.FC = () => {
   
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const { progress } = useTrialStatus(organization?.id || null);
+  const [memberCount, setMemberCount] = useState<number>(1);
 
   // Check if trial is expired without subscription
   useEffect(() => {
     if (organization?.trial_expired && !hasPaidSubscription) {
       setShowExpiredModal(true);
     }
+
+    // Get organization member count for per-member pricing calculations
+    const fetchMemberCount = async () => {
+      if (organization?.id) {
+        try {
+          const { count, error } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('organization_id', organization.id);
+          
+          if (!error && count !== null) {
+            setMemberCount(Math.max(count, 1)); // Minimum 1 member
+          }
+        } catch (error) {
+          console.error("Error fetching member count:", error);
+        }
+      }
+    };
+
+    fetchMemberCount();
   }, [organization, hasPaidSubscription]);
 
   // Fetch all subscription plans
@@ -63,29 +89,102 @@ const PlanSettings: React.FC = () => {
     fetchPlans();
   }, []);
 
-  // Format features for display
-  const formatFeatures = (features: Record<string, any> | null | undefined): string[] => {
-    if (!features) return [];
+  // Get categories from features objects across all plans
+  const getFeatureCategories = () => {
+    const categories = new Set<string>();
     
-    return Object.entries(features).map(([key, value]) => {
-      // Format the feature key into a readable string
-      const formattedKey = key.split('_').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1)
-      ).join(' ');
-      
-      return `${formattedKey}: ${value}`;
+    plans.forEach(plan => {
+      if (plan.features && typeof plan.features === 'object') {
+        Object.keys(plan.features).forEach(key => {
+          // Extract category from key using common naming conventions
+          const category = key.split('_')[0];
+          if (category) categories.add(category);
+        });
+      }
     });
+    
+    return Array.from(categories);
   };
 
-  const handleUpgrade = () => {
-    navigate("/settings/subscription");
+  // Format features for display with categorization
+  const formatFeatures = (features: Record<string, any> | null | undefined): Record<string, string[]> => {
+    if (!features) return {};
+    
+    const categorizedFeatures: Record<string, string[]> = {};
+    
+    Object.entries(features).forEach(([key, value]) => {
+      // Try to extract a category from the key (e.g., storage_limit -> storage)
+      const categorySplit = key.split('_');
+      const category = categorySplit[0] || 'general';
+      
+      if (!categorizedFeatures[category]) {
+        categorizedFeatures[category] = [];
+      }
+      
+      // Format the feature key into a readable string
+      const formattedKey = key.split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      categorizedFeatures[category].push(`${formattedKey}: ${value}`);
+    });
+    
+    return categorizedFeatures;
+  };
+
+  // Check if a feature exists in a plan
+  const planHasFeature = (plan: SubscriptionPlan, featureName: string): boolean | string => {
+    if (!plan.features) return false;
+    
+    // Look for the feature in the features object with flexible matching
+    for (const [key, value] of Object.entries(plan.features)) {
+      if (key.toLowerCase().includes(featureName.toLowerCase())) {
+        return value;
+      }
+    }
+    
+    return false;
+  };
+
+  const handleUpgrade = async (planId: string) => {
+    if (isSubscribedToPlan(planId)) return;
+    
+    try {
+      setSubmitting(true);
+      setSelectedPlanId(planId);
+      
+      // If organization already has a subscription, handle as a plan change
+      if (hasPaidSubscription && organization?.subscription_plan_id) {
+        // Get portal session URL and redirect to Stripe customer portal
+        const portalUrl = await stripeService.createPortalSession();
+        if (portalUrl) {
+          window.location.href = portalUrl;
+          return;
+        }
+      } else {
+        // New subscription flow
+        const checkoutUrl = await stripeService.createCheckout(planId);
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+          return;
+        }
+      }
+      
+      throw new Error("Failed to initiate checkout process");
+    } catch (error) {
+      console.error("Error during checkout:", error);
+      toast.error("Failed to process upgrade. Please try again.");
+    } finally {
+      setSubmitting(false);
+      setSelectedPlanId(null);
+    }
   };
   
   const handleRequestExtension = () => {
     navigate("/settings/subscription/request-extension");
   };
   
-  const isCurrentPlan = (planId: string) => {
+  const isSubscribedToPlan = (planId: string) => {
     return organization?.subscription_plan_id === planId;
   };
 
@@ -110,6 +209,29 @@ const PlanSettings: React.FC = () => {
       </Alert>
     );
   };
+
+  // Find if there's a recommended plan
+  const getRecommendedPlan = () => {
+    // Logic to determine recommended plan based on organization size and needs
+    // For now, just return the middle-tier plan
+    if (plans.length >= 3) {
+      return plans[1].id; // Usually the middle plan is a good recommendation
+    }
+    return null;
+  };
+
+  // Get popular plan (most subscribed)
+  const getPopularPlan = () => {
+    // In a real implementation, this would check analytics data
+    // For now, just return the middle plan as popular
+    if (plans.length >= 3) {
+      return plans[1].id;
+    }
+    return null;
+  };
+
+  const recommendedPlanId = getRecommendedPlan();
+  const popularPlanId = getPopularPlan();
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -149,6 +271,14 @@ const PlanSettings: React.FC = () => {
             <h3 className="text-xl font-medium">
               {subscriptionPlan?.name || (organization?.subscription_plan_id ? "Custom Plan" : "Free Plan")}
             </h3>
+            {subscriptionPlan && (
+              <div className="text-2xl font-bold">
+                <PricingDisplay 
+                  plan={subscriptionPlan} 
+                  memberCount={memberCount}
+                />
+              </div>
+            )}
             {isTrialActive && (
               <TrialProgressIndicator 
                 daysLeft={daysLeftInTrial} 
@@ -171,11 +301,16 @@ const PlanSettings: React.FC = () => {
                 </li>
               )}
               
-              {formatFeatures(subscriptionPlan?.features).map((feature, index) => (
-                <li key={index} className="flex items-center">
-                  <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                  <span>{feature}</span>
-                </li>
+              {subscriptionPlan?.features && Object.entries(formatFeatures(subscriptionPlan.features)).map(([category, features]) => (
+                <React.Fragment key={category}>
+                  <li className="font-medium mt-3 first:mt-0">{category.charAt(0).toUpperCase() + category.slice(1)}:</li>
+                  {features.map((feature, index) => (
+                    <li key={index} className="flex items-center ml-4">
+                      <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </React.Fragment>
               ))}
               
               {(!subscriptionPlan || !subscriptionPlan?.features) && (
@@ -186,7 +321,7 @@ const PlanSettings: React.FC = () => {
           
         </CardContent>
         <CardFooter>
-          <Button onClick={handleUpgrade}>
+          <Button onClick={() => navigate("/settings/subscription")}>
             {hasPaidSubscription ? "Change Plan" : "Upgrade Plan"}
           </Button>
         </CardFooter>
@@ -202,24 +337,36 @@ const PlanSettings: React.FC = () => {
             plans.map((plan) => (
               <Card 
                 key={plan.id} 
-                className={isCurrentPlan(plan.id) ? "border-primary border-2" : ""}
+                className={`relative ${isSubscribedToPlan(plan.id) ? "border-primary border-2" : ""}`}
               >
+                {plan.id === recommendedPlanId && !isSubscribedToPlan(plan.id) && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
+                    Recommended
+                  </div>
+                )}
+                {plan.id === popularPlanId && !isSubscribedToPlan(plan.id) && plan.id !== recommendedPlanId && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
+                    Popular
+                  </div>
+                )}
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>{plan.name}</CardTitle>
-                    {isCurrentPlan(plan.id) && (
+                    {isSubscribedToPlan(plan.id) && (
                       <Badge>Current</Badge>
                     )}
                   </div>
                   <CardDescription>{plan.deskripsi || `${plan.name} subscription plan`}</CardDescription>
+                  <div className="mt-2 font-bold">
+                    <PricingDisplay 
+                      plan={plan} 
+                      memberCount={memberCount}
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold mb-4">
-                    {plan.price === 0 ? "Free" : `$${plan.price}`}
-                    {plan.price > 0 && <span className="text-sm text-gray-500">/month</span>}
-                  </div>
-                  
                   <ul className="space-y-2">
+                    {/* Max Members Feature */}
                     {plan.max_members && (
                       <li className="flex items-center">
                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> 
@@ -227,21 +374,54 @@ const PlanSettings: React.FC = () => {
                       </li>
                     )}
                     
-                    {formatFeatures(plan.features).map((feature, index) => (
-                      <li key={index} className="flex items-center">
-                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
+                    {/* Key Features */}
+                    {plan.features && (
+                      <>
+                        {planHasFeature(plan, 'storage') && (
+                          <li className="flex items-center">
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                            <span>Storage: {planHasFeature(plan, 'storage')}</span>
+                          </li>
+                        )}
+                        {planHasFeature(plan, 'support') && (
+                          <li className="flex items-center">
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                            <span>Support: {planHasFeature(plan, 'support')}</span>
+                          </li>
+                        )}
+                        {planHasFeature(plan, 'integration') && (
+                          <li className="flex items-center">
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                            <span>Integrations: {planHasFeature(plan, 'integration')}</span>
+                          </li>
+                        )}
+                        {planHasFeature(plan, 'security') && (
+                          <li className="flex items-center">
+                            <ShieldCheck className="mr-2 h-4 w-4 text-green-500" />
+                            <span>Security: {planHasFeature(plan, 'security')}</span>
+                          </li>
+                        )}
+                      </>
+                    )}
                   </ul>
                 </CardContent>
                 <CardFooter>
                   <Button 
-                    onClick={handleUpgrade} 
-                    variant={isCurrentPlan(plan.id) ? "outline" : "default"}
-                    disabled={isCurrentPlan(plan.id)}
+                    onClick={() => handleUpgrade(plan.id)} 
+                    variant={isSubscribedToPlan(plan.id) ? "outline" : "default"}
+                    disabled={isSubscribedToPlan(plan.id) || submitting}
+                    className="w-full"
                   >
-                    {isCurrentPlan(plan.id) ? "Current Plan" : "Select Plan"}
+                    {submitting && selectedPlanId === plan.id ? (
+                      <>Loading...</>
+                    ) : isSubscribedToPlan(plan.id) ? (
+                      "Current Plan"
+                    ) : (
+                      <>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Select Plan
+                      </>
+                    )}
                   </Button>
                 </CardFooter>
               </Card>
@@ -254,7 +434,7 @@ const PlanSettings: React.FC = () => {
       <TrialExpiredModal 
         isOpen={showExpiredModal} 
         onClose={() => setShowExpiredModal(false)} 
-        onUpgrade={handleUpgrade}
+        onUpgrade={() => navigate("/settings/subscription")}
         onRequest={handleRequestExtension}
         allowClose={false}
         organizationName={organization?.name || "your organization"}

@@ -4,10 +4,12 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { TrialStatusLevel } from "@/hooks/useTrialStatus";
 
 interface TrialProgressIndicatorProps {
   daysLeft: number;
   progress: number;
+  statusLevel?: TrialStatusLevel;
   className?: string;
   compact?: boolean;
   showButton?: boolean;
@@ -16,32 +18,47 @@ interface TrialProgressIndicatorProps {
 export const TrialProgressIndicator: React.FC<TrialProgressIndicatorProps> = ({
   daysLeft,
   progress,
+  statusLevel = 'normal',
   className,
   compact = false,
   showButton = true
 }) => {
   const navigate = useNavigate();
   
-  // Determine status based on days left
-  const isUrgent = daysLeft <= 1;
-  const isWarning = daysLeft <= 3 && !isUrgent;
+  const getProgressColor = () => {
+    switch(statusLevel) {
+      case 'critical': return "bg-red-500";
+      case 'warning': return "bg-amber-500";
+      default: return "bg-green-500";
+    }
+  };
   
-  const progressColor = isUrgent 
-    ? "bg-red-500" 
-    : isWarning 
-      ? "bg-amber-500" 
-      : "bg-green-500";
+  const getTextColor = () => {
+    switch(statusLevel) {
+      case 'critical': return "text-red-600";
+      case 'warning': return "text-amber-600";
+      default: return "text-green-600";
+    }
+  };
+  
+  const getButtonVariant = () => {
+    switch(statusLevel) {
+      case 'critical': return "destructive";
+      case 'warning': return "secondary";
+      default: return "outline";
+    }
+  };
   
   return (
     <div className={cn("w-full space-y-2", className)}>
       {!compact && (
         <div className="flex items-center justify-between text-sm">
           <div className="font-medium">
-            Trial Status: {isUrgent ? "Critical" : isWarning ? "Warning" : "Active"}
+            Trial Status: {statusLevel === 'critical' ? "Critical" : statusLevel === 'warning' ? "Warning" : "Active"}
           </div>
           <div className={cn(
             "font-medium",
-            isUrgent ? "text-red-600" : isWarning ? "text-amber-600" : "text-green-600"
+            getTextColor()
           )}>
             {daysLeft} {daysLeft === 1 ? "day" : "days"} left
           </div>
@@ -57,7 +74,7 @@ export const TrialProgressIndicator: React.FC<TrialProgressIndicatorProps> = ({
         {compact && (
           <span className={cn(
             "text-xs font-medium",
-            isUrgent ? "text-red-600" : isWarning ? "text-amber-600" : "text-green-600"
+            getTextColor()
           )}>
             {daysLeft}d
           </span>
@@ -66,7 +83,7 @@ export const TrialProgressIndicator: React.FC<TrialProgressIndicatorProps> = ({
         {showButton && !compact && (
           <Button 
             size="sm" 
-            variant={isUrgent ? "destructive" : isWarning ? "secondary" : "outline"}
+            variant={getButtonVariant()}
             onClick={() => navigate("/settings/subscription")}
           >
             Upgrade

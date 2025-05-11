@@ -2,11 +2,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export type TrialStatusLevel = 'critical' | 'warning' | 'normal';
+
 export function useTrialStatus(organizationId: string | null) {
   const [isTrialActive, setIsTrialActive] = useState<boolean>(false);
   const [isTrialExpired, setIsTrialExpired] = useState<boolean>(false);
   const [daysLeftInTrial, setDaysLeftInTrial] = useState<number>(0);
   const [progress, setProgress] = useState<number>(0);
+  const [statusLevel, setStatusLevel] = useState<TrialStatusLevel>('normal');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -53,9 +56,19 @@ export function useTrialStatus(organizationId: string | null) {
             const progressPercentage = (daysUsed / totalDays) * 100;
             
             setProgress(progressPercentage);
+            
+            // Set status level based on days left
+            if (daysLeft <= 1) {
+              setStatusLevel('critical');
+            } else if (daysLeft <= 3) {
+              setStatusLevel('warning');
+            } else {
+              setStatusLevel('normal');
+            }
           } else {
             setDaysLeftInTrial(0);
             setProgress(100);
+            setStatusLevel('critical');
           }
         }
       } catch (err) {
@@ -73,6 +86,7 @@ export function useTrialStatus(organizationId: string | null) {
     isTrialExpired,
     daysLeftInTrial,
     progress,
+    statusLevel,
     isLoading
   };
 }
