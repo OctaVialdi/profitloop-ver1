@@ -77,7 +77,22 @@ const PlanSettings: React.FC = () => {
           throw error;
         }
         
-        setPlans(data || []);
+        if (data) {
+          // Process the data to ensure features is properly parsed
+          const processedPlans: SubscriptionPlan[] = data.map(plan => {
+            // Parse features if it's a string
+            const features = typeof plan.features === 'string' 
+              ? JSON.parse(plan.features) 
+              : plan.features;
+              
+            return {
+              ...plan,
+              features: features as Record<string, any> | null
+            };
+          });
+          
+          setPlans(processedPlans);
+        }
       } catch (error) {
         console.error("Error fetching plans:", error);
       } finally {

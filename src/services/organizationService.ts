@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Organization, SubscriptionPlan, BillingSettings, Invoice, InvoiceHistoryResponse, BillingPaymentMethod } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
+import { parseJsonIfString } from "@/utils/jsonUtils";
 
 class OrganizationService {
   async getOrganization(organizationId: string): Promise<Organization | null> {
@@ -31,25 +32,20 @@ class OrganizationService {
       };
       
       // Convert from JSON string if needed
-      if (typeof themeSettings === 'string') {
-        try {
-          themeSettings = JSON.parse(themeSettings);
-        } catch (e) {
-          console.warn('Could not parse theme_settings JSON:', e);
-          themeSettings = {
-            primary_color: "#1E40AF",
-            secondary_color: "#3B82F6",
-            accent_color: "#60A5FA",
-            sidebar_color: "#F1F5F9",
-          };
-        }
-      }
+      themeSettings = parseJsonIfString(themeSettings, {
+        primary_color: "#1E40AF",
+        secondary_color: "#3B82F6",
+        accent_color: "#60A5FA",
+        sidebar_color: "#F1F5F9",
+      });
+      
+      const subscriptionStatus = orgData.subscription_status as 'trial' | 'active' | 'expired' || 'trial';
       
       return {
         ...orgData as unknown as Organization,
-        theme_settings: themeSettings as any,
+        theme_settings: themeSettings,
         trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false,
-        subscription_status: orgData.subscription_status as 'trial' | 'active' | 'expired' || 'trial',
+        subscription_status: subscriptionStatus,
         trial_start_date: orgData.trial_start_date || null,
         grace_period_end: orgData.grace_period_end || null,
         stripe_customer_id: orgData.stripe_customer_id || null,
@@ -74,19 +70,11 @@ class OrganizationService {
       }
       
       // Parse features from JSON if needed
-      let features = planData.features;
-      if (typeof features === 'string') {
-        try {
-          features = JSON.parse(features);
-        } catch (e) {
-          console.warn('Could not parse features JSON:', e);
-          features = null;
-        }
-      }
+      const features = parseJsonIfString<Record<string, any> | null>(planData.features, null);
       
       return {
         ...planData,
-        features: features as Record<string, any> | null
+        features
       } as SubscriptionPlan;
     } catch (error) {
       console.error("Error fetching subscription plan:", error);
@@ -111,32 +99,16 @@ class OrganizationService {
       if (!data) return null;
 
       // Parse payment_method JSON if it's a string
-      let paymentMethod = data.payment_method;
-      if (typeof paymentMethod === 'string' && paymentMethod) {
-        try {
-          paymentMethod = JSON.parse(paymentMethod);
-        } catch (e) {
-          console.warn('Could not parse payment_method JSON:', e);
-          paymentMethod = null;
-        }
-      }
+      const paymentMethod = parseJsonIfString<BillingPaymentMethod | null>(data.payment_method, null);
 
       // Parse invoice_address JSON if it's a string
-      let invoiceAddress = data.invoice_address;
-      if (typeof invoiceAddress === 'string' && invoiceAddress) {
-        try {
-          invoiceAddress = JSON.parse(invoiceAddress);
-        } catch (e) {
-          console.warn('Could not parse invoice_address JSON:', e);
-          invoiceAddress = null;
-        }
-      }
+      const invoiceAddress = parseJsonIfString<any>(data.invoice_address, null);
 
       return {
         id: data.id,
         organization_id: data.organization_id,
-        payment_method: paymentMethod as BillingPaymentMethod | null,
-        invoice_address: invoiceAddress as any,
+        payment_method: paymentMethod,
+        invoice_address: invoiceAddress,
         last_payment_date: data.last_payment_date,
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -190,30 +162,14 @@ class OrganizationService {
       
       // Parse back the JSON fields
       const resultData = result.data;
-      let paymentMethod = resultData.payment_method;
-      let invoiceAddress = resultData.invoice_address;
-      
-      if (typeof paymentMethod === 'string' && paymentMethod) {
-        try {
-          paymentMethod = JSON.parse(paymentMethod);
-        } catch (e) {
-          paymentMethod = null;
-        }
-      }
-      
-      if (typeof invoiceAddress === 'string' && invoiceAddress) {
-        try {
-          invoiceAddress = JSON.parse(invoiceAddress);
-        } catch (e) {
-          invoiceAddress = null;
-        }
-      }
+      const paymentMethod = parseJsonIfString<BillingPaymentMethod | null>(resultData.payment_method, null);
+      const invoiceAddress = parseJsonIfString<any>(resultData.invoice_address, null);
       
       return {
         id: resultData.id,
         organization_id: resultData.organization_id,
-        payment_method: paymentMethod as BillingPaymentMethod | null,
-        invoice_address: invoiceAddress as any,
+        payment_method: paymentMethod,
+        invoice_address: invoiceAddress,
         last_payment_date: resultData.last_payment_date,
         created_at: resultData.created_at,
         updated_at: resultData.updated_at
@@ -257,18 +213,11 @@ class OrganizationService {
       
       // Parse payment_details if it's a string
       const invoices = data.map(invoice => {
-        let paymentDetails = invoice.payment_details;
-        if (typeof paymentDetails === 'string' && paymentDetails) {
-          try {
-            paymentDetails = JSON.parse(paymentDetails);
-          } catch (e) {
-            paymentDetails = null;
-          }
-        }
+        const paymentDetails = parseJsonIfString<any>(invoice.payment_details, null);
         
         return {
           ...invoice,
-          payment_details: paymentDetails as any
+          payment_details: paymentDetails
         };
       });
       
@@ -299,18 +248,11 @@ class OrganizationService {
       if (!data) return null;
       
       // Parse payment_details if it's a string
-      let paymentDetails = data.payment_details;
-      if (typeof paymentDetails === 'string' && paymentDetails) {
-        try {
-          paymentDetails = JSON.parse(paymentDetails);
-        } catch (e) {
-          paymentDetails = null;
-        }
-      }
+      const paymentDetails = parseJsonIfString<any>(data.payment_details, null);
       
       return {
         ...data,
-        payment_details: paymentDetails as any
+        payment_details: paymentDetails
       } as Invoice;
     } catch (error) {
       console.error("Error in getInvoiceById:", error);
@@ -321,3 +263,4 @@ class OrganizationService {
 
 // Export the service as a singleton instance
 export const organizationService = new OrganizationService();
+export const { getOrganization, getSubscriptionPlan } = organizationService;

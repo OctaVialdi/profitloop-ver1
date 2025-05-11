@@ -4,6 +4,7 @@ import { NavigateFunction } from "react-router-dom";
 import { OrganizationData, UserProfile, SubscriptionPlan, ThemeSettings } from "@/types/organization";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { parseJsonIfString } from "@/utils/jsonUtils";
 
 export async function fetchOrganizationData(
   setOrganizationData: Dispatch<SetStateAction<OrganizationData>>,
@@ -101,23 +102,30 @@ export async function fetchOrganizationData(
       
       // Handle theme_settings if it exists
       if (orgData.theme_settings) {
-        // Handle theme_settings if it's a string (JSON)
-        if (typeof orgData.theme_settings === 'string') {
-          try {
-            themeSettings = JSON.parse(orgData.theme_settings);
-          } catch (e) {
-            console.warn("Failed to parse theme_settings JSON", e);
+        themeSettings = parseJsonIfString<ThemeSettings>(
+          orgData.theme_settings, 
+          {
+            primary_color: "#1E40AF",
+            secondary_color: "#3B82F6",
+            accent_color: "#60A5FA",
+            sidebar_color: "#F1F5F9",
           }
-        } else {
-          // It's already an object
-          themeSettings = orgData.theme_settings as ThemeSettings;
-        }
+        );
+      }
+      
+      // Ensure subscription_status is a valid enum value
+      let subscriptionStatus: 'trial' | 'active' | 'expired' = 'trial';
+      if (orgData.subscription_status === 'active' || 
+          orgData.subscription_status === 'expired' ||
+          orgData.subscription_status === 'trial') {
+        subscriptionStatus = orgData.subscription_status;
       }
       
       // Create organization object with processed theme_settings and new fields
       const organization = {
         ...orgData,
         theme_settings: themeSettings,
+        subscription_status: subscriptionStatus,
         stripe_customer_id: orgData.stripe_customer_id || null,
         billing_email: orgData.billing_email || null
       };
@@ -146,18 +154,11 @@ export async function fetchOrganizationData(
           
         if (!planError && planData) {
           // Process features if it's a string
-          let features = planData.features;
-          if (typeof features === 'string') {
-            try {
-              features = JSON.parse(features);
-            } catch (e) {
-              features = {};
-            }
-          }
+          const features = parseJsonIfString<Record<string, any>>(planData.features, {});
           
           subscriptionPlan = {
             ...planData,
-            features: features as Record<string, any>
+            features
           };
         }
       }

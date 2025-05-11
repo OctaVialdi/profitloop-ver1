@@ -79,7 +79,7 @@ type SubscriptionPlanFormValues = z.infer<typeof formSchema>;
 
 const SubscriptionPlansManagement = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPricingPerMember, setIsPricingPerMember] = useState(false);
@@ -116,25 +116,35 @@ const SubscriptionPlansManagement = () => {
 
   const fetchPlans = async () => {
     try {
-      setIsLoading(true);
-
-      const { data: subscriptionPlans, error } = await supabase
+      setLoading(true);
+      const { data, error } = await supabase
         .from('subscription_plans')
         .select('*')
-        .order('price', { ascending: true });
+        .order('price');
 
-      if (error) {
-        console.error("Error fetching subscription plans:", error);
-        toast.error("Failed to load subscription plans");
-        return;
+      if (error) throw error;
+
+      if (data) {
+        // Process the data to ensure features is properly parsed
+        const processedPlans: SubscriptionPlan[] = data.map(plan => {
+          // Parse features if it's a string
+          const features = typeof plan.features === 'string' 
+            ? JSON.parse(plan.features) 
+            : plan.features;
+          
+          return {
+            ...plan,
+            features: features as Record<string, any> | null
+          };
+        });
+        
+        setPlans(processedPlans);
       }
-
-      setPlans(subscriptionPlans || []);
     } catch (error) {
-      console.error("Error loading subscription plans:", error);
-      toast.error("An error occurred while loading plans");
+      console.error('Error fetching subscription plans:', error);
+      toast.error('Could not load subscription plans');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 

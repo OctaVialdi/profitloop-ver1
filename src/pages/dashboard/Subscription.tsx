@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +51,7 @@ const Subscription = () => {
           const current = subscriptionPlans.find(
             plan => plan.id === organization.subscription_plan_id
           ) || null;
-          
+        
           if (current) {
             // Transform JSON features to Record type if needed
             const transformedCurrent: SubscriptionPlan = {
@@ -62,16 +61,14 @@ const Subscription = () => {
             setCurrentPlan(transformedCurrent);
           }
         }
-        
+      
         // Format plans for display
         if (subscriptionPlans) {
           const formattedPlans: SubscriptionPlan[] = subscriptionPlans.map(plan => ({
             ...plan,
-            features: plan.features as Record<string, any> | null,
-            current: plan.id === organization?.subscription_plan_id,
-            popular: plan.slug === 'standard_plan'
+            features: plan.features as Record<string, any> | null
           }));
-          
+        
           setPlans(formattedPlans);
         }
       } catch (error) {
