@@ -23,7 +23,6 @@ const CreateContent = () => {
   const {
     contentTypes,
     contentItems,
-    isManager,
     addContentItem,
     updateContentItem,
     deleteContentItems,
@@ -92,18 +91,16 @@ const CreateContent = () => {
       <CardHeader className="py-3 flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Content Management</CardTitle>
         <div className="flex space-x-2">
-          {isManager && (
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={handleDeleteSelected}
-              disabled={!contentItems.some(item => item.isSelected)}
-              className="text-sm"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete Selected
-            </Button>
-          )}
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleDeleteSelected}
+            disabled={!contentItems.some(item => item.isSelected)}
+            className="text-sm"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete Selected
+          </Button>
           <Button onClick={handleAddRow} size="sm" className="text-sm">
             <PlusCircle className="h-4 w-4 mr-1" />
             Add Row
@@ -116,15 +113,13 @@ const CreateContent = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                {isManager && (
-                  <TableHead className="w-12">
-                    <Checkbox 
-                      checked={selectAll} 
-                      onCheckedChange={handleSelectAll}
-                      aria-label="Select all"
-                    />
-                  </TableHead>
-                )}
+                <TableHead className="w-12">
+                  <Checkbox 
+                    checked={selectAll} 
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead className="w-1/4">Tanggal Posting</TableHead>
                 <TableHead>Tipe Content</TableHead>
               </TableRow>
@@ -133,15 +128,13 @@ const CreateContent = () => {
               {contentItems.length > 0 ? (
                 contentItems.map(item => (
                   <TableRow key={item.id}>
-                    {isManager && (
-                      <TableCell>
-                        <Checkbox 
-                          checked={item.isSelected} 
-                          onCheckedChange={() => toggleSelectItem(item.id)}
-                          aria-label="Select row"
-                        />
-                      </TableCell>
-                    )}
+                    <TableCell>
+                      <Checkbox 
+                        checked={item.isSelected} 
+                        onCheckedChange={() => toggleSelectItem(item.id)}
+                        aria-label="Select row"
+                      />
+                    </TableCell>
                     <TableCell>
                       <Popover 
                         open={isCalendarOpen[item.id]} 
@@ -188,7 +181,7 @@ const CreateContent = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={isManager ? 3 : 2} className="h-24 text-center">
+                  <TableCell colSpan={3} className="h-24 text-center">
                     No content items. Click "Add Row" to create one.
                   </TableCell>
                 </TableRow>

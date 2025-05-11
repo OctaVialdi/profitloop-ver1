@@ -18,7 +18,6 @@ export const useContentManagement = () => {
   const { employees } = useEmployees();
   const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const [isManager, setIsManager] = useState(false);
   const [currentUser, setCurrentUser] = useState<LegacyEmployee | null>(null);
 
   // Load content types from localStorage
@@ -52,8 +51,7 @@ export const useContentManagement = () => {
     }
   }, [contentItems]);
 
-  // Simulated logged in user - in a real app this would come from authentication
-  // For now we'll assume the first marketing manager is the current user
+  // Get current user
   useEffect(() => {
     if (employees.length > 0) {
       const marketingEmployees = employees
@@ -66,11 +64,9 @@ export const useContentManagement = () => {
       
       if (manager) {
         setCurrentUser(manager);
-        setIsManager(true);
       } else if (marketingEmployees.length > 0) {
         // Default to first marketing employee if no manager exists
         setCurrentUser(marketingEmployees[0]);
-        setIsManager(false);
       }
     }
   }, [employees]);
@@ -115,7 +111,6 @@ export const useContentManagement = () => {
   return {
     contentTypes,
     contentItems,
-    isManager,
     currentUser,
     addContentItem,
     updateContentItem,
