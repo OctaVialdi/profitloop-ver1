@@ -16,16 +16,22 @@ import SubscriptionSuccess from "@/pages/subscription/SubscriptionSuccess";
 // Not found
 import NotFound from "@/pages/NotFound";
 
+// Convert routes to proper RouteObject format
 export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Navigate to="/dashboard" replace />,
   },
-  // Auth Routes
-  ...authRoutes,
   
-  // Dashboard
-  ...dashboardRoutes,
+  // Auth Routes - Ensure they are properly converted to RouteObject format
+  ...(Array.isArray(authRoutes) 
+    ? authRoutes.map(route => route as unknown as RouteObject) 
+    : [authRoutes] as RouteObject[]),
+  
+  // Dashboard Routes
+  ...(Array.isArray(dashboardRoutes) 
+    ? dashboardRoutes.map(route => route as unknown as RouteObject) 
+    : [dashboardRoutes] as RouteObject[]),
   
   // Settings
   settingsRoutes as RouteObject,

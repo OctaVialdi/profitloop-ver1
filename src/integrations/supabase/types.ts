@@ -2242,6 +2242,51 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_events: {
+        Row: {
+          additional_data: Json | null
+          created_at: string
+          event_type: string
+          id: string
+          organization_id: string
+          plan_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          additional_data?: Json | null
+          created_at?: string
+          event_type: string
+          id?: string
+          organization_id: string
+          plan_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          additional_data?: Json | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          organization_id?: string
+          plan_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string
