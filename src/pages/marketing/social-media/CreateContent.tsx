@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -22,12 +23,16 @@ import { useContentManagement, ContentItem } from "@/hooks/useContentManagement"
 const CreateContent = () => {
   const {
     contentTypes,
+    services,
+    subServices,
     contentItems,
+    contentPlanners,
     addContentItem,
     updateContentItem,
     deleteContentItems,
     toggleSelectItem,
-    selectAllItems
+    selectAllItems,
+    getFilteredSubServices
   } = useContentManagement();
 
   const [selectAll, setSelectAll] = useState(false);
@@ -59,6 +64,22 @@ const CreateContent = () => {
     updateContentItem(itemId, { contentType: typeId });
   };
 
+  const handlePICChange = (itemId: string, picName: string) => {
+    updateContentItem(itemId, { pic: picName });
+  };
+  
+  const handleServiceChange = (itemId: string, serviceId: string) => {
+    // When service changes, reset subService
+    updateContentItem(itemId, { 
+      service: serviceId,
+      subService: ""  
+    });
+  };
+  
+  const handleSubServiceChange = (itemId: string, subServiceId: string) => {
+    updateContentItem(itemId, { subService: subServiceId });
+  };
+
   const handleDeleteSelected = () => {
     const selectedIds = contentItems
       .filter(item => item.isSelected)
@@ -84,6 +105,17 @@ const CreateContent = () => {
   const getContentTypeName = (typeId: string) => {
     const contentType = contentTypes.find(type => type.id === typeId);
     return contentType ? contentType.name : "Unknown";
+  };
+
+  // Get filtered sub-services based on selected service
+  const getFilteredSubServicesByServiceId = (serviceId: string) => {
+    return subServices.filter(subService => subService.serviceId === serviceId);
+  };
+
+  // Find service ID by name
+  const getServiceIdByName = (serviceName: string) => {
+    const service = services.find(s => s.name === serviceName);
+    return service ? service.id : "";
   };
 
   return (
@@ -113,22 +145,25 @@ const CreateContent = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">
+                <TableHead className="w-12 text-center">
                   <Checkbox 
                     checked={selectAll} 
                     onCheckedChange={handleSelectAll}
                     aria-label="Select all"
                   />
                 </TableHead>
-                <TableHead className="w-1/4">Tanggal Posting</TableHead>
-                <TableHead>Tipe Content</TableHead>
+                <TableHead className="w-1/6 text-center">Tanggal Posting</TableHead>
+                <TableHead className="text-center">Tipe Content</TableHead>
+                <TableHead className="text-center">PIC</TableHead>
+                <TableHead className="text-center">Layanan</TableHead>
+                <TableHead className="text-center">Sub Layanan</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {contentItems.length > 0 ? (
                 contentItems.map(item => (
                   <TableRow key={item.id}>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Checkbox 
                         checked={item.isSelected} 
                         onCheckedChange={() => toggleSelectItem(item.id)}
@@ -177,11 +212,75 @@ const CreateContent = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
+                    <TableCell>
+                      <Select 
+                        value={item.pic} 
+                        onValueChange={(value) => handlePICChange(item.id, value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select PIC" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contentPlanners.length > 0 ? (
+                            contentPlanners.map((planner) => (
+                              <SelectItem key={planner.id} value={planner.name}>
+                                {planner.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-pic" disabled>
+                              No content planners found
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select 
+                        value={item.service} 
+                        onValueChange={(value) => handleServiceChange(item.id, value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select service" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {services.map((service) => (
+                            <SelectItem key={service.id} value={service.id}>
+                              {service.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select 
+                        value={item.subService} 
+                        onValueChange={(value) => handleSubServiceChange(item.id, value)}
+                        disabled={!item.service}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select sub-service" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {item.service ? (
+                            getFilteredSubServicesByServiceId(item.service).map((subService) => (
+                              <SelectItem key={subService.id} value={subService.id}>
+                                {subService.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-sub" disabled>
+                              Select a service first
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     No content items. Click "Add Row" to create one.
                   </TableCell>
                 </TableRow>
