@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CirclePlay, BarChart3, Users, ExternalLink, Lightning } from "lucide-react";
+import { CirclePlay, BarChart3, Users, ExternalLink, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AIRecommendationsProps {
@@ -47,7 +47,7 @@ export const AIRecommendations: React.FC<AIRecommendationsProps> = ({
       id: 'performance',
       title: 'Performance Boost',
       description: 'Upgrade to remove usage limits and speed up your workflow.',
-      icon: <Lightning className="h-8 w-8 text-amber-500" />,
+      icon: <Zap className="h-8 w-8 text-amber-500" />,
       benefit: '3x faster processing for your data-heavy operations'
     }
   ];

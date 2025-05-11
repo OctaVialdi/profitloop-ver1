@@ -16,7 +16,8 @@ import { SubscriptionPlan } from "@/types/organization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { stripeService } from "@/services/stripeService";
 import { toast } from "sonner";
-import { PromotionCountdown, AIRecommendations } from "@/components/subscription";
+import { PromotionCountdown } from "@/components/subscription/PromotionCountdown";
+import { AIRecommendations } from "@/components/subscription/AIRecommendations";
 
 const PlanSettings: React.FC = () => {
   const navigate = useNavigate();
