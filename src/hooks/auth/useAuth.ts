@@ -52,6 +52,10 @@ export function useAuth() {
       
       console.log("Delete user function response:", data);
       
+      if (!data.success) {
+        throw new Error(data.error || "Gagal menghapus akun");
+      }
+      
       toast.success("Akun berhasil dihapus");
       
       // 3. Sign out and redirect to register page

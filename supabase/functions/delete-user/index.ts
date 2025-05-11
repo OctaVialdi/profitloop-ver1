@@ -42,7 +42,7 @@ serve(async (req) => {
     // 1. Get user info first to check if they own an organization
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('organization_id, role')
+      .select('organization_id, role, full_name')
       .eq('id', user_id)
       .single();
 
@@ -78,7 +78,115 @@ serve(async (req) => {
       }
     }
 
-    // 2. Delete the organization if needed
+    // Start a cleanup process to delete all references to the user
+    console.log('Beginning cleanup of user-related data');
+
+    // Track any error that happens during cleanup
+    const cleanupErrors = [];
+
+    // 2. Delete user's notifications
+    try {
+      console.log('Removing user notifications');
+      const { error: notifDeleteError } = await supabaseAdmin
+        .from('notifications')
+        .delete()
+        .eq('user_id', user_id);
+      
+      if (notifDeleteError) {
+        console.error(`Error deleting notifications: ${notifDeleteError.message}`);
+        cleanupErrors.push(`Notifications: ${notifDeleteError.message}`);
+      }
+    } catch (err) {
+      console.error(`Exception deleting notifications: ${err.message}`);
+      cleanupErrors.push(`Notifications exception: ${err.message}`);
+    }
+
+    // 3. Delete user's payment transactions
+    try {
+      console.log('Removing user payment transactions');
+      const { error: paymentDeleteError } = await supabaseAdmin
+        .from('payment_transactions')
+        .delete()
+        .eq('user_id', user_id);
+      
+      if (paymentDeleteError) {
+        console.error(`Error deleting payment transactions: ${paymentDeleteError.message}`);
+        cleanupErrors.push(`Payment transactions: ${paymentDeleteError.message}`);
+      }
+    } catch (err) {
+      console.error(`Exception deleting payment transactions: ${err.message}`);
+      cleanupErrors.push(`Payment transactions exception: ${err.message}`);
+    }
+
+    // 4. Delete user's org memberships
+    try {
+      console.log('Removing org memberships');
+      const { error: orgMemberDeleteError } = await supabaseAdmin
+        .from('org_members')
+        .delete()
+        .eq('user_id', user_id);
+      
+      if (orgMemberDeleteError) {
+        console.error(`Error deleting org members: ${orgMemberDeleteError.message}`);
+        cleanupErrors.push(`Org members: ${orgMemberDeleteError.message}`);
+      }
+    } catch (err) {
+      console.error(`Exception deleting org members: ${err.message}`);
+      cleanupErrors.push(`Org members exception: ${err.message}`);
+    }
+
+    // 5. Delete payment logs associated with the user
+    try {
+      console.log('Removing payment logs');
+      const { error: paymentLogDeleteError } = await supabaseAdmin
+        .from('payment_logs')
+        .delete()
+        .eq('user_id', user_id);
+      
+      if (paymentLogDeleteError) {
+        console.error(`Error deleting payment logs: ${paymentLogDeleteError.message}`);
+        cleanupErrors.push(`Payment logs: ${paymentLogDeleteError.message}`);
+      }
+    } catch (err) {
+      console.error(`Exception deleting payment logs: ${err.message}`);
+      cleanupErrors.push(`Payment logs exception: ${err.message}`);
+    }
+
+    // 6. Delete subscription audit logs created by the user
+    try {
+      console.log('Removing subscription audit logs');
+      const { error: subAuditDeleteError } = await supabaseAdmin
+        .from('subscription_audit_logs')
+        .delete()
+        .eq('user_id', user_id);
+      
+      if (subAuditDeleteError) {
+        console.error(`Error deleting subscription audit logs: ${subAuditDeleteError.message}`);
+        cleanupErrors.push(`Subscription audit logs: ${subAuditDeleteError.message}`);
+      }
+    } catch (err) {
+      console.error(`Exception deleting subscription audit logs: ${err.message}`);
+      cleanupErrors.push(`Subscription audit logs exception: ${err.message}`);
+    }
+
+    // 7. Delete subscription analytics associated with the user
+    try {
+      console.log('Removing subscription analytics');
+      const { error: subAnalyticsDeleteError } = await supabaseAdmin
+        .from('subscription_analytics')
+        .delete()
+        .eq('user_id', user_id);
+      
+      if (subAnalyticsDeleteError) {
+        console.error(`Error deleting subscription analytics: ${subAnalyticsDeleteError.message}`);
+        cleanupErrors.push(`Subscription analytics: ${subAnalyticsDeleteError.message}`);
+      }
+    } catch (err) {
+      console.error(`Exception deleting subscription analytics: ${err.message}`);
+      cleanupErrors.push(`Subscription analytics exception: ${err.message}`);
+    }
+
+    // 8. Delete the organization if needed
     if (shouldDeleteOrg && profile?.organization_id) {
       try {
         console.log(`Deleting organization: ${profile.organization_id}`);
@@ -90,6 +198,7 @@ serve(async (req) => {
         
         if (deleteOrgError) {
           console.error(`Error deleting organization: ${deleteOrgError.message}`);
+          cleanupErrors.push(`Organization: ${deleteOrgError.message}`);
         } else {
           console.log(`Organization deleted successfully: ${profile.organization_id}`);
         }
@@ -97,11 +206,12 @@ serve(async (req) => {
         // Note: Any associated records will be deleted via cascade delete rules in database
       } catch (orgError) {
         console.error(`Error during organization deletion: ${orgError.message}`);
+        cleanupErrors.push(`Organization exception: ${orgError.message}`);
         // Continue with user deletion even if org deletion fails
       }
     }
 
-    // 3. Finally, delete the user from auth.users 
+    // 9. Finally, delete the user from auth.users 
     // This will cascade delete their profile due to the trigger we have set up
     console.log(`Deleting user from auth system: ${user_id}`);
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
@@ -116,7 +226,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         message: 'User account deleted successfully',
-        deleted_organization: shouldDeleteOrg
+        deleted_organization: shouldDeleteOrg,
+        cleanup_errors: cleanupErrors.length > 0 ? cleanupErrors : null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
