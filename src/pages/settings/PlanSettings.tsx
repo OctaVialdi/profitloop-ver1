@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -139,7 +138,10 @@ const PlanSettings: React.FC = () => {
     // Look for the feature in the features object with flexible matching
     for (const [key, value] of Object.entries(plan.features)) {
       if (key.toLowerCase().includes(featureName.toLowerCase())) {
-        return value;
+        // Fix: Convert the value to string to ensure it's compatible with the return type
+        return typeof value === 'string' || typeof value === 'boolean' 
+          ? value 
+          : String(value);
       }
     }
     
