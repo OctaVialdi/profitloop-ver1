@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, LineChart, ChartContainer } from "@/components/ui/chart";
@@ -44,24 +43,24 @@ const SubscriptionAnalytics = () => {
     fetchData();
   }, [toast]);
 
-  // Prepare data for charts
-  const formatEventTypeData = () => {
+  // Helper function to format data for the charts
+  function formatEventTypeData() {
     if (!eventCounts) return [];
     
     return Object.entries(eventCounts).map(([name, value]) => ({
       name,
       value
     }));
-  };
+  }
 
-  const formatFeatureData = () => {
+  function formatFeatureData() {
     if (!featureConversions) return [];
     
     return featureConversions.map(item => ({
       name: item.feature,
       value: item.conversions
     }));
-  };
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2">

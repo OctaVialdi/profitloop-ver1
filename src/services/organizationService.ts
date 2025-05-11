@@ -50,7 +50,9 @@ export async function getOrganization(organizationId: string): Promise<Organizat
       trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false,
       subscription_status: orgData.subscription_status as 'trial' | 'active' | 'expired' || 'trial',
       trial_start_date: orgData.trial_start_date || null,
-      grace_period_end: orgData.grace_period_end || null
+      grace_period_end: orgData.grace_period_end || null,
+      stripe_customer_id: orgData.stripe_customer_id || null, // Added new field
+      billing_email: orgData.billing_email || null // Added new field
     };
   } catch (error) {
     console.error("Error fetching organization:", error);

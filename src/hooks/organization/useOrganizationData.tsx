@@ -1,4 +1,3 @@
-
 import { Dispatch, SetStateAction } from "react";
 import { NavigateFunction } from "react-router-dom";
 import { OrganizationData, UserProfile, SubscriptionPlan } from "@/types/organization";
@@ -114,10 +113,12 @@ export async function fetchOrganizationData(
         }
       }
       
-      // Create organization object with processed theme_settings
+      // Create organization object with processed theme_settings and new fields
       const organization = {
         ...orgData,
-        theme_settings: themeSettings
+        theme_settings: themeSettings,
+        stripe_customer_id: orgData.stripe_customer_id || null,
+        billing_email: orgData.billing_email || null
       };
       
       // Determine user roles based on profile role

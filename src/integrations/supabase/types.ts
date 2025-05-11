@@ -1757,6 +1757,7 @@ export type Database = {
       organizations: {
         Row: {
           address: string | null
+          billing_email: string | null
           business_field: string | null
           created_at: string | null
           creator_email: string | null
@@ -1766,6 +1767,7 @@ export type Database = {
           logo_path: string | null
           name: string
           phone: string | null
+          stripe_customer_id: string | null
           subscription_plan_id: string | null
           subscription_status: string | null
           theme_settings: Json | null
@@ -1775,6 +1777,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          billing_email?: string | null
           business_field?: string | null
           created_at?: string | null
           creator_email?: string | null
@@ -1784,6 +1787,7 @@ export type Database = {
           logo_path?: string | null
           name: string
           phone?: string | null
+          stripe_customer_id?: string | null
           subscription_plan_id?: string | null
           subscription_status?: string | null
           theme_settings?: Json | null
@@ -1793,6 +1797,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          billing_email?: string | null
           business_field?: string | null
           created_at?: string | null
           creator_email?: string | null
@@ -1802,6 +1807,7 @@ export type Database = {
           logo_path?: string | null
           name?: string
           phone?: string | null
+          stripe_customer_id?: string | null
           subscription_plan_id?: string | null
           subscription_status?: string | null
           theme_settings?: Json | null

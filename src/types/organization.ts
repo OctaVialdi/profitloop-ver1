@@ -1,4 +1,3 @@
-
 export interface UserProfile {
   id: string;
   organization_id?: string;
@@ -38,6 +37,8 @@ export interface Organization {
   trial_start_date?: string;
   creator_email?: string;
   grace_period_end?: string;
+  stripe_customer_id?: string; // Added new field for Midtrans integration
+  billing_email?: string; // Added new field for billing email
 }
 
 export interface UserPreferences {
