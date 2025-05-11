@@ -184,5 +184,69 @@ export const stripeService = {
       console.error("Error sending trial reminder email:", error);
       return false;
     }
+  },
+
+  /**
+   * Cancel subscription with reason
+   * @param reason The reason for cancellation
+   * @param feedback Optional feedback from the user
+   * @returns Success status
+   */
+  cancelSubscription: async (reason: string, feedback?: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { 
+          reason,
+          feedback
+        }
+      });
+      
+      if (error) throw new Error(`Error cancelling subscription: ${error.message}`);
+      
+      // Store cancellation reason and feedback in database
+      if (reason) {
+        await supabase.from('subscription_cancellations').insert({
+          reason,
+          feedback: feedback || null,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      return data?.success || false;
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Apply a discount offer to the user's subscription
+   * @param discountPercent The percentage discount to apply
+   * @param durationMonths The number of months for the discount
+   * @returns Success status
+   */
+  applyDiscountOffer: async (discountPercent: number = 30, durationMonths: number = 3): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("apply-discount", {
+        body: { 
+          discountPercent,
+          durationMonths
+        }
+      });
+      
+      if (error) throw new Error(`Error applying discount: ${error.message}`);
+      
+      // Store discount claim in database
+      await supabase.from('subscription_discounts').insert({
+        discount_percent: discountPercent,
+        duration_months: durationMonths,
+        claimed_at: new Date().toISOString()
+      });
+      
+      return data?.success || false;
+    } catch (error) {
+      console.error("Error applying discount offer:", error);
+      throw error;
+    }
   }
 };

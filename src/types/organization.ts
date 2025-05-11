@@ -128,3 +128,23 @@ export interface UserProfile {
   created_at?: string | null;
   last_active?: string | null;
 }
+
+export interface SubscriptionCancellation {
+  id?: string;
+  organization_id?: string;
+  user_id?: string;
+  reason: string;
+  feedback?: string | null;
+  timestamp?: string;
+}
+
+export interface SubscriptionDiscount {
+  id?: string;
+  organization_id?: string;
+  user_id?: string;
+  discount_percent: number;
+  duration_months: number;
+  claimed_at?: string;
+  expires_at?: string;
+  is_active?: boolean;
+}

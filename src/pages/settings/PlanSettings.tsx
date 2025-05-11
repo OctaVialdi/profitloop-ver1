@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, Info, AlertTriangle, CreditCard, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Info, AlertTriangle, CreditCard, ShieldCheck, X } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { TrialProgressIndicator } from "@/components/subscription/TrialProgressIndicator";
 import { TrialExpiredModal } from "@/components/subscription/TrialExpiredModal";
 import { PricingDisplay } from "@/components/subscription/PricingDisplay"; 
+import { CancelPlanDialog } from "@/components/subscription/CancelPlanDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionPlan } from "@/types/organization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
@@ -28,6 +29,7 @@ const PlanSettings: React.FC = () => {
   } = useOrganization();
   
   const [showExpiredModal, setShowExpiredModal] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -201,6 +203,33 @@ const PlanSettings: React.FC = () => {
     navigate("/settings/subscription/request-extension");
   };
   
+  const handleCancelPlan = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleConfirmCancelPlan = async (reason: string) => {
+    try {
+      setSubmitting(true);
+      
+      // Call the stripe service to cancel the subscription
+      const success = await stripeService.cancelSubscription(reason);
+      
+      if (success) {
+        toast.success("Your subscription has been cancelled successfully");
+        // Refresh organization data to reflect changes
+        await refreshData();
+      } else {
+        throw new Error("Failed to cancel subscription");
+      }
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      toast.error("Failed to cancel subscription. Please try again or contact support.");
+      throw error;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  
   const isSubscribedToPlan = (planId: string) => {
     return organization?.subscription_plan_id === planId;
   };
@@ -338,9 +367,16 @@ const PlanSettings: React.FC = () => {
           
         </CardContent>
         <CardFooter>
-          <Button onClick={() => navigate("/settings/subscription")}>
-            {hasPaidSubscription ? "Change Plan" : "Upgrade Plan"}
-          </Button>
+          {hasPaidSubscription ? (
+            <Button variant="destructive" onClick={handleCancelPlan}>
+              <X className="mr-2 h-4 w-4" />
+              Cancel Plan
+            </Button>
+          ) : (
+            <Button onClick={() => navigate("/settings/subscription")}>
+              Upgrade Plan
+            </Button>
+          )}
         </CardFooter>
       </Card>
       
@@ -455,6 +491,14 @@ const PlanSettings: React.FC = () => {
         onRequest={handleRequestExtension}
         allowClose={false}
         organizationName={organization?.name || "your organization"}
+      />
+
+      {/* Cancel Subscription Dialog */}
+      <CancelPlanDialog 
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onConfirmCancel={handleConfirmCancelPlan}
+        planName={subscriptionPlan?.name || "Subscription"}
       />
     </div>
   );
