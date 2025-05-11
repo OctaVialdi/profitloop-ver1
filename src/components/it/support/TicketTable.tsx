@@ -78,7 +78,7 @@ export default function TicketTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">
-                <TableHead className="w-[80px]">ID</TableHead>
+                <TableHead className="w-[120px]">Ticket ID</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Category</TableHead>
@@ -110,7 +110,7 @@ export default function TicketTable({
               ) : (
                 tickets.map((ticket) => (
                   <TableRow key={ticket.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">{ticket.id}</TableCell>
+                    <TableCell className="font-medium">{ticket.ticket_id}</TableCell>
                     <TableCell>{ticket.title}</TableCell>
                     <TableCell>{ticket.department}</TableCell>
                     <TableCell>

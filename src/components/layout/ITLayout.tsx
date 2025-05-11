@@ -19,9 +19,7 @@ export default function ITLayout({ children }: ITLayoutProps) {
   const location = useLocation();
   
   const tabs: Tab[] = [
-    { name: "Dashboard", href: "/it/dashboard" },
     { name: "IT Support", href: "/it/support" },
-    { name: "IT Developer", href: "/it/developer" },
   ];
   
   const currentPath = location.pathname;
@@ -37,23 +35,6 @@ export default function ITLayout({ children }: ITLayoutProps) {
 
   return (
     <div className="w-full space-y-4">
-      <Card className="sticky top-0 z-10 mb-4 p-1 overflow-x-auto bg-white">
-        <Tabs defaultValue={defaultTab} value={defaultTab} className="w-full">
-          <TabsList className="w-full justify-start">
-            {tabs.map((tab) => (
-              <TabsTrigger 
-                key={tab.href} 
-                value={tab.href} 
-                className="min-w-[100px] transition-all duration-200 ease-in-out" 
-                asChild
-              >
-                <Link to={tab.href}>{tab.name}</Link>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </Card>
-      
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location.pathname}

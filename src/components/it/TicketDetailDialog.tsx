@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -66,8 +67,8 @@ const TicketDetailDialog: React.FC<TicketDetailDialogProps> = ({
           <div className="space-y-2">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="font-medium">ID:</p>
-                <p>{ticket.id}</p>
+                <p className="font-medium">Ticket ID:</p>
+                <p>{ticket.ticket_id}</p>
               </div>
             </div>
           </div>
@@ -120,6 +121,13 @@ const TicketDetailDialog: React.FC<TicketDetailDialogProps> = ({
             <p className="font-medium">Assignee</p>
             <p className="p-3 border rounded-md">{ticket.assignee}</p>
           </div>
+
+          {ticket.relatedAsset && (
+            <div className="space-y-2">
+              <p className="font-medium">Related Asset</p>
+              <p className="p-3 border rounded-md">{ticket.relatedAsset}</p>
+            </div>
+          )}
 
           <div className="border-t pt-4">
             <h3 className="font-medium text-lg mb-4">Approval Process</h3>

@@ -2436,6 +2436,7 @@ export type Database = {
           priority: string
           related_asset: string | null
           status: string
+          ticket_id: string | null
           title: string
           updated_at: string | null
         }
@@ -2453,6 +2454,7 @@ export type Database = {
           priority: string
           related_asset?: string | null
           status: string
+          ticket_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -2470,6 +2472,7 @@ export type Database = {
           priority?: string
           related_asset?: string | null
           status?: string
+          ticket_id?: string | null
           title?: string
           updated_at?: string | null
         }

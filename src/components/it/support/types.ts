@@ -1,6 +1,7 @@
 
 export interface Ticket {
   id: string;
+  ticket_id: string;
   title: string;
   description?: string;
   department: string;
@@ -20,5 +21,5 @@ export interface Ticket {
     type: "completed" | "pending" | null;
   };
   assignee: string;
-  relatedAsset?: string; // Added this property
+  relatedAsset?: string;
 }

@@ -7,6 +7,7 @@ import { Ticket } from '@/components/it/support/types';
 // Interface for our DB ticket model
 export interface SupportTicket {
   id: string;
+  ticket_id: string;
   title: string;
   description?: string;
   department: string;
@@ -42,7 +43,7 @@ export const fetchTickets = async (): Promise<SupportTicket[]> => {
 };
 
 // Create a new ticket
-export const createTicket = async (ticket: Omit<SupportTicket, 'id' | 'created_at' | 'updated_at'>): Promise<SupportTicket | null> => {
+export const createTicket = async (ticket: Omit<SupportTicket, 'id' | 'created_at' | 'updated_at' | 'ticket_id'>): Promise<SupportTicket | null> => {
   try {
     const { data, error } = await supabase
       .from('support_tickets')
@@ -121,6 +122,7 @@ export const fetchEmployees = async (): Promise<{ id: string, name: string }[]> 
 export const mapDbTicketToUiTicket = (dbTicket: SupportTicket): Ticket => {
   return {
     id: dbTicket.id,
+    ticket_id: dbTicket.ticket_id || `TKT-${dbTicket.id.substr(0, 8)}`, // Fallback if ticket_id not available
     title: dbTicket.title,
     description: dbTicket.description || "",
     department: dbTicket.department,
@@ -128,8 +130,8 @@ export const mapDbTicketToUiTicket = (dbTicket: SupportTicket): Ticket => {
       name: dbTicket.category, 
       icon: dbTicket.category_icon || ""
     },
-    priority: dbTicket.priority as "High" | "Medium" | "Low", // Added type assertion
-    status: dbTicket.status as "In Progress" | "Resolved" | "Pending" | "Received" | "Open" | "Maintenance" | "Retired" | "Rejected", // Added type assertion
+    priority: dbTicket.priority as "High" | "Medium" | "Low",
+    status: dbTicket.status as "In Progress" | "Resolved" | "Pending" | "Received" | "Open" | "Maintenance" | "Retired" | "Rejected",
     createdAt: new Date(dbTicket.created_at).toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric', 
@@ -149,7 +151,7 @@ export const mapUiTicketToDbTicket = (
   uiTicket: Partial<Ticket>, 
   organizationId: string, 
   userId?: string
-): Omit<SupportTicket, 'id' | 'created_at' | 'updated_at'> => {
+): Omit<SupportTicket, 'id' | 'created_at' | 'updated_at' | 'ticket_id'> => {
   return {
     title: uiTicket.title || "",
     description: uiTicket.description,
