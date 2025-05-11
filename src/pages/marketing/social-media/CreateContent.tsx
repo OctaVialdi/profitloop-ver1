@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, PlusCircle, Trash2, ExternalLink, Edit } from "lucide-react";
+import { CalendarIcon, PlusCircle, Trash2, ExternalLink, Edit, FileText, List, CircleDot } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -329,6 +329,7 @@ const CreateContent = () => {
                           placeholder="Enter title"
                           className="w-full"
                           maxLength={25}
+                          icon={<FileText className="h-4 w-4 text-muted-foreground" />}
                         />
                       </TableCell>
                       <TableCell>
@@ -337,7 +338,7 @@ const CreateContent = () => {
                           onValueChange={(value) => handleContentPillarChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select pillar" />
+                            <SelectValue placeholder="Select pillar" icon={<List className="h-4 w-4" />} />
                           </SelectTrigger>
                           <SelectContent>
                             {contentPillars.map((pillar) => (
@@ -377,6 +378,7 @@ const CreateContent = () => {
                             className="w-full justify-center"
                             onClick={() => openBriefDialog(item.id, "")}
                           >
+                            <FileText className="h-4 w-4 mr-2" />
                             Click to add brief
                           </Button>
                         )}
@@ -387,7 +389,7 @@ const CreateContent = () => {
                           onValueChange={(value) => handleStatusChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="-" />
+                            <SelectValue placeholder="-" icon={<CircleDot className="h-4 w-4" />} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="">-</SelectItem>
