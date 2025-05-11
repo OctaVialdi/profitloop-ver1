@@ -1,4 +1,3 @@
-
 export interface Organization {
   id: string;
   name: string;
@@ -109,4 +108,20 @@ export interface Invoice {
 export interface InvoiceHistoryResponse {
   invoices: Invoice[];
   total_count: number;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name?: string | null;
+  profile_image?: string | null;
+  timezone?: string | null;
+  role?: string | null;
+  organization_id?: string | null;
+  email_verified?: boolean;
+  has_seen_welcome?: boolean;
+  invited_by?: string | null;
+  preferences?: Record<string, any> | null;
+  created_at?: string | null;
+  last_active?: string | null;
 }

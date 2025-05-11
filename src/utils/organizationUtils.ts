@@ -1,5 +1,5 @@
 
-import { Organization, SubscriptionPlan, UserProfile } from "@/types/organization";
+import { Organization, SubscriptionPlan, UserProfile, ThemeSettings } from "@/types/organization";
 
 export function calculateTrialStatus(organization: Organization | null): {
   isTrialActive: boolean;

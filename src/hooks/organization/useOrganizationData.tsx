@@ -1,6 +1,7 @@
+
 import { Dispatch, SetStateAction } from "react";
 import { NavigateFunction } from "react-router-dom";
-import { OrganizationData, UserProfile, SubscriptionPlan } from "@/types/organization";
+import { OrganizationData, UserProfile, SubscriptionPlan, ThemeSettings } from "@/types/organization";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -91,25 +92,25 @@ export async function fetchOrganizationData(
       }
       
       // Process theme_settings
-      let themeSettings = orgData.theme_settings || {
+      let themeSettings: ThemeSettings = {
         primary_color: "#1E40AF",
         secondary_color: "#3B82F6",
         accent_color: "#60A5FA",
         sidebar_color: "#F1F5F9",
       };
       
-      // Handle theme_settings if it's a string (JSON)
-      if (typeof themeSettings === 'string') {
-        try {
-          themeSettings = JSON.parse(themeSettings);
-        } catch (e) {
-          console.warn("Failed to parse theme_settings JSON", e);
-          themeSettings = {
-            primary_color: "#1E40AF",
-            secondary_color: "#3B82F6",
-            accent_color: "#60A5FA",
-            sidebar_color: "#F1F5F9",
-          };
+      // Handle theme_settings if it exists
+      if (orgData.theme_settings) {
+        // Handle theme_settings if it's a string (JSON)
+        if (typeof orgData.theme_settings === 'string') {
+          try {
+            themeSettings = JSON.parse(orgData.theme_settings);
+          } catch (e) {
+            console.warn("Failed to parse theme_settings JSON", e);
+          }
+        } else {
+          // It's already an object
+          themeSettings = orgData.theme_settings as ThemeSettings;
         }
       }
       
@@ -127,10 +128,10 @@ export async function fetchOrganizationData(
       const isEmployee = userProfileData.role === "employee" || isAdmin;
       
       // Calculate trial status
-      const trialEndDate = new Date(organization.trial_end_date);
+      const trialEndDate = organization.trial_end_date ? new Date(organization.trial_end_date) : null;
       const now = new Date();
-      const isTrialActive = !organization.trial_expired && trialEndDate > now;
-      const daysLeftInTrial = isTrialActive ? 
+      const isTrialActive = !organization.trial_expired && trialEndDate && trialEndDate > now;
+      const daysLeftInTrial = (isTrialActive && trialEndDate) ? 
         Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 3600 * 24)) : 0;
       const hasPaidSubscription = organization.subscription_status === 'active';
 
@@ -156,7 +157,7 @@ export async function fetchOrganizationData(
           
           subscriptionPlan = {
             ...planData,
-            features: features
+            features: features as Record<string, any>
           };
         }
       }
