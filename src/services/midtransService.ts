@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 /**
  * Midtrans integration service
@@ -95,24 +95,26 @@ export const midtransService = {
       }
       
       // Open the Snap modal
-      window.snap.pay(token, {
-        onSuccess: () => {
-          toast.success("Pembayaran berhasil!");
-          if (onSuccess) onSuccess();
-        },
-        onPending: () => {
-          toast.info("Pembayaran sedang diproses.");
-        },
-        onError: (error: any) => {
-          console.error("Payment error:", error);
-          toast.error("Pembayaran gagal. Silakan coba lagi.");
-          if (onError) onError(error);
-        },
-        onClose: () => {
-          toast.info("Modal pembayaran ditutup.");
-          if (onClose) onClose();
-        }
-      });
+      if (window.snap) {
+        window.snap.pay(token, {
+          onSuccess: () => {
+            toast.success("Pembayaran berhasil!");
+            if (onSuccess) onSuccess();
+          },
+          onPending: () => {
+            toast.info("Pembayaran sedang diproses.");
+          },
+          onError: (error: any) => {
+            console.error("Payment error:", error);
+            toast.error("Pembayaran gagal. Silakan coba lagi.");
+            if (onError) onError(error);
+          },
+          onClose: () => {
+            toast.info("Modal pembayaran ditutup.");
+            if (onClose) onClose();
+          }
+        });
+      }
     } catch (error) {
       console.error("Error opening Snap modal:", error);
       toast.error("Gagal membuka halaman pembayaran. Silakan coba lagi.");
@@ -122,6 +124,14 @@ export const midtransService = {
   /**
    * Redirect to Midtrans checkout URL
    * @param redirectUrl The Midtrans redirect URL
+   */
+  redirectToPayment: (redirectUrl: string) => {
+    window.location.href = redirectUrl;
+  },
+  
+  /**
+   * Redirect to checkout page
+   * @param redirectUrl The checkout URL
    */
   redirectToCheckout: (redirectUrl: string) => {
     window.location.href = redirectUrl;

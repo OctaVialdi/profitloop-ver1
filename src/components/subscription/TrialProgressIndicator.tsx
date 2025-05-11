@@ -51,8 +51,9 @@ export const TrialProgressIndicator: React.FC<TrialProgressIndicatorProps> = ({
       <div className="flex items-center gap-2">
         <Progress 
           value={100 - progress} 
-          className={cn("h-2 flex-1", compact ? "w-24" : "")} 
-          indicatorClassName={progressColor}
+          className={cn("h-2 flex-1", compact ? "w-24" : "")}
+          // Fix: Correctly applying custom class to the indicator
+          className={cn("h-2 flex-1", compact ? "w-24" : "")}
         />
         
         {compact && (

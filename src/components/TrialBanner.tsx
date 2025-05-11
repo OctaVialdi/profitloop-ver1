@@ -161,7 +161,7 @@ const TrialBanner = () => {
         }
         
         setOrganizationName(orgData.name || 'your organization');
-        handleTrialData(orgData);
+        await handleTrialData(orgData);
       } catch (error) {
         console.error("Error fetching organization data:", error);
         setIsLoading(false);
@@ -169,7 +169,7 @@ const TrialBanner = () => {
     };
     
     // Function to handle trial data processing
-    const handleTrialData = (orgData: any) => {
+    const handleTrialData = async (orgData: any) => {
       // Process trial start and end dates
       const trialStartDate = orgData.trial_start_date ? new Date(orgData.trial_start_date) : null;
       const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
@@ -225,21 +225,27 @@ const TrialBanner = () => {
           if ((diffDays === 7 || diffDays === 3 || diffDays === 1) && 
               (!lastReminder || lastReminder !== today)) {
             
-            // Get user email
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email) {
-              // Send email reminder
-              subscriptionNotificationService.sendTrialExpirationReminder(
-                organizationId,
-                diffDays,
-                user.email
-              ).then(success => {
-                if (success) {
-                  // Store the date of this reminder to avoid sending duplicates
-                  localStorage.setItem(lastReminderKey, today);
-                  console.log(`Trial reminder email sent for ${diffDays} days left`);
-                }
-              });
+            try {
+              // Get user email - FIXED: Using an async context
+              const userResponse = await supabase.auth.getUser();
+              const user = userResponse.data?.user;
+              
+              if (user?.email) {
+                // Send email reminder
+                subscriptionNotificationService.sendTrialExpirationReminder(
+                  organizationId,
+                  diffDays,
+                  user.email
+                ).then(success => {
+                  if (success) {
+                    // Store the date of this reminder to avoid sending duplicates
+                    localStorage.setItem(lastReminderKey, today);
+                    console.log(`Trial reminder email sent for ${diffDays} days left`);
+                  }
+                });
+              }
+            } catch (error) {
+              console.error("Error getting user:", error);
             }
             
             // Create in-app notification
@@ -277,14 +283,16 @@ const TrialBanner = () => {
   
   // Handle subscription navigation
   const handleSubscribe = () => {
-    subscriptionAnalyticsService.trackEvent({
-      eventType: 'trial_banner_upgrade_click',
-      organizationId: organizationId,
-      additionalData: { 
-        daysLeft: daysLeft,
-        source: 'banner' 
-      }
-    });
+    if (organizationId) {
+      subscriptionAnalyticsService.trackEvent({
+        eventType: 'trial_banner_clicked',
+        organizationId: organizationId,
+        additionalData: { 
+          daysLeft: daysLeft,
+          source: 'banner' 
+        }
+      });
+    }
     navigate('/settings/subscription');
   };
   
@@ -293,11 +301,13 @@ const TrialBanner = () => {
     setIsDismissed(true);
     localStorage.setItem('trial_banner_dismissed', 'true');
     
-    subscriptionAnalyticsService.trackEvent({
-      eventType: 'trial_banner_dismissed',
-      organizationId: organizationId,
-      additionalData: { daysLeft: daysLeft }
-    });
+    if (organizationId) {
+      subscriptionAnalyticsService.trackEvent({
+        eventType: 'banner_dismissed',
+        organizationId: organizationId,
+        additionalData: { daysLeft: daysLeft }
+      });
+    }
   };
   
   // Don't show the banner on auth pages, if not authenticated, if dismissed, or if loading
@@ -313,7 +323,7 @@ const TrialBanner = () => {
   // Determine alert variant based on days left
   const getVariant = () => {
     if (isTrialExpired) return "destructive";
-    if (daysLeft <= 3) return "warning";
+    if (daysLeft <= 3) return "default";
     return "default";
   };
   
@@ -374,18 +384,22 @@ const TrialBanner = () => {
         isOpen={showExpiredModal && isTrialExpired}
         organizationName={organizationName}
         onUpgrade={() => {
-          subscriptionAnalyticsService.trackEvent({
-            eventType: 'trial_expired_modal_upgrade',
-            organizationId: organizationId
-          });
+          if (organizationId) {
+            subscriptionAnalyticsService.trackEvent({
+              eventType: 'trial_expired_action',
+              organizationId: organizationId
+            });
+          }
           setShowExpiredModal(false);
           navigate('/settings/subscription');
         }}
         onRequest={() => {
-          subscriptionAnalyticsService.trackEvent({
-            eventType: 'trial_expired_modal_request_extension',
-            organizationId: organizationId
-          });
+          if (organizationId) {
+            subscriptionAnalyticsService.trackEvent({
+              eventType: 'extension_requested',
+              organizationId: organizationId
+            });
+          }
           setShowExpiredModal(false);
           navigate('/settings/subscription/request-extension');
         }}

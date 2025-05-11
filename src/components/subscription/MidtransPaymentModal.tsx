@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, ExternalLink } from "lucide-react";
-import { midtransService } from "@/services/midtransService";
 import { toast } from "sonner";
 
 interface MidtransPaymentModalProps {
@@ -38,7 +37,7 @@ export function MidtransPaymentModal({
     }
     
     // Redirect to Midtrans payment page
-    midtransService.redirectToPayment(redirectUrl);
+    window.location.href = redirectUrl;
   };
 
   return (

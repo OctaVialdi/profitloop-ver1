@@ -13,21 +13,13 @@ import { settingsRoutes } from "./settingsRoutes";
 // Subscription routes
 import SubscriptionSuccess from "@/pages/subscription/SubscriptionSuccess";
 
-// Recruitment routes
-import { recruitmentRoutes } from "./recruitmentRoutes";
-
-// Employee routes
-import { employeeRoutes } from "./employeeRoutes";
-
-// Public routes
-import Homepage from "@/pages/Homepage";
-import { RecruitmentPublicRoutes } from "./recruitmentPublicRoutes";
+// Not found
 import NotFound from "@/pages/NotFound";
 
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <Homepage />,
+    element: <Navigate to="/dashboard" replace />,
   },
   // Auth Routes
   ...authRoutes,
@@ -43,11 +35,6 @@ export const routes: RouteObject[] = [
     path: "/subscription/success",
     element: <SubscriptionSuccess />
   },
-  
-  // Recruitment
-  ...recruitmentRoutes,
-  ...RecruitmentPublicRoutes,
-  ...employeeRoutes,
   
   // Not found
   {
