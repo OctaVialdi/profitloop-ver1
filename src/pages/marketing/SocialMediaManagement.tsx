@@ -53,9 +53,6 @@ interface ContentManager {
   onTimeRate: number;
   effectiveRate: number;
   score: number;
-  pic?: string; // Added for PIC
-  service?: string; // Added for Layanan
-  subService?: string; // Added for Sub Layanan
 }
 
 interface TabData {
@@ -170,10 +167,7 @@ const SocialMediaManagement = () => {
         progress: 75,
         onTimeRate: 80,
         effectiveRate: 90,
-        score: 82,
-        pic: "Sarah Wilson",
-        service: "Social Media",
-        subService: "Instagram"
+        score: 82
       },
       {
         name: "Jane Smith",
@@ -183,10 +177,7 @@ const SocialMediaManagement = () => {
         progress: 80,
         onTimeRate: 70,
         effectiveRate: 85,
-        score: 78,
-        pic: "Mark Johnson",
-        service: "Social Media", 
-        subService: "Facebook"
+        score: 78
       },
       {
         name: "Mike Johnson",
@@ -196,10 +187,7 @@ const SocialMediaManagement = () => {
         progress: 65,
         onTimeRate: 75,
         effectiveRate: 80,
-        score: 76,
-        pic: "Emily Davis", 
-        service: "SEO", 
-        subService: "On-page SEO"
+        score: 76
       },
       {
         name: "Sara Williams",
@@ -209,10 +197,7 @@ const SocialMediaManagement = () => {
         progress: 85,
         onTimeRate: 85,
         effectiveRate: 88,
-        score: 86,
-        pic: "Robert Chen",
-        service: "SEM",
-        subService: "Google Ads"
+        score: 86
       }
     ];
   }, []);
@@ -464,18 +449,6 @@ const SocialMediaManagement = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableHead>
-                  {/* New column - PIC (Column No 4) */}
-                  <TableHead className="h-8 text-center w-[150px] py-1">
-                    PIC
-                  </TableHead>
-                  {/* New column - Layanan (Column No 5) */}
-                  <TableHead className="h-8 text-center w-[150px] py-1">
-                    Layanan
-                  </TableHead>
-                  {/* New column - Sub Layanan (Column No 6) */}
-                  <TableHead className="h-8 text-center w-[150px] py-1">
-                    Sub Layanan
-                  </TableHead>
                   <TableHead className="h-8 text-center w-[150px] py-1">
                     Target {format(selectedMonth, "MMM yyyy")}
                   </TableHead>
@@ -491,83 +464,6 @@ const SocialMediaManagement = () => {
                     <TableCell className="py-1 px-4 font-medium text-sm">{manager.name}</TableCell>
                     <TableCell className="py-1 px-4 text-center text-sm">{manager.dailyTarget}</TableCell>
                     <TableCell className="py-1 px-4 text-center text-sm">{manager.monthlyTarget}</TableCell>
-                    {/* PIC Dropdown */}
-                    <TableCell className="py-1 px-4 text-center text-sm">
-                      <Select defaultValue={manager.pic}>
-                        <SelectTrigger className="h-7 w-full">
-                          <SelectValue placeholder="Select PIC" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {contentPlanners.length > 0 ? (
-                            contentPlanners.map((planner) => (
-                              <SelectItem key={planner.id} value={planner.name}>
-                                {planner.name}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no-pic">No content planners found</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    {/* Layanan Dropdown */}
-                    <TableCell className="py-1 px-4 text-center text-sm">
-                      <Select 
-                        defaultValue={manager.service}
-                        onValueChange={(value) => {
-                          // In a real app, you would update the manager's service here
-                          console.log("Selected service:", value);
-                        }}
-                      >
-                        <SelectTrigger className="h-7 w-full">
-                          <SelectValue placeholder="Select Layanan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {services.map((service) => (
-                            <SelectItem key={service.id} value={service.name}>
-                              {service.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    {/* Sub Layanan Dropdown - dependent on Layanan selection */}
-                    <TableCell className="py-1 px-4 text-center text-sm">
-                      <Select 
-                        defaultValue={manager.subService}
-                        onValueChange={(value) => {
-                          // In a real app, you would update the manager's sub-service here
-                          console.log("Selected sub-service:", value);
-                        }}
-                      >
-                        <SelectTrigger className="h-7 w-full">
-                          <SelectValue placeholder="Select Sub Layanan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {services.map((service) => {
-                            if (service.name === manager.service) {
-                              const filteredSubServices = subServices.filter(
-                                sub => sub.serviceId === service.id
-                              );
-                              
-                              return (
-                                <SelectGroup key={service.id}>
-                                  <SelectItem value={service.name} disabled>
-                                    {service.name}
-                                  </SelectItem>
-                                  {filteredSubServices.map((subService) => (
-                                    <SelectItem key={subService.id} value={subService.name}>
-                                      {subService.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              );
-                            }
-                            return null;
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
                     <TableCell className="py-1 px-4 text-center text-sm">
                       <div className="flex items-center justify-center gap-1">
                         <span>{manager.monthlyTargetAdjusted}</span>
