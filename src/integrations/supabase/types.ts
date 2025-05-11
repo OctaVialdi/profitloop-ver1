@@ -2421,6 +2421,60 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          assignee: string | null
+          assignee_id: string | null
+          category: string
+          category_icon: string | null
+          created_at: string
+          created_by: string | null
+          department: string
+          description: string | null
+          id: string
+          organization_id: string
+          priority: string
+          related_asset: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignee?: string | null
+          assignee_id?: string | null
+          category: string
+          category_icon?: string | null
+          created_at?: string
+          created_by?: string | null
+          department: string
+          description?: string | null
+          id?: string
+          organization_id: string
+          priority: string
+          related_asset?: string | null
+          status: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignee?: string | null
+          assignee_id?: string | null
+          category?: string
+          category_icon?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string
+          description?: string | null
+          id?: string
+          organization_id?: string
+          priority?: string
+          related_asset?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number

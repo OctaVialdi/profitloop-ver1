@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { FilePlus, Filter, FileDown, RotateCw, Upload, Eye, Edit, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { FilePlus, Filter, FileDown, RotateCw, Eye, Edit, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -18,12 +18,11 @@ interface TicketTableProps {
   onViewTicket: (ticket: Ticket) => void;
   onEditTicket: (ticket: Ticket) => void;
   onDeleteTicket: (ticket: Ticket) => void;
-  onUploadForTicket: (ticketId: string) => void;
   onCreateTicket: () => void;
-  onUpload: () => void;
   onMarkAsResolved: (ticket: Ticket) => void;
   onApproveTicket: (ticket: Ticket) => void;
   onRejectTicket: (ticket: Ticket) => void;
+  isLoading?: boolean;
 }
 
 export default function TicketTable({
@@ -31,12 +30,11 @@ export default function TicketTable({
   onViewTicket,
   onEditTicket,
   onDeleteTicket,
-  onUploadForTicket,
   onCreateTicket,
-  onUpload,
   onMarkAsResolved,
   onApproveTicket,
-  onRejectTicket
+  onRejectTicket,
+  isLoading = false
 }: TicketTableProps) {
   return (
     <div>
@@ -47,13 +45,6 @@ export default function TicketTable({
             onClick={onCreateTicket}
           >
             <FilePlus size={16} /> New Ticket
-          </Button>
-          <Button
-            variant="outline" 
-            className="flex items-center gap-1"
-            onClick={onUpload}
-          >
-            <Upload size={16} /> Upload
           </Button>
           <Button variant="outline" className="flex items-center gap-1">
             <RotateCw size={16} />
@@ -101,111 +92,119 @@ export default function TicketTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tickets.map((ticket) => (
-                <TableRow key={ticket.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium">{ticket.id}</TableCell>
-                  <TableCell>{ticket.title}</TableCell>
-                  <TableCell>{ticket.department}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <span>{ticket.category.icon}</span> {ticket.category.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getPriorityBadgeClass(ticket.priority)} variant="outline">
-                      {ticket.priority}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusBadgeClass(ticket.status)} variant="outline">
-                      {ticket.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{ticket.createdAt}</TableCell>
-                  <TableCell>
-                    <span className={getResponseTimeClass(ticket.response.type).className}>
-                      {getResponseTimeClass(ticket.response.type).icon} {ticket.response.time}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={getResolutionInfo(ticket.resolution).className}>
-                      {getResolutionInfo(ticket.resolution).icon} {getResolutionInfo(ticket.resolution).time}
-                    </span>
-                  </TableCell>
-                  <TableCell>{ticket.assignee}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        title="View Details"
-                        onClick={() => onViewTicket(ticket)}
-                      >
-                        <Eye size={16} />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        title="Edit"
-                        onClick={() => onEditTicket(ticket)}
-                      >
-                        <Edit size={16} />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="text-red-500 hover:text-red-700"
-                        title="Delete"
-                        onClick={() => onDeleteTicket(ticket)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="text-purple-500 hover:text-purple-700"
-                        title="Upload Files"
-                        onClick={() => onUploadForTicket(ticket.id)}
-                      >
-                        <Upload size={16} />
-                      </Button>
-                      {ticket.status !== "Resolved" && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-green-500 hover:text-green-700" 
-                          title="Mark as Resolved"
-                          onClick={() => onMarkAsResolved(ticket)}
-                        >
-                          <CheckCircle2 size={16} />
-                        </Button>
-                      )}
-                      {ticket.status !== "In Progress" && ticket.status !== "Resolved" && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-amber-500 hover:text-amber-700" 
-                          title="Approve"
-                          onClick={() => onApproveTicket(ticket)}
-                        >
-                          <CheckCircle2 size={16} />
-                        </Button>
-                      )}
-                      {ticket.status !== "Rejected" && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-red-500 hover:text-red-700" 
-                          title="Reject"
-                          onClick={() => onRejectTicket(ticket)}
-                        >
-                          <AlertCircle size={16} />
-                        </Button>
-                      )}
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={11} className="text-center py-8">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-8 h-8 rounded-full border-2 border-purple-600 border-t-transparent animate-spin mb-2"></div>
+                      <p className="text-gray-500">Loading tickets...</p>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : tickets.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={11} className="text-center py-8">
+                    <p className="text-gray-500">No tickets found. Create your first ticket to get started.</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                tickets.map((ticket) => (
+                  <TableRow key={ticket.id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium">{ticket.id}</TableCell>
+                    <TableCell>{ticket.title}</TableCell>
+                    <TableCell>{ticket.department}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <span>{ticket.category.icon}</span> {ticket.category.name}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getPriorityBadgeClass(ticket.priority)} variant="outline">
+                        {ticket.priority}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusBadgeClass(ticket.status)} variant="outline">
+                        {ticket.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{ticket.createdAt}</TableCell>
+                    <TableCell>
+                      <span className={getResponseTimeClass(ticket.response.type).className}>
+                        {getResponseTimeClass(ticket.response.type).icon} {ticket.response.time}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={getResolutionInfo(ticket.resolution).className}>
+                        {getResolutionInfo(ticket.resolution).icon} {getResolutionInfo(ticket.resolution).time}
+                      </span>
+                    </TableCell>
+                    <TableCell>{ticket.assignee}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          title="View Details"
+                          onClick={() => onViewTicket(ticket)}
+                        >
+                          <Eye size={16} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          title="Edit"
+                          onClick={() => onEditTicket(ticket)}
+                        >
+                          <Edit size={16} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-red-500 hover:text-red-700"
+                          title="Delete"
+                          onClick={() => onDeleteTicket(ticket)}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                        {ticket.status !== "Resolved" && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="text-green-500 hover:text-green-700" 
+                            title="Mark as Resolved"
+                            onClick={() => onMarkAsResolved(ticket)}
+                          >
+                            <CheckCircle2 size={16} />
+                          </Button>
+                        )}
+                        {ticket.status !== "In Progress" && ticket.status !== "Resolved" && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="text-amber-500 hover:text-amber-700" 
+                            title="Approve"
+                            onClick={() => onApproveTicket(ticket)}
+                          >
+                            <CheckCircle2 size={16} />
+                          </Button>
+                        )}
+                        {ticket.status !== "Rejected" && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="text-red-500 hover:text-red-700" 
+                            title="Reject"
+                            onClick={() => onRejectTicket(ticket)}
+                          >
+                            <AlertCircle size={16} />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

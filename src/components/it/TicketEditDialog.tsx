@@ -13,6 +13,7 @@ interface TicketEditDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (ticket: Ticket) => void;
   onCancel: () => void;
+  employees?: { id: string, name: string }[];
 }
 
 interface DropdownOption {
@@ -53,19 +54,13 @@ const statuses: DropdownOption[] = [
   { value: "Retired", label: "Retired", color: "gray" },
 ];
 
-const assignees: DropdownOption[] = [
-  { value: "", label: "Unassigned" },
-  { value: "John Doe", label: "John Doe" },
-  { value: "Jane Smith", label: "Jane Smith" },
-  { value: "Mike Johnson", label: "Mike Johnson" },
-];
-
 const TicketEditDialog: React.FC<TicketEditDialogProps> = ({
   ticket,
   open,
   onOpenChange,
   onSave,
   onCancel,
+  employees = []
 }) => {
   const [editedTicket, setEditedTicket] = useState<Ticket | null>(null);
   const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
@@ -138,6 +133,12 @@ const TicketEditDialog: React.FC<TicketEditDialogProps> = ({
     }
   };
 
+  // Build list of assignee options from employees
+  const assigneeOptions = [
+    { value: "", label: "Unassigned" },
+    ...employees.map(emp => ({ value: emp.name, label: emp.name }))
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -165,19 +166,12 @@ const TicketEditDialog: React.FC<TicketEditDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <label className="block font-medium">Related Asset <span className="text-red-500">*</span></label>
-            <div className="relative">
-              <Input
-                placeholder="Search assets by name, type, ID, department..."
-                className="pr-10"
-              />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="8" stroke="#9CA3AF" strokeWidth="2" />
-                  <path d="M21 21L17 17" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-            </div>
+            <label className="block font-medium">Related Asset</label>
+            <Input
+              value={editedTicket.relatedAsset || ""}
+              onChange={(e) => handleInputChange("relatedAsset", e.target.value)}
+              placeholder="Enter related asset (optional)"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -355,17 +349,17 @@ const TicketEditDialog: React.FC<TicketEditDialogProps> = ({
               </div>
               
               {showAssigneeDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                  {assignees.map((assignee) => (
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {assigneeOptions.map((assignee) => (
                     <div 
                       key={assignee.value}
-                      className={`p-2 cursor-pointer hover:bg-gray-100 ${assignee.value === editedTicket.assignee ? 'bg-blue-50' : ''}`}
+                      className={`p-2 cursor-pointer hover:bg-gray-100 ${assignee.label === editedTicket.assignee ? 'bg-blue-50' : ''}`}
                       onClick={() => {
-                        handleInputChange("assignee", assignee.value);
+                        handleInputChange("assignee", assignee.label);
                         setShowAssigneeDropdown(false);
                       }}
                     >
-                      {assignee.value === editedTicket.assignee && (
+                      {assignee.label === editedTicket.assignee && (
                         <Check className="inline-block mr-2 h-4 w-4" />
                       )}
                       {assignee.label}
@@ -381,7 +375,11 @@ const TicketEditDialog: React.FC<TicketEditDialogProps> = ({
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button className="bg-purple-700 hover:bg-purple-800" onClick={handleSave}>
+          <Button 
+            className="bg-purple-700 hover:bg-purple-800" 
+            onClick={handleSave}
+            disabled={!editedTicket.title || !editedTicket.department || !editedTicket.priority}
+          >
             Update Ticket
           </Button>
         </div>
