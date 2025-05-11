@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +12,10 @@ import { TrialProgressIndicator } from "@/components/subscription/TrialProgressI
 import { TrialExpiredModal } from "@/components/subscription/TrialExpiredModal";
 import { PricingDisplay } from "@/components/subscription/PricingDisplay"; 
 import { CancelPlanDialog } from "@/components/subscription/CancelPlanDialog";
+import { MidtransPaymentModal } from "@/components/subscription/MidtransPaymentModal";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionPlan } from "@/types/organization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
-import { stripeService } from "@/services/stripeService";
 import { toast } from "sonner";
 
 const PlanSettings: React.FC = () => {
@@ -36,6 +37,11 @@ const PlanSettings: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const { progress } = useTrialStatus(organization?.id || null);
   const [memberCount, setMemberCount] = useState<number>(1);
+  
+  // Add states for Midtrans payment
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [selectedPlanName, setSelectedPlanName] = useState("");
 
   // Check if trial is expired without subscription
   useEffect(() => {
@@ -172,30 +178,29 @@ const PlanSettings: React.FC = () => {
       setSubmitting(true);
       setSelectedPlanId(planId);
       
-      // If organization already has a subscription, handle as a plan change
-      if (hasPaidSubscription && organization?.subscription_plan_id) {
-        // Get portal session URL and redirect to Stripe customer portal
-        const portalUrl = await stripeService.createPortalSession();
-        if (portalUrl) {
-          window.location.href = portalUrl;
-          return;
-        }
-      } else {
-        // New subscription flow
-        const checkoutUrl = await stripeService.createCheckout(planId);
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl;
-          return;
-        }
+      // Find the selected plan
+      const selectedPlan = plans.find(p => p.id === planId);
+      
+      if (!selectedPlan) {
+        throw new Error("Selected plan not found");
       }
       
-      throw new Error("Failed to initiate checkout process");
+      // Save plan name for the payment modal
+      setSelectedPlanName(selectedPlan.name);
+      
+      // If the plan has a direct payment URL, use it for Midtrans
+      if (selectedPlan.direct_payment_url) {
+        setPaymentUrl(selectedPlan.direct_payment_url);
+        setShowPaymentModal(true);
+      } else {
+        // Fallback to Stripe or other payment methods
+        toast.error("Direct payment URL not configured for this plan. Please contact support.");
+      }
     } catch (error) {
-      console.error("Error during checkout:", error);
-      toast.error("Failed to process upgrade. Please try again.");
+      console.error("Error during plan selection:", error);
+      toast.error("Failed to process plan selection. Please try again.");
     } finally {
       setSubmitting(false);
-      setSelectedPlanId(null);
     }
   };
   
@@ -211,36 +216,22 @@ const PlanSettings: React.FC = () => {
     try {
       setSubmitting(true);
       
-      if (hasPaidSubscription) {
-        // Call the stripe service to cancel the subscription
-        const success = await stripeService.cancelSubscription(reason);
-        
-        if (success) {
-          toast.success("Your subscription has been cancelled successfully");
-          // Refresh organization data to reflect changes
-          await refreshData();
-        } else {
-          throw new Error("Failed to cancel subscription");
+      // For simplicity, we'll just update the organization's subscription status
+      if (organization?.id) {
+        const { error } = await supabase
+          .from('organizations')
+          .update({
+            subscription_plan_id: null,
+            subscription_status: isTrialActive ? 'trial' : 'expired',
+            trial_expired: !isTrialActive
+          })
+          .eq('id', organization.id);
+          
+        if (error) {
+          throw error;
         }
-      } else {
-        // For free plans or trials, we just notify the user
-        toast.success("Your plan has been cancelled");
         
-        // If in trial, mark trial as expired
-        if (organization?.id && (isTrialActive || !organization.trial_expired)) {
-          const { error } = await supabase
-            .from('organizations')
-            .update({
-              trial_expired: true,
-              subscription_status: 'expired'
-            })
-            .eq('id', organization.id);
-            
-          if (error) {
-            console.error("Error updating trial status:", error);
-            throw new Error("Failed to update trial status");
-          }
-        }
+        toast.success("Your subscription has been cancelled successfully");
         
         // Refresh organization data to reflect changes
         await refreshData();
@@ -248,9 +239,9 @@ const PlanSettings: React.FC = () => {
     } catch (error) {
       console.error("Error cancelling subscription:", error);
       toast.error("Failed to cancel subscription. Please try again or contact support.");
-      throw error; // Re-throw to be caught by the dialog
     } finally {
       setSubmitting(false);
+      setShowCancelDialog(false);
     }
   };
   
@@ -298,6 +289,11 @@ const PlanSettings: React.FC = () => {
       return plans[1].id;
     }
     return null;
+  };
+
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    setPaymentUrl("");
   };
 
   const recommendedPlanId = getRecommendedPlan();
@@ -518,6 +514,14 @@ const PlanSettings: React.FC = () => {
         onClose={() => setShowCancelDialog(false)}
         onConfirmCancel={handleConfirmCancelPlan}
         planName={subscriptionPlan?.name || "Subscription"}
+      />
+      
+      {/* Midtrans Payment Modal */}
+      <MidtransPaymentModal
+        isOpen={showPaymentModal}
+        onClose={closePaymentModal}
+        redirectUrl={paymentUrl}
+        planName={selectedPlanName}
       />
     </div>
   );
