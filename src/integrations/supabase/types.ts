@@ -2253,6 +2253,7 @@ export type Database = {
           max_members: number | null
           name: string
           price: number
+          price_per_member: number | null
           slug: string | null
           stripe_price_id: string | null
         }
@@ -2266,6 +2267,7 @@ export type Database = {
           max_members?: number | null
           name: string
           price?: number
+          price_per_member?: number | null
           slug?: string | null
           stripe_price_id?: string | null
         }
@@ -2279,6 +2281,7 @@ export type Database = {
           max_members?: number | null
           name?: string
           price?: number
+          price_per_member?: number | null
           slug?: string | null
           stripe_price_id?: string | null
         }
