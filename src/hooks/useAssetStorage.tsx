@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ensureBucketExists } from "@/integrations/supabase/storage";
 import { toast } from "sonner";
 
@@ -28,12 +28,16 @@ export function useAssetStorage() {
           } else {
             setError(result.error || "Failed to initialize asset storage");
             console.warn("Storage may be in limited functionality mode. Some features might not work as expected.");
+            // Still set initialized to true to prevent app from crashing
+            setIsInitialized(true);
           }
         }
       } catch (err: any) {
         console.error("Error initializing asset storage:", err);
         setError("Error initializing asset storage");
         toast.error("Error initializing asset storage");
+        // Set initialized to true anyway to prevent app from crashing
+        setIsInitialized(true);
       } finally {
         setIsLoading(false);
       }

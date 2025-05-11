@@ -15,6 +15,7 @@ import { useLocation } from "react-router-dom";
 const EXCLUDED_ROUTES = [
   '/settings/subscription',
   '/settings/subscription/request-extension',
+  '/settings/plan',
   '/auth',
   '/login',
   '/register',
@@ -78,7 +79,7 @@ function AppContent() {
   }, [location.pathname, isExcludedRoute]);
 
   const handleUpgrade = () => {
-    window.location.href = '/settings/subscription';
+    window.location.href = '/settings/plan';
   };
 
   const handleRequestExtension = () => {
