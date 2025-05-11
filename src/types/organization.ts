@@ -65,20 +65,22 @@ export interface BillingPaymentMethod {
   name?: string;
 }
 
+export interface BillingInvoiceAddress {
+  companyName?: string;
+  taxId?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  emailBilling?: string;
+}
+
 export interface BillingSettings {
   id?: string;
   organization_id: string;
   payment_method?: BillingPaymentMethod | null;
-  invoice_address?: {
-    companyName?: string;
-    taxId?: string;
-    streetAddress?: string;
-    city?: string;
-    state?: string;
-    postalCode?: string;
-    country?: string;
-    emailBilling?: string;
-  } | null;
+  invoice_address?: BillingInvoiceAddress | null;
   last_payment_date?: string | null;
   created_at?: string;
   updated_at?: string;

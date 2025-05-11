@@ -34,6 +34,7 @@ const BillingSettings: React.FC = () => {
       try {
         // Fetch billing settings
         const settings = await organizationService.getBillingSettings(organization.id);
+        console.log("Loaded billing settings:", settings);
         setBillingSettings(settings);
         
         // Fetch invoices
@@ -68,30 +69,34 @@ const BillingSettings: React.FC = () => {
     loadBillingData();
   }, [organization?.id, page, limit, filterStatus]);
   
-  const handleRefreshData = () => {
+  const handleRefreshData = async () => {
     if (organization?.id) {
       setIsLoading(true);
       setLoadError(null);
-      Promise.all([
-        organizationService.getBillingSettings(organization.id),
-        organizationService.getOrganizationInvoices(
+      try {
+        // Fetch billing settings
+        const settings = await organizationService.getBillingSettings(organization.id);
+        setBillingSettings(settings);
+        
+        // Fetch invoices with current pagination and filters
+        const invoiceResponse = await organizationService.getOrganizationInvoices(
           organization.id,
           page,
           limit,
           filterStatus as 'paid' | 'unpaid' | 'pending' | undefined
-        )
-      ]).then(([settings, invoiceResponse]) => {
-        setBillingSettings(settings);
+        );
+        
         setInvoices(invoiceResponse.invoices);
         setTotalInvoiceCount(invoiceResponse.total_count);
-        setIsLoading(false);
+        
         toast.success("Billing data refreshed successfully");
-      }).catch(error => {
+      } catch (error) {
         console.error('Error refreshing data:', error);
         setLoadError("Failed to refresh billing data");
-        setIsLoading(false);
         toast.error("Failed to refresh billing information");
-      });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
   

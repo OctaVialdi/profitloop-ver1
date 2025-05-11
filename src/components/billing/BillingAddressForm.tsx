@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,15 +23,31 @@ export function BillingAddressForm({
   const [isEditing, setIsEditing] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
-    companyName: billingSettings?.invoice_address?.companyName || "",
-    taxId: billingSettings?.invoice_address?.taxId || "",
-    streetAddress: billingSettings?.invoice_address?.streetAddress || "",
-    city: billingSettings?.invoice_address?.city || "",
-    state: billingSettings?.invoice_address?.state || "",
-    postalCode: billingSettings?.invoice_address?.postalCode || "",
-    country: billingSettings?.invoice_address?.country || "Indonesia",
-    emailBilling: billingSettings?.invoice_address?.emailBilling || "",
+    companyName: "",
+    taxId: "",
+    streetAddress: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "Indonesia",
+    emailBilling: "",
   });
+
+  // Update form data when billingSettings changes
+  useEffect(() => {
+    if (billingSettings?.invoice_address) {
+      setFormData({
+        companyName: billingSettings.invoice_address?.companyName || "",
+        taxId: billingSettings.invoice_address?.taxId || "",
+        streetAddress: billingSettings.invoice_address?.streetAddress || "",
+        city: billingSettings.invoice_address?.city || "",
+        state: billingSettings.invoice_address?.state || "",
+        postalCode: billingSettings.invoice_address?.postalCode || "",
+        country: billingSettings.invoice_address?.country || "Indonesia",
+        emailBilling: billingSettings.invoice_address?.emailBilling || "",
+      });
+    }
+  }, [billingSettings]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
