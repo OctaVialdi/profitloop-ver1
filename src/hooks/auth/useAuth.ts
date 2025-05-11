@@ -29,38 +29,32 @@ export function useAuth() {
     
     setIsDeleting(true);
     try {
-      console.log("Starting account deletion process for user:", user.id);
-      
       // 1. Fetch user's organization data to clean up after
       const { data: profile } = await supabase
         .from('profiles')
-        .select('organization_id, role, full_name')
+        .select('organization_id, role')
         .eq('id', user.id)
         .single();
 
-      console.log("User profile data:", profile);
-
       // 2. Use service role to delete user (client-side tokens don't have permission)
-      const { data, error } = await supabase.functions.invoke('delete-user', {
+      const { error } = await supabase.functions.invoke('delete-user', {
         body: { user_id: user.id }
       });
 
       if (error) {
-        console.error("Error invoking delete-user function:", error);
         throw new Error(error.message || "Gagal menghapus akun");
       }
       
-      console.log("Delete user function response:", data);
-      
-      if (!data.success) {
-        throw new Error(data.error || "Gagal menghapus akun");
+      // 3. Clean up organizations if user was the last super_admin
+      if (profile?.role === 'super_admin' && profile?.organization_id) {
+        // This will be handled by the serverless function
       }
-      
+
       toast.success("Akun berhasil dihapus");
       
-      // 3. Sign out and redirect to register page
+      // 4. Sign out and redirect
       await robustSignOut();
-      window.location.href = "/auth/register";
+      window.location.href = "/auth/login";
       
     } catch (err: any) {
       console.error("Error deleting account:", err);

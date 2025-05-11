@@ -12,11 +12,6 @@ export const PasswordChangeForm: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState({
-    current: false,
-    new: false,
-    confirm: false
-  });
   
   // Password validation
   const hasMinLength = newPassword.length >= 8;
@@ -63,29 +58,13 @@ export const PasswordChangeForm: React.FC = () => {
     }
   };
 
-  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
-    setShowPassword(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-2">
-        <Label htmlFor="current-password" className="flex justify-between">
-          Password Saat Ini
-          <button
-            type="button"
-            className="text-xs text-blue-600 hover:text-blue-800"
-            onClick={() => togglePasswordVisibility('current')}
-          >
-            {showPassword.current ? 'Sembunyikan' : 'Tampilkan'}
-          </button>
-        </Label>
+        <Label htmlFor="current-password">Password Saat Ini</Label>
         <Input
           id="current-password"
-          type={showPassword.current ? "text" : "password"}
+          type="password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           required
@@ -93,19 +72,10 @@ export const PasswordChangeForm: React.FC = () => {
       </div>
       
       <div className="grid gap-2">
-        <Label htmlFor="new-password" className="flex justify-between">
-          Password Baru
-          <button
-            type="button"
-            className="text-xs text-blue-600 hover:text-blue-800"
-            onClick={() => togglePasswordVisibility('new')}
-          >
-            {showPassword.new ? 'Sembunyikan' : 'Tampilkan'}
-          </button>
-        </Label>
+        <Label htmlFor="new-password">Password Baru</Label>
         <Input
           id="new-password"
-          type={showPassword.new ? "text" : "password"}
+          type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
@@ -113,19 +83,10 @@ export const PasswordChangeForm: React.FC = () => {
       </div>
       
       <div className="grid gap-2">
-        <Label htmlFor="confirm-password" className="flex justify-between">
-          Konfirmasi Password
-          <button
-            type="button"
-            className="text-xs text-blue-600 hover:text-blue-800"
-            onClick={() => togglePasswordVisibility('confirm')}
-          >
-            {showPassword.confirm ? 'Sembunyikan' : 'Tampilkan'}
-          </button>
-        </Label>
+        <Label htmlFor="confirm-password">Konfirmasi Password</Label>
         <Input
           id="confirm-password"
-          type={showPassword.confirm ? "text" : "password"}
+          type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
@@ -177,7 +138,7 @@ export const PasswordChangeForm: React.FC = () => {
       
       <Button 
         type="submit" 
-        disabled={isLoading || !isValidPassword || !passwordsMatch || !currentPassword}
+        disabled={isLoading || !isValidPassword || !passwordsMatch}
         className="w-full"
       >
         {isLoading ? (
