@@ -73,6 +73,7 @@ const formSchema = z.object({
     message: "Price per member must be a non-negative number.",
   }).optional(),
   features: z.record(z.string(), z.any()).optional(),
+  directPaymentUrl: z.string().optional(),
 });
 
 type SubscriptionPlanFormValues = z.infer<typeof formSchema>;
@@ -96,6 +97,7 @@ const SubscriptionPlansManagement = () => {
       isPricingPerMember: false,
       pricePerMember: 0,
       features: {},
+      directPaymentUrl: "",
     },
   });
 
@@ -162,6 +164,7 @@ const SubscriptionPlansManagement = () => {
       setValue("isPricingPerMember", !!plan.price_per_member);
       setValue("pricePerMember", plan.price_per_member || 0);
       setValue("features", plan.features || {});
+      setValue("directPaymentUrl", plan.direct_payment_url || "");
     } else {
       setSelectedPlan(null);
       reset({
@@ -172,6 +175,7 @@ const SubscriptionPlansManagement = () => {
         isPricingPerMember: false,
         pricePerMember: 0,
         features: {},
+        directPaymentUrl: "",
       });
     }
     setIsDialogOpen(true);
@@ -188,6 +192,7 @@ const SubscriptionPlansManagement = () => {
         is_active: values.isActive,
         price_per_member: values.isPricingPerMember ? values.pricePerMember : null,
         features: values.features || {},
+        direct_payment_url: values.directPaymentUrl || null,
       };
 
       if (selectedPlan) {
@@ -388,6 +393,7 @@ const SubscriptionPlansManagement = () => {
                 <TabsList className="mb-4">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
                   <TabsTrigger value="features">Features</TabsTrigger>
+                  <TabsTrigger value="payment">Payment</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="basic" className="space-y-4">
@@ -534,6 +540,28 @@ const SubscriptionPlansManagement = () => {
                         </FormControl>
                         <FormDescription>
                           Add features that are included in this plan
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="payment" className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="directPaymentUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Direct Payment URL</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://payment-gateway.com/checkout/your-plan" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Direct URL to payment gateway checkout for this plan. If provided, users will be sent directly to this URL for payment.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
