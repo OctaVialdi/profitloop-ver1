@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Settings, LayoutDashboard, MessageSquare, DollarSign, Activity, 
   Headset, Laptop, Users } from "lucide-react";
@@ -75,7 +76,7 @@ export function DashboardSidebar({
     },
     {
       name: "IT Support",
-      href: "/it/dashboard",
+      href: "/it/support",
       icon: Headset
     },
     {
