@@ -59,6 +59,7 @@ export interface SubscriptionPlan {
   created_at?: string;
   current?: boolean; // Added for UI display
   popular?: boolean; // Added for UI display
+  price_per_member?: number | null; // Added for per-member pricing
 }
 
 export type OrganizationData = {

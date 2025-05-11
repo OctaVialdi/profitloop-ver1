@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
@@ -158,6 +159,25 @@ const Subscription = () => {
     return null;
   };
 
+  // Format price display based on pricing model
+  const formatPrice = (plan: SubscriptionPlan) => {
+    if (plan.price_per_member) {
+      return (
+        <>
+          ${plan.price_per_member}
+          <span className="text-sm text-muted-foreground">/member/month</span>
+        </>
+      );
+    } else {
+      return (
+        <>
+          ${plan.price}
+          <span className="text-sm text-muted-foreground">/month</span>
+        </>
+      );
+    }
+  };
+
   const renderPlans = () => {
     if (!organization) return null;
     
@@ -185,8 +205,7 @@ const Subscription = () => {
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="text-4xl font-bold">
-                ${plan.price}
-                <span className="text-sm text-muted-foreground">/month</span>
+                {formatPrice(plan)}
               </div>
               <Separator />
               <ul className="list-none pl-0 space-y-1">
@@ -205,7 +224,7 @@ const Subscription = () => {
               </ul>
             </CardContent>
             <div className="p-4">
-              {plan.price === 0 ? (
+              {plan.price === 0 && !plan.price_per_member ? (
                 <Button
                   className="w-full"
                   onClick={handleFreePlanSelection}
