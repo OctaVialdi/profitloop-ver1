@@ -1,7 +1,5 @@
-
-
 import { supabase } from "@/integrations/supabase/client";
-import { Organization, SubscriptionPlan, BillingSettings, Invoice } from "@/types/organization";
+import { Organization, SubscriptionPlan, BillingSettings, Invoice, InvoiceHistoryResponse } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
 
 export async function getOrganization(organizationId: string): Promise<Organization | null> {
