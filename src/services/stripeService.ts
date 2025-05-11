@@ -207,6 +207,7 @@ export const stripeService = {
       // Store cancellation reason and feedback in audit logs
       await supabase.from('subscription_audit_logs').insert({
         action: 'subscription_cancelled',
+        organization_id: (await supabase.auth.getSession()).data.session?.user.id || '',
         data: {
           reason,
           feedback: feedback || null,
@@ -241,6 +242,7 @@ export const stripeService = {
       // Store discount claim in audit logs
       await supabase.from('subscription_audit_logs').insert({
         action: 'discount_applied',
+        organization_id: (await supabase.auth.getSession()).data.session?.user.id || '',
         data: {
           discount_percent: discountPercent,
           duration_months: durationMonths,
