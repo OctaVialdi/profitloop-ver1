@@ -1,113 +1,111 @@
-export interface UserProfile {
-  id: string;
-  organization_id?: string;
-  role?: string;
-  email?: string;
-  full_name?: string;
-  timezone?: string;
-  preferences?: UserPreferences;
-  created_at?: string;
-  last_active?: string;
-  profile_image?: string | null;
-  created_at_formatted?: string;
-}
 
 export interface Organization {
   id: string;
   name: string;
-  business_field: string | null;
-  employee_count: number | null;
-  address: string | null;
-  phone: string | null;
-  logo_path: string | null;
-  theme_settings: {
-    primary_color: string;
-    secondary_color: string;
-    accent_color: string;
-    sidebar_color: string;
-  } | any; // Adding 'any' to handle Json type from database
-  subscription_status?: string;
-  subscription_plan_id?: string;
-  subscription_plan_name?: string; // Added for SubscriptionManagement.tsx
-  subscription_price?: number; // Added for SubscriptionManagement.tsx
-  subscription_end_date?: string; // Added for SubscriptionManagement.tsx
-  subscription_id?: string; // Added for SubscriptionManagement.tsx
-  trial_end_date?: string;
+  creator_email?: string | null;
+  business_field?: string | null;
+  employee_count?: number;
+  address?: string | null;
+  phone?: string | null;
+  logo_path?: string | null;
+  theme_settings?: ThemeSettings;
   trial_expired?: boolean;
-  trial_start_date?: string;
-  creator_email?: string;
-  grace_period_end?: string;
-  stripe_customer_id?: string; // Added new field for Midtrans integration
-  billing_email?: string; // Added new field for billing email
+  subscription_status?: 'trial' | 'active' | 'expired';
+  subscription_plan_id?: string | null;
+  trial_start_date?: string | null;
+  trial_end_date?: string | null;
+  grace_period_end?: string | null;
+  stripe_customer_id?: string | null;
+  billing_email?: string | null;
 }
 
-export interface UserPreferences {
-  dark_mode?: boolean;
-  [key: string]: any;
+export interface ThemeSettings {
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  sidebar_color: string;
 }
 
 export interface SubscriptionPlan {
   id: string;
   name: string;
-  slug?: string;
-  price: number;
-  max_members: number;
-  features: Record<string, any> | null | any; // Added 'any' to handle Json type
-  direct_payment_url?: string;
   deskripsi?: string;
+  max_members?: number;
+  price: number;
+  price_per_member?: number;
+  features: Record<string, any> | null;
   is_active: boolean;
-  stripe_price_id?: string;
+  direct_payment_url?: string | null;
+  slug?: string | null;
+  stripe_price_id?: string | null;
   created_at?: string;
-  current?: boolean; // Added for UI display
-  popular?: boolean; // Added for UI display
-  price_per_member?: number | null; // Added for per-member pricing
 }
 
-export type OrganizationData = {
+export interface OrganizationData {
   organization: Organization | null;
-  userProfile: UserProfile | null;
+  userProfile: any | null;
   isLoading: boolean;
   error: Error | null;
   isSuperAdmin: boolean;
   isAdmin: boolean;
   isEmployee: boolean;
-  isTrialActive?: boolean;
-  daysLeftInTrial?: number;
-  hasPaidSubscription?: boolean;
-  subscriptionPlan?: SubscriptionPlan | null;  // Added to store current plan details
+  subscriptionPlan: SubscriptionPlan | null;
   refreshData: () => Promise<void>;
-};
+  isTrialActive?: boolean;
+  daysLeftInTrial?: number | null;
+  hasPaidSubscription?: boolean;
+}
 
-// New type for billing settings
+export interface BillingPaymentMethod {
+  type: string;
+  brand?: string;
+  exp_month?: number;
+  exp_year?: number;
+  last4?: string;
+  name?: string;
+}
+
 export interface BillingSettings {
-  id: string;
+  id?: string;
   organization_id: string;
-  payment_method?: string;
-  invoice_address?: Record<string, any> | null;
-  last_payment_date?: string;
+  payment_method?: BillingPaymentMethod | null;
+  invoice_address?: {
+    companyName?: string;
+    taxId?: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+    emailBilling?: string;
+  } | null;
+  last_payment_date?: string | null;
   created_at?: string;
   updated_at?: string;
 }
 
-// New type for invoices
 export interface Invoice {
   id: string;
   organization_id: string;
+  subscription_plan_id?: string;
   amount: number;
-  due_date: string;
-  status: 'paid' | 'unpaid' | 'pending';
-  invoice_pdf_url?: string;
-  created_at: string;
-  updated_at: string;
-  invoice_number: string;
-  currency: string;
   tax_amount: number;
   total_amount: number;
-  subscription_plan_id?: string;
-  payment_details?: Record<string, any> | null;
+  currency: string;
+  status: string;
+  invoice_number: string;
+  invoice_pdf_url?: string;
+  due_date: string;
+  payment_details?: {
+    method?: string;
+    planName?: string;
+    billingName?: string;
+    last4?: string;
+  } | null;
+  created_at: string;
+  updated_at: string;
 }
 
-// New interface for invoice history response
 export interface InvoiceHistoryResponse {
   invoices: Invoice[];
   total_count: number;

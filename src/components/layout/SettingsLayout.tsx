@@ -29,6 +29,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const tabs: Tab[] = [
     { name: "Profile", href: "/settings/profile" },
     { name: "Plan", href: "/settings/plan" },
+    { name: "Billing", href: "/settings/billing" },
     { name: "Admin", href: "/settings/admin", adminOnly: true },
   ];
   
