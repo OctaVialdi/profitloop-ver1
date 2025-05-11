@@ -1,156 +1,211 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectGroup, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { useContentManagement, ContentItem } from "@/hooks/useContentManagement";
 
 const CreateContent = () => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [platform, setPlatform] = useState("");
-  const [contentType, setContentType] = useState("");
-  const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const {
+    contentTypes,
+    contentItems,
+    isManager,
+    addContentItem,
+    updateContentItem,
+    deleteContentItems,
+    toggleSelectItem,
+    selectAllItems
+  } = useContentManagement();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log({
-      title,
-      description,
-      platform,
-      contentType,
-      publishDate
-    });
+  const [selectAll, setSelectAll] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState<{ [key: string]: boolean }>({});
+  
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked);
+    selectAllItems(checked);
+  };
+
+  const handleAddRow = () => {
+    addContentItem();
+    toast.success("New content row added");
+  };
+
+  const handleDateChange = (itemId: string, date: Date | undefined) => {
+    if (date) {
+      updateContentItem(itemId, { postDate: format(date, 'yyyy-MM-dd') });
+      
+      // Close the calendar popover
+      setIsCalendarOpen(prev => ({
+        ...prev,
+        [itemId]: false
+      }));
+    }
+  };
+
+  const handleTypeChange = (itemId: string, typeId: string) => {
+    updateContentItem(itemId, { contentType: typeId });
+  };
+
+  const handleDeleteSelected = () => {
+    const selectedIds = contentItems
+      .filter(item => item.isSelected)
+      .map(item => item.id);
     
-    // Reset form
-    setTitle("");
-    setDescription("");
-    setPlatform("");
-    setContentType("");
-    setPublishDate(undefined);
+    if (selectedIds.length === 0) {
+      toast.error("No items selected for deletion");
+      return;
+    }
+    
+    deleteContentItems(selectedIds);
+    setSelectAll(false);
+    toast.success(`${selectedIds.length} items deleted`);
+  };
+
+  const toggleCalendar = (itemId: string) => {
+    setIsCalendarOpen(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }));
+  };
+
+  const getContentTypeName = (typeId: string) => {
+    const contentType = contentTypes.find(type => type.id === typeId);
+    return contentType ? contentType.name : "Unknown";
   };
 
   return (
     <Card className="w-full">
-      <CardHeader className="py-3">
-        <CardTitle className="text-lg">Create Content</CardTitle>
+      <CardHeader className="py-3 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">Content Management</CardTitle>
+        <div className="flex space-x-2">
+          {isManager && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleDeleteSelected}
+              disabled={!contentItems.some(item => item.isSelected)}
+              className="text-sm"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete Selected
+            </Button>
+          )}
+          <Button onClick={handleAddRow} size="sm" className="text-sm">
+            <PlusCircle className="h-4 w-4 mr-1" />
+            Add Row
+          </Button>
+        </div>
       </CardHeader>
+      
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Content Title</Label>
-            <Input 
-              id="title"
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-              placeholder="Enter content title" 
-              required 
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="platform">Platform</Label>
-              <Select value={platform} onValueChange={setPlatform} required>
-                <SelectTrigger id="platform">
-                  <SelectValue placeholder="Select platform" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="instagram">Instagram</SelectItem>
-                    <SelectItem value="facebook">Facebook</SelectItem>
-                    <SelectItem value="twitter">Twitter</SelectItem>
-                    <SelectItem value="tiktok">TikTok</SelectItem>
-                    <SelectItem value="linkedin">LinkedIn</SelectItem>
-                    <SelectItem value="youtube">YouTube</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contentType">Content Type</Label>
-              <Select value={contentType} onValueChange={setContentType} required>
-                <SelectTrigger id="contentType">
-                  <SelectValue placeholder="Select content type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="post">Post</SelectItem>
-                    <SelectItem value="story">Story</SelectItem>
-                    <SelectItem value="reel">Reel/Short Video</SelectItem>
-                    <SelectItem value="carousel">Carousel</SelectItem>
-                    <SelectItem value="video">Long Video</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="publishDate">Publish Date</Label>
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  id="publishDate"
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {publishDate ? format(publishDate, "PPP") : "Select date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={publishDate}
-                  onSelect={(date) => {
-                    setPublishDate(date);
-                    setIsCalendarOpen(false);
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Content Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter content description"
-              className="min-h-[120px]"
-              required
-            />
-          </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" type="button">
-              Save as Draft
-            </Button>
-            <Button type="submit">
-              Create Content
-            </Button>
-          </div>
-        </form>
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {isManager && (
+                  <TableHead className="w-12">
+                    <Checkbox 
+                      checked={selectAll} 
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
+                )}
+                <TableHead className="w-1/4">Tanggal Posting</TableHead>
+                <TableHead>Tipe Content</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contentItems.length > 0 ? (
+                contentItems.map(item => (
+                  <TableRow key={item.id}>
+                    {isManager && (
+                      <TableCell>
+                        <Checkbox 
+                          checked={item.isSelected} 
+                          onCheckedChange={() => toggleSelectItem(item.id)}
+                          aria-label="Select row"
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <Popover 
+                        open={isCalendarOpen[item.id]} 
+                        onOpenChange={() => toggleCalendar(item.id)}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {item.postDate || 'Select date'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={item.postDate ? new Date(item.postDate) : undefined}
+                            onSelect={(date) => handleDateChange(item.id, date)}
+                            initialFocus
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </TableCell>
+                    <TableCell>
+                      <Select 
+                        value={item.contentType} 
+                        onValueChange={(value) => handleTypeChange(item.id, value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select content type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contentTypes.map((type) => (
+                            <SelectItem key={type.id} value={type.id}>
+                              {type.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={isManager ? 3 : 2} className="h-24 text-center">
+                    No content items. Click "Add Row" to create one.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
+      
+      <CardFooter className="pt-2 flex justify-between">
+        <div className="text-sm text-muted-foreground">
+          {contentItems.length} item{contentItems.length !== 1 ? 's' : ''} 
+          {contentItems.some(item => item.isSelected) && 
+            ` (${contentItems.filter(item => item.isSelected).length} selected)`
+          }
+        </div>
+      </CardFooter>
     </Card>
   );
 };
