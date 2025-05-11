@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  TooltipProps,
   Legend,
   Bar,
   LineChart as RechartsLineChart,
@@ -14,10 +15,34 @@ import {
 } from 'recharts';
 
 interface ChartContainerProps {
-  children: React.ReactNode;
+  children: React.ReactElement;
   className?: string;
   config?: {
     value?: {
+      theme?: {
+        light?: string;
+        dark?: string;
+      };
+    };
+    revenue?: {
+      theme?: {
+        light?: string;
+        dark?: string;
+      };
+    };
+    expenses?: {
+      theme?: {
+        light?: string;
+        dark?: string;
+      };
+    };
+    profit?: {
+      theme?: {
+        light?: string;
+        dark?: string;
+      };
+    };
+    income?: {
       theme?: {
         light?: string;
         dark?: string;
@@ -30,6 +55,7 @@ interface ChartProps {
   data: Array<{
     name: string;
     value: number;
+    [key: string]: any;
   }>;
   className?: string;
 }
@@ -89,3 +115,50 @@ export const LineChart: React.FC<ChartProps> = ({ data }) => {
     </RechartsLineChart>
   );
 };
+
+// Add the missing ChartTooltipContent component
+interface ChartTooltipContentProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    name: string;
+    dataKey: string;
+    payload: any;
+  }>;
+  label?: string;
+}
+
+export const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({ active, payload, label }) => {
+  if (!active || !payload || payload.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white p-2 border border-gray-200 rounded-md shadow-md">
+      <p className="text-sm font-medium">{label}</p>
+      {payload.map((entry, index) => (
+        <div key={`item-${index}`} className="flex items-center gap-2 text-sm">
+          <div 
+            className="w-3 h-3 rounded-full" 
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="font-medium">{entry.name}:</span>
+          <span>{typeof entry.value === 'number' ? 
+            new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(entry.value) : 
+            entry.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Add additional chart components that are being imported elsewhere
+export const ChartTooltip = Tooltip;
+export const ChartLegend = Legend;
+export const ChartLegendContent = Legend;

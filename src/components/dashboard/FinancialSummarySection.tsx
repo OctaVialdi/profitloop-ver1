@@ -15,7 +15,7 @@ import {
   ResponsiveContainer,
   Legend 
 } from 'recharts';
-import { ChartContainer } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { DollarSign, BarChart3, PieChart, TrendingUp, TrendingDown } from 'lucide-react';
 import { MonthlyRevenue, ExpenseBreakdown, TrendDirection } from '@/types/dashboard';
 import { formatCurrency } from '@/lib/utils';
