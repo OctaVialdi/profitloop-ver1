@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -192,58 +193,63 @@ const Subscription = () => {
     
     return (
       <div className="grid gap-4 md:grid-cols-3">
-        {plans.map((plan) => (
-          <Card key={plan.id} className={plan.current ? "border-2 border-primary" : ""}>
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-              <CardDescription>
-                {plan.deskripsi || "A great plan for your organization"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-4xl font-bold">
-                {formatPrice(plan)}
+        {plans.map((plan) => {
+          // Check if this is the current active plan
+          const isCurrentPlan = organization.subscription_plan_id === plan.id;
+          
+          return (
+            <Card key={plan.id} className={isCurrentPlan ? "border-2 border-primary" : ""}>
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                <CardDescription>
+                  {plan.deskripsi || "A great plan for your organization"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="text-4xl font-bold">
+                  {formatPrice(plan)}
+                </div>
+                <Separator />
+                <ul className="list-none pl-0 space-y-1">
+                  <li>Max Members: {plan.max_members}</li>
+                  {plan.features &&
+                    typeof plan.features === 'object' && (
+                      <ul className="mt-4 space-y-2">
+                        {Object.entries(plan.features).map(([key, value]) => (
+                          <li key={key} className="flex items-start">
+                            <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>{key}: {String(value)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                </ul>
+              </CardContent>
+              <div className="p-4">
+                {plan.price === 0 && !plan.price_per_member ? (
+                  <Button
+                    className="w-full"
+                    onClick={handleFreePlanSelection}
+                    disabled={subscribeLoading}
+                  >
+                    {subscribeLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Upgrading...
+                      </>
+                    ) : (
+                      "Select Free Plan"
+                    )}
+                  </Button>
+                ) : (
+                  <Button className="w-full" disabled>
+                    Coming Soon
+                  </Button>
+                )}
               </div>
-              <Separator />
-              <ul className="list-none pl-0 space-y-1">
-                <li>Max Members: {plan.max_members}</li>
-                {plan.features &&
-                  typeof plan.features === 'object' && (
-                    <ul className="mt-4 space-y-2">
-                      {Object.entries(plan.features).map(([key, value]) => (
-                        <li key={key} className="flex items-start">
-                          <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span>{key}: {String(value)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-              </ul>
-            </CardContent>
-            <div className="p-4">
-              {plan.price === 0 && !plan.price_per_member ? (
-                <Button
-                  className="w-full"
-                  onClick={handleFreePlanSelection}
-                  disabled={subscribeLoading}
-                >
-                  {subscribeLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Upgrading...
-                    </>
-                  ) : (
-                    "Select Free Plan"
-                  )}
-                </Button>
-              ) : (
-                <Button className="w-full" disabled>
-                  Coming Soon
-                </Button>
-              )}
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     );
   };

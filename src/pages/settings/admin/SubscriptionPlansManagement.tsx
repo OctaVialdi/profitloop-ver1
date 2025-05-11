@@ -79,7 +79,7 @@ type SubscriptionPlanFormValues = z.infer<typeof formSchema>;
 
 const SubscriptionPlansManagement = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [isLoading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPricingPerMember, setIsPricingPerMember] = useState(false);
@@ -179,7 +179,7 @@ const SubscriptionPlansManagement = () => {
 
   const onSubmit = async (values: SubscriptionPlanFormValues) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
 
       const planData = {
         name: values.name,
@@ -229,7 +229,7 @@ const SubscriptionPlansManagement = () => {
       console.error("Error during form submission:", error);
       toast.error("An unexpected error occurred");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -242,7 +242,7 @@ const SubscriptionPlansManagement = () => {
     if (!planToDelete) return;
     
     try {
-      setIsLoading(true);
+      setLoading(true);
 
       const { error } = await supabase
         .from('subscription_plans')
@@ -261,7 +261,7 @@ const SubscriptionPlansManagement = () => {
       console.error("Error during delete operation:", error);
       toast.error("An unexpected error occurred");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
       setDeleteConfirmOpen(false);
       setPlanToDelete(null);
     }
@@ -306,7 +306,7 @@ const SubscriptionPlansManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
+                {loading ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-10">
                       <div className="flex items-center justify-center">
@@ -550,8 +550,8 @@ const SubscriptionPlansManagement = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" disabled={loading}>
+                  {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {selectedPlan ? "Updating..." : "Creating..."}
@@ -578,7 +578,7 @@ const SubscriptionPlansManagement = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeletePlan}>
-              {isLoading ? (
+              {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deleting...

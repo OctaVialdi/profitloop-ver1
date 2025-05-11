@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Organization, SubscriptionPlan, BillingSettings, Invoice, InvoiceHistoryResponse, BillingPaymentMethod } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
@@ -24,20 +23,23 @@ class OrganizationService {
       }
       
       // Ensure theme_settings matches our interface structure
-      let themeSettings = orgData.theme_settings || {
+      const defaultThemeSettings = {
         primary_color: "#1E40AF",
         secondary_color: "#3B82F6",
         accent_color: "#60A5FA",
         sidebar_color: "#F1F5F9",
       };
       
-      // Convert from JSON string if needed
-      themeSettings = parseJsonIfString(themeSettings, {
-        primary_color: "#1E40AF",
-        secondary_color: "#3B82F6",
-        accent_color: "#60A5FA",
-        sidebar_color: "#F1F5F9",
-      });
+      // Convert from JSON string if needed and ensure all required properties
+      let themeSettings = parseJsonIfString(orgData.theme_settings, defaultThemeSettings);
+      
+      // Ensure all required properties exist
+      themeSettings = {
+        primary_color: themeSettings.primary_color || defaultThemeSettings.primary_color,
+        secondary_color: themeSettings.secondary_color || defaultThemeSettings.secondary_color,
+        accent_color: themeSettings.accent_color || defaultThemeSettings.accent_color,
+        sidebar_color: themeSettings.sidebar_color || defaultThemeSettings.sidebar_color,
+      };
       
       const subscriptionStatus = orgData.subscription_status as 'trial' | 'active' | 'expired' || 'trial';
       
