@@ -43,7 +43,7 @@ export function CustomerPortalSection({ subscriptionActive, organizationId }: Cu
   };
 
   const goToSubscriptionPage = () => {
-    navigate("/settings/subscription");
+    navigate("/settings/plan");
   };
 
   return (
