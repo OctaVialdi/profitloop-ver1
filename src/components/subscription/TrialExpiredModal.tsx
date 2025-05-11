@@ -36,7 +36,6 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
   const navigate = useNavigate();
   const [recommendedPlan, setRecommendedPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Fetch the recommended plan (with direct payment URL) when the modal opens
   useEffect(() => {
@@ -48,7 +47,6 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
   const fetchRecommendedPlan = async () => {
     try {
       setLoading(true);
-      setError(null);
       // Get an active plan with direct_payment_url set, preferring the ones with price > 0
       const { data, error } = await supabase
         .from('subscription_plans')
@@ -60,7 +58,6 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
 
       if (error) {
         console.error("Error fetching recommended plan:", error);
-        setError("Failed to load plan information");
         return;
       }
 
@@ -76,12 +73,9 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
           ...plan,
           features: features as Record<string, any> | null
         });
-      } else {
-        setError("No recommended plan available");
       }
     } catch (err) {
       console.error("Error in fetchRecommendedPlan:", err);
-      setError("Failed to load subscription information");
     } finally {
       setLoading(false);
     }
@@ -90,18 +84,7 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
   const handleUpgrade = () => {
     if (recommendedPlan?.direct_payment_url) {
       // If we have a recommended plan with direct payment URL, go there
-      try {
-        window.location.href = recommendedPlan.direct_payment_url;
-      } catch (err) {
-        console.error("Error redirecting to payment URL:", err);
-        // Fall back to the provided onUpgrade handler if redirect fails
-        if (onUpgrade) {
-          onUpgrade();
-        } else {
-          // Default fallback to plan page
-          navigate('/settings/plan');
-        }
-      }
+      window.location.href = recommendedPlan.direct_payment_url;
     } else if (onUpgrade) {
       // Otherwise use the provided onUpgrade handler
       onUpgrade();
@@ -121,11 +104,8 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={allowClose ? onClose : undefined}>
-      <DialogContent 
-        className="sm:max-w-[500px]" 
-        preventOutsideClose={!allowClose}
-        hideCloseButton={!allowClose}
-      >
+      <DialogContent className="sm:max-w-[500px]" onInteractOutside={e => e.preventDefault()}>
+        {/* Add Close button if allowed */}
         {allowClose && (
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
             <X className="h-4 w-4" />
@@ -148,12 +128,6 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
             Upgrading provides you with continued access to all features and premium support.
             You can also request a trial extension if you need more time to evaluate.
           </p>
-          
-          {error && (
-            <div className="mt-4 p-2 border border-red-300 rounded-md bg-red-50 text-red-700 text-sm">
-              {error}. Please try again or contact support.
-            </div>
-          )}
           
           {recommendedPlan && (
             <div className="mt-4 p-4 border rounded-md bg-primary/5">

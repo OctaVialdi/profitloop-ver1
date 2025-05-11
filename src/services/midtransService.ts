@@ -67,50 +67,6 @@ export const midtransService = {
   },
   
   /**
-   * Load the Midtrans Snap script if it's not already loaded
-   * @param clientKey Optional client key to use
-   * @returns Promise that resolves when the script is loaded
-   */
-  loadSnapScript: async (clientKey?: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      try {
-        // If Snap is already available, resolve immediately
-        if (window.snap) {
-          resolve();
-          return;
-        }
-        
-        // Check if script is already being loaded
-        if (document.querySelector('script[src="https://app.midtrans.com/snap/snap.js"]')) {
-          // Wait for script to finish loading
-          const checkInterval = setInterval(() => {
-            if (window.snap) {
-              clearInterval(checkInterval);
-              resolve();
-            }
-          }, 100);
-          return;
-        }
-        
-        // Create and load the script
-        const script = document.createElement("script");
-        script.src = "https://app.midtrans.com/snap/snap.js";
-        
-        if (clientKey) {
-          script.setAttribute("data-client-key", clientKey);
-        }
-        
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load Midtrans Snap script"));
-        
-        document.body.appendChild(script);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-  
-  /**
    * Open Midtrans checkout snap in modal
    * @param token The Midtrans snap token
    * @param onSuccess Callback for successful payment
@@ -119,15 +75,24 @@ export const midtransService = {
    */
   openSnapModal: async (
     token: string,
-    clientKey?: string,
     onSuccess?: () => void,
     onError?: (error: any) => void,
-    onClose?: () => void,
-    onPending?: () => void
-  ): Promise<boolean> => {
+    onClose?: () => void
+  ) => {
     try {
-      // Load the Midtrans Snap script if not already loaded
-      await midtransService.loadSnapScript(clientKey);
+      // Wait for the Midtrans Snap script to load
+      if (!window.snap) {
+        // Load the Midtrans Snap script if not already loaded
+        const script = document.createElement("script");
+        script.src = "https://app.midtrans.com/snap/snap.js";
+        script.setAttribute("data-client-key", "YOUR_CLIENT_KEY"); // This is public so it's ok
+        document.body.appendChild(script);
+        
+        // Wait for the script to load
+        await new Promise(resolve => {
+          script.onload = resolve;
+        });
+      }
       
       // Open the Snap modal
       if (window.snap) {
@@ -138,7 +103,6 @@ export const midtransService = {
           },
           onPending: () => {
             toast.info("Pembayaran sedang diproses.");
-            if (onPending) onPending();
           },
           onError: (error: any) => {
             console.error("Payment error:", error);
@@ -150,40 +114,26 @@ export const midtransService = {
             if (onClose) onClose();
           }
         });
-        return true;
-      } else {
-        throw new Error("Midtrans Snap tidak tersedia");
       }
     } catch (error) {
       console.error("Error opening Snap modal:", error);
       toast.error("Gagal membuka halaman pembayaran. Silakan coba lagi.");
-      return false;
     }
   },
   
   /**
-   * Redirect to Midtrans checkout URL (fallback method)
+   * Redirect to Midtrans checkout URL
    * @param redirectUrl The Midtrans redirect URL
    */
   redirectToPayment: (redirectUrl: string) => {
-    if (!redirectUrl) {
-      toast.error("URL pembayaran tidak tersedia");
-      return;
-    }
+    window.location.href = redirectUrl;
+  },
+  
+  /**
+   * Redirect to checkout page
+   * @param redirectUrl The checkout URL
+   */
+  redirectToCheckout: (redirectUrl: string) => {
     window.location.href = redirectUrl;
   }
 };
-
-// Add window.snap type definition
-declare global {
-  interface Window {
-    snap?: {
-      pay: (token: string, options: {
-        onSuccess: () => void;
-        onPending: () => void;
-        onError: (error: any) => void;
-        onClose: () => void;
-      }) => void;
-    };
-  }
-}
