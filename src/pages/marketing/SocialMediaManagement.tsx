@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useMemo } from "react";
 import { 
   Card, 
   CardContent, 
@@ -52,12 +53,26 @@ interface ContentManager {
   onTimeRate: number;
   effectiveRate: number;
   score: number;
+  pic?: string; // Added for PIC
+  service?: string; // Added for Layanan
+  subService?: string; // Added for Sub Layanan
 }
 
 interface TabData {
   id: string;
   label: string;
   path: string;
+}
+
+interface Service {
+  id: string;
+  name: string;
+}
+
+interface SubService {
+  id: string;
+  serviceId: string;
+  name: string;
 }
 
 const SocialMediaManagement = () => {
@@ -73,6 +88,11 @@ const SocialMediaManagement = () => {
   const [editingManager, setEditingManager] = useState<ContentManager | null>(null);
   const [targetValue, setTargetValue] = useState<string>("20");
   
+  // New states for PIC, Services, and SubServices data from localStorage
+  const [contentPlanners, setContentPlanners] = useState<any[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [subServices, setSubServices] = useState<SubService[]>([]);
+  
   const primaryTabs: TabData[] = [
     { id: "content-planner", label: "Content Planner", path: "" },
     { id: "production", label: "Production", path: "" },
@@ -85,6 +105,46 @@ const SocialMediaManagement = () => {
     { id: "content-bank", label: "Content Bank", path: "/marketing/social-media/content-bank" },
     { id: "content-qc", label: "Content QC", path: "/marketing/social-media/content-qc" }
   ];
+
+  // Load the content planners (employees with jobPosition "Content Planner")
+  useEffect(() => {
+    // Load data from localStorage
+    const storedEmployeesJson = localStorage.getItem('employees');
+    if (storedEmployeesJson) {
+      try {
+        const allEmployees = JSON.parse(storedEmployeesJson);
+        // Filter for Digital Marketing employees with Content Planner position
+        const planners = allEmployees.filter(
+          (emp: any) => emp.organization === "Digital Marketing" && 
+                        emp.jobPosition === "Content Planner"
+        );
+        setContentPlanners(planners);
+      } catch (e) {
+        console.error("Error parsing employees from localStorage:", e);
+      }
+    }
+  }, []);
+
+  // Load services and subServices from localStorage
+  useEffect(() => {
+    const storedServices = localStorage.getItem("marketingServices");
+    if (storedServices) {
+      try {
+        setServices(JSON.parse(storedServices));
+      } catch (e) {
+        console.error("Error parsing services from localStorage:", e);
+      }
+    }
+
+    const storedSubServices = localStorage.getItem("marketingSubServices");
+    if (storedSubServices) {
+      try {
+        setSubServices(JSON.parse(storedSubServices));
+      } catch (e) {
+        console.error("Error parsing sub-services from localStorage:", e);
+      }
+    }
+  }, []);
 
   // Detect current path and set active tab accordingly
   useEffect(() => {
@@ -99,48 +159,63 @@ const SocialMediaManagement = () => {
     }
   }, [location.pathname]);
 
-  const contentManagers: ContentManager[] = [
-    {
-      name: "John Doe",
-      dailyTarget: 20,
-      monthlyTarget: 20,
-      monthlyTargetAdjusted: 20,
-      progress: 75,
-      onTimeRate: 80,
-      effectiveRate: 90,
-      score: 82
-    },
-    {
-      name: "Jane Smith",
-      dailyTarget: 20,
-      monthlyTarget: 20,
-      monthlyTargetAdjusted: 15,
-      progress: 80,
-      onTimeRate: 70,
-      effectiveRate: 85,
-      score: 78
-    },
-    {
-      name: "Mike Johnson",
-      dailyTarget: 15,
-      monthlyTarget: 15,
-      monthlyTargetAdjusted: 18,
-      progress: 65,
-      onTimeRate: 75,
-      effectiveRate: 80,
-      score: 76
-    },
-    {
-      name: "Sara Williams",
-      dailyTarget: 18,
-      monthlyTarget: 18,
-      monthlyTargetAdjusted: 20,
-      progress: 85,
-      onTimeRate: 85,
-      effectiveRate: 88,
-      score: 86
-    }
-  ];
+  // Combine the content managers with PIC, service, and subService data
+  const contentManagers: ContentManager[] = useMemo(() => {
+    return [
+      {
+        name: "John Doe",
+        dailyTarget: 20,
+        monthlyTarget: 20,
+        monthlyTargetAdjusted: 20,
+        progress: 75,
+        onTimeRate: 80,
+        effectiveRate: 90,
+        score: 82,
+        pic: "Sarah Wilson",
+        service: "Social Media",
+        subService: "Instagram"
+      },
+      {
+        name: "Jane Smith",
+        dailyTarget: 20,
+        monthlyTarget: 20,
+        monthlyTargetAdjusted: 15,
+        progress: 80,
+        onTimeRate: 70,
+        effectiveRate: 85,
+        score: 78,
+        pic: "Mark Johnson",
+        service: "Social Media", 
+        subService: "Facebook"
+      },
+      {
+        name: "Mike Johnson",
+        dailyTarget: 15,
+        monthlyTarget: 15,
+        monthlyTargetAdjusted: 18,
+        progress: 65,
+        onTimeRate: 75,
+        effectiveRate: 80,
+        score: 76,
+        pic: "Emily Davis", 
+        service: "SEO", 
+        subService: "On-page SEO"
+      },
+      {
+        name: "Sara Williams",
+        dailyTarget: 18,
+        monthlyTarget: 18,
+        monthlyTargetAdjusted: 20,
+        progress: 85,
+        onTimeRate: 85,
+        effectiveRate: 88,
+        score: 86,
+        pic: "Robert Chen",
+        service: "SEM",
+        subService: "Google Ads"
+      }
+    ];
+  }, []);
 
   const getTabTitle = () => {
     switch (activeTab) {
@@ -178,6 +253,11 @@ const SocialMediaManagement = () => {
   const handleTabClick = (tabId: string, path: string) => {
     navigate(path);
     setActiveSubTab(tabId);
+  };
+
+  // Get subservices for a specific service
+  const getSubServicesForService = (serviceId: string) => {
+    return subServices.filter(subService => subService.serviceId === serviceId);
   };
 
   const months = [
@@ -384,6 +464,18 @@ const SocialMediaManagement = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableHead>
+                  {/* New column - PIC (Column No 4) */}
+                  <TableHead className="h-8 text-center w-[150px] py-1">
+                    PIC
+                  </TableHead>
+                  {/* New column - Layanan (Column No 5) */}
+                  <TableHead className="h-8 text-center w-[150px] py-1">
+                    Layanan
+                  </TableHead>
+                  {/* New column - Sub Layanan (Column No 6) */}
+                  <TableHead className="h-8 text-center w-[150px] py-1">
+                    Sub Layanan
+                  </TableHead>
                   <TableHead className="h-8 text-center w-[150px] py-1">
                     Target {format(selectedMonth, "MMM yyyy")}
                   </TableHead>
@@ -399,6 +491,83 @@ const SocialMediaManagement = () => {
                     <TableCell className="py-1 px-4 font-medium text-sm">{manager.name}</TableCell>
                     <TableCell className="py-1 px-4 text-center text-sm">{manager.dailyTarget}</TableCell>
                     <TableCell className="py-1 px-4 text-center text-sm">{manager.monthlyTarget}</TableCell>
+                    {/* PIC Dropdown */}
+                    <TableCell className="py-1 px-4 text-center text-sm">
+                      <Select defaultValue={manager.pic}>
+                        <SelectTrigger className="h-7 w-full">
+                          <SelectValue placeholder="Select PIC" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contentPlanners.length > 0 ? (
+                            contentPlanners.map((planner) => (
+                              <SelectItem key={planner.id} value={planner.name}>
+                                {planner.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-pic">No content planners found</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    {/* Layanan Dropdown */}
+                    <TableCell className="py-1 px-4 text-center text-sm">
+                      <Select 
+                        defaultValue={manager.service}
+                        onValueChange={(value) => {
+                          // In a real app, you would update the manager's service here
+                          console.log("Selected service:", value);
+                        }}
+                      >
+                        <SelectTrigger className="h-7 w-full">
+                          <SelectValue placeholder="Select Layanan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {services.map((service) => (
+                            <SelectItem key={service.id} value={service.name}>
+                              {service.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    {/* Sub Layanan Dropdown - dependent on Layanan selection */}
+                    <TableCell className="py-1 px-4 text-center text-sm">
+                      <Select 
+                        defaultValue={manager.subService}
+                        onValueChange={(value) => {
+                          // In a real app, you would update the manager's sub-service here
+                          console.log("Selected sub-service:", value);
+                        }}
+                      >
+                        <SelectTrigger className="h-7 w-full">
+                          <SelectValue placeholder="Select Sub Layanan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {services.map((service) => {
+                            if (service.name === manager.service) {
+                              const filteredSubServices = subServices.filter(
+                                sub => sub.serviceId === service.id
+                              );
+                              
+                              return (
+                                <SelectGroup key={service.id}>
+                                  <SelectItem value={service.name} disabled>
+                                    {service.name}
+                                  </SelectItem>
+                                  {filteredSubServices.map((subService) => (
+                                    <SelectItem key={subService.id} value={subService.name}>
+                                      {subService.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              );
+                            }
+                            return null;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell className="py-1 px-4 text-center text-sm">
                       <div className="flex items-center justify-center gap-1">
                         <span>{manager.monthlyTargetAdjusted}</span>

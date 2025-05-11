@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,9 +22,20 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 
-// Define the ContentType interface
+// Define interfaces for the data types
 interface ContentType {
   id: string;
+  name: string;
+}
+
+interface Service {
+  id: string;
+  name: string;
+}
+
+interface SubService {
+  id: string;
+  serviceId: string;
   name: string;
 }
 
@@ -45,6 +57,27 @@ const Settings = () => {
     { id: "4", name: "Carousel" }
   ]);
   const [newContentType, setNewContentType] = useState("");
+
+  // State for services management
+  const [services, setServices] = useState<Service[]>([
+    { id: "1", name: "Social Media" },
+    { id: "2", name: "SEO" },
+    { id: "3", name: "SEM" }
+  ]);
+  const [newService, setNewService] = useState("");
+
+  // State for sub-services management
+  const [subServices, setSubServices] = useState<SubService[]>([
+    { id: "1", serviceId: "1", name: "Instagram" },
+    { id: "2", serviceId: "1", name: "Facebook" },
+    { id: "3", serviceId: "1", name: "TikTok" },
+    { id: "4", serviceId: "2", name: "On-page SEO" },
+    { id: "5", serviceId: "2", name: "Off-page SEO" },
+    { id: "6", serviceId: "3", name: "Google Ads" },
+    { id: "7", serviceId: "3", name: "Facebook Ads" }
+  ]);
+  const [newSubService, setNewSubService] = useState("");
+  const [selectedServiceForSubService, setSelectedServiceForSubService] = useState("");
 
   useEffect(() => {
     // Filter employees by organization "Digital Marketing" when employees data changes
@@ -102,16 +135,98 @@ const Settings = () => {
     toast.success("Content type deleted");
   };
 
-  // Store content types in localStorage when it changes
+  // Function to add a new service
+  const handleAddService = () => {
+    if (newService.trim() === "") {
+      toast.error("Service name cannot be empty");
+      return;
+    }
+    
+    // Check if service already exists
+    if (services.some(service => service.name.toLowerCase() === newService.toLowerCase())) {
+      toast.error("This service already exists");
+      return;
+    }
+    
+    const newServiceItem = {
+      id: `${Date.now()}`,
+      name: newService
+    };
+    
+    setServices([...services, newServiceItem]);
+    setNewService("");
+    toast.success("Service added");
+  };
+
+  // Function to delete a service
+  const handleDeleteService = (id: string) => {
+    setServices(services.filter(service => service.id !== id));
+    // Also delete all sub-services associated with this service
+    setSubServices(subServices.filter(subService => subService.serviceId !== id));
+    toast.success("Service and its sub-services deleted");
+  };
+
+  // Function to add a new sub-service
+  const handleAddSubService = () => {
+    if (newSubService.trim() === "") {
+      toast.error("Sub-service name cannot be empty");
+      return;
+    }
+    
+    if (selectedServiceForSubService === "") {
+      toast.error("Please select a parent service");
+      return;
+    }
+    
+    // Check if sub-service already exists under this service
+    if (subServices.some(
+      subService => 
+        subService.name.toLowerCase() === newSubService.toLowerCase() && 
+        subService.serviceId === selectedServiceForSubService
+    )) {
+      toast.error("This sub-service already exists under the selected service");
+      return;
+    }
+    
+    const newSubServiceItem = {
+      id: `${Date.now()}`,
+      serviceId: selectedServiceForSubService,
+      name: newSubService
+    };
+    
+    setSubServices([...subServices, newSubServiceItem]);
+    setNewSubService("");
+    toast.success("Sub-service added");
+  };
+
+  // Function to delete a sub-service
+  const handleDeleteSubService = (id: string) => {
+    setSubServices(subServices.filter(subService => subService.id !== id));
+    toast.success("Sub-service deleted");
+  };
+
+  // Store content types, services, and sub-services in localStorage when they change
   useEffect(() => {
     localStorage.setItem("marketingContentTypes", JSON.stringify(contentTypes));
-  }, [contentTypes]);
+    localStorage.setItem("marketingServices", JSON.stringify(services));
+    localStorage.setItem("marketingSubServices", JSON.stringify(subServices));
+  }, [contentTypes, services, subServices]);
 
-  // Load content types from localStorage on component mount
+  // Load content types, services, and sub-services from localStorage on component mount
   useEffect(() => {
     const storedTypes = localStorage.getItem("marketingContentTypes");
     if (storedTypes) {
       setContentTypes(JSON.parse(storedTypes));
+    }
+
+    const storedServices = localStorage.getItem("marketingServices");
+    if (storedServices) {
+      setServices(JSON.parse(storedServices));
+    }
+
+    const storedSubServices = localStorage.getItem("marketingSubServices");
+    if (storedSubServices) {
+      setSubServices(JSON.parse(storedSubServices));
     }
   }, []);
 
@@ -179,6 +294,8 @@ const Settings = () => {
           <TabsList className="mb-4">
             <TabsTrigger value="team-members">Team Members</TabsTrigger>
             <TabsTrigger value="content-types">Content Types</TabsTrigger>
+            <TabsTrigger value="services">Services</TabsTrigger>
+            <TabsTrigger value="sub-services">Sub Services</TabsTrigger>
           </TabsList>
           
           <TabsContent value="team-members">
@@ -338,6 +455,141 @@ const Settings = () => {
                       <tr>
                         <td colSpan={2} className="py-6 text-center text-muted-foreground">
                           No content types defined yet
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="services">
+            <div>
+              <h2 className="text-lg font-medium mb-4">Services</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add or remove services that will be available in the content management table.
+              </p>
+              
+              <div className="flex gap-2 mb-6">
+                <Input 
+                  placeholder="New service name" 
+                  value={newService} 
+                  onChange={(e) => setNewService(e.target.value)}
+                  className="max-w-sm"
+                />
+                <Button onClick={handleAddService} size="sm">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Service
+                </Button>
+              </div>
+              
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="py-3 px-4 text-left font-medium">Name</th>
+                      <th className="py-3 px-4 text-right font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {services.length > 0 ? (
+                      services.map((service) => (
+                        <tr key={service.id} className="border-t hover:bg-muted/30">
+                          <td className="py-3 px-4">{service.name}</td>
+                          <td className="py-3 px-4 text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDeleteService(service.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={2} className="py-6 text-center text-muted-foreground">
+                          No services defined yet
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="sub-services">
+            <div>
+              <h2 className="text-lg font-medium mb-4">Sub Services</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add or remove sub-services that will be available under specific services.
+              </p>
+              
+              <div className="flex gap-2 mb-6">
+                <div className="flex gap-2 flex-1 max-w-xl">
+                  <select 
+                    className="border rounded-md p-2 flex-1" 
+                    value={selectedServiceForSubService}
+                    onChange={(e) => setSelectedServiceForSubService(e.target.value)}
+                  >
+                    <option value="">Select a parent service</option>
+                    {services.map(service => (
+                      <option key={service.id} value={service.id}>{service.name}</option>
+                    ))}
+                  </select>
+                  
+                  <Input 
+                    placeholder="New sub-service name" 
+                    value={newSubService} 
+                    onChange={(e) => setNewSubService(e.target.value)}
+                    className="flex-1"
+                  />
+                  
+                  <Button onClick={handleAddSubService} size="sm">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add Sub-Service
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="py-3 px-4 text-left font-medium">Parent Service</th>
+                      <th className="py-3 px-4 text-left font-medium">Sub-Service Name</th>
+                      <th className="py-3 px-4 text-right font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subServices.length > 0 ? (
+                      subServices.map((subService) => {
+                        const parentService = services.find(service => service.id === subService.serviceId);
+                        return (
+                          <tr key={subService.id} className="border-t hover:bg-muted/30">
+                            <td className="py-3 px-4">{parentService?.name || 'Unknown Service'}</td>
+                            <td className="py-3 px-4">{subService.name}</td>
+                            <td className="py-3 px-4 text-right">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleDeleteSubService(subService.id)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={3} className="py-6 text-center text-muted-foreground">
+                          No sub-services defined yet
                         </td>
                       </tr>
                     )}
