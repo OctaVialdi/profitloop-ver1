@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -195,7 +196,11 @@ export const stripeService = {
   cancelSubscription: async (reason: string, feedback?: string): Promise<boolean> => {
     try {
       const session = await supabase.auth.getSession();
-      const organizationId = session.data.session?.user.id || '';
+      const user = session.data.session?.user;
+      
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
       
       const { data, error } = await supabase.functions.invoke("cancel-subscription", {
         body: { 
@@ -204,13 +209,22 @@ export const stripeService = {
         }
       });
       
-      if (error) throw new Error(`Error cancelling subscription: ${error.message}`);
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(`Error cancelling subscription: ${error.message}`);
+      }
+      
+      if (!data?.success) {
+        const errorMessage = data?.error || "Unknown error";
+        console.error("Cancellation failed:", errorMessage);
+        throw new Error(errorMessage);
+      }
       
       // Store cancellation reason and feedback in audit logs
       await supabase.from('subscription_audit_logs').insert({
         action: 'subscription_cancelled',
-        organization_id: organizationId,
-        user_id: session.data.session?.user.id,
+        organization_id: user.id,
+        user_id: user.id,
         data: {
           reason,
           feedback: feedback || null,
@@ -218,9 +232,10 @@ export const stripeService = {
         }
       });
       
-      return data?.success || false;
+      return true;
     } catch (error) {
       console.error("Error cancelling subscription:", error);
+      // Re-throw the error to be handled by the caller
       throw error;
     }
   },

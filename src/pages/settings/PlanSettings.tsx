@@ -211,20 +211,44 @@ const PlanSettings: React.FC = () => {
     try {
       setSubmitting(true);
       
-      // Call the stripe service to cancel the subscription
-      const success = await stripeService.cancelSubscription(reason);
-      
-      if (success) {
-        toast.success("Your subscription has been cancelled successfully");
+      if (hasPaidSubscription) {
+        // Call the stripe service to cancel the subscription
+        const success = await stripeService.cancelSubscription(reason);
+        
+        if (success) {
+          toast.success("Your subscription has been cancelled successfully");
+          // Refresh organization data to reflect changes
+          await refreshData();
+        } else {
+          throw new Error("Failed to cancel subscription");
+        }
+      } else {
+        // For free plans or trials, we just notify the user
+        toast.success("Your plan has been cancelled");
+        
+        // If in trial, mark trial as expired
+        if (organization?.id && (isTrialActive || !organization.trial_expired)) {
+          const { error } = await supabase
+            .from('organizations')
+            .update({
+              trial_expired: true,
+              subscription_status: 'expired'
+            })
+            .eq('id', organization.id);
+            
+          if (error) {
+            console.error("Error updating trial status:", error);
+            throw new Error("Failed to update trial status");
+          }
+        }
+        
         // Refresh organization data to reflect changes
         await refreshData();
-      } else {
-        throw new Error("Failed to cancel subscription");
       }
     } catch (error) {
       console.error("Error cancelling subscription:", error);
       toast.error("Failed to cancel subscription. Please try again or contact support.");
-      throw error;
+      throw error; // Re-throw to be caught by the dialog
     } finally {
       setSubmitting(false);
     }

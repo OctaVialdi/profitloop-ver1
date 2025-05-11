@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -36,12 +37,16 @@ export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }:
   const [currentStep, setCurrentStep] = useState("reason"); // "reason", "feedback", "offer", "confirm"
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleReasonNext = () => {
     if (!selectedReason) {
       toast.error("Please select a reason for cancellation");
       return;
     }
+
+    // Clear any previous errors
+    setErrorMessage(null);
 
     // If the reason is "too expensive", show the offer dialog
     if (selectedReason === "too_expensive") {
@@ -54,17 +59,22 @@ export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }:
 
   const handleBackToReason = () => {
     setCurrentStep("reason");
+    setErrorMessage(null);
   };
 
   const handleConfirmCancel = async () => {
     try {
       setIsSubmitting(true);
+      setErrorMessage(null);
+      
       // Call the parent handler with the reason
       await onConfirmCancel(selectedReason || "not_specified");
       toast.success("Your subscription has been cancelled");
       onClose();
     } catch (error) {
       console.error("Error cancelling subscription:", error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred';
+      setErrorMessage(`Failed to cancel subscription: ${errorMsg}. Please try again or contact support.`);
       toast.error("Failed to cancel subscription. Please try again or contact support.");
     } finally {
       setIsSubmitting(false);
@@ -87,6 +97,7 @@ export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }:
     setSelectedReason(null);
     setFeedback("");
     setIsSubmitting(false);
+    setErrorMessage(null);
   };
 
   return (
@@ -156,6 +167,13 @@ export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }:
               <div className="text-sm text-muted-foreground">
                 <p className="font-medium">Your feedback:</p>
                 <p className="italic">"{feedback}"</p>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="p-3 bg-red-50 text-red-800 rounded-md">
+                <p className="font-medium">Error:</p>
+                <p>{errorMessage}</p>
               </div>
             )}
           </div>

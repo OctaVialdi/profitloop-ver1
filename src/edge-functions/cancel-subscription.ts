@@ -1,10 +1,21 @@
 
 // NOTE: This file is for reference only and would be implemented in Supabase Edge Functions
 // This file should be placed in supabase/functions/cancel-subscription/index.ts when deploying
-// The actual implementation has been moved to the proper Supabase directory structure
 
-// Reference implementation only
-export const cancelSubscription = async () => {
+// Mock implementation for browser preview
+export const cancelSubscription = async (reason: string, feedback?: string): Promise<{ success: boolean; error?: string }> => {
   console.warn('This is a reference file. The actual implementation is in supabase/functions/cancel-subscription/index.ts');
-  return { success: false, error: 'Not implemented in browser context' };
+  
+  try {
+    // In browser context, simulate a successful response for testing UI
+    return { 
+      success: true,
+      message: 'Subscription cancelled successfully (simulated in browser)'
+    };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: 'Failed to cancel subscription in browser context' 
+    };
+  }
 };
