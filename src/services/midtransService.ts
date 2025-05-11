@@ -115,33 +115,40 @@ export const midtransService = {
    */
   verifyPaymentStatus: async (orderId: string) => {
     try {
-      const { data, error } = await supabase
+      // First, fetch the payment transaction by order_id
+      const { data: transactionData, error: transactionError } = await supabase
         .from("payment_transactions")
-        .select(`
-          id,
-          status,
-          subscription_plan_id,
-          subscription_plan:subscription_plans(name)
-        `)
+        .select("id, status, subscription_plan_id")
         .eq("order_id", orderId)
         .single();
       
-      if (error) {
-        console.error("Error verifying payment status:", error);
-        throw new Error(`Error verifying payment: ${error.message}`);
+      if (transactionError) {
+        console.error("Error verifying payment status:", transactionError);
+        throw new Error(`Error verifying payment: ${transactionError.message}`);
+      }
+
+      // Default response in case we don't find subscription details
+      let response = {
+        success: transactionData?.status === "success",
+        status: transactionData?.status || 'pending',
+        subscription_tier: null
+      };
+
+      // If we have a subscription_plan_id, fetch the subscription plan details
+      if (transactionData?.subscription_plan_id) {
+        const { data: subscriptionPlan, error: subscriptionError } = await supabase
+          .from("subscription_plans")
+          .select("name")
+          .eq("id", transactionData.subscription_plan_id)
+          .single();
+        
+        if (!subscriptionError && subscriptionPlan) {
+          // Update response with subscription plan name
+          response.subscription_tier = subscriptionPlan.name;
+        }
       }
       
-      // Parse the response data with proper null checks
-      return {
-        success: data?.status === "success",
-        status: data?.status || 'pending',
-        subscription_tier: data?.subscription_plan && 
-          typeof data.subscription_plan === 'object' && 
-          data.subscription_plan !== null && 
-          'name' in data.subscription_plan 
-            ? data.subscription_plan.name 
-            : null
-      };
+      return response;
     } catch (error) {
       console.error("Error verifying payment status:", error);
       return { success: false, status: 'error', subscription_tier: null };
