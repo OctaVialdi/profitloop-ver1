@@ -1,5 +1,6 @@
 
 // NOTE: This file is for reference only and would be implemented in Supabase Edge Functions
+// This file should be placed in supabase/functions/apply-discount/index.ts when deploying
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";

@@ -195,6 +195,9 @@ export const stripeService = {
    */
   cancelSubscription: async (reason: string, feedback?: string): Promise<boolean> => {
     try {
+      const session = await supabase.auth.getSession();
+      const organizationId = session.data.session?.user.id || '';
+      
       const { data, error } = await supabase.functions.invoke("cancel-subscription", {
         body: { 
           reason,
@@ -207,7 +210,7 @@ export const stripeService = {
       // Store cancellation reason and feedback in audit logs
       await supabase.from('subscription_audit_logs').insert({
         action: 'subscription_cancelled',
-        organization_id: (await supabase.auth.getSession()).data.session?.user.id || '',
+        organization_id: organizationId,
         data: {
           reason,
           feedback: feedback || null,
@@ -230,6 +233,9 @@ export const stripeService = {
    */
   applyDiscountOffer: async (discountPercent: number = 30, durationMonths: number = 3): Promise<boolean> => {
     try {
+      const session = await supabase.auth.getSession();
+      const organizationId = session.data.session?.user.id || '';
+      
       const { data, error } = await supabase.functions.invoke("apply-discount", {
         body: { 
           discountPercent,
@@ -242,7 +248,7 @@ export const stripeService = {
       // Store discount claim in audit logs
       await supabase.from('subscription_audit_logs').insert({
         action: 'discount_applied',
-        organization_id: (await supabase.auth.getSession()).data.session?.user.id || '',
+        organization_id: organizationId,
         data: {
           discount_percent: discountPercent,
           duration_months: durationMonths,
