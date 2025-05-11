@@ -128,8 +128,8 @@ export const mapDbTicketToUiTicket = (dbTicket: SupportTicket): Ticket => {
       name: dbTicket.category, 
       icon: dbTicket.category_icon || ""
     },
-    priority: dbTicket.priority,
-    status: dbTicket.status,
+    priority: dbTicket.priority as "High" | "Medium" | "Low", // Added type assertion
+    status: dbTicket.status as "In Progress" | "Resolved" | "Pending" | "Received" | "Open" | "Maintenance" | "Retired" | "Rejected", // Added type assertion
     createdAt: new Date(dbTicket.created_at).toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric', 

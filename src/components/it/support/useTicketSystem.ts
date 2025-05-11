@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Ticket } from "./types";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth"; // Fixed import path
 import { useOrganization } from "@/hooks/useOrganization";
 import { 
   fetchTickets, 

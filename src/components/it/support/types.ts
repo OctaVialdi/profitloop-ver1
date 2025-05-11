@@ -20,4 +20,5 @@ export interface Ticket {
     type: "completed" | "pending" | null;
   };
   assignee: string;
+  relatedAsset?: string; // Added this property
 }

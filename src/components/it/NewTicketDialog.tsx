@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -64,7 +63,7 @@ const NewTicketDialog: React.FC<NewTicketDialogProps> = ({
     priority: "Medium",
     status: "Received",
     assignee: "Unassigned",
-    relatedAsset: ""
+    relatedAsset: "" // properly typed now
   });
   
   const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
