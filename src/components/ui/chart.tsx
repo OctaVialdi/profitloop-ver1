@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -97,6 +98,36 @@ ${colorConfig
     />
   )
 }
+
+// Add BarChart component that wraps Recharts' BarChart
+const BarChart: React.FC<{
+  data?: any;
+}> = ({ data }) => {
+  return (
+    <RechartsPrimitive.BarChart data={data}>
+      <RechartsPrimitive.CartesianGrid strokeDasharray="3 3" />
+      <RechartsPrimitive.XAxis dataKey="name" />
+      <RechartsPrimitive.YAxis />
+      <RechartsPrimitive.Tooltip />
+      <RechartsPrimitive.Bar dataKey="value" fill="#8884d8" />
+    </RechartsPrimitive.BarChart>
+  );
+};
+
+// Add LineChart component that wraps Recharts' LineChart
+const LineChart: React.FC<{
+  data?: any;
+}> = ({ data }) => {
+  return (
+    <RechartsPrimitive.LineChart data={data}>
+      <RechartsPrimitive.CartesianGrid strokeDasharray="3 3" />
+      <RechartsPrimitive.XAxis dataKey="name" />
+      <RechartsPrimitive.YAxis />
+      <RechartsPrimitive.Tooltip />
+      <RechartsPrimitive.Line type="monotone" dataKey="value" stroke="#8884d8" />
+    </RechartsPrimitive.LineChart>
+  );
+};
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
@@ -360,4 +391,6 @@ export {
   ChartLegend,
   ChartLegendContent,
   ChartStyle,
+  BarChart,
+  LineChart,
 }

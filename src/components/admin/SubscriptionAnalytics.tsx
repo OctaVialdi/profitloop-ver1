@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, LineChart } from "@/components/ui/chart";
+import { BarChart, LineChart, ChartContainer } from "@/components/ui/chart";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { subscriptionAnalyticsService } from "@/services/subscription"; // Updated import path
+import { subscriptionAnalyticsService } from "@/services/subscription"; 
 
 const SubscriptionAnalytics = () => {
   const [eventCounts, setEventCounts] = useState<{ [key: string]: number } | null>(null);
@@ -44,11 +45,23 @@ const SubscriptionAnalytics = () => {
   }, [toast]);
 
   // Prepare data for charts
-  const eventTypeLabels = eventCounts ? Object.keys(eventCounts) : [];
-  const eventTypeValues = eventCounts ? Object.values(eventCounts) : [];
+  const formatEventTypeData = () => {
+    if (!eventCounts) return [];
+    
+    return Object.entries(eventCounts).map(([name, value]) => ({
+      name,
+      value
+    }));
+  };
 
-  const featureLabels = featureConversions ? featureConversions.map(item => item.feature) : [];
-  const featureValues = featureConversions ? featureConversions.map(item => item.conversions) : [];
+  const formatFeatureData = () => {
+    if (!featureConversions) return [];
+    
+    return featureConversions.map(item => ({
+      name: item.feature,
+      value: item.conversions
+    }));
+  };
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -65,20 +78,14 @@ const SubscriptionAnalytics = () => {
               Memuat data...
             </div>
           ) : eventCounts && Object.keys(eventCounts).length > 0 ? (
-            <BarChart
-              data={{
-                labels: eventTypeLabels,
-                datasets: [
-                  {
-                    label: "Jumlah Event",
-                    data: eventTypeValues,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                  },
-                ],
+            <ChartContainer
+              className="h-80"
+              config={{
+                value: { theme: { light: 'rgba(54, 162, 235, 0.6)', dark: 'rgba(54, 162, 235, 1)' } }
               }}
-            />
+            >
+              <BarChart data={formatEventTypeData()} />
+            </ChartContainer>
           ) : (
             <Alert>
               <AlertCircle className="h-4 w-4" />
@@ -101,21 +108,14 @@ const SubscriptionAnalytics = () => {
               Memuat data...
             </div>
           ) : featureConversions && featureConversions.length > 0 ? (
-            <LineChart
-              data={{
-                labels: featureLabels,
-                datasets: [
-                  {
-                    label: "Konversi",
-                    data: featureValues,
-                    fill: false,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2,
-                  },
-                ],
+            <ChartContainer 
+              className="h-80"
+              config={{
+                value: { theme: { light: 'rgba(75, 192, 192, 0.2)', dark: 'rgba(75, 192, 192, 1)' } }
               }}
-            />
+            >
+              <LineChart data={formatFeatureData()} />
+            </ChartContainer>
           ) : (
             <Alert>
               <AlertCircle className="h-4 w-4" />

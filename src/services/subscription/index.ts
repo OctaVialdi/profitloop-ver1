@@ -1,7 +1,7 @@
 
 import { subscriptionAnalyticsCore } from "./core";
 import { subscriptionTrackingService } from "./trackingService";
-import { subscriptionAnalyticsService } from "./analyticsService";
+import { subscriptionAnalyticsService as analyticsService } from "./analyticsService";
 import { SubscriptionEvent, SubscriptionEventType } from "./types";
 
 // Export all subscription analytics functionality combined
@@ -22,9 +22,9 @@ export const subscriptionAnalyticsService = {
   trackTrialExtensionRequested: subscriptionTrackingService.trackTrialExtensionRequested,
   
   // Analytics service methods
-  getAnalyticsByEventType: subscriptionAnalyticsService.getAnalyticsByEventType,
-  getFeatureConversionAnalytics: subscriptionAnalyticsService.getFeatureConversionAnalytics,
-  getTrialConversionMetrics: subscriptionAnalyticsService.getTrialConversionMetrics,
+  getAnalyticsByEventType: analyticsService.getAnalyticsByEventType,
+  getFeatureConversionAnalytics: analyticsService.getFeatureConversionAnalytics,
+  getTrialConversionMetrics: analyticsService.getTrialConversionMetrics,
 };
 
 // Re-export types
