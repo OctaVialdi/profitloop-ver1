@@ -39,6 +39,8 @@ const ProfileSettings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [expectedDeleteConfirmation, setExpectedDeleteConfirmation] = useState("");
 
   useEffect(() => {
     if (userProfile) {
@@ -49,6 +51,11 @@ const ProfileSettings = () => {
         darkMode: userProfile.preferences?.dark_mode || false,
         profileImage: userProfile.profile_image || null,
       });
+      
+      // Set the expected delete confirmation text
+      if (userProfile.full_name) {
+        setExpectedDeleteConfirmation(`hapus akun profile ${userProfile.full_name}`);
+      }
     }
   }, [userProfile]);
 
@@ -115,8 +122,18 @@ const ProfileSettings = () => {
   };
 
   const handleConfirmDelete = () => {
-    deleteAccount();
-    setDeleteDialogOpen(false);
+    // Verifikasi bahwa teks konfirmasi cocok
+    if (deleteConfirmation.toLowerCase() === expectedDeleteConfirmation.toLowerCase()) {
+      deleteAccount();
+      setDeleteDialogOpen(false);
+    } else {
+      toast.error("Teks konfirmasi tidak cocok. Silakan ketik dengan benar.");
+    }
+  };
+
+  const handleDeleteDialogOpen = () => {
+    setDeleteConfirmation("");
+    setDeleteDialogOpen(true);
   };
 
   const timezones = [
@@ -124,6 +141,8 @@ const ProfileSettings = () => {
     { value: "Asia/Makassar", label: "Makassar (GMT+8)" },
     { value: "Asia/Jayapura", label: "Jayapura (GMT+9)" },
   ];
+
+  const isConfirmationCorrect = deleteConfirmation.toLowerCase() === expectedDeleteConfirmation.toLowerCase();
 
   return (
     <div className="container mx-auto py-10">
@@ -215,7 +234,7 @@ const ProfileSettings = () => {
             <CardContent>
               <Button
                 variant="destructive"
-                onClick={() => setDeleteDialogOpen(true)}
+                onClick={handleDeleteDialogOpen}
                 disabled={isDeleting}
               >
                 {isDeleting ? "Menghapus..." : "Hapus Akun"}
@@ -282,6 +301,19 @@ const ProfileSettings = () => {
               <li>Jika Anda adalah admin terakhir, organisasi Anda juga akan dihapus</li>
               <li>Anda tidak dapat memulihkan akun setelah dihapus</li>
             </ul>
+            
+            <div className="mt-4">
+              <Label htmlFor="delete-confirmation" className="text-destructive font-medium">
+                Untuk konfirmasi, ketik "hapus akun profile {formData.fullName}"
+              </Label>
+              <Input
+                id="delete-confirmation"
+                className="mt-2"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder={`hapus akun profile ${formData.fullName}`}
+              />
+            </div>
           </div>
           
           <DialogFooter>
@@ -291,7 +323,7 @@ const ProfileSettings = () => {
             <Button 
               variant="destructive" 
               onClick={handleConfirmDelete}
-              disabled={isDeleting}
+              disabled={isDeleting || !isConfirmationCorrect}
             >
               {isDeleting ? (
                 <>
