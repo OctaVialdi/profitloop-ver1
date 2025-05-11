@@ -323,14 +323,16 @@ const CreateContent = () => {
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Input
-                          value={item.title || ""}
-                          onChange={(e) => handleTitleChange(item.id, e.target.value)}
-                          placeholder="Enter title"
-                          className="w-full"
-                          maxLength={25}
-                          icon={<FileText className="h-4 w-4 text-muted-foreground" />}
-                        />
+                        <div className="flex items-center">
+                          <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
+                          <Input
+                            value={item.title || ""}
+                            onChange={(e) => handleTitleChange(item.id, e.target.value)}
+                            placeholder="Enter title"
+                            className="w-full"
+                            maxLength={25}
+                          />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Select 
@@ -338,7 +340,10 @@ const CreateContent = () => {
                           onValueChange={(value) => handleContentPillarChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select pillar" icon={<List className="h-4 w-4" />} />
+                            <div className="flex items-center">
+                              <List className="h-4 w-4 mr-2" />
+                              <SelectValue placeholder="Select pillar" />
+                            </div>
                           </SelectTrigger>
                           <SelectContent>
                             {contentPillars.map((pillar) => (
@@ -389,7 +394,10 @@ const CreateContent = () => {
                           onValueChange={(value) => handleStatusChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="-" icon={<CircleDot className="h-4 w-4" />} />
+                            <div className="flex items-center">
+                              <CircleDot className="h-4 w-4 mr-2" />
+                              <SelectValue placeholder="-" />
+                            </div>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="">-</SelectItem>
