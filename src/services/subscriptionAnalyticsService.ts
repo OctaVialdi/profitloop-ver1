@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Define valid event types
@@ -141,11 +140,11 @@ export const subscriptionAnalyticsService = {
   /**
    * Track feature impression
    */
-  trackFeatureImpression: (feature: string, organizationId: string): Promise<boolean> => {
+  trackFeatureImpression: (feature: string, context: string, organizationId: string): Promise<boolean> => {
     return subscriptionAnalyticsService.trackEvent({
       eventType: 'premium_feature_clicked',
       organizationId,
-      additionalData: { feature, action: 'impression' }
+      additionalData: { feature, context, action: 'impression' }
     });
   },
 
@@ -219,7 +218,8 @@ export const subscriptionAnalyticsService = {
       // Count conversions by feature
       const featureConversions: Record<string, number> = {};
       data.forEach(event => {
-        const feature = event.additional_data?.feature || 'unknown';
+        // Fix type error with proper type assertion
+        const feature = (event.additional_data as Record<string, any>)?.feature || 'unknown';
         featureConversions[feature] = (featureConversions[feature] || 0) + 1;
       });
       
