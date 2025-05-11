@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatePresence, motion } from "framer-motion";
+import { Settings } from "lucide-react";
 
 interface Tab {
   name: string;
@@ -23,6 +24,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
     { name: "KOL Management", href: "/marketing/kol" },
     { name: "SEO Management", href: "/marketing/seo" },
     { name: "Rating Performance", href: "/marketing/ratings" },
+    { name: "Settings", href: "/marketing/settings" },
   ];
   
   const currentPath = location.pathname;
@@ -48,7 +50,16 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
                 className="min-w-[100px] transition-all duration-200 ease-in-out" 
                 asChild
               >
-                <Link to={tab.href}>{tab.name}</Link>
+                <Link to={tab.href}>
+                  {tab.name === "Settings" ? (
+                    <div className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </div>
+                  ) : (
+                    tab.name
+                  )}
+                </Link>
               </TabsTrigger>
             ))}
           </TabsList>
