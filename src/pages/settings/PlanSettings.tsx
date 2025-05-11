@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -218,20 +217,50 @@ const PlanSettings: React.FC = () => {
       
       // For simplicity, we'll just update the organization's subscription status
       if (organization?.id) {
+        // Determine what to update based on trial status
+        const updateData: any = {
+          subscription_plan_id: null
+        };
+        
+        // If trial is active, keep it active and don't mark it expired
+        if (isTrialActive && daysLeftInTrial && daysLeftInTrial > 0) {
+          updateData.subscription_status = 'trial';
+          // Don't set trial_expired to true if trial is still active
+        } else {
+          // If trial is already expired or no trial info, mark as expired
+          updateData.subscription_status = 'expired';
+          updateData.trial_expired = !isTrialActive;
+        }
+        
         const { error } = await supabase
           .from('organizations')
-          .update({
-            subscription_plan_id: null,
-            subscription_status: isTrialActive ? 'trial' : 'expired',
-            trial_expired: !isTrialActive
-          })
+          .update(updateData)
           .eq('id', organization.id);
           
         if (error) {
           throw error;
         }
         
-        toast.success("Your subscription has been cancelled successfully");
+        // Log cancellation reason in subscription_audit_logs
+        await supabase
+          .from('subscription_audit_logs')
+          .insert({
+            organization_id: organization.id,
+            action: 'subscription_cancelled',
+            user_id: (await supabase.auth.getUser()).data.user?.id,
+            data: {
+              reason: reason,
+              plan_id: organization.subscription_plan_id,
+              plan_name: subscriptionPlan?.name || 'Unknown Plan',
+              was_trial_active: isTrialActive,
+              days_left_in_trial: daysLeftInTrial
+            }
+          });
+        
+        toast.success(isTrialActive 
+          ? "Your subscription has been cancelled. You can still use premium features until your trial ends."
+          : "Your subscription has been cancelled successfully"
+        );
         
         // Refresh organization data to reflect changes
         await refreshData();
@@ -514,6 +543,8 @@ const PlanSettings: React.FC = () => {
         onClose={() => setShowCancelDialog(false)}
         onConfirmCancel={handleConfirmCancelPlan}
         planName={subscriptionPlan?.name || "Subscription"}
+        isTrialActive={isTrialActive}
+        daysLeftInTrial={daysLeftInTrial}
       />
       
       {/* Midtrans Payment Modal */}

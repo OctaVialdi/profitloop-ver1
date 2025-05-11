@@ -7,13 +7,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CancellationFeedbackDialog } from "./CancellationFeedbackDialog";
 import { DiscountOfferDialog } from "./DiscountOfferDialog";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 import { toast } from "sonner";
 
 const CANCELLATION_REASONS = [
@@ -30,9 +31,18 @@ interface CancelPlanDialogProps {
   onClose: () => void;
   onConfirmCancel: (reason: string) => Promise<void>;
   planName: string;
+  isTrialActive?: boolean;
+  daysLeftInTrial?: number;
 }
 
-export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }: CancelPlanDialogProps) {
+export function CancelPlanDialog({ 
+  isOpen, 
+  onClose, 
+  onConfirmCancel, 
+  planName, 
+  isTrialActive = false,
+  daysLeftInTrial = 0 
+}: CancelPlanDialogProps) {
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState("reason"); // "reason", "feedback", "offer", "confirm"
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,10 +110,24 @@ export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }:
     setErrorMessage(null);
   };
 
+  // Get the appropriate warning message based on trial status
+  const getWarningMessage = () => {
+    if (isTrialActive && daysLeftInTrial > 0) {
+      return `Your subscription will be cancelled, but you can continue using premium features until your trial ends in ${daysLeftInTrial} day${daysLeftInTrial !== 1 ? 's' : ''}.`;
+    }
+    return "Your subscription will be cancelled immediately and you will lose access to premium features.";
+  };
+
   return (
     <>
       <Dialog open={isOpen && currentStep === "reason"} onOpenChange={isOpen ? undefined : resetDialog}>
         <DialogContent className="sm:max-w-[500px]">
+          <DialogClose asChild onClick={onClose} className="absolute right-4 top-4">
+            <Button variant="ghost" size="icon">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DialogClose>
           <DialogHeader>
             <DialogTitle>Cancel your subscription</DialogTitle>
             <DialogDescription>
@@ -135,6 +159,7 @@ export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }:
         isOpen={isOpen && currentStep === "feedback"}
         onBack={handleBackToReason}
         onSubmit={handleFeedbackSubmitted}
+        onClose={onClose}
       />
 
       <DiscountOfferDialog
@@ -143,10 +168,17 @@ export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }:
         onContinueToCancel={() => setCurrentStep("feedback")}
         onClaimOffer={handleOfferClaimed}
         planName={planName}
+        onClose={onClose}
       />
 
       <Dialog open={isOpen && currentStep === "confirm"} onOpenChange={isOpen ? undefined : resetDialog}>
         <DialogContent className="sm:max-w-[500px]">
+          <DialogClose asChild onClick={onClose} className="absolute right-4 top-4">
+            <Button variant="ghost" size="icon">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DialogClose>
           <DialogHeader>
             <DialogTitle>Confirm Cancellation</DialogTitle>
             <DialogDescription>
@@ -159,7 +191,7 @@ export function CancelPlanDialog({ isOpen, onClose, onConfirmCancel, planName }:
               <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium">Important:</p>
-                <p>Your subscription will be cancelled immediately and you will lose access to premium features.</p>
+                <p>{getWarningMessage()}</p>
               </div>
             </div>
 

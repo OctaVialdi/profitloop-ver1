@@ -7,10 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check, PercentIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { BadgePercent, X } from "lucide-react";
 
 interface DiscountOfferDialogProps {
   isOpen: boolean;
@@ -18,6 +18,7 @@ interface DiscountOfferDialogProps {
   onContinueToCancel: () => void;
   onClaimOffer: () => void;
   planName: string;
+  onClose: () => void;
 }
 
 export function DiscountOfferDialog({
@@ -26,75 +27,46 @@ export function DiscountOfferDialog({
   onContinueToCancel,
   onClaimOffer,
   planName,
+  onClose
 }: DiscountOfferDialogProps) {
-  // Calculate discount
-  const discountPercent = 30;
-  
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen}>
       <DialogContent className="sm:max-w-[500px]">
+        <DialogClose asChild onClick={onClose} className="absolute right-4 top-4">
+          <Button variant="ghost" size="icon">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </DialogClose>
+        
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <span className="text-2xl font-bold">Special Offer</span>
-            <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">
-              {discountPercent}% OFF
-            </Badge>
-          </DialogTitle>
+          <DialogTitle>Wait! We have a special offer for you</DialogTitle>
           <DialogDescription>
-            We'd hate to see you go. How about a special discount?
+            Before you cancel your {planName} subscription, we'd like to offer you a discount.
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4 space-y-4">
-          <div className="p-4 bg-green-50 rounded-md">
-            <div className="flex justify-between items-center border-b border-green-200 pb-2 mb-3">
-              <span className="font-semibold">Current Plan: {planName}</span>
-              <PercentIcon className="h-5 w-5 text-green-600" />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <Check className="h-4 w-4 text-green-600 mr-2" />
-                <span>Get {discountPercent}% off for the next 3 months</span>
-              </div>
-              <div className="flex items-center">
-                <Check className="h-4 w-4 text-green-600 mr-2" />
-                <span>Keep all your current features and benefits</span>
-              </div>
-              <div className="flex items-center">
-                <Check className="h-4 w-4 text-green-600 mr-2" />
-                <span>No commitments, cancel anytime</span>
-              </div>
-            </div>
-            
-            <div className="mt-4 text-center">
-              <p className="font-medium text-green-700">
-                This offer is valid for the next 24 hours only
+          <div className="bg-blue-50 rounded-lg p-4 flex items-start space-x-3">
+            <BadgePercent className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
+            <div className="text-blue-800">
+              <h4 className="font-semibold text-lg">Get 30% off for 3 months</h4>
+              <p className="text-sm mt-1">
+                We value your business and would like to offer you a 30% discount on your subscription for the next 3 months.
               </p>
             </div>
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-col gap-2">
-          <Button 
-            className="w-full" 
-            onClick={onClaimOffer}
-          >
-            Continue & Claim Offer <ArrowRight className="ml-2 h-4 w-4" />
+        <DialogFooter>
+          <Button variant="outline" onClick={onBack}>
+            Go Back
           </Button>
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={onContinueToCancel}
-          >
-            Continue to Cancel
+          <Button variant="ghost" onClick={onContinueToCancel}>
+            No thanks, continue cancelling
           </Button>
-          <Button 
-            variant="ghost" 
-            onClick={onBack}
-            className="w-full sm:w-auto"
-          >
-            Back
+          <Button onClick={onClaimOffer} className="bg-green-600 hover:bg-green-700">
+            Claim Discount
           </Button>
         </DialogFooter>
       </DialogContent>
