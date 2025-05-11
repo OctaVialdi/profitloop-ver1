@@ -73,12 +73,26 @@ export const midtransService = {
    */
   loadSnapScript: async (clientKey?: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-      if (window.snap) {
-        resolve();
-        return;
-      }
-      
       try {
+        // If Snap is already available, resolve immediately
+        if (window.snap) {
+          resolve();
+          return;
+        }
+        
+        // Check if script is already being loaded
+        if (document.querySelector('script[src="https://app.midtrans.com/snap/snap.js"]')) {
+          // Wait for script to finish loading
+          const checkInterval = setInterval(() => {
+            if (window.snap) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+          return;
+        }
+        
+        // Create and load the script
         const script = document.createElement("script");
         script.src = "https://app.midtrans.com/snap/snap.js";
         
