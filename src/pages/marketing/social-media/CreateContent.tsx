@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,6 +21,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useContentManagement, ContentItem } from "@/hooks/useContentManagement";
 import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 
 const CreateContent = () => {
   const {
@@ -429,7 +429,7 @@ const CreateContent = () => {
         </div>
       </CardFooter>
 
-      {/* Brief Dialog */}
+      {/* Improved Brief Dialog with proper scrolling and text wrapping */}
       <Dialog open={isBriefDialogOpen} onOpenChange={setIsBriefDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -448,15 +448,17 @@ const CreateContent = () => {
               />
             ) : (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-md whitespace-pre-wrap">
-                  {currentBrief}
-                </div>
+                <ScrollArea className="h-[200px] rounded-md border p-4">
+                  <div className="whitespace-pre-wrap break-words">
+                    {currentBrief}
+                  </div>
+                </ScrollArea>
                 
                 {extractGoogleDocsLink(currentBrief) && (
-                  <div className="border rounded-md overflow-hidden">
+                  <div className="border rounded-md overflow-hidden mt-4">
                     <iframe 
                       src={`${extractGoogleDocsLink(currentBrief)}?embedded=true`}
-                      className="w-full h-[400px]"
+                      className="w-full h-[300px]"
                       title="Google Doc"
                     ></iframe>
                   </div>
