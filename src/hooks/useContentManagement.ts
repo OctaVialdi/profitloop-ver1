@@ -17,6 +17,11 @@ export interface SubService {
   name: string;
 }
 
+export interface ContentPillar {
+  id: string;
+  name: string;
+}
+
 export interface ContentItem {
   id: string;
   postDate: string | undefined;
@@ -25,6 +30,10 @@ export interface ContentItem {
   pic: string;
   service: string;
   subService: string;
+  title: string;
+  contentPillar: string;
+  brief: string;
+  status: string;
 }
 
 export const useContentManagement = () => {
@@ -33,6 +42,7 @@ export const useContentManagement = () => {
   const [subServices, setSubServices] = useState<SubService[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [contentPlanners, setContentPlanners] = useState<any[]>([]);
+  const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
   
   // Load content types, services, and sub-services from localStorage
   useEffect(() => {
@@ -65,6 +75,26 @@ export const useContentManagement = () => {
         } catch (e) {
           console.error("Error parsing sub-services from localStorage:", e);
         }
+      }
+
+      // Load content pillars
+      const storedContentPillars = localStorage.getItem("marketingContentPillars");
+      if (storedContentPillars) {
+        try {
+          setContentPillars(JSON.parse(storedContentPillars));
+        } catch (e) {
+          console.error("Error parsing content pillars from localStorage:", e);
+        }
+      } else {
+        // Default content pillars if none exist
+        const defaultPillars = [
+          { id: "1", name: "Awareness" },
+          { id: "2", name: "Consideration" },
+          { id: "3", name: "Decision" },
+          { id: "4", name: "Loyalty" }
+        ];
+        setContentPillars(defaultPillars);
+        localStorage.setItem("marketingContentPillars", JSON.stringify(defaultPillars));
       }
 
       // Load content planners (employees with jobPosition "Content Planner")
@@ -113,13 +143,22 @@ export const useContentManagement = () => {
       isSelected: false,
       pic: "",
       service: "",
-      subService: ""
+      subService: "",
+      title: "",
+      contentPillar: "",
+      brief: "",
+      status: ""
     };
     setContentItems([...contentItems, newItem]);
   };
 
   // Update a content item
   const updateContentItem = (itemId: string, updates: Partial<ContentItem>) => {
+    // Check if brief is being changed, and if so, reset status
+    if (updates.brief !== undefined) {
+      updates.status = "";
+    }
+    
     setContentItems(prevItems =>
       prevItems.map(item =>
         item.id === itemId ? { ...item, ...updates } : item
@@ -161,6 +200,7 @@ export const useContentManagement = () => {
     subServices,
     contentItems,
     contentPlanners,
+    contentPillars,
     addContentItem,
     updateContentItem,
     deleteContentItems,
