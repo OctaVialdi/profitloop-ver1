@@ -147,7 +147,7 @@ export const useContentManagement = () => {
       title: "",
       contentPillar: "",
       brief: "",
-      status: ""
+      status: "none" // Changed from empty string to "none"
     };
     setContentItems([...contentItems, newItem]);
   };
@@ -156,7 +156,7 @@ export const useContentManagement = () => {
   const updateContentItem = (itemId: string, updates: Partial<ContentItem>) => {
     // Check if brief is being changed, and if so, reset status
     if (updates.brief !== undefined) {
-      updates.status = "";
+      updates.status = "none"; // Changed from empty string to "none"
     }
     
     setContentItems(prevItems =>

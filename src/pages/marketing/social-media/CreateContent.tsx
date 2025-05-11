@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -274,7 +273,7 @@ const CreateContent = () => {
                                 </SelectItem>
                               ))
                             ) : (
-                              <SelectItem value="no-pic" disabled>
+                              <SelectItem value="no-pic-found" disabled>
                                 No content planners found
                               </SelectItem>
                             )}
@@ -315,7 +314,7 @@ const CreateContent = () => {
                                 </SelectItem>
                               ))
                             ) : (
-                              <SelectItem value="no-sub" disabled>
+                              <SelectItem value="select-service-first" disabled>
                                 Select a service first
                               </SelectItem>
                             )}
@@ -400,7 +399,7 @@ const CreateContent = () => {
                             </div>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">-</SelectItem>
+                            <SelectItem value="none">-</SelectItem>
                             <SelectItem value="review">Butuh Di Review</SelectItem>
                             <SelectItem value="revisi">Request Revisi</SelectItem>
                           </SelectContent>
