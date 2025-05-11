@@ -1,201 +1,129 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 
 /**
  * Midtrans integration service
- * Handles interactions with Midtrans payment gateway edge functions
+ * Handles interactions with Midtrans payment gateway
  */
 export const midtransService = {
   /**
-   * Create a payment transaction for a plan using Midtrans
-   * @param planId The slug of the subscription plan
-   * @returns The token and redirect URL for Midtrans payment page
+   * Create a checkout session for a plan
+   * @param planId The ID of the subscription plan
+   * @returns Midtrans checkout data including token and redirect URL
    */
-  createPayment: async (planId: string): Promise<{ token: string, redirectUrl: string, orderId: string } | null> => {
+  createCheckout: async (planId: string): Promise<{
+    token: string;
+    redirect_url: string;
+    order_id: string;
+    client_key: string;
+    transaction_id: string;
+  } | null> => {
     try {
-      // Get user organization from profiles
-      const { data: profileData } = await supabase.auth.getUser();
-      
-      if (!profileData?.user) {
-        throw new Error("User not authenticated");
-      }
-      
-      const { data: userData } = await supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", profileData.user.id)
-        .single();
-        
-      if (!userData?.organization_id) {
-        throw new Error("User organization not found");
-      }
-      
-      // First, check if this plan has a direct payment URL
-      const { data: planData } = await supabase
-        .from("subscription_plans")
-        .select("direct_payment_url, price, name")
-        .eq("slug", planId)
-        .eq("is_active", true)
-        .single();
-        
-      // If plan has a direct payment URL, use it
-      if (planData?.direct_payment_url) {
-        const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        
-        // Log the direct URL usage
-        console.log("Using direct Midtrans URL for plan", planId, "with orderId:", orderId);
-        
-        // Store transaction in database to track it
-        const { error: transactionError } = await supabase
-          .from("payment_transactions")
-          .insert({
-            order_id: orderId,
-            organization_id: userData.organization_id,
-            subscription_plan_id: planId,
-            payment_gateway: "midtrans",
-            payment_provider: "midtrans",
-            amount: planData.price || 0,
-            currency: "IDR",
-            status: "pending",
-            payment_url: planData.direct_payment_url
-          });
-          
-        if (transactionError) {
-          console.error("Error storing transaction:", transactionError);
-          // Continue anyway as this is not critical for user experience
+      const { data, error } = await supabase.functions.invoke("create-midtrans-checkout", {
+        body: { 
+          planId,
+          successUrl: window.location.origin + "/settings/subscription?success=true",
+          cancelUrl: window.location.origin + "/settings/subscription?canceled=true"
         }
-        
-        return {
-          token: "direct-url-token",
-          redirectUrl: planData.direct_payment_url,
-          orderId: orderId
-        };
-      }
-      
-      // For plans without direct URL, use the normal flow with edge function
-      const { data, error } = await supabase.functions.invoke("create-midtrans-payment", {
-        body: { planId }
       });
       
-      if (error) {
-        console.error("Midtrans payment error:", error);
-        throw new Error(`Error creating payment: ${error.message || "Terjadi kesalahan pada sistem pembayaran"}`);
-      }
+      if (error) throw new Error(`Error creating checkout: ${error.message}`);
+      if (!data?.token) throw new Error("No checkout token returned");
       
-      if (!data?.token || !data?.redirectUrl) {
-        console.error("Invalid Midtrans response:", data);
-        throw new Error("Data pembayaran tidak lengkap dari server");
-      }
-      
-      // Log successful request for debugging
-      console.log("Payment initialized successfully:", {
-        planId,
-        orderId: data.orderId,
-        hasToken: !!data.token,
-        hasRedirectUrl: !!data.redirectUrl
-      });
-      
-      return {
-        token: data.token,
-        redirectUrl: data.redirectUrl,
-        orderId: data.orderId
-      };
+      return data;
     } catch (error) {
-      console.error("Error creating Midtrans payment:", error);
-      toast.error(`Gagal memuat halaman pembayaran: ${error.message || "Silakan coba lagi"}`);
+      console.error("Error creating checkout session:", error);
+      toast.error("Gagal memuat halaman pembayaran. Silakan coba lagi.");
       return null;
     }
   },
   
   /**
-   * Verify the payment status using the order ID
-   * @param orderId The Midtrans order ID
+   * Verify payment status by order ID
+   * @param orderId The order ID to check
    * @returns Payment status information
    */
-  verifyPaymentStatus: async (orderId: string) => {
+  checkPaymentStatus: async (orderId: string) => {
     try {
-      // First, fetch the payment transaction by order_id
-      const { data: transactionData, error: transactionError } = await supabase
+      const { data, error } = await supabase
         .from("payment_transactions")
-        .select("id, status, subscription_plan_id")
+        .select("*, subscription_plan:subscription_plans(*)")
         .eq("order_id", orderId)
         .single();
       
-      if (transactionError) {
-        console.error("Error verifying payment status:", transactionError);
-        throw new Error(`Error verifying payment: ${transactionError.message}`);
-      }
-
-      // Default response in case we don't find subscription details
-      let response = {
-        success: transactionData?.status === "success",
-        status: transactionData?.status || 'pending',
-        subscription_tier: null
+      if (error) throw new Error(`Error checking payment: ${error.message}`);
+      
+      return {
+        success: data?.status === "success",
+        status: data?.status || "unknown",
+        subscription_plan: data?.subscription_plan || null,
+        transaction: data
       };
-
-      // If we have a subscription_plan_id, fetch the subscription plan details
-      if (transactionData?.subscription_plan_id) {
-        const { data: subscriptionPlan, error: subscriptionError } = await supabase
-          .from("subscription_plans")
-          .select("name")
-          .eq("id", transactionData.subscription_plan_id)
-          .single();
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+      return { success: false, status: "error", subscription_plan: null, transaction: null };
+    }
+  },
+  
+  /**
+   * Open Midtrans checkout snap in modal
+   * @param token The Midtrans snap token
+   * @param onSuccess Callback for successful payment
+   * @param onError Callback for payment error
+   * @param onClose Callback when modal is closed
+   */
+  openSnapModal: async (
+    token: string,
+    onSuccess?: () => void,
+    onError?: (error: any) => void,
+    onClose?: () => void
+  ) => {
+    try {
+      // Wait for the Midtrans Snap script to load
+      if (!window.snap) {
+        // Load the Midtrans Snap script if not already loaded
+        const script = document.createElement("script");
+        script.src = "https://app.midtrans.com/snap/snap.js";
+        script.setAttribute("data-client-key", "YOUR_CLIENT_KEY"); // This is public so it's ok
+        document.body.appendChild(script);
         
-        if (!subscriptionError && subscriptionPlan) {
-          // Update response with subscription plan name
-          response.subscription_tier = subscriptionPlan.name;
-        }
+        // Wait for the script to load
+        await new Promise(resolve => {
+          script.onload = resolve;
+        });
       }
       
-      return response;
+      // Open the Snap modal
+      window.snap.pay(token, {
+        onSuccess: () => {
+          toast.success("Pembayaran berhasil!");
+          if (onSuccess) onSuccess();
+        },
+        onPending: () => {
+          toast.info("Pembayaran sedang diproses.");
+        },
+        onError: (error: any) => {
+          console.error("Payment error:", error);
+          toast.error("Pembayaran gagal. Silakan coba lagi.");
+          if (onError) onError(error);
+        },
+        onClose: () => {
+          toast.info("Modal pembayaran ditutup.");
+          if (onClose) onClose();
+        }
+      });
     } catch (error) {
-      console.error("Error verifying payment status:", error);
-      return { success: false, status: 'error', subscription_tier: null };
+      console.error("Error opening Snap modal:", error);
+      toast.error("Gagal membuka halaman pembayaran. Silakan coba lagi.");
     }
   },
   
   /**
-   * Open Midtrans payment page directly by redirecting to the URL
-   * @param redirectUrl The Midtrans payment redirect URL
+   * Redirect to Midtrans checkout URL
+   * @param redirectUrl The Midtrans redirect URL
    */
-  redirectToPayment: (redirectUrl: string): void => {
-    if (!redirectUrl) {
-      toast.error("URL pembayaran tidak valid");
-      return;
-    }
-    
-    // Log redirection
-    console.log("Redirecting to Midtrans payment page:", redirectUrl);
-    
-    // Redirect the browser to the Midtrans payment page
+  redirectToCheckout: (redirectUrl: string) => {
     window.location.href = redirectUrl;
-  },
-  
-  /**
-   * Load Midtrans Snap library - kept for backward compatibility
-   * @returns Promise that resolves when the library is loaded
-   */
-  loadSnapLibrary: (): Promise<void> => {
-    return new Promise((resolve) => {
-      // This function is mostly for backward compatibility
-      // Direct redirection is now the preferred payment method
-      console.log("Note: Direct redirection is now the preferred payment method");
-      resolve();
-    });
   }
 };
-
-// Keep TypeScript interface for global window object with Snap
-declare global {
-  interface Window {
-    snap?: {
-      pay: (token: string, options: {
-        onSuccess: (result: any) => void;
-        onPending: (result: any) => void;
-        onError: (result: any) => void;
-        onClose: () => void;
-      }) => void;
-    }
-  }
-}

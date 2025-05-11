@@ -1,17 +1,11 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@1.0.0";
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// Helper logging function for enhanced debugging
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[SEND-TRIAL-REMINDER] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -21,46 +15,26 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) throw new Error("RESEND_API_KEY is not set");
     
-    // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
     if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-      throw new Error("Missing required Supabase environment variables");
+      throw new Error("Missing Supabase environment variables");
     }
 
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not set");
-    }
-
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
-
-    // Create Supabase clients
+    // Create clients
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false }
-    });
-    
-    // Initialize Resend email client
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const resend = new Resend(resendApiKey);
     
-    // Get request body
-    const { daysLeft } = await req.json();
+    // Get user authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
     
-    // Validate daysLeft parameter
-    if (typeof daysLeft !== 'number' || daysLeft < 0) {
-      throw new Error("Invalid daysLeft parameter");
-    }
-    
-    logStep("Processing request", { daysLeft });
-    
-    // Authenticate the user
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
@@ -68,131 +42,126 @@ serve(async (req) => {
     if (!userData?.user) throw new Error("No authenticated user found");
     
     const user = userData.user;
-    logStep("User authenticated", { userId: user.id, email: user.email });
     
-    // Get user's profile to fetch organization ID
-    const { data: profileData } = await supabaseAdmin
-      .from('profiles')
-      .select('organization_id, full_name')
-      .eq('id', user.id)
-      .maybeSingle();
+    // Parse request body
+    const { organizationId, daysLeft, email = user.email } = await req.json();
+    
+    if (!organizationId) throw new Error("Organization ID is required");
+    if (!daysLeft && daysLeft !== 0) throw new Error("Days left is required");
+    
+    // Get organization information
+    const { data: organization, error: orgError } = await supabaseAdmin
+      .from("organizations")
+      .select("name, trial_end_date")
+      .eq("id", organizationId)
+      .single();
       
-    if (!profileData?.organization_id) {
-      throw new Error("User has no associated organization");
+    if (orgError || !organization) {
+      throw new Error("Organization not found or error fetching organization data");
     }
     
-    // Get organization details
-    const { data: orgData } = await supabaseAdmin
-      .from('organizations')
-      .select('id, name, trial_end_date')
-      .eq('id', profileData.organization_id)
-      .maybeSingle();
-      
-    if (!orgData) throw new Error("Organization not found");
-    
-    logStep("Found organization", { orgId: orgData.id, orgName: orgData.name });
-    
-    // Format trial end date
-    const trialEndDate = orgData.trial_end_date ? new Date(orgData.trial_end_date) : null;
-    const formattedEndDate = trialEndDate ? trialEndDate.toLocaleDateString('id-ID', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    }) : 'tidak diketahui';
-    
-    // Get all admins of the organization to send them emails
-    const { data: admins } = await supabaseAdmin
-      .from('profiles')
-      .select('id, email, full_name')
-      .eq('organization_id', orgData.id)
-      .in('role', ['super_admin', 'admin']);
-    
-    if (!admins || admins.length === 0) {
-      throw new Error("No admin users found for organization");
-    }
-    
-    logStep("Found admins", { count: admins.length });
-    
-    // Generate trial reminder message
-    const userName = profileData.full_name || user.email || 'Pelanggan';
-    const orgName = orgData.name || 'Organisasi Anda';
-    
-    // Determine email subject and content based on days left
-    let subject = '';
-    let content = '';
+    // Generate appropriate email content based on days left
+    let subject = "";
+    let emailHtml = "";
     
     if (daysLeft === 0) {
-      subject = `Masa trial ${orgName} telah berakhir`;
-      content = `
-        <h1>Masa Trial Anda Telah Berakhir</h1>
-        <p>Halo ${userName},</p>
-        <p>Masa trial untuk ${orgName} telah berakhir. Untuk melanjutkan akses ke semua fitur premium, silakan upgrade ke salah satu paket berlangganan kami.</p>
-        <div style="margin: 25px 0; text-align: center;">
-          <a href="${supabaseUrl}/settings/subscription" style="background-color: #9b87f5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Upgrade Sekarang</a>
+      subject = `Trial Anda di ${organization.name} telah berakhir`;
+      emailHtml = `
+        <h1>Trial Anda telah berakhir</h1>
+        <p>Masa trial untuk ${organization.name} telah berakhir hari ini. Untuk melanjutkan akses ke semua fitur, silakan upgrade ke paket berbayar.</p>
+        <p>Jika Anda mengalami kendala atau membutuhkan bantuan, jangan ragu untuk menghubungi tim dukungan kami.</p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="${req.headers.get("Origin")}/settings/subscription" style="background-color: #4f46e5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Upgrade Sekarang
+          </a>
         </div>
-        <p>Jika Anda memerlukan bantuan atau memiliki pertanyaan, silakan hubungi tim dukungan kami.</p>
-        <p>Terima kasih,<br>Tim Kami</p>
+      `;
+    } else if (daysLeft === 1) {
+      subject = `Trial Anda di ${organization.name} berakhir besok`;
+      emailHtml = `
+        <h1>Trial Anda berakhir besok</h1>
+        <p>Masa trial untuk ${organization.name} akan berakhir besok. Untuk menghindari gangguan layanan, silakan upgrade ke paket berbayar.</p>
+        <p>Dengan berlangganan, Anda akan terus mendapatkan akses ke semua fitur premium dan dukungan prioritas.</p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="${req.headers.get("Origin")}/settings/subscription" style="background-color: #4f46e5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Upgrade Sekarang
+          </a>
+        </div>
+      `;
+    } else if (daysLeft <= 3) {
+      subject = `Trial Anda di ${organization.name} berakhir dalam ${daysLeft} hari`;
+      emailHtml = `
+        <h1>Trial Anda akan segera berakhir</h1>
+        <p>Masa trial untuk ${organization.name} akan berakhir dalam ${daysLeft} hari. Untuk menghindari gangguan layanan, silakan upgrade ke paket berbayar.</p>
+        <p>Kami menawarkan berbagai paket berlangganan yang dapat disesuaikan dengan kebutuhan bisnis Anda.</p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="${req.headers.get("Origin")}/settings/subscription" style="background-color: #4f46e5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Lihat Paket Kami
+          </a>
+        </div>
       `;
     } else {
-      subject = `Masa trial ${orgName} akan berakhir dalam ${daysLeft} hari`;
-      content = `
-        <h1>Masa Trial Anda Akan Segera Berakhir</h1>
-        <p>Halo ${userName},</p>
-        <p>Masa trial untuk ${orgName} akan berakhir pada <strong>${formattedEndDate}</strong> (${daysLeft} hari lagi).</p>
-        <p>Untuk melanjutkan akses ke semua fitur premium, silakan upgrade ke salah satu paket berlangganan kami sebelum masa trial berakhir.</p>
-        <div style="margin: 25px 0; text-align: center;">
-          <a href="${supabaseUrl}/settings/subscription" style="background-color: #9b87f5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Lihat Paket Berlangganan</a>
+      subject = `${daysLeft} hari tersisa dalam trial Anda di ${organization.name}`;
+      emailHtml = `
+        <h1>${daysLeft} hari tersisa dalam trial Anda</h1>
+        <p>Masa trial untuk ${organization.name} akan berakhir dalam ${daysLeft} hari. Kami harap Anda menikmati semua fitur yang kami tawarkan.</p>
+        <p>Untuk terus menikmati akses tak terbatas, silakan pertimbangkan untuk upgrade ke salah satu paket berlangganan kami.</p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="${req.headers.get("Origin")}/settings/subscription" style="background-color: #4f46e5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Lihat Paket Kami
+          </a>
         </div>
-        <p>Jika Anda memerlukan bantuan atau memiliki pertanyaan, silakan hubungi tim dukungan kami.</p>
-        <p>Terima kasih,<br>Tim Kami</p>
       `;
     }
     
-    // Send email notifications to all admins
-    const emailPromises = admins.map(admin => {
-      return resend.emails.send({
-        from: 'notification@yourdomain.com',
-        to: admin.email!,
-        subject: subject,
-        html: content
-      });
+    // Add common email styling and footer
+    emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        ${emailHtml}
+        <div style="margin-top: 40px; border-top: 1px solid #eaeaea; padding-top: 20px; font-size: 12px; color: #666;">
+          <p>Email ini dikirimkan secara otomatis terkait dengan langganan Anda.</p>
+          <p>© ${new Date().getFullYear()} ${organization.name}</p>
+        </div>
+      </div>
+    `;
+    
+    // Send email using Resend
+    const emailResult = await resend.emails.send({
+      from: `Notifications <no-reply@${Deno.env.get("RESEND_DOMAIN") || "resend.dev"}>`,
+      to: [email],
+      subject: subject,
+      html: emailHtml,
+      tags: [
+        {
+          name: "category",
+          value: "trial_reminder"
+        },
+        {
+          name: "days_left",
+          value: daysLeft.toString()
+        }
+      ]
     });
     
-    // Wait for all emails to be sent
-    const emailResults = await Promise.allSettled(emailPromises);
-    const successCount = emailResults.filter(result => result.status === 'fulfilled').length;
+    console.log("Email sent:", emailResult);
     
-    logStep("Email sending complete", { 
-      total: emailResults.length, 
-      success: successCount,
-      failed: emailResults.length - successCount 
-    });
-    
-    // Create notifications in the system for all admins
-    const notifications = admins.map(admin => ({
-      user_id: admin.id,
-      organization_id: orgData.id,
-      title: subject,
-      message: daysLeft === 0 
-        ? 'Masa trial Anda telah berakhir. Silakan upgrade untuk melanjutkan akses.' 
-        : `Masa trial Anda akan berakhir dalam ${daysLeft} hari.`,
-      type: 'warning',
-      action_url: '/settings/subscription'
-    }));
-    
-    if (notifications.length > 0) {
-      const { error: notifError } = await supabaseAdmin
-        .from('notifications')
-        .insert(notifications);
-        
-      if (notifError) {
-        console.error("Error creating notifications:", notifError);
+    // Log the reminder in audit logs
+    await supabaseAdmin.from("subscription_audit_logs").insert({
+      organization_id: organizationId,
+      action: "trial_reminder_sent",
+      user_id: user.id,
+      data: {
+        days_left: daysLeft,
+        sent_to: email,
+        email_type: "trial_reminder"
       }
-    }
+    });
     
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        emailsSent: successCount,
-        emailsFailed: emailResults.length - successCount
+        success: true,
+        message: "Trial reminder email sent successfully",
+        email_id: emailResult.id
       }),
       {
         status: 200,
@@ -200,12 +169,11 @@ serve(async (req) => {
       }
     );
     
-  } catch (error: any) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error in send-trial-reminder:", errorMessage);
+  } catch (error) {
+    console.error("Error in send-trial-reminder:", error);
     
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: error.message }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders }
