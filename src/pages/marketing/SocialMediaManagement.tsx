@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Card, 
   CardContent, 
@@ -60,6 +60,8 @@ interface TabData {
 }
 
 const SocialMediaManagement = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("content-planner");
   const [activeSubTab, setActiveSubTab] = useState<string>("dashboard");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -158,6 +160,19 @@ const SocialMediaManagement = () => {
     setIsEditTargetOpen(false);
     setEditingManager(null);
   };
+
+  const handleSubTabClick = (tabId: string) => {
+    setActiveSubTab(tabId);
+    if (tabId === "create-content") {
+      navigate("/marketing/social-media/create-content");
+    }
+  };
+
+  // Check if we're on the create-content route
+  const isCreateContentRoute = location.pathname === "/marketing/social-media/create-content";
+  if (isCreateContentRoute && activeSubTab !== "create-content") {
+    setActiveSubTab("create-content");
+  }
 
   const months = [
     "January", "February", "March", "April", "May", "June", 
@@ -310,7 +325,17 @@ const SocialMediaManagement = () => {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        {renderMonthCalendar()}
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              setSelectedDate(date);
+                              setIsCalendarOpen(false);
+                            }
+                          }}
+                          initialFocus
+                        />
                       </PopoverContent>
                     </Popover>
                   </TableHead>
@@ -437,7 +462,7 @@ const SocialMediaManagement = () => {
           {secondaryTabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveSubTab(tab.id)}
+              onClick={() => handleSubTabClick(tab.id)}
               className={`py-2 px-3 text-center text-sm transition-all duration-200 flex items-center justify-center gap-1 ${
                 activeSubTab === tab.id 
                   ? "bg-white text-gray-800 font-medium" 
@@ -485,16 +510,18 @@ const SocialMediaManagement = () => {
       </div>
 
       {/* Dashboard Content - More compact */}
-      <Card className="w-full">
-        <CardHeader className="py-3">
-          <CardTitle className="text-lg">Dashboard Content</CardTitle>
-        </CardHeader>
-        <CardContent className="py-2">
-          <p className="text-sm text-muted-foreground">
-            This section will display dashboard content for the selected tabs.
-          </p>
-        </CardContent>
-      </Card>
+      {!isCreateContentRoute && (
+        <Card className="w-full">
+          <CardHeader className="py-3">
+            <CardTitle className="text-lg">Dashboard Content</CardTitle>
+          </CardHeader>
+          <CardContent className="py-2">
+            <p className="text-sm text-muted-foreground">
+              This section will display dashboard content for the selected tabs.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Edit Target Dialog */}
       <Dialog open={isEditTargetOpen} onOpenChange={setIsEditTargetOpen}>
@@ -519,11 +546,16 @@ const SocialMediaManagement = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {months.map((month, index) => (
-                      <SelectItem key={month} value={`${month} ${selectedMonth.getFullYear()}`}>
-                        {month} {selectedMonth.getFullYear()}
-                      </SelectItem>
-                    ))}
+                    {months.map((month, index) => {
+                      const isCurrentYear = new Date().getFullYear() === selectedMonth.getFullYear();
+                      const isCurrentMonth = index === selectedMonth.getMonth() && isCurrentYear;
+                      
+                      return (
+                        <SelectItem key={month} value={`${month} ${selectedMonth.getFullYear()}`}>
+                          {month} {selectedMonth.getFullYear()}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectGroup>
                 </SelectContent>
               </Select>

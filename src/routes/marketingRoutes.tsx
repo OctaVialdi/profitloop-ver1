@@ -10,6 +10,7 @@ import SeoManagement from "@/pages/marketing/SeoManagement";
 import RatingPerformance from "@/pages/marketing/RatingPerformance";
 import AgencyComparison from "@/pages/marketing/AgencyComparison";
 import Settings from "@/pages/marketing/Settings";
+import CreateContent from "@/pages/marketing/social-media/CreateContent";
 import { Outlet } from "react-router-dom";
 
 export const marketingRoutes = (
@@ -28,6 +29,7 @@ export const marketingRoutes = (
   >
     <Route path="ads-performance" element={<AdsPerformance />} />
     <Route path="social-media" element={<SocialMediaManagement />} />
+    <Route path="social-media/create-content" element={<CreateContent />} />
     <Route path="kol" element={<KolManagement />} />
     <Route path="seo" element={<SeoManagement />} />
     <Route path="ratings" element={<RatingPerformance />} />
