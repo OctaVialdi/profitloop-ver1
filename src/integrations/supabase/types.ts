@@ -2182,6 +2182,39 @@ export type Database = {
           },
         ]
       }
+      subscription_analytics: {
+        Row: {
+          additional_data: Json | null
+          created_at: string
+          event_type: string
+          id: string
+          organization_id: string
+          plan_id: string | null
+          previous_plan_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          additional_data?: Json | null
+          created_at?: string
+          event_type: string
+          id?: string
+          organization_id: string
+          plan_id?: string | null
+          previous_plan_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          additional_data?: Json | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          organization_id?: string
+          plan_id?: string | null
+          previous_plan_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscription_audit_logs: {
         Row: {
           action: string

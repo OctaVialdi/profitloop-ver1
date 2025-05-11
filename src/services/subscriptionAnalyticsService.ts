@@ -35,6 +35,18 @@ interface AnalyticsEventPayload {
   additionalData?: Record<string, any>;
 }
 
+// Define type for subscription analytics records
+interface SubscriptionAnalyticsRecord {
+  id: string;
+  event_type: string;
+  organization_id: string;
+  user_id?: string;
+  plan_id?: string;
+  previous_plan_id?: string;
+  additional_data?: Record<string, any>;
+  created_at: string;
+}
+
 /**
  * Service to track subscription-related analytics events
  */
@@ -339,13 +351,17 @@ export const subscriptionAnalyticsService = {
   /**
    * Get analytics for a specific organization
    */
-  async getOrganizationAnalytics(organizationId: string): Promise<any> {
+  async getOrganizationAnalytics(organizationId: string): Promise<SubscriptionAnalyticsRecord[]> {
     try {
+      // Use type casting to handle the subscription_analytics table that now exists
       const { data, error } = await supabase
         .from('subscription_analytics')
         .select('*')
         .eq('organization_id', organizationId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { 
+          data: SubscriptionAnalyticsRecord[] | null; 
+          error: any 
+        };
 
       if (error) throw error;
       return data || [];
@@ -358,7 +374,7 @@ export const subscriptionAnalyticsService = {
   /**
    * Get analytics aggregated by event type
    */
-  async getAnalyticsByEventType(organizationId?: string, limit: number = 1000): Promise<any> {
+  async getAnalyticsByEventType(organizationId?: string, limit: number = 1000): Promise<Record<string, number>> {
     try {
       let query = supabase
         .from('subscription_analytics')
@@ -370,7 +386,11 @@ export const subscriptionAnalyticsService = {
         query = query.eq('organization_id', organizationId);
       }
       
-      const { data, error } = await query;
+      // Use type casting to handle the subscription_analytics table that now exists
+      const { data, error } = await query as {
+        data: SubscriptionAnalyticsRecord[] | null;
+        error: any
+      };
 
       if (error) throw error;
       return this.aggregateByEventType(data || []);
@@ -386,10 +406,14 @@ export const subscriptionAnalyticsService = {
   async getFeatureConversionAnalytics(): Promise<any> {
     try {
       // First get all premium_feature_clicked events
+      // Use type casting to handle the subscription_analytics table that now exists
       const { data: featureClicks, error: featureError } = await supabase
         .from('subscription_analytics')
         .select('*')
-        .eq('event_type', 'premium_feature_clicked');
+        .eq('event_type', 'premium_feature_clicked') as {
+          data: SubscriptionAnalyticsRecord[] | null;
+          error: any
+        };
 
       if (featureError) throw featureError;
       
@@ -397,7 +421,10 @@ export const subscriptionAnalyticsService = {
       const { data: checkouts, error: checkoutError } = await supabase
         .from('subscription_analytics')
         .select('*')
-        .eq('event_type', 'checkout_initiated');
+        .eq('event_type', 'checkout_initiated') as {
+          data: SubscriptionAnalyticsRecord[] | null;
+          error: any
+        };
         
       if (checkoutError) throw checkoutError;
       
@@ -411,7 +438,7 @@ export const subscriptionAnalyticsService = {
         const additionalData = click.additional_data as Record<string, any> | null;
         const feature = additionalData?.featureName;
         
-        if (!feature) return;
+        if (!feature || !userId) return;
         
         if (!featureClicksByUser[userId]) {
           featureClicksByUser[userId] = { features: [], timestamp: 0 };
@@ -430,6 +457,8 @@ export const subscriptionAnalyticsService = {
       // Check which feature clicks led to checkouts
       (checkouts || []).forEach(checkout => {
         const userId = checkout.user_id;
+        if (!userId) return;
+        
         const checkoutTime = new Date(checkout.created_at).getTime();
         
         if (featureClicksByUser[userId]) {
@@ -461,7 +490,10 @@ export const subscriptionAnalyticsService = {
       const { data: trialStarts, error: trialError } = await supabase
         .from('subscription_analytics')
         .select('*')
-        .eq('event_type', 'trial_started');
+        .eq('event_type', 'trial_started') as {
+          data: SubscriptionAnalyticsRecord[] | null;
+          error: any
+        };
         
       if (trialError) throw trialError;
       
@@ -469,7 +501,10 @@ export const subscriptionAnalyticsService = {
       const { data: subscriptions, error: subError } = await supabase
         .from('subscription_analytics')
         .select('*')
-        .eq('event_type', 'subscription_activated');
+        .eq('event_type', 'subscription_activated') as {
+          data: SubscriptionAnalyticsRecord[] | null;
+          error: any
+        };
         
       if (subError) throw subError;
       
@@ -497,7 +532,7 @@ export const subscriptionAnalyticsService = {
   /**
    * Helper: Aggregate analytics by event type
    */
-  aggregateByEventType(data: any[]): Record<string, number> {
+  aggregateByEventType(data: SubscriptionAnalyticsRecord[]): Record<string, number> {
     return data.reduce((acc: Record<string, number>, event) => {
       const eventType = event.event_type;
       acc[eventType] = (acc[eventType] || 0) + 1;

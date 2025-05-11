@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -193,11 +192,16 @@ const Subscription = () => {
               <ul className="list-none pl-0 space-y-1">
                 <li>Max Members: {plan.max_members}</li>
                 {plan.features &&
-                  Object.entries(plan.features).map(([key, value]) => (
-                    <li key={key}>
-                      {key}: {value}
-                    </li>
-                  ))}
+                  typeof plan.features === 'object' && (
+                    <ul className="mt-4 space-y-2">
+                      {Object.entries(plan.features).map(([key, value]) => (
+                        <li key={key} className="flex items-start">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                          <span>{key}: {String(value)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
               </ul>
             </CardContent>
             <div className="p-4">

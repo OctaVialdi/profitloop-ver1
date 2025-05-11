@@ -98,7 +98,7 @@ export const useAppThemeManager = () => {
   }, []);
   
   const updateTheme = async (newColors: typeof colors) => {
-    if (!organization?.id) return;
+    if (!organization?.id) return { success: false, error: 'No organization' };
     
     try {
       // Update in database
@@ -117,16 +117,16 @@ export const useAppThemeManager = () => {
       
       if (error) {
         console.error("Error updating theme:", error);
-        throw error;
+        return { success: false, error: error.message };
       }
       
       // Update local state
       setColors(newColors);
       
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Exception updating theme:", error);
-      return { success: false, error };
+      return { success: false, error: error.message };
     }
   };
   
