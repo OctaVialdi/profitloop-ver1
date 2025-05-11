@@ -1,163 +1,155 @@
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Loader2, Check, X } from "lucide-react";
 
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Masukkan password saat ini"),
-  newPassword: z
-    .string()
-    .min(8, "Password minimal 8 karakter")
-    .refine((value) => /[a-z]/.test(value), {
-      message: "Password harus memiliki minimal satu huruf kecil",
-    })
-    .refine((value) => /[A-Z]/.test(value), {
-      message: "Password harus memiliki minimal satu huruf besar",
-    })
-    .refine((value) => /\d/.test(value), {
-      message: "Password harus memiliki minimal satu angka",
-    })
-    .refine((value) => /[!@#$%^&*(),.?":{}|<>]/.test(value), {
-      message: "Password harus memiliki minimal satu karakter khusus",
-    }),
-});
-
-type PasswordFormValues = z.infer<typeof passwordSchema>;
-
-export function PasswordChangeForm() {
+export const PasswordChangeForm: React.FC = () => {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
+  
+  // Password validation
+  const hasMinLength = newPassword.length >= 8;
+  const hasUpperCase = /[A-Z]/.test(newPassword);
+  const hasLowerCase = /[a-z]/.test(newPassword);
+  const hasNumber = /[0-9]/.test(newPassword);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+  const passwordsMatch = newPassword === confirmPassword && newPassword !== "";
+  
+  const isValidPassword = hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
 
-  const form = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const onSubmit = async (data: PasswordFormValues) => {
+    if (!isValidPassword) {
+      toast.error("Password tidak memenuhi persyaratan keamanan");
+      return;
+    }
+    
+    if (!passwordsMatch) {
+      toast.error("Password baru dan konfirmasi tidak sama");
+      return;
+    }
+    
     setIsLoading(true);
+    
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: data.newPassword,
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
       });
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
+      
       toast.success("Password berhasil diperbarui");
-      form.reset();
-    } catch (err: any) {
-      console.error("Error changing password:", err);
-      toast.error(err.message || "Gagal mengubah password");
+      // Reset form
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("Error changing password:", error);
+      toast.error(error.message || "Gagal mengubah password");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="currentPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password Saat Ini</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    placeholder="Masukkan password saat ini"
-                    type={showCurrentPassword ? "text" : "password"}
-                    {...field}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  >
-                    {showCurrentPassword ? (
-                      <EyeOffIcon className="h-4 w-4" />
-                    ) : (
-                      <EyeIcon className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid gap-2">
+        <Label htmlFor="current-password">Password Saat Ini</Label>
+        <Input
+          id="current-password"
+          type="password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          required
         />
-
-        <FormField
-          control={form.control}
-          name="newPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password Baru</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    placeholder="Masukkan password baru"
-                    type={showNewPassword ? "text" : "password"}
-                    {...field}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    {showNewPassword ? (
-                      <EyeOffIcon className="h-4 w-4" />
-                    ) : (
-                      <EyeIcon className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </FormControl>
-              <FormDescription className="text-xs">
-                Password harus memiliki minimal:
-                <ul className="list-disc pl-5 mt-1 space-y-1">
-                  <li>8 karakter</li>
-                  <li>Satu huruf kecil</li>
-                  <li>Satu huruf besar</li>
-                  <li>Satu angka</li>
-                  <li>Satu karakter khusus</li>
-                </ul>
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+      </div>
+      
+      <div className="grid gap-2">
+        <Label htmlFor="new-password">Password Baru</Label>
+        <Input
+          id="new-password"
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          required
         />
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Menyimpan..." : "Ubah Password"}
-          </Button>
+      </div>
+      
+      <div className="grid gap-2">
+        <Label htmlFor="confirm-password">Konfirmasi Password</Label>
+        <Input
+          id="confirm-password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+        {newPassword && confirmPassword && (
+          <div className="text-sm">
+            {passwordsMatch ? (
+              <p className="text-green-600 flex items-center">
+                <Check className="h-4 w-4 mr-1" /> 
+                Password sama
+              </p>
+            ) : (
+              <p className="text-red-600 flex items-center">
+                <X className="h-4 w-4 mr-1" /> 
+                Password tidak sama
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {newPassword && (
+        <div className="space-y-2 text-sm">
+          <p className="font-medium">Persyaratan Password:</p>
+          <ul className="space-y-1">
+            <li className={`flex items-center ${hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
+              {hasMinLength ? <Check className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
+              Minimal 8 karakter
+            </li>
+            <li className={`flex items-center ${hasUpperCase ? 'text-green-600' : 'text-gray-500'}`}>
+              {hasUpperCase ? <Check className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
+              Minimal 1 huruf besar
+            </li>
+            <li className={`flex items-center ${hasLowerCase ? 'text-green-600' : 'text-gray-500'}`}>
+              {hasLowerCase ? <Check className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
+              Minimal 1 huruf kecil
+            </li>
+            <li className={`flex items-center ${hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
+              {hasNumber ? <Check className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
+              Minimal 1 angka
+            </li>
+            <li className={`flex items-center ${hasSpecialChar ? 'text-green-600' : 'text-gray-500'}`}>
+              {hasSpecialChar ? <Check className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
+              Minimal 1 karakter khusus (!@#$%^&*.,?)
+            </li>
+          </ul>
         </div>
-      </form>
-    </Form>
+      )}
+      
+      <Button 
+        type="submit" 
+        disabled={isLoading || !isValidPassword || !passwordsMatch}
+        className="w-full"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Menyimpan...
+          </>
+        ) : (
+          "Perbarui Password"
+        )}
+      </Button>
+    </form>
   );
-}
+};

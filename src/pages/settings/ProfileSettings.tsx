@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ProfilePhotoUploader } from "@/components/settings/ProfilePhotoUploader";
 import { PasswordChangeForm } from "@/components/settings/PasswordChangeForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 interface ProfileFormData {
   fullName: string;
@@ -24,7 +27,7 @@ interface ProfileFormData {
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, deleteAccount, isDeleting, signOutFromAllSessions } = useAuth();
   const { userProfile, refreshData } = useOrganization();
   const [formData, setFormData] = useState<ProfileFormData>({
     fullName: userProfile?.full_name || "",
@@ -34,8 +37,8 @@ const ProfileSettings = () => {
     profileImage: userProfile?.profile_image || null,
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
@@ -61,32 +64,6 @@ const ProfileSettings = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateUserProfile(formData);
-  };
-
-  const handleDeleteAccount = async () => {
-    setIsDeleting(true);
-    try {
-      if (!user) {
-        toast.error("Tidak ada pengguna yang terautentikasi.");
-        return;
-      }
-
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
-
-      if (error) {
-        console.error("Error deleting user:", error);
-        toast.error("Gagal menghapus akun. Silakan coba lagi.");
-      } else {
-        toast.success("Akun berhasil dihapus.");
-        await signOut();
-        navigate("/auth/login");
-      }
-    } catch (err: any) {
-      console.error("Error deleting account:", err);
-      toast.error(err.message || "Terjadi kesalahan saat menghapus akun.");
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   const handleProfilePhotoUpdated = (newPhotoUrl: string) => {
@@ -135,6 +112,11 @@ const ProfileSettings = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleConfirmDelete = () => {
+    deleteAccount();
+    setDeleteDialogOpen(false);
   };
 
   const timezones = [
@@ -233,7 +215,7 @@ const ProfileSettings = () => {
             <CardContent>
               <Button
                 variant="destructive"
-                onClick={handleDeleteAccount}
+                onClick={() => setDeleteDialogOpen(true)}
                 disabled={isDeleting}
               >
                 {isDeleting ? "Menghapus..." : "Hapus Akun"}
@@ -270,7 +252,7 @@ const ProfileSettings = () => {
                     <h3 className="font-medium">Keluar dari Semua Sesi Aktif</h3>
                     <p className="text-sm text-muted-foreground">Paksa logout dari semua perangkat dan sesi Anda</p>
                   </div>
-                  <Button variant="outline" onClick={() => supabase.auth.signOut({ scope: 'global' })}>
+                  <Button variant="outline" onClick={signOutFromAllSessions}>
                     Keluar
                   </Button>
                 </div>
@@ -279,6 +261,50 @@ const ProfileSettings = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-destructive">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              Konfirmasi Hapus Akun
+            </DialogTitle>
+            <DialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Akun Anda beserta semua data akan dihapus secara permanen.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="text-sm font-medium text-gray-900">Apa yang akan terjadi setelah akun dihapus:</p>
+            <ul className="mt-2 text-sm text-gray-700 list-disc list-inside">
+              <li>Anda akan kehilangan akses ke semua data dan informasi akun</li>
+              <li>Jika Anda adalah admin terakhir, organisasi Anda juga akan dihapus</li>
+              <li>Anda tidak dapat memulihkan akun setelah dihapus</li>
+            </ul>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Batal
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Menghapus...
+                </>
+              ) : (
+                "Hapus Akun Permanen"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
