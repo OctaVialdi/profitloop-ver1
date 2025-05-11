@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar } from "@/components/ui/avatar";
+import { useNavigate } from "react-router-dom";
 
 // Define the ContentType interface
 interface ContentType {
@@ -15,6 +19,7 @@ interface ContentType {
 }
 
 const Settings = () => {
+  const navigate = useNavigate();
   const { employees, isLoading } = useEmployees();
   const [filteredEmployees, setFilteredEmployees] = useState<LegacyEmployee[]>([]);
   const [activeTab, setActiveTab] = useState("team-members");
@@ -81,6 +86,11 @@ const Settings = () => {
     }
   }, []);
 
+  // Handle click on employee name to navigate to employee detail
+  const handleEmployeeClick = (employee: LegacyEmployee) => {
+    navigate(`/my-info/personal?id=${employee.id}`);
+  };
+
   return (
     <Card className="border-0 shadow-none">
       <CardHeader className="pb-2">
@@ -102,36 +112,67 @@ const Settings = () => {
                 </div>
               ) : filteredEmployees.length > 0 ? (
                 <div className="border rounded-md overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="py-3 px-4 text-left font-medium">Name</th>
-                        <th className="py-3 px-4 text-left font-medium">Employee ID</th>
-                        <th className="py-3 px-4 text-left font-medium">Email</th>
-                        <th className="py-3 px-4 text-left font-medium">Job Position</th>
-                        <th className="py-3 px-4 text-left font-medium">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredEmployees.map((employee) => (
-                        <tr key={employee.id} className="border-t hover:bg-muted/30">
-                          <td className="py-3 px-4">{employee.name}</td>
-                          <td className="py-3 px-4">{employee.employeeId || employee.employee_id}</td>
-                          <td className="py-3 px-4">{employee.email}</td>
-                          <td className="py-3 px-4">{employee.jobPosition}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              employee.status === 'Active' ? 'bg-green-100 text-green-800' : 
-                              employee.status === 'Resigned' ? 'bg-red-100 text-red-800' : 
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {employee.status || 'Active'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="relative">
+                    <Table>
+                      <TableHeader className="sticky top-0 z-10 bg-white">
+                        <TableRow>
+                          <TableHead className="w-10">
+                            <Checkbox />
+                          </TableHead>
+                          <TableHead className="w-[200px]">Employee name</TableHead>
+                          <TableHead className="w-[120px]">Employee ID</TableHead>
+                          <TableHead className="w-[150px]">Organization</TableHead>
+                          <TableHead className="w-[150px]">Job position</TableHead>
+                          <TableHead className="w-[120px]">Job level</TableHead>
+                          <TableHead className="w-[150px]">Employment status</TableHead>
+                          <TableHead className="text-right w-[100px]">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredEmployees.map((employee) => (
+                          <TableRow key={employee.id} className="border-t hover:bg-muted/30">
+                            <TableCell>
+                              <Checkbox />
+                            </TableCell>
+                            <TableCell>
+                              <div 
+                                className="flex items-center gap-2 cursor-pointer"
+                                onClick={() => handleEmployeeClick(employee)}
+                              >
+                                <Avatar className="h-8 w-8">
+                                  <div className="bg-gray-100 h-full w-full rounded-full flex items-center justify-center">
+                                    {employee.name.charAt(0)}
+                                  </div>
+                                </Avatar>
+                                <div className="text-blue-600 hover:underline">{employee.name}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{employee.employeeId || employee.employee_id || '-'}</TableCell>
+                            <TableCell>{employee.organization || '-'}</TableCell>
+                            <TableCell>{employee.jobPosition || '-'}</TableCell>
+                            <TableCell>{employee.jobLevel || '-'}</TableCell>
+                            <TableCell>{employee.employmentStatus || '-'}</TableCell>
+                            <TableCell className="text-right">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleEmployeeClick(employee)}
+                              >
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {filteredEmployees.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={8} className="text-center py-8">
+                              No Digital Marketing employees found
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 border rounded-md bg-muted/10">
