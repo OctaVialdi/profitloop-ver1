@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -293,7 +292,7 @@ const TrialBanner = () => {
         }
       });
     }
-    navigate('/settings/subscription');
+    navigate('/settings/plan');
   };
   
   // Handle dismiss click
@@ -391,7 +390,7 @@ const TrialBanner = () => {
             });
           }
           setShowExpiredModal(false);
-          navigate('/settings/subscription');
+          navigate('/settings/plan');
         }}
         onRequest={() => {
           if (organizationId) {

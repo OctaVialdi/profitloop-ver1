@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -88,8 +89,8 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
       // Otherwise use the provided onUpgrade handler
       onUpgrade();
     } else {
-      // Default fallback to subscription page
-      navigate('/settings/subscription');
+      // Default fallback to plan page
+      navigate('/settings/plan');
     }
   };
 

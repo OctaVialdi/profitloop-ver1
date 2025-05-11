@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, Info, AlertTriangle, CreditCard, ShieldCheck, X } from "lucide-react";
+import { CheckCircle2, Info, AlertTriangle, CreditCard, ShieldCheck, X, ArrowDown } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { TrialProgressIndicator } from "@/components/subscription/TrialProgressIndicator";
 import { TrialExpiredModal } from "@/components/subscription/TrialExpiredModal";
@@ -36,6 +37,10 @@ const PlanSettings: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const { progress } = useTrialStatus(organization?.id || null);
   const [memberCount, setMemberCount] = useState<number>(1);
+  const availablePlansRef = useRef<HTMLDivElement>(null);
+  
+  // Add state for cancellation success message
+  const [showCancellationSuccess, setShowCancellationSuccess] = useState(false);
   
   // Add states for Midtrans payment
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -262,8 +267,21 @@ const PlanSettings: React.FC = () => {
           : "Your subscription has been cancelled successfully"
         );
         
+        // Set cancellation success flag
+        setShowCancellationSuccess(true);
+        
         // Refresh organization data to reflect changes
         await refreshData();
+        
+        // Scroll to available plans section after a short delay
+        setTimeout(() => {
+          if (availablePlansRef.current) {
+            availablePlansRef.current.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        }, 500);
       }
     } catch (error) {
       console.error("Error cancelling subscription:", error);
@@ -276,6 +294,11 @@ const PlanSettings: React.FC = () => {
   
   const isSubscribedToPlan = (planId: string) => {
     return organization?.subscription_plan_id === planId;
+  };
+
+  // Check if the user has any active subscription or plan
+  const hasActivePlan = () => {
+    return organization?.subscription_plan_id !== null;
   };
 
   const renderTrialBanner = () => {
@@ -331,6 +354,19 @@ const PlanSettings: React.FC = () => {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <h1 className="text-3xl font-bold">Plan Settings</h1>
+      
+      {/* Cancellation Success Alert */}
+      {showCancellationSuccess && (
+        <Alert className="bg-green-50 text-green-800 border-green-300">
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription>
+            Your plan has been successfully cancelled. 
+            {isTrialActive && daysLeftInTrial && daysLeftInTrial > 0 
+              ? ` You can still use premium features until your trial ends in ${daysLeftInTrial} days.` 
+              : ' Please select a new plan below to continue using premium features.'}
+          </AlertDescription>
+        </Alert>
+      )}
       
       {/* Trial Banner */}
       {renderTrialBanner()}
@@ -416,16 +452,30 @@ const PlanSettings: React.FC = () => {
           
         </CardContent>
         <CardFooter>
-          {/* Always show "Cancel Plan" button regardless of subscription status */}
-          <Button variant="destructive" onClick={handleCancelPlan}>
-            <X className="mr-2 h-4 w-4" />
-            Cancel Plan
-          </Button>
+          {/* Show "Cancel Plan" button only if user has an active plan, otherwise show "View Available Plans" */}
+          {hasActivePlan() ? (
+            <Button variant="destructive" onClick={handleCancelPlan}>
+              <X className="mr-2 h-4 w-4" />
+              Cancel Plan
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (availablePlansRef.current) {
+                  availablePlansRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
+            >
+              <ArrowDown className="mr-2 h-4 w-4" />
+              View Available Plans
+            </Button>
+          )}
         </CardFooter>
       </Card>
       
       {/* Plan Comparison */}
-      <div>
+      <div ref={availablePlansRef}>
         <h2 className="text-2xl font-bold mb-4">Available Plans</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {loading ? (
@@ -531,7 +581,7 @@ const PlanSettings: React.FC = () => {
       <TrialExpiredModal 
         isOpen={showExpiredModal} 
         onClose={() => setShowExpiredModal(false)} 
-        onUpgrade={() => navigate("/settings/subscription")}
+        onUpgrade={() => navigate("/settings/plan")}
         onRequest={handleRequestExtension}
         allowClose={false}
         organizationName={organization?.name || "your organization"}
