@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Card, 
   CardContent, 
@@ -60,6 +60,8 @@ interface TabData {
 }
 
 const SocialMediaManagement = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("content-planner");
   const [activeSubTab, setActiveSubTab] = useState<string>("dashboard");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -252,6 +254,14 @@ const SocialMediaManagement = () => {
     );
   };
 
+  const handleSecondaryTabClick = (tabId: string) => {
+    if (tabId === "create-content") {
+      navigate("/marketing/social-media/create-content");
+    } else {
+      setActiveSubTab(tabId);
+    }
+  };
+
   return (
     <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 space-y-4">
       {/* Primary Tab Navigation - Updated to be more compact */}
@@ -437,9 +447,10 @@ const SocialMediaManagement = () => {
           {secondaryTabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveSubTab(tab.id)}
+              onClick={() => handleSecondaryTabClick(tab.id)}
               className={`py-2 px-3 text-center text-sm transition-all duration-200 flex items-center justify-center gap-1 ${
-                activeSubTab === tab.id 
+                (activeSubTab === tab.id && location.pathname !== "/marketing/social-media/create-content") || 
+                (tab.id === "create-content" && location.pathname === "/marketing/social-media/create-content")
                   ? "bg-white text-gray-800 font-medium" 
                   : "bg-gray-50 text-gray-600 hover:bg-gray-100"
               }`}
@@ -484,17 +495,21 @@ const SocialMediaManagement = () => {
         </div>
       </div>
 
-      {/* Dashboard Content - More compact */}
-      <Card className="w-full">
-        <CardHeader className="py-3">
-          <CardTitle className="text-lg">Dashboard Content</CardTitle>
-        </CardHeader>
-        <CardContent className="py-2">
-          <p className="text-sm text-muted-foreground">
-            This section will display dashboard content for the selected tabs.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Display dashboard content only if not on create-content route */}
+      {location.pathname !== "/marketing/social-media/create-content" && (
+        <div className="w-full">
+          <Card className="w-full">
+            <CardHeader className="py-3">
+              <CardTitle className="text-lg">Dashboard Content</CardTitle>
+            </CardHeader>
+            <CardContent className="py-2">
+              <p className="text-sm text-muted-foreground">
+                This section will display dashboard content for the selected tabs.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Edit Target Dialog */}
       <Dialog open={isEditTargetOpen} onOpenChange={setIsEditTargetOpen}>
