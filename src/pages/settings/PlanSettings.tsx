@@ -16,8 +16,6 @@ import { SubscriptionPlan } from "@/types/organization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { stripeService } from "@/services/stripeService";
 import { toast } from "sonner";
-import { PromotionCountdown } from "@/components/subscription/PromotionCountdown";
-import { AIRecommendations } from "@/components/subscription/AIRecommendations";
 
 const PlanSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -38,7 +36,6 @@ const PlanSettings: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const { progress } = useTrialStatus(organization?.id || null);
   const [memberCount, setMemberCount] = useState<number>(1);
-  const [showPromotion, setShowPromotion] = useState(true);
 
   // Check if trial is expired without subscription
   useEffect(() => {
@@ -313,24 +310,6 @@ const PlanSettings: React.FC = () => {
       {/* Trial Banner */}
       {renderTrialBanner()}
       
-      {/* Promotion Banner for Expired Trial */}
-      {organization?.trial_expired && !hasPaidSubscription && showPromotion && (
-        <PromotionCountdown 
-          discount="20%" 
-          onUpgrade={() => navigate('/settings/subscription')}
-          className="mb-6"
-        />
-      )}
-      
-      {/* AI Recommendations for Expired Trial */}
-      {organization?.trial_expired && !hasPaidSubscription && (
-        <AIRecommendations 
-          organizationId={organization?.id || null}
-          onUpgrade={() => navigate('/settings/subscription')} 
-          className="mb-6"
-        />
-      )}
-      
       {/* Current Plan Details */}
       <Card className="overflow-hidden">
         <CardHeader>
@@ -512,10 +491,7 @@ const PlanSettings: React.FC = () => {
                     ) : (
                       <>
                         <CreditCard className="mr-2 h-4 w-4" />
-                        {organization?.trial_expired && !hasPaidSubscription 
-                          ? "Select This Plan" 
-                          : "Select Plan"
-                        }
+                        Select Plan
                       </>
                     )}
                   </Button>
@@ -525,65 +501,6 @@ const PlanSettings: React.FC = () => {
           )}
         </div>
       </div>
-      
-      {/* Testimonials Section */}
-      {(organization?.trial_expired && !hasPaidSubscription) && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">What Our Customers Say</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 rounded-full p-2">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-lg font-semibold">JD</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">John Doe</h4>
-                    <p className="text-sm text-muted-foreground">Marketing Director</p>
-                    <p className="mt-2 text-sm italic">"The premium features have transformed how we work. Well worth the investment."</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 rounded-full p-2">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-lg font-semibold">SP</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Sarah Parker</h4>
-                    <p className="text-sm text-muted-foreground">Product Manager</p>
-                    <p className="mt-2 text-sm italic">"We increased our productivity by 40% after upgrading to the Professional plan."</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 rounded-full p-2">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-lg font-semibold">AR</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Alex Rivera</h4>
-                    <p className="text-sm text-muted-foreground">Tech Lead</p>
-                    <p className="mt-2 text-sm italic">"The advanced features and support have been crucial to our team's success."</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
       
       {/* Trial Expired Modal */}
       <TrialExpiredModal 
