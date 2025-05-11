@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -26,7 +25,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addMonths, subMonths, addDays, subDays } from "date-fns";
+import { format, addMonths, subMonths } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -42,6 +41,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 
 interface ContentManager {
   name: string;
@@ -57,9 +57,12 @@ interface ContentManager {
 interface TabData {
   id: string;
   label: string;
+  path: string;
 }
 
 const SocialMediaManagement = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("content-planner");
   const [activeSubTab, setActiveSubTab] = useState<string>("dashboard");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -71,17 +74,30 @@ const SocialMediaManagement = () => {
   const [targetValue, setTargetValue] = useState<string>("20");
   
   const primaryTabs: TabData[] = [
-    { id: "content-planner", label: "Content Planner" },
-    { id: "production", label: "Production" },
-    { id: "content-post", label: "Content Post" }
+    { id: "content-planner", label: "Content Planner", path: "" },
+    { id: "production", label: "Production", path: "" },
+    { id: "content-post", label: "Content Post", path: "" }
   ];
 
   const secondaryTabs: TabData[] = [
-    { id: "dashboard", label: "Dashboard" },
-    { id: "create-content", label: "Create Content" },
-    { id: "content-bank", label: "Content Bank" },
-    { id: "content-qc", label: "Content QC" }
+    { id: "dashboard", label: "Dashboard", path: "/marketing/social-media" },
+    { id: "create-content", label: "Create Content", path: "/marketing/social-media/create-content" },
+    { id: "content-bank", label: "Content Bank", path: "/marketing/social-media/content-bank" },
+    { id: "content-qc", label: "Content QC", path: "/marketing/social-media/content-qc" }
   ];
+
+  // Detect current path and set active tab accordingly
+  useEffect(() => {
+    const path = location.pathname;
+    
+    // Set activeSubTab based on current path
+    const currentSubTab = secondaryTabs.find(tab => tab.path === path);
+    if (currentSubTab) {
+      setActiveSubTab(currentSubTab.id);
+    } else if (path === "/marketing/social-media") {
+      setActiveSubTab("dashboard");
+    }
+  }, [location.pathname]);
 
   const contentManagers: ContentManager[] = [
     {
@@ -157,6 +173,11 @@ const SocialMediaManagement = () => {
     // In a real app, you would update the manager's target here
     setIsEditTargetOpen(false);
     setEditingManager(null);
+  };
+
+  const handleTabClick = (tabId: string, path: string) => {
+    navigate(path);
+    setActiveSubTab(tabId);
   };
 
   const months = [
@@ -254,7 +275,7 @@ const SocialMediaManagement = () => {
 
   return (
     <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 space-y-4">
-      {/* Primary Tab Navigation - Updated to be more compact */}
+      {/* Primary Tab Navigation */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
           {primaryTabs.map((tab) => (
@@ -287,7 +308,7 @@ const SocialMediaManagement = () => {
         </div>
       </div>
 
-      {/* Content Section - Updated table rows to be more compact */}
+      {/* Content Section */}
       <Card className="w-full border shadow-sm">
         <CardHeader className="pb-2 pt-3">
           <CardTitle className="text-lg">{getTabTitle()}</CardTitle>
@@ -408,7 +429,7 @@ const SocialMediaManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Pagination - Make it more compact */}
+      {/* Pagination */}
       <div className="flex justify-end">
         <Pagination>
           <PaginationContent>
@@ -431,13 +452,13 @@ const SocialMediaManagement = () => {
         </Pagination>
       </div>
 
-      {/* Secondary Tab Navigation - Updated to be more compact */}
+      {/* Secondary Tab Navigation */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-4 w-full">
           {secondaryTabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveSubTab(tab.id)}
+              onClick={() => handleTabClick(tab.id, tab.path)}
               className={`py-2 px-3 text-center text-sm transition-all duration-200 flex items-center justify-center gap-1 ${
                 activeSubTab === tab.id 
                   ? "bg-white text-gray-800 font-medium" 
@@ -484,17 +505,8 @@ const SocialMediaManagement = () => {
         </div>
       </div>
 
-      {/* Dashboard Content - More compact */}
-      <Card className="w-full">
-        <CardHeader className="py-3">
-          <CardTitle className="text-lg">Dashboard Content</CardTitle>
-        </CardHeader>
-        <CardContent className="py-2">
-          <p className="text-sm text-muted-foreground">
-            This section will display dashboard content for the selected tabs.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Content for the active tab */}
+      <Outlet />
 
       {/* Edit Target Dialog */}
       <Dialog open={isEditTargetOpen} onOpenChange={setIsEditTargetOpen}>
