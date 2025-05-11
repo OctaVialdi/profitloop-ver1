@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -181,8 +182,8 @@ const CreateContent = () => {
       </CardHeader>
       
       <CardContent>
-        <ScrollArea className="w-full whitespace-nowrap" type="scroll">
-          <div className="border rounded-md overflow-hidden">
+        <div className="w-full overflow-auto">
+          <div className="min-w-[1200px]">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -193,15 +194,15 @@ const CreateContent = () => {
                       aria-label="Select all"
                     />
                   </TableHead>
-                  <TableHead className="w-1/6 text-center">Tanggal Posting</TableHead>
-                  <TableHead className="text-center">Tipe Content</TableHead>
-                  <TableHead className="text-center">PIC</TableHead>
-                  <TableHead className="text-center">Layanan</TableHead>
-                  <TableHead className="text-center">Sub Layanan</TableHead>
-                  <TableHead className="text-center">Judul Content</TableHead>
-                  <TableHead className="text-center">Content Pillar</TableHead>
-                  <TableHead className="text-center">Brief</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="w-[150px] text-center">Tanggal Posting</TableHead>
+                  <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
+                  <TableHead className="w-[120px] text-center">PIC</TableHead>
+                  <TableHead className="w-[150px] text-center">Layanan</TableHead>
+                  <TableHead className="w-[150px] text-center">Sub Layanan</TableHead>
+                  <TableHead className="w-[180px] text-center">Judul Content</TableHead>
+                  <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
+                  <TableHead className="w-[180px] text-center">Brief</TableHead>
+                  <TableHead className="w-[150px] text-center">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -417,7 +418,7 @@ const CreateContent = () => {
               </TableBody>
             </Table>
           </div>
-        </ScrollArea>
+        </div>
       </CardContent>
       
       <CardFooter className="pt-2 flex justify-between">
