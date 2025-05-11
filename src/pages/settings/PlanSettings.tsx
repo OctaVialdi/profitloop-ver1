@@ -367,16 +367,11 @@ const PlanSettings: React.FC = () => {
           
         </CardContent>
         <CardFooter>
-          {hasPaidSubscription ? (
-            <Button variant="destructive" onClick={handleCancelPlan}>
-              <X className="mr-2 h-4 w-4" />
-              Cancel Plan
-            </Button>
-          ) : (
-            <Button onClick={() => navigate("/settings/subscription")}>
-              Upgrade Plan
-            </Button>
-          )}
+          {/* Always show "Cancel Plan" button regardless of subscription status */}
+          <Button variant="destructive" onClick={handleCancelPlan}>
+            <X className="mr-2 h-4 w-4" />
+            Cancel Plan
+          </Button>
         </CardFooter>
       </Card>
       
