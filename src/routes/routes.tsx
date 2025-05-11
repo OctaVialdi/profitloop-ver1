@@ -1,5 +1,5 @@
 
-import { Navigate, Route, RouteObject } from "react-router-dom";
+import { Navigate, RouteObject } from "react-router-dom";
 
 // Auth routes
 import { authRoutes } from "./authRoutes";
@@ -28,7 +28,7 @@ export const routes: RouteObject[] = [
   ...dashboardRoutes,
   
   // Settings
-  settingsRoutes,
+  settingsRoutes as RouteObject,
   
   // Subscription
   {

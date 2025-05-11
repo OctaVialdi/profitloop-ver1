@@ -226,7 +226,7 @@ const TrialBanner = () => {
               (!lastReminder || lastReminder !== today)) {
             
             try {
-              // Get user email - FIXED: Using an async context
+              // Get user email - Using async/await properly now
               const userResponse = await supabase.auth.getUser();
               const user = userResponse.data?.user;
               
@@ -396,7 +396,7 @@ const TrialBanner = () => {
         onRequest={() => {
           if (organizationId) {
             subscriptionAnalyticsService.trackEvent({
-              eventType: 'extension_requested',
+              eventType: 'trial_extension_requested',
               organizationId: organizationId
             });
           }

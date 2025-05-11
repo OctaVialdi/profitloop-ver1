@@ -94,16 +94,16 @@ export const SubscriptionPlans = () => {
       subscriptionAnalyticsService.trackCheckoutInitiated(planId, organization?.id || '');
       
       // Use Midtrans payment
-      const result = await midtransService.createPayment(planId);
+      const result = await midtransService.createCheckout(planId);
       
       if (result) {
         // For standard plan (direct URL), redirect immediately
         if (planId === 'standard_plan') {
-          midtransService.redirectToPayment(result.redirectUrl);
+          midtransService.redirectToPayment(result.redirect_url);
         } else {
           // For other plans, show modal first
           setPaymentData({
-            redirectUrl: result.redirectUrl,
+            redirectUrl: result.redirect_url,
             planName: planName
           });
           setPaymentModalOpen(true);
