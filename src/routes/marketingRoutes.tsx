@@ -5,7 +5,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import AdsPerformance from "@/pages/marketing/AdsPerformance";
 import SocialMediaManagement from "@/pages/marketing/SocialMediaManagement";
-import CreateContent from "@/pages/marketing/social-media/CreateContent";
 import KolManagement from "@/pages/marketing/KolManagement";
 import SeoManagement from "@/pages/marketing/SeoManagement";
 import RatingPerformance from "@/pages/marketing/RatingPerformance";
@@ -29,7 +28,6 @@ export const marketingRoutes = (
   >
     <Route path="ads-performance" element={<AdsPerformance />} />
     <Route path="social-media" element={<SocialMediaManagement />} />
-    <Route path="social-media/create-content" element={<CreateContent />} />
     <Route path="kol" element={<KolManagement />} />
     <Route path="seo" element={<SeoManagement />} />
     <Route path="ratings" element={<RatingPerformance />} />

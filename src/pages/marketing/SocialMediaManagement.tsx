@@ -1,5 +1,5 @@
+
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Card, 
   CardContent, 
@@ -60,12 +60,8 @@ interface TabData {
 }
 
 const SocialMediaManagement = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("content-planner");
-  const [activeSubTab, setActiveSubTab] = useState<string>(
-    location.pathname.includes("/create-content") ? "create-content" : "dashboard"
-  );
+  const [activeSubTab, setActiveSubTab] = useState<string>("dashboard");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -161,19 +157,6 @@ const SocialMediaManagement = () => {
     // In a real app, you would update the manager's target here
     setIsEditTargetOpen(false);
     setEditingManager(null);
-  };
-
-  const handleSubTabClick = (tabId: string) => {
-    setActiveSubTab(tabId);
-    if (tabId === "create-content") {
-      navigate("/marketing/social-media/create-content");
-    } else {
-      // If we're on the create-content route and we click another tab,
-      // navigate back to the main social-media route
-      if (location.pathname.includes("/create-content")) {
-        navigate("/marketing/social-media");
-      }
-    }
   };
 
   const months = [
@@ -304,161 +287,157 @@ const SocialMediaManagement = () => {
         </div>
       </div>
 
-      {/* Content Section - Only show if not on Create Content route */}
-      {!location.pathname.includes("/create-content") && (
-        <>
-          <Card className="w-full border shadow-sm">
-            <CardHeader className="pb-2 pt-3">
-              <CardTitle className="text-lg">{getTabTitle()}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table className="w-full">
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="h-8 w-[150px] py-1">PIC</TableHead>
-                      <TableHead className="h-8 text-center w-[150px] py-1">
-                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              className="flex items-center justify-center gap-1 w-full font-normal text-xs h-7 px-2"
-                            >
-                              <span>{format(selectedDate, "dd MMM yyyy")}</span>
-                              <CalendarIcon className="h-3 w-3" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            {renderMonthCalendar()}
-                          </PopoverContent>
-                        </Popover>
-                      </TableHead>
-                      <TableHead className="h-8 text-center w-[150px] py-1">
-                        <DropdownMenu 
-                          open={isMonthSelectorOpen} 
-                          onOpenChange={setIsMonthSelectorOpen}
+      {/* Content Section - Updated table rows to be more compact */}
+      <Card className="w-full border shadow-sm">
+        <CardHeader className="pb-2 pt-3">
+          <CardTitle className="text-lg">{getTabTitle()}</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-8 w-[150px] py-1">PIC</TableHead>
+                  <TableHead className="h-8 text-center w-[150px] py-1">
+                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center justify-center gap-1 w-full font-normal text-xs h-7 px-2"
                         >
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              className="flex items-center justify-center gap-1 w-full font-normal text-xs h-7 px-2"
+                          <span>{format(selectedDate, "dd MMM yyyy")}</span>
+                          <CalendarIcon className="h-3 w-3" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        {renderMonthCalendar()}
+                      </PopoverContent>
+                    </Popover>
+                  </TableHead>
+                  <TableHead className="h-8 text-center w-[150px] py-1">
+                    <DropdownMenu 
+                      open={isMonthSelectorOpen} 
+                      onOpenChange={setIsMonthSelectorOpen}
+                    >
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center justify-center gap-1 w-full font-normal text-xs h-7 px-2"
+                        >
+                          <span>{format(selectedMonth, "MMMM yyyy")}</span>
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto">
+                        {months.map((month, index) => {
+                          const isCurrentYear = new Date().getFullYear() === selectedMonth.getFullYear();
+                          const isCurrentMonth = index === selectedMonth.getMonth() && isCurrentYear;
+                          
+                          return (
+                            <DropdownMenuItem
+                              key={month}
+                              className={`flex items-center py-1 px-4 text-xs ${isCurrentMonth ? 'bg-gray-100' : ''}`}
+                              onClick={() => {
+                                setSelectedMonth(new Date(selectedMonth.getFullYear(), index));
+                                setIsMonthSelectorOpen(false);
+                              }}
                             >
-                              <span>{format(selectedMonth, "MMMM yyyy")}</span>
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto">
-                            {months.map((month, index) => {
-                              const isCurrentYear = new Date().getFullYear() === selectedMonth.getFullYear();
-                              const isCurrentMonth = index === selectedMonth.getMonth() && isCurrentYear;
-                              
-                              return (
-                                <DropdownMenuItem
-                                  key={month}
-                                  className={`flex items-center py-1 px-4 text-xs ${isCurrentMonth ? 'bg-gray-100' : ''}`}
-                                  onClick={() => {
-                                    setSelectedMonth(new Date(selectedMonth.getFullYear(), index));
-                                    setIsMonthSelectorOpen(false);
-                                  }}
+                              {isCurrentMonth && (
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  className="h-3 w-3 mr-2 text-blue-500" 
+                                  viewBox="0 0 20 20" 
+                                  fill="currentColor"
                                 >
-                                  {isCurrentMonth && (
-                                    <svg 
-                                      xmlns="http://www.w3.org/2000/svg" 
-                                      className="h-3 w-3 mr-2 text-blue-500" 
-                                      viewBox="0 0 20 20" 
-                                      fill="currentColor"
-                                    >
-                                      <path 
-                                        fillRule="evenodd" 
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                                        clipRule="evenodd" 
-                                      />
-                                    </svg>
-                                  )}
-                                  {month} {selectedMonth.getFullYear()}
-                                </DropdownMenuItem>
-                              );
-                            })}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableHead>
-                      <TableHead className="h-8 text-center w-[150px] py-1">
-                        Target {format(selectedMonth, "MMM yyyy")}
-                      </TableHead>
-                      <TableHead className="h-8 w-[200px] py-1">Progress</TableHead>
-                      <TableHead className="h-8 text-center py-1">On Time Rate</TableHead>
-                      <TableHead className="h-8 text-center py-1">Effective Rate</TableHead>
-                      <TableHead className="h-8 text-center py-1">Score</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {contentManagers.map((manager) => (
-                      <TableRow key={manager.name} className="hover:bg-gray-50/80">
-                        <TableCell className="py-1 px-4 font-medium text-sm">{manager.name}</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.dailyTarget}</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.monthlyTarget}</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">
-                          <div className="flex items-center justify-center gap-1">
-                            <span>{manager.monthlyTargetAdjusted}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-4 w-4"
-                              onClick={() => handleEditTarget(manager)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-1 px-4">
-                          <div className="flex items-center gap-2">
-                            <Progress value={manager.progress} className="h-1.5" />
-                            <span className="text-xs">{manager.progress}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.onTimeRate}%</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.effectiveRate}%</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.score}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pagination - Make it more compact */}
-          <div className="flex justify-end">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious href="#" className="h-7 text-xs" />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" className="h-7 w-7 text-xs">1</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" className="h-7 w-7 text-xs" isActive>2</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" className="h-7 w-7 text-xs">3</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext href="#" className="h-7 text-xs" />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                                  <path 
+                                    fillRule="evenodd" 
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                    clipRule="evenodd" 
+                                  />
+                                </svg>
+                              )}
+                              {month} {selectedMonth.getFullYear()}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableHead>
+                  <TableHead className="h-8 text-center w-[150px] py-1">
+                    Target {format(selectedMonth, "MMM yyyy")}
+                  </TableHead>
+                  <TableHead className="h-8 w-[200px] py-1">Progress</TableHead>
+                  <TableHead className="h-8 text-center py-1">On Time Rate</TableHead>
+                  <TableHead className="h-8 text-center py-1">Effective Rate</TableHead>
+                  <TableHead className="h-8 text-center py-1">Score</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {contentManagers.map((manager) => (
+                  <TableRow key={manager.name} className="hover:bg-gray-50/80">
+                    <TableCell className="py-1 px-4 font-medium text-sm">{manager.name}</TableCell>
+                    <TableCell className="py-1 px-4 text-center text-sm">{manager.dailyTarget}</TableCell>
+                    <TableCell className="py-1 px-4 text-center text-sm">{manager.monthlyTarget}</TableCell>
+                    <TableCell className="py-1 px-4 text-center text-sm">
+                      <div className="flex items-center justify-center gap-1">
+                        <span>{manager.monthlyTargetAdjusted}</span>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-4 w-4"
+                          onClick={() => handleEditTarget(manager)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-1 px-4">
+                      <div className="flex items-center gap-2">
+                        <Progress value={manager.progress} className="h-1.5" />
+                        <span className="text-xs">{manager.progress}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-1 px-4 text-center text-sm">{manager.onTimeRate}%</TableCell>
+                    <TableCell className="py-1 px-4 text-center text-sm">{manager.effectiveRate}%</TableCell>
+                    <TableCell className="py-1 px-4 text-center text-sm">{manager.score}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </>
-      )}
+        </CardContent>
+      </Card>
 
-      {/* Secondary Tab Navigation */}
+      {/* Pagination - Make it more compact */}
+      <div className="flex justify-end">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href="#" className="h-7 text-xs" />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#" className="h-7 w-7 text-xs">1</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#" className="h-7 w-7 text-xs" isActive>2</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#" className="h-7 w-7 text-xs">3</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext href="#" className="h-7 text-xs" />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+
+      {/* Secondary Tab Navigation - Updated to be more compact */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-4 w-full">
           {secondaryTabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => handleSubTabClick(tab.id)}
+              onClick={() => setActiveSubTab(tab.id)}
               className={`py-2 px-3 text-center text-sm transition-all duration-200 flex items-center justify-center gap-1 ${
                 activeSubTab === tab.id 
                   ? "bg-white text-gray-800 font-medium" 
@@ -505,19 +484,17 @@ const SocialMediaManagement = () => {
         </div>
       </div>
 
-      {/* Dashboard Content - Only show if not on Create Content route and activeSubTab is dashboard */}
-      {!location.pathname.includes("/create-content") && activeSubTab === "dashboard" && (
-        <Card className="w-full">
-          <CardHeader className="py-3">
-            <CardTitle className="text-lg">Dashboard Content</CardTitle>
-          </CardHeader>
-          <CardContent className="py-2">
-            <p className="text-sm text-muted-foreground">
-              This section will display dashboard content for the selected tabs.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Dashboard Content - More compact */}
+      <Card className="w-full">
+        <CardHeader className="py-3">
+          <CardTitle className="text-lg">Dashboard Content</CardTitle>
+        </CardHeader>
+        <CardContent className="py-2">
+          <p className="text-sm text-muted-foreground">
+            This section will display dashboard content for the selected tabs.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Edit Target Dialog */}
       <Dialog open={isEditTargetOpen} onOpenChange={setIsEditTargetOpen}>
