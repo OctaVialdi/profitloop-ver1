@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -203,14 +204,15 @@ export const stripeService = {
       
       if (error) throw new Error(`Error cancelling subscription: ${error.message}`);
       
-      // Store cancellation reason and feedback in database
-      if (reason) {
-        await supabase.from('subscription_cancellations').insert({
+      // Store cancellation reason and feedback in audit logs
+      await supabase.from('subscription_audit_logs').insert({
+        action: 'subscription_cancelled',
+        data: {
           reason,
           feedback: feedback || null,
           timestamp: new Date().toISOString()
-        });
-      }
+        }
+      });
       
       return data?.success || false;
     } catch (error) {
@@ -236,11 +238,14 @@ export const stripeService = {
       
       if (error) throw new Error(`Error applying discount: ${error.message}`);
       
-      // Store discount claim in database
-      await supabase.from('subscription_discounts').insert({
-        discount_percent: discountPercent,
-        duration_months: durationMonths,
-        claimed_at: new Date().toISOString()
+      // Store discount claim in audit logs
+      await supabase.from('subscription_audit_logs').insert({
+        action: 'discount_applied',
+        data: {
+          discount_percent: discountPercent,
+          duration_months: durationMonths,
+          claimed_at: new Date().toISOString()
+        }
       });
       
       return data?.success || false;

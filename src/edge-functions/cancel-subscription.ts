@@ -101,12 +101,16 @@ serve(async (req) => {
       .eq('id', orgData.id);
       
     // Record cancellation reason in the database
-    await supabaseClient.from('subscription_cancellations').insert({
+    await supabaseClient.from('subscription_audit_logs').insert({
       organization_id: orgData.id,
       user_id: user.id,
       reason,
       feedback: feedback || null,
-      timestamp: new Date().toISOString(),
+      action: 'subscription_cancelled',
+      data: {
+        reason,
+        feedback: feedback || null,
+      }
     });
     
     return new Response(JSON.stringify({ success: true }), {

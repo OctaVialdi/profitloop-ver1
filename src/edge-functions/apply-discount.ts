@@ -108,14 +108,17 @@ serve(async (req) => {
     });
     
     // Record the discount in the database
-    await supabaseClient.from('subscription_discounts').insert({
+    await supabaseClient.from('subscription_audit_logs').insert({
       organization_id: organizationId,
       user_id: user.id,
-      discount_percent: discountPercent,
-      duration_months: durationMonths,
-      claimed_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      is_active: true,
+      action: 'discount_applied',
+      data: {
+        discount_percent: discountPercent,
+        duration_months: durationMonths,
+        claimed_at: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        is_active: true
+      }
     });
     
     return new Response(JSON.stringify({ 
