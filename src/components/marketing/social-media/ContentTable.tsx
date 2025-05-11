@@ -83,6 +83,9 @@ export const ContentTable: React.FC<ContentTableProps> = ({
             </TableHead>
             <TableHead className="w-[150px] text-center">Tanggal Posting</TableHead>
             <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
+            <TableHead className="w-[120px] text-center">PIC</TableHead>
+            <TableHead className="w-[150px] text-center">Layanan</TableHead>
+            <TableHead className="w-[150px] text-center">Sub Layanan</TableHead>
             <TableHead className="w-[180px] text-center">Judul Content</TableHead>
             <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
             <TableHead className="w-[180px] text-center">Brief</TableHead>
@@ -139,6 +142,70 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           {type.name}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Select 
+                    value={item.pic} 
+                    onValueChange={(value) => handlePICChange(item.id, value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select PIC" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contentPlanners.length > 0 ? (
+                        contentPlanners.map((planner) => (
+                          <SelectItem key={planner.id} value={planner.name}>
+                            {planner.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-pic-found" disabled>
+                          No content planners found
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Select 
+                    value={item.service} 
+                    onValueChange={(value) => handleServiceChange(item.id, value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {services.map((service) => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Select 
+                    value={item.subService} 
+                    onValueChange={(value) => handleSubServiceChange(item.id, value)}
+                    disabled={!item.service}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select sub-service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {item.service ? (
+                        getFilteredSubServicesByServiceId(item.service).map((subService) => (
+                          <SelectItem key={subService.id} value={subService.id}>
+                            {subService.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="select-service-first" disabled>
+                          Select a service first
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </TableCell>
@@ -230,7 +297,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
+              <TableCell colSpan={10} className="h-24 text-center">
                 No content items. Click "Add Row" to create one.
               </TableCell>
             </TableRow>
