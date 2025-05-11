@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
 import { BillingAddressForm } from "@/components/billing/BillingAddressForm";
 import { InvoiceHistoryTable } from "@/components/billing/InvoiceHistoryTable";
@@ -9,6 +9,7 @@ import { PaymentMethodSection } from "@/components/billing/PaymentMethodSection"
 import { CustomerPortalSection } from "@/components/billing/CustomerPortalSection";
 import { organizationService } from "@/services/organizationService";
 import { BillingSettings as BillingSettingsType, Invoice } from "@/types/organization";
+import { toast } from "sonner";
 
 const BillingSettings: React.FC = () => {
   const { organization, hasPaidSubscription } = useOrganization();
@@ -17,6 +18,7 @@ const BillingSettings: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [totalInvoiceCount, setTotalInvoiceCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
@@ -28,6 +30,7 @@ const BillingSettings: React.FC = () => {
       if (!organization?.id) return;
       
       setIsLoading(true);
+      setLoadError(null);
       try {
         // Fetch billing settings
         const settings = await organizationService.getBillingSettings(organization.id);
@@ -55,6 +58,8 @@ const BillingSettings: React.FC = () => {
         
       } catch (error) {
         console.error('Error loading billing data:', error);
+        setLoadError("Failed to load billing data. Please try again later.");
+        toast.error("Failed to load billing information");
       } finally {
         setIsLoading(false);
       }
@@ -66,6 +71,7 @@ const BillingSettings: React.FC = () => {
   const handleRefreshData = () => {
     if (organization?.id) {
       setIsLoading(true);
+      setLoadError(null);
       Promise.all([
         organizationService.getBillingSettings(organization.id),
         organizationService.getOrganizationInvoices(
@@ -79,9 +85,12 @@ const BillingSettings: React.FC = () => {
         setInvoices(invoiceResponse.invoices);
         setTotalInvoiceCount(invoiceResponse.total_count);
         setIsLoading(false);
+        toast.success("Billing data refreshed successfully");
       }).catch(error => {
         console.error('Error refreshing data:', error);
+        setLoadError("Failed to refresh billing data");
         setIsLoading(false);
+        toast.error("Failed to refresh billing information");
       });
     }
   };
@@ -90,6 +99,21 @@ const BillingSettings: React.FC = () => {
     <div className="container mx-auto py-6 space-y-6">
       <h1 className="text-3xl font-bold">Billing Settings</h1>
       
+      {loadError && (
+        <Alert className="bg-red-50 text-red-800 border-red-200">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{loadError}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Billing information note */}
+      <Alert className="bg-blue-50 border-blue-200">
+        <Info className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-700">
+          Manage your payment information and view your billing history below. Payment methods added here will be used for future subscription payments.
+        </AlertDescription>
+      </Alert>
+
       {/* Pending Invoice Notifications */}
       {pendingInvoices.length > 0 && (
         <Alert className="bg-yellow-50 text-yellow-800 border-yellow-300">
@@ -129,7 +153,10 @@ const BillingSettings: React.FC = () => {
       />
       
       {/* Customer Portal Section */}
-      <CustomerPortalSection subscriptionActive={!!hasPaidSubscription} />
+      <CustomerPortalSection 
+        subscriptionActive={!!hasPaidSubscription}
+        organizationId={organization?.id || null}
+      />
     </div>
   );
 };

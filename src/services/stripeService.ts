@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 /**
  * Stripe integration service
@@ -74,14 +73,21 @@ export const stripeService = {
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       
-      if (error) throw new Error(`Error creating portal session: ${error.message}`);
+      if (error) {
+        // Special handling for missing Stripe API key
+        if (error.message?.includes("STRIPE_SECRET_KEY is not set")) {
+          console.error("Stripe secret key is not configured");
+          throw new Error("Payment provider not properly configured");
+        }
+        throw new Error(`Error creating portal session: ${error.message}`);
+      }
+      
       if (!data?.url) throw new Error("No portal URL returned");
       
       return data.url;
     } catch (error) {
       console.error("Error creating customer portal session:", error);
-      toast.error("Gagal memuat portal pelanggan. Silakan coba lagi.");
-      return null;
+      throw error;
     }
   },
   

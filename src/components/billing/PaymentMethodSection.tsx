@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -7,13 +7,15 @@ import {
   Edit2, 
   PlusCircle, 
   Check, 
-  ExternalLink 
+  ExternalLink,
+  AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { BillingSettings } from "@/types/organization";
 import { PaymentMethodDialog } from "./PaymentMethodDialog";
 import { stripeService } from "@/services/stripeService";
 import { midtransService } from "@/services/midtransService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PaymentMethodSectionProps {
   billingSettings: BillingSettings | null;
@@ -28,8 +30,9 @@ export function PaymentMethodSection({
   onUpdate,
   hasPaidSubscription
 }: PaymentMethodSectionProps) {
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [isRedirecting, setIsRedirecting] = React.useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showStripeError, setShowStripeError] = useState(false);
 
   const hasPaymentMethod = billingSettings?.payment_method?.type === "card";
   const cardInfo = hasPaymentMethod ? billingSettings.payment_method : null;
@@ -37,6 +40,7 @@ export function PaymentMethodSection({
   const openCustomerPortal = async () => {
     try {
       setIsRedirecting(true);
+      setShowStripeError(false);
       const portalUrl = await stripeService.createPortalSession();
       if (portalUrl) {
         window.location.href = portalUrl;
@@ -45,9 +49,14 @@ export function PaymentMethodSection({
       }
     } catch (error) {
       console.error("Error redirecting to customer portal:", error);
-      toast.error("Failed to open customer portal. Please try again.");
+      toast.error("Failed to open customer portal. Please try again later.");
+      setShowStripeError(true);
       setIsRedirecting(false);
     }
+  };
+
+  const handleAddPaymentMethod = () => {
+    setIsDialogOpen(true);
   };
 
   const renderCardInfo = () => {
@@ -99,7 +108,7 @@ export function PaymentMethodSection({
           {!hasPaymentMethod ? (
             <Button 
               size="sm" 
-              onClick={() => setIsDialogOpen(true)}
+              onClick={handleAddPaymentMethod}
             >
               <PlusCircle className="h-4 w-4 mr-2" /> Add Payment Method
             </Button>
@@ -107,13 +116,22 @@ export function PaymentMethodSection({
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => setIsDialogOpen(true)}
+              onClick={handleAddPaymentMethod}
             >
               <Edit2 className="h-4 w-4 mr-2" /> Edit
             </Button>
           )}
         </div>
       </div>
+
+      {showStripeError && (
+        <Alert className="mb-4 bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-700">
+            Stripe payment services are currently unavailable. You can still add payment details for record-keeping purposes.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {hasPaymentMethod ? (
         <div className="bg-gray-50 rounded-lg p-4 border">
@@ -149,7 +167,7 @@ export function PaymentMethodSection({
           <p className="text-sm text-gray-500 mb-4">
             Add a payment method to manage your subscriptions and invoices.
           </p>
-          <Button onClick={() => setIsDialogOpen(true)}>
+          <Button onClick={handleAddPaymentMethod}>
             <PlusCircle className="h-4 w-4 mr-2" /> Add Payment Method
           </Button>
         </div>
@@ -162,6 +180,7 @@ export function PaymentMethodSection({
           currentPaymentMethod={billingSettings?.payment_method}
           onUpdate={onUpdate}
           organizationId={organizationId}
+          stripeUnavailable={showStripeError}
         />
       )}
     </Card>

@@ -11,10 +11,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, CreditCard } from "lucide-react";
+import { Loader2, CreditCard, Info } from "lucide-react";
 import { toast } from "sonner";
 import { stripeService } from "@/services/stripeService";
 import { BillingPaymentMethod } from "@/types/organization";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { organizationService } from "@/services/organizationService";
 
 interface PaymentMethodDialogProps {
   open: boolean;
@@ -22,6 +24,7 @@ interface PaymentMethodDialogProps {
   currentPaymentMethod: BillingPaymentMethod | null | undefined;
   onUpdate: () => void;
   organizationId: string | null;
+  stripeUnavailable?: boolean;
 }
 
 export function PaymentMethodDialog({
@@ -29,7 +32,8 @@ export function PaymentMethodDialog({
   onOpenChange,
   currentPaymentMethod,
   onUpdate,
-  organizationId
+  organizationId,
+  stripeUnavailable = false
 }: PaymentMethodDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -148,14 +152,51 @@ export function PaymentMethodDialog({
     try {
       setIsSubmitting(true);
 
-      // In a real implementation, we would use Stripe Elements or similar
-      // For demo purposes, we'll redirect to the Stripe portal
-      const portalUrl = await stripeService.createPortalSession();
-      if (portalUrl) {
-        toast.success("Redirecting to payment management portal");
-        window.location.href = portalUrl;
-      } else {
-        throw new Error("Failed to create portal session");
+      if (!stripeUnavailable) {
+        // Try Stripe portal first if available
+        try {
+          const portalUrl = await stripeService.createPortalSession();
+          if (portalUrl) {
+            toast.success("Redirecting to payment management portal");
+            window.location.href = portalUrl;
+            return;
+          }
+        } catch (stripeError) {
+          console.error("Error accessing Stripe portal:", stripeError);
+          // Fall back to local storage if Stripe fails
+        }
+      }
+
+      // Local storage of card information if Stripe is not available
+      // Extract data from the form
+      const [month, year] = formData.expiryDate.split("/");
+      const cardNumber = formData.cardNumber.replace(/\s/g, "");
+      
+      // Create payment method object
+      const paymentMethod: BillingPaymentMethod = {
+        type: "card",
+        brand: detectCardType(cardNumber),
+        last4: cardNumber.slice(-4),
+        exp_month: parseInt(month, 10),
+        exp_year: 2000 + parseInt(year, 10), // Convert YY to full year
+        name: formData.cardHolder
+      };
+
+      // Save to database using organizationService
+      if (organizationId) {
+        const billingSettings = {
+          organization_id: organizationId,
+          payment_method: paymentMethod
+        };
+        
+        const result = await organizationService.saveBillingSettings(billingSettings);
+        if (result) {
+          toast.success("Payment method updated successfully");
+          onUpdate();
+          onOpenChange(false);
+        } else {
+          throw new Error("Failed to save payment method");
+        }
       }
     } catch (error) {
       console.error("Error updating payment method:", error);
@@ -163,6 +204,26 @@ export function PaymentMethodDialog({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Function to detect card type based on number
+  const detectCardType = (cardNumber: string): string => {
+    // Basic regex patterns for card types
+    const patterns = {
+      visa: /^4/,
+      mastercard: /^(5[1-5]|2[2-7])/,
+      amex: /^3[47]/,
+      discover: /^6(?:011|5)/,
+      jcb: /^(?:2131|1800|35)/,
+    };
+
+    for (const [cardType, pattern] of Object.entries(patterns)) {
+      if (pattern.test(cardNumber)) {
+        return cardType;
+      }
+    }
+    
+    return "unknown";
   };
 
   return (
@@ -176,6 +237,15 @@ export function PaymentMethodDialog({
             Enter your card details below to {currentPaymentMethod ? "update your" : "add a new"} payment method.
           </DialogDescription>
         </DialogHeader>
+
+        {stripeUnavailable && (
+          <Alert className="bg-blue-50 border-blue-200">
+            <Info className="h-4 w-4 text-blue-500" />
+            <AlertDescription className="text-blue-700">
+              Your card details will be stored for record-keeping purposes only.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">

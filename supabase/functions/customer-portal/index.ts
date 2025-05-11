@@ -25,14 +25,30 @@ serve(async (req) => {
 
     // Get environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      logStep("STRIPE_SECRET_KEY missing");
+      return new Response(
+        JSON.stringify({ 
+          error: "STRIPE_SECRET_KEY is not set", 
+          message: "Payment provider not properly configured"
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500 
+        }
+      );
+    }
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-      throw new Error("Missing Supabase environment variables");
+      logStep("Missing Supabase environment variables");
+      return new Response(
+        JSON.stringify({ error: "Supabase configuration missing" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
     }
 
     // Create Supabase clients
@@ -41,14 +57,31 @@ serve(async (req) => {
       auth: { persistSession: false }
     });
 
+    // Authenticate user
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "No authorization header provided" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
     
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    if (!userData?.user) throw new Error("No authenticated user found");
+    if (userError) {
+      return new Response(
+        JSON.stringify({ error: `Authentication error: ${userError.message}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+    
+    if (!userData?.user) {
+      return new Response(
+        JSON.stringify({ error: "No authenticated user found" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
     
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
@@ -61,7 +94,10 @@ serve(async (req) => {
       .maybeSingle();
       
     if (!profileData?.organization_id) {
-      throw new Error("User has no associated organization");
+      return new Response(
+        JSON.stringify({ error: "User has no associated organization" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
     
     // Get organization data
@@ -79,31 +115,74 @@ serve(async (req) => {
       logStep("Found existing Stripe customer ID", { customerId });
     } else {
       // Check if there's a customer with this email
-      const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      
-      if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
+      try {
+        const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+        const customers = await stripe.customers.list({ email: user.email, limit: 1 });
         
-        // Update the organization with the customer ID
-        await supabaseAdmin
-          .from('organizations')
-          .update({ stripe_customer_id: customerId })
-          .eq('id', profileData.organization_id);
+        if (customers.data.length > 0) {
+          customerId = customers.data[0].id;
           
-        logStep("Found and saved existing Stripe customer by email", { customerId });
-      } else {
-        throw new Error("No Stripe customer found for this user or organization");
+          // Update the organization with the customer ID
+          await supabaseAdmin
+            .from('organizations')
+            .update({ stripe_customer_id: customerId })
+            .eq('id', profileData.organization_id);
+            
+          logStep("Found and saved existing Stripe customer by email", { customerId });
+        } else {
+          // Create a new customer
+          try {
+            const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+            const newCustomer = await stripe.customers.create({
+              email: user.email,
+              name: user.user_metadata?.full_name || user.email,
+              metadata: {
+                organization_id: profileData.organization_id
+              }
+            });
+            
+            customerId = newCustomer.id;
+            
+            // Update the organization with the customer ID
+            await supabaseAdmin
+              .from('organizations')
+              .update({ stripe_customer_id: customerId })
+              .eq('id', profileData.organization_id);
+              
+            logStep("Created and saved new Stripe customer", { customerId });
+          } catch (stripeError) {
+            logStep("Error creating Stripe customer", { error: stripeError.message });
+            throw new Error(`Failed to create Stripe customer: ${stripeError.message}`);
+          }
+        }
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Failed to find or create Stripe customer",
+            details: error.message
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
       }
+    }
+
+    if (!customerId) {
+      return new Response(
+        JSON.stringify({ error: "No Stripe customer found or created for this user or organization" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     // Create customer portal session
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
+    // Specific return URL to the billing settings page
+    const returnUrl = `${origin}/settings/billing`;
+    
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/settings/subscription`,
+      return_url: returnUrl,
     });
     
     logStep("Customer portal session created", { 

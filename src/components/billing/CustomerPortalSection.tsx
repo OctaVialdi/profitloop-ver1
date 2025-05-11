@@ -2,21 +2,32 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { stripeService } from "@/services/stripeService";
-import { hasPaidSubscription } from "@/utils/subscription";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 
 interface CustomerPortalSectionProps {
   subscriptionActive: boolean;
+  organizationId: string | null;
 }
 
-export function CustomerPortalSection({ subscriptionActive }: CustomerPortalSectionProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export function CustomerPortalSection({ subscriptionActive, organizationId }: CustomerPortalSectionProps) {
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [stripeError, setStripeError] = useState(false);
+  const navigate = useNavigate();
 
-  const handleOpenPortal = async () => {
+  const openCustomerPortal = async () => {
+    if (!organizationId) {
+      toast.error("Organization ID is required");
+      return;
+    }
+
     try {
-      setIsLoading(true);
+      setIsRedirecting(true);
+      setStripeError(false);
+
       const portalUrl = await stripeService.createPortalSession();
       if (portalUrl) {
         window.location.href = portalUrl;
@@ -24,38 +35,63 @@ export function CustomerPortalSection({ subscriptionActive }: CustomerPortalSect
         throw new Error("Failed to create portal session");
       }
     } catch (error) {
-      console.error("Error opening customer portal:", error);
-      toast.error("Failed to open customer portal. Please try again.");
-      setIsLoading(false);
+      console.error("Error accessing customer portal:", error);
+      toast.error("Failed to access customer portal. You can still manage your subscription from the Plans page.");
+      setStripeError(true);
+      setIsRedirecting(false);
     }
   };
 
-  if (!subscriptionActive) {
-    return null;
-  }
+  const goToSubscriptionPage = () => {
+    navigate("/settings/subscription");
+  };
 
   return (
     <Card className="p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-        <div>
-          <h2 className="text-xl font-bold mb-2">Customer Portal</h2>
-          <p className="text-gray-500 max-w-lg mb-4 md:mb-0">
-            Access the customer portal to manage your subscription, update payment methods, and view billing history.
-          </p>
-        </div>
-        <Button onClick={handleOpenPortal} disabled={isLoading}>
-          {isLoading ? (
-            <>
+      <h2 className="text-xl font-bold mb-6">Manage Subscription</h2>
+
+      {stripeError && (
+        <Alert className="mb-6 bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-700">
+            Payment portal access is currently unavailable. You can still manage your subscription from the Plans page.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="text-gray-600 mb-6">
+        <p className="mb-2">
+          {subscriptionActive
+            ? "Manage your subscription settings, update your payment method, or view your billing history."
+            : "You don't have an active subscription. Visit the Plans page to select a subscription plan."}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-4">
+        {subscriptionActive ? (
+          <Button
+            variant="default"
+            onClick={openCustomerPortal}
+            disabled={isRedirecting}
+          >
+            {isRedirecting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Opening...
-            </>
-          ) : (
-            <>
+            ) : (
               <ExternalLink className="mr-2 h-4 w-4" />
-              Open Customer Portal
-            </>
-          )}
-        </Button>
+            )}
+            {isRedirecting ? "Opening Portal..." : "Customer Portal"}
+          </Button>
+        ) : (
+          <Button onClick={goToSubscriptionPage}>
+            View Plans <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        )}
+        
+        {stripeError && subscriptionActive && (
+          <Button variant="outline" onClick={goToSubscriptionPage}>
+            View Plans <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        )}
       </div>
     </Card>
   );

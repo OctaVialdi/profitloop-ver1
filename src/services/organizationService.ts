@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Organization, SubscriptionPlan, BillingSettings, Invoice, InvoiceHistoryResponse, BillingPaymentMethod } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
@@ -49,6 +50,7 @@ class OrganizationService {
         trial_expired: orgData.trial_expired !== null ? orgData.trial_expired : false,
         subscription_status: subscriptionStatus,
         trial_start_date: orgData.trial_start_date || null,
+        trial_end_date: orgData.trial_end_date || null,
         grace_period_end: orgData.grace_period_end || null,
         stripe_customer_id: orgData.stripe_customer_id || null,
         billing_email: orgData.billing_email || null
@@ -124,6 +126,8 @@ class OrganizationService {
   // Save or update billing settings
   async saveBillingSettings(settings: BillingSettings): Promise<BillingSettings | null> {
     try {
+      console.log("Saving billing settings:", settings);
+      
       // Check if settings exist for this organization
       const { data: existingSettings } = await supabase
         .from('billing_settings')
@@ -133,28 +137,32 @@ class OrganizationService {
         
       let result;
       
+      // Make sure payment_method is properly serialized
+      const paymentMethodJson = settings.payment_method ? JSON.stringify(settings.payment_method) : null;
+      console.log("Payment method for storage:", paymentMethodJson);
+      
       const dataToUpsert = {
-        payment_method: settings.payment_method ? JSON.stringify(settings.payment_method) : null,
+        payment_method: paymentMethodJson,
         invoice_address: settings.invoice_address ? JSON.stringify(settings.invoice_address) : null,
         last_payment_date: settings.last_payment_date,
         organization_id: settings.organization_id
       };
       
       if (existingSettings) {
+        console.log("Updating existing billing settings");
         // Update existing settings
         result = await supabase
           .from('billing_settings')
           .update(dataToUpsert)
           .eq('id', existingSettings.id)
-          .select()
-          .single();
+          .select();
       } else {
+        console.log("Creating new billing settings");
         // Create new settings
         result = await supabase
           .from('billing_settings')
           .insert(dataToUpsert)
-          .select()
-          .single();
+          .select();
       }
       
       if (result.error) {
@@ -162,8 +170,13 @@ class OrganizationService {
         throw result.error;
       }
       
+      if (!result.data || result.data.length === 0) {
+        console.error("No data returned from saving billing settings");
+        return null;
+      }
+      
       // Parse back the JSON fields
-      const resultData = result.data;
+      const resultData = result.data[0];
       const paymentMethod = parseJsonIfString<BillingPaymentMethod | null>(resultData.payment_method, null);
       const invoiceAddress = parseJsonIfString<any>(resultData.invoice_address, null);
       
