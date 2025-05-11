@@ -36,7 +36,6 @@ export const settingsRoutes = (
     <Route path="profile" element={<ProfileSettings />} />
     <Route path="plan" element={<PlanSettings />} />
     <Route path="billing" element={<BillingSettings />} />
-    <Route path="admin" element={<AdminPage />} />
     {/* Direct to subscription page by default */}
     <Route path="" element={<Navigate to="/settings/subscription" replace />} />
   </Route>
