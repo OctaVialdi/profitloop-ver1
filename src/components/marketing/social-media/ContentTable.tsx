@@ -259,7 +259,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8" 
-                        onClick={() => openBriefDialog(item.id, item.brief)}
+                        onClick={() => openBriefDialog(item.id, item.brief, "edit")}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -268,7 +268,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                     <Button
                       variant="ghost"
                       className="w-full justify-center"
-                      onClick={() => openBriefDialog(item.id, "")}
+                      onClick={() => openBriefDialog(item.id, "", "edit")}
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       Click to add brief
