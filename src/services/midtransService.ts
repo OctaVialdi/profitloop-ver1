@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -130,12 +131,13 @@ export const midtransService = {
         throw new Error(`Error verifying payment: ${error.message}`);
       }
       
-      // Parse the response data
+      // Parse the response data with proper null checks
       return {
         success: data?.status === "success",
         status: data?.status || 'pending',
         subscription_tier: data?.subscription_plan && 
           typeof data.subscription_plan === 'object' && 
+          data.subscription_plan !== null && 
           'name' in data.subscription_plan 
             ? data.subscription_plan.name 
             : null
