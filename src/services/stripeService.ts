@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -211,6 +210,7 @@ export const stripeService = {
       await supabase.from('subscription_audit_logs').insert({
         action: 'subscription_cancelled',
         organization_id: organizationId,
+        user_id: session.data.session?.user.id,
         data: {
           reason,
           feedback: feedback || null,
@@ -249,6 +249,7 @@ export const stripeService = {
       await supabase.from('subscription_audit_logs').insert({
         action: 'discount_applied',
         organization_id: organizationId,
+        user_id: session.data.session?.user.id,
         data: {
           discount_percent: discountPercent,
           duration_months: durationMonths,

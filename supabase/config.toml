@@ -133,3 +133,7 @@ enabled = false
 [functions]
   [functions.create-profile-if-not-exists]
   verify_jwt = true
+  [functions.cancel-subscription]
+  verify_jwt = true
+  [functions.apply-discount]
+  verify_jwt = true
