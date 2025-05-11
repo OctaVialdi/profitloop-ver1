@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      billing_settings: {
+        Row: {
+          created_at: string
+          id: string
+          invoice_address: Json | null
+          last_payment_date: string | null
+          organization_id: string
+          payment_method: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invoice_address?: Json | null
+          last_payment_date?: string | null
+          organization_id: string
+          payment_method?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invoice_address?: Json | null
+          last_payment_date?: string | null
+          organization_id?: string
+          payment_method?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_applications: {
         Row: {
           address: string | null
@@ -2338,6 +2376,51 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_settings: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          plan_id: string | null
+          renewal_date: string | null
+          status: Database["public"]["Enums"]["subscription_status_enum"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          plan_id?: string | null
+          renewal_date?: string | null
+          status?: Database["public"]["Enums"]["subscription_status_enum"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          plan_id?: string | null
+          renewal_date?: string | null
+          status?: Database["public"]["Enums"]["subscription_status_enum"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_settings_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -2651,7 +2734,9 @@ export type Database = {
       }
     }
     Enums: {
+      invoice_status_enum: "paid" | "unpaid" | "pending"
       reprimand_type: "Verbal" | "Written" | "PIP" | "Suspension"
+      subscription_status_enum: "trial" | "active" | "expired" | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2767,7 +2852,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      invoice_status_enum: ["paid", "unpaid", "pending"],
       reprimand_type: ["Verbal", "Written", "PIP", "Suspension"],
+      subscription_status_enum: ["trial", "active", "expired", "canceled"],
     },
   },
 } as const

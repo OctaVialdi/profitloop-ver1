@@ -1,3 +1,4 @@
+
 export interface UserProfile {
   id: string;
   organization_id?: string;
@@ -77,3 +78,38 @@ export type OrganizationData = {
   subscriptionPlan?: SubscriptionPlan | null;  // Added to store current plan details
   refreshData: () => Promise<void>;
 };
+
+// New type for billing settings
+export interface BillingSettings {
+  id: string;
+  organization_id: string;
+  payment_method?: string;
+  invoice_address?: Record<string, any> | null;
+  last_payment_date?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// New type for invoices
+export interface Invoice {
+  id: string;
+  organization_id: string;
+  amount: number;
+  due_date: string;
+  status: 'paid' | 'unpaid' | 'pending';
+  invoice_pdf_url?: string;
+  created_at: string;
+  updated_at: string;
+  invoice_number: string;
+  currency: string;
+  tax_amount: number;
+  total_amount: number;
+  subscription_plan_id?: string;
+  payment_details?: Record<string, any> | null;
+}
+
+// New interface for invoice history response
+export interface InvoiceHistoryResponse {
+  invoices: Invoice[];
+  total_count: number;
+}

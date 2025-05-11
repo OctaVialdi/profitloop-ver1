@@ -1,6 +1,7 @@
 
+
 import { supabase } from "@/integrations/supabase/client";
-import { Organization, SubscriptionPlan } from "@/types/organization";
+import { Organization, SubscriptionPlan, BillingSettings, Invoice } from "@/types/organization";
 import { OrganizationFormData } from "@/types/onboarding";
 
 export async function getOrganization(organizationId: string): Promise<Organization | null> {
@@ -89,6 +90,139 @@ export async function getSubscriptionPlan(planId: string): Promise<SubscriptionP
     } as SubscriptionPlan;
   } catch (error) {
     console.error("Error fetching subscription plan:", error);
+    return null;
+  }
+}
+
+// New function to get organization's billing settings
+export async function getBillingSettings(organizationId: string): Promise<BillingSettings | null> {
+  try {
+    const { data, error } = await supabase
+      .from('billing_settings')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching billing settings:", error);
+      throw error;
+    }
+
+    return data as BillingSettings;
+  } catch (error) {
+    console.error("Error in getBillingSettings:", error);
+    return null;
+  }
+}
+
+// Save or update billing settings
+export async function saveBillingSettings(settings: BillingSettings): Promise<BillingSettings | null> {
+  try {
+    // Check if settings exist for this organization
+    const { data: existingSettings } = await supabase
+      .from('billing_settings')
+      .select('id')
+      .eq('organization_id', settings.organization_id)
+      .maybeSingle();
+      
+    let result;
+    
+    if (existingSettings) {
+      // Update existing settings
+      result = await supabase
+        .from('billing_settings')
+        .update({
+          payment_method: settings.payment_method,
+          invoice_address: settings.invoice_address,
+          last_payment_date: settings.last_payment_date
+        })
+        .eq('id', existingSettings.id)
+        .select()
+        .single();
+    } else {
+      // Create new settings
+      result = await supabase
+        .from('billing_settings')
+        .insert({
+          organization_id: settings.organization_id,
+          payment_method: settings.payment_method,
+          invoice_address: settings.invoice_address,
+          last_payment_date: settings.last_payment_date
+        })
+        .select()
+        .single();
+    }
+    
+    if (result.error) {
+      console.error("Error saving billing settings:", result.error);
+      throw result.error;
+    }
+    
+    return result.data as BillingSettings;
+  } catch (error) {
+    console.error("Error in saveBillingSettings:", error);
+    return null;
+  }
+}
+
+// Get invoices for an organization with pagination
+export async function getOrganizationInvoices(
+  organizationId: string,
+  page: number = 1,
+  limit: number = 10,
+  status?: 'paid' | 'unpaid' | 'pending'
+): Promise<InvoiceHistoryResponse> {
+  try {
+    let query = supabase
+      .from('invoices')
+      .select('*', { count: 'exact' })
+      .eq('organization_id', organizationId)
+      .order('due_date', { ascending: false });
+      
+    // Add status filter if specified
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    // Add pagination
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+    
+    const { data, error, count } = await query;
+    
+    if (error) {
+      console.error("Error fetching invoices:", error);
+      throw error;
+    }
+    
+    return {
+      invoices: data as Invoice[],
+      total_count: count || 0
+    };
+  } catch (error) {
+    console.error("Error in getOrganizationInvoices:", error);
+    return { invoices: [], total_count: 0 };
+  }
+}
+
+// Get a single invoice by ID
+export async function getInvoiceById(invoiceId: string): Promise<Invoice | null> {
+  try {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('id', invoiceId)
+      .maybeSingle();
+      
+    if (error) {
+      console.error("Error fetching invoice:", error);
+      throw error;
+    }
+    
+    return data as Invoice;
+  } catch (error) {
+    console.error("Error in getInvoiceById:", error);
     return null;
   }
 }
