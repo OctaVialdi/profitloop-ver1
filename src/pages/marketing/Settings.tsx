@@ -1,16 +1,25 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEmployees, LegacyEmployee, convertToLegacyFormat } from "@/hooks/useEmployees";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 // Define the ContentType interface
 interface ContentType {
@@ -20,9 +29,13 @@ interface ContentType {
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { employees, isLoading } = useEmployees();
+  const { employees, isLoading, deleteEmployee } = useEmployees();
   const [filteredEmployees, setFilteredEmployees] = useState<LegacyEmployee[]>([]);
   const [activeTab, setActiveTab] = useState("team-members");
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [currentUserOrg, setCurrentUserOrg] = useState<string | null>(null);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // State for content types management
   const [contentTypes, setContentTypes] = useState<ContentType[]>([
@@ -41,8 +54,24 @@ const Settings = () => {
         .filter(employee => employee.organization === "Digital Marketing");
       
       setFilteredEmployees(marketingEmployees);
+      
+      // Set current user's role and organization based on some logic
+      // For demo purposes, we'll check if there's a "Manager" in Digital Marketing
+      const currentUserInfo = employees
+        .map(convertToLegacyFormat)
+        .find(emp => emp.jobLevel === "Manager" && emp.organization === "Digital Marketing");
+      
+      if (currentUserInfo) {
+        setCurrentUserRole(currentUserInfo.jobLevel || null);
+        setCurrentUserOrg(currentUserInfo.organization || null);
+      }
     }
   }, [employees]);
+
+  // Check if current user is a Manager in Digital Marketing
+  const isManager = useMemo(() => {
+    return currentUserRole === "Manager" && currentUserOrg === "Digital Marketing";
+  }, [currentUserRole, currentUserOrg]);
 
   // Function to add a new content type
   const handleAddContentType = () => {
@@ -91,6 +120,55 @@ const Settings = () => {
     navigate(`/my-info/personal?id=${employee.id}`);
   };
 
+  // Handle checkbox selection
+  const handleSelectEmployee = (employeeId: string) => {
+    setSelectedEmployees(prev => {
+      if (prev.includes(employeeId)) {
+        return prev.filter(id => id !== employeeId);
+      } else {
+        return [...prev, employeeId];
+      }
+    });
+  };
+
+  // Handle select all employees
+  const handleSelectAll = () => {
+    if (selectedEmployees.length === filteredEmployees.length) {
+      setSelectedEmployees([]);
+    } else {
+      setSelectedEmployees(filteredEmployees.map(employee => employee.id));
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    try {
+      // Close the dialog first
+      setIsDeleteDialogOpen(false);
+      
+      let successCount = 0;
+      
+      // Delete each selected employee
+      for (const employeeId of selectedEmployees) {
+        try {
+          await deleteEmployee(employeeId);
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to delete employee ${employeeId}:`, error);
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`Successfully deleted ${successCount} team member${successCount > 1 ? 's' : ''}`);
+        // Clear selection
+        setSelectedEmployees([]);
+      }
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      toast.error("Failed to delete some team members");
+    }
+  };
+
   return (
     <Card className="border-0 shadow-none">
       <CardHeader className="pb-2">
@@ -105,7 +183,21 @@ const Settings = () => {
           
           <TabsContent value="team-members">
             <div>
-              <h2 className="text-lg font-medium mb-4">Marketing Team Members</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium">Marketing Team Members</h2>
+                {isManager && selectedEmployees.length > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="flex items-center"
+                  >
+                    <Trash className="h-4 w-4 mr-2" />
+                    Delete Selected ({selectedEmployees.length})
+                  </Button>
+                )}
+              </div>
+              
               {isLoading ? (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -116,9 +208,17 @@ const Settings = () => {
                     <Table>
                       <TableHeader className="sticky top-0 z-10 bg-white">
                         <TableRow>
-                          <TableHead className="w-10">
-                            <Checkbox />
-                          </TableHead>
+                          {isManager && (
+                            <TableHead className="w-10">
+                              <Checkbox 
+                                checked={
+                                  filteredEmployees.length > 0 && 
+                                  selectedEmployees.length === filteredEmployees.length
+                                }
+                                onCheckedChange={handleSelectAll}
+                              />
+                            </TableHead>
+                          )}
                           <TableHead className="w-[200px]">Employee name</TableHead>
                           <TableHead className="w-[120px]">Employee ID</TableHead>
                           <TableHead className="w-[150px]">Organization</TableHead>
@@ -131,9 +231,14 @@ const Settings = () => {
                       <TableBody>
                         {filteredEmployees.map((employee) => (
                           <TableRow key={employee.id} className="border-t hover:bg-muted/30">
-                            <TableCell>
-                              <Checkbox />
-                            </TableCell>
+                            {isManager && (
+                              <TableCell>
+                                <Checkbox 
+                                  checked={selectedEmployees.includes(employee.id)}
+                                  onCheckedChange={() => handleSelectEmployee(employee.id)}
+                                />
+                              </TableCell>
+                            )}
                             <TableCell>
                               <div 
                                 className="flex items-center gap-2 cursor-pointer"
@@ -165,7 +270,7 @@ const Settings = () => {
                         ))}
                         {filteredEmployees.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={8} className="text-center py-8">
+                            <TableCell colSpan={isManager ? 8 : 7} className="text-center py-8">
                               No Digital Marketing employees found
                             </TableCell>
                           </TableRow>
@@ -243,6 +348,25 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      {/* Confirmation Dialog for Delete */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Team Members</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedEmployees.length} selected team member{selectedEmployees.length > 1 ? 's' : ''}?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 text-white hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
