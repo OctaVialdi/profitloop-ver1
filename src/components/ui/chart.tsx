@@ -124,6 +124,10 @@ interface ChartTooltipContentProps {
     name: string;
     dataKey: string;
     payload: any;
+    // Add the color property to fix the TypeScript error
+    color?: string;
+    stroke?: string;
+    fill?: string;
   }>;
   label?: string;
 }
@@ -140,7 +144,8 @@ export const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({ active
         <div key={`item-${index}`} className="flex items-center gap-2 text-sm">
           <div 
             className="w-3 h-3 rounded-full" 
-            style={{ backgroundColor: entry.color }}
+            // Use stroke, fill or color, whichever is available
+            style={{ backgroundColor: entry.color || entry.stroke || entry.fill || '#cccccc' }}
           />
           <span className="font-medium">{entry.name}:</span>
           <span>{typeof entry.value === 'number' ? 
