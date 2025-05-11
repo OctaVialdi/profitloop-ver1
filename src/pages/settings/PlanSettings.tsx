@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +11,11 @@ import { TrialProgressIndicator } from "@/components/subscription/TrialProgressI
 import { TrialExpiredModal } from "@/components/subscription/TrialExpiredModal";
 import { PricingDisplay } from "@/components/subscription/PricingDisplay"; 
 import { CancelPlanDialog } from "@/components/subscription/CancelPlanDialog";
-import { MidtransPaymentModal } from "@/components/subscription/MidtransPaymentModal";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionPlan } from "@/types/organization";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { toast } from "sonner";
+import { midtransService } from "@/services/midtransService";
 
 const PlanSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -42,11 +41,6 @@ const PlanSettings: React.FC = () => {
   // Add state for cancellation success message
   const [showCancellationSuccess, setShowCancellationSuccess] = useState(false);
   
-  // Add states for Midtrans payment
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentUrl, setPaymentUrl] = useState("");
-  const [selectedPlanName, setSelectedPlanName] = useState("");
-
   // Check if trial is expired without subscription
   useEffect(() => {
     if (organization?.trial_expired && !hasPaidSubscription) {
@@ -189,22 +183,54 @@ const PlanSettings: React.FC = () => {
         throw new Error("Selected plan not found");
       }
       
-      // Save plan name for the payment modal
-      setSelectedPlanName(selectedPlan.name);
+      // Use Midtrans checkout
+      const checkoutData = await midtransService.createCheckout(planId);
       
-      // If the plan has a direct payment URL, use it for Midtrans
-      if (selectedPlan.direct_payment_url) {
-        setPaymentUrl(selectedPlan.direct_payment_url);
-        setShowPaymentModal(true);
-      } else {
-        // Fallback to Stripe or other payment methods
-        toast.error("Direct payment URL not configured for this plan. Please contact support.");
+      if (!checkoutData) {
+        throw new Error("Failed to create payment session");
       }
+      
+      // Try to open the Snap modal seamlessly
+      const snapOpened = await midtransService.openSnapModal(
+        checkoutData.token,
+        checkoutData.client_key,
+        // On Success
+        async () => {
+          await refreshData();
+          toast.success(`Berhasil berlangganan paket ${selectedPlan.name}!`);
+        },
+        // On Error
+        () => {
+          toast.error("Pembayaran gagal. Silakan coba lagi.");
+        },
+        // On Close
+        () => {
+          setSubmitting(false);
+          setSelectedPlanId(null);
+        },
+        // On Pending
+        () => {
+          toast.info("Pembayaran sedang diproses. Status akan diperbarui segera.");
+          refreshData();
+        }
+      );
+      
+      // Fallback to redirect method if snap opening fails
+      if (!snapOpened && checkoutData.redirect_url) {
+        toast.info("Mengalihkan ke halaman pembayaran...");
+        midtransService.redirectToPayment(checkoutData.redirect_url);
+      }
+      
     } catch (error) {
       console.error("Error during plan selection:", error);
-      toast.error("Failed to process plan selection. Please try again.");
+      toast.error("Gagal memproses pemilihan paket. Silakan coba lagi.");
     } finally {
-      setSubmitting(false);
+      // setSubmitting to false only if we didn't open the Snap modal
+      // (because the onClose callback will handle it in that case)
+      if (!window.snap) {
+        setSubmitting(false);
+        setSelectedPlanId(null);
+      }
     }
   };
   
@@ -341,11 +367,6 @@ const PlanSettings: React.FC = () => {
       return plans[1].id;
     }
     return null;
-  };
-
-  const closePaymentModal = () => {
-    setShowPaymentModal(false);
-    setPaymentUrl("");
   };
 
   const recommendedPlanId = getRecommendedPlan();
@@ -595,14 +616,6 @@ const PlanSettings: React.FC = () => {
         planName={subscriptionPlan?.name || "Subscription"}
         isTrialActive={isTrialActive}
         daysLeftInTrial={daysLeftInTrial}
-      />
-      
-      {/* Midtrans Payment Modal */}
-      <MidtransPaymentModal
-        isOpen={showPaymentModal}
-        onClose={closePaymentModal}
-        redirectUrl={paymentUrl}
-        planName={selectedPlanName}
       />
     </div>
   );

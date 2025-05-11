@@ -104,8 +104,11 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={allowClose ? onClose : undefined}>
-      <DialogContent className="sm:max-w-[500px]" onInteractOutside={e => e.preventDefault()}>
-        {/* Add Close button if allowed */}
+      <DialogContent 
+        className="sm:max-w-[500px]" 
+        preventOutsideClose={!allowClose}
+        hideCloseButton={!allowClose}
+      >
         {allowClose && (
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
             <X className="h-4 w-4" />
