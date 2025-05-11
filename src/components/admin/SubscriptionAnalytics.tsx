@@ -1,267 +1,162 @@
-
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { useOrganization } from "@/hooks/useOrganization";
-import { AlertTriangle, Award, CheckCircle2, DollarSign, Users } from 'lucide-react';
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { Skeleton } from "@/components/ui/skeleton";
-import { format } from 'date-fns';
+import { BarChart, LineChart } from "@/components/ui/chart";
+import { useToast } from "@/components/ui/use-toast";
+import { AlertCircle, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { subscriptionAnalyticsService } from "@/services/subscription"; // Updated import path
 
 const SubscriptionAnalytics = () => {
-  const [loading, setLoading] = useState(true);
-  const [eventData, setEventData] = useState<Record<string, number>>({});
-  const [featureConversions, setFeatureConversions] = useState<{ feature: string; conversions: number }[]>([]);
-  const [trialMetrics, setTrialMetrics] = useState<{ totalTrials: number; totalConversions: number; conversionRate: string }>({
-    totalTrials: 0,
-    totalConversions: 0,
-    conversionRate: '0.00'
-  });
-  const { organization } = useOrganization();
+  const [eventCounts, setEventCounts] = useState<{ [key: string]: number } | null>(null);
+  const [featureConversions, setFeatureConversions] = useState<{ feature: string; conversions: number; }[] | null>(null);
+  const [trialMetrics, setTrialMetrics] = useState<{ totalTrials: number; totalConversions: number; conversionRate: string; } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      setLoading(true);
-      
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        // Track admin panel view
-        subscriptionAnalyticsService.trackAdminPanelView('analytics', organization?.id);
-        
-        // Fetch analytics data
-        const eventStats = await subscriptionAnalyticsService.getAnalyticsByEventType();
-        setEventData(eventStats);
-        
-        // Fetch feature conversion data
-        const featureData = await subscriptionAnalyticsService.getFeatureConversionAnalytics();
-        setFeatureConversions(featureData);
-        
+        // Fetch event counts
+        const eventCountsData = await subscriptionAnalyticsService.getAnalyticsByEventType();
+        setEventCounts(eventCountsData);
+
+        // Fetch feature conversion analytics
+        const featureConversionData = await subscriptionAnalyticsService.getFeatureConversionAnalytics();
+        setFeatureConversions(featureConversionData);
+
         // Fetch trial conversion metrics
-        const trialData = await subscriptionAnalyticsService.getTrialConversionMetrics();
-        setTrialMetrics(trialData);
+        const trialConversionMetrics = await subscriptionAnalyticsService.getTrialConversionMetrics();
+        setTrialMetrics(trialConversionMetrics);
       } catch (error) {
         console.error("Error fetching analytics data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load analytics data. Please try again."
+        });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-    
-    fetchAnalytics();
-  }, [organization?.id]);
-  
-  // Transform data for charts
-  const eventChartData = Object.entries(eventData).map(([name, value]) => ({
-    name,
-    count: value
-  })).sort((a, b) => b.count - a.count);
-  
-  const featureChartData = featureConversions.slice(0, 5); // Top 5 features
-  
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
-  
-  const conversionRateData = [
-    { name: 'Converted', value: parseFloat(trialMetrics.conversionRate) },
-    { name: 'Not Converted', value: 100 - parseFloat(trialMetrics.conversionRate) }
-  ];
+
+    fetchData();
+  }, [toast]);
+
+  // Prepare data for charts
+  const eventTypeLabels = eventCounts ? Object.keys(eventCounts) : [];
+  const eventTypeValues = eventCounts ? Object.values(eventCounts) : [];
+
+  const featureLabels = featureConversions ? featureConversions.map(item => item.feature) : [];
+  const featureValues = featureConversions ? featureConversions.map(item => item.conversions) : [];
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-4 md:grid-cols-2">
+      {/* Event Type Analytics */}
       <Card>
+        <CardHeader>
+          <CardTitle>Analitik Tipe Event</CardTitle>
+          <CardDescription>Jumlah setiap tipe event</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Info className="mr-2 h-4 w-4 animate-spin" />
+              Memuat data...
+            </div>
+          ) : eventCounts && Object.keys(eventCounts).length > 0 ? (
+            <BarChart
+              data={{
+                labels: eventTypeLabels,
+                datasets: [
+                  {
+                    label: "Jumlah Event",
+                    data: eventTypeValues,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                  },
+                ],
+              }}
+            />
+          ) : (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>Tidak ada data event yang tersedia.</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Feature Conversion Analytics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Analitik Konversi Fitur</CardTitle>
+          <CardDescription>Jumlah konversi per fitur</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Info className="mr-2 h-4 w-4 animate-spin" />
+              Memuat data...
+            </div>
+          ) : featureConversions && featureConversions.length > 0 ? (
+            <LineChart
+              data={{
+                labels: featureLabels,
+                datasets: [
+                  {
+                    label: "Konversi",
+                    data: featureValues,
+                    fill: false,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                  },
+                ],
+              }}
+            />
+          ) : (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>Tidak ada data konversi fitur yang tersedia.</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Trial Conversion Metrics */}
+      <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle>Metrik Konversi Trial</CardTitle>
-          <CardDescription>Statistik konversi dari trial ke langganan berbayar</CardDescription>
+          <CardDescription>Jumlah total trial, konversi, dan tingkat konversi</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Info className="mr-2 h-4 w-4 animate-spin" />
+              Memuat data...
+            </div>
+          ) : trialMetrics ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
-              ))}
+              <div>
+                <div className="text-lg font-semibold">Total Trial</div>
+                <div className="text-2xl font-bold">{trialMetrics.totalTrials}</div>
+              </div>
+              <div>
+                <div className="text-lg font-semibold">Total Konversi</div>
+                <div className="text-2xl font-bold">{trialMetrics.totalConversions}</div>
+              </div>
+              <div>
+                <div className="text-lg font-semibold">Tingkat Konversi</div>
+                <div className="text-2xl font-bold">{trialMetrics.conversionRate}%</div>
+              </div>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-900 mb-1">Total Trial</p>
-                      <h3 className="text-2xl font-bold text-blue-700">{trialMetrics.totalTrials}</h3>
-                    </div>
-                    <Users className="h-10 w-10 text-blue-500" />
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-green-50 border-green-200">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-green-900 mb-1">Total Konversi</p>
-                      <h3 className="text-2xl font-bold text-green-700">{trialMetrics.totalConversions}</h3>
-                    </div>
-                    <CheckCircle2 className="h-10 w-10 text-green-500" />
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-amber-50 border-amber-200">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-amber-900 mb-1">Tingkat Konversi</p>
-                      <h3 className="text-2xl font-bold text-amber-700">{trialMetrics.conversionRate}%</h3>
-                    </div>
-                    <Award className="h-10 w-10 text-amber-500" />
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <div className="mb-4">
-                <h3 className="text-lg font-medium mb-2">Persentase Konversi</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={conversionRateData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                    >
-                      {conversionRateData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={index === 0 ? '#0088FE' : '#FF8042'} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `${value}%`} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Fitur yang Mendorong Konversi</CardTitle>
-          <CardDescription>Fitur premium yang paling mendorong konversi langganan</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : featureChartData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <AlertTriangle className="h-12 w-12 text-amber-500 mb-2" />
-              <h3 className="text-lg font-medium">Belum ada data konversi</h3>
-              <p className="text-muted-foreground">Data konversi akan muncul saat pengguna mengklik fitur premium dan melakukan checkout</p>
-            </div>
-          ) : (
-            <ChartContainer 
-              config={{
-                conversion: {
-                  label: "Konversi",
-                  color: "#0088FE"
-                }
-              }} 
-              className="h-72"
-            >
-              <BarChart data={featureChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="feature" />
-                <YAxis />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Legend />
-                <Bar dataKey="conversions" name="conversion" fill="#0088FE" />
-              </BarChart>
-            </ChartContainer>
-          )}
-          
-          {featureChartData.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-2">Detail Fitur Konversi</h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fitur</TableHead>
-                    <TableHead className="text-right">Jumlah Konversi</TableHead>
-                    <TableHead className="text-right">Persentase</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {featureChartData.map((feature, idx) => {
-                    const total = featureChartData.reduce((acc, f) => acc + f.conversions, 0);
-                    const percentage = total > 0 ? ((feature.conversions / total) * 100).toFixed(1) : '0.0';
-                    
-                    return (
-                      <TableRow key={idx}>
-                        <TableCell>{feature.feature}</TableCell>
-                        <TableCell className="text-right">{feature.conversions}</TableCell>
-                        <TableCell className="text-right">{percentage}%</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Statistik Event</CardTitle>
-          <CardDescription>Distribusi event analitik berdasarkan jenis</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : eventChartData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <AlertTriangle className="h-12 w-12 text-amber-500 mb-2" />
-              <h3 className="text-lg font-medium">Belum ada data event</h3>
-              <p className="text-muted-foreground">Data event akan muncul saat pengguna berinteraksi dengan fitur-fitur langganan</p>
-            </div>
-          ) : (
-            <>
-              <ChartContainer 
-                config={eventChartData.reduce((acc, item) => {
-                  acc[item.name] = { 
-                    label: item.name,
-                    color: COLORS[eventChartData.indexOf(item) % COLORS.length]
-                  };
-                  return acc;
-                }, {} as Record<string, any>)} 
-                className="h-96"
-              >
-                <BarChart data={eventChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" name="Jumlah" fill="#8884d8" />
-                </BarChart>
-              </ChartContainer>
-              
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-2">Detail Event</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Jenis Event</TableHead>
-                      <TableHead className="text-right">Jumlah</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {eventChartData.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell className="text-right">{item.count}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>Tidak ada data metrik trial yang tersedia.</AlertDescription>
+            </Alert>
           )}
         </CardContent>
       </Card>

@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { subscriptionAnalyticsService } from "@/services/subscriptionAnalyticsService";
+import { subscriptionAnalyticsService } from "@/services/subscription"; // Updated import path
 import { useOrganization } from "@/hooks/useOrganization";
 import SubscriptionAnalytics from '@/components/admin/SubscriptionAnalytics';
 import { AlertTriangle, ShieldAlert, Package2 } from 'lucide-react';
