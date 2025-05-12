@@ -49,7 +49,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
         <TabsTrigger value="publishing" className="px-6">Publishing Info</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="primary" className="mt-0">
+      <TabsContent value="primary" className="mt-0 w-full">
         <ContentTable
           {...props}
           visibleColumns={primaryColumns}
@@ -57,7 +57,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
         />
       </TabsContent>
 
-      <TabsContent value="details" className="mt-0">
+      <TabsContent value="details" className="mt-0 w-full">
         <ContentTable
           {...props}
           visibleColumns={detailsColumns}
@@ -65,7 +65,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
         />
       </TabsContent>
 
-      <TabsContent value="publishing" className="mt-0">
+      <TabsContent value="publishing" className="mt-0 w-full">
         <ContentTable
           {...props}
           visibleColumns={publishingColumns}
@@ -75,4 +75,3 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
     </Tabs>
   );
 };
-
