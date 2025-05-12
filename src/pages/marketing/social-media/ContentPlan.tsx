@@ -160,7 +160,7 @@ const ContentPlan = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-full overflow-hidden">
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
           <CardTitle className="text-xl font-semibold">Content Management</CardTitle>
@@ -187,7 +187,7 @@ const ContentPlan = () => {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <ContentTable
             contentItems={contentItems}
             contentTypes={contentTypes}
