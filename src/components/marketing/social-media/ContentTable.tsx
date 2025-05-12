@@ -48,6 +48,8 @@ interface ContentTableProps {
   toggleApproved: (itemId: string, isApproved: boolean) => void;
   visibleColumns?: string[];
   columnWidths?: {[key: string]: number};
+  initialVisibleWidth?: number;
+  initiallyVisibleColumns?: string[];
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -78,7 +80,9 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   resetRevisionCounter,
   toggleApproved,
   visibleColumns = [],
-  columnWidths = {}
+  columnWidths = {},
+  initialVisibleWidth = 1100, // Default width for container
+  initiallyVisibleColumns = []
 }) => {
   // Format completion date for display
   const formatCompletionDate = (dateString: string | undefined) => {
@@ -104,13 +108,24 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     }, 0);
   };
 
+  // Check if a column is initially visible (should be positioned within view)
+  const isInitiallyVisible = (columnName: string) => {
+    return initiallyVisibleColumns.length === 0 || initiallyVisibleColumns.includes(columnName);
+  };
+
   const tableWidth = calculateTableWidth();
 
   return (
     <div className="w-full overflow-hidden">
       <div className="relative">
         <ScrollArea className="h-[calc(100vh-220px)]">
-          <div className="overflow-x-auto" style={{ minWidth: "100%", width: `${tableWidth}px` }}>
+          <div 
+            className="overflow-x-auto" 
+            style={{ 
+              minWidth: `${initialVisibleWidth}px`, 
+              width: `${tableWidth}px` 
+            }}
+          >
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
@@ -604,6 +619,14 @@ export const ContentTable: React.FC<ContentTableProps> = ({
             </Table>
           </div>
         </ScrollArea>
+      </div>
+      <div className="mt-2 text-xs text-gray-500 flex justify-end">
+        <span className="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+          Scroll right to see more columns
+        </span>
       </div>
     </div>
   );

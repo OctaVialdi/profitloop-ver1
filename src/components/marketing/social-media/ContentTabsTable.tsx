@@ -39,6 +39,11 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
     "contentPillar", "brief", "status", "revision", "approved", "completionDate", 
     "mirrorPostDate", "mirrorContentType", "mirrorTitle"
   ];
+  
+  // Define which columns should be initially visible (from selectColumn to brief)
+  const initiallyVisibleColumns = [
+    "selectColumn", "postDate", "contentType", "pic", "service", "subService", "title", "contentPillar", "brief"
+  ];
 
   // Define fixed widths for all columns
   const columnWidths = {
@@ -60,11 +65,18 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
     mirrorTitle: 180
   };
 
+  // Calculate the total width of initially visible columns
+  const initialVisibleWidth = initiallyVisibleColumns.reduce((total, column) => {
+    return total + columnWidths[column];
+  }, 0);
+
   return (
     <ContentTable
       {...props}
       visibleColumns={allColumns}
       columnWidths={columnWidths}
+      initialVisibleWidth={initialVisibleWidth}
+      initiallyVisibleColumns={initiallyVisibleColumns}
     />
   );
 };
