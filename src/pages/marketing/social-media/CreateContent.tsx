@@ -111,89 +111,117 @@ const CreateContent = () => {
       
       <CardContent>
         <div className="border rounded-md">
-          <Table className="table-fixed">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox 
-                    checked={selectAll} 
-                    onCheckedChange={handleSelectAll}
-                    aria-label="Select all"
-                  />
-                </TableHead>
-                <TableHead className="w-1/4">Tanggal Posting</TableHead>
-                <TableHead>Tipe Content</TableHead>
-              </TableRow>
-            </TableHeader>
-          </Table>
+          <div className="overflow-hidden">
+            <Table className="w-full table-fixed">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px] min-w-[50px]">
+                    <Checkbox 
+                      checked={selectAll} 
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
+                  <TableHead className="w-[180px] min-w-[180px]">Tanggal Posting</TableHead>
+                  <TableHead className="w-[180px] min-w-[180px]">Tipe Content</TableHead>
+                  <TableHead className="w-[180px] min-w-[180px]">Platform</TableHead>
+                  <TableHead className="w-[180px] min-w-[180px]">Status</TableHead>
+                  <TableHead className="w-[180px] min-w-[180px]">Assignee</TableHead>
+                </TableRow>
+              </TableHeader>
+            </Table>
+          </div>
           
-          {/* Applying vertical scroll using ScrollArea component */}
+          {/* Applying vertical scroll using ScrollArea component and horizontal scroll */}
           <ScrollArea className="h-[400px]">
-            <Table className="table-fixed">
-              <TableBody>
-                {contentItems.length > 0 ? (
-                  contentItems.map(item => (
-                    <TableRow key={item.id}>
-                      <TableCell className="w-12">
-                        <Checkbox 
-                          checked={item.isSelected} 
-                          onCheckedChange={() => toggleSelectItem(item.id)}
-                          aria-label="Select row"
-                        />
-                      </TableCell>
-                      <TableCell className="w-1/4">
-                        <Popover 
-                          open={isCalendarOpen[item.id]} 
-                          onOpenChange={() => toggleCalendar(item.id)}
-                        >
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-left font-normal"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {item.postDate || 'Select date'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={item.postDate ? new Date(item.postDate) : undefined}
-                              onSelect={(date) => handleDateChange(item.id, date)}
-                              initialFocus
-                              className="p-3 pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.contentType} 
-                          onValueChange={(value) => handleTypeChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select content type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {contentTypes.map((type) => (
-                              <SelectItem key={type.id} value={type.id}>
-                                {type.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+            <div className="overflow-x-auto">
+              <Table className="w-full min-w-[800px] table-fixed">
+                <TableBody>
+                  {contentItems.length > 0 ? (
+                    contentItems.map(item => (
+                      <TableRow key={item.id}>
+                        <TableCell className="w-[50px] min-w-[50px]">
+                          <Checkbox 
+                            checked={item.isSelected} 
+                            onCheckedChange={() => toggleSelectItem(item.id)}
+                            aria-label="Select row"
+                          />
+                        </TableCell>
+                        <TableCell className="w-[180px] min-w-[180px]">
+                          <Popover 
+                            open={isCalendarOpen[item.id]} 
+                            onOpenChange={() => toggleCalendar(item.id)}
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start text-left font-normal"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {item.postDate || 'Select date'}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={item.postDate ? new Date(item.postDate) : undefined}
+                                onSelect={(date) => handleDateChange(item.id, date)}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </TableCell>
+                        <TableCell className="w-[180px] min-w-[180px]">
+                          <Select 
+                            value={item.contentType} 
+                            onValueChange={(value) => handleTypeChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select content type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {contentTypes.map((type) => (
+                                <SelectItem key={type.id} value={type.id}>
+                                  {type.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="w-[180px] min-w-[180px]">
+                          <Select disabled>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="All platforms" />
+                            </SelectTrigger>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="w-[180px] min-w-[180px]">
+                          <Select disabled>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Draft" />
+                            </SelectTrigger>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="w-[180px] min-w-[180px]">
+                          <Select disabled>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Unassigned" />
+                            </SelectTrigger>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No content items. Click "Add Row" to create one.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">
-                      No content items. Click "Add Row" to create one.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </ScrollArea>
         </div>
       </CardContent>
