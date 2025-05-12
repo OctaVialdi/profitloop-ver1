@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -73,13 +74,13 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   resetRevisionCounter
 }) => {
   return (
-    <div className="w-full overflow-hidden">
-      {/* Wrap the entire table in a ScrollArea that allows both vertical and horizontal scrolling */}
-      <div className="overflow-auto">
+    <div className="w-full">
+      {/* Use a fixed height container with both ScrollArea and overflow-auto */}
+      <div className="relative">
         <ScrollArea className="h-[calc(100vh-220px)]">
-          <div className="min-w-[1200px]"> {/* Set a minimum width to ensure horizontal scrolling */}
-            <Table className="w-full table-fixed">
-              <TableHeader className="sticky top-0 bg-white z-20 shadow-sm">
+          <div className="overflow-x-auto min-w-[1200px]">
+            <Table>
+              <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
                   <TableHead className="w-[50px] text-center sticky left-0 bg-slate-50 z-30 border-r">
                     <Checkbox 
@@ -89,16 +90,16 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       className="mt-1"
                     />
                   </TableHead>
-                  <TableHead className="w-[120px] text-center font-medium">Tanggal Posting</TableHead>
-                  <TableHead className="w-[120px] text-center font-medium">Tipe Content</TableHead>
-                  <TableHead className="w-[100px] text-center font-medium">PIC</TableHead>
-                  <TableHead className="w-[120px] text-center font-medium">Layanan</TableHead>
-                  <TableHead className="w-[120px] text-center font-medium">Sub Layanan</TableHead>
-                  <TableHead className="w-[180px] text-center font-medium">Judul Content</TableHead>
-                  <TableHead className="w-[120px] text-center font-medium">Content Pillar</TableHead>
-                  <TableHead className="w-[180px] text-center font-medium">Brief</TableHead>
-                  <TableHead className="w-[100px] text-center font-medium">Status</TableHead>
-                  <TableHead className="w-[100px] text-center font-medium">Revision</TableHead>
+                  <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Posting</TableHead>
+                  <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                  <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">PIC</TableHead>
+                  <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Layanan</TableHead>
+                  <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Sub Layanan</TableHead>
+                  <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                  <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
+                  <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Brief</TableHead>
+                  <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Status</TableHead>
+                  <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Revision</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -112,7 +113,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           aria-label="Select row"
                         />
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         <Popover 
                           open={isCalendarOpen[item.id]} 
                           onOpenChange={() => toggleCalendar(item.id)}
@@ -137,7 +138,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </PopoverContent>
                         </Popover>
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         <Select 
                           value={item.contentType} 
                           onValueChange={(value) => handleTypeChange(item.id, value)}
@@ -154,7 +155,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         <Select 
                           value={item.pic} 
                           onValueChange={(value) => handlePICChange(item.id, value)}
@@ -177,7 +178,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         <Select 
                           value={item.service} 
                           onValueChange={(value) => handleServiceChange(item.id, value)}
@@ -194,7 +195,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         <Select 
                           value={item.subService} 
                           onValueChange={(value) => handleSubServiceChange(item.id, value)}
@@ -230,7 +231,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         <Select 
                           value={item.contentPillar} 
                           onValueChange={(value) => handleContentPillarChange(item.id, value)}
@@ -250,7 +251,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         {item.brief ? (
                           <div className="flex items-center space-x-2">
                             <Button 
@@ -284,7 +285,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Button>
                         )}
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         <Select 
                           value={item.status} 
                           onValueChange={(value) => handleStatusChange(item.id, value)}
@@ -302,7 +303,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell className="p-2 whitespace-nowrap">
                         <div className="flex items-center justify-between">
                           <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[30px]">
                             {item.revisionCount || 0}
