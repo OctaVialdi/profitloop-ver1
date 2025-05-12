@@ -61,7 +61,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="h-8 w-[100px] py-1">PIC</TableHead>
-              <TableHead className="h-8 text-center w-[110px] py-1">
+              <TableHead className="h-8 text-center w-[100px] py-1">
                 <DateSelector 
                   selectedDate={selectedDate}
                   setSelectedDate={setSelectedDate}
@@ -78,13 +78,13 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   setIsMonthSelectorOpen={setIsMonthSelectorOpen}
                 />
               </TableHead>
-              <TableHead className="h-8 text-center w-[120px] py-1">
+              <TableHead className="h-8 text-center w-[100px] py-1">
                 Target {format(selectedMonth, "MMM yyyy")}
               </TableHead>
-              <TableHead className="h-8 w-[160px] py-1">Progress</TableHead>
-              <TableHead className="h-8 text-center w-[110px] py-1">On Time Rate</TableHead>
-              <TableHead className="h-8 text-center w-[110px] py-1">Effective Rate</TableHead>
-              <TableHead className="h-8 text-center w-[80px] py-1">Score</TableHead>
+              <TableHead className="h-8 w-[100px] py-1">Progress</TableHead>
+              <TableHead className="h-8 text-center w-[100px] py-1">On Time Rate</TableHead>
+              <TableHead className="h-8 text-center w-[100px] py-1">Effective Rate</TableHead>
+              <TableHead className="h-8 text-center w-[100px] py-1">Score</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
