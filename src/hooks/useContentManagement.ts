@@ -116,7 +116,13 @@ export const useContentManagement = () => {
       const storedContentItems = localStorage.getItem("marketingContentItems");
       if (storedContentItems) {
         try {
-          setContentItems(JSON.parse(storedContentItems));
+          // Make sure all loaded items use "none" for empty status
+          const parsedItems = JSON.parse(storedContentItems);
+          const updatedItems = parsedItems.map((item: ContentItem) => ({
+            ...item,
+            status: item.status || "none" // Replace any empty string with "none"
+          }));
+          setContentItems(updatedItems);
         } catch (e) {
           console.error("Error parsing content items from localStorage:", e);
         }
@@ -360,6 +366,11 @@ export const useContentManagement = () => {
   };
   
   const updateContentItem = (id: string, updates: Partial<ContentItem>) => {
+    // Ensure status is never an empty string
+    if (updates.status === "") {
+      updates.status = "none";
+    }
+    
     setContentItems(prev => 
       prev.map(item => item.id === id ? { ...item, ...updates } : item)
     );

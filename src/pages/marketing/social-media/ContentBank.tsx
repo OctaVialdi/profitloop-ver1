@@ -70,7 +70,7 @@ const ContentBank = () => {
         title: "Summer Collection Promo",
         contentPillar: contentPillars.length > 0 ? contentPillars[0].id : "",
         brief: "Create engaging content for summer collection",
-        status: "",
+        status: "none",
         revisions: 0,
         approved: false,
         completionDate: null
@@ -133,7 +133,7 @@ const ContentBank = () => {
       title: "",
       contentPillar: "",
       brief: "",
-      status: "",
+      status: "none",
       revisions: 0,
       approved: false,
       completionDate: null
@@ -207,7 +207,7 @@ const ContentBank = () => {
     setItems(items.map(item => {
       if (item.id === id) {
         // Reset status when brief is changed
-        return { ...item, brief, status: "" };
+        return { ...item, brief, status: "none" };
       }
       return item;
     }));
@@ -369,7 +369,7 @@ const ContentBank = () => {
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={item.contentType} 
+                          value={item.contentType || "none"} 
                           onValueChange={(value) => handleContentTypeChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
@@ -386,7 +386,7 @@ const ContentBank = () => {
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={item.pic} 
+                          value={item.pic || "none"} 
                           onValueChange={(value) => handlePicChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
@@ -403,7 +403,7 @@ const ContentBank = () => {
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={item.service} 
+                          value={item.service || "none"} 
                           onValueChange={(value) => handleServiceChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
@@ -420,7 +420,7 @@ const ContentBank = () => {
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={item.subService} 
+                          value={item.subService || "none"} 
                           onValueChange={(value) => handleSubServiceChange(item.id, value)}
                           disabled={!item.service}
                         >
@@ -461,7 +461,7 @@ const ContentBank = () => {
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={item.contentPillar} 
+                          value={item.contentPillar || "none"} 
                           onValueChange={(value) => handleContentPillarChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
@@ -487,7 +487,7 @@ const ContentBank = () => {
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={item.status} 
+                          value={item.status}
                           onValueChange={(value) => handleStatusChange(item.id, value)}
                         >
                           <SelectTrigger className="w-full">
