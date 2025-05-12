@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot } from "lucide-react";
+import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot, RefreshCcw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
 
@@ -75,11 +75,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 }) => {
   return (
     <div className="w-full overflow-hidden">
-      <ScrollArea className="h-[calc(100vh-220px)]">
-        <Table className="w-full table-fixed">
+      <ScrollArea className="h-[calc(100vh-220px)]" orientation="both">
+        <Table className="w-full min-w-max table-fixed">
           <TableHeader className="sticky top-0 bg-white z-20 shadow-sm">
-            <TableRow className="bg-slate-50">
-              <TableHead className="w-[50px] text-center sticky left-0 bg-slate-50 z-30 border-r">
+            <TableRow className="bg-slate-100">
+              <TableHead className="w-[50px] text-center sticky left-0 bg-slate-100 z-30 border-r">
                 <Checkbox 
                   checked={selectAll} 
                   onCheckedChange={handleSelectAll}
@@ -87,15 +87,16 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                   className="mt-1"
                 />
               </TableHead>
-              <TableHead className="w-[120px] text-center font-medium">Tanggal Posting</TableHead>
-              <TableHead className="w-[120px] text-center font-medium">Tipe Content</TableHead>
-              <TableHead className="w-[100px] text-center font-medium">PIC</TableHead>
-              <TableHead className="w-[120px] text-center font-medium">Layanan</TableHead>
-              <TableHead className="w-[120px] text-center font-medium">Sub Layanan</TableHead>
-              <TableHead className="w-[180px] text-center font-medium">Judul Content</TableHead>
-              <TableHead className="w-[120px] text-center font-medium">Content Pillar</TableHead>
-              <TableHead className="w-[180px] text-center font-medium">Brief</TableHead>
-              <TableHead className="w-[100px] text-center font-medium">Status</TableHead>
+              <TableHead className="w-[110px] text-center font-semibold text-slate-700">Tanggal Posting</TableHead>
+              <TableHead className="w-[110px] text-center font-semibold text-slate-700">Tipe Content</TableHead>
+              <TableHead className="w-[90px] text-center font-semibold text-slate-700">PIC</TableHead>
+              <TableHead className="w-[110px] text-center font-semibold text-slate-700">Layanan</TableHead>
+              <TableHead className="w-[110px] text-center font-semibold text-slate-700">Sub Layanan</TableHead>
+              <TableHead className="w-[160px] text-center font-semibold text-slate-700">Judul Content</TableHead>
+              <TableHead className="w-[110px] text-center font-semibold text-slate-700">Content Pillar</TableHead>
+              <TableHead className="w-[160px] text-center font-semibold text-slate-700">Brief</TableHead>
+              <TableHead className="w-[90px] text-center font-semibold text-slate-700">Status</TableHead>
+              <TableHead className="w-[90px] text-center font-semibold text-slate-700">Revision</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -299,11 +300,27 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       </SelectContent>
                     </Select>
                   </TableCell>
+                  <TableCell className="p-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-slate-700">{item.revisionCount || 0}</span>
+                      {item.revisionCount > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 ml-2"
+                          onClick={() => resetRevisionCounter(item.id)}
+                          title="Reset revision counter"
+                        >
+                          <RefreshCcw className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center">
+                <TableCell colSpan={11} className="h-24 text-center">
                   No content items. Click "Add Row" to create one.
                 </TableCell>
               </TableRow>
