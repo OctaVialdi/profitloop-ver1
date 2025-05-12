@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, FileText } from "lucide-react";
+import { CalendarIcon, FileText, ExternalLink, Edit } from "lucide-react";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useContentBrief } from "@/hooks/useContentBrief";
+import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
 
 const ContentPlan = () => {
   const { toast } = useToast();
@@ -37,6 +39,20 @@ const ContentPlan = () => {
     contentPlanners,
     contentPillars
   } = useContentManagement();
+
+  // Use the content brief hook
+  const {
+    isBriefDialogOpen,
+    setIsBriefDialogOpen,
+    currentBrief,
+    setCurrentBrief,
+    briefDialogMode,
+    setBriefDialogMode,
+    extractGoogleDocsLink,
+    displayBrief,
+    openBriefDialog,
+    saveBrief
+  } = useContentBrief(updateContentItem);
 
   // State for calendar popovers
   const [isCalendarOpen, setIsCalendarOpen] = useState<{ [key: string]: boolean }>({});
@@ -198,6 +214,7 @@ const ContentPlan = () => {
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Sub Layanan</TableHead>
                     <TableHead className="w-[200px] text-center whitespace-nowrap">Judul Content</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Content Pillar</TableHead>
+                    <TableHead className="w-[200px] text-center whitespace-nowrap">Brief</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -352,11 +369,45 @@ const ContentPlan = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
+                        <TableCell className="p-2 min-w-[200px]">
+                          {item.brief ? (
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                variant="outline"
+                                size="sm"
+                                className="text-left truncate w-full bg-white"
+                                onClick={() => openBriefDialog(item.id, item.brief, "view")}
+                              >
+                                {displayBrief(item.brief)}
+                                {extractGoogleDocsLink(item.brief) && (
+                                  <ExternalLink className="ml-2 h-3 w-3 inline" />
+                                )}
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8" 
+                                onClick={() => openBriefDialog(item.id, item.brief, "edit")}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-center"
+                              onClick={() => openBriefDialog(item.id, "", "edit")}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              Click to add brief
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-24 text-center">
+                      <TableCell colSpan={9} className="h-24 text-center">
                         No content items. Click "Add Row" to create one.
                       </TableCell>
                     </TableRow>
@@ -390,6 +441,18 @@ const ContentPlan = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Brief Dialog */}
+      <BriefDialog
+        isOpen={isBriefDialogOpen}
+        onOpenChange={setIsBriefDialogOpen}
+        currentBrief={currentBrief}
+        setCurrentBrief={setCurrentBrief}
+        mode={briefDialogMode}
+        setMode={setBriefDialogMode}
+        saveBrief={saveBrief}
+        extractGoogleDocsLink={extractGoogleDocsLink}
+      />
     </Card>
   );
 };
