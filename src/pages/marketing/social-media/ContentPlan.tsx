@@ -194,8 +194,8 @@ const ContentPlan = () => {
         <div className="border rounded-md">
           {/* Main scroll container for vertical scrolling */}
           <ScrollArea className="h-[calc(100vh-230px)]">
-            {/* Container for horizontal scrolling */}
-            <div className="overflow-x-auto min-w-[1200px]">
+            {/* Container for horizontal scrolling with minimum width */}
+            <div className="overflow-x-auto min-w-[1500px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
@@ -458,3 +458,4 @@ const ContentPlan = () => {
 };
 
 export default ContentPlan;
+
