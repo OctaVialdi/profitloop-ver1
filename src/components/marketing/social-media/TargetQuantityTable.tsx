@@ -60,8 +60,8 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
         <Table className="w-full">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 w-[100px] py-1">PIC</TableHead>
-              <TableHead className="h-8 text-center w-[100px] py-1">
+              <TableHead className="h-8 w-[80px] py-1 px-1">PIC</TableHead>
+              <TableHead className="h-8 text-center w-[80px] py-1 px-1">
                 <DateSelector 
                   selectedDate={selectedDate}
                   setSelectedDate={setSelectedDate}
@@ -70,7 +70,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   renderMonthCalendar={renderMonthCalendar}
                 />
               </TableHead>
-              <TableHead className="h-8 text-center w-[100px] py-1">
+              <TableHead className="h-8 text-center w-[80px] py-1 px-1">
                 <MonthSelector 
                   selectedMonth={selectedMonth}
                   setSelectedMonth={setSelectedMonth}
@@ -78,23 +78,23 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   setIsMonthSelectorOpen={setIsMonthSelectorOpen}
                 />
               </TableHead>
-              <TableHead className="h-8 text-center w-[100px] py-1">
+              <TableHead className="h-8 text-center w-[80px] py-1 px-1">
                 Target {format(selectedMonth, "MMM yyyy")}
               </TableHead>
-              <TableHead className="h-8 w-[100px] py-1">Progress</TableHead>
-              <TableHead className="h-8 text-center w-[100px] py-1">On Time Rate</TableHead>
-              <TableHead className="h-8 text-center w-[100px] py-1">Effective Rate</TableHead>
-              <TableHead className="h-8 text-center w-[100px] py-1">Score</TableHead>
+              <TableHead className="h-8 w-[80px] py-1 px-1">Progress</TableHead>
+              <TableHead className="h-8 text-center w-[80px] py-1 px-1">On Time Rate</TableHead>
+              <TableHead className="h-8 text-center w-[80px] py-1 px-1">Effective Rate</TableHead>
+              <TableHead className="h-8 text-center w-[80px] py-1 px-1">Score</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {contentManagers.map((manager) => (
               <TableRow key={manager.name} className="hover:bg-gray-50/80">
-                <TableCell className="py-1 px-2 font-medium text-sm">{manager.name}</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.dailyTarget}</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.monthlyTarget}</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">
-                  <div className="flex items-center justify-center gap-1">
+                <TableCell className="py-1 px-1 font-medium text-xs">{manager.name}</TableCell>
+                <TableCell className="py-1 px-1 text-center text-xs">{manager.dailyTarget}</TableCell>
+                <TableCell className="py-1 px-1 text-center text-xs">{manager.monthlyTarget}</TableCell>
+                <TableCell className="py-1 px-1 text-center text-xs">
+                  <div className="flex items-center justify-center gap-0.5">
                     <span>{manager.monthlyTargetAdjusted}</span>
                     <Button 
                       variant="ghost" 
@@ -106,15 +106,15 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                     </Button>
                   </div>
                 </TableCell>
-                <TableCell className="py-1 px-2">
-                  <div className="flex items-center gap-1">
+                <TableCell className="py-1 px-1">
+                  <div className="flex items-center gap-0.5">
                     <Progress value={manager.progress} className="h-1.5" />
                     <span className="text-xs">{manager.progress}%</span>
                   </div>
                 </TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.onTimeRate}%</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.effectiveRate}%</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.score}</TableCell>
+                <TableCell className="py-1 px-1 text-center text-xs">{manager.onTimeRate}%</TableCell>
+                <TableCell className="py-1 px-1 text-center text-xs">{manager.effectiveRate}%</TableCell>
+                <TableCell className="py-1 px-1 text-center text-xs">{manager.score}</TableCell>
               </TableRow>
             ))}
           </TableBody>
