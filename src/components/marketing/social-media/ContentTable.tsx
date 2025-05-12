@@ -18,7 +18,37 @@ import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
 import { format } from "date-fns";
-import { ContentTableProps } from "./types";
+
+interface ContentTableProps {
+  contentItems: ContentItem[];
+  contentTypes: ContentType[];
+  services: Service[];
+  subServices: SubService[];
+  contentPlanners: any[];
+  contentPillars: ContentPillar[];
+  isCalendarOpen: { [key: string]: boolean };
+  isUserManager: boolean; 
+  toggleCalendar: (itemId: string) => void;
+  handleDateChange: (itemId: string, date: Date | undefined) => void;
+  handleTypeChange: (itemId: string, typeId: string) => void;
+  handlePICChange: (itemId: string, picName: string) => void;
+  handleServiceChange: (itemId: string, serviceId: string) => void;
+  handleSubServiceChange: (itemId: string, subServiceId: string) => void;
+  handleTitleChange: (itemId: string, title: string) => void;
+  handleContentPillarChange: (itemId: string, pillarId: string) => void;
+  handleStatusChange: (itemId: string, status: string) => void;
+  toggleSelectItem: (itemId: string) => void;
+  selectAll: boolean;
+  handleSelectAll: (checked: boolean) => void;
+  openBriefDialog: (itemId: string, brief: string, mode: "edit" | "view") => void;
+  getFilteredSubServicesByServiceId: (serviceId: string) => SubService[];
+  extractGoogleDocsLink: (text: string) => string | null;
+  displayBrief: (brief: string) => string;
+  resetRevisionCounter: (itemId: string) => void;
+  toggleApproved: (itemId: string, isApproved: boolean) => void;
+  visibleColumns?: string[];
+  activeTab?: string;
+}
 
 export const ContentTable: React.FC<ContentTableProps> = ({
   contentItems,
@@ -67,15 +97,15 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   };
 
   return (
-    <div className="w-full h-full">
-      <div className="relative w-full">
-        <ScrollArea className="h-[calc(100vh-220px)] w-full">
-          <div className="w-full overflow-auto">
+    <div className="w-full">
+      <div className="relative">
+        <ScrollArea className="h-[calc(100vh-220px)]">
+          <div className={`overflow-x-auto ${activeTab ? "w-full" : "min-w-[1200px]"}`}>
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
                   {isColumnVisible("selectColumn") && (
-                    <TableHead className="w-[5%] text-center sticky left-0 bg-slate-50 z-30 border-r">
+                    <TableHead className="w-[50px] text-center sticky left-0 bg-slate-50 z-30 border-r">
                       <Checkbox 
                         checked={selectAll} 
                         onCheckedChange={handleSelectAll}
@@ -85,49 +115,49 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                     </TableHead>
                   )}
                   {isColumnVisible("postDate") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Tanggal Posting</TableHead>
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Posting</TableHead>
                   )}
                   {isColumnVisible("contentType") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
                   )}
                   {isColumnVisible("pic") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">PIC</TableHead>
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">PIC</TableHead>
                   )}
                   {isColumnVisible("service") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Layanan</TableHead>
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Layanan</TableHead>
                   )}
                   {isColumnVisible("subService") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Sub Layanan</TableHead>
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Sub Layanan</TableHead>
                   )}
                   {isColumnVisible("title") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
                   )}
                   {isColumnVisible("contentPillar") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
                   )}
                   {isColumnVisible("brief") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Brief</TableHead>
+                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Brief</TableHead>
                   )}
                   {isColumnVisible("status") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Status</TableHead>
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Status</TableHead>
                   )}
                   {isColumnVisible("revision") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Revision</TableHead>
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Revision</TableHead>
                   )}
                   {isColumnVisible("approved") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Approved</TableHead>
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Approved</TableHead>
                   )}
                   {isColumnVisible("completionDate") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Tanggal Selesai</TableHead>
+                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Tanggal Selesai</TableHead>
                   )}
                   {isColumnVisible("mirrorPostDate") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Tanggal Upload</TableHead>
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Upload</TableHead>
                   )}
                   {isColumnVisible("mirrorContentType") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
                   )}
                   {isColumnVisible("mirrorTitle") && (
-                    <TableHead className="text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
                   )}
                 </TableRow>
               </TableHeader>

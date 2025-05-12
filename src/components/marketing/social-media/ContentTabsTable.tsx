@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ContentTable } from "./ContentTable";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
-import { primaryColumns, detailsColumns, publishingColumns } from "./ContentColumnConfig";
 
 interface ContentTabsTableProps {
   contentItems: ContentItem[];
@@ -35,7 +34,12 @@ interface ContentTabsTableProps {
 }
 
 export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
-  const [activeTab, setActiveTab] = useState<string>("primary");
+  const [activeTab, setActiveTab] = useState("primary");
+  
+  // Define column sets for each tab
+  const primaryColumns = ["selectColumn", "postDate", "contentType", "pic", "service", "subService", "title"];
+  const detailsColumns = ["selectColumn", "contentPillar", "brief", "status", "revision", "approved"];
+  const publishingColumns = ["selectColumn", "completionDate", "mirrorPostDate", "mirrorContentType", "mirrorTitle"];
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -49,7 +53,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
         <TabsTrigger value="publishing" className="px-6">Publishing Info</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="primary" className="mt-0 w-full">
+      <TabsContent value="primary" className="mt-0">
         <ContentTable
           {...props}
           visibleColumns={primaryColumns}
@@ -57,7 +61,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
         />
       </TabsContent>
 
-      <TabsContent value="details" className="mt-0 w-full">
+      <TabsContent value="details" className="mt-0">
         <ContentTable
           {...props}
           visibleColumns={detailsColumns}
@@ -65,7 +69,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
         />
       </TabsContent>
 
-      <TabsContent value="publishing" className="mt-0 w-full">
+      <TabsContent value="publishing" className="mt-0">
         <ContentTable
           {...props}
           visibleColumns={publishingColumns}
