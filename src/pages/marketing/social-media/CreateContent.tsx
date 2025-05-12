@@ -110,8 +110,8 @@ const CreateContent = () => {
       </CardHeader>
       
       <CardContent>
-        <div className="border rounded-md overflow-hidden">
-          <Table>
+        <div className="border rounded-md">
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
@@ -125,19 +125,23 @@ const CreateContent = () => {
                 <TableHead>Tipe Content</TableHead>
               </TableRow>
             </TableHeader>
-            <ScrollArea className="h-[400px]">
+          </Table>
+          
+          {/* Applying vertical scroll using ScrollArea component */}
+          <ScrollArea className="h-[400px]">
+            <Table className="table-fixed">
               <TableBody>
                 {contentItems.length > 0 ? (
                   contentItems.map(item => (
                     <TableRow key={item.id}>
-                      <TableCell>
+                      <TableCell className="w-12">
                         <Checkbox 
                           checked={item.isSelected} 
                           onCheckedChange={() => toggleSelectItem(item.id)}
                           aria-label="Select row"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-1/4">
                         <Popover 
                           open={isCalendarOpen[item.id]} 
                           onOpenChange={() => toggleCalendar(item.id)}
@@ -189,8 +193,8 @@ const CreateContent = () => {
                   </TableRow>
                 )}
               </TableBody>
-            </ScrollArea>
-          </Table>
+            </Table>
+          </ScrollArea>
         </div>
       </CardContent>
       
