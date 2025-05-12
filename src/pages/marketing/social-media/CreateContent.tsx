@@ -494,8 +494,12 @@ const CreateContent = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={15} className="h-24 text-center">
-                          No content items. Click "Add Row" to create one.
+                        <TableCell colSpan={15} className="h-[300px] text-center">
+                          <ScrollArea className="h-full w-full flex items-center justify-center">
+                            <div className="h-full w-full flex items-center justify-center">
+                              No content items. Click "Add Row" to create one.
+                            </div>
+                          </ScrollArea>
                         </TableCell>
                       </TableRow>
                     )}
