@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 
 export interface ContentType {
@@ -36,6 +37,16 @@ export interface ContentItem {
   revisionCount: number;
   isApproved: boolean;
   completionDate: string | undefined;
+  picProduction: string;
+  googleDriveLink: string;
+  productionStatus: string;
+  productionRevisionCount: number;
+  productionCompletionDate: string | undefined;
+  productionApproved: boolean;
+  productionApprovedDate: string | undefined;
+  postLink: string;
+  isDone: boolean;
+  actualPostDate: string | undefined;
 }
 
 export const useContentManagement = () => {
@@ -138,9 +149,10 @@ export const useContentManagement = () => {
 
   // Add a new content item
   const addContentItem = () => {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     const newItem: ContentItem = {
       id: `${Date.now()}`,
-      postDate: undefined,
+      postDate: today,
       contentType: "",
       isSelected: false,
       pic: "",
@@ -153,8 +165,18 @@ export const useContentManagement = () => {
       revisionCount: 0,
       isApproved: false,
       completionDate: undefined,
+      picProduction: "",
+      googleDriveLink: "",
+      productionStatus: "none",
+      productionRevisionCount: 0,
+      productionCompletionDate: undefined,
+      productionApproved: false,
+      productionApprovedDate: undefined,
+      postLink: "",
+      isDone: false,
+      actualPostDate: undefined
     };
-    setContentItems([...contentItems, newItem]);
+    setContentItems([newItem, ...contentItems]);
   };
 
   // Update a content item
@@ -164,6 +186,14 @@ export const useContentManagement = () => {
       const currentItem = contentItems.find(item => item.id === itemId);
       if (currentItem && currentItem.status !== "revisi") {
         updates.revisionCount = (currentItem.revisionCount || 0) + 1;
+      }
+    }
+    
+    // Increment production revision count if changing status to "revisi"
+    if (updates.productionStatus === "revisi") {
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && currentItem.productionStatus !== "revisi") {
+        updates.productionRevisionCount = (currentItem.productionRevisionCount || 0) + 1;
       }
     }
     
@@ -181,9 +211,49 @@ export const useContentManagement = () => {
       }
     }
     
+    // Set production completion date if status is changing to "review" and there's no completion date yet
+    if (updates.productionStatus === "review") {
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && !currentItem.productionCompletionDate) {
+        updates.productionCompletionDate = new Date().toISOString();
+      }
+    } else if (updates.productionStatus && updates.productionStatus !== "review") {
+      // Clear production completion date if status is changing away from "review"
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && currentItem.productionStatus === "review") {
+        updates.productionCompletionDate = undefined;
+      }
+    }
+
+    // Set production approved date if productionApproved is changing to true
+    if (updates.productionApproved === true) {
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && !currentItem.productionApprovedDate) {
+        updates.productionApprovedDate = new Date().toISOString();
+      }
+    } else if (updates.productionApproved === false) {
+      // Clear production approved date if productionApproved is changing to false
+      updates.productionApprovedDate = undefined;
+    }
+    
+    // Set actual post date when postLink is added
+    if (updates.postLink && updates.postLink.trim() !== '') {
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && (!currentItem.postLink || currentItem.postLink.trim() === '')) {
+        updates.actualPostDate = new Date().toISOString();
+      }
+    } else if (updates.postLink === '') {
+      updates.actualPostDate = undefined;
+    }
+    
     // Check if brief is being changed, and if so, reset status
     if (updates.brief !== undefined) {
       updates.status = "none";
+    }
+
+    // Check if googleDriveLink is being changed, and if so, reset productionStatus
+    if (updates.googleDriveLink !== undefined) {
+      updates.productionStatus = "none";
     }
     
     setContentItems(prevItems =>
@@ -198,6 +268,15 @@ export const useContentManagement = () => {
     setContentItems(prevItems =>
       prevItems.map(item =>
         item.id === itemId ? { ...item, revisionCount: 0 } : item
+      )
+    );
+  };
+
+  // Reset production revision counter for a specific item
+  const resetProductionRevisionCounter = (itemId: string) => {
+    setContentItems(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId ? { ...item, productionRevisionCount: 0 } : item
       )
     );
   };
@@ -240,6 +319,7 @@ export const useContentManagement = () => {
     addContentItem,
     updateContentItem,
     resetRevisionCounter,
+    resetProductionRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
     selectAllItems,

@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw } from "lucide-react";
+import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw, Download, Link } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 
 interface ContentTableProps {
   contentItems: ContentItem[];
@@ -80,11 +80,40 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   visibleColumns = [],
   activeTab = "primary",
 }) => {
-  // Format completion date for display
-  const formatCompletionDate = (dateString: string | undefined) => {
+  // Format date for display
+  const formatDateWithTime = (dateString: string | undefined) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return format(date, 'dd MMM yyyy - HH:mm');
+  };
+
+  const formatDateOnly = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return format(date, 'dd MMM yyyy');
+  };
+
+  // Calculate on-time status
+  const getOnTimeStatus = (postDate: string | undefined, actualDate: string | undefined) => {
+    if (!postDate || !actualDate) return '';
+    
+    const plannedDate = new Date(postDate);
+    const actualPostDate = new Date(actualDate);
+    
+    if (actualPostDate <= plannedDate) {
+      return (
+        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-xs font-medium">
+          On Time
+        </span>
+      );
+    } else {
+      const daysLate = differenceInDays(actualPostDate, plannedDate);
+      return (
+        <span className="bg-red-100 text-red-800 px-2 py-1 rounded-md text-xs font-medium">
+          Late [{daysLate}] Day{daysLate !== 1 ? 's' : ''}
+        </span>
+      );
+    }
   };
 
   // Helper function to check if a column should be displayed
@@ -100,10 +129,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     <div className="w-full">
       <div className="relative">
         <ScrollArea className="h-[calc(100vh-220px)]">
-          <div className={`overflow-x-auto ${activeTab ? "w-full" : "min-w-[1200px]"}`}>
+          <div className="w-full overflow-x-auto">
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
+                  {/* Column 1: Action (Checkbox) */}
                   {isColumnVisible("selectColumn") && (
                     <TableHead className="w-[50px] text-center sticky left-0 bg-slate-50 z-30 border-r">
                       <Checkbox 
@@ -114,50 +144,145 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       />
                     </TableHead>
                   )}
+                  
+                  {/* Column 2: Tanggal Posting */}
                   {isColumnVisible("postDate") && (
                     <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Posting</TableHead>
                   )}
+                  
+                  {/* Column 3: Tipe Content */}
                   {isColumnVisible("contentType") && (
                     <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
                   )}
+                  
+                  {/* Column 4: PIC */}
                   {isColumnVisible("pic") && (
                     <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">PIC</TableHead>
                   )}
+                  
+                  {/* Column 5: Layanan */}
                   {isColumnVisible("service") && (
                     <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Layanan</TableHead>
                   )}
+                  
+                  {/* Column 6: Sub Layanan */}
                   {isColumnVisible("subService") && (
                     <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Sub Layanan</TableHead>
                   )}
+                  
+                  {/* Column 7: Judul Content */}
                   {isColumnVisible("title") && (
                     <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
                   )}
+                  
+                  {/* Column 8: Content Pillar */}
                   {isColumnVisible("contentPillar") && (
                     <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
                   )}
+                  
+                  {/* Column 9: Brief */}
                   {isColumnVisible("brief") && (
                     <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Brief</TableHead>
                   )}
+                  
+                  {/* Column 10: Status */}
                   {isColumnVisible("status") && (
                     <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Status</TableHead>
                   )}
+                  
+                  {/* Column 11: Revision */}
                   {isColumnVisible("revision") && (
                     <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Revision</TableHead>
                   )}
+                  
+                  {/* Column 12: Approved */}
                   {isColumnVisible("approved") && (
                     <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Approved</TableHead>
                   )}
+                  
+                  {/* Column 13: Tanggal Selesai */}
                   {isColumnVisible("completionDate") && (
                     <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Tanggal Selesai</TableHead>
                   )}
+                  
+                  {/* Column 14: Tanggal Upload (Mirror of Tanggal Posting) */}
                   {isColumnVisible("mirrorPostDate") && (
                     <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Upload</TableHead>
                   )}
+                  
+                  {/* Column 15: Tipe Content (Mirror) */}
                   {isColumnVisible("mirrorContentType") && (
                     <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
                   )}
+                  
+                  {/* Column 16: Judul Content (Mirror) */}
                   {isColumnVisible("mirrorTitle") && (
                     <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                  )}
+                  
+                  {/* Column 17: PIC Produksi */}
+                  {isColumnVisible("picProduction") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">PIC Produksi</TableHead>
+                  )}
+                  
+                  {/* Column 18: Link Google Drive */}
+                  {isColumnVisible("googleDriveLink") && (
+                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Link Google Drive</TableHead>
+                  )}
+                  
+                  {/* Column 19: Status Produksi */}
+                  {isColumnVisible("productionStatus") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Status Produksi</TableHead>
+                  )}
+                  
+                  {/* Column 20: Revisi Counter (Production) */}
+                  {isColumnVisible("productionRevision") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Revisi Counter</TableHead>
+                  )}
+                  
+                  {/* Column 21: Tanggal Selesai Produksi */}
+                  {isColumnVisible("productionCompletionDate") && (
+                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Tanggal Selesai Produksi</TableHead>
+                  )}
+                  
+                  {/* Column 22: Approved (Production) */}
+                  {isColumnVisible("productionApproved") && (
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Approved</TableHead>
+                  )}
+                  
+                  {/* Column 23: Tanggal Approved (Production) */}
+                  {isColumnVisible("productionApprovedDate") && (
+                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Tanggal Approved</TableHead>
+                  )}
+                  
+                  {/* Column 24: Download Link File */}
+                  {isColumnVisible("downloadLink") && (
+                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Download Link File</TableHead>
+                  )}
+                  
+                  {/* Column 25: Link Post */}
+                  {isColumnVisible("postLink") && (
+                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Link Post</TableHead>
+                  )}
+                  
+                  {/* Column 26: Done */}
+                  {isColumnVisible("isDone") && (
+                    <TableHead className="w-[80px] text-center font-medium whitespace-nowrap">Done</TableHead>
+                  )}
+                  
+                  {/* Column 27: Actual Post */}
+                  {isColumnVisible("actualPostDate") && (
+                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Actual Post</TableHead>
+                  )}
+                  
+                  {/* Column 28: On Time Status */}
+                  {isColumnVisible("onTimeStatus") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">On Time Status</TableHead>
+                  )}
+                  
+                  {/* Column 29: Status Content */}
+                  {isColumnVisible("contentStatus") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Status Content</TableHead>
                   )}
                 </TableRow>
               </TableHeader>
@@ -165,6 +290,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                 {contentItems.length > 0 ? (
                   contentItems.map(item => (
                     <TableRow key={item.id} className="hover:bg-slate-50/60">
+                      {/* Column 1: Action (Checkbox) */}
                       {isColumnVisible("selectColumn") && (
                         <TableCell className="text-center sticky left-0 bg-white z-10 border-r">
                           <Checkbox 
@@ -174,6 +300,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           />
                         </TableCell>
                       )}
+                      
+                      {/* Column 2: Tanggal Posting */}
                       {isColumnVisible("postDate") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Popover 
@@ -186,7 +314,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 className="w-full justify-start text-left font-normal"
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {item.postDate || 'Select date'}
+                                {item.postDate ? formatDateOnly(item.postDate) : 'Select date'}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
@@ -201,6 +329,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Popover>
                         </TableCell>
                       )}
+                      
+                      {/* Column 3: Tipe Content */}
                       {isColumnVisible("contentType") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Select 
@@ -211,6 +341,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select content type" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="">-</SelectItem>
                               {contentTypes.map((type) => (
                                 <SelectItem key={type.id} value={type.id}>
                                   {type.name}
@@ -220,6 +351,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Select>
                         </TableCell>
                       )}
+                      
+                      {/* Column 4: PIC */}
                       {isColumnVisible("pic") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Select 
@@ -230,6 +363,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select PIC" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="">-</SelectItem>
                               {contentPlanners.length > 0 ? (
                                 contentPlanners.map((planner) => (
                                   <SelectItem key={planner.id} value={planner.name}>
@@ -245,6 +379,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Select>
                         </TableCell>
                       )}
+                      
+                      {/* Column 5: Layanan */}
                       {isColumnVisible("service") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Select 
@@ -255,6 +391,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select service" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="">-</SelectItem>
                               {services.map((service) => (
                                 <SelectItem key={service.id} value={service.id}>
                                   {service.name}
@@ -264,6 +401,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Select>
                         </TableCell>
                       )}
+                      
+                      {/* Column 6: Sub Layanan */}
                       {isColumnVisible("subService") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Select 
@@ -275,6 +414,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select sub-service" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="">-</SelectItem>
                               {item.service ? (
                                 getFilteredSubServicesByServiceId(item.service).map((subService) => (
                                   <SelectItem key={subService.id} value={subService.id}>
@@ -290,6 +430,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Select>
                         </TableCell>
                       )}
+                      
+                      {/* Column 7: Judul Content */}
                       {isColumnVisible("title") && (
                         <TableCell className="p-2">
                           <div className="flex items-center">
@@ -304,6 +446,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </div>
                         </TableCell>
                       )}
+                      
+                      {/* Column 8: Content Pillar */}
                       {isColumnVisible("contentPillar") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Select 
@@ -317,6 +461,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               </div>
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="">-</SelectItem>
                               {contentPillars.map((pillar) => (
                                 <SelectItem key={pillar.id} value={pillar.id}>
                                   {pillar.name}
@@ -326,6 +471,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Select>
                         </TableCell>
                       )}
+                      
+                      {/* Column 9: Brief */}
                       {isColumnVisible("brief") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           {item.brief ? (
@@ -362,6 +509,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           )}
                         </TableCell>
                       )}
+                      
+                      {/* Column 10: Status */}
                       {isColumnVisible("status") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Select 
@@ -382,6 +531,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Select>
                         </TableCell>
                       )}
+                      
+                      {/* Column 11: Revision */}
                       {isColumnVisible("revision") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <div className="flex items-center justify-between">
@@ -400,6 +551,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </div>
                         </TableCell>
                       )}
+                      
+                      {/* Column 12: Approved */}
                       {isColumnVisible("approved") && (
                         <TableCell className="p-2 text-center whitespace-nowrap">
                           <Checkbox 
@@ -409,35 +562,236 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           />
                         </TableCell>
                       )}
+                      
+                      {/* Column 13: Tanggal Selesai */}
                       {isColumnVisible("completionDate") && (
                         <TableCell className="p-2 text-center whitespace-nowrap">
                           {item.status === "review" && item.completionDate && (
                             <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md">
-                              {formatCompletionDate(item.completionDate)}
+                              {formatDateWithTime(item.completionDate)}
                             </div>
                           )}
                         </TableCell>
                       )}
+                      
+                      {/* Column 14: Tanggal Upload (Mirror of Tanggal Posting) */}
                       {isColumnVisible("mirrorPostDate") && (
                         <TableCell className="p-2 text-center whitespace-nowrap">
-                          {item.postDate || "-"}
+                          {formatDateOnly(item.postDate)}
                         </TableCell>
                       )}
+                      
+                      {/* Column 15: Tipe Content (Mirror) */}
                       {isColumnVisible("mirrorContentType") && (
                         <TableCell className="p-2 text-center whitespace-nowrap">
                           {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
                         </TableCell>
                       )}
+                      
+                      {/* Column 16: Judul Content (Mirror) */}
                       {isColumnVisible("mirrorTitle") && (
                         <TableCell className="p-2 text-center whitespace-nowrap">
                           {item.title || "-"}
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 17: PIC Produksi */}
+                      {isColumnVisible("picProduction") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.picProduction} 
+                            onValueChange={(value) => updateContentItem(item.id, { picProduction: value })}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Select Production PIC" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">-</SelectItem>
+                              {/* This would need to be populated with actual production staff */}
+                              <SelectItem value="production-1">Production Staff 1</SelectItem>
+                              <SelectItem value="production-2">Production Staff 2</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 18: Link Google Drive */}
+                      {isColumnVisible("googleDriveLink") && (
+                        <TableCell className="p-2">
+                          <div className="flex items-center">
+                            <Link className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
+                            <Input
+                              value={item.googleDriveLink || ""}
+                              onChange={(e) => updateContentItem(item.id, { googleDriveLink: e.target.value })}
+                              placeholder="Enter Google Drive link"
+                              className="w-full bg-white"
+                            />
+                          </div>
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 19: Status Produksi */}
+                      {isColumnVisible("productionStatus") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.productionStatus || "none"} 
+                            onValueChange={(value) => updateContentItem(item.id, { productionStatus: value })}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <div className="flex items-center">
+                                <CircleDot className="h-4 w-4 mr-2" />
+                                <SelectValue placeholder="-" />
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              <SelectItem value="review">Butuh Di Review</SelectItem>
+                              <SelectItem value="revisi">Request Revisi</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 20: Revisi Counter (Production) */}
+                      {isColumnVisible("productionRevision") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <div className="flex items-center justify-between">
+                            <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[30px]">
+                              {item.productionRevisionCount || 0}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => updateContentItem(item.id, { productionRevisionCount: 0 })}
+                              title="Reset revision counter"
+                            >
+                              <RefreshCw className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 21: Tanggal Selesai Produksi */}
+                      {isColumnVisible("productionCompletionDate") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {item.productionStatus === "review" && item.productionCompletionDate && (
+                            <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md">
+                              {formatDateWithTime(item.productionCompletionDate)}
+                            </div>
+                          )}
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 22: Approved (Production) */}
+                      {isColumnVisible("productionApproved") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          <Checkbox 
+                            checked={item.productionApproved} 
+                            onCheckedChange={(checked) => updateContentItem(item.id, { productionApproved: checked as boolean })}
+                            aria-label="Approve production"
+                            disabled={!isUserManager}
+                          />
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 23: Tanggal Approved (Production) */}
+                      {isColumnVisible("productionApprovedDate") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {item.productionApproved && item.productionApprovedDate && (
+                            <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-md">
+                              {formatDateWithTime(item.productionApprovedDate)}
+                            </div>
+                          )}
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 24: Download Link File */}
+                      {isColumnVisible("downloadLink") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {item.productionApproved && item.googleDriveLink && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white"
+                              onClick={() => window.open(item.googleDriveLink, '_blank')}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 25: Link Post */}
+                      {isColumnVisible("postLink") && (
+                        <TableCell className="p-2">
+                          <div className="flex items-center">
+                            <Link className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
+                            <Input
+                              value={item.postLink || ""}
+                              onChange={(e) => updateContentItem(item.id, { postLink: e.target.value })}
+                              placeholder="Enter post link"
+                              className="w-full bg-white"
+                            />
+                          </div>
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 26: Done */}
+                      {isColumnVisible("isDone") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          <Checkbox 
+                            checked={item.isDone} 
+                            onCheckedChange={(checked) => updateContentItem(item.id, { isDone: checked as boolean })}
+                            aria-label="Mark as done"
+                          />
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 27: Actual Post */}
+                      {isColumnVisible("actualPostDate") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {item.actualPostDate && (
+                            <div className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-md">
+                              {formatDateWithTime(item.actualPostDate)}
+                            </div>
+                          )}
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 28: On Time Status */}
+                      {isColumnVisible("onTimeStatus") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {item.postDate && item.actualPostDate && (
+                            getOnTimeStatus(item.postDate, item.actualPostDate)
+                          )}
+                        </TableCell>
+                      )}
+                      
+                      {/* Column 29: Status Content */}
+                      {isColumnVisible("contentStatus") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.contentStatus || "none"} 
+                            onValueChange={(value) => updateContentItem(item.id, { contentStatus: value })}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              <SelectItem value="recommended">Recomended For Ads</SelectItem>
+                              <SelectItem value="cancel">Cancel</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                       )}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={16} className="h-24 text-center">
+                    <TableCell colSpan={Object.keys(visibleColumns || []).length + 1} className="h-24 text-center">
                       No content items. Click "Add Row" to create one.
                     </TableCell>
                   </TableRow>

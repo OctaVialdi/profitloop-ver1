@@ -40,6 +40,8 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
   const primaryColumns = ["selectColumn", "postDate", "contentType", "pic", "service", "subService", "title"];
   const detailsColumns = ["selectColumn", "contentPillar", "brief", "status", "revision", "approved"];
   const publishingColumns = ["selectColumn", "completionDate", "mirrorPostDate", "mirrorContentType", "mirrorTitle"];
+  const productionColumns = ["selectColumn", "picProduction", "googleDriveLink", "productionStatus", "productionRevision", "productionCompletionDate", "productionApproved", "productionApprovedDate"];
+  const postingColumns = ["selectColumn", "downloadLink", "postLink", "isDone", "actualPostDate", "onTimeStatus", "contentStatus"];
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -51,6 +53,8 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
         <TabsTrigger value="primary" className="px-6">Primary Info</TabsTrigger>
         <TabsTrigger value="details" className="px-6">Content Details</TabsTrigger>
         <TabsTrigger value="publishing" className="px-6">Publishing Info</TabsTrigger>
+        <TabsTrigger value="production" className="px-6">Production</TabsTrigger>
+        <TabsTrigger value="posting" className="px-6">Posting</TabsTrigger>
       </TabsList>
 
       <TabsContent value="primary" className="mt-0">
@@ -74,6 +78,22 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
           {...props}
           visibleColumns={publishingColumns}
           activeTab="publishing"
+        />
+      </TabsContent>
+
+      <TabsContent value="production" className="mt-0">
+        <ContentTable
+          {...props}
+          visibleColumns={productionColumns}
+          activeTab="production"
+        />
+      </TabsContent>
+
+      <TabsContent value="posting" className="mt-0">
+        <ContentTable
+          {...props}
+          visibleColumns={postingColumns}
+          activeTab="posting"
         />
       </TabsContent>
     </Tabs>
