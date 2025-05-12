@@ -31,10 +31,10 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
-          className="flex items-center justify-center gap-1 w-full font-normal text-xs h-7 px-2"
+          className="flex items-center justify-center gap-1 w-full font-normal text-xs h-6 px-1"
         >
-          <span>{format(selectedMonth, "MMMM yyyy")}</span>
-          <ChevronDown className="h-3 w-3" />
+          <span className="truncate">{format(selectedMonth, "MMM yyyy")}</span>
+          <ChevronDown className="h-3 w-3 flex-shrink-0" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto">

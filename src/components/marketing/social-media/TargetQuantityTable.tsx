@@ -56,12 +56,12 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
 }) => {
   return (
     <ScrollArea className="w-full">
-      <div className="min-w-max">
+      <div className="min-w-fit">
         <Table className="w-full">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 w-[100px] py-1">PIC</TableHead>
-              <TableHead className="h-8 text-center w-[110px] py-1">
+              <TableHead className="h-7 whitespace-nowrap py-1 w-auto min-w-[120px]">PIC</TableHead>
+              <TableHead className="h-7 text-center py-1 w-[90px]">
                 <DateSelector 
                   selectedDate={selectedDate}
                   setSelectedDate={setSelectedDate}
@@ -70,7 +70,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   renderMonthCalendar={renderMonthCalendar}
                 />
               </TableHead>
-              <TableHead className="h-8 text-center w-[100px] py-1">
+              <TableHead className="h-7 text-center py-1 w-[90px]">
                 <MonthSelector 
                   selectedMonth={selectedMonth}
                   setSelectedMonth={setSelectedMonth}
@@ -78,13 +78,13 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   setIsMonthSelectorOpen={setIsMonthSelectorOpen}
                 />
               </TableHead>
-              <TableHead className="h-8 text-center w-[120px] py-1">
+              <TableHead className="h-7 text-center whitespace-nowrap py-1 w-[90px]">
                 Target {format(selectedMonth, "MMM yyyy")}
               </TableHead>
-              <TableHead className="h-8 w-[160px] py-1">Progress</TableHead>
-              <TableHead className="h-8 text-center w-[110px] py-1">On Time Rate</TableHead>
-              <TableHead className="h-8 text-center w-[110px] py-1">Effective Rate</TableHead>
-              <TableHead className="h-8 text-center w-[80px] py-1">Score</TableHead>
+              <TableHead className="h-7 py-1 w-[100px]">Progress</TableHead>
+              <TableHead className="h-7 text-center py-1 w-[90px]">On Time Rate</TableHead>
+              <TableHead className="h-7 text-center py-1 w-[90px]">Effective Rate</TableHead>
+              <TableHead className="h-7 text-center py-1 w-[60px]">Score</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -109,7 +109,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                 <TableCell className="py-1 px-2">
                   <div className="flex items-center gap-1">
                     <Progress value={manager.progress} className="h-1.5" />
-                    <span className="text-xs">{manager.progress}%</span>
+                    <span className="text-xs whitespace-nowrap">{manager.progress}%</span>
                   </div>
                 </TableCell>
                 <TableCell className="py-1 px-2 text-center text-sm">{manager.onTimeRate}%</TableCell>
