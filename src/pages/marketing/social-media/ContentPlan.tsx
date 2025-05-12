@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -138,156 +137,159 @@ const ContentPlan = () => {
       </CardHeader>
       <CardContent>
         <div className="border rounded-md overflow-hidden">
-          {/* Main scroll container for vertical scrolling */}
+          {/* Vertical scroll container */}
           <ScrollArea className="h-[calc(100vh-230px)]">
-            {/* Container for horizontal scrolling with fixed column widths */}
-            <div className="min-w-[1200px] max-w-[1300px] w-full" style={{ tableLayout: 'fixed' }}>
-              <Table>
-                <TableHeader className="sticky top-0 bg-white z-10">
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="w-[60px] text-center sticky left-0 bg-slate-50 z-20">
-                      <Checkbox 
-                        checked={selectAll} 
-                        onCheckedChange={handleSelectAll}
-                        aria-label="Select all"
-                        className="ml-2"
-                      />
-                    </TableHead>
-                    <TableHead className="w-[200px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
-                    <TableHead className="w-[200px] text-center whitespace-nowrap">Tipe Content</TableHead>
-                    <TableHead className="w-[200px] text-center whitespace-nowrap">PIC</TableHead>
-                    <TableHead className="w-[200px] text-center whitespace-nowrap">Layanan</TableHead>
-                    <TableHead className="w-[200px] text-center whitespace-nowrap">Sub Layanan</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contentItems.length > 0 ? (
-                    contentItems.map(item => (
-                      <TableRow key={item.id} className="hover:bg-slate-50/60">
-                        <TableCell className="text-center sticky left-0 bg-white z-10">
-                          <Checkbox 
-                            checked={item.isSelected} 
-                            onCheckedChange={() => toggleSelectItem(item.id)}
-                            aria-label="Select row"
-                          />
-                        </TableCell>
-                        <TableCell className="p-2">
-                          <Popover 
-                            open={isCalendarOpen[item.id]} 
-                            onOpenChange={() => toggleCalendar(item.id)}
-                          >
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start text-left font-normal"
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {item.postDate || 'Select date'}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 z-50" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={item.postDate ? new Date(item.postDate) : undefined}
-                                onSelect={(date) => handleDateChange(item.id, date)}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-                        <TableCell className="p-2">
-                          <Select 
-                            value={item.contentType} 
-                            onValueChange={(value) => handleTypeChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full bg-white">
-                              <SelectValue placeholder="Select content type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {contentTypes.map((type) => (
-                                <SelectItem key={type.id} value={type.id}>
-                                  {type.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="p-2">
-                          <Select 
-                            value={item.pic} 
-                            onValueChange={(value) => handlePICChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full bg-white">
-                              <SelectValue placeholder="Select PIC" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {contentPlanners.length > 0 ? (
-                                contentPlanners.map((planner) => (
-                                  <SelectItem key={planner.id} value={planner.name}>
-                                    {planner.name}
+            {/* Horizontal scroll container - added overflow-x-auto to ensure horizontal scrolling */}
+            <div className="overflow-x-auto">
+              {/* Fixed width container for the table */}
+              <div className="min-w-[1200px] max-w-[1300px] w-full">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10">
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="w-[60px] text-center sticky left-0 bg-slate-50 z-20">
+                        <Checkbox 
+                          checked={selectAll} 
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all"
+                          className="ml-2"
+                        />
+                      </TableHead>
+                      <TableHead className="w-[200px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
+                      <TableHead className="w-[200px] text-center whitespace-nowrap">Tipe Content</TableHead>
+                      <TableHead className="w-[200px] text-center whitespace-nowrap">PIC</TableHead>
+                      <TableHead className="w-[200px] text-center whitespace-nowrap">Layanan</TableHead>
+                      <TableHead className="w-[200px] text-center whitespace-nowrap">Sub Layanan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {contentItems.length > 0 ? (
+                      contentItems.map(item => (
+                        <TableRow key={item.id} className="hover:bg-slate-50/60">
+                          <TableCell className="text-center sticky left-0 bg-white z-10">
+                            <Checkbox 
+                              checked={item.isSelected} 
+                              onCheckedChange={() => toggleSelectItem(item.id)}
+                              aria-label="Select row"
+                            />
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <Popover 
+                              open={isCalendarOpen[item.id]} 
+                              onOpenChange={() => toggleCalendar(item.id)}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start text-left font-normal"
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {item.postDate || 'Select date'}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-50" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={item.postDate ? new Date(item.postDate) : undefined}
+                                  onSelect={(date) => handleDateChange(item.id, date)}
+                                  initialFocus
+                                  className="p-3 pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <Select 
+                              value={item.contentType} 
+                              onValueChange={(value) => handleTypeChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select content type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {contentTypes.map((type) => (
+                                  <SelectItem key={type.id} value={type.id}>
+                                    {type.name}
                                   </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="no-pic-found" disabled>
-                                  No content planners found
-                                </SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="p-2">
-                          <Select 
-                            value={item.service} 
-                            onValueChange={(value) => handleServiceChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full bg-white">
-                              <SelectValue placeholder="Select service" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {services.map((service) => (
-                                <SelectItem key={service.id} value={service.id}>
-                                  {service.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="p-2">
-                          <Select 
-                            value={item.subService} 
-                            onValueChange={(value) => handleSubServiceChange(item.id, value)}
-                            disabled={!item.service} // Disable if no service is selected
-                          >
-                            <SelectTrigger className="w-full bg-white">
-                              <SelectValue placeholder="Select sub service" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {item.service ? (
-                                getFilteredSubServices(item.service).map((subService) => (
-                                  <SelectItem key={subService.id} value={subService.id}>
-                                    {subService.name}
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <Select 
+                              value={item.pic} 
+                              onValueChange={(value) => handlePICChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select PIC" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {contentPlanners.length > 0 ? (
+                                  contentPlanners.map((planner) => (
+                                    <SelectItem key={planner.id} value={planner.name}>
+                                      {planner.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no-pic-found" disabled>
+                                    No content planners found
                                   </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="no-subservice" disabled>
-                                  Select a service first
-                                </SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <Select 
+                              value={item.service} 
+                              onValueChange={(value) => handleServiceChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select service" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {services.map((service) => (
+                                  <SelectItem key={service.id} value={service.id}>
+                                    {service.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <Select 
+                              value={item.subService} 
+                              onValueChange={(value) => handleSubServiceChange(item.id, value)}
+                              disabled={!item.service} // Disable if no service is selected
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select sub service" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {item.service ? (
+                                  getFilteredSubServices(item.service).map((subService) => (
+                                    <SelectItem key={subService.id} value={subService.id}>
+                                      {subService.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no-subservice" disabled>
+                                    Select a service first
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          No content items. Click "Add Row" to create one.
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
-                        No content items. Click "Add Row" to create one.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </ScrollArea>
         </div>
