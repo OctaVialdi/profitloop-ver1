@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { DateSelector } from "./DateSelector";
 import { MonthSelector } from "./MonthSelector";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 interface ContentManager {
   name: string;
@@ -60,8 +61,13 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
         <Table className="w-full">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-7 whitespace-nowrap py-1 w-[90px] min-w-[90px]">PIC</TableHead>
-              <TableHead className="h-7 text-center py-1 w-[70px]">
+              <TableHead className="h-7 whitespace-nowrap py-1 w-[90px] min-w-[90px] relative">
+                PIC
+                <div className="absolute right-0 top-0 h-full">
+                  <Separator orientation="vertical" className="h-full bg-gray-300" />
+                </div>
+              </TableHead>
+              <TableHead className="h-7 text-center py-1 w-[70px] relative">
                 <DateSelector 
                   selectedDate={selectedDate}
                   setSelectedDate={setSelectedDate}
@@ -69,31 +75,72 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   setIsCalendarOpen={setIsCalendarOpen}
                   renderMonthCalendar={renderMonthCalendar}
                 />
+                <div className="absolute right-0 top-0 h-full">
+                  <Separator orientation="vertical" className="h-full bg-gray-300" />
+                </div>
               </TableHead>
-              <TableHead className="h-7 text-center py-1 w-[70px]">
+              <TableHead className="h-7 text-center py-1 w-[70px] relative">
                 <MonthSelector 
                   selectedMonth={selectedMonth}
                   setSelectedMonth={setSelectedMonth}
                   isMonthSelectorOpen={isMonthSelectorOpen}
                   setIsMonthSelectorOpen={setIsMonthSelectorOpen}
                 />
+                <div className="absolute right-0 top-0 h-full">
+                  <Separator orientation="vertical" className="h-full bg-gray-300" />
+                </div>
               </TableHead>
-              <TableHead className="h-7 text-center whitespace-nowrap py-1 w-[80px]">
+              <TableHead className="h-7 text-center whitespace-nowrap py-1 w-[80px] relative">
                 Target {format(selectedMonth, "MMM yyyy")}
+                <div className="absolute right-0 top-0 h-full">
+                  <Separator orientation="vertical" className="h-full bg-gray-300" />
+                </div>
               </TableHead>
-              <TableHead className="h-7 py-1 w-[120px]">Progress</TableHead>
-              <TableHead className="h-7 text-center py-1 w-[80px]">On Time Rate</TableHead>
-              <TableHead className="h-7 text-center py-1 w-[80px]">Effective Rate</TableHead>
-              <TableHead className="h-7 text-center py-1 w-[60px]">Score</TableHead>
+              <TableHead className="h-7 py-1 w-[120px] relative">
+                Progress
+                <div className="absolute right-0 top-0 h-full">
+                  <Separator orientation="vertical" className="h-full bg-gray-300" />
+                </div>
+              </TableHead>
+              <TableHead className="h-7 text-center py-1 w-[80px] relative">
+                On Time Rate
+                <div className="absolute right-0 top-0 h-full">
+                  <Separator orientation="vertical" className="h-full bg-gray-300" />
+                </div>
+              </TableHead>
+              <TableHead className="h-7 text-center py-1 w-[80px] relative">
+                Effective Rate
+                <div className="absolute right-0 top-0 h-full">
+                  <Separator orientation="vertical" className="h-full bg-gray-300" />
+                </div>
+              </TableHead>
+              <TableHead className="h-7 text-center py-1 w-[60px]">
+                Score
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {contentManagers.map((manager) => (
               <TableRow key={manager.name} className="hover:bg-gray-50/80">
-                <TableCell className="py-1 px-2 font-medium text-sm truncate">{manager.name}</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.dailyTarget}</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.monthlyTarget}</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">
+                <TableCell className="py-1 px-2 font-medium text-sm truncate relative">
+                  {manager.name}
+                  <div className="absolute right-0 top-0 h-full">
+                    <Separator orientation="vertical" className="h-full bg-gray-200" />
+                  </div>
+                </TableCell>
+                <TableCell className="py-1 px-2 text-center text-sm relative">
+                  {manager.dailyTarget}
+                  <div className="absolute right-0 top-0 h-full">
+                    <Separator orientation="vertical" className="h-full bg-gray-200" />
+                  </div>
+                </TableCell>
+                <TableCell className="py-1 px-2 text-center text-sm relative">
+                  {manager.monthlyTarget}
+                  <div className="absolute right-0 top-0 h-full">
+                    <Separator orientation="vertical" className="h-full bg-gray-200" />
+                  </div>
+                </TableCell>
+                <TableCell className="py-1 px-2 text-center text-sm relative">
                   <div className="flex items-center justify-center gap-1">
                     <span>{manager.monthlyTargetAdjusted}</span>
                     <Button 
@@ -105,16 +152,34 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                       <Edit className="h-3 w-3" />
                     </Button>
                   </div>
+                  <div className="absolute right-0 top-0 h-full">
+                    <Separator orientation="vertical" className="h-full bg-gray-200" />
+                  </div>
                 </TableCell>
-                <TableCell className="py-1 px-2">
+                <TableCell className="py-1 px-2 relative">
                   <div className="flex items-center gap-1">
                     <Progress value={manager.progress} className="h-1.5 min-w-[60px]" />
                     <span className="text-xs whitespace-nowrap">{manager.progress}%</span>
                   </div>
+                  <div className="absolute right-0 top-0 h-full">
+                    <Separator orientation="vertical" className="h-full bg-gray-200" />
+                  </div>
                 </TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.onTimeRate}%</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.effectiveRate}%</TableCell>
-                <TableCell className="py-1 px-2 text-center text-sm">{manager.score}</TableCell>
+                <TableCell className="py-1 px-2 text-center text-sm relative">
+                  {manager.onTimeRate}%
+                  <div className="absolute right-0 top-0 h-full">
+                    <Separator orientation="vertical" className="h-full bg-gray-200" />
+                  </div>
+                </TableCell>
+                <TableCell className="py-1 px-2 text-center text-sm relative">
+                  {manager.effectiveRate}%
+                  <div className="absolute right-0 top-0 h-full">
+                    <Separator orientation="vertical" className="h-full bg-gray-200" />
+                  </div>
+                </TableCell>
+                <TableCell className="py-1 px-2 text-center text-sm">
+                  {manager.score}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
