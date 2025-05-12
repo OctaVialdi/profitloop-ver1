@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -110,21 +111,7 @@ const CreateContent = () => {
     updateContentItem(itemId, { status });
   };
 
-  // New handler for the Approved checkbox
-  const handleApprovalChange = (itemId: string, isApproved: boolean) => {
-    // Only managers can change approval status
-    if (isUserManager) {
-      updateContentItem(itemId, { isApproved });
-      
-      if (isApproved) {
-        toast.success("Content has been approved");
-      } else {
-        toast.info("Approval has been removed");
-      }
-    } else {
-      toast.error("Only managers can approve content");
-    }
-  };
+  // Removed handleApprovalChange function since it's no longer needed
 
   const handleDeleteSelected = () => {
     const selectedIds = contentItems
@@ -183,7 +170,6 @@ const CreateContent = () => {
           handleTitleChange={handleTitleChange}
           handleContentPillarChange={handleContentPillarChange}
           handleStatusChange={handleStatusChange}
-          handleApprovalChange={handleApprovalChange}
           toggleSelectItem={toggleSelectItem}
           selectAll={selectAll}
           handleSelectAll={handleSelectAll}
