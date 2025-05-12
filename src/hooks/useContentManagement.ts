@@ -348,7 +348,7 @@ export const useContentManagement = () => {
       title: "",
       contentPillar: "",
       brief: "",
-      status: "",
+      status: "none", // Use "none" instead of empty string
       revisions: 0,
       approved: false,
       completionDate: null,

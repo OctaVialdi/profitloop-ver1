@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -495,7 +494,7 @@ const ContentBank = () => {
                             <SelectValue placeholder="-" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">-</SelectItem>
+                            <SelectItem value="none">-</SelectItem>
                             <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
                             <SelectItem value="Request Revisi">Request Revisi</SelectItem>
                           </SelectContent>
