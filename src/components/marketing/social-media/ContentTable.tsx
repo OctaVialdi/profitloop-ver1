@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -177,7 +176,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                     <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
                   )}
                   
-                  {/* Column 8: Content Pillar */}
+                  {/* Content Pillar Column */}
                   {isColumnVisible("contentPillar") && (
                     <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
                   )}
@@ -449,7 +448,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       
-                      {/* Column 8: Content Pillar */}
+                      {/* Content Pillar Column */}
                       {isColumnVisible("contentPillar") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Select 
@@ -463,7 +462,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               </div>
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {contentPillars.map((pillar) => (
                                 <SelectItem key={pillar.id} value={pillar.id}>
                                   {pillar.name}
@@ -608,7 +607,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select Production PIC" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {/* This would need to be populated with actual production staff */}
                               <SelectItem value="production-1">Production Staff 1</SelectItem>
                               <SelectItem value="production-2">Production Staff 2</SelectItem>
