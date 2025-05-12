@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { useEmployees, LegacyEmployee, convertToLegacyFormat } from "@/hooks/useEmployees";
 
 export interface ContentType {
@@ -23,28 +23,14 @@ export interface ContentPillar {
   name: string;
 }
 
-export interface ContentItem {
-  id: string;
-  postDate: string | undefined;
-  contentType: string;
-  isSelected: boolean;
-  pic: string;
-  service: string;
-  subService: string;
-  title: string;
-  contentPillar: string;
-  brief: string;
-  status: string;
-}
-
 export const useContentManagement = () => {
   const { employees } = useEmployees();
   const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [subServices, setSubServices] = useState<SubService[]>([]);
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [contentPlanners, setContentPlanners] = useState<any[]>([]);
   const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
+  const [currentUser, setCurrentUser] = useState<LegacyEmployee | null>(null);
   
   // Load content types, services, and sub-services from localStorage
   useEffect(() => {
@@ -87,16 +73,6 @@ export const useContentManagement = () => {
         } catch (e) {
           console.error("Error parsing content pillars from localStorage:", e);
         }
-      } else {
-        // Default content pillars if none exist
-        const defaultPillars = [
-          { id: "1", name: "Awareness" },
-          { id: "2", name: "Consideration" },
-          { id: "3", name: "Decision" },
-          { id: "4", name: "Loyalty" }
-        ];
-        setContentPillars(defaultPillars);
-        localStorage.setItem("marketingContentPillars", JSON.stringify(defaultPillars));
       }
 
       // Load content planners (employees with jobPosition "Content Planner")
@@ -117,74 +93,27 @@ export const useContentManagement = () => {
     };
 
     loadData();
-    
-    // Load previously saved content items
-    const storedItems = localStorage.getItem("contentItems");
-    if (storedItems) {
-      try {
-        setContentItems(JSON.parse(storedItems));
-      } catch (e) {
-        console.error("Error parsing content items from localStorage:", e);
-      }
-    }
   }, []);
 
-  // Save content items to localStorage whenever they change
+  // Get current user
   useEffect(() => {
-    if (contentItems.length > 0) {
-      localStorage.setItem("contentItems", JSON.stringify(contentItems));
+    if (employees.length > 0) {
+      const marketingEmployees = employees
+        .map(convertToLegacyFormat)
+        .filter(employee => employee.organization === "Digital Marketing");
+      
+      const manager = marketingEmployees.find(
+        employee => employee.jobPosition?.toLowerCase().includes("manager")
+      );
+      
+      if (manager) {
+        setCurrentUser(manager);
+      } else if (marketingEmployees.length > 0) {
+        // Default to first marketing employee if no manager exists
+        setCurrentUser(marketingEmployees[0]);
+      }
     }
-  }, [contentItems]);
-
-  // Add a new content item
-  const addContentItem = () => {
-    const newItem: ContentItem = {
-      id: `${Date.now()}`,
-      postDate: new Date().toISOString().split('T')[0],
-      contentType: "",
-      isSelected: false,
-      pic: "",
-      service: "",
-      subService: "",
-      title: "",
-      contentPillar: "",
-      brief: "",
-      status: "none",
-    };
-    setContentItems([...contentItems, newItem]);
-  };
-
-  // Update a content item
-  const updateContentItem = (itemId: string, updates: Partial<ContentItem>) => {
-    setContentItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId ? { ...item, ...updates } : item
-      )
-    );
-  };
-
-  // Delete content items by IDs
-  const deleteContentItems = (itemIds: string[]) => {
-    setContentItems(prevItems => 
-      prevItems.filter(item => !itemIds.includes(item.id))
-    );
-  };
-
-  // Toggle selection of an item
-  const toggleSelectItem = (itemId: string) => {
-    setContentItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId ? { ...item, isSelected: !item.isSelected } : item
-      )
-    );
-  };
-
-  // Select all items
-  const selectAllItems = (selected: boolean) => {
-    setContentItems(prevItems =>
-      prevItems.map(item => ({ ...item, isSelected: selected }))
-    );
-  };
+  }, [employees]);
 
   // Get filtered sub-services for a specific service
   const getFilteredSubServices = (serviceId: string) => {
@@ -195,14 +124,9 @@ export const useContentManagement = () => {
     contentTypes,
     services,
     subServices,
-    contentItems,
     contentPlanners,
     contentPillars,
-    addContentItem,
-    updateContentItem,
-    deleteContentItems,
-    toggleSelectItem,
-    selectAllItems,
+    currentUser,
     getFilteredSubServices
   };
 };
