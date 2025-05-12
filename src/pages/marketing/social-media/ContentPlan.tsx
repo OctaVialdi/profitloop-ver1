@@ -170,21 +170,22 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Fixed width container */}
+        {/* Fixed width container - limit width to create horizontal scroll */}
         <div className="w-full">
-          {/* Enhanced scrolling container with better horizontal scroll handling */}
+          {/* Main scrollable container with borders */}
           <div className="rounded-md border overflow-hidden">
+            {/* Relative container to handle sticky positioning */}
             <div className="relative">
-              {/* ScrollArea component handles vertical scrolling */}
+              {/* Vertical Scroll Container */}
               <ScrollArea className="h-[calc(100vh-350px)]">
-                {/* Dedicated horizontal scrolling container with improved styling */}
-                <div className="overflow-x-auto" style={{ minWidth: "100%" }}>
+                {/* Horizontal Scroll Container - force fixed width to ensure horizontal scrolling */}
+                <div className="overflow-x-auto" style={{ width: "100%", minWidth: "100%" }}>
                   <Table>
-                    {/* Sticky header with proper z-index */}
-                    <TableHeader className="sticky top-0 bg-white z-10">
+                    {/* Sticky header with high z-index */}
+                    <TableHeader className="sticky top-0 bg-white z-30">
                       <TableRow>
                         {isManager && (
-                          <TableHead className="w-[50px] text-center sticky left-0 bg-white z-20">
+                          <TableHead className="w-[50px] text-center sticky left-0 bg-white z-40">
                             <input 
                               type="checkbox" 
                               checked={allSelected}
@@ -193,20 +194,21 @@ const ContentPlan = () => {
                             />
                           </TableHead>
                         )}
-                        <TableHead className="min-w-[120px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
-                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Tipe Content</TableHead>
-                        <TableHead className="min-w-[120px] text-center whitespace-nowrap">PIC</TableHead>
-                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Layanan</TableHead>
-                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Sub Layanan</TableHead>
-                        <TableHead className="min-w-[180px] text-center whitespace-nowrap">Judul Content</TableHead>
-                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Content Pillar</TableHead>
-                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Brief</TableHead>
-                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Status</TableHead>
-                        <TableHead className="min-w-[100px] text-center whitespace-nowrap">Revision</TableHead>
-                        <TableHead className="min-w-[100px] text-center whitespace-nowrap">Approved</TableHead>
-                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Tanggal Selesai</TableHead>
-                        <TableHead className="min-w-[120px] text-center whitespace-nowrap">Tanggal Upload</TableHead>
-                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Tipe Content</TableHead>
+                        <TableHead className="w-[120px] whitespace-nowrap">Tanggal Posting</TableHead>
+                        <TableHead className="w-[150px] whitespace-nowrap">Tipe Content</TableHead>
+                        <TableHead className="w-[120px] whitespace-nowrap">PIC</TableHead>
+                        <TableHead className="w-[150px] whitespace-nowrap">Layanan</TableHead>
+                        <TableHead className="w-[150px] whitespace-nowrap">Sub Layanan</TableHead>
+                        <TableHead className="w-[180px] whitespace-nowrap">Judul Content</TableHead>
+                        <TableHead className="w-[150px] whitespace-nowrap">Content Pillar</TableHead>
+                        <TableHead className="w-[150px] whitespace-nowrap">Brief</TableHead>
+                        {/* Columns after Brief will require horizontal scrolling to see */}
+                        <TableHead className="w-[150px] whitespace-nowrap">Status</TableHead>
+                        <TableHead className="w-[100px] whitespace-nowrap">Revision</TableHead>
+                        <TableHead className="w-[100px] whitespace-nowrap">Approved</TableHead>
+                        <TableHead className="w-[150px] whitespace-nowrap">Tanggal Selesai</TableHead>
+                        <TableHead className="w-[120px] whitespace-nowrap">Tanggal Upload</TableHead>
+                        <TableHead className="w-[150px] whitespace-nowrap">Tipe Content</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -220,7 +222,7 @@ const ContentPlan = () => {
                         contentItems.map((item) => (
                           <TableRow key={item.id}>
                             {isManager && (
-                              <TableHead className="text-center sticky left-0 bg-white z-10">
+                              <TableHead className="text-center sticky left-0 bg-white z-20">
                                 <input 
                                   type="checkbox" 
                                   checked={!!item.isSelected}
@@ -319,10 +321,10 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Button 
                                 variant="ghost" 
-                                className="w-full text-left justify-start h-auto py-1 px-2 whitespace-nowrap"
+                                className="w-full text-left justify-start h-auto py-1 px-2"
                                 onClick={() => openTitleDialog(item.id, item.title)}
                               >
                                 <span className="truncate block">
@@ -346,10 +348,10 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Button 
                                 variant="ghost" 
-                                className="w-full text-left justify-start h-auto py-1 px-2 whitespace-nowrap"
+                                className="w-full text-left justify-start h-auto py-1 px-2"
                                 onClick={() => openBriefDialog(item.id, item.brief)}
                               >
                                 <span className="truncate block">
