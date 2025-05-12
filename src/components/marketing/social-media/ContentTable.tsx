@@ -48,6 +48,7 @@ interface ContentTableProps {
   visibleColumns?: string[];
   fixedColumnsCount?: number;
   initialVisibleColumnsCount?: number;
+  columnWidths?: {[key: string]: number};
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -80,6 +81,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   visibleColumns = [],
   fixedColumnsCount = 1,
   initialVisibleColumnsCount = 10,
+  columnWidths = {},
 }) => {
   // Format completion date for display
   const formatCompletionDate = (dateString: string | undefined) => {
@@ -103,6 +105,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     return columnIndex < initialVisibleColumnsCount;
   };
 
+  // Get column width from columnWidths object or return default
+  const getColumnWidth = (columnName: string) => {
+    return columnWidths[columnName] || 150;
+  };
+
   // Get visible column names
   const getVisibleColumnNames = () => {
     if (visibleColumns.length === 0) {
@@ -117,18 +124,28 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 
   const columnNames = getVisibleColumnNames();
 
+  // Calculate the total table width based on column widths
+  const totalTableWidth = columnNames.reduce((total, columnName) => {
+    return total + getColumnWidth(columnName);
+  }, 0);
+
   return (
     <div className="w-full relative">
-      <div className="overflow-hidden border border-slate-200 rounded-md">
-        <div className="overflow-x-auto" style={{ maxWidth: '100%', position: 'relative' }}>
-          <div className="inline-block min-w-full align-middle">
+      <div className="border border-slate-200 rounded-md overflow-hidden">
+        {/* Horizontal scrolling container with fixed width */}
+        <div className="overflow-x-auto" style={{ 
+          maxWidth: '100%', 
+          position: 'relative', 
+          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+        }}>
+          <div style={{ width: `${totalTableWidth}px`, minWidth: '100%' }}>
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
                   {columnNames.map((columnName, index) => {
                     let content = null;
                     const isFixed = isColumnFixed(index);
-                    const isInitVisible = isInitiallyVisible(index);
+                    const columnWidth = getColumnWidth(columnName);
                     
                     const cellClassName = `text-center font-medium whitespace-nowrap ${
                       isFixed ? "sticky left-0 bg-slate-50 shadow-[1px_0_0_0_#e5e7eb] z-30" : ""
@@ -201,7 +218,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         style={{
                           position: isFixed ? 'sticky' : 'static',
                           left: isFixed ? 0 : 'auto',
-                          backgroundColor: isInitVisible ? (isFixed ? '#f8fafc' : '#fff') : '#f1f5f9'
+                          width: `${columnWidth}px`,
+                          minWidth: `${columnWidth}px`,
+                          maxWidth: `${columnWidth}px`,
+                          backgroundColor: isFixed ? '#f8fafc' : '#f1f5f9',
+                          boxSizing: 'border-box'
                         }}
                       >
                         {content}
@@ -216,7 +237,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                     <TableRow key={item.id} className="hover:bg-slate-50/60 relative">
                       {columnNames.map((columnName, index) => {
                         const isFixed = isColumnFixed(index);
-                        const isInitVisible = isInitiallyVisible(index);
+                        const columnWidth = getColumnWidth(columnName);
                         const cellClassName = `p-2 whitespace-nowrap ${
                           isFixed ? "sticky left-0 bg-white shadow-[1px_0_0_0_#e5e7eb] z-10" : ""
                         }`;
@@ -228,7 +249,12 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                             style={{
                               position: isFixed ? 'sticky' : 'static',
                               left: isFixed ? 0 : 'auto',
-                              backgroundColor: isInitVisible ? 'white' : '#f8fafc'
+                              width: `${columnWidth}px`,
+                              minWidth: `${columnWidth}px`,
+                              maxWidth: `${columnWidth}px`,
+                              backgroundColor: isFixed ? 'white' : 'white',
+                              boxSizing: 'border-box',
+                              overflow: 'hidden'
                             }}
                           >
                             {columnName === "selectColumn" && (
@@ -246,10 +272,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 <PopoverTrigger asChild>
                                   <Button
                                     variant="outline"
-                                    className="w-full justify-start text-left font-normal"
+                                    className="w-full justify-start text-left font-normal truncate"
+                                    style={{ maxWidth: `${columnWidth - 10}px` }}
                                   >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {item.postDate || 'Select date'}
+                                    <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate">{item.postDate || 'Select date'}</span>
                                   </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="start">
@@ -268,8 +295,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 value={item.contentType} 
                                 onValueChange={(value) => handleTypeChange(item.id, value)}
                               >
-                                <SelectTrigger className="w-full bg-white">
-                                  <SelectValue placeholder="Select content type" />
+                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
+                                  <SelectValue placeholder="Select content type" className="truncate" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {contentTypes.map((type) => (
@@ -285,8 +312,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 value={item.pic} 
                                 onValueChange={(value) => handlePICChange(item.id, value)}
                               >
-                                <SelectTrigger className="w-full bg-white">
-                                  <SelectValue placeholder="Select PIC" />
+                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
+                                  <SelectValue placeholder="Select PIC" className="truncate" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {contentPlanners.length > 0 ? (
@@ -308,8 +335,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 value={item.service} 
                                 onValueChange={(value) => handleServiceChange(item.id, value)}
                               >
-                                <SelectTrigger className="w-full bg-white">
-                                  <SelectValue placeholder="Select service" />
+                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
+                                  <SelectValue placeholder="Select service" className="truncate" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {services.map((service) => (
@@ -326,8 +353,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 onValueChange={(value) => handleSubServiceChange(item.id, value)}
                                 disabled={!item.service}
                               >
-                                <SelectTrigger className="w-full bg-white">
-                                  <SelectValue placeholder="Select sub-service" />
+                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
+                                  <SelectValue placeholder="Select sub-service" className="truncate" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {item.service ? (
@@ -345,7 +372,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               </Select>
                             )}
                             {columnName === "title" && (
-                              <div className="flex items-center">
+                              <div className="flex items-center" style={{ maxWidth: `${columnWidth - 10}px` }}>
                                 <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
                                 <Input
                                   value={item.title || ""}
@@ -353,6 +380,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   placeholder="Enter title"
                                   className="w-full bg-white"
                                   maxLength={25}
+                                  style={{ maxWidth: `${columnWidth - 30}px` }}
                                 />
                               </div>
                             )}
@@ -361,10 +389,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 value={item.contentPillar} 
                                 onValueChange={(value) => handleContentPillarChange(item.id, value)}
                               >
-                                <SelectTrigger className="w-full bg-white">
-                                  <div className="flex items-center">
-                                    <List className="h-4 w-4 mr-2" />
-                                    <SelectValue placeholder="Select pillar" />
+                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
+                                  <div className="flex items-center truncate">
+                                    <List className="h-4 w-4 mr-2 flex-shrink-0" />
+                                    <SelectValue placeholder="Select pillar" className="truncate" />
                                   </div>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -378,22 +406,23 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                             )}
                             {columnName === "brief" && (
                               item.brief ? (
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-2" style={{ maxWidth: `${columnWidth - 10}px` }}>
                                   <Button 
                                     variant="outline"
                                     size="sm"
-                                    className="text-left truncate w-full bg-white"
+                                    className="text-left truncate bg-white"
                                     onClick={() => openBriefDialog(item.id, item.brief!, "view")}
+                                    style={{ maxWidth: `${columnWidth - 40}px` }}
                                   >
-                                    {displayBrief(item.brief)}
+                                    <span className="truncate">{displayBrief(item.brief)}</span>
                                     {extractGoogleDocsLink(item.brief) && (
-                                      <ExternalLink className="ml-2 h-3 w-3 inline" />
+                                      <ExternalLink className="ml-2 h-3 w-3 flex-shrink-0" />
                                     )}
                                   </Button>
                                   <Button 
                                     variant="ghost" 
                                     size="icon" 
-                                    className="h-8 w-8" 
+                                    className="h-8 w-8 flex-shrink-0" 
                                     onClick={() => openBriefDialog(item.id, item.brief!, "edit")}
                                   >
                                     <Edit className="h-4 w-4" />
@@ -402,11 +431,12 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               ) : (
                                 <Button
                                   variant="ghost"
-                                  className="w-full justify-center"
+                                  className="w-full justify-center truncate"
                                   onClick={() => openBriefDialog(item.id, "", "edit")}
+                                  style={{ maxWidth: `${columnWidth - 10}px` }}
                                 >
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  Click to add brief
+                                  <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                                  <span className="truncate">Click to add brief</span>
                                 </Button>
                               )
                             )}
@@ -415,10 +445,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 value={item.status || "none"} 
                                 onValueChange={(value) => handleStatusChange(item.id, value)}
                               >
-                                <SelectTrigger className="w-full bg-white">
-                                  <div className="flex items-center">
-                                    <CircleDot className="h-4 w-4 mr-2" />
-                                    <SelectValue placeholder="-" />
+                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
+                                  <div className="flex items-center truncate">
+                                    <CircleDot className="h-4 w-4 mr-2 flex-shrink-0" />
+                                    <SelectValue placeholder="-" className="truncate" />
                                   </div>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -429,14 +459,14 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               </Select>
                             )}
                             {columnName === "revision" && (
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between" style={{ maxWidth: `${columnWidth - 10}px` }}>
                                 <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[30px]">
                                   {item.revisionCount || 0}
                                 </div>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7"
+                                  className="h-7 w-7 flex-shrink-0"
                                   onClick={() => resetRevisionCounter(item.id)}
                                   title="Reset revision counter"
                                 >
@@ -445,7 +475,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               </div>
                             )}
                             {columnName === "approved" && (
-                              <div className="flex justify-center">
+                              <div className="flex justify-center" style={{ maxWidth: `${columnWidth - 10}px` }}>
                                 <Checkbox 
                                   checked={item.isApproved} 
                                   onCheckedChange={(checked) => toggleApproved(item.id, checked as boolean)}
@@ -455,23 +485,23 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                             )}
                             {columnName === "completionDate" && (
                               item.status === "review" && item.completionDate ? (
-                                <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md text-xs">
+                                <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md text-xs truncate" style={{ maxWidth: `${columnWidth - 10}px` }}>
                                   {formatCompletionDate(item.completionDate)}
                                 </div>
                               ) : null
                             )}
                             {columnName === "mirrorPostDate" && (
-                              <div className="text-center text-sm text-slate-600">
+                              <div className="text-center text-sm text-slate-600 truncate" style={{ maxWidth: `${columnWidth - 10}px` }}>
                                 {item.postDate || "-"}
                               </div>
                             )}
                             {columnName === "mirrorContentType" && (
-                              <div className="text-center text-sm text-slate-600">
+                              <div className="text-center text-sm text-slate-600 truncate" style={{ maxWidth: `${columnWidth - 10}px` }}>
                                 {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
                               </div>
                             )}
                             {columnName === "mirrorTitle" && (
-                              <div className="text-center text-sm text-slate-600">
+                              <div className="text-center text-sm text-slate-600 truncate" style={{ maxWidth: `${columnWidth - 10}px` }}>
                                 {item.title || "-"}
                               </div>
                             )}
@@ -494,9 +524,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
       </div>
       
       {/* Visual indicator that more content is available horizontally */}
-      {columnNames.length > initialVisibleColumnsCount && (
-        <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-slate-50 to-transparent" />
-      )}
+      <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-slate-50 to-transparent" />
     </div>
   );
 };

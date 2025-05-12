@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -119,6 +120,16 @@ const ContentPlan = () => {
       } catch (e) {
         console.error("Error parsing employees from localStorage:", e);
       }
+    }
+
+    // Ensure we have some sample data
+    if (contentItems.length === 0) {
+      // Add sample data for testing horizontal scroll
+      setTimeout(() => {
+        for (let i = 0; i < 3; i++) {
+          addContentItem();
+        }
+      }, 500);
     }
   }, []);
 

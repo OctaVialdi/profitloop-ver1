@@ -45,12 +45,33 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
   // All columns combined
   const allColumns = [...fixedColumns, ...initialVisibleColumns, ...scrollableColumns];
 
+  // Define fixed widths for each column type
+  const columnWidths = {
+    selectColumn: 50,
+    postDate: 180,
+    contentType: 150,
+    pic: 150,
+    service: 180,
+    subService: 180,
+    title: 200,
+    contentPillar: 150,
+    brief: 200,
+    status: 150,
+    revision: 120,
+    approved: 100,
+    completionDate: 180,
+    mirrorPostDate: 150,
+    mirrorContentType: 150,
+    mirrorTitle: 200
+  };
+
   return (
     <ContentTable
       {...props}
       visibleColumns={allColumns}
       fixedColumnsCount={fixedColumns.length}
       initialVisibleColumnsCount={fixedColumns.length + initialVisibleColumns.length}
+      columnWidths={columnWidths}
     />
   );
 };
