@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -158,14 +157,14 @@ const CreateContent = () => {
   const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <Card className="w-full">
+    <Card className="w-full h-full flex flex-col overflow-hidden">
       <ContentHeader 
         handleDeleteSelected={handleDeleteSelected}
         handleAddRow={handleAddRow}
         hasSelectedItems={hasSelectedItems}
       />
       
-      <CardContent>
+      <CardContent className="flex-grow overflow-hidden p-0">
         <ContentTable
           contentItems={contentItems}
           contentTypes={contentTypes}

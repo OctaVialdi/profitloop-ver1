@@ -89,9 +89,9 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 
   return (
     <div className="relative w-full overflow-hidden">
-      <ScrollArea className="w-full">
-        <div className="min-w-[1400px]">
-          <Table className="w-full">
+      <ScrollArea className="h-[calc(100vh-300px)] w-full">
+        <div className="w-[1800px]">
+          <Table className="w-full table-fixed">
             <TableHeader className="sticky top-0 bg-white z-20">
               <TableRow>
                 <TableHead className="w-[60px] text-center sticky left-0 bg-white z-30 border-r">
@@ -101,19 +101,19 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                     aria-label="Select all"
                   />
                 </TableHead>
-                <TableHead className="w-[140px] text-center">Tanggal Posting</TableHead>
-                <TableHead className="w-[140px] text-center">Tipe Content</TableHead>
-                <TableHead className="w-[140px] text-center">PIC</TableHead>
-                <TableHead className="w-[140px] text-center">Layanan</TableHead>
-                <TableHead className="w-[140px] text-center">Sub Layanan</TableHead>
-                <TableHead className="w-[140px] text-center">Judul Content</TableHead>
-                <TableHead className="w-[140px] text-center">Content Pillar</TableHead>
+                <TableHead className="w-[150px] text-center">Tanggal Posting</TableHead>
+                <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
+                <TableHead className="w-[120px] text-center">PIC</TableHead>
+                <TableHead className="w-[150px] text-center">Layanan</TableHead>
+                <TableHead className="w-[150px] text-center">Sub Layanan</TableHead>
+                <TableHead className="w-[180px] text-center">Judul Content</TableHead>
+                <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
                 <TableHead className="w-[180px] text-center">Brief</TableHead>
                 <TableHead className="w-[140px] text-center">Status</TableHead>
-                <TableHead className="w-[140px] text-center">Revision</TableHead>
-                <TableHead className="w-[140px] text-center">Approved</TableHead>
-                <TableHead className="w-[140px] text-center">Tanggal Selesai</TableHead>
-                <TableHead className="w-[140px] text-center">Tanggal Upload</TableHead>
+                <TableHead className="w-[100px] text-center">Revision</TableHead>
+                <TableHead className="w-[100px] text-center">Approved</TableHead>
+                <TableHead className="w-[150px] text-center">Tanggal Selesai</TableHead>
+                <TableHead className="w-[150px] text-center">Tanggal Upload</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -370,7 +370,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={14} className="h-24 text-center"> {/* Updated colspan to 14 */}
+                  <TableCell colSpan={14} className="h-24 text-center">
                     No content items. Click "Add Row" to create one.
                   </TableCell>
                 </TableRow>
