@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -220,40 +219,46 @@ const CreateContent = () => {
       </CardHeader>
       
       <CardContent>
-        <div className="border rounded-md">
-          <div className="overflow-hidden">
-            <div className="w-[1800px] min-w-full overflow-x-auto">
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-20">
-                  <TableRow>
-                    <TableHead className="w-12 text-center sticky left-0 bg-background z-30">
-                      <Checkbox 
-                        checked={selectAll} 
-                        onCheckedChange={handleSelectAll}
-                        aria-label="Select all"
-                      />
-                    </TableHead>
-                    <TableHead className="w-36 text-center">Tanggal Posting</TableHead>
-                    <TableHead className="w-36 text-center">Tipe Content</TableHead>
-                    <TableHead className="w-36 text-center">PIC</TableHead>
-                    <TableHead className="w-36 text-center">Layanan</TableHead>
-                    <TableHead className="w-36 text-center">Sub Layanan</TableHead>
-                    <TableHead className="w-36 text-center">Judul Content</TableHead>
-                    <TableHead className="w-36 text-center">Content Pillar</TableHead>
-                    <TableHead className="w-36 text-center">Brief</TableHead>
-                    <TableHead className="w-36 text-center">Status</TableHead>
-                    <TableHead className="w-24 text-center">Revision</TableHead>
-                    <TableHead className="w-24 text-center">Approved</TableHead>
-                    <TableHead className="w-36 text-center">Tanggal Selesai</TableHead>
-                    <TableHead className="w-36 text-center">Tanggal Upload</TableHead>
-                    <TableHead className="w-36 text-center">Tipe Content</TableHead>
-                  </TableRow>
-                </TableHeader>
-              </Table>
+        {/* Container with fixed dimensions and overflow handling */}
+        <div className="border rounded-md w-full relative overflow-hidden">
+          {/* Fixed width for the main wrapper with horizontal scrolling */}
+          <div className="max-w-full">
+            {/* Header table with sticky positioning and fixed width columns */}
+            <div className="w-full overflow-x-auto">
+              <div className="min-w-[1800px]"> {/* Minimum width to accommodate all columns */}
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-20">
+                    <TableRow>
+                      <TableHead className="w-12 text-center sticky left-0 bg-background z-30">
+                        <Checkbox 
+                          checked={selectAll} 
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all"
+                        />
+                      </TableHead>
+                      <TableHead className="w-36 text-center">Tanggal Posting</TableHead>
+                      <TableHead className="w-36 text-center">Tipe Content</TableHead>
+                      <TableHead className="w-36 text-center">PIC</TableHead>
+                      <TableHead className="w-36 text-center">Layanan</TableHead>
+                      <TableHead className="w-36 text-center">Sub Layanan</TableHead>
+                      <TableHead className="w-36 text-center">Judul Content</TableHead>
+                      <TableHead className="w-36 text-center">Content Pillar</TableHead>
+                      <TableHead className="w-36 text-center">Brief</TableHead>
+                      <TableHead className="w-36 text-center">Status</TableHead>
+                      <TableHead className="w-24 text-center">Revision</TableHead>
+                      <TableHead className="w-24 text-center">Approved</TableHead>
+                      <TableHead className="w-36 text-center">Tanggal Selesai</TableHead>
+                      <TableHead className="w-36 text-center">Tanggal Upload</TableHead>
+                      <TableHead className="w-36 text-center">Tipe Content</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                </Table>
+              </div>
             </div>
             
+            {/* Body table with vertical scrolling and fixed width columns matching header */}
             <ScrollArea className="h-[400px]">
-              <div className="w-[1800px] min-w-full overflow-x-auto">
+              <div className="min-w-[1800px]"> {/* Ensure same minimum width as header */}
                 <Table>
                   <TableBody>
                     {contentItems.length > 0 ? (
@@ -500,11 +505,9 @@ const CreateContent = () => {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={15} className="h-[300px] text-center">
-                          <ScrollArea className="h-full w-full flex items-center justify-center">
-                            <div className="h-full w-full flex items-center justify-center">
-                              No content items. Click "Add Row" to create one.
-                            </div>
-                          </ScrollArea>
+                          <div className="h-full w-full flex items-center justify-center">
+                            No content items. Click "Add Row" to create one.
+                          </div>
                         </TableCell>
                       </TableRow>
                     )}
