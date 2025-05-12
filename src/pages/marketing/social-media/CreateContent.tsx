@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -138,7 +137,7 @@ const CreateContent = () => {
         hasSelectedItems={hasSelectedItems}
       />
       
-      <CardContent>
+      <CardContent className="px-4 py-2">
         <ContentTable
           contentItems={contentItems}
           contentTypes={contentTypes}
