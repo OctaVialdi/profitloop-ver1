@@ -37,6 +37,20 @@ export interface ContentItem {
   revisionCount: number;
   isApproved: boolean;
   completionDate: string | undefined;
+  // New fields
+  picProduction: string;
+  googleDriveLink: string;
+  productionStatus: string;
+  productionRevisionCount: number;
+  productionCompletionDate: string | undefined;
+  productionApproved: boolean;
+  productionApprovedDate: string | undefined;
+  downloadLinkFile: string;
+  postLink: string;
+  isDone: boolean;
+  actualPostDate: string | undefined;
+  onTimeStatus: string;
+  contentStatus: string;
 }
 
 export const useContentManagement = () => {
@@ -46,6 +60,7 @@ export const useContentManagement = () => {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [contentPlanners, setContentPlanners] = useState<any[]>([]);
   const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
+  const [productionTeam, setProductionTeam] = useState<any[]>([]);
   
   // Load content types, services, and sub-services from localStorage
   useEffect(() => {
@@ -111,6 +126,13 @@ export const useContentManagement = () => {
                       emp.jobPosition === "Content Planner"
           );
           setContentPlanners(planners);
+          
+          // Filter for Creative department employees with Production role
+          const production = allEmployees.filter(
+            (emp: any) => emp.organization === "Creative" && 
+                      emp.jobPosition === "Produksi"
+          );
+          setProductionTeam(production);
         } catch (e) {
           console.error("Error parsing employees from localStorage:", e);
         }
@@ -155,6 +177,20 @@ export const useContentManagement = () => {
       revisionCount: 0,
       isApproved: false,
       completionDate: undefined,
+      // New fields with default values
+      picProduction: "",
+      googleDriveLink: "",
+      productionStatus: "none",
+      productionRevisionCount: 0,
+      productionCompletionDate: undefined,
+      productionApproved: false,
+      productionApprovedDate: undefined,
+      downloadLinkFile: "",
+      postLink: "",
+      isDone: false,
+      actualPostDate: undefined,
+      onTimeStatus: "",
+      contentStatus: "none"
     };
     setContentItems([...contentItems, newItem]);
   };
@@ -173,6 +209,15 @@ export const useContentManagement = () => {
     setContentItems(prevItems =>
       prevItems.map(item =>
         item.id === itemId ? { ...item, revisionCount: 0 } : item
+      )
+    );
+  };
+  
+  // Reset production revision counter for a specific item
+  const resetProductionRevisionCounter = (itemId: string) => {
+    setContentItems(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId ? { ...item, productionRevisionCount: 0 } : item
       )
     );
   };
@@ -204,6 +249,27 @@ export const useContentManagement = () => {
   const getFilteredSubServices = (serviceId: string) => {
     return subServices.filter(subService => subService.serviceId === serviceId);
   };
+  
+  // Calculate on-time status
+  const calculateOnTimeStatus = (postDate: string | undefined, actualPostDate: string | undefined) => {
+    if (!postDate || !actualPostDate) return "";
+    
+    const plannedDate = new Date(postDate);
+    const actualDate = new Date(actualPostDate);
+    
+    // Reset hours to compare dates only
+    plannedDate.setHours(0, 0, 0, 0);
+    actualDate.setHours(0, 0, 0, 0);
+    
+    if (actualDate <= plannedDate) {
+      return "On Time";
+    } else {
+      // Calculate days difference
+      const diffTime = Math.abs(actualDate.getTime() - plannedDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return `Late [${diffDays}] Day${diffDays > 1 ? 's' : ''}`;
+    }
+  };
 
   return {
     contentTypes,
@@ -212,12 +278,15 @@ export const useContentManagement = () => {
     contentItems,
     contentPlanners,
     contentPillars,
+    productionTeam,
     addContentItem,
     updateContentItem,
     resetRevisionCounter,
+    resetProductionRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
     selectAllItems,
-    getFilteredSubServices
+    getFilteredSubServices,
+    calculateOnTimeStatus
   };
 };
