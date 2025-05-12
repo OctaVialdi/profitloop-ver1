@@ -46,9 +46,9 @@ interface ContentTableProps {
   displayBrief: (brief: string) => string;
   resetRevisionCounter: (itemId: string) => void;
   toggleApproved: (itemId: string, isApproved: boolean) => void;
+  updateContentItem: (itemId: string, updates: Partial<ContentItem>) => void;
   visibleColumns?: string[];
   activeTab?: string;
-  updateContentItem: (itemId: string, updates: Partial<ContentItem>) => void;
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -78,6 +78,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   displayBrief,
   resetRevisionCounter,
   toggleApproved,
+  updateContentItem,
   visibleColumns = [],
   activeTab = "primary",
 }) => {
