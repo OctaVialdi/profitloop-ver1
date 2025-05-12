@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -157,7 +158,7 @@ const CreateContent = () => {
   const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <Card className="w-full h-full overflow-hidden">
+    <Card className="w-full h-full overflow-hidden" style={{ maxWidth: "1462px", height: "746px" }}>
       <ContentHeader 
         handleDeleteSelected={handleDeleteSelected}
         handleAddRow={handleAddRow}
@@ -215,3 +216,4 @@ const CreateContent = () => {
 };
 
 export default CreateContent;
+
