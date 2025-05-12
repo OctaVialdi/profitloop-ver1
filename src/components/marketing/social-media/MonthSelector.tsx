@@ -33,7 +33,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
           variant="ghost" 
           className="flex items-center justify-center gap-1 w-full font-normal text-xs h-6 px-0"
         >
-          <span className="truncate">{format(selectedMonth, "MMM")}</span>
+          <span className="truncate">{format(selectedMonth, "MMM").substring(0, 3)}</span>
           <ChevronDown className="h-3 w-3 flex-shrink-0" />
         </Button>
       </DropdownMenuTrigger>

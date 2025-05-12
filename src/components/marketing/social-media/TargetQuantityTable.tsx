@@ -58,6 +58,8 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
   return (
     <ScrollArea className="w-full">
       <div className="min-w-fit">
+        {/* Add a separator between the card header and the table */}
+        <Separator className="mb-2" />
         <Table className="w-full">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -67,7 +69,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   <Separator orientation="vertical" className="h-full bg-gray-300" />
                 </div>
               </TableHead>
-              <TableHead className="h-7 text-center py-1 w-[70px] relative">
+              <TableHead className="h-7 text-center py-1 w-[60px] relative">
                 <DateSelector 
                   selectedDate={selectedDate}
                   setSelectedDate={setSelectedDate}
@@ -79,7 +81,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   <Separator orientation="vertical" className="h-full bg-gray-300" />
                 </div>
               </TableHead>
-              <TableHead className="h-7 text-center py-1 w-[70px] relative">
+              <TableHead className="h-7 text-center py-1 w-[60px] relative">
                 <MonthSelector 
                   selectedMonth={selectedMonth}
                   setSelectedMonth={setSelectedMonth}
@@ -90,13 +92,13 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                   <Separator orientation="vertical" className="h-full bg-gray-300" />
                 </div>
               </TableHead>
-              <TableHead className="h-7 text-center whitespace-nowrap py-1 w-[80px] relative">
-                Target {format(selectedMonth, "MMM yyyy")}
+              <TableHead className="h-7 text-center whitespace-nowrap py-1 w-[70px] relative">
+                Target {format(selectedMonth, "MMM yy")}
                 <div className="absolute right-0 top-0 h-full">
                   <Separator orientation="vertical" className="h-full bg-gray-300" />
                 </div>
               </TableHead>
-              <TableHead className="h-7 py-1 w-[120px] relative">
+              <TableHead className="h-7 py-1 w-[140px] relative">
                 Progress
                 <div className="absolute right-0 top-0 h-full">
                   <Separator orientation="vertical" className="h-full bg-gray-300" />
@@ -158,7 +160,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
                 </TableCell>
                 <TableCell className="py-1 px-2 relative">
                   <div className="flex items-center gap-1">
-                    <Progress value={manager.progress} className="h-1.5 min-w-[60px]" />
+                    <Progress value={manager.progress} className="h-1.5 min-w-[80px]" />
                     <span className="text-xs whitespace-nowrap">{manager.progress}%</span>
                   </div>
                   <div className="absolute right-0 top-0 h-full">
