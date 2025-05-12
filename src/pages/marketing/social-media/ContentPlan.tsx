@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -171,12 +170,16 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Fixed width container with horizontal scroll */}
         <div className="w-full">
           <div className="rounded-md border">
             <div className="relative">
+              {/* ScrollArea for vertical scrolling */}
               <ScrollArea className="h-[calc(100vh-350px)]">
+                {/* Container for horizontal scrolling */}
                 <div className="overflow-x-auto">
                   <Table>
+                    {/* Sticky header with proper z-index */}
                     <TableHeader className="sticky top-0 bg-white z-10">
                       <TableRow>
                         {isManager && (
