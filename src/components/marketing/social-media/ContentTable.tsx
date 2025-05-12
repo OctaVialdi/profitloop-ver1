@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -129,6 +128,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
+                  {/* Render only columns defined in visibleColumns or all if none provided */}
+                  {/* The checkout column is always visible */}
                   {isColumnVisible("selectColumn") && (
                     <TableHead 
                       className="text-center sticky left-0 bg-slate-50 z-30 border-r" 
@@ -142,121 +143,139 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       />
                     </TableHead>
                   )}
+                  
+                  {/* The post date column is shown only if it should be visible */}
                   {isColumnVisible("postDate") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className={`text-center font-medium whitespace-nowrap ${isInitiallyVisible("postDate") ? "" : "bg-gray-50"}`}
                       style={{ width: `${getColumnWidth("postDate")}px`, minWidth: `${getColumnWidth("postDate")}px` }}
                     >
                       Tanggal Posting
                     </TableHead>
                   )}
+
+                  {/* Other columns follow a similar pattern */}
                   {isColumnVisible("contentType") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className={`text-center font-medium whitespace-nowrap ${isInitiallyVisible("contentType") ? "" : "bg-gray-50"}`}
                       style={{ width: `${getColumnWidth("contentType")}px`, minWidth: `${getColumnWidth("contentType")}px` }}
                     >
                       Tipe Content
                     </TableHead>
                   )}
+
                   {isColumnVisible("pic") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className={`text-center font-medium whitespace-nowrap ${isInitiallyVisible("pic") ? "" : "bg-gray-50"}`}
                       style={{ width: `${getColumnWidth("pic")}px`, minWidth: `${getColumnWidth("pic")}px` }}
                     >
                       PIC
                     </TableHead>
                   )}
+
                   {isColumnVisible("service") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className={`text-center font-medium whitespace-nowrap ${isInitiallyVisible("service") ? "" : "bg-gray-50"}`}
                       style={{ width: `${getColumnWidth("service")}px`, minWidth: `${getColumnWidth("service")}px` }}
                     >
                       Layanan
                     </TableHead>
                   )}
+
                   {isColumnVisible("subService") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className={`text-center font-medium whitespace-nowrap ${isInitiallyVisible("subService") ? "" : "bg-gray-50"}`}
                       style={{ width: `${getColumnWidth("subService")}px`, minWidth: `${getColumnWidth("subService")}px` }}
                     >
                       Sub Layanan
                     </TableHead>
                   )}
+
                   {isColumnVisible("title") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className={`text-center font-medium whitespace-nowrap ${isInitiallyVisible("title") ? "" : "bg-gray-50"}`}
                       style={{ width: `${getColumnWidth("title")}px`, minWidth: `${getColumnWidth("title")}px` }}
                     >
                       Judul Content
                     </TableHead>
                   )}
+
                   {isColumnVisible("contentPillar") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className={`text-center font-medium whitespace-nowrap ${isInitiallyVisible("contentPillar") ? "" : "bg-gray-50"}`}
                       style={{ width: `${getColumnWidth("contentPillar")}px`, minWidth: `${getColumnWidth("contentPillar")}px` }}
                     >
                       Content Pillar
                     </TableHead>
                   )}
+
                   {isColumnVisible("brief") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className={`text-center font-medium whitespace-nowrap ${isInitiallyVisible("brief") ? "" : "bg-gray-50"}`}
                       style={{ width: `${getColumnWidth("brief")}px`, minWidth: `${getColumnWidth("brief")}px` }}
                     >
                       Brief
                     </TableHead>
                   )}
+
+                  {/* The following columns are only visible when scrolling */}
                   {isColumnVisible("status") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className="text-center font-medium whitespace-nowrap bg-slate-100"
                       style={{ width: `${getColumnWidth("status")}px`, minWidth: `${getColumnWidth("status")}px` }}
                     >
                       Status
                     </TableHead>
                   )}
+
                   {isColumnVisible("revision") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className="text-center font-medium whitespace-nowrap bg-slate-100"
                       style={{ width: `${getColumnWidth("revision")}px`, minWidth: `${getColumnWidth("revision")}px` }}
                     >
                       Revision
                     </TableHead>
                   )}
+
                   {isColumnVisible("approved") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className="text-center font-medium whitespace-nowrap bg-slate-100"
                       style={{ width: `${getColumnWidth("approved")}px`, minWidth: `${getColumnWidth("approved")}px` }}
                     >
                       Approved
                     </TableHead>
                   )}
+
                   {isColumnVisible("completionDate") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className="text-center font-medium whitespace-nowrap bg-slate-100"
                       style={{ width: `${getColumnWidth("completionDate")}px`, minWidth: `${getColumnWidth("completionDate")}px` }}
                     >
                       Tanggal Selesai
                     </TableHead>
                   )}
+
                   {isColumnVisible("mirrorPostDate") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className="text-center font-medium whitespace-nowrap bg-slate-100"
                       style={{ width: `${getColumnWidth("mirrorPostDate")}px`, minWidth: `${getColumnWidth("mirrorPostDate")}px` }}
                     >
                       Tanggal Upload
                     </TableHead>
                   )}
+
                   {isColumnVisible("mirrorContentType") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className="text-center font-medium whitespace-nowrap bg-slate-100"
                       style={{ width: `${getColumnWidth("mirrorContentType")}px`, minWidth: `${getColumnWidth("mirrorContentType")}px` }}
                     >
                       Tipe Content
                     </TableHead>
                   )}
+
                   {isColumnVisible("mirrorTitle") && (
                     <TableHead 
-                      className="text-center font-medium whitespace-nowrap"
+                      className="text-center font-medium whitespace-nowrap bg-slate-100"
                       style={{ width: `${getColumnWidth("mirrorTitle")}px`, minWidth: `${getColumnWidth("mirrorTitle")}px` }}
                     >
                       Judul Content
@@ -268,6 +287,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                 {contentItems.length > 0 ? (
                   contentItems.map(item => (
                     <TableRow key={item.id} className="hover:bg-slate-50/60">
+                      {/* Table cells follow the same pattern as headers */}
                       {isColumnVisible("selectColumn") && (
                         <TableCell 
                           className="text-center sticky left-0 bg-white z-10 border-r"
@@ -280,6 +300,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           />
                         </TableCell>
                       )}
+
+                      {/* Rest of the table cells */}
                       {isColumnVisible("postDate") && (
                         <TableCell 
                           className="p-2 whitespace-nowrap"
