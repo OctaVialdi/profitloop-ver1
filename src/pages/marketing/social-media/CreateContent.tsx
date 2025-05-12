@@ -1,54 +1,60 @@
+
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, PlusCircle, Trash2, RefreshCcw } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { format } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useContentManagement } from "@/hooks/useContentManagement";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { useContentBrief } from "@/hooks/useContentBrief";
+import { ContentTable } from "@/components/marketing/social-media/ContentTable";
+import { ContentHeader } from "@/components/marketing/social-media/ContentHeader";
+import { ContentFooter } from "@/components/marketing/social-media/ContentFooter";
+import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
 
 const CreateContent = () => {
   const {
     contentTypes,
+    services,
+    subServices,
     contentItems,
-    picOptions,
-    serviceOptions,
-    subServiceOptions,
-    contentPillarOptions,
+    contentPlanners,
+    contentPillars,
     addContentItem,
     updateContentItem,
+    resetRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
     selectAllItems,
-    getSubServices
+    getFilteredSubServices
   } = useContentManagement();
 
   const [selectAll, setSelectAll] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState<{ [key: string]: boolean }>({});
-  const [briefDialogOpen, setBriefDialogOpen] = useState<{ [key: string]: boolean }>({});
-  const [titleDialogOpen, setTitleDialogOpen] = useState<{ [key: string]: boolean }>({});
   
+  // Simulate a user role check - in a real app, this would come from authentication
+  const [isUserManager, setIsUserManager] = useState(true);
+  
+  // Simulate loading user role from localStorage
+  useEffect(() => {
+    // In a real application, you would get this from your auth system
+    // For now, we'll hardcode it to true for testing purposes
+    const savedUserRole = localStorage.getItem("userRole");
+    setIsUserManager(savedUserRole === "manager" || true); // Default to true for testing
+  }, []);
+  
+  const {
+    isBriefDialogOpen,
+    setIsBriefDialogOpen,
+    currentBrief,
+    setCurrentBrief,
+    currentItemId,
+    briefDialogMode,
+    setBriefDialogMode,
+    extractGoogleDocsLink,
+    displayBrief,
+    openBriefDialog,
+    saveBrief
+  } = useContentBrief(updateContentItem);
+
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
     selectAllItems(checked);
@@ -75,73 +81,50 @@ const CreateContent = () => {
     updateContentItem(itemId, { contentType: typeId });
   };
 
-  const handlePICChange = (itemId: string, picId: string) => {
-    updateContentItem(itemId, { picId: picId });
+  const handlePICChange = (itemId: string, picName: string) => {
+    updateContentItem(itemId, { pic: picName });
   };
-
+  
   const handleServiceChange = (itemId: string, serviceId: string) => {
-    // Reset subService when service changes
+    // When service changes, reset subService
     updateContentItem(itemId, { 
-      serviceId: serviceId, 
-      subServiceId: '' 
+      service: serviceId,
+      subService: ""  
     });
   };
-
+  
   const handleSubServiceChange = (itemId: string, subServiceId: string) => {
-    updateContentItem(itemId, { subServiceId: subServiceId });
-  };
-
-  const handleContentPillarChange = (itemId: string, pillarId: string) => {
-    updateContentItem(itemId, { contentPillarId: pillarId });
+    updateContentItem(itemId, { subService: subServiceId });
   };
 
   const handleTitleChange = (itemId: string, title: string) => {
-    updateContentItem(itemId, { title: title });
-    setTitleDialogOpen(prev => ({
-      ...prev,
-      [itemId]: false
-    }));
+    // Limit to 25 characters
+    const trimmedTitle = title.slice(0, 25);
+    updateContentItem(itemId, { title: trimmedTitle });
   };
 
-  const handleBriefChange = (itemId: string, brief: string) => {
-    updateContentItem(itemId, { 
-      brief: brief,
-      status: '' // Reset status when brief is updated
-    });
-    setBriefDialogOpen(prev => ({
-      ...prev,
-      [itemId]: false
-    }));
+  const handleContentPillarChange = (itemId: string, pillarId: string) => {
+    updateContentItem(itemId, { contentPillar: pillarId });
   };
 
   const handleStatusChange = (itemId: string, status: string) => {
-    const item = contentItems.find(item => item.id === itemId);
-    let newRevisionCount = item?.revisionCount || 0;
-    
-    // If changing to "Request Revisi", increment revision count
-    if (status === "request-revision") {
-      newRevisionCount += 1;
+    updateContentItem(itemId, { status });
+  };
+
+  // New handler for the Approved checkbox
+  const handleApprovalChange = (itemId: string, isApproved: boolean) => {
+    // Only managers can change approval status
+    if (isUserManager) {
+      updateContentItem(itemId, { isApproved });
+      
+      if (isApproved) {
+        toast.success("Content has been approved");
+      } else {
+        toast.info("Approval has been removed");
+      }
+    } else {
+      toast.error("Only managers can approve content");
     }
-    
-    // If changing to "Butuh Di Review", set completion date
-    const completionDate = status === "needs-review" ? 
-      format(new Date(), 'dd MMM yyyy - HH:mm') : 
-      item?.completionDate || '';
-
-    updateContentItem(itemId, { 
-      status: status,
-      revisionCount: newRevisionCount,
-      completionDate: completionDate
-    });
-  };
-
-  const resetRevisionCount = (itemId: string) => {
-    updateContentItem(itemId, { revisionCount: 0 });
-    toast.success("Revision count reset");
-  };
-
-  const handleApprovedChange = (itemId: string, checked: boolean) => {
-    updateContentItem(itemId, { isApproved: checked });
   };
 
   const handleDeleteSelected = () => {
@@ -166,360 +149,68 @@ const CreateContent = () => {
     }));
   };
 
-  const openBriefDialog = (itemId: string) => {
-    setBriefDialogOpen(prev => ({
-      ...prev,
-      [itemId]: true
-    }));
+  // Get filtered sub-services based on selected service
+  const getFilteredSubServicesByServiceId = (serviceId: string) => {
+    return subServices.filter(subService => subService.serviceId === serviceId);
   };
-
-  const openTitleDialog = (itemId: string) => {
-    setTitleDialogOpen(prev => ({
-      ...prev,
-      [itemId]: true
-    }));
-  };
-
-  // Function to truncate text to a specific length
-  const truncateText = (text: string, maxLength: number) => {
-    if (!text) return '';
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-  };
-
-  // Function to detect and make URLs clickable
-  const processLinks = (text: string) => {
-    if (!text) return '';
-    // Simple regex for detecting URLs
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, url => 
-      `<a href="${url}" target="_blank" class="text-blue-500 underline">${url}</a>`
-    );
-  };
+  
+  const hasSelectedItems = contentItems.some(item => item.isSelected);
+  const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <Card className="w-full max-w-full">
-      <CardHeader className="py-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Content Management</CardTitle>
-        <div className="flex space-x-2">
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={handleDeleteSelected}
-            disabled={!contentItems.some(item => item.isSelected)}
-            className="text-sm"
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Delete Selected
-          </Button>
-          <Button onClick={handleAddRow} size="sm" className="text-sm">
-            <PlusCircle className="h-4 w-4 mr-1" />
-            Add Row
-          </Button>
-        </div>
-      </CardHeader>
+    <Card className="w-full max-w-full overflow-hidden">
+      <ContentHeader 
+        handleDeleteSelected={handleDeleteSelected}
+        handleAddRow={handleAddRow}
+        hasSelectedItems={hasSelectedItems}
+      />
       
-      <CardContent>
-        {/* Main content container with fixed width and overflow control */}
-        <div className="border rounded-md w-full">
-          {/* Scrollable container with fixed height */}
-          <ScrollArea className="h-[550px]">
-            {/* Table container with horizontal scrolling */}
-            <div className="overflow-x-auto relative">
-              <Table>
-                {/* Header with sticky positioning */}
-                <TableHeader className="sticky top-0 bg-background z-20">
-                  <TableRow>
-                    <TableHead className="w-12 text-center sticky left-0 bg-background z-30">
-                      <Checkbox 
-                        checked={selectAll} 
-                        onCheckedChange={handleSelectAll}
-                        aria-label="Select all"
-                      />
-                    </TableHead>
-                    <TableHead className="w-36 text-center">Tanggal Posting</TableHead>
-                    <TableHead className="w-36 text-center">Tipe Content</TableHead>
-                    <TableHead className="w-36 text-center">PIC</TableHead>
-                    <TableHead className="w-36 text-center">Layanan</TableHead>
-                    <TableHead className="w-36 text-center">Sub Layanan</TableHead>
-                    <TableHead className="w-36 text-center">Judul Content</TableHead>
-                    <TableHead className="w-36 text-center">Content Pillar</TableHead>
-                    <TableHead className="w-36 text-center">Brief</TableHead>
-                    <TableHead className="w-36 text-center">Status</TableHead>
-                    <TableHead className="w-24 text-center">Revision</TableHead>
-                    <TableHead className="w-24 text-center">Approved</TableHead>
-                    <TableHead className="w-36 text-center">Tanggal Selesai</TableHead>
-                    <TableHead className="w-36 text-center">Tanggal Upload</TableHead>
-                    <TableHead className="w-36 text-center">Tipe Content</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contentItems.length > 0 ? (
-                    contentItems.map(item => (
-                      <TableRow key={item.id}>
-                        <TableCell className="sticky left-0 bg-background z-10">
-                          <Checkbox 
-                            checked={item.isSelected} 
-                            onCheckedChange={() => toggleSelectItem(item.id)}
-                            aria-label="Select row"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Popover 
-                            open={isCalendarOpen[item.id]} 
-                            onOpenChange={() => toggleCalendar(item.id)}
-                          >
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start text-left font-normal"
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {item.postDate || 'Select date'}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={item.postDate ? new Date(item.postDate) : undefined}
-                                onSelect={(date) => handleDateChange(item.id, date)}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={item.contentType || "placeholder"} 
-                            onValueChange={(value) => handleTypeChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="placeholder">-</SelectItem>
-                              {contentTypes.map((type) => (
-                                <SelectItem key={type.id} value={type.id}>
-                                  {type.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={item.picId || "placeholder"} 
-                            onValueChange={(value) => handlePICChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="placeholder">-</SelectItem>
-                              {picOptions.map((pic) => (
-                                <SelectItem key={pic.id} value={pic.id}>
-                                  {pic.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={item.serviceId || "placeholder"} 
-                            onValueChange={(value) => handleServiceChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="placeholder">-</SelectItem>
-                              {serviceOptions.map((service) => (
-                                <SelectItem key={service.id} value={service.id}>
-                                  {service.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={item.subServiceId || "placeholder"} 
-                            onValueChange={(value) => handleSubServiceChange(item.id, value)}
-                            disabled={!item.serviceId || item.serviceId === "placeholder"}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="placeholder">-</SelectItem>
-                              {item.serviceId && item.serviceId !== "placeholder" && subServiceOptions
-                                .filter(sub => sub.parentId === item.serviceId)
-                                .map((subService) => (
-                                  <SelectItem key={subService.id} value={subService.id}>
-                                    {subService.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Dialog 
-                            open={titleDialogOpen[item.id]} 
-                            onOpenChange={(open) => setTitleDialogOpen(prev => ({...prev, [item.id]: open}))}
-                          >
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                className="w-full justify-start text-left h-auto py-2"
-                              >
-                                {truncateText(item.title || 'Click to add title', 25)}
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md">
-                              <DialogHeader>
-                                <DialogTitle>Content Title</DialogTitle>
-                              </DialogHeader>
-                              <Input
-                                defaultValue={item.title || ''}
-                                onChange={(e) => handleTitleChange(item.id, e.target.value)}
-                                className="w-full"
-                                placeholder="Enter content title"
-                              />
-                              <DialogClose asChild>
-                                <Button type="button">Save</Button>
-                              </DialogClose>
-                            </DialogContent>
-                          </Dialog>
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={item.contentPillarId || "placeholder"} 
-                            onValueChange={(value) => handleContentPillarChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="placeholder">-</SelectItem>
-                              {contentPillarOptions.map((pillar) => (
-                                <SelectItem key={pillar.id} value={pillar.id}>
-                                  {pillar.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Dialog 
-                            open={briefDialogOpen[item.id]} 
-                            onOpenChange={(open) => setBriefDialogOpen(prev => ({...prev, [item.id]: open}))}
-                          >
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                className="w-full justify-start text-left h-auto py-2"
-                              >
-                                {item.brief ? truncateText(item.brief, 25) : 'Click to add brief'}
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-lg">
-                              <DialogHeader>
-                                <DialogTitle>Content Brief</DialogTitle>
-                              </DialogHeader>
-                              <Textarea
-                                defaultValue={item.brief || ''}
-                                onChange={(e) => handleBriefChange(item.id, e.target.value)}
-                                className="w-full h-60"
-                                placeholder="Enter brief details (paste Google Docs links for direct access)"
-                              />
-                              {item.brief && item.brief.includes('docs.google.com') && (
-                                <div className="mt-4">
-                                  <h4 className="text-sm font-medium mb-2">Document Preview:</h4>
-                                  <iframe
-                                    src={item.brief.match(/(https?:\/\/docs.google.com\/[^\s]+)/)?.[0] + '?embedded=true'}
-                                    className="w-full h-60 border rounded"
-                                  />
-                                </div>
-                              )}
-                              <DialogClose asChild>
-                                <Button type="button">Save</Button>
-                              </DialogClose>
-                            </DialogContent>
-                          </Dialog>
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={item.status || "placeholder"}
-                            onValueChange={(value) => handleStatusChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="placeholder">-</SelectItem>
-                              <SelectItem value="needs-review">Butuh Di Review</SelectItem>
-                              <SelectItem value="request-revision">Request Revisi</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center space-x-1">
-                            <span className="font-medium">{item.revisionCount || 0}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6" 
-                              onClick={() => resetRevisionCount(item.id)}
-                            >
-                              <RefreshCcw className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={item.isApproved || false} 
-                            onCheckedChange={(checked) => handleApprovedChange(item.id, checked === true)}
-                            aria-label="Approve content"
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {item.status === 'needs-review' ? item.completionDate : ''}
-                        </TableCell>
-                        <TableCell>
-                          {item.postDate || ''}
-                        </TableCell>
-                        <TableCell>
-                          {contentTypes.find(type => type.id === item.contentType)?.name || ''}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={15} className="h-[300px] text-center">
-                        <div className="h-full w-full flex items-center justify-center">
-                          No content items. Click "Add Row" to create one.
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-              {/* Add horizontal scroll bar */}
-              <ScrollBar orientation="horizontal" />
-            </div>
-          </ScrollArea>
-        </div>
+      <CardContent className="p-0 overflow-hidden">
+        <ContentTable
+          contentItems={contentItems}
+          contentTypes={contentTypes}
+          services={services}
+          subServices={subServices}
+          contentPlanners={contentPlanners}
+          contentPillars={contentPillars}
+          isCalendarOpen={isCalendarOpen}
+          isUserManager={isUserManager}
+          toggleCalendar={toggleCalendar}
+          handleDateChange={handleDateChange}
+          handleTypeChange={handleTypeChange}
+          handlePICChange={handlePICChange}
+          handleServiceChange={handleServiceChange}
+          handleSubServiceChange={handleSubServiceChange}
+          handleTitleChange={handleTitleChange}
+          handleContentPillarChange={handleContentPillarChange}
+          handleStatusChange={handleStatusChange}
+          handleApprovalChange={handleApprovalChange}
+          toggleSelectItem={toggleSelectItem}
+          selectAll={selectAll}
+          handleSelectAll={handleSelectAll}
+          openBriefDialog={openBriefDialog}
+          getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
+          extractGoogleDocsLink={extractGoogleDocsLink}
+          displayBrief={displayBrief}
+          resetRevisionCounter={resetRevisionCounter}
+        />
       </CardContent>
       
-      <CardFooter className="pt-2 flex justify-between">
-        <div className="text-sm text-muted-foreground">
-          {contentItems.length} item{contentItems.length !== 1 ? 's' : ''} 
-          {contentItems.some(item => item.isSelected) && 
-            ` (${contentItems.filter(item => item.isSelected).length} selected)`
-          }
-        </div>
-      </CardFooter>
+      <ContentFooter 
+        totalItems={contentItems.length}
+        selectedItemsCount={selectedItemsCount}
+      />
+
+      <BriefDialog
+        isOpen={isBriefDialogOpen}
+        onOpenChange={setIsBriefDialogOpen}
+        currentBrief={currentBrief}
+        setCurrentBrief={setCurrentBrief}
+        mode={briefDialogMode}
+        setMode={setBriefDialogMode}
+        saveBrief={saveBrief}
+        extractGoogleDocsLink={extractGoogleDocsLink}
+      />
     </Card>
   );
 };
