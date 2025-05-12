@@ -24,9 +24,9 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
-          className="flex items-center justify-center gap-1 w-full font-normal text-xs h-6 px-1"
+          className="flex items-center justify-center gap-1 w-full font-normal text-xs h-6 px-0"
         >
-          <span className="truncate">{format(selectedDate, "dd MMM yyyy")}</span>
+          <span className="truncate">{format(selectedDate, "dd MMM")}</span>
           <CalendarIcon className="h-3 w-3 flex-shrink-0" />
         </Button>
       </PopoverTrigger>
