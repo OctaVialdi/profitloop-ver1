@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -47,6 +46,7 @@ interface ContentTableProps {
   toggleApproved: (itemId: string, isApproved: boolean) => void;
   visibleColumns?: string[];
   fixedColumnsCount?: number;
+  initialVisibleColumnsCount?: number;
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -78,6 +78,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   toggleApproved,
   visibleColumns = [],
   fixedColumnsCount = 1,
+  initialVisibleColumnsCount = 10,
 }) => {
   // Format completion date for display
   const formatCompletionDate = (dateString: string | undefined) => {
@@ -94,6 +95,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   // Helper function to check if a column should be fixed
   const isColumnFixed = (columnIndex: number) => {
     return columnIndex < fixedColumnsCount;
+  };
+
+  // Helper function to check if a column is part of initially visible columns
+  const isInitiallyVisible = (columnIndex: number) => {
+    return columnIndex < initialVisibleColumnsCount;
   };
 
   // Get visible column names
@@ -114,16 +120,18 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   return (
     <div className="w-full">
       <div className="relative overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
           <Table>
             <TableHeader className="sticky top-0 bg-white z-20">
               <TableRow className="bg-slate-50">
                 {getVisibleColumnNames().map((columnName, index) => {
                   let content = null;
                   const isFixed = isColumnFixed(index);
+                  const isInitVisible = isInitiallyVisible(index);
+                  
                   const cellClassName = `text-center font-medium whitespace-nowrap ${
                     isFixed ? "sticky left-0 bg-slate-50 z-30" : ""
-                  } ${isFixed && index === fixedColumnsCount - 1 ? "border-r" : ""}`;
+                  } ${isFixed && index === fixedColumnsCount - 1 ? "border-r border-slate-200" : ""}`;
 
                   switch (columnName) {
                     case "selectColumn":
@@ -201,7 +209,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       const isFixed = isColumnFixed(index);
                       const cellClassName = `p-2 whitespace-nowrap ${
                         isFixed ? "sticky left-0 bg-white z-10" : ""
-                      } ${isFixed && index === fixedColumnsCount - 1 ? "border-r" : ""}`;
+                      } ${isFixed && index === fixedColumnsCount - 1 ? "border-r border-slate-200" : ""}`;
 
                       switch (columnName) {
                         case "selectColumn":

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -283,35 +282,37 @@ const ContentPlan = () => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <ContentTabsTable
-          contentItems={contentItems}
-          contentTypes={contentTypes}
-          services={services}
-          subServices={subServices}
-          contentPlanners={contentPlanners}
-          contentPillars={contentPillars}
-          isCalendarOpen={isCalendarOpen}
-          isUserManager={isUserManager}
-          toggleCalendar={toggleCalendar}
-          handleDateChange={handleDateChange}
-          handleTypeChange={handleTypeChange}
-          handlePICChange={handlePICChange}
-          handleServiceChange={handleServiceChange}
-          handleSubServiceChange={handleSubServiceChange}
-          handleTitleChange={handleTitleChange}
-          handleContentPillarChange={handleContentPillarChange}
-          handleStatusChange={handleStatusChange}
-          toggleSelectItem={handleToggleSelectItem}
-          selectAll={selectAll}
-          handleSelectAll={handleSelectAll}
-          openBriefDialog={openBriefDialog}
-          getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
-          extractGoogleDocsLink={extractGoogleDocsLink}
-          displayBrief={displayBrief}
-          resetRevisionCounter={resetRevisionCounter}
-          toggleApproved={toggleApproved}
-        />
+      <CardContent className="overflow-hidden">
+        <div className="w-full" style={{ overflowX: 'auto' }}>
+          <ContentTabsTable
+            contentItems={contentItems}
+            contentTypes={contentTypes}
+            services={services}
+            subServices={subServices}
+            contentPlanners={contentPlanners}
+            contentPillars={contentPillars}
+            isCalendarOpen={isCalendarOpen}
+            isUserManager={isUserManager}
+            toggleCalendar={toggleCalendar}
+            handleDateChange={handleDateChange}
+            handleTypeChange={handleTypeChange}
+            handlePICChange={handlePICChange}
+            handleServiceChange={handleServiceChange}
+            handleSubServiceChange={handleSubServiceChange}
+            handleTitleChange={handleTitleChange}
+            handleContentPillarChange={handleContentPillarChange}
+            handleStatusChange={handleStatusChange}
+            toggleSelectItem={handleToggleSelectItem}
+            selectAll={selectAll}
+            handleSelectAll={handleSelectAll}
+            openBriefDialog={openBriefDialog}
+            getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
+            extractGoogleDocsLink={extractGoogleDocsLink}
+            displayBrief={displayBrief}
+            resetRevisionCounter={resetRevisionCounter}
+            toggleApproved={toggleApproved}
+          />
+        </div>
       </CardContent>
 
       {/* Brief Dialog */}
