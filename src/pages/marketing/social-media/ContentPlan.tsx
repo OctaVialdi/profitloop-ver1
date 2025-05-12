@@ -16,12 +16,10 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, FileText, ExternalLink, Edit } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useContentBrief } from "@/hooks/useContentBrief";
-import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
 
 const ContentPlan = () => {
   const { toast } = useToast();
@@ -37,22 +35,7 @@ const ContentPlan = () => {
     selectAllItems,
     getFilteredSubServices,
     contentPlanners,
-    contentPillars
   } = useContentManagement();
-
-  // Use the content brief hook
-  const {
-    isBriefDialogOpen,
-    setIsBriefDialogOpen,
-    currentBrief,
-    setCurrentBrief,
-    briefDialogMode,
-    setBriefDialogMode,
-    extractGoogleDocsLink,
-    displayBrief,
-    openBriefDialog,
-    saveBrief
-  } = useContentBrief(updateContentItem);
 
   // State for calendar popovers
   const [isCalendarOpen, setIsCalendarOpen] = useState<{ [key: string]: boolean }>({});
@@ -132,38 +115,6 @@ const ContentPlan = () => {
     updateContentItem(itemId, { subService: subServiceId });
   };
 
-  // Handle content pillar change
-  const handleContentPillarChange = (itemId: string, pillarId: string) => {
-    updateContentItem(itemId, { contentPillar: pillarId });
-  };
-
-  // Handle title change from inline input
-  const handleTitleChange = (itemId: string, title: string) => {
-    updateContentItem(itemId, { title });
-  };
-
-  // Open title dialog for full editing
-  const openTitleDialog = (itemId: string, title: string) => {
-    setCurrentTitle(title || "");
-    setEditingItemId(itemId);
-    setTitleDialogOpen(true);
-  };
-
-  // Save title from dialog
-  const saveTitleFromDialog = () => {
-    if (editingItemId) {
-      updateContentItem(editingItemId, { title: currentTitle });
-      setTitleDialogOpen(false);
-      setEditingItemId("");
-    }
-  };
-
-  // Format title for display (truncate if necessary)
-  const formatTitle = (title: string) => {
-    if (!title) return "";
-    return title.length > 25 ? title.substring(0, 25) + "..." : title;
-  };
-
   return (
     <Card className="w-full">
       <CardHeader className="py-3 flex flex-row items-center justify-between">
@@ -191,11 +142,11 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-md">
+        <div className="border rounded-md overflow-auto">
           {/* Main scroll container for vertical scrolling */}
-          <ScrollArea className="h-[calc(100vh-230px)]">
+          <ScrollArea className="h-[calc(100vh-230px)] overflow-x-auto">
             {/* Container for horizontal scrolling with minimum width */}
-            <div className="overflow-x-auto min-w-[1500px]">
+            <div className="min-w-[1500px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
@@ -212,9 +163,6 @@ const ContentPlan = () => {
                     <TableHead className="w-[150px] text-center whitespace-nowrap">PIC</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Layanan</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Sub Layanan</TableHead>
-                    <TableHead className="w-[200px] text-center whitespace-nowrap">Judul Content</TableHead>
-                    <TableHead className="w-[150px] text-center whitespace-nowrap">Content Pillar</TableHead>
-                    <TableHead className="w-[200px] text-center whitespace-nowrap">Brief</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -334,80 +282,11 @@ const ContentPlan = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="p-2">
-                          <div className="flex items-center">
-                            <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
-                            <Input
-                              value={formatTitle(item.title || "")}
-                              onChange={(e) => handleTitleChange(item.id, e.target.value)}
-                              onDoubleClick={() => openTitleDialog(item.id, item.title || "")}
-                              placeholder="Enter title"
-                              className="w-full bg-white cursor-pointer"
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell className="p-2">
-                          <Select 
-                            value={item.contentPillar} 
-                            onValueChange={(value) => handleContentPillarChange(item.id, value)}
-                          >
-                            <SelectTrigger className="w-full bg-white">
-                              <SelectValue placeholder="Select pillar" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {contentPillars.length > 0 ? (
-                                contentPillars.map((pillar) => (
-                                  <SelectItem key={pillar.id} value={pillar.id}>
-                                    {pillar.name}
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="no-pillar-found" disabled>
-                                  No content pillars found
-                                </SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="p-2 min-w-[200px]">
-                          {item.brief ? (
-                            <div className="flex items-center space-x-2">
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                className="text-left truncate w-full bg-white"
-                                onClick={() => openBriefDialog(item.id, item.brief, "view")}
-                              >
-                                {displayBrief(item.brief)}
-                                {extractGoogleDocsLink(item.brief) && (
-                                  <ExternalLink className="ml-2 h-3 w-3 inline" />
-                                )}
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8" 
-                                onClick={() => openBriefDialog(item.id, item.brief, "edit")}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              className="w-full justify-center"
-                              onClick={() => openBriefDialog(item.id, "", "edit")}
-                            >
-                              <FileText className="h-4 w-4 mr-2" />
-                              Click to add brief
-                            </Button>
-                          )}
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={9} className="h-24 text-center">
+                      <TableCell colSpan={6} className="h-24 text-center">
                         No content items. Click "Add Row" to create one.
                       </TableCell>
                     </TableRow>
@@ -436,26 +315,19 @@ const ContentPlan = () => {
               />
             </div>
             <div className="flex justify-end">
-              <Button type="submit" onClick={saveTitleFromDialog}>Save Title</Button>
+              <Button type="submit" onClick={() => {
+                if (editingItemId) {
+                  updateContentItem(editingItemId, { title: currentTitle });
+                  setTitleDialogOpen(false);
+                  setEditingItemId("");
+                }
+              }}>Save Title</Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Brief Dialog */}
-      <BriefDialog
-        isOpen={isBriefDialogOpen}
-        onOpenChange={setIsBriefDialogOpen}
-        currentBrief={currentBrief}
-        setCurrentBrief={setCurrentBrief}
-        mode={briefDialogMode}
-        setMode={setBriefDialogMode}
-        saveBrief={saveBrief}
-        extractGoogleDocsLink={extractGoogleDocsLink}
-      />
     </Card>
   );
 };
 
 export default ContentPlan;
-
