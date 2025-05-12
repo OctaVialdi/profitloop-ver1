@@ -319,36 +319,40 @@ const ContentBank = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Fixed size ScrollArea with both vertical and horizontal scrolling */}
+        {/* Fixed size container with only vertical scroll */}
         <div className="h-[400px] w-full border rounded-md">
-          <ScrollArea className="h-full w-full" type="always">
+          <Table>
+            <TableHeader className="sticky top-0 bg-white z-10">
+              <TableRow>
+                <TableHead className="w-[50px] text-center">
+                  <Checkbox 
+                    checked={allSelected && items.length > 0}
+                    onCheckedChange={handleSelectAllChange}
+                    aria-label="Select all"
+                  />
+                </TableHead>
+                <TableHead className="w-[120px] text-center">Tanggal Posting</TableHead>
+                <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
+                <TableHead className="w-[120px] text-center">PIC</TableHead>
+                <TableHead className="w-[150px] text-center">Layanan</TableHead>
+                <TableHead className="w-[150px] text-center">Sub Layanan</TableHead>
+                <TableHead className="w-[200px] text-center">Judul Content</TableHead>
+                <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
+                <TableHead className="w-[150px] text-center">Brief</TableHead>
+                <TableHead className="w-[150px] text-center">Status</TableHead>
+                <TableHead className="w-[100px] text-center">Revision</TableHead>
+                <TableHead className="w-[100px] text-center">Approved</TableHead>
+                <TableHead className="w-[150px] text-center">Tanggal Selesai</TableHead>
+                <TableHead className="w-[120px] text-center">Tanggal Upload</TableHead>
+                <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
+              </TableRow>
+            </TableHeader>
+          </Table>
+
+          {/* ScrollArea for table body with both vertical and horizontal scroll */}
+          <ScrollArea className="h-[calc(400px-40px)]" type="always">
             <div className="min-w-[1800px]">
               <Table>
-                <TableHeader className="sticky top-0 bg-white z-10">
-                  <TableRow>
-                    <TableHead className="w-[50px] text-center">
-                      <Checkbox 
-                        checked={allSelected && items.length > 0}
-                        onCheckedChange={handleSelectAllChange}
-                        aria-label="Select all"
-                      />
-                    </TableHead>
-                    <TableHead className="w-[120px] text-center">Tanggal Posting</TableHead>
-                    <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
-                    <TableHead className="w-[120px] text-center">PIC</TableHead>
-                    <TableHead className="w-[150px] text-center">Layanan</TableHead>
-                    <TableHead className="w-[150px] text-center">Sub Layanan</TableHead>
-                    <TableHead className="w-[200px] text-center">Judul Content</TableHead>
-                    <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
-                    <TableHead className="w-[150px] text-center">Brief</TableHead>
-                    <TableHead className="w-[150px] text-center">Status</TableHead>
-                    <TableHead className="w-[100px] text-center">Revision</TableHead>
-                    <TableHead className="w-[100px] text-center">Approved</TableHead>
-                    <TableHead className="w-[150px] text-center">Tanggal Selesai</TableHead>
-                    <TableHead className="w-[120px] text-center">Tanggal Upload</TableHead>
-                    <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
-                  </TableRow>
-                </TableHeader>
                 <TableBody>
                   {items.map((item) => (
                     <TableRow key={item.id}>
