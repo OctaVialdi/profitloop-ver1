@@ -138,35 +138,33 @@ const CreateContent = () => {
         hasSelectedItems={hasSelectedItems}
       />
       
-      <CardContent className="p-0">
-        <div className="w-full">
-          <ContentTable
-            contentItems={contentItems}
-            contentTypes={contentTypes}
-            services={services}
-            subServices={subServices}
-            contentPlanners={contentPlanners}
-            contentPillars={contentPillars}
-            isCalendarOpen={isCalendarOpen}
-            toggleCalendar={toggleCalendar}
-            handleDateChange={handleDateChange}
-            handleTypeChange={handleTypeChange}
-            handlePICChange={handlePICChange}
-            handleServiceChange={handleServiceChange}
-            handleSubServiceChange={handleSubServiceChange}
-            handleTitleChange={handleTitleChange}
-            handleContentPillarChange={handleContentPillarChange}
-            handleStatusChange={handleStatusChange}
-            toggleSelectItem={toggleSelectItem}
-            selectAll={selectAll}
-            handleSelectAll={handleSelectAll}
-            openBriefDialog={openBriefDialog}
-            getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
-            extractGoogleDocsLink={extractGoogleDocsLink}
-            displayBrief={displayBrief}
-            resetRevisionCounter={resetRevisionCounter}
-          />
-        </div>
+      <CardContent>
+        <ContentTable
+          contentItems={contentItems}
+          contentTypes={contentTypes}
+          services={services}
+          subServices={subServices}
+          contentPlanners={contentPlanners}
+          contentPillars={contentPillars}
+          isCalendarOpen={isCalendarOpen}
+          toggleCalendar={toggleCalendar}
+          handleDateChange={handleDateChange}
+          handleTypeChange={handleTypeChange}
+          handlePICChange={handlePICChange}
+          handleServiceChange={handleServiceChange}
+          handleSubServiceChange={handleSubServiceChange}
+          handleTitleChange={handleTitleChange}
+          handleContentPillarChange={handleContentPillarChange}
+          handleStatusChange={handleStatusChange}
+          toggleSelectItem={toggleSelectItem}
+          selectAll={selectAll}
+          handleSelectAll={handleSelectAll}
+          openBriefDialog={openBriefDialog}
+          getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
+          extractGoogleDocsLink={extractGoogleDocsLink}
+          displayBrief={displayBrief}
+          resetRevisionCounter={resetRevisionCounter}
+        />
       </CardContent>
       
       <ContentFooter 

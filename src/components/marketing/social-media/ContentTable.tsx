@@ -72,68 +72,44 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   displayBrief,
   resetRevisionCounter
 }) => {
-  // Define column widths to be consistent between header and body
-  const columnWidths = {
-    checkbox: "w-[60px]",
-    date: "w-[140px]",
-    type: "w-[140px]",
-    pic: "w-[140px]",
-    service: "w-[140px]",
-    subService: "w-[140px]",
-    title: "w-[140px]",
-    pillar: "w-[140px]",
-    brief: "w-[180px]",
-    status: "w-[140px]",
-    revision: "w-[140px]"
-  };
-
   return (
     <div className="relative w-full">
-      {/* Fixed header section with the same widths as body cells */}
-      <div className="w-full border-b">
-        <div className="w-full min-w-[1500px]">
-          <Table>
+      <ScrollArea className="w-full">
+        <div className="min-w-max">
+          <Table className="w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className={`${columnWidths.checkbox} text-center sticky left-0 bg-white z-10 border-r`}>
+                <TableHead className="w-[60px] text-center sticky left-0 bg-white z-10 border-r">
                   <Checkbox 
                     checked={selectAll} 
                     onCheckedChange={handleSelectAll}
                     aria-label="Select all"
                   />
                 </TableHead>
-                <TableHead className={`${columnWidths.date} text-center`}>Tanggal Posting</TableHead>
-                <TableHead className={`${columnWidths.type} text-center`}>Tipe Content</TableHead>
-                <TableHead className={`${columnWidths.pic} text-center`}>PIC</TableHead>
-                <TableHead className={`${columnWidths.service} text-center`}>Layanan</TableHead>
-                <TableHead className={`${columnWidths.subService} text-center`}>Sub Layanan</TableHead>
-                <TableHead className={`${columnWidths.title} text-center`}>Judul Content</TableHead>
-                <TableHead className={`${columnWidths.pillar} text-center`}>Content Pillar</TableHead>
-                <TableHead className={`${columnWidths.brief} text-center`}>Brief</TableHead>
-                <TableHead className={`${columnWidths.status} text-center`}>Status</TableHead>
-                <TableHead className={`${columnWidths.revision} text-center`}>Revision</TableHead>
+                <TableHead className="w-[140px] text-center">Tanggal Posting</TableHead>
+                <TableHead className="w-[140px] text-center">Tipe Content</TableHead>
+                <TableHead className="w-[140px] text-center">PIC</TableHead>
+                <TableHead className="w-[140px] text-center">Layanan</TableHead>
+                <TableHead className="w-[140px] text-center">Sub Layanan</TableHead>
+                <TableHead className="w-[140px] text-center">Judul Content</TableHead>
+                <TableHead className="w-[140px] text-center">Content Pillar</TableHead>
+                <TableHead className="w-[180px] text-center">Brief</TableHead>
+                <TableHead className="w-[140px] text-center">Status</TableHead>
+                <TableHead className="w-[140px] text-center">Revision</TableHead>
               </TableRow>
             </TableHeader>
-          </Table>
-        </div>
-      </div>
-
-      {/* Scrollable body section with the same width columns */}
-      <div className="w-full overflow-x-auto" style={{ maxHeight: "calc(100vh - 300px)" }}>
-        <div className="min-w-[1500px]">
-          <Table>
             <TableBody>
               {contentItems.length > 0 ? (
                 contentItems.map(item => (
                   <TableRow key={item.id}>
-                    <TableCell className={`${columnWidths.checkbox} text-center sticky left-0 bg-white z-10 border-r`}>
+                    <TableCell className="text-center sticky left-0 bg-white z-10 border-r">
                       <Checkbox 
                         checked={item.isSelected} 
                         onCheckedChange={() => toggleSelectItem(item.id)}
                         aria-label="Select row"
                       />
                     </TableCell>
-                    <TableCell className={`${columnWidths.date} p-2`}>
+                    <TableCell className="p-2">
                       <Popover 
                         open={isCalendarOpen[item.id]} 
                         onOpenChange={() => toggleCalendar(item.id)}
@@ -158,7 +134,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </PopoverContent>
                       </Popover>
                     </TableCell>
-                    <TableCell className={`${columnWidths.type} p-2`}>
+                    <TableCell className="p-2">
                       <Select 
                         value={item.contentType} 
                         onValueChange={(value) => handleTypeChange(item.id, value)}
@@ -175,7 +151,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className={`${columnWidths.pic} p-2`}>
+                    <TableCell className="p-2">
                       <Select 
                         value={item.pic} 
                         onValueChange={(value) => handlePICChange(item.id, value)}
@@ -198,7 +174,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className={`${columnWidths.service} p-2`}>
+                    <TableCell className="p-2">
                       <Select 
                         value={item.service} 
                         onValueChange={(value) => handleServiceChange(item.id, value)}
@@ -215,7 +191,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className={`${columnWidths.subService} p-2`}>
+                    <TableCell className="p-2">
                       <Select 
                         value={item.subService} 
                         onValueChange={(value) => handleSubServiceChange(item.id, value)}
@@ -239,7 +215,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className={`${columnWidths.title} p-2`}>
+                    <TableCell className="p-2">
                       <div className="flex items-center">
                         <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
                         <Input
@@ -251,7 +227,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         />
                       </div>
                     </TableCell>
-                    <TableCell className={`${columnWidths.pillar} p-2`}>
+                    <TableCell className="p-2">
                       <Select 
                         value={item.contentPillar} 
                         onValueChange={(value) => handleContentPillarChange(item.id, value)}
@@ -271,7 +247,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className={`${columnWidths.brief} p-2`}>
+                    <TableCell className="p-2">
                       {item.brief ? (
                         <div className="flex items-center space-x-2">
                           <Button 
@@ -305,7 +281,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </Button>
                       )}
                     </TableCell>
-                    <TableCell className={`${columnWidths.status} p-2`}>
+                    <TableCell className="p-2">
                       <Select 
                         value={item.status} 
                         onValueChange={(value) => handleStatusChange(item.id, value)}
@@ -323,7 +299,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className={`${columnWidths.revision} p-2`}>
+                    <TableCell className="p-2">
                       <div className="flex items-center justify-between">
                         <div className="font-medium text-center w-full">
                           {item.revisionCount || 0}
@@ -351,7 +327,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
             </TableBody>
           </Table>
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 };
