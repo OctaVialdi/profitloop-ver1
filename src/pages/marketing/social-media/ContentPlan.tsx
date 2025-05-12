@@ -196,6 +196,7 @@ const ContentPlan = () => {
             displayBrief={displayBrief}
             resetRevisionCounter={resetRevisionCounter}
             toggleApproved={toggleApproved}
+            updateContentItem={updateContentItem}
           />
         </div>
       </CardContent>

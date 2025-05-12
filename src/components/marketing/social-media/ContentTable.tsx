@@ -48,6 +48,7 @@ interface ContentTableProps {
   toggleApproved: (itemId: string, isApproved: boolean) => void;
   visibleColumns?: string[];
   activeTab?: string;
+  updateContentItem: (itemId: string, updates: Partial<ContentItem>) => void;
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({

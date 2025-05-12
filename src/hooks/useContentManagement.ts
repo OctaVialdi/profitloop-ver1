@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 export interface ContentType {
@@ -47,6 +46,7 @@ export interface ContentItem {
   postLink: string;
   isDone: boolean;
   actualPostDate: string | undefined;
+  contentStatus: string;
 }
 
 export const useContentManagement = () => {
@@ -174,7 +174,8 @@ export const useContentManagement = () => {
       productionApprovedDate: undefined,
       postLink: "",
       isDone: false,
-      actualPostDate: undefined
+      actualPostDate: undefined,
+      contentStatus: ""
     };
     setContentItems([newItem, ...contentItems]);
   };

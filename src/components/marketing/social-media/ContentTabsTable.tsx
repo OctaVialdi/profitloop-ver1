@@ -31,6 +31,7 @@ interface ContentTabsTableProps {
   displayBrief: (brief: string) => string;
   resetRevisionCounter: (itemId: string) => void;
   toggleApproved: (itemId: string, isApproved: boolean) => void;
+  updateContentItem: (itemId: string, updates: Partial<ContentItem>) => void;
 }
 
 export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
