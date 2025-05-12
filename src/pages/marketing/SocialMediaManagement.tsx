@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
@@ -55,6 +56,7 @@ const SocialMediaManagement = () => {
 
   const secondaryTabs: TabData[] = [
     { id: "dashboard", label: "Dashboard", path: "/marketing/social-media" },
+    { id: "content-plan", label: "Content Plan", path: "/marketing/social-media/content-plan" },
     { id: "content-bank", label: "Content Bank", path: "/marketing/social-media/content-bank" },
     { id: "content-qc", label: "Content QC", path: "/marketing/social-media/content-qc" }
   ];
