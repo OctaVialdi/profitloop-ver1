@@ -137,6 +137,11 @@ const CreateContent = () => {
   const getFilteredSubServicesByServiceId = (serviceId: string) => {
     return subServices.filter(subService => subService.serviceId === serviceId);
   };
+
+  // Handle toggle approved status
+  const handleToggleApproved = (itemId: string, isApproved: boolean) => {
+    updateContentItem(itemId, { isApproved });
+  };
   
   const hasSelectedItems = contentItems.some(item => item.isSelected);
   const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
@@ -176,6 +181,7 @@ const CreateContent = () => {
           extractGoogleDocsLink={extractGoogleDocsLink}
           displayBrief={displayBrief}
           resetRevisionCounter={resetRevisionCounter}
+          toggleApproved={handleToggleApproved}
         />
       </CardContent>
       

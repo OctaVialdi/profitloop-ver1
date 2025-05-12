@@ -17,6 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
+import { format } from "date-fns";
 
 interface ContentTableProps {
   contentItems: ContentItem[];
@@ -44,6 +45,7 @@ interface ContentTableProps {
   extractGoogleDocsLink: (text: string) => string | null;
   displayBrief: (brief: string) => string;
   resetRevisionCounter: (itemId: string) => void;
+  toggleApproved: (itemId: string, isApproved: boolean) => void;
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -71,8 +73,16 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   getFilteredSubServicesByServiceId,
   extractGoogleDocsLink,
   displayBrief,
-  resetRevisionCounter
+  resetRevisionCounter,
+  toggleApproved
 }) => {
+  // Format completion date for display
+  const formatCompletionDate = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return format(date, 'dd MMM yyyy - HH:mm');
+  };
+
   return (
     <div className="w-full">
       {/* Use a fixed height container with both ScrollArea and overflow-auto */}
@@ -100,6 +110,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                   <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Brief</TableHead>
                   <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Status</TableHead>
                   <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Revision</TableHead>
+                  <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Approved</TableHead>
+                  <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Tanggal Selesai</TableHead>
+                  <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Upload</TableHead>
+                  <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                  <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -319,11 +334,34 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           </Button>
                         </div>
                       </TableCell>
+                      <TableCell className="p-2 text-center whitespace-nowrap">
+                        <Checkbox 
+                          checked={item.isApproved} 
+                          onCheckedChange={(checked) => toggleApproved(item.id, checked as boolean)}
+                          aria-label="Approve content"
+                        />
+                      </TableCell>
+                      <TableCell className="p-2 text-center whitespace-nowrap">
+                        {item.status === "review" && item.completionDate && (
+                          <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md">
+                            {formatCompletionDate(item.completionDate)}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="p-2 text-center whitespace-nowrap">
+                        {item.postDate || "-"}
+                      </TableCell>
+                      <TableCell className="p-2 text-center whitespace-nowrap">
+                        {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
+                      </TableCell>
+                      <TableCell className="p-2 text-center whitespace-nowrap">
+                        {item.title || "-"}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={11} className="h-24 text-center">
+                    <TableCell colSpan={16} className="h-24 text-center">
                       No content items. Click "Add Row" to create one.
                     </TableCell>
                   </TableRow>
