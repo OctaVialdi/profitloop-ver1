@@ -46,33 +46,24 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
     maritalStatus: "Marital status"
   };
   
+  // Define default columns to be displayed if none are selected
+  const defaultColumns: (keyof EmployeeColumnState)[] = [
+    'name',
+    'employeeId', 
+    'organization',
+    'jobPosition',
+    'jobLevel',
+    'employmentStatus'
+  ];
+  
   // Filter the column order to only include visible columns
-  const visibleColumnsOrder = columnOrder.filter(col => visibleColumns[col]);
+  // If no columns are visible from the order, use the default columns
+  const visibleColumnsOrder = columnOrder
+    .filter(col => visibleColumns[col])
+    .length > 0 
+      ? columnOrder.filter(col => visibleColumns[col]) 
+      : defaultColumns.filter(col => true);
   
-  // Important: We need exactly 5 data columns (plus checkbox and actions columns) for a total of 7
-  const limitedVisibleColumnsOrder: Array<keyof EmployeeColumnState> = (() => {
-    const maxDataColumns = 5; // Maximum number of data columns to display
-    
-    // If name is in the visible columns, we need to ensure it's included
-    const nameIndex = visibleColumnsOrder.indexOf('name');
-    
-    if (nameIndex === -1) {
-      // If name is not in the visible columns, just take the first 5
-      return visibleColumnsOrder.slice(0, maxDataColumns) as Array<keyof EmployeeColumnState>;
-    } else {
-      // Remove "name" from the array for now
-      const withoutName = [...visibleColumnsOrder];
-      withoutName.splice(nameIndex, 1);
-      
-      // Take the name column plus up to (maxDataColumns-1) more columns
-      return ['name' as keyof EmployeeColumnState, 
-        ...withoutName.slice(0, maxDataColumns - 1) as Array<keyof EmployeeColumnState>];
-    }
-  })();
-  
-  // Check if we need horizontal scrolling (more columns exist than are shown)
-  const needsHorizontalScroll = visibleColumnsOrder.length > limitedVisibleColumnsOrder.length;
-
   // Handle click on employee name to navigate to employee detail with new route pattern
   const handleEmployeeClick = (employee: LegacyEmployee) => {
     navigate(`/my-info/personal?id=${employee.id}`);
@@ -122,82 +113,82 @@ export const EmployeeTableView: React.FC<EmployeeTableViewProps> = ({
     return employee[columnKey as keyof LegacyEmployee] || '-';
   };
 
-  // Calculate width for columns to ensure alignment
+  // Calculate width for columns to ensure appropriate spacing
   const getColumnWidth = (colKey: keyof EmployeeColumnState) => {
-    if (colKey === 'name') return 'w-[220px]';
-    if (colKey === 'employeeId') return 'w-[140px]';
-    if (colKey === 'email') return 'w-[200px]';
-    return 'w-[180px]';
+    switch(colKey) {
+      case 'name': return 'w-[200px]';
+      case 'employeeId': return 'w-[120px]';
+      case 'organization': return 'w-[150px]';
+      case 'jobPosition': return 'w-[150px]';
+      case 'jobLevel': return 'w-[120px]';
+      case 'employmentStatus': return 'w-[150px]';
+      case 'email': return 'w-[200px]';
+      default: return 'w-[150px]';
+    }
   };
 
   return (
     <div className="border rounded-md">
       <div className="relative">
-        {/* Using a single table structure for better alignment */}
-        <ScrollArea className="w-full" type={needsHorizontalScroll ? "always" : "auto"}>
-          <div className={needsHorizontalScroll ? "min-w-max" : "w-full"}>
-            <Table>
-              <TableHeader className="sticky top-0 z-20 bg-white">
-                <TableRow>
-                  <TableHead className="w-[40px] sticky left-0 z-30 bg-white">
-                    <Checkbox />
+        <Table>
+          <TableHeader className="sticky top-0 z-20 bg-white">
+            <TableRow>
+              <TableHead className="w-10 sticky left-0 z-30 bg-white">
+                <Checkbox />
+              </TableHead>
+              
+              {visibleColumnsOrder.map((colKey) => {
+                const isNameColumn = colKey === 'name';
+                const columnWidth = getColumnWidth(colKey);
+                return (
+                  <TableHead 
+                    key={colKey}
+                    className={`${isNameColumn ? "sticky left-[40px] z-30 bg-white" : ""} ${columnWidth}`}
+                  >
+                    {columnLabels[colKey]}
                   </TableHead>
-                  
-                  {limitedVisibleColumnsOrder.map((colKey) => {
-                    const isNameColumn = colKey === 'name';
-                    const columnWidth = getColumnWidth(colKey);
-                    return (
-                      <TableHead 
-                        key={colKey}
-                        className={`${isNameColumn ? "sticky left-[40px] z-30 bg-white" : ""} ${columnWidth}`}
-                      >
-                        {columnLabels[colKey]}
-                      </TableHead>
-                    );
-                  })}
-                  
-                  <TableHead className="text-right sticky right-0 z-30 bg-white w-[100px]">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="relative">
-                {data.map(employee => (
-                  <TableRow key={employee.id}>
-                    <TableCell className="sticky left-0 z-20 bg-white">
-                      <Checkbox />
+                );
+              })}
+              
+              <TableHead className="text-right sticky right-0 z-30 bg-white w-[100px]">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="relative">
+            {data.map(employee => (
+              <TableRow key={employee.id}>
+                <TableCell className="sticky left-0 z-20 bg-white">
+                  <Checkbox />
+                </TableCell>
+                
+                {visibleColumnsOrder.map((colKey) => {
+                  const isNameColumn = colKey === 'name';
+                  const columnWidth = getColumnWidth(colKey);
+                  return (
+                    <TableCell 
+                      key={colKey}
+                      className={`${isNameColumn ? "sticky left-[40px] z-20 bg-white" : ""} ${columnWidth}`}
+                    >
+                      {renderCellContent(employee, colKey)}
                     </TableCell>
-                    
-                    {limitedVisibleColumnsOrder.map((colKey) => {
-                      const isNameColumn = colKey === 'name';
-                      const columnWidth = getColumnWidth(colKey);
-                      return (
-                        <TableCell 
-                          key={colKey}
-                          className={`${isNameColumn ? "sticky left-[40px] z-20 bg-white" : ""} ${columnWidth}`}
-                        >
-                          {renderCellContent(employee, colKey)}
-                        </TableCell>
-                      );
-                    })}
-                    
-                    <TableCell className="text-right sticky right-0 z-20 bg-white w-[100px]">
-                      <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {data.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={limitedVisibleColumnsOrder.length + 2} className="text-center py-8">
-                      No employee data found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          {needsHorizontalScroll && <ScrollBar orientation="horizontal" />}
-        </ScrollArea>
+                  );
+                })}
+                
+                <TableCell className="text-right sticky right-0 z-20 bg-white w-[100px]">
+                  <EmployeeActions employeeId={employee.id} employeeName={employee.name} />
+                </TableCell>
+              </TableRow>
+            ))}
+            {data.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={visibleColumnsOrder.length + 2} className="text-center py-8">
+                  No employee data found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
