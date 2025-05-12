@@ -150,7 +150,7 @@ export const useContentManagement = () => {
       title: "",
       contentPillar: "",
       brief: "",
-      status: "none",
+      status: "none", // Changed from "" to "none"
       revisionCount: 0,
       isApproved: false,
       completionDate: undefined,
@@ -184,7 +184,7 @@ export const useContentManagement = () => {
     
     // Check if brief is being changed, and if so, reset status
     if (updates.brief !== undefined) {
-      updates.status = "none";
+      updates.status = "none"; // Changed from "" to "none"
     }
     
     setContentItems(prevItems =>

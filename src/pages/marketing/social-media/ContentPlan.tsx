@@ -256,7 +256,8 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">-</SelectItem>
+                                  {/* Fix: Changed the empty string to "none" for the default option */}
+                                  <SelectItem value="none">-</SelectItem>
                                   {contentTypes.map(type => (
                                     <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
                                   ))}
@@ -272,7 +273,8 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">-</SelectItem>
+                                  {/* Fix: Changed the empty string to "none" for the default option */}
+                                  <SelectItem value="none">-</SelectItem>
                                   {contentPlanners.map(planner => (
                                     <SelectItem key={planner.id} value={planner.id}>{planner.name}</SelectItem>
                                   ))}
@@ -291,7 +293,8 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">-</SelectItem>
+                                  {/* Fix: Changed the empty string to "none" for the default option */}
+                                  <SelectItem value="none">-</SelectItem>
                                   {services.map(service => (
                                     <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
                                   ))}
@@ -308,7 +311,8 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">-</SelectItem>
+                                  {/* Fix: Changed the empty string to "none" for the default option */}
+                                  <SelectItem value="none">-</SelectItem>
                                   {item.service && getFilteredSubServices(item.service).map(subService => (
                                     <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>
                                   ))}
@@ -335,7 +339,8 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">-</SelectItem>
+                                  {/* Fix: Changed the empty string to "none" for the default option */}
+                                  <SelectItem value="none">-</SelectItem>
                                   {contentPillars.map(pillar => (
                                     <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
                                   ))}
