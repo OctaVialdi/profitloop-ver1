@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -91,7 +90,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   return (
     <div className="relative w-full overflow-hidden">
       <ScrollArea className="h-[calc(100vh-220px)] w-full">
-        <div className="w-[1800px]"> {/* Fixed width to ensure consistent layout */}
+        <div className="w-[1800px]">
           <Table className="w-full table-fixed">
             <TableHeader className="sticky top-0 bg-white z-20">
               <TableRow>
