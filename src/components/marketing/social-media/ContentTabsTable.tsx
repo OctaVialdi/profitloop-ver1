@@ -1,5 +1,6 @@
 
-import React from "react";
+import React, { useState } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ContentTable } from "./ContentTable";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
 
@@ -33,43 +34,48 @@ interface ContentTabsTableProps {
 }
 
 export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
-  // Initially visible columns (from selectColumn to brief)
-  const initialVisibleColumns = [
-    "selectColumn", "postDate", "contentType", "pic", "service", "subService", "title", "contentPillar", "brief"
-  ];
+  const [activeTab, setActiveTab] = useState("primary");
+  
+  // Define column sets for each tab
+  const primaryColumns = ["selectColumn", "postDate", "contentType", "pic", "service", "subService", "title"];
+  const detailsColumns = ["selectColumn", "contentPillar", "brief", "status", "revision", "approved"];
+  const publishingColumns = ["selectColumn", "completionDate", "mirrorPostDate", "mirrorContentType", "mirrorTitle"];
 
-  // Define all columns for the single table
-  const allColumns = [
-    "selectColumn", "postDate", "contentType", "pic", "service", "subService", "title", 
-    "contentPillar", "brief", "status", "revision", "approved", "completionDate", 
-    "mirrorPostDate", "mirrorContentType", "mirrorTitle"
-  ];
-
-  // Define fixed widths for all columns - adjusted to be wider
-  const columnWidths = {
-    selectColumn: 60,
-    postDate: 160,
-    contentType: 180,
-    pic: 150,
-    service: 180,
-    subService: 180,
-    title: 240,
-    contentPillar: 180,
-    brief: 240,
-    status: 150,
-    revision: 120,
-    approved: 120,
-    completionDate: 180,
-    mirrorPostDate: 160,
-    mirrorContentType: 180,
-    mirrorTitle: 240
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   return (
-    <ContentTable
-      {...props}
-      visibleColumns={initialVisibleColumns}
-      columnWidths={columnWidths}
-    />
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+      <TabsList className="mb-4 bg-white">
+        <TabsTrigger value="primary" className="px-6">Primary Info</TabsTrigger>
+        <TabsTrigger value="details" className="px-6">Content Details</TabsTrigger>
+        <TabsTrigger value="publishing" className="px-6">Publishing Info</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="primary" className="mt-0">
+        <ContentTable
+          {...props}
+          visibleColumns={primaryColumns}
+          activeTab="primary"
+        />
+      </TabsContent>
+
+      <TabsContent value="details" className="mt-0">
+        <ContentTable
+          {...props}
+          visibleColumns={detailsColumns}
+          activeTab="details"
+        />
+      </TabsContent>
+
+      <TabsContent value="publishing" className="mt-0">
+        <ContentTable
+          {...props}
+          visibleColumns={publishingColumns}
+          activeTab="publishing"
+        />
+      </TabsContent>
+    </Tabs>
   );
 };
