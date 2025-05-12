@@ -17,7 +17,6 @@ import SocialMediaDashboard from "@/pages/marketing/social-media/Dashboard";
 import CreateContent from "@/pages/marketing/social-media/CreateContent";
 import ContentBank from "@/pages/marketing/social-media/ContentBank";
 import ContentQC from "@/pages/marketing/social-media/ContentQC";
-import ContentPlan from "@/pages/marketing/social-media/ContentPlan";
 
 export const marketingRoutes = (
   <Route
@@ -41,7 +40,6 @@ export const marketingRoutes = (
       <Route path="create-content" element={<CreateContent />} />
       <Route path="content-bank" element={<ContentBank />} />
       <Route path="content-qc" element={<ContentQC />} />
-      <Route path="content-plan" element={<ContentPlan />} />
     </Route>
     
     <Route path="kol" element={<KolManagement />} />
@@ -53,4 +51,3 @@ export const marketingRoutes = (
     <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
   </Route>
 );
-

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useEmployees, LegacyEmployee, convertToLegacyFormat } from "@/hooks/useEmployees";
 
 export interface ContentType {
@@ -7,64 +7,21 @@ export interface ContentType {
   name: string;
 }
 
-export interface Service {
-  id: string;
-  name: string;
-}
-
-export interface SubService {
-  id: string;
-  parentId: string;
-  name: string;
-}
-
-export interface ContentPillar {
-  id: string;
-  name: string;
-}
-
-export interface PIC {
-  id: string;
-  name: string;
-  employeeId: string;
-}
-
 export interface ContentItem {
   id: string;
   postDate: string;
   contentType: string;
-  pic?: string;
-  service?: string;
-  subService?: string;
-  title?: string;
-  contentPillar?: string;
-  brief?: string;
-  status?: string;
-  revisions?: number;
-  approved?: boolean;
-  completionDate?: string;
   isSelected?: boolean;
 }
 
 export const useContentManagement = () => {
   const { employees } = useEmployees();
   const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
-  const [servicesList, setServicesList] = useState<Service[]>([]);
-  const [subServicesList, setSubServicesList] = useState<SubService[]>([]);
-  const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [currentUser, setCurrentUser] = useState<LegacyEmployee | null>(null);
-  const [picList, setPICList] = useState<PIC[]>([]);
 
-  // Check if current user is a marketing manager
-  const isManager = useMemo(() => {
-    return currentUser?.jobPosition?.toLowerCase().includes("manager") && 
-           currentUser?.organization === "Digital Marketing";
-  }, [currentUser]);
-
-  // Load data from localStorage
+  // Load content types from localStorage
   useEffect(() => {
-    // Load content types
     const storedTypes = localStorage.getItem("marketingContentTypes");
     if (storedTypes) {
       setContentTypes(JSON.parse(storedTypes));
@@ -78,33 +35,6 @@ export const useContentManagement = () => {
       ];
       setContentTypes(defaultTypes);
       localStorage.setItem("marketingContentTypes", JSON.stringify(defaultTypes));
-    }
-    
-    // Load services
-    const storedServices = localStorage.getItem("marketingServices");
-    if (storedServices) {
-      setServicesList(JSON.parse(storedServices));
-    } else {
-      const defaultServices: Service[] = [];
-      localStorage.setItem("marketingServices", JSON.stringify(defaultServices));
-    }
-    
-    // Load subservices
-    const storedSubServices = localStorage.getItem("marketingSubServices");
-    if (storedSubServices) {
-      setSubServicesList(JSON.parse(storedSubServices));
-    } else {
-      const defaultSubServices: SubService[] = [];
-      localStorage.setItem("marketingSubServices", JSON.stringify(defaultSubServices));
-    }
-    
-    // Load content pillars
-    const storedPillars = localStorage.getItem("contentPillars");
-    if (storedPillars) {
-      setContentPillars(JSON.parse(storedPillars));
-    } else {
-      const defaultPillars: ContentPillar[] = [];
-      localStorage.setItem("contentPillars", JSON.stringify(defaultPillars));
     }
     
     // Load content items if they exist
@@ -121,25 +51,13 @@ export const useContentManagement = () => {
     }
   }, [contentItems]);
 
-  // Get current user and PICs
+  // Get current user
   useEffect(() => {
     if (employees.length > 0) {
       const marketingEmployees = employees
         .map(convertToLegacyFormat)
         .filter(employee => employee.organization === "Digital Marketing");
       
-      // Find content planners for PIC dropdown
-      const contentPlanners = marketingEmployees
-        .filter(employee => employee.jobPosition?.includes("Content Planner"))
-        .map(employee => ({
-          id: employee.id,
-          name: employee.name,
-          employeeId: employee.employeeId || employee.employee_id || ""
-        }));
-      
-      setPICList(contentPlanners);
-      
-      // Set current user
       const manager = marketingEmployees.find(
         employee => employee.jobPosition?.toLowerCase().includes("manager")
       );
@@ -190,91 +108,14 @@ export const useContentManagement = () => {
     );
   };
 
-  // Service management functions
-  const addService = (name: string) => {
-    const newService: Service = {
-      id: `service-${Date.now()}`,
-      name
-    };
-    
-    setServicesList(prev => [...prev, newService]);
-    localStorage.setItem("marketingServices", JSON.stringify([...servicesList, newService]));
-    return newService;
-  };
-
-  const deleteService = (id: string) => {
-    // Delete service and all related sub-services
-    setServicesList(prev => prev.filter(service => service.id !== id));
-    setSubServicesList(prev => prev.filter(subService => subService.parentId !== id));
-    
-    // Update localStorage
-    const updatedServices = servicesList.filter(service => service.id !== id);
-    const updatedSubServices = subServicesList.filter(subService => subService.parentId !== id);
-    
-    localStorage.setItem("marketingServices", JSON.stringify(updatedServices));
-    localStorage.setItem("marketingSubServices", JSON.stringify(updatedSubServices));
-  };
-
-  // SubService management functions
-  const addSubService = (name: string, parentId: string) => {
-    const newSubService: SubService = {
-      id: `subservice-${Date.now()}`,
-      parentId,
-      name
-    };
-    
-    setSubServicesList(prev => [...prev, newSubService]);
-    localStorage.setItem("marketingSubServices", JSON.stringify([...subServicesList, newSubService]));
-    return newSubService;
-  };
-
-  const deleteSubService = (id: string) => {
-    setSubServicesList(prev => prev.filter(subService => subService.id !== id));
-    
-    // Update localStorage
-    const updatedSubServices = subServicesList.filter(subService => subService.id !== id);
-    localStorage.setItem("marketingSubServices", JSON.stringify(updatedSubServices));
-  };
-
-  // Content pillar management functions
-  const addContentPillar = (name: string) => {
-    const newPillar: ContentPillar = {
-      id: `pillar-${Date.now()}`,
-      name
-    };
-    
-    setContentPillars(prev => [...prev, newPillar]);
-    localStorage.setItem("contentPillars", JSON.stringify([...contentPillars, newPillar]));
-    return newPillar;
-  };
-
-  const deleteContentPillar = (id: string) => {
-    setContentPillars(prev => prev.filter(pillar => pillar.id !== id));
-    
-    // Update localStorage
-    const updatedPillars = contentPillars.filter(pillar => pillar.id !== id);
-    localStorage.setItem("contentPillars", JSON.stringify(updatedPillars));
-  };
-
   return {
     contentTypes,
-    servicesList,
-    subServicesList,
-    contentPillars,
     contentItems,
     currentUser,
-    picList,
-    isManager,
     addContentItem,
     updateContentItem,
     deleteContentItems,
     toggleSelectItem,
-    selectAllItems,
-    addService,
-    deleteService,
-    addSubService,
-    deleteSubService,
-    addContentPillar,
-    deleteContentPillar
+    selectAllItems
   };
 };
