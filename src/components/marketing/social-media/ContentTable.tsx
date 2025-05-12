@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -14,9 +13,9 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, PlusCircle, Trash2, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw } from "lucide-react";
+import { CalendarIcon, PlusCircle, Trash2, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw, Clock, Upload } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
 
 interface ContentTableProps {
@@ -27,6 +26,7 @@ interface ContentTableProps {
   contentPlanners: any[];
   contentPillars: ContentPillar[];
   isCalendarOpen: { [key: string]: boolean };
+  isUserManager: boolean; // New prop to check if user is a manager
   toggleCalendar: (itemId: string) => void;
   handleDateChange: (itemId: string, date: Date | undefined) => void;
   handleTypeChange: (itemId: string, typeId: string) => void;
@@ -36,6 +36,7 @@ interface ContentTableProps {
   handleTitleChange: (itemId: string, title: string) => void;
   handleContentPillarChange: (itemId: string, pillarId: string) => void;
   handleStatusChange: (itemId: string, status: string) => void;
+  handleApprovalChange: (itemId: string, isApproved: boolean) => void; // New handler for approval
   toggleSelectItem: (itemId: string) => void;
   selectAll: boolean;
   handleSelectAll: (checked: boolean) => void;
@@ -54,6 +55,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   contentPlanners,
   contentPillars,
   isCalendarOpen,
+  isUserManager,
   toggleCalendar,
   handleDateChange,
   handleTypeChange,
@@ -63,6 +65,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   handleTitleChange,
   handleContentPillarChange,
   handleStatusChange,
+  handleApprovalChange,
   toggleSelectItem,
   selectAll,
   handleSelectAll,
@@ -72,14 +75,26 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   displayBrief,
   resetRevisionCounter
 }) => {
+  // Function to format date for "Tanggal Selesai" column
+  const formatCompletionDate = (dateString: string | undefined): string => {
+    if (!dateString) return "-";
+    try {
+      const date = parseISO(dateString);
+      return format(date, "dd MMM yyyy - HH:mm");
+    } catch (error) {
+      console.error("Error formatting completion date:", error);
+      return "-";
+    }
+  };
+
   return (
-    <div className="relative w-full">
+    <div className="relative w-full overflow-hidden">
       <ScrollArea className="w-full">
-        <div className="min-w-max">
+        <div className="min-w-[1400px]">
           <Table className="w-full">
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-white z-20">
               <TableRow>
-                <TableHead className="w-[60px] text-center sticky left-0 bg-white z-10 border-r">
+                <TableHead className="w-[60px] text-center sticky left-0 bg-white z-30 border-r">
                   <Checkbox 
                     checked={selectAll} 
                     onCheckedChange={handleSelectAll}
@@ -96,6 +111,9 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                 <TableHead className="w-[180px] text-center">Brief</TableHead>
                 <TableHead className="w-[140px] text-center">Status</TableHead>
                 <TableHead className="w-[140px] text-center">Revision</TableHead>
+                <TableHead className="w-[140px] text-center">Approved</TableHead>
+                <TableHead className="w-[140px] text-center">Tanggal Selesai</TableHead>
+                <TableHead className="w-[140px] text-center">Tanggal Upload</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -315,11 +333,44 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </Button>
                       </div>
                     </TableCell>
+
+                    {/* New column 12: Approved checkbox (only clickable by managers) */}
+                    <TableCell className="p-2 text-center">
+                      <Checkbox
+                        checked={item.isApproved}
+                        onCheckedChange={(checked) => 
+                          handleApprovalChange(item.id, checked === true)
+                        }
+                        disabled={!isUserManager}
+                        aria-label="Approve content"
+                        className="mx-auto"
+                      />
+                    </TableCell>
+
+                    {/* New column 13: Tanggal Selesai (Completion Date) */}
+                    <TableCell className="p-2">
+                      <div className="flex items-center">
+                        {item.status === "review" && (
+                          <>
+                            <Clock className="h-4 w-4 text-muted-foreground mr-2" />
+                            <span>{formatCompletionDate(item.completionDate)}</span>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* New column 14: Tanggal Upload (mirroring posting date) */}
+                    <TableCell className="p-2">
+                      <div className="flex items-center">
+                        <Upload className="h-4 w-4 text-muted-foreground mr-2" />
+                        <span>{item.postDate || "-"}</span>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={11} className="h-24 text-center">
+                  <TableCell colSpan={14} className="h-24 text-center"> {/* Updated colspan to 14 */}
                     No content items. Click "Add Row" to create one.
                   </TableCell>
                 </TableRow>

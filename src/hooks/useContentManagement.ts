@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 export interface ContentType {
@@ -34,7 +33,9 @@ export interface ContentItem {
   contentPillar: string;
   brief: string;
   status: string;
-  revisionCount: number; // Added revision counter
+  revisionCount: number;
+  isApproved: boolean;
+  completionDate: string | undefined;
 }
 
 export const useContentManagement = () => {
@@ -148,8 +149,10 @@ export const useContentManagement = () => {
       title: "",
       contentPillar: "",
       brief: "",
-      status: "none", // Changed from empty string to "none"
-      revisionCount: 0 // Initialize revision counter to 0
+      status: "none",
+      revisionCount: 0,
+      isApproved: false,
+      completionDate: undefined,
     };
     setContentItems([...contentItems, newItem]);
   };
@@ -164,9 +167,23 @@ export const useContentManagement = () => {
       }
     }
     
+    // Set completion date if status is changing to "review" and there's no completion date yet
+    if (updates.status === "review") {
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && !currentItem.completionDate) {
+        updates.completionDate = new Date().toISOString();
+      }
+    } else if (updates.status && updates.status !== "review") {
+      // Clear completion date if status is changing away from "review"
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && currentItem.status === "review") {
+        updates.completionDate = undefined;
+      }
+    }
+    
     // Check if brief is being changed, and if so, reset status
     if (updates.brief !== undefined) {
-      updates.status = "none"; // Changed from empty string to "none"
+      updates.status = "none";
     }
     
     setContentItems(prevItems =>
