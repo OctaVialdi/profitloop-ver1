@@ -33,7 +33,7 @@ interface ContentTabsTableProps {
 }
 
 export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
-  // Define all columns for the single table
+  // Define all columns for the single table with horizontal scrolling
   const allColumns = [
     "selectColumn", "postDate", "contentType", "pic", "service", "subService", "title", 
     "contentPillar", "brief", "status", "revision", "approved", "completionDate", 
