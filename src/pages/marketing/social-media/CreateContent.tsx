@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -157,60 +158,62 @@ const CreateContent = () => {
   const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <Card className="w-full h-full overflow-hidden">
-      <ContentHeader 
-        handleDeleteSelected={handleDeleteSelected}
-        handleAddRow={handleAddRow}
-        hasSelectedItems={hasSelectedItems}
-      />
-      
-      <CardContent className="p-0 overflow-hidden">
-        <ContentTable
-          contentItems={contentItems}
-          contentTypes={contentTypes}
-          services={services}
-          subServices={subServices}
-          contentPlanners={contentPlanners}
-          contentPillars={contentPillars}
-          isCalendarOpen={isCalendarOpen}
-          isUserManager={isUserManager}
-          toggleCalendar={toggleCalendar}
-          handleDateChange={handleDateChange}
-          handleTypeChange={handleTypeChange}
-          handlePICChange={handlePICChange}
-          handleServiceChange={handleServiceChange}
-          handleSubServiceChange={handleSubServiceChange}
-          handleTitleChange={handleTitleChange}
-          handleContentPillarChange={handleContentPillarChange}
-          handleStatusChange={handleStatusChange}
-          handleApprovalChange={handleApprovalChange}
-          toggleSelectItem={toggleSelectItem}
-          selectAll={selectAll}
-          handleSelectAll={handleSelectAll}
-          openBriefDialog={openBriefDialog}
-          getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
-          extractGoogleDocsLink={extractGoogleDocsLink}
-          displayBrief={displayBrief}
-          resetRevisionCounter={resetRevisionCounter}
+    <div className="w-full min-h-screen space-y-4">
+      <Card className="w-full border shadow-sm">
+        <ContentHeader 
+          handleDeleteSelected={handleDeleteSelected}
+          handleAddRow={handleAddRow}
+          hasSelectedItems={hasSelectedItems}
         />
-      </CardContent>
-      
-      <ContentFooter 
-        totalItems={contentItems.length}
-        selectedItemsCount={selectedItemsCount}
-      />
+        
+        <CardContent className="p-0 overflow-hidden">
+          <ContentTable
+            contentItems={contentItems}
+            contentTypes={contentTypes}
+            services={services}
+            subServices={subServices}
+            contentPlanners={contentPlanners}
+            contentPillars={contentPillars}
+            isCalendarOpen={isCalendarOpen}
+            isUserManager={isUserManager}
+            toggleCalendar={toggleCalendar}
+            handleDateChange={handleDateChange}
+            handleTypeChange={handleTypeChange}
+            handlePICChange={handlePICChange}
+            handleServiceChange={handleServiceChange}
+            handleSubServiceChange={handleSubServiceChange}
+            handleTitleChange={handleTitleChange}
+            handleContentPillarChange={handleContentPillarChange}
+            handleStatusChange={handleStatusChange}
+            handleApprovalChange={handleApprovalChange}
+            toggleSelectItem={toggleSelectItem}
+            selectAll={selectAll}
+            handleSelectAll={handleSelectAll}
+            openBriefDialog={openBriefDialog}
+            getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
+            extractGoogleDocsLink={extractGoogleDocsLink}
+            displayBrief={displayBrief}
+            resetRevisionCounter={resetRevisionCounter}
+          />
+        </CardContent>
+        
+        <ContentFooter 
+          totalItems={contentItems.length}
+          selectedItemsCount={selectedItemsCount}
+        />
 
-      <BriefDialog
-        isOpen={isBriefDialogOpen}
-        onOpenChange={setIsBriefDialogOpen}
-        currentBrief={currentBrief}
-        setCurrentBrief={setCurrentBrief}
-        mode={briefDialogMode}
-        setMode={setBriefDialogMode}
-        saveBrief={saveBrief}
-        extractGoogleDocsLink={extractGoogleDocsLink}
-      />
-    </Card>
+        <BriefDialog
+          isOpen={isBriefDialogOpen}
+          onOpenChange={setIsBriefDialogOpen}
+          currentBrief={currentBrief}
+          setCurrentBrief={setCurrentBrief}
+          mode={briefDialogMode}
+          setMode={setBriefDialogMode}
+          saveBrief={saveBrief}
+          extractGoogleDocsLink={extractGoogleDocsLink}
+        />
+      </Card>
+    </div>
   );
 };
 
