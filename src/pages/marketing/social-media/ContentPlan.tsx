@@ -170,9 +170,9 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative border rounded-md">
+        <div className="border rounded-md">
           <ScrollArea className="h-[calc(100vh-230px)]">
-            <div className="overflow-x-auto min-w-max">
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
