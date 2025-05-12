@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -114,117 +115,130 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     return visibleColumns;
   };
 
-  // Calculate scrollable area width (for non-fixed columns)
-  const nonFixedColumnsCount = getVisibleColumnNames().length - fixedColumnsCount;
+  const columnNames = getVisibleColumnNames();
 
   return (
-    <div className="w-full">
-      <div className="relative overflow-hidden">
-        <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
-          <Table>
-            <TableHeader className="sticky top-0 bg-white z-20">
-              <TableRow className="bg-slate-50">
-                {getVisibleColumnNames().map((columnName, index) => {
-                  let content = null;
-                  const isFixed = isColumnFixed(index);
-                  const isInitVisible = isInitiallyVisible(index);
-                  
-                  const cellClassName = `text-center font-medium whitespace-nowrap ${
-                    isFixed ? "sticky left-0 bg-slate-50 z-30" : ""
-                  } ${isFixed && index === fixedColumnsCount - 1 ? "border-r border-slate-200" : ""}`;
+    <div className="w-full relative">
+      <div className="overflow-hidden border border-slate-200 rounded-md">
+        <div className="overflow-x-auto" style={{ maxWidth: '100%', position: 'relative' }}>
+          <div className="inline-block min-w-full align-middle">
+            <Table>
+              <TableHeader className="sticky top-0 bg-white z-20">
+                <TableRow className="bg-slate-50">
+                  {columnNames.map((columnName, index) => {
+                    let content = null;
+                    const isFixed = isColumnFixed(index);
+                    const isInitVisible = isInitiallyVisible(index);
+                    
+                    const cellClassName = `text-center font-medium whitespace-nowrap ${
+                      isFixed ? "sticky left-0 bg-slate-50 shadow-[1px_0_0_0_#e5e7eb] z-30" : ""
+                    }`;
 
-                  switch (columnName) {
-                    case "selectColumn":
-                      content = (
-                        <Checkbox 
-                          checked={selectAll} 
-                          onCheckedChange={handleSelectAll}
-                          aria-label="Select all"
-                          className="mt-1"
-                        />
-                      );
-                      break;
-                    case "postDate":
-                      content = "Tanggal Posting";
-                      break;
-                    case "contentType":
-                      content = "Tipe Content";
-                      break;
-                    case "pic":
-                      content = "PIC";
-                      break;
-                    case "service":
-                      content = "Layanan";
-                      break;
-                    case "subService":
-                      content = "Sub Layanan";
-                      break;
-                    case "title":
-                      content = "Judul Content";
-                      break;
-                    case "contentPillar":
-                      content = "Content Pillar";
-                      break;
-                    case "brief":
-                      content = "Brief";
-                      break;
-                    case "status":
-                      content = "Status";
-                      break;
-                    case "revision":
-                      content = "Revision";
-                      break;
-                    case "approved":
-                      content = "Approved";
-                      break;
-                    case "completionDate":
-                      content = "Tanggal Selesai";
-                      break;
-                    case "mirrorPostDate":
-                      content = "Tanggal Upload";
-                      break;
-                    case "mirrorContentType":
-                      content = "Tipe Content";
-                      break;
-                    case "mirrorTitle":
-                      content = "Judul Content";
-                      break;
-                    default:
-                      content = columnName;
-                  }
+                    switch (columnName) {
+                      case "selectColumn":
+                        content = (
+                          <Checkbox 
+                            checked={selectAll} 
+                            onCheckedChange={handleSelectAll}
+                            aria-label="Select all"
+                            className="mt-1"
+                          />
+                        );
+                        break;
+                      case "postDate":
+                        content = "Tanggal Posting";
+                        break;
+                      case "contentType":
+                        content = "Tipe Content";
+                        break;
+                      case "pic":
+                        content = "PIC";
+                        break;
+                      case "service":
+                        content = "Layanan";
+                        break;
+                      case "subService":
+                        content = "Sub Layanan";
+                        break;
+                      case "title":
+                        content = "Judul Content";
+                        break;
+                      case "contentPillar":
+                        content = "Content Pillar";
+                        break;
+                      case "brief":
+                        content = "Brief";
+                        break;
+                      case "status":
+                        content = "Status";
+                        break;
+                      case "revision":
+                        content = "Revision";
+                        break;
+                      case "approved":
+                        content = "Approved";
+                        break;
+                      case "completionDate":
+                        content = "Tanggal Selesai";
+                        break;
+                      case "mirrorPostDate":
+                        content = "Tanggal Upload";
+                        break;
+                      case "mirrorContentType":
+                        content = "Tipe Content";
+                        break;
+                      case "mirrorTitle":
+                        content = "Judul Content";
+                        break;
+                      default:
+                        content = columnName;
+                    }
 
-                  return (
-                    <TableHead key={columnName} className={cellClassName}>
-                      {content}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contentItems.length > 0 ? (
-                contentItems.map(item => (
-                  <TableRow key={item.id} className="hover:bg-slate-50/60">
-                    {getVisibleColumnNames().map((columnName, index) => {
-                      const isFixed = isColumnFixed(index);
-                      const cellClassName = `p-2 whitespace-nowrap ${
-                        isFixed ? "sticky left-0 bg-white z-10" : ""
-                      } ${isFixed && index === fixedColumnsCount - 1 ? "border-r border-slate-200" : ""}`;
+                    return (
+                      <TableHead 
+                        key={columnName} 
+                        className={cellClassName}
+                        style={{
+                          position: isFixed ? 'sticky' : 'static',
+                          left: isFixed ? 0 : 'auto',
+                          backgroundColor: isInitVisible ? (isFixed ? '#f8fafc' : '#fff') : '#f1f5f9'
+                        }}
+                      >
+                        {content}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {contentItems.length > 0 ? (
+                  contentItems.map(item => (
+                    <TableRow key={item.id} className="hover:bg-slate-50/60 relative">
+                      {columnNames.map((columnName, index) => {
+                        const isFixed = isColumnFixed(index);
+                        const isInitVisible = isInitiallyVisible(index);
+                        const cellClassName = `p-2 whitespace-nowrap ${
+                          isFixed ? "sticky left-0 bg-white shadow-[1px_0_0_0_#e5e7eb] z-10" : ""
+                        }`;
 
-                      switch (columnName) {
-                        case "selectColumn":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                        return (
+                          <TableCell 
+                            key={`${item.id}-${columnName}`} 
+                            className={cellClassName}
+                            style={{
+                              position: isFixed ? 'sticky' : 'static',
+                              left: isFixed ? 0 : 'auto',
+                              backgroundColor: isInitVisible ? 'white' : '#f8fafc'
+                            }}
+                          >
+                            {columnName === "selectColumn" && (
                               <Checkbox 
                                 checked={item.isSelected} 
                                 onCheckedChange={() => toggleSelectItem(item.id)}
                                 aria-label="Select row"
                               />
-                            </TableCell>
-                          );
-                        case "postDate":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                            )}
+                            {columnName === "postDate" && (
                               <Popover 
                                 open={isCalendarOpen[item.id]} 
                                 onOpenChange={() => toggleCalendar(item.id)}
@@ -248,11 +262,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   />
                                 </PopoverContent>
                               </Popover>
-                            </TableCell>
-                          );
-                        case "contentType":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                            )}
+                            {columnName === "contentType" && (
                               <Select 
                                 value={item.contentType} 
                                 onValueChange={(value) => handleTypeChange(item.id, value)}
@@ -268,11 +279,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   ))}
                                 </SelectContent>
                               </Select>
-                            </TableCell>
-                          );
-                        case "pic":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                            )}
+                            {columnName === "pic" && (
                               <Select 
                                 value={item.pic} 
                                 onValueChange={(value) => handlePICChange(item.id, value)}
@@ -294,11 +302,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   )}
                                 </SelectContent>
                               </Select>
-                            </TableCell>
-                          );
-                        case "service":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                            )}
+                            {columnName === "service" && (
                               <Select 
                                 value={item.service} 
                                 onValueChange={(value) => handleServiceChange(item.id, value)}
@@ -314,11 +319,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   ))}
                                 </SelectContent>
                               </Select>
-                            </TableCell>
-                          );
-                        case "subService":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                            )}
+                            {columnName === "subService" && (
                               <Select 
                                 value={item.subService} 
                                 onValueChange={(value) => handleSubServiceChange(item.id, value)}
@@ -341,11 +343,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   )}
                                 </SelectContent>
                               </Select>
-                            </TableCell>
-                          );
-                        case "title":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                            )}
+                            {columnName === "title" && (
                               <div className="flex items-center">
                                 <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
                                 <Input
@@ -356,11 +355,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   maxLength={25}
                                 />
                               </div>
-                            </TableCell>
-                          );
-                        case "contentPillar":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                            )}
+                            {columnName === "contentPillar" && (
                               <Select 
                                 value={item.contentPillar} 
                                 onValueChange={(value) => handleContentPillarChange(item.id, value)}
@@ -379,12 +375,9 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   ))}
                                 </SelectContent>
                               </Select>
-                            </TableCell>
-                          );
-                        case "brief":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
-                              {item.brief ? (
+                            )}
+                            {columnName === "brief" && (
+                              item.brief ? (
                                 <div className="flex items-center space-x-2">
                                   <Button 
                                     variant="outline"
@@ -415,12 +408,9 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   <FileText className="h-4 w-4 mr-2" />
                                   Click to add brief
                                 </Button>
-                              )}
-                            </TableCell>
-                          );
-                        case "status":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                              )
+                            )}
+                            {columnName === "status" && (
                               <Select 
                                 value={item.status || "none"} 
                                 onValueChange={(value) => handleStatusChange(item.id, value)}
@@ -437,11 +427,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   <SelectItem value="revisi">Request Revisi</SelectItem>
                                 </SelectContent>
                               </Select>
-                            </TableCell>
-                          );
-                        case "revision":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
+                            )}
+                            {columnName === "revision" && (
                               <div className="flex items-center justify-between">
                                 <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[30px]">
                                   {item.revisionCount || 0}
@@ -456,67 +443,60 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                   <RefreshCw className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
-                            </TableCell>
-                          );
-                        case "approved":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={`${cellClassName} text-center`}>
-                              <Checkbox 
-                                checked={item.isApproved} 
-                                onCheckedChange={(checked) => toggleApproved(item.id, checked as boolean)}
-                                aria-label="Approve content"
-                              />
-                            </TableCell>
-                          );
-                        case "completionDate":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={`${cellClassName} text-center`}>
-                              {item.status === "review" && item.completionDate && (
-                                <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md">
+                            )}
+                            {columnName === "approved" && (
+                              <div className="flex justify-center">
+                                <Checkbox 
+                                  checked={item.isApproved} 
+                                  onCheckedChange={(checked) => toggleApproved(item.id, checked as boolean)}
+                                  aria-label="Approve content"
+                                />
+                              </div>
+                            )}
+                            {columnName === "completionDate" && (
+                              item.status === "review" && item.completionDate ? (
+                                <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md text-xs">
                                   {formatCompletionDate(item.completionDate)}
                                 </div>
-                              )}
-                            </TableCell>
-                          );
-                        case "mirrorPostDate":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={`${cellClassName} text-center`}>
-                              {item.postDate || "-"}
-                            </TableCell>
-                          );
-                        case "mirrorContentType":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={`${cellClassName} text-center`}>
-                              {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
-                            </TableCell>
-                          );
-                        case "mirrorTitle":
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={`${cellClassName} text-center`}>
-                              {item.title || "-"}
-                            </TableCell>
-                          );
-                        default:
-                          return (
-                            <TableCell key={`${item.id}-${columnName}`} className={cellClassName}>
-                              -
-                            </TableCell>
-                          );
-                      }
-                    })}
+                              ) : null
+                            )}
+                            {columnName === "mirrorPostDate" && (
+                              <div className="text-center text-sm text-slate-600">
+                                {item.postDate || "-"}
+                              </div>
+                            )}
+                            {columnName === "mirrorContentType" && (
+                              <div className="text-center text-sm text-slate-600">
+                                {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
+                              </div>
+                            )}
+                            {columnName === "mirrorTitle" && (
+                              <div className="text-center text-sm text-slate-600">
+                                {item.title || "-"}
+                              </div>
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columnNames.length} className="h-24 text-center">
+                      No content items. Click "Add Row" to create one.
+                    </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={getVisibleColumnNames().length} className="h-24 text-center">
-                    No content items. Click "Add Row" to create one.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
+      
+      {/* Visual indicator that more content is available horizontally */}
+      {columnNames.length > initialVisibleColumnsCount && (
+        <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-slate-50 to-transparent" />
+      )}
     </div>
   );
 };

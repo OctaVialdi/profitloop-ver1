@@ -282,8 +282,8 @@ const ContentPlan = () => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="overflow-hidden">
-        <div className="w-full" style={{ overflowX: 'auto' }}>
+      <CardContent className="p-0 relative">
+        <div className="w-full overflow-hidden">
           <ContentTabsTable
             contentItems={contentItems}
             contentTypes={contentTypes}
