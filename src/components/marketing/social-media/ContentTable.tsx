@@ -75,7 +75,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 }) => {
   return (
     <div className="w-full overflow-hidden">
-      <ScrollArea className="h-[calc(100vh-220px)]" orientation="both">
+      <ScrollArea className="h-[calc(100vh-220px)]">
         <Table className="w-full min-w-max table-fixed">
           <TableHeader className="sticky top-0 bg-white z-20 shadow-sm">
             <TableRow className="bg-slate-100">
@@ -331,3 +331,4 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     </div>
   );
 };
+
