@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { LegacyEmployee } from '@/hooks/useEmployees';
 import { EmployeeColumnState, ColumnOrder } from './EmployeeColumnManager';
@@ -18,40 +19,40 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   const [showColumns, setShowColumns] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   
-  // Default columns configuration
+  // Update with the proper type
   const [visibleColumns, setVisibleColumns] = useState<EmployeeColumnState>({
     name: true,
     employeeId: true,
-    email: false,
-    branch: false,
+    email: true,
+    branch: true,
     organization: true,
     jobPosition: true,
     jobLevel: true,
     employmentStatus: true,
-    joinDate: false,
-    endDate: false,
-    signDate: false,
-    resignDate: false,
-    barcode: false,
-    birthDate: false,
-    birthPlace: false,
-    address: false,
-    mobilePhone: false,
-    religion: false,
-    gender: false,
-    maritalStatus: false,
+    joinDate: true,
+    endDate: true,
+    signDate: true,
+    resignDate: true,
+    barcode: true,
+    birthDate: true,
+    birthPlace: true,
+    address: true,
+    mobilePhone: true,
+    religion: true,
+    gender: true,
+    maritalStatus: true,
   });
 
   // Define the default column order
   const [columnOrder, setColumnOrder] = useState<ColumnOrder>([
     'name',
     'employeeId',
+    'email',
+    'branch',
     'organization',
     'jobPosition',
     'jobLevel',
     'employmentStatus',
-    'email',
-    'branch',
     'joinDate',
     'endDate',
     'signDate',
@@ -155,6 +156,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ data }) => {
   }, [filteredData, activeFilters]);
 
   // Statistics for this period (May 2025)
+  // Count active, new hires (joined this month), and leaving (resigned this month)
   const periodStats = useMemo(() => {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
