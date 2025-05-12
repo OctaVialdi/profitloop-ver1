@@ -16,10 +16,11 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ContentPlan = () => {
   const { toast } = useToast();
@@ -39,6 +40,11 @@ const ContentPlan = () => {
 
   // State for calendar popovers
   const [isCalendarOpen, setIsCalendarOpen] = useState<{ [key: string]: boolean }>({});
+  
+  // State for title dialog
+  const [titleDialogOpen, setTitleDialogOpen] = useState(false);
+  const [currentTitle, setCurrentTitle] = useState("");
+  const [editingItemId, setEditingItemId] = useState("");
   
   // Select all checkbox state
   const selectAll = contentItems.length > 0 && contentItems.every(item => item.isSelected);
@@ -110,6 +116,33 @@ const ContentPlan = () => {
     updateContentItem(itemId, { subService: subServiceId });
   };
 
+  // Handle title change from inline input
+  const handleTitleChange = (itemId: string, title: string) => {
+    updateContentItem(itemId, { title });
+  };
+
+  // Open title dialog for full editing
+  const openTitleDialog = (itemId: string, title: string) => {
+    setCurrentTitle(title || "");
+    setEditingItemId(itemId);
+    setTitleDialogOpen(true);
+  };
+
+  // Save title from dialog
+  const saveTitleFromDialog = () => {
+    if (editingItemId) {
+      updateContentItem(editingItemId, { title: currentTitle });
+      setTitleDialogOpen(false);
+      setEditingItemId("");
+    }
+  };
+
+  // Format title for display (truncate if necessary)
+  const formatTitle = (title: string) => {
+    if (!title) return "";
+    return title.length > 25 ? title.substring(0, 25) + "..." : title;
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="py-3 flex flex-row items-center justify-between">
@@ -156,6 +189,7 @@ const ContentPlan = () => {
                     <TableHead className="w-[150px] text-center whitespace-nowrap">PIC</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Layanan</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Sub Layanan</TableHead>
+                    <TableHead className="w-[200px] text-center whitespace-nowrap">Judul Content</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -275,11 +309,23 @@ const ContentPlan = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
+                        <TableCell className="p-2">
+                          <div className="flex items-center">
+                            <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
+                            <Input
+                              value={formatTitle(item.title || "")}
+                              onChange={(e) => handleTitleChange(item.id, e.target.value)}
+                              onDoubleClick={() => openTitleDialog(item.id, item.title || "")}
+                              placeholder="Enter title"
+                              className="w-full bg-white cursor-pointer"
+                            />
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
+                      <TableCell colSpan={7} className="h-24 text-center">
                         No content items. Click "Add Row" to create one.
                       </TableCell>
                     </TableRow>
@@ -290,6 +336,29 @@ const ContentPlan = () => {
           </ScrollArea>
         </div>
       </CardContent>
+
+      {/* Dialog for full title editing */}
+      <Dialog open={titleDialogOpen} onOpenChange={setTitleDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Content Title</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Input
+                id="title"
+                value={currentTitle}
+                onChange={(e) => setCurrentTitle(e.target.value)}
+                placeholder="Enter complete title"
+                className="w-full"
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" onClick={saveTitleFromDialog}>Save Title</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
