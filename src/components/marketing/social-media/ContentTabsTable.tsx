@@ -54,7 +54,6 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
           {...props}
           visibleColumns={primaryColumns}
           activeTab="primary"
-          toggleApproval={props.toggleApproved}
         />
       </TabsContent>
 
@@ -63,7 +62,6 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
           {...props}
           visibleColumns={detailsColumns}
           activeTab="details"
-          toggleApproval={props.toggleApproved}
         />
       </TabsContent>
 
@@ -72,7 +70,6 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
           {...props}
           visibleColumns={publishingColumns}
           activeTab="publishing"
-          toggleApproval={props.toggleApproved}
         />
       </TabsContent>
     </Tabs>
