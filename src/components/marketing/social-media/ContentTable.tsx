@@ -1,8 +1,9 @@
+
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -89,8 +90,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 
   return (
     <div className="relative w-full overflow-hidden">
-      <ScrollArea className="h-[calc(100vh-220px)] w-full">
-        <div className="w-[1800px]">
+      <ScrollArea className="h-[calc(100vh-220px)]">
+        <div className="min-w-max">
           <Table className="w-full table-fixed">
             <TableHeader className="sticky top-0 bg-white z-20">
               <TableRow>
@@ -375,6 +376,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
             </TableBody>
           </Table>
         </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
   );

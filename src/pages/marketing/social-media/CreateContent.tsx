@@ -157,7 +157,7 @@ const CreateContent = () => {
   const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <Card className="w-full h-full overflow-hidden">
+    <Card className="w-full max-w-[1462.22px] h-[746.22px] overflow-hidden mx-auto">
       <ContentHeader 
         handleDeleteSelected={handleDeleteSelected}
         handleAddRow={handleAddRow}
