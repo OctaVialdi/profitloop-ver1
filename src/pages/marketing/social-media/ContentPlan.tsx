@@ -26,14 +26,12 @@ const ContentPlan = () => {
   const {
     contentTypes,
     services,
-    subServices,
     contentItems,
     addContentItem,
     updateContentItem,
     deleteContentItems,
     toggleSelectItem,
     selectAllItems,
-    getFilteredSubServices,
     contentPlanners,
   } = useContentManagement();
 
@@ -102,17 +100,7 @@ const ContentPlan = () => {
 
   // Handle service change
   const handleServiceChange = (itemId: string, serviceId: string) => {
-    const updatedItem: any = { service: serviceId };
-    
-    // Clear sub-service when changing service
-    updatedItem.subService = "";
-    
-    updateContentItem(itemId, updatedItem);
-  };
-
-  // Handle sub-service change
-  const handleSubServiceChange = (itemId: string, subServiceId: string) => {
-    updateContentItem(itemId, { subService: subServiceId });
+    updateContentItem(itemId, { service: serviceId });
   };
 
   return (
@@ -162,7 +150,6 @@ const ContentPlan = () => {
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Tipe Content</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">PIC</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Layanan</TableHead>
-                    <TableHead className="w-[150px] text-center whitespace-nowrap">Sub Layanan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -258,35 +245,11 @@ const ContentPlan = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="p-2">
-                          <Select 
-                            value={item.subService} 
-                            onValueChange={(value) => handleSubServiceChange(item.id, value)}
-                            disabled={!item.service}
-                          >
-                            <SelectTrigger className="w-full bg-white">
-                              <SelectValue placeholder="Select sub-service" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {item.service ? (
-                                getFilteredSubServices(item.service).map((subService) => (
-                                  <SelectItem key={subService.id} value={subService.id}>
-                                    {subService.name}
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="select-service-first" disabled>
-                                  Select a service first
-                                </SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
+                      <TableCell colSpan={5} className="h-24 text-center">
                         No content items. Click "Add Row" to create one.
                       </TableCell>
                     </TableRow>
