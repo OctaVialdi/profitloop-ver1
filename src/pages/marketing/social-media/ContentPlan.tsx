@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Plus, Trash } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 import { ContentTabsTable } from "@/components/marketing/social-media/ContentTabsTable";
+import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { format } from "date-fns";
 
@@ -233,6 +234,13 @@ const ContentPlan = () => {
     setIsBriefDialogOpen(true);
   };
 
+  // Save brief content
+  const saveBriefContent = (content: string) => {
+    if (currentItemForBrief) {
+      updateContentItem(currentItemForBrief, { brief: content });
+    }
+  };
+
   // Extract Google Docs link from brief text
   const extractGoogleDocsLink = (text: string) => {
     const googleDocsRegex = /(https:\/\/docs\.google\.com\/\S+)/g;
@@ -305,6 +313,16 @@ const ContentPlan = () => {
           toggleApproved={toggleApproved}
         />
       </CardContent>
+
+      {/* Brief Dialog */}
+      <BriefDialog
+        isOpen={isBriefDialogOpen}
+        onClose={() => setIsBriefDialogOpen(false)}
+        briefContent={briefContent}
+        onSave={saveBriefContent}
+        mode={briefEditMode}
+        title="Content Brief"
+      />
     </Card>
   );
 };

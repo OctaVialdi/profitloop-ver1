@@ -47,7 +47,6 @@ interface ContentTableProps {
   resetRevisionCounter: (itemId: string) => void;
   toggleApproved: (itemId: string, isApproved: boolean) => void;
   visibleColumns?: string[];
-  activeTab?: string;
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -78,7 +77,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   resetRevisionCounter,
   toggleApproved,
   visibleColumns = [],
-  activeTab = "primary",
 }) => {
   // Format completion date for display
   const formatCompletionDate = (dateString: string | undefined) => {
@@ -89,10 +87,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 
   // Helper function to check if a column should be displayed
   const isColumnVisible = (columnName: string) => {
-    // Always show the select column across all tabs
-    if (columnName === "selectColumn" && !visibleColumns.includes("selectColumn")) {
-      return true;
-    }
     return visibleColumns.length === 0 || visibleColumns.includes(columnName);
   };
 
@@ -100,7 +94,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     <div className="w-full">
       <div className="relative">
         <ScrollArea className="h-[calc(100vh-220px)]">
-          <div className={`overflow-x-auto ${activeTab ? "w-full" : "min-w-[1200px]"}`}>
+          <div className="overflow-auto min-w-[1700px]">
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
