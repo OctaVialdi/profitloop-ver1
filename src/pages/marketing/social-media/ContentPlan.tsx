@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash } from "lucide-react";
-import { ContentTabsTable } from "@/components/marketing/social-media/ContentTabsTable";
+import { ContentTable } from "@/components/marketing/social-media/ContentTable";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
 import { toast } from "sonner";
@@ -142,6 +143,16 @@ const ContentPlan = () => {
     updateContentItem(itemId, { isApproved });
   };
 
+  // Define all columns for the horizontal scrollable table
+  const allColumns = [
+    "selectColumn", "postDate", "contentType", "pic", "service", "subService", "title", 
+    "contentPillar", "brief", "status", "revision", "approved", "completionDate", 
+    "mirrorPostDate", "mirrorContentType", "mirrorTitle", "picProduction", 
+    "googleDriveLink", "productionStatus", "productionRevision", "productionCompletionDate", 
+    "productionApproved", "productionApprovedDate", "downloadLink", "postLink", 
+    "isDone", "actualPostDate", "onTimeStatus", "contentStatus"
+  ];
+
   return (
     <Card className="w-full">
       <CardHeader className="py-3 flex flex-row items-center justify-between">
@@ -168,7 +179,7 @@ const ContentPlan = () => {
       </CardHeader>
       <CardContent>
         <div className="w-full">
-          <ContentTabsTable 
+          <ContentTable 
             contentItems={contentItems}
             contentTypes={contentTypes}
             services={services}
@@ -196,6 +207,7 @@ const ContentPlan = () => {
             resetRevisionCounter={resetRevisionCounter}
             toggleApproved={toggleApproved}
             updateContentItem={updateContentItem}
+            visibleColumns={allColumns}
           />
         </div>
       </CardContent>
