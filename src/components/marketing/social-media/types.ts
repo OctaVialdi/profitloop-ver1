@@ -27,7 +27,7 @@ export interface ContentTableProps {
   extractGoogleDocsLink: (text: string) => string | null;
   displayBrief: (brief: string) => string;
   resetRevisionCounter: (itemId: string) => void;
-  toggleApproval: (itemId: string, isApproved: boolean) => void;
+  toggleApproved: (itemId: string, isApproved: boolean) => void;
   visibleColumns: string[];
   activeTab: string;
 }
