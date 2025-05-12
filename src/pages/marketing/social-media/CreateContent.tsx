@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -13,26 +14,41 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
+import { CalendarIcon, PlusCircle, Trash2, RefreshCcw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { useContentManagement, ContentItem } from "@/hooks/useContentManagement";
+import { useContentManagement } from "@/hooks/useContentManagement";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 const CreateContent = () => {
   const {
     contentTypes,
     contentItems,
+    picOptions,
+    serviceOptions,
+    subServiceOptions,
+    contentPillarOptions,
     addContentItem,
     updateContentItem,
     deleteContentItems,
     toggleSelectItem,
-    selectAllItems
+    selectAllItems,
+    getSubServices
   } = useContentManagement();
 
   const [selectAll, setSelectAll] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState<{ [key: string]: boolean }>({});
+  const [briefDialogOpen, setBriefDialogOpen] = useState<{ [key: string]: boolean }>({});
+  const [titleDialogOpen, setTitleDialogOpen] = useState<{ [key: string]: boolean }>({});
   
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
@@ -60,6 +76,75 @@ const CreateContent = () => {
     updateContentItem(itemId, { contentType: typeId });
   };
 
+  const handlePICChange = (itemId: string, picId: string) => {
+    updateContentItem(itemId, { picId: picId });
+  };
+
+  const handleServiceChange = (itemId: string, serviceId: string) => {
+    // Reset subService when service changes
+    updateContentItem(itemId, { 
+      serviceId: serviceId, 
+      subServiceId: '' 
+    });
+  };
+
+  const handleSubServiceChange = (itemId: string, subServiceId: string) => {
+    updateContentItem(itemId, { subServiceId: subServiceId });
+  };
+
+  const handleContentPillarChange = (itemId: string, pillarId: string) => {
+    updateContentItem(itemId, { contentPillarId: pillarId });
+  };
+
+  const handleTitleChange = (itemId: string, title: string) => {
+    updateContentItem(itemId, { title: title });
+    setTitleDialogOpen(prev => ({
+      ...prev,
+      [itemId]: false
+    }));
+  };
+
+  const handleBriefChange = (itemId: string, brief: string) => {
+    updateContentItem(itemId, { 
+      brief: brief,
+      status: '' // Reset status when brief is updated
+    });
+    setBriefDialogOpen(prev => ({
+      ...prev,
+      [itemId]: false
+    }));
+  };
+
+  const handleStatusChange = (itemId: string, status: string) => {
+    const item = contentItems.find(item => item.id === itemId);
+    let newRevisionCount = item?.revisionCount || 0;
+    
+    // If changing to "Request Revisi", increment revision count
+    if (status === "request-revision") {
+      newRevisionCount += 1;
+    }
+    
+    // If changing to "Butuh Di Review", set completion date
+    const completionDate = status === "needs-review" ? 
+      format(new Date(), 'dd MMM yyyy - HH:mm') : 
+      item?.completionDate || '';
+
+    updateContentItem(itemId, { 
+      status: status,
+      revisionCount: newRevisionCount,
+      completionDate: completionDate
+    });
+  };
+
+  const resetRevisionCount = (itemId: string) => {
+    updateContentItem(itemId, { revisionCount: 0 });
+    toast.success("Revision count reset");
+  };
+
+  const handleApprovedChange = (itemId: string, checked: boolean) => {
+    updateContentItem(itemId, { isApproved: checked });
+  };
+
   const handleDeleteSelected = () => {
     const selectedIds = contentItems
       .filter(item => item.isSelected)
@@ -82,9 +167,34 @@ const CreateContent = () => {
     }));
   };
 
-  const getContentTypeName = (typeId: string) => {
-    const contentType = contentTypes.find(type => type.id === typeId);
-    return contentType ? contentType.name : "Unknown";
+  const openBriefDialog = (itemId: string) => {
+    setBriefDialogOpen(prev => ({
+      ...prev,
+      [itemId]: true
+    }));
+  };
+
+  const openTitleDialog = (itemId: string) => {
+    setTitleDialogOpen(prev => ({
+      ...prev,
+      [itemId]: true
+    }));
+  };
+
+  // Function to truncate text to a specific length
+  const truncateText = (text: string, maxLength: number) => {
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
+  // Function to detect and make URLs clickable
+  const processLinks = (text: string) => {
+    if (!text) return '';
+    // Simple regex for detecting URLs
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, url => 
+      `<a href="${url}" target="_blank" class="text-blue-500 underline">${url}</a>`
+    );
   };
 
   return (
@@ -111,90 +221,289 @@ const CreateContent = () => {
       
       <CardContent>
         <div className="border rounded-md">
-          <Table className="table-fixed">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox 
-                    checked={selectAll} 
-                    onCheckedChange={handleSelectAll}
-                    aria-label="Select all"
-                  />
-                </TableHead>
-                <TableHead className="w-1/4">Tanggal Posting</TableHead>
-                <TableHead>Tipe Content</TableHead>
-              </TableRow>
-            </TableHeader>
-          </Table>
-          
-          {/* Applying vertical scroll using ScrollArea component */}
-          <ScrollArea className="h-[400px]">
-            <Table className="table-fixed">
-              <TableBody>
-                {contentItems.length > 0 ? (
-                  contentItems.map(item => (
-                    <TableRow key={item.id}>
-                      <TableCell className="w-12">
+          <div className="overflow-hidden">
+            <ScrollArea className="h-[400px]">
+              <div className="w-[1800px] min-w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12 text-center sticky left-0 bg-background z-10">
                         <Checkbox 
-                          checked={item.isSelected} 
-                          onCheckedChange={() => toggleSelectItem(item.id)}
-                          aria-label="Select row"
+                          checked={selectAll} 
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all"
                         />
-                      </TableCell>
-                      <TableCell className="w-1/4">
-                        <Popover 
-                          open={isCalendarOpen[item.id]} 
-                          onOpenChange={() => toggleCalendar(item.id)}
-                        >
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-left font-normal"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {item.postDate || 'Select date'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={item.postDate ? new Date(item.postDate) : undefined}
-                              onSelect={(date) => handleDateChange(item.id, date)}
-                              initialFocus
-                              className="p-3 pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.contentType} 
-                          onValueChange={(value) => handleTypeChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select content type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {contentTypes.map((type) => (
-                              <SelectItem key={type.id} value={type.id}>
-                                {type.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead className="w-40 text-center">Tanggal Posting</TableHead>
+                      <TableHead className="w-40 text-center">Tipe Content</TableHead>
+                      <TableHead className="w-40 text-center">PIC</TableHead>
+                      <TableHead className="w-40 text-center">Layanan</TableHead>
+                      <TableHead className="w-40 text-center">Sub Layanan</TableHead>
+                      <TableHead className="w-40 text-center">Judul Content</TableHead>
+                      <TableHead className="w-40 text-center">Content Pillar</TableHead>
+                      <TableHead className="w-40 text-center">Brief</TableHead>
+                      <TableHead className="w-40 text-center">Status</TableHead>
+                      <TableHead className="w-32 text-center">Revision</TableHead>
+                      <TableHead className="w-32 text-center">Approved</TableHead>
+                      <TableHead className="w-40 text-center">Tanggal Selesai</TableHead>
+                      <TableHead className="w-40 text-center">Tanggal Upload</TableHead>
+                      <TableHead className="w-40 text-center">Tipe Content</TableHead>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">
-                      No content items. Click "Add Row" to create one.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </ScrollArea>
+                  </TableHeader>
+                  <TableBody>
+                    {contentItems.length > 0 ? (
+                      contentItems.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="sticky left-0 bg-background z-10">
+                            <Checkbox 
+                              checked={item.isSelected} 
+                              onCheckedChange={() => toggleSelectItem(item.id)}
+                              aria-label="Select row"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Popover 
+                              open={isCalendarOpen[item.id]} 
+                              onOpenChange={() => toggleCalendar(item.id)}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start text-left font-normal"
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {item.postDate || 'Select date'}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={item.postDate ? new Date(item.postDate) : undefined}
+                                  onSelect={(date) => handleDateChange(item.id, date)}
+                                  initialFocus
+                                  className="p-3 pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={item.contentType || ""} 
+                              onValueChange={(value) => handleTypeChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">-</SelectItem>
+                                {contentTypes.map((type) => (
+                                  <SelectItem key={type.id} value={type.id}>
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={item.picId || ""} 
+                              onValueChange={(value) => handlePICChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">-</SelectItem>
+                                {picOptions.map((pic) => (
+                                  <SelectItem key={pic.id} value={pic.id}>
+                                    {pic.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={item.serviceId || ""} 
+                              onValueChange={(value) => handleServiceChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">-</SelectItem>
+                                {serviceOptions.map((service) => (
+                                  <SelectItem key={service.id} value={service.id}>
+                                    {service.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={item.subServiceId || ""} 
+                              onValueChange={(value) => handleSubServiceChange(item.id, value)}
+                              disabled={!item.serviceId}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">-</SelectItem>
+                                {item.serviceId && subServiceOptions
+                                  .filter(sub => sub.parentId === item.serviceId)
+                                  .map((subService) => (
+                                    <SelectItem key={subService.id} value={subService.id}>
+                                      {subService.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Dialog 
+                              open={titleDialogOpen[item.id]} 
+                              onOpenChange={(open) => setTitleDialogOpen(prev => ({...prev, [item.id]: open}))}
+                            >
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  className="w-full justify-start text-left h-auto py-2"
+                                >
+                                  {truncateText(item.title || 'Click to add title', 25)}
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                  <DialogTitle>Content Title</DialogTitle>
+                                </DialogHeader>
+                                <Input
+                                  defaultValue={item.title || ''}
+                                  onChange={(e) => handleTitleChange(item.id, e.target.value)}
+                                  className="w-full"
+                                  placeholder="Enter content title"
+                                />
+                                <DialogClose asChild>
+                                  <Button type="button">Save</Button>
+                                </DialogClose>
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={item.contentPillarId || ""} 
+                              onValueChange={(value) => handleContentPillarChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">-</SelectItem>
+                                {contentPillarOptions.map((pillar) => (
+                                  <SelectItem key={pillar.id} value={pillar.id}>
+                                    {pillar.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Dialog 
+                              open={briefDialogOpen[item.id]} 
+                              onOpenChange={(open) => setBriefDialogOpen(prev => ({...prev, [item.id]: open}))}
+                            >
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  className="w-full justify-start text-left h-auto py-2"
+                                >
+                                  {item.brief ? truncateText(item.brief, 25) : 'Click to add brief'}
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-lg">
+                                <DialogHeader>
+                                  <DialogTitle>Content Brief</DialogTitle>
+                                </DialogHeader>
+                                <Textarea
+                                  defaultValue={item.brief || ''}
+                                  onChange={(e) => handleBriefChange(item.id, e.target.value)}
+                                  className="w-full h-60"
+                                  placeholder="Enter brief details (paste Google Docs links for direct access)"
+                                />
+                                {item.brief && item.brief.includes('docs.google.com') && (
+                                  <div className="mt-4">
+                                    <h4 className="text-sm font-medium mb-2">Document Preview:</h4>
+                                    <iframe
+                                      src={item.brief.match(/(https?:\/\/docs.google.com\/[^\s]+)/)?.[0] + '?embedded=true'}
+                                      className="w-full h-60 border rounded"
+                                    />
+                                  </div>
+                                )}
+                                <DialogClose asChild>
+                                  <Button type="button">Save</Button>
+                                </DialogClose>
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={item.status || ""}
+                              onValueChange={(value) => handleStatusChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">-</SelectItem>
+                                <SelectItem value="needs-review">Butuh Di Review</SelectItem>
+                                <SelectItem value="request-revision">Request Revisi</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-center space-x-1">
+                              <span className="font-medium">{item.revisionCount || 0}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6" 
+                                onClick={() => resetRevisionCount(item.id)}
+                              >
+                                <RefreshCcw className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Checkbox 
+                              checked={item.isApproved || false} 
+                              onCheckedChange={(checked) => handleApprovedChange(item.id, checked === true)}
+                              aria-label="Approve content"
+                            />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {item.status === 'needs-review' ? item.completionDate : ''}
+                          </TableCell>
+                          <TableCell>
+                            {item.postDate || ''}
+                          </TableCell>
+                          <TableCell>
+                            {contentTypes.find(type => type.id === item.contentType)?.name || ''}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={15} className="h-24 text-center">
+                          No content items. Click "Add Row" to create one.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
+          </div>
         </div>
       </CardContent>
       
