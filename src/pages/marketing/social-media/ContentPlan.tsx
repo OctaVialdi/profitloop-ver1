@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +31,8 @@ const ContentPlan = () => {
     updateContentItem,
     deleteContentItems,
     toggleSelectItem,
-    selectAllItems
+    selectAllItems,
+    resetRevisionCounter
   } = useContentManagement();
   
   // Local state for the ContentPlan component
@@ -200,28 +200,10 @@ const ContentPlan = () => {
 
   // Handler for status change
   const handleStatusChange = (itemId: string, status: string) => {
-    const item = contentItems.find(item => item.id === itemId);
-    const updatedItem: any = { status };
-    
-    // If changing to "Butuh Di Review", add completion date
-    if (status === "review") {
-      updatedItem.completionDate = new Date().toISOString();
-    }
-    
-    // If changing to "Request Revisi", increment revision counter
-    if (status === "revisi" && item?.status !== "revisi") {
-      updatedItem.revisionCount = (item?.revisionCount || 0) + 1;
-    }
-    
-    updateContentItem(itemId, updatedItem);
+    updateContentItem(itemId, { status });
   };
 
-  // Reset revision counter
-  const resetRevisionCounter = (itemId: string) => {
-    updateContentItem(itemId, { revisionCount: 0 });
-  };
-
-  // Toggle approved status
+  // Handle toggle approved state
   const toggleApproved = (itemId: string, isApproved: boolean) => {
     updateContentItem(itemId, { isApproved });
   };

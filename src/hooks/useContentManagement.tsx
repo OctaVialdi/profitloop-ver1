@@ -104,7 +104,8 @@ export const useContentManagement = () => {
       postDate: today,
       contentType: contentTypes.length > 0 ? contentTypes[0].id : "",
       isSelected: false,
-      revisionCount: 0
+      revisionCount: 0,
+      status: "none"
     };
     
     setContentItems(prev => [newItem, ...prev]);
@@ -119,6 +120,18 @@ export const useContentManagement = () => {
           if (updates.brief !== undefined && updates.brief !== item.brief) {
             return { ...item, ...updates, status: "none" };
           }
+          
+          // Increment revision count if changing status to "revisi"
+          if (updates.status === "revisi" && item.status !== "revisi") {
+            const newRevisionCount = (item.revisionCount || 0) + 1;
+            return { ...item, ...updates, revisionCount: newRevisionCount };
+          }
+          
+          // Add completion date when status changes to "review"
+          if (updates.status === "review" && item.status !== "review") {
+            return { ...item, ...updates, completionDate: new Date().toISOString() };
+          }
+          
           return { ...item, ...updates };
         }
         return item;
@@ -143,6 +156,15 @@ export const useContentManagement = () => {
       prev.map(item => ({ ...item, isSelected: selected }))
     );
   };
+  
+  // Reset revision counter for an item
+  const resetRevisionCounter = (id: string) => {
+    setContentItems(prev => 
+      prev.map(item => 
+        item.id === id ? { ...item, revisionCount: 0 } : item
+      )
+    );
+  };
 
   return {
     contentTypes,
@@ -152,6 +174,7 @@ export const useContentManagement = () => {
     updateContentItem,
     deleteContentItems,
     toggleSelectItem,
-    selectAllItems
+    selectAllItems,
+    resetRevisionCounter
   };
 };
