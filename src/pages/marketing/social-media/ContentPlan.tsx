@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Navigate } from "react-router-dom";
+import CreateContent from "./CreateContent";
 
 const ContentPlan = () => {
-  return <Navigate to="/marketing/social-media/create-content" replace />;
+  return <CreateContent />;
 };
 
 export default ContentPlan;

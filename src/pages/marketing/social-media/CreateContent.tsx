@@ -280,7 +280,7 @@ const CreateContent = () => {
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="placeholder">-</SelectItem>
                               {contentTypes.map((type) => (
                                 <SelectItem key={type.id} value={type.id}>
                                   {type.name}
@@ -298,7 +298,7 @@ const CreateContent = () => {
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="placeholder">-</SelectItem>
                               {picList.map((pic) => (
                                 <SelectItem key={pic.id} value={pic.id}>
                                   {pic.name}
@@ -316,7 +316,7 @@ const CreateContent = () => {
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="placeholder">-</SelectItem>
                               {servicesList.map((service) => (
                                 <SelectItem key={service.id} value={service.id}>
                                   {service.name}
@@ -335,7 +335,7 @@ const CreateContent = () => {
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="placeholder">-</SelectItem>
                               {item.service && getFilteredSubServices(item.service).map((subService) => (
                                 <SelectItem key={subService.id} value={subService.id}>
                                   {subService.name}
@@ -362,7 +362,7 @@ const CreateContent = () => {
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="placeholder">-</SelectItem>
                               {contentPillars.map((pillar) => (
                                 <SelectItem key={pillar.id} value={pillar.id}>
                                   {pillar.name}
@@ -392,7 +392,7 @@ const CreateContent = () => {
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="placeholder">-</SelectItem>
                               <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
                               <SelectItem value="Request Revisi">Request Revisi</SelectItem>
                             </SelectContent>
@@ -476,3 +476,4 @@ const CreateContent = () => {
 };
 
 export default CreateContent;
+

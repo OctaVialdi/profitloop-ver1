@@ -53,3 +53,4 @@ export const marketingRoutes = (
     <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
   </Route>
 );
+
