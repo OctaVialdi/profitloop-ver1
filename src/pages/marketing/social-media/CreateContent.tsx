@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { format } from "date-fns";
 import { useContentBrief } from "@/hooks/useContentBrief";
-import { ContentTable } from "@/components/marketing/social-media/ContentTable";
 import { ContentHeader } from "@/components/marketing/social-media/ContentHeader";
 import { ContentFooter } from "@/components/marketing/social-media/ContentFooter";
 import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
+import { ContentTabsTable } from "@/components/marketing/social-media/ContentTabsTable";
 
 const CreateContent = () => {
   const {
@@ -155,7 +155,7 @@ const CreateContent = () => {
       />
       
       <CardContent className="p-0 overflow-hidden">
-        <ContentTable
+        <ContentTabsTable
           contentItems={contentItems}
           contentTypes={contentTypes}
           services={services}
