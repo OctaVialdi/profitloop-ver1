@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -179,7 +178,7 @@ const ContentPlan = () => {
               {/* ScrollArea component handles vertical scrolling */}
               <ScrollArea className="h-[calc(100vh-350px)]">
                 {/* Dedicated horizontal scrolling container with improved styling */}
-                <div className="overflow-x-auto min-w-full">
+                <div className="overflow-x-auto" style={{ minWidth: "100%" }}>
                   <Table>
                     {/* Sticky header with proper z-index */}
                     <TableHeader className="sticky top-0 bg-white z-10">
@@ -194,20 +193,20 @@ const ContentPlan = () => {
                             />
                           </TableHead>
                         )}
-                        <TableHead className="min-w-[120px] text-center">Tanggal Posting</TableHead>
-                        <TableHead className="min-w-[150px] text-center">Tipe Content</TableHead>
-                        <TableHead className="min-w-[120px] text-center">PIC</TableHead>
-                        <TableHead className="min-w-[150px] text-center">Layanan</TableHead>
-                        <TableHead className="min-w-[150px] text-center">Sub Layanan</TableHead>
-                        <TableHead className="min-w-[180px] text-center">Judul Content</TableHead>
-                        <TableHead className="min-w-[150px] text-center">Content Pillar</TableHead>
-                        <TableHead className="min-w-[150px] text-center">Brief</TableHead>
-                        <TableHead className="min-w-[150px] text-center">Status</TableHead>
-                        <TableHead className="min-w-[100px] text-center">Revision</TableHead>
-                        <TableHead className="min-w-[100px] text-center">Approved</TableHead>
-                        <TableHead className="min-w-[150px] text-center">Tanggal Selesai</TableHead>
-                        <TableHead className="min-w-[120px] text-center">Tanggal Upload</TableHead>
-                        <TableHead className="min-w-[150px] text-center">Tipe Content</TableHead>
+                        <TableHead className="min-w-[120px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
+                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Tipe Content</TableHead>
+                        <TableHead className="min-w-[120px] text-center whitespace-nowrap">PIC</TableHead>
+                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Layanan</TableHead>
+                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Sub Layanan</TableHead>
+                        <TableHead className="min-w-[180px] text-center whitespace-nowrap">Judul Content</TableHead>
+                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Content Pillar</TableHead>
+                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Brief</TableHead>
+                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Status</TableHead>
+                        <TableHead className="min-w-[100px] text-center whitespace-nowrap">Revision</TableHead>
+                        <TableHead className="min-w-[100px] text-center whitespace-nowrap">Approved</TableHead>
+                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Tanggal Selesai</TableHead>
+                        <TableHead className="min-w-[120px] text-center whitespace-nowrap">Tanggal Upload</TableHead>
+                        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Tipe Content</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -221,7 +220,7 @@ const ContentPlan = () => {
                         contentItems.map((item) => (
                           <TableRow key={item.id}>
                             {isManager && (
-                              <TableHead className="text-center">
+                              <TableHead className="text-center sticky left-0 bg-white z-10">
                                 <input 
                                   type="checkbox" 
                                   checked={!!item.isSelected}
@@ -230,7 +229,7 @@ const ContentPlan = () => {
                                 />
                               </TableHead>
                             )}
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button 
@@ -252,7 +251,7 @@ const ContentPlan = () => {
                                 </PopoverContent>
                               </Popover>
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Select
                                 value={item.contentType || ""}
                                 onValueChange={(value) => updateContentItem(item.id, { contentType: value })}
@@ -261,7 +260,6 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {/* Fix: Changed the empty string to "none" for the default option */}
                                   <SelectItem value="none">-</SelectItem>
                                   {contentTypes.map(type => (
                                     <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
@@ -269,7 +267,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Select
                                 value={item.pic || ""}
                                 onValueChange={(value) => updateContentItem(item.id, { pic: value })}
@@ -278,7 +276,6 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {/* Fix: Changed the empty string to "none" for the default option */}
                                   <SelectItem value="none">-</SelectItem>
                                   {contentPlanners.map(planner => (
                                     <SelectItem key={planner.id} value={planner.id}>{planner.name}</SelectItem>
@@ -286,7 +283,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Select
                                 value={item.service || ""}
                                 onValueChange={(value) => {
@@ -298,7 +295,6 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {/* Fix: Changed the empty string to "none" for the default option */}
                                   <SelectItem value="none">-</SelectItem>
                                   {services.map(service => (
                                     <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
@@ -306,7 +302,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Select
                                 value={item.subService || ""}
                                 onValueChange={(value) => updateContentItem(item.id, { subService: value })}
@@ -316,7 +312,6 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {/* Fix: Changed the empty string to "none" for the default option */}
                                   <SelectItem value="none">-</SelectItem>
                                   {item.service && getFilteredSubServices(item.service).map(subService => (
                                     <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>
@@ -327,7 +322,7 @@ const ContentPlan = () => {
                             <TableHead>
                               <Button 
                                 variant="ghost" 
-                                className="w-full text-left justify-start h-auto py-1 px-2"
+                                className="w-full text-left justify-start h-auto py-1 px-2 whitespace-nowrap"
                                 onClick={() => openTitleDialog(item.id, item.title)}
                               >
                                 <span className="truncate block">
@@ -335,7 +330,7 @@ const ContentPlan = () => {
                                 </span>
                               </Button>
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Select
                                 value={item.contentPillar || ""}
                                 onValueChange={(value) => updateContentItem(item.id, { contentPillar: value })}
@@ -344,7 +339,6 @@ const ContentPlan = () => {
                                   <SelectValue placeholder="-" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {/* Fix: Changed the empty string to "none" for the default option */}
                                   <SelectItem value="none">-</SelectItem>
                                   {contentPillars.map(pillar => (
                                     <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
@@ -355,7 +349,7 @@ const ContentPlan = () => {
                             <TableHead>
                               <Button 
                                 variant="ghost" 
-                                className="w-full text-left justify-start h-auto py-1 px-2"
+                                className="w-full text-left justify-start h-auto py-1 px-2 whitespace-nowrap"
                                 onClick={() => openBriefDialog(item.id, item.brief)}
                               >
                                 <span className="truncate block">
@@ -363,7 +357,7 @@ const ContentPlan = () => {
                                 </span>
                               </Button>
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               <Select
                                 value={item.status || "none"}
                                 onValueChange={(value) => updateContentItem(item.id, { status: value })}
@@ -378,7 +372,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead className="text-center">
+                            <TableHead className="text-center whitespace-nowrap">
                               <div className="flex items-center justify-center gap-2">
                                 <span>{item.revisionCount || 0}</span>
                                 <Button 
@@ -391,7 +385,7 @@ const ContentPlan = () => {
                                 </Button>
                               </div>
                             </TableHead>
-                            <TableHead className="text-center">
+                            <TableHead className="text-center whitespace-nowrap">
                               <input 
                                 type="checkbox" 
                                 checked={!!item.isApproved}
@@ -399,14 +393,14 @@ const ContentPlan = () => {
                                 className="h-4 w-4 rounded border-gray-300"
                               />
                             </TableHead>
-                            <TableHead className="text-center">
+                            <TableHead className="text-center whitespace-nowrap">
                               {item.status === "review" && item.completionDate && 
                                 format(new Date(item.completionDate), "dd MMM yyyy - HH:mm")}
                             </TableHead>
-                            <TableHead className="text-center">
+                            <TableHead className="text-center whitespace-nowrap">
                               {item.postDate && format(new Date(item.postDate), "dd MMM yyyy")}
                             </TableHead>
-                            <TableHead>
+                            <TableHead className="whitespace-nowrap">
                               {item.contentType && contentTypes.find(type => type.id === item.contentType)?.name}
                             </TableHead>
                           </TableRow>
