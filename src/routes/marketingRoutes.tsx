@@ -14,6 +14,7 @@ import { Outlet } from "react-router-dom";
 
 // Import Social Media tab components
 import SocialMediaDashboard from "@/pages/marketing/social-media/Dashboard";
+import CreateContent from "@/pages/marketing/social-media/CreateContent";
 import ContentBank from "@/pages/marketing/social-media/ContentBank";
 import ContentQC from "@/pages/marketing/social-media/ContentQC";
 import ContentPlan from "@/pages/marketing/social-media/ContentPlan";
@@ -37,6 +38,7 @@ export const marketingRoutes = (
     {/* Social Media Management with nested routes */}
     <Route path="social-media" element={<SocialMediaManagement />}>
       <Route index element={<SocialMediaDashboard />} />
+      <Route path="create-content" element={<CreateContent />} />
       <Route path="content-bank" element={<ContentBank />} />
       <Route path="content-qc" element={<ContentQC />} />
       <Route path="content-plan" element={<ContentPlan />} />
