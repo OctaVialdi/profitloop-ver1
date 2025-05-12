@@ -343,7 +343,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select content type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {contentTypes.map((type) => (
                                 <SelectItem key={type.id} value={type.id}>
                                   {type.name}
@@ -365,7 +365,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select PIC" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {contentPlanners.length > 0 ? (
                                 contentPlanners.map((planner) => (
                                   <SelectItem key={planner.id} value={planner.name}>
@@ -393,7 +393,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select service" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {services.map((service) => (
                                 <SelectItem key={service.id} value={service.id}>
                                   {service.name}
@@ -416,7 +416,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <SelectValue placeholder="Select sub-service" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {item.service ? (
                                 getFilteredSubServicesByServiceId(item.service).map((subService) => (
                                   <SelectItem key={subService.id} value={subService.id}>

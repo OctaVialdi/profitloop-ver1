@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 
 export interface ContentType {
@@ -153,19 +154,19 @@ export const useContentManagement = () => {
     const newItem: ContentItem = {
       id: `${Date.now()}`,
       postDate: today,
-      contentType: "",
+      contentType: "none",
       isSelected: false,
-      pic: "",
-      service: "",
-      subService: "",
+      pic: "none",
+      service: "none",
+      subService: "none",
       title: "",
-      contentPillar: "",
+      contentPillar: "none",
       brief: "",
       status: "none",
       revisionCount: 0,
       isApproved: false,
       completionDate: undefined,
-      picProduction: "",
+      picProduction: "none",
       googleDriveLink: "",
       productionStatus: "none",
       productionRevisionCount: 0,
@@ -175,7 +176,7 @@ export const useContentManagement = () => {
       postLink: "",
       isDone: false,
       actualPostDate: undefined,
-      contentStatus: ""
+      contentStatus: "none"
     };
     setContentItems([newItem, ...contentItems]);
   };
