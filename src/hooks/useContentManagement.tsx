@@ -7,10 +7,36 @@ export interface ContentType {
   name: string;
 }
 
+export interface ContentPillar {
+  id: string;
+  name: string;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+}
+
+export interface SubService {
+  id: string;
+  name: string;
+  serviceId: string;
+}
+
 export interface ContentItem {
   id: string;
   postDate: string;
   contentType: string;
+  pic?: string;
+  service?: string;
+  subService?: string;
+  title?: string;
+  contentPillar?: string;
+  brief?: string;
+  status?: string;
+  revisionCount?: number;
+  isApproved?: boolean;
+  completionDate?: string;
   isSelected?: boolean;
 }
 
@@ -77,7 +103,8 @@ export const useContentManagement = () => {
       id: `content-${Date.now()}`,
       postDate: today,
       contentType: contentTypes.length > 0 ? contentTypes[0].id : "",
-      isSelected: false
+      isSelected: false,
+      revisionCount: 0
     };
     
     setContentItems(prev => [newItem, ...prev]);
@@ -86,7 +113,16 @@ export const useContentManagement = () => {
 
   const updateContentItem = (id: string, updates: Partial<ContentItem>) => {
     setContentItems(prev => 
-      prev.map(item => item.id === id ? { ...item, ...updates } : item)
+      prev.map(item => {
+        if (item.id === id) {
+          // Special handling for brief updates: reset status if brief is changed
+          if (updates.brief !== undefined && updates.brief !== item.brief) {
+            return { ...item, ...updates, status: "none" };
+          }
+          return { ...item, ...updates };
+        }
+        return item;
+      })
     );
   };
 

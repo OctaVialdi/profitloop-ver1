@@ -1,85 +1,117 @@
 
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ExternalLink } from "lucide-react";
 
 interface BriefDialogProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  currentBrief: string;
-  setCurrentBrief: (brief: string) => void;
+  onClose: () => void;
+  briefContent: string;
+  onSave: (content: string) => void;
   mode: "edit" | "view";
-  setMode: (mode: "edit" | "view") => void;
-  saveBrief: () => void;
-  extractGoogleDocsLink: (text: string) => string | null;
+  title?: string;
 }
 
 export const BriefDialog: React.FC<BriefDialogProps> = ({
   isOpen,
-  onOpenChange,
-  currentBrief,
-  setCurrentBrief,
+  onClose,
+  briefContent,
+  onSave,
   mode,
-  setMode,
-  saveBrief,
-  extractGoogleDocsLink
+  title = "Brief Content",
 }) => {
+  const [content, setContent] = useState(briefContent || "");
+  const [googleDocsLink, setGoogleDocsLink] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Reset content when dialog opens with new briefContent
+  useEffect(() => {
+    setContent(briefContent || "");
+    
+    // Extract Google Docs link if it exists
+    const googleDocsRegex = /(https:\/\/docs\.google\.com\/\S+)/g;
+    const match = briefContent.match(googleDocsRegex);
+    setGoogleDocsLink(match ? match[0] : null);
+  }, [briefContent, isOpen]);
+
+  const handleSave = () => {
+    onSave(content);
+    onClose();
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    
+    // Check for Google Docs links in real-time
+    const googleDocsRegex = /(https:\/\/docs\.google\.com\/\S+)/g;
+    const match = e.target.value.match(googleDocsRegex);
+    setGoogleDocsLink(match ? match[0] : null);
+  };
+
+  const togglePreview = () => {
+    setShowPreview(!showPreview);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>
-            {mode === "edit" ? "Edit Brief" : "View Brief"}
-          </DialogTitle>
+          <DialogTitle className="text-xl">{title}</DialogTitle>
         </DialogHeader>
-        
-        <div className="py-4">
-          {mode === "edit" ? (
-            <Textarea 
-              value={currentBrief} 
-              onChange={(e) => setCurrentBrief(e.target.value)}
-              placeholder="Enter brief details here..."
-              className="min-h-[200px]"
+
+        {showPreview && googleDocsLink ? (
+          <div className="h-[400px] w-full border rounded">
+            <iframe
+              src={`${googleDocsLink}?embedded=true`}
+              className="w-full h-full"
+              frameBorder="0"
+            ></iframe>
+          </div>
+        ) : (
+          <div className="my-4">
+            <Textarea
+              value={content}
+              onChange={handleContentChange}
+              placeholder="Enter brief content here..."
+              className="min-h-[300px] resize-none"
+              readOnly={mode === "view"}
+              autoFocus={mode === "edit"}
             />
-          ) : (
-            <div className="space-y-4">
-              <ScrollArea className="h-[200px] rounded-md border p-4">
-                <div className="whitespace-pre-wrap break-words">
-                  {currentBrief}
-                </div>
-              </ScrollArea>
-              
-              {extractGoogleDocsLink(currentBrief) && (
-                <div className="border rounded-md overflow-hidden mt-4">
-                  <iframe 
-                    src={`${extractGoogleDocsLink(currentBrief)}?embedded=true`}
-                    className="w-full h-[300px]"
-                    title="Google Doc"
-                  ></iframe>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        
-        <DialogFooter>
-          {mode === "edit" ? (
-            <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+          </div>
+        )}
+
+        <DialogFooter className="flex justify-between">
+          <div className="flex items-center">
+            {googleDocsLink && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={togglePreview}
+                className="flex items-center"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                {showPreview ? "Show Brief Text" : "Preview Google Doc"}
               </Button>
-              <Button onClick={saveBrief}>Save Brief</Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Close
+            )}
+          </div>
+          <div className="flex space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            {mode === "edit" && (
+              <Button type="button" onClick={handleSave}>
+                Save Brief
               </Button>
-              <Button onClick={() => setMode("edit")}>Edit</Button>
-            </>
-          )}
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

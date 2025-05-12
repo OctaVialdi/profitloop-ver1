@@ -334,7 +334,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 variant="outline"
                                 size="sm"
                                 className="text-left truncate w-full bg-white"
-                                onClick={() => openBriefDialog(item.id, item.brief, "view")}
+                                onClick={() => openBriefDialog(item.id, item.brief!, "view")}
                               >
                                 {displayBrief(item.brief)}
                                 {extractGoogleDocsLink(item.brief) && (
@@ -345,7 +345,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-8 w-8" 
-                                onClick={() => openBriefDialog(item.id, item.brief, "edit")}
+                                onClick={() => openBriefDialog(item.id, item.brief!, "edit")}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -365,7 +365,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       {isColumnVisible("status") && (
                         <TableCell className="p-2 whitespace-nowrap">
                           <Select 
-                            value={item.status} 
+                            value={item.status || "none"} 
                             onValueChange={(value) => handleStatusChange(item.id, value)}
                           >
                             <SelectTrigger className="w-full bg-white">
