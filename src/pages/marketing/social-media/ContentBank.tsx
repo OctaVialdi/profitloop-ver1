@@ -319,229 +319,233 @@ const ContentBank = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Fixed size container with only vertical scroll */}
-        <div className="h-[400px] w-full border rounded-md">
-          <Table>
-            <TableHeader className="sticky top-0 bg-white z-10">
-              <TableRow>
-                <TableHead className="w-[50px] text-center">
-                  <Checkbox 
-                    checked={allSelected && items.length > 0}
-                    onCheckedChange={handleSelectAllChange}
-                    aria-label="Select all"
-                  />
-                </TableHead>
-                <TableHead className="w-[120px] text-center">Tanggal Posting</TableHead>
-                <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
-                <TableHead className="w-[120px] text-center">PIC</TableHead>
-                <TableHead className="w-[150px] text-center">Layanan</TableHead>
-                <TableHead className="w-[150px] text-center">Sub Layanan</TableHead>
-                <TableHead className="w-[200px] text-center">Judul Content</TableHead>
-                <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
-                <TableHead className="w-[150px] text-center">Brief</TableHead>
-                <TableHead className="w-[150px] text-center">Status</TableHead>
-                <TableHead className="w-[100px] text-center">Revision</TableHead>
-                <TableHead className="w-[100px] text-center">Approved</TableHead>
-                <TableHead className="w-[150px] text-center">Tanggal Selesai</TableHead>
-                <TableHead className="w-[120px] text-center">Tanggal Upload</TableHead>
-                <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
-              </TableRow>
-            </TableHeader>
-          </Table>
-
-          {/* ScrollArea for table body with both vertical and horizontal scroll */}
-          <ScrollArea className="h-[calc(400px-40px)]" type="always">
-            <div className="min-w-[1800px]">
-              <Table>
-                <TableBody>
-                  {items.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="text-center">
-                        <Checkbox 
-                          checked={item.isSelected} 
-                          onCheckedChange={(checked) => handleSelectItem(item.id, !!checked)}
-                          aria-label="Select row"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="date" 
-                          value={item.postDate} 
-                          onChange={(e) => handlePostDateChange(item.id, e.target.value)} 
-                          className="w-full"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.contentType || "none"} 
-                          onValueChange={(value) => handleContentTypeChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {contentTypes.map((type) => (
-                              <SelectItem key={type.id} value={type.id}>
-                                {type.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.pic || "none"} 
-                          onValueChange={(value) => handlePicChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {contentPlanners.map((planner) => (
-                              <SelectItem key={planner.id} value={planner.id}>
-                                {planner.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.service || "none"} 
-                          onValueChange={(value) => handleServiceChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {services.map((service) => (
-                              <SelectItem key={service.id} value={service.id}>
-                                {service.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.subService || "none"} 
-                          onValueChange={(value) => handleSubServiceChange(item.id, value)}
-                          disabled={!item.service}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {item.service && getFilteredSubServices(item.service).map((subService) => (
-                              <SelectItem key={subService.id} value={subService.id}>
-                                {subService.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" className="w-full h-auto text-left justify-start px-2 py-1">
-                              {truncateText(item.title, 25) || "Click to add title"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-80">
-                            <div className="space-y-2">
-                              <h4 className="font-medium">Content Title</h4>
-                              <Textarea 
-                                value={item.title}
-                                onChange={(e) => handleTitleChange(item.id, e.target.value)}
-                                placeholder="Enter content title"
-                                className="min-h-[100px]"
-                              />
-                              <div className="flex justify-end">
-                                <Button size="sm" onClick={() => {}}>Save</Button>
+        <div className="border rounded-md h-[400px] overflow-hidden">
+          {/* Fixed header */}
+          <div className="w-[1800px]">
+            <Table>
+              <TableHeader className="sticky top-0 bg-white z-10">
+                <TableRow>
+                  <TableHead className="w-[50px] text-center">
+                    <Checkbox 
+                      checked={allSelected && items.length > 0}
+                      onCheckedChange={handleSelectAllChange}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
+                  <TableHead className="w-[120px] text-center">Tanggal Posting</TableHead>
+                  <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
+                  <TableHead className="w-[120px] text-center">PIC</TableHead>
+                  <TableHead className="w-[150px] text-center">Layanan</TableHead>
+                  <TableHead className="w-[150px] text-center">Sub Layanan</TableHead>
+                  <TableHead className="w-[200px] text-center">Judul Content</TableHead>
+                  <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
+                  <TableHead className="w-[150px] text-center">Brief</TableHead>
+                  <TableHead className="w-[150px] text-center">Status</TableHead>
+                  <TableHead className="w-[100px] text-center">Revision</TableHead>
+                  <TableHead className="w-[100px] text-center">Approved</TableHead>
+                  <TableHead className="w-[150px] text-center">Tanggal Selesai</TableHead>
+                  <TableHead className="w-[120px] text-center">Tanggal Upload</TableHead>
+                  <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
+                </TableRow>
+              </TableHeader>
+            </Table>
+          </div>
+          
+          {/* Scrollable body */}
+          <div className="h-[calc(400px-40px)] overflow-hidden">
+            <ScrollArea className="h-full" style={{ overflow: "auto" }}>
+              <div className="min-w-[1800px]">
+                <Table>
+                  <TableBody>
+                    {items.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="text-center">
+                          <Checkbox 
+                            checked={item.isSelected} 
+                            onCheckedChange={(checked) => handleSelectItem(item.id, !!checked)}
+                            aria-label="Select row"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="date" 
+                            value={item.postDate} 
+                            onChange={(e) => handlePostDateChange(item.id, e.target.value)} 
+                            className="w-full"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={item.contentType || "none"} 
+                            onValueChange={(value) => handleContentTypeChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {contentTypes.map((type) => (
+                                <SelectItem key={type.id} value={type.id}>
+                                  {type.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={item.pic || "none"} 
+                            onValueChange={(value) => handlePicChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {contentPlanners.map((planner) => (
+                                <SelectItem key={planner.id} value={planner.id}>
+                                  {planner.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={item.service || "none"} 
+                            onValueChange={(value) => handleServiceChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {services.map((service) => (
+                                <SelectItem key={service.id} value={service.id}>
+                                  {service.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={item.subService || "none"} 
+                            onValueChange={(value) => handleSubServiceChange(item.id, value)}
+                            disabled={!item.service}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {item.service && getFilteredSubServices(item.service).map((subService) => (
+                                <SelectItem key={subService.id} value={subService.id}>
+                                  {subService.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" className="w-full h-auto text-left justify-start px-2 py-1">
+                                {truncateText(item.title, 25) || "Click to add title"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                              <div className="space-y-2">
+                                <h4 className="font-medium">Content Title</h4>
+                                <Textarea 
+                                  value={item.title}
+                                  onChange={(e) => handleTitleChange(item.id, e.target.value)}
+                                  placeholder="Enter content title"
+                                  className="min-h-[100px]"
+                                />
+                                <div className="flex justify-end">
+                                  <Button size="sm" onClick={() => {}}>Save</Button>
+                                </div>
                               </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.contentPillar || "none"} 
-                          onValueChange={(value) => handleContentPillarChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {contentPillars.map((pillar) => (
-                              <SelectItem key={pillar.id} value={pillar.id}>
-                                {pillar.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full h-auto text-left justify-start px-2 py-1"
-                          onClick={() => handleBriefClick(item.id, item.brief)}
-                        >
-                          {truncateText(item.brief, 25) || "Click to add brief"}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.status}
-                          onValueChange={(value) => handleStatusChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
-                            <SelectItem value="Request Revisi">Request Revisi</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <span>{item.revisions}</span>
+                            </PopoverContent>
+                          </Popover>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={item.contentPillar || "none"} 
+                            onValueChange={(value) => handleContentPillarChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {contentPillars.map((pillar) => (
+                                <SelectItem key={pillar.id} value={pillar.id}>
+                                  {pillar.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
                           <Button 
                             variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6"
-                            onClick={() => handleResetRevisions(item.id)}
+                            className="w-full h-auto text-left justify-start px-2 py-1"
+                            onClick={() => handleBriefClick(item.id, item.brief)}
                           >
-                            <RefreshCcw className="h-3 w-3" />
+                            {truncateText(item.brief, 25) || "Click to add brief"}
                           </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox 
-                          checked={item.approved} 
-                          onCheckedChange={(checked) => handleApproveChange(item.id, !!checked)}
-                          aria-label="Approve content"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {item.status === "Butuh Di Review" ? (
-                          formatCompletionDate(item.completionDate)
-                        ) : ""}
-                      </TableCell>
-                      <TableCell>
-                        {item.postDate}
-                      </TableCell>
-                      <TableCell>
-                        {getContentTypeName(item.contentType)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={item.status}
+                            onValueChange={(value) => handleStatusChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
+                              <SelectItem value="Request Revisi">Request Revisi</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center space-x-2">
+                            <span>{item.revisions}</span>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={() => handleResetRevisions(item.id)}
+                            >
+                              <RefreshCcw className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox 
+                            checked={item.approved} 
+                            onCheckedChange={(checked) => handleApproveChange(item.id, !!checked)}
+                            aria-label="Approve content"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {item.status === "Butuh Di Review" ? (
+                            formatCompletionDate(item.completionDate)
+                          ) : ""}
+                        </TableCell>
+                        <TableCell>
+                          {item.postDate}
+                        </TableCell>
+                        <TableCell>
+                          {getContentTypeName(item.contentType)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </div>
         </div>
       </CardContent>
       
