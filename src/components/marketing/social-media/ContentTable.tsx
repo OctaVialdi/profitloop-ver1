@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -73,7 +72,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   resetRevisionCounter
 }) => {
   return (
-    <div className="relative w-full overflow-hidden">
+    <div className="relative w-full">
+      {/* Fixed header section */}
       <div className="w-full">
         <Table className="w-full">
           <TableHeader>
@@ -99,8 +99,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
           </TableHeader>
         </Table>
       </div>
+
+      {/* Scrollable body section */}
       <div className="w-full overflow-x-auto" style={{ maxHeight: "calc(100vh - 300px)" }}>
-        <Table className="w-full">
+        <Table className="w-full min-w-[1500px]">
           <TableBody>
             {contentItems.length > 0 ? (
               contentItems.map(item => (
