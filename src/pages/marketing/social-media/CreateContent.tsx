@@ -1,60 +1,38 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
-import { useContentManagement } from "@/hooks/useContentManagement";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
-import { useContentBrief } from "@/hooks/useContentBrief";
-import { ContentTable } from "@/components/marketing/social-media/ContentTable";
-import { ContentHeader } from "@/components/marketing/social-media/ContentHeader";
-import { ContentFooter } from "@/components/marketing/social-media/ContentFooter";
-import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
+import { toast } from "sonner";
+import { useContentManagement, ContentItem } from "@/hooks/useContentManagement";
 
 const CreateContent = () => {
   const {
     contentTypes,
-    services,
-    subServices,
     contentItems,
-    contentPlanners,
-    contentPillars,
     addContentItem,
     updateContentItem,
-    resetRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
-    selectAllItems,
-    getFilteredSubServices
+    selectAllItems
   } = useContentManagement();
 
   const [selectAll, setSelectAll] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState<{ [key: string]: boolean }>({});
   
-  // Simulate a user role check - in a real app, this would come from authentication
-  const [isUserManager, setIsUserManager] = useState(true);
-  
-  // Simulate loading user role from localStorage
-  useEffect(() => {
-    // In a real application, you would get this from your auth system
-    // For now, we'll hardcode it to true for testing purposes
-    const savedUserRole = localStorage.getItem("userRole");
-    setIsUserManager(savedUserRole === "manager" || true); // Default to true for testing
-  }, []);
-  
-  const {
-    isBriefDialogOpen,
-    setIsBriefDialogOpen,
-    currentBrief,
-    setCurrentBrief,
-    currentItemId,
-    briefDialogMode,
-    setBriefDialogMode,
-    extractGoogleDocsLink,
-    displayBrief,
-    openBriefDialog,
-    saveBrief
-  } = useContentBrief(updateContentItem);
-
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
     selectAllItems(checked);
@@ -81,52 +59,6 @@ const CreateContent = () => {
     updateContentItem(itemId, { contentType: typeId });
   };
 
-  const handlePICChange = (itemId: string, picName: string) => {
-    updateContentItem(itemId, { pic: picName });
-  };
-  
-  const handleServiceChange = (itemId: string, serviceId: string) => {
-    // When service changes, reset subService
-    updateContentItem(itemId, { 
-      service: serviceId,
-      subService: ""  
-    });
-  };
-  
-  const handleSubServiceChange = (itemId: string, subServiceId: string) => {
-    updateContentItem(itemId, { subService: subServiceId });
-  };
-
-  const handleTitleChange = (itemId: string, title: string) => {
-    // Limit to 25 characters
-    const trimmedTitle = title.slice(0, 25);
-    updateContentItem(itemId, { title: trimmedTitle });
-  };
-
-  const handleContentPillarChange = (itemId: string, pillarId: string) => {
-    updateContentItem(itemId, { contentPillar: pillarId });
-  };
-
-  const handleStatusChange = (itemId: string, status: string) => {
-    updateContentItem(itemId, { status });
-  };
-
-  // New handler for the Approved checkbox
-  const handleApprovalChange = (itemId: string, isApproved: boolean) => {
-    // Only managers can change approval status
-    if (isUserManager) {
-      updateContentItem(itemId, { isApproved });
-      
-      if (isApproved) {
-        toast.success("Content has been approved");
-      } else {
-        toast.info("Approval has been removed");
-      }
-    } else {
-      toast.error("Only managers can approve content");
-    }
-  };
-
   const handleDeleteSelected = () => {
     const selectedIds = contentItems
       .filter(item => item.isSelected)
@@ -149,71 +81,125 @@ const CreateContent = () => {
     }));
   };
 
-  // Get filtered sub-services based on selected service
-  const getFilteredSubServicesByServiceId = (serviceId: string) => {
-    return subServices.filter(subService => subService.serviceId === serviceId);
+  const getContentTypeName = (typeId: string) => {
+    const contentType = contentTypes.find(type => type.id === typeId);
+    return contentType ? contentType.name : "Unknown";
   };
-  
-  const hasSelectedItems = contentItems.some(item => item.isSelected);
-  const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <div className="w-full min-h-screen space-y-4">
-      <Card className="w-full border shadow-sm">
-        <ContentHeader 
-          handleDeleteSelected={handleDeleteSelected}
-          handleAddRow={handleAddRow}
-          hasSelectedItems={hasSelectedItems}
-        />
-        
-        <CardContent className="p-0 overflow-hidden">
-          <ContentTable
-            contentItems={contentItems}
-            contentTypes={contentTypes}
-            services={services}
-            subServices={subServices}
-            contentPlanners={contentPlanners}
-            contentPillars={contentPillars}
-            isCalendarOpen={isCalendarOpen}
-            isUserManager={isUserManager}
-            toggleCalendar={toggleCalendar}
-            handleDateChange={handleDateChange}
-            handleTypeChange={handleTypeChange}
-            handlePICChange={handlePICChange}
-            handleServiceChange={handleServiceChange}
-            handleSubServiceChange={handleSubServiceChange}
-            handleTitleChange={handleTitleChange}
-            handleContentPillarChange={handleContentPillarChange}
-            handleStatusChange={handleStatusChange}
-            handleApprovalChange={handleApprovalChange}
-            toggleSelectItem={toggleSelectItem}
-            selectAll={selectAll}
-            handleSelectAll={handleSelectAll}
-            openBriefDialog={openBriefDialog}
-            getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
-            extractGoogleDocsLink={extractGoogleDocsLink}
-            displayBrief={displayBrief}
-            resetRevisionCounter={resetRevisionCounter}
-          />
-        </CardContent>
-        
-        <ContentFooter 
-          totalItems={contentItems.length}
-          selectedItemsCount={selectedItemsCount}
-        />
-
-        <BriefDialog
-          isOpen={isBriefDialogOpen}
-          onOpenChange={setIsBriefDialogOpen}
-          currentBrief={currentBrief}
-          setCurrentBrief={setCurrentBrief}
-          mode={briefDialogMode}
-          setMode={setBriefDialogMode}
-          saveBrief={saveBrief}
-          extractGoogleDocsLink={extractGoogleDocsLink}
-        />
-      </Card>
-    </div>
+    <Card className="w-full">
+      <CardHeader className="py-3 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">Content Management</CardTitle>
+        <div className="flex space-x-2">
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleDeleteSelected}
+            disabled={!contentItems.some(item => item.isSelected)}
+            className="text-sm"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete Selected
+          </Button>
+          <Button onClick={handleAddRow} size="sm" className="text-sm">
+            <PlusCircle className="h-4 w-4 mr-1" />
+            Add Row
+          </Button>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox 
+                    checked={selectAll} 
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
+                <TableHead className="w-1/4">Tanggal Posting</TableHead>
+                <TableHead>Tipe Content</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contentItems.length > 0 ? (
+                contentItems.map(item => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <Checkbox 
+                        checked={item.isSelected} 
+                        onCheckedChange={() => toggleSelectItem(item.id)}
+                        aria-label="Select row"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Popover 
+                        open={isCalendarOpen[item.id]} 
+                        onOpenChange={() => toggleCalendar(item.id)}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {item.postDate || 'Select date'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={item.postDate ? new Date(item.postDate) : undefined}
+                            onSelect={(date) => handleDateChange(item.id, date)}
+                            initialFocus
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </TableCell>
+                    <TableCell>
+                      <Select 
+                        value={item.contentType} 
+                        onValueChange={(value) => handleTypeChange(item.id, value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select content type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contentTypes.map((type) => (
+                            <SelectItem key={type.id} value={type.id}>
+                              {type.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="h-24 text-center">
+                    No content items. Click "Add Row" to create one.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="pt-2 flex justify-between">
+        <div className="text-sm text-muted-foreground">
+          {contentItems.length} item{contentItems.length !== 1 ? 's' : ''} 
+          {contentItems.some(item => item.isSelected) && 
+            ` (${contentItems.filter(item => item.isSelected).length} selected)`
+          }
+        </div>
+      </CardFooter>
+    </Card>
   );
 };
 
