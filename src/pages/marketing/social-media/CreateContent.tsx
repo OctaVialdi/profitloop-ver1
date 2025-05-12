@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useContentManagement, ContentItem } from "@/hooks/useContentManagement";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CreateContent = () => {
   const {
@@ -109,8 +110,8 @@ const CreateContent = () => {
       </CardHeader>
       
       <CardContent>
-        <div className="border rounded-md overflow-hidden">
-          <Table>
+        <div className="border rounded-md">
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
@@ -124,70 +125,76 @@ const CreateContent = () => {
                 <TableHead>Tipe Content</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {contentItems.length > 0 ? (
-                contentItems.map(item => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Checkbox 
-                        checked={item.isSelected} 
-                        onCheckedChange={() => toggleSelectItem(item.id)}
-                        aria-label="Select row"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Popover 
-                        open={isCalendarOpen[item.id]} 
-                        onOpenChange={() => toggleCalendar(item.id)}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start text-left font-normal"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {item.postDate || 'Select date'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={item.postDate ? new Date(item.postDate) : undefined}
-                            onSelect={(date) => handleDateChange(item.id, date)}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
-                    <TableCell>
-                      <Select 
-                        value={item.contentType} 
-                        onValueChange={(value) => handleTypeChange(item.id, value)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select content type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {contentTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.id}>
-                              {type.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+          </Table>
+          
+          {/* Applying vertical scroll using ScrollArea component */}
+          <ScrollArea className="h-[400px]">
+            <Table className="table-fixed">
+              <TableBody>
+                {contentItems.length > 0 ? (
+                  contentItems.map(item => (
+                    <TableRow key={item.id}>
+                      <TableCell className="w-12">
+                        <Checkbox 
+                          checked={item.isSelected} 
+                          onCheckedChange={() => toggleSelectItem(item.id)}
+                          aria-label="Select row"
+                        />
+                      </TableCell>
+                      <TableCell className="w-1/4">
+                        <Popover 
+                          open={isCalendarOpen[item.id]} 
+                          onOpenChange={() => toggleCalendar(item.id)}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {item.postDate || 'Select date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={item.postDate ? new Date(item.postDate) : undefined}
+                              onSelect={(date) => handleDateChange(item.id, date)}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </TableCell>
+                      <TableCell>
+                        <Select 
+                          value={item.contentType} 
+                          onValueChange={(value) => handleTypeChange(item.id, value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select content type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {contentTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.id}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="h-24 text-center">
+                      No content items. Click "Add Row" to create one.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center">
-                    No content items. Click "Add Row" to create one.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </div>
       </CardContent>
       
