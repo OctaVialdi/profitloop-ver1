@@ -111,8 +111,6 @@ const CreateContent = () => {
     updateContentItem(itemId, { status });
   };
 
-  // Removed handleApprovalChange function since it's no longer needed
-
   const handleDeleteSelected = () => {
     const selectedIds = contentItems
       .filter(item => item.isSelected)

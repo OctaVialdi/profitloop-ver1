@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw } from "lucide-react";
+import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
 
@@ -96,7 +96,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                 <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
                 <TableHead className="w-[180px] text-center">Brief</TableHead>
                 <TableHead className="w-[140px] text-center">Status</TableHead>
-                <TableHead className="w-[100px] text-center">Revision</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -300,27 +299,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="p-2">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium text-center w-full">
-                          {item.revisionCount || 0}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => resetRevisionCounter(item.id)}
-                          title="Reset revision counter"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={11} className="h-24 text-center">
+                  <TableCell colSpan={10} className="h-24 text-center">
                     No content items. Click "Add Row" to create one.
                   </TableCell>
                 </TableRow>
