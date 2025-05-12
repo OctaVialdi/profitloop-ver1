@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useEmployees, LegacyEmployee, convertToLegacyFormat } from "@/hooks/useEmployees";
+import { useState, useEffect } from "react";
 
 export interface ContentType {
   id: string;
@@ -17,12 +16,6 @@ export interface SubService {
   name: string;
 }
 
-export interface ContentPlanner {
-  id: string;
-  name: string;
-  email: string;
-}
-
 export interface ContentPillar {
   id: string;
   name: string;
@@ -30,8 +23,9 @@ export interface ContentPillar {
 
 export interface ContentItem {
   id: string;
-  postDate: string;
+  postDate: string | undefined;
   contentType: string;
+  isSelected: boolean;
   pic: string;
   service: string;
   subService: string;
@@ -39,23 +33,20 @@ export interface ContentItem {
   contentPillar: string;
   brief: string;
   status: string;
-  revisions: number;
-  approved: boolean;
-  completionDate: string | null;
-  isSelected?: boolean;
+  revisionCount: number;
+  isApproved: boolean;
+  completionDate: string | undefined;
 }
 
 export const useContentManagement = () => {
-  const { employees } = useEmployees();
   const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [subServices, setSubServices] = useState<SubService[]>([]);
-  const [contentPlanners, setContentPlanners] = useState<ContentPlanner[]>([]);
-  const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const [currentUser, setCurrentUser] = useState<LegacyEmployee | null>(null);
+  const [contentPlanners, setContentPlanners] = useState<any[]>([]);
+  const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
   
-  // Load data from localStorage
+  // Load content types, services, and sub-services from localStorage
   useEffect(() => {
     const loadData = () => {
       // Load content types
@@ -65,12 +56,7 @@ export const useContentManagement = () => {
           setContentTypes(JSON.parse(storedContentTypes));
         } catch (e) {
           console.error("Error parsing content types from localStorage:", e);
-          // Initialize with defaults if parsing fails
-          setDefaultContentTypes();
         }
-      } else {
-        // Initialize with defaults if no data exists
-        setDefaultContentTypes();
       }
 
       // Load services
@@ -80,10 +66,7 @@ export const useContentManagement = () => {
           setServices(JSON.parse(storedServices));
         } catch (e) {
           console.error("Error parsing services from localStorage:", e);
-          setDefaultServices();
         }
-      } else {
-        setDefaultServices();
       }
 
       // Load sub-services
@@ -93,10 +76,7 @@ export const useContentManagement = () => {
           setSubServices(JSON.parse(storedSubServices));
         } catch (e) {
           console.error("Error parsing sub-services from localStorage:", e);
-          setDefaultSubServices();
         }
-      } else {
-        setDefaultSubServices();
       }
 
       // Load content pillars
@@ -106,319 +86,163 @@ export const useContentManagement = () => {
           setContentPillars(JSON.parse(storedContentPillars));
         } catch (e) {
           console.error("Error parsing content pillars from localStorage:", e);
-          setDefaultContentPillars();
         }
       } else {
-        setDefaultContentPillars();
+        // Default content pillars if none exist
+        const defaultPillars = [
+          { id: "1", name: "Awareness" },
+          { id: "2", name: "Consideration" },
+          { id: "3", name: "Decision" },
+          { id: "4", name: "Loyalty" }
+        ];
+        setContentPillars(defaultPillars);
+        localStorage.setItem("marketingContentPillars", JSON.stringify(defaultPillars));
       }
-      
-      // Load content items
-      const storedContentItems = localStorage.getItem("marketingContentItems");
-      if (storedContentItems) {
+
+      // Load content planners (employees with jobPosition "Content Planner")
+      const storedEmployeesJson = localStorage.getItem('employees');
+      if (storedEmployeesJson) {
         try {
-          // Make sure all loaded items use "none" for empty status
-          const parsedItems = JSON.parse(storedContentItems);
-          const updatedItems = parsedItems.map((item: ContentItem) => ({
-            ...item,
-            status: item.status || "none" // Replace any empty string with "none"
-          }));
-          setContentItems(updatedItems);
+          const allEmployees = JSON.parse(storedEmployeesJson);
+          // Filter for Digital Marketing employees with Content Planner position
+          const planners = allEmployees.filter(
+            (emp: any) => emp.organization === "Digital Marketing" && 
+                      emp.jobPosition === "Content Planner"
+          );
+          setContentPlanners(planners);
         } catch (e) {
-          console.error("Error parsing content items from localStorage:", e);
+          console.error("Error parsing employees from localStorage:", e);
         }
       }
     };
 
     loadData();
-  }, []);
-  
-  // Initialize content planners from employees
-  useEffect(() => {
-    if (employees.length > 0) {
-      // Filter Content Planner positions
-      const planners = employees
-        .map(convertToLegacyFormat)
-        .filter(emp => emp.jobPosition === "Content Planner" && emp.organization === "Digital Marketing")
-        .map(emp => ({
-          id: emp.id,
-          name: emp.name,
-          email: emp.email || ""
-        }));
-      
-      setContentPlanners(planners);
-    }
-  }, [employees]);
-
-  // Get current user
-  useEffect(() => {
-    if (employees.length > 0) {
-      const marketingEmployees = employees
-        .map(convertToLegacyFormat)
-        .filter(employee => employee.organization === "Digital Marketing");
-      
-      const manager = marketingEmployees.find(
-        employee => employee.jobPosition?.toLowerCase().includes("manager")
-      );
-      
-      if (manager) {
-        setCurrentUser(manager);
-      } else if (marketingEmployees.length > 0) {
-        // Default to first marketing employee if no manager exists
-        setCurrentUser(marketingEmployees[0]);
+    
+    // Load previously saved content items
+    const storedItems = localStorage.getItem("contentItems");
+    if (storedItems) {
+      try {
+        setContentItems(JSON.parse(storedItems));
+      } catch (e) {
+        console.error("Error parsing content items from localStorage:", e);
       }
     }
-  }, [employees]);
-  
-  // Save data to localStorage when it changes
-  useEffect(() => {
-    if (contentTypes.length > 0) {
-      localStorage.setItem("marketingContentTypes", JSON.stringify(contentTypes));
-    }
-  }, [contentTypes]);
-  
-  useEffect(() => {
-    if (services.length > 0) {
-      localStorage.setItem("marketingServices", JSON.stringify(services));
-    }
-  }, [services]);
-  
-  useEffect(() => {
-    if (subServices.length > 0) {
-      localStorage.setItem("marketingSubServices", JSON.stringify(subServices));
-    }
-  }, [subServices]);
-  
-  useEffect(() => {
-    if (contentPillars.length > 0) {
-      localStorage.setItem("marketingContentPillars", JSON.stringify(contentPillars));
-    }
-  }, [contentPillars]);
-  
+  }, []);
+
+  // Save content items to localStorage whenever they change
   useEffect(() => {
     if (contentItems.length > 0) {
-      localStorage.setItem("marketingContentItems", JSON.stringify(contentItems));
+      localStorage.setItem("contentItems", JSON.stringify(contentItems));
     }
   }, [contentItems]);
-  
-  // Default data initialization functions
-  const setDefaultContentTypes = () => {
-    const defaults: ContentType[] = [
-      { id: "1", name: "Image Post" },
-      { id: "2", name: "Video Post" },
-      { id: "3", name: "Story" },
-      { id: "4", name: "Carousel" },
-      { id: "5", name: "Reel" }
-    ];
-    setContentTypes(defaults);
-    localStorage.setItem("marketingContentTypes", JSON.stringify(defaults));
-  };
-  
-  const setDefaultServices = () => {
-    const defaults: Service[] = [
-      { id: "1", name: "Social Media Management" },
-      { id: "2", name: "Content Creation" },
-      { id: "3", name: "Digital Advertising" }
-    ];
-    setServices(defaults);
-    localStorage.setItem("marketingServices", JSON.stringify(defaults));
-  };
-  
-  const setDefaultSubServices = () => {
-    const defaults: SubService[] = [
-      { id: "1", serviceId: "1", name: "Instagram Management" },
-      { id: "2", serviceId: "1", name: "Facebook Management" },
-      { id: "3", serviceId: "1", name: "TikTok Management" },
-      { id: "4", serviceId: "2", name: "Graphic Design" },
-      { id: "5", serviceId: "2", name: "Copywriting" },
-      { id: "6", serviceId: "3", name: "Google Ads" },
-      { id: "7", serviceId: "3", name: "Facebook Ads" }
-    ];
-    setSubServices(defaults);
-    localStorage.setItem("marketingSubServices", JSON.stringify(defaults));
-  };
-  
-  const setDefaultContentPillars = () => {
-    const defaults: ContentPillar[] = [
-      { id: "1", name: "Education" },
-      { id: "2", name: "Promotion" },
-      { id: "3", name: "Entertainment" },
-      { id: "4", name: "Inspiration" },
-      { id: "5", name: "Conversion" }
-    ];
-    setContentPillars(defaults);
-    localStorage.setItem("marketingContentPillars", JSON.stringify(defaults));
-  };
 
-  // Get filtered sub-services for a specific service
-  const getFilteredSubServices = (serviceId: string) => {
-    return subServices.filter(subService => subService.serviceId === serviceId);
-  };
-  
-  // Content Types Management
-  const addContentType = (name: string) => {
-    const newType: ContentType = {
-      id: `type-${Date.now()}`,
-      name
-    };
-    setContentTypes([...contentTypes, newType]);
-    return newType;
-  };
-  
-  const updateContentType = (id: string, name: string) => {
-    const updated = contentTypes.map(type => 
-      type.id === id ? { ...type, name } : type
-    );
-    setContentTypes(updated);
-  };
-  
-  const deleteContentType = (id: string) => {
-    setContentTypes(contentTypes.filter(type => type.id !== id));
-  };
-  
-  // Services Management
-  const addService = (name: string) => {
-    const newService: Service = {
-      id: `service-${Date.now()}`,
-      name
-    };
-    setServices([...services, newService]);
-    return newService;
-  };
-  
-  const updateService = (id: string, name: string) => {
-    const updated = services.map(service => 
-      service.id === id ? { ...service, name } : service
-    );
-    setServices(updated);
-  };
-  
-  const deleteService = (id: string) => {
-    setServices(services.filter(service => service.id !== id));
-    // Also remove associated sub-services
-    setSubServices(subServices.filter(subService => subService.serviceId !== id));
-  };
-  
-  // Sub-Services Management
-  const addSubService = (serviceId: string, name: string) => {
-    const newSubService: SubService = {
-      id: `subservice-${Date.now()}`,
-      serviceId,
-      name
-    };
-    setSubServices([...subServices, newSubService]);
-    return newSubService;
-  };
-  
-  const updateSubService = (id: string, serviceId: string, name: string) => {
-    const updated = subServices.map(subService => 
-      subService.id === id ? { ...subService, serviceId, name } : subService
-    );
-    setSubServices(updated);
-  };
-  
-  const deleteSubService = (id: string) => {
-    setSubServices(subServices.filter(subService => subService.id !== id));
-  };
-  
-  // Content Pillars Management
-  const addContentPillar = (name: string) => {
-    const newPillar: ContentPillar = {
-      id: `pillar-${Date.now()}`,
-      name
-    };
-    setContentPillars([...contentPillars, newPillar]);
-    return newPillar;
-  };
-  
-  const updateContentPillar = (id: string, name: string) => {
-    const updated = contentPillars.map(pillar => 
-      pillar.id === id ? { ...pillar, name } : pillar
-    );
-    setContentPillars(updated);
-  };
-  
-  const deleteContentPillar = (id: string) => {
-    setContentPillars(contentPillars.filter(pillar => pillar.id !== id));
-  };
-  
-  // Content Items Management
+  // Add a new content item
   const addContentItem = () => {
-    const today = new Date();
     const newItem: ContentItem = {
-      id: `content-${Date.now()}`,
-      postDate: today.toISOString().split('T')[0],
+      id: `${Date.now()}`,
+      postDate: undefined,
       contentType: "",
+      isSelected: false,
       pic: "",
       service: "",
       subService: "",
       title: "",
       contentPillar: "",
       brief: "",
-      status: "none", // Use "none" instead of empty string
-      revisions: 0,
-      approved: false,
-      completionDate: null,
-      isSelected: false
+      status: "none",
+      revisionCount: 0,
+      isApproved: false,
+      completionDate: undefined,
     };
-    
-    setContentItems([newItem, ...contentItems]);
-    return newItem;
+    setContentItems([...contentItems, newItem]);
   };
-  
-  const updateContentItem = (id: string, updates: Partial<ContentItem>) => {
-    // Ensure status is never an empty string
-    if (updates.status === "") {
+
+  // Update a content item
+  const updateContentItem = (itemId: string, updates: Partial<ContentItem>) => {
+    // Increment revision count if changing status to "revisi"
+    if (updates.status === "revisi") {
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && currentItem.status !== "revisi") {
+        updates.revisionCount = (currentItem.revisionCount || 0) + 1;
+      }
+    }
+    
+    // Set completion date if status is changing to "review" and there's no completion date yet
+    if (updates.status === "review") {
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && !currentItem.completionDate) {
+        updates.completionDate = new Date().toISOString();
+      }
+    } else if (updates.status && updates.status !== "review") {
+      // Clear completion date if status is changing away from "review"
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && currentItem.status === "review") {
+        updates.completionDate = undefined;
+      }
+    }
+    
+    // Check if brief is being changed, and if so, reset status
+    if (updates.brief !== undefined) {
       updates.status = "none";
     }
     
-    setContentItems(prev => 
-      prev.map(item => item.id === id ? { ...item, ...updates } : item)
-    );
-  };
-  
-  const deleteContentItems = (ids: string[]) => {
-    setContentItems(prev => prev.filter(item => !ids.includes(item.id)));
-  };
-  
-  const toggleSelectItem = (id: string) => {
-    setContentItems(prev => 
-      prev.map(item => 
-        item.id === id ? { ...item, isSelected: !item.isSelected } : item
+    setContentItems(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId ? { ...item, ...updates } : item
       )
     );
   };
-  
-  const selectAllItems = (selected: boolean) => {
-    setContentItems(prev => 
-      prev.map(item => ({ ...item, isSelected: selected }))
+
+  // Reset revision counter for a specific item
+  const resetRevisionCounter = (itemId: string) => {
+    setContentItems(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId ? { ...item, revisionCount: 0 } : item
+      )
     );
+  };
+
+  // Delete content items by IDs
+  const deleteContentItems = (itemIds: string[]) => {
+    setContentItems(prevItems => 
+      prevItems.filter(item => !itemIds.includes(item.id))
+    );
+  };
+
+  // Toggle selection of an item
+  const toggleSelectItem = (itemId: string) => {
+    setContentItems(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId ? { ...item, isSelected: !item.isSelected } : item
+      )
+    );
+  };
+
+  // Select all items
+  const selectAllItems = (selected: boolean) => {
+    setContentItems(prevItems =>
+      prevItems.map(item => ({ ...item, isSelected: selected }))
+    );
+  };
+
+  // Get filtered sub-services for a specific service
+  const getFilteredSubServices = (serviceId: string) => {
+    return subServices.filter(subService => subService.serviceId === serviceId);
   };
 
   return {
     contentTypes,
     services,
     subServices,
+    contentItems,
     contentPlanners,
     contentPillars,
-    contentItems,
-    currentUser,
-    getFilteredSubServices,
-    addContentType,
-    updateContentType,
-    deleteContentType,
-    addService,
-    updateService,
-    deleteService,
-    addSubService,
-    updateSubService,
-    deleteSubService,
-    addContentPillar,
-    updateContentPillar,
-    deleteContentPillar,
     addContentItem,
     updateContentItem,
+    resetRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
-    selectAllItems
+    selectAllItems,
+    getFilteredSubServices
   };
 };
