@@ -2,14 +2,24 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, RefreshCcw, CalendarIcon, FileText, Link, ExternalLink, Download } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { useContentBrief } from "@/hooks/useContentBrief";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
-import { ContentTabsTable } from "@/components/marketing/social-media/ContentTabsTable";
 import { format } from "date-fns";
 
 interface InputDialogProps {
@@ -76,11 +86,7 @@ const ContentPlan = () => {
     getFilteredSubServices,
     resetRevisionCounter,
     resetProductionRevisionCounter,
-    calculateOnTimeStatus,
-    handleStatusChange: statusChange,
-    handleProductionStatusChange: productionStatusChange,
-    handleContentStatusChange: contentStatusChange,
-    toggleApproval
+    calculateOnTimeStatus
   } = useContentManagement();
 
   // Initialize the useContentBrief hook
@@ -245,17 +251,51 @@ const ContentPlan = () => {
     setEditingItemId("");
   };
 
-  // Handle status changes
+  // Handle status change
   const handleStatusChange = (itemId: string, status: string) => {
-    statusChange(itemId, status);
+    const updates: Partial<typeof contentItems[0]> = { status };
+    
+    // If status changes to "review", add completion date
+    if (status === "review") {
+      const now = new Date();
+      updates.completionDate = now.toISOString();
+    }
+    
+    // If status changes to "revision", increment revision counter
+    if (status === "revision") {
+      const item = contentItems.find(item => item.id === itemId);
+      if (item) {
+        updates.revisionCount = (item.revisionCount || 0) + 1;
+      }
+    }
+    
+    updateContentItem(itemId, updates);
   };
   
+  // Handle production status change
   const handleProductionStatusChange = (itemId: string, status: string) => {
-    productionStatusChange(itemId, status);
+    const updates: Partial<typeof contentItems[0]> = { productionStatus: status };
+    
+    // If status changes to "review", add completion date
+    if (status === "review") {
+      const now = new Date();
+      updates.productionCompletionDate = now.toISOString();
+    }
+    
+    // If status changes to "revision", increment revision counter
+    if (status === "revision") {
+      const item = contentItems.find(item => item.id === itemId);
+      if (item) {
+        updates.productionRevisionCount = (item.productionRevisionCount || 0) + 1;
+      }
+    }
+    
+    updateContentItem(itemId, updates);
   };
   
+  // Handle content status change
   const handleContentStatusChange = (itemId: string, status: string) => {
-    contentStatusChange(itemId, status);
+    updateContentItem(itemId, { contentStatus: status });
   };
 
   // Handle brief change and status update
@@ -285,7 +325,24 @@ const ContentPlan = () => {
     
     // Save current items for next comparison
     localStorage.setItem("prevContentItems", JSON.stringify(contentItems));
-  }, [contentItems, updateContentItem]);
+  }, [contentItems]);
+  
+  // Handle approval changes and set approval date
+  const handleApprovalChange = (itemId: string, isApproved: boolean, field: "isApproved" | "productionApproved") => {
+    const now = new Date();
+    const updates: Partial<typeof contentItems[0]> = { 
+      [field]: isApproved 
+    };
+    
+    // Set the approval date if approving production
+    if (field === "productionApproved" && isApproved) {
+      updates.productionApprovedDate = now.toISOString();
+    } else if (field === "productionApproved" && !isApproved) {
+      updates.productionApprovedDate = undefined;
+    }
+    
+    updateContentItem(itemId, updates);
+  };
   
   // Handle done status change
   const handleDoneStatusChange = (itemId: string, isDone: boolean) => {
@@ -334,45 +391,433 @@ const ContentPlan = () => {
       </CardHeader>
       <CardContent>
         <div className="border rounded-md overflow-hidden">
+          {/* Vertical scroll container */}
           <ScrollArea className="h-[calc(100vh-230px)]">
+            {/* Horizontal scroll container */}
             <div className="overflow-x-auto">
-              <div className="min-w-[1200px] max-w-[1300px] w-full">
-                <ContentTabsTable
-                  contentItems={contentItems}
-                  contentTypes={contentTypes}
-                  services={services}
-                  subServices={subServices}
-                  contentPlanners={contentPlanners}
-                  contentPillars={contentPillars}
-                  productionTeam={productionTeam}
-                  isCalendarOpen={isCalendarOpen}
-                  isUserManager={true}
-                  toggleCalendar={toggleCalendar}
-                  handleDateChange={handleDateChange}
-                  handleTypeChange={handleTypeChange}
-                  handlePICChange={handlePICChange}
-                  handleServiceChange={handleServiceChange}
-                  handleSubServiceChange={handleSubServiceChange}
-                  handleTitleChange={handleTitleChange}
-                  handleContentPillarChange={handleContentPillarChange}
-                  handleStatusChange={handleStatusChange}
-                  handleProductionStatusChange={handleProductionStatusChange}
-                  handleContentStatusChange={handleContentStatusChange}
-                  toggleSelectItem={toggleSelectItem}
-                  selectAll={selectAll}
-                  handleSelectAll={handleSelectAll}
-                  openBriefDialog={openBriefDialog}
-                  getFilteredSubServicesByServiceId={getFilteredSubServices}
-                  extractGoogleDocsLink={extractGoogleDocsLink}
-                  displayBrief={displayBrief}
-                  resetRevisionCounter={resetRevisionCounter}
-                  resetProductionRevisionCounter={resetProductionRevisionCounter}
-                  toggleApproved={toggleApproval}
-                  openTitleDialog={openTitleDialog}
-                  openLinkDialog={openLinkDialog}
-                  handlePICProductionChange={handlePICProductionChange}
-                  handleDoneStatusChange={handleDoneStatusChange}
-                />
+              {/* Fixed width container for the table */}
+              <div className="w-[2800px]">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-20">
+                    <TableRow className="bg-slate-50 border-b border-slate-200">
+                      <TableHead className="w-[60px] text-center sticky left-0 bg-slate-50 z-30 border-r">
+                        <Checkbox 
+                          checked={selectAll} 
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all"
+                          className="ml-2"
+                        />
+                      </TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Posting</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Tipe Content</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">PIC</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Layanan</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Sub Layanan</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Judul Content</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Content Pillar</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Brief</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Status</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Revision</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Approved</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Selesai</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Upload</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Tipe Content</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Judul Content</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">PIC Produksi</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Link Google Drive</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Status Produksi</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Revisi Counter</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Selesai Produksi</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Approved</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Approved</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Download Link File</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Link Post</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Done</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Actual Post</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">On Time Status</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap px-3 py-2">Status Content</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {contentItems.length > 0 ? (
+                      contentItems.map(item => (
+                        <TableRow key={item.id} className="hover:bg-slate-50/60 border-b">
+                          <TableCell className="text-center sticky left-0 bg-white z-10 border-r">
+                            <Checkbox 
+                              checked={item.isSelected} 
+                              onCheckedChange={() => toggleSelectItem(item.id)}
+                              aria-label="Select row"
+                            />
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Popover 
+                              open={isCalendarOpen[`${item.id}-postDate`]} 
+                              onOpenChange={() => toggleCalendar(item.id, 'postDate')}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start text-left font-normal"
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {item.postDate ? formatDisplayDate(item.postDate, false) : 'Select date'}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-50" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={item.postDate ? new Date(item.postDate) : undefined}
+                                  onSelect={(date) => handleDateChange(item.id, date, 'postDate')}
+                                  initialFocus
+                                  className="p-3 pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Select 
+                              value={item.contentType} 
+                              onValueChange={(value) => handleTypeChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select content type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {contentTypes.map((type) => (
+                                  <SelectItem key={type.id} value={type.id}>
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Select 
+                              value={item.pic} 
+                              onValueChange={(value) => handlePICChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select PIC" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {contentPlanners.length > 0 ? (
+                                  contentPlanners.map((planner) => (
+                                    <SelectItem key={planner.id} value={planner.name}>
+                                      {planner.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no-pic-found" disabled>
+                                    No content planners found
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Select 
+                              value={item.service} 
+                              onValueChange={(value) => handleServiceChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select service" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {services.map((service) => (
+                                  <SelectItem key={service.id} value={service.id}>
+                                    {service.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Select 
+                              value={item.subService} 
+                              onValueChange={(value) => handleSubServiceChange(item.id, value)}
+                              disabled={!item.service} // Disable if no service is selected
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select sub service" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {item.service ? (
+                                  getFilteredSubServices(item.service).map((subService) => (
+                                    <SelectItem key={subService.id} value={subService.id}>
+                                      {subService.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no-subservice" disabled>
+                                    Select a service first
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal overflow-hidden text-ellipsis"
+                              onClick={() => openTitleDialog(item.id, item.title)}
+                            >
+                              {item.title ? 
+                                (item.title.length > 25 ? 
+                                  `${item.title.substring(0, 25)}...` : 
+                                  item.title) : 
+                                'Click to add title'}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Select 
+                              value={item.contentPillar} 
+                              onValueChange={(value) => handleContentPillarChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select content pillar" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {contentPillars.map((pillar) => (
+                                  <SelectItem key={pillar.id} value={pillar.id}>
+                                    {pillar.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                              onClick={() => openBriefDialog(item.id, item.brief, item.brief ? "view" : "edit")}
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              {item.brief ? displayBrief(item.brief) : 'Click to add brief'}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Select 
+                              value={item.status} 
+                              onValueChange={(value) => handleStatusChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">-</SelectItem>
+                                <SelectItem value="review">Butuh Di Review</SelectItem>
+                                <SelectItem value="revision">Request Revisi</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            <div className="flex items-center justify-center space-x-2">
+                              <span>{item.revisionCount || 0}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => resetRevisionCounter(item.id)}
+                                className="h-6 w-6"
+                              >
+                                <RefreshCcw className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            <Checkbox 
+                              checked={item.isApproved}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  handleApprovalChange(item.id, true, "isApproved");
+                                }
+                              }}
+                              disabled={item.isApproved} // Once checked, it can't be unchecked
+                            />
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            {item.status === "review" && item.completionDate ? (
+                              <div className="text-center">
+                                {formatDisplayDate(item.completionDate)}
+                              </div>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            {/* Mirroring the postDate column */}
+                            {item.postDate ? formatDisplayDate(item.postDate, false) : "-"}
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            {/* Mirroring the contentType column */}
+                            {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            {/* Mirroring the title column */}
+                            <div className="overflow-hidden text-ellipsis max-w-full">
+                              {item.title ? 
+                                (item.title.length > 25 ? 
+                                  `${item.title.substring(0, 25)}...` : 
+                                  item.title) : 
+                                '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Select 
+                              value={item.picProduction} 
+                              onValueChange={(value) => handlePICProductionChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select Production PIC" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {productionTeam.length > 0 ? (
+                                  productionTeam.map((member) => (
+                                    <SelectItem key={member.id} value={member.name}>
+                                      {member.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no-pic-found" disabled>
+                                    No production team found
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal overflow-hidden text-ellipsis"
+                              onClick={() => openLinkDialog(item.id, "googleDrive", item.googleDriveLink)}
+                            >
+                              <Link className="mr-2 h-4 w-4" />
+                              {item.googleDriveLink ? 
+                                (item.googleDriveLink.length > 25 ? 
+                                  `${item.googleDriveLink.substring(0, 25)}...` : 
+                                  item.googleDriveLink) : 
+                                'Add Google Drive link'}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Select 
+                              value={item.productionStatus} 
+                              onValueChange={(value) => handleProductionStatusChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">-</SelectItem>
+                                <SelectItem value="review">Butuh Di Review</SelectItem>
+                                <SelectItem value="revision">Request Revisi</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            <div className="flex items-center justify-center space-x-2">
+                              <span>{item.productionRevisionCount || 0}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => resetProductionRevisionCounter(item.id)}
+                                className="h-6 w-6"
+                              >
+                                <RefreshCcw className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            {item.productionStatus === "review" && item.productionCompletionDate ? (
+                              <div className="text-center">
+                                {formatDisplayDate(item.productionCompletionDate)}
+                              </div>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            <Checkbox 
+                              checked={item.productionApproved}
+                              onCheckedChange={(checked) => {
+                                handleApprovalChange(item.id, Boolean(checked), "productionApproved");
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            {item.productionApproved && item.productionApprovedDate ? (
+                              <div className="text-center">
+                                {formatDisplayDate(item.productionApprovedDate)}
+                              </div>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            {item.productionApproved && item.googleDriveLink ? (
+                              <Button
+                                variant="outline"
+                                className="w-full flex items-center justify-center"
+                                onClick={() => window.open(item.googleDriveLink, "_blank")}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </Button>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap border-r">
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal overflow-hidden text-ellipsis"
+                              onClick={() => openLinkDialog(item.id, "postLink", item.postLink)}
+                            >
+                              <ExternalLink className="mr-2 h-4 w-4" />
+                              {item.postLink ? 
+                                (item.postLink.length > 25 ? 
+                                  `${item.postLink.substring(0, 25)}...` : 
+                                  item.postLink) : 
+                                'Add post link'}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            <Checkbox 
+                              checked={item.isDone}
+                              onCheckedChange={(checked) => {
+                                handleDoneStatusChange(item.id, Boolean(checked));
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            {item.actualPostDate ? (
+                              <div className="text-center">
+                                {formatDisplayDate(item.actualPostDate)}
+                              </div>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
+                            <div className={`text-center ${item.onTimeStatus?.startsWith('Late') ? 'text-red-500 font-medium' : 'text-green-500 font-medium'}`}>
+                              {item.onTimeStatus || "-"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2 whitespace-nowrap">
+                            <Select 
+                              value={item.contentStatus} 
+                              onValueChange={(value) => handleContentStatusChange(item.id, value)}
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">-</SelectItem>
+                                <SelectItem value="recommended">Recommended For Ads</SelectItem>
+                                <SelectItem value="cancel">Cancel</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={29} className="h-24 text-center">
+                          No content items. Click "Add Row" to create one.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </ScrollArea>

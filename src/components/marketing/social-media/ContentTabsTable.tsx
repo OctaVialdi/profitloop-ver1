@@ -2,20 +2,19 @@
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ContentTable } from "./ContentTable";
-import { ContentType, ContentPillar, Service, SubService } from "@/types/contentManagement";
+import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
 
 interface ContentTabsTableProps {
-  contentItems: any[];
+  contentItems: ContentItem[];
   contentTypes: ContentType[];
   services: Service[];
   subServices: SubService[];
   contentPlanners: any[];
   contentPillars: ContentPillar[];
-  productionTeam: any[];
   isCalendarOpen: { [key: string]: boolean };
   isUserManager: boolean;
-  toggleCalendar: (itemId: string, type: string) => void;
-  handleDateChange: (itemId: string, date: Date | undefined, type: string) => void;
+  toggleCalendar: (itemId: string) => void;
+  handleDateChange: (itemId: string, date: Date | undefined) => void;
   handleTypeChange: (itemId: string, typeId: string) => void;
   handlePICChange: (itemId: string, picName: string) => void;
   handleServiceChange: (itemId: string, serviceId: string) => void;
@@ -23,8 +22,6 @@ interface ContentTabsTableProps {
   handleTitleChange: (itemId: string, title: string) => void;
   handleContentPillarChange: (itemId: string, pillarId: string) => void;
   handleStatusChange: (itemId: string, status: string) => void;
-  handleProductionStatusChange: (itemId: string, status: string) => void;
-  handleContentStatusChange: (itemId: string, status: string) => void;
   toggleSelectItem: (itemId: string) => void;
   selectAll: boolean;
   handleSelectAll: (checked: boolean) => void;
@@ -33,12 +30,7 @@ interface ContentTabsTableProps {
   extractGoogleDocsLink: (text: string) => string | null;
   displayBrief: (brief: string) => string;
   resetRevisionCounter: (itemId: string) => void;
-  resetProductionRevisionCounter: (itemId: string) => void;
-  toggleApproved: (itemId: string, isApproved: boolean, field: "isApproved" | "productionApproved") => void;
-  openTitleDialog: (itemId: string, currentTitle: string) => void;
-  openLinkDialog: (itemId: string, type: "googleDrive" | "postLink", currentValue: string) => void;
-  handlePICProductionChange: (itemId: string, picName: string) => void;
-  handleDoneStatusChange: (itemId: string, isDone: boolean) => void;
+  toggleApproved: (itemId: string, isApproved: boolean) => void;
 }
 
 export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
@@ -46,13 +38,8 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
   
   // Define column sets for each tab
   const primaryColumns = ["selectColumn", "postDate", "contentType", "pic", "service", "subService", "title"];
-  const detailsColumns = ["selectColumn", "contentPillar", "brief", "status", "revision", "approved", "completionDate"];
-  const publishingColumns = [
-    "selectColumn", "mirrorPostDate", "mirrorContentType", "mirrorTitle", 
-    "picProduction", "googleDriveLink", "productionStatus", "productionRevision", 
-    "productionCompletionDate", "productionApproved", "productionApprovedDate", 
-    "downloadLink", "postLink", "isDone", "actualPostDate", "onTimeStatus", "contentStatus"
-  ];
+  const detailsColumns = ["selectColumn", "contentPillar", "brief", "status", "revision", "approved"];
+  const publishingColumns = ["selectColumn", "completionDate", "mirrorPostDate", "mirrorContentType", "mirrorTitle"];
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
