@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from "react";
+import { useEmployees, LegacyEmployee, convertToLegacyFormat } from "@/hooks/useEmployees";
 
 export interface ContentType {
   id: string;
@@ -33,12 +35,10 @@ export interface ContentItem {
   contentPillar: string;
   brief: string;
   status: string;
-  revisionCount: number;
-  isApproved: boolean;
-  completionDate: string | undefined;
 }
 
 export const useContentManagement = () => {
+  const { employees } = useEmployees();
   const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [subServices, setSubServices] = useState<SubService[]>([]);
@@ -140,7 +140,7 @@ export const useContentManagement = () => {
   const addContentItem = () => {
     const newItem: ContentItem = {
       id: `${Date.now()}`,
-      postDate: undefined,
+      postDate: new Date().toISOString().split('T')[0],
       contentType: "",
       isSelected: false,
       pic: "",
@@ -150,54 +150,15 @@ export const useContentManagement = () => {
       contentPillar: "",
       brief: "",
       status: "none",
-      revisionCount: 0,
-      isApproved: false,
-      completionDate: undefined,
     };
     setContentItems([...contentItems, newItem]);
   };
 
   // Update a content item
   const updateContentItem = (itemId: string, updates: Partial<ContentItem>) => {
-    // Increment revision count if changing status to "revisi"
-    if (updates.status === "revisi") {
-      const currentItem = contentItems.find(item => item.id === itemId);
-      if (currentItem && currentItem.status !== "revisi") {
-        updates.revisionCount = (currentItem.revisionCount || 0) + 1;
-      }
-    }
-    
-    // Set completion date if status is changing to "review" and there's no completion date yet
-    if (updates.status === "review") {
-      const currentItem = contentItems.find(item => item.id === itemId);
-      if (currentItem && !currentItem.completionDate) {
-        updates.completionDate = new Date().toISOString();
-      }
-    } else if (updates.status && updates.status !== "review") {
-      // Clear completion date if status is changing away from "review"
-      const currentItem = contentItems.find(item => item.id === itemId);
-      if (currentItem && currentItem.status === "review") {
-        updates.completionDate = undefined;
-      }
-    }
-    
-    // Check if brief is being changed, and if so, reset status
-    if (updates.brief !== undefined) {
-      updates.status = "none";
-    }
-    
     setContentItems(prevItems =>
       prevItems.map(item =>
         item.id === itemId ? { ...item, ...updates } : item
-      )
-    );
-  };
-
-  // Reset revision counter for a specific item
-  const resetRevisionCounter = (itemId: string) => {
-    setContentItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId ? { ...item, revisionCount: 0 } : item
       )
     );
   };
@@ -239,7 +200,6 @@ export const useContentManagement = () => {
     contentPillars,
     addContentItem,
     updateContentItem,
-    resetRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
     selectAllItems,

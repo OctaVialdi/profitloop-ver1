@@ -1,7 +1,7 @@
 
 import React from "react";
+import { CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Trash2 } from "lucide-react";
 
 interface ContentHeaderProps {
@@ -16,21 +16,27 @@ export const ContentHeader: React.FC<ContentHeaderProps> = ({
   hasSelectedItems
 }) => {
   return (
-    <CardHeader className="py-3 flex flex-row items-center justify-between">
-      <CardTitle className="text-lg">Content Management</CardTitle>
-      <div className="flex space-x-2">
-        <Button 
-          variant="destructive" 
-          size="sm" 
-          onClick={handleDeleteSelected}
-          disabled={!hasSelectedItems}
-          className="text-sm"
+    <CardHeader className="flex-row justify-between items-center">
+      <h3 className="text-lg font-medium">Content Management</h3>
+      <div className="flex items-center space-x-2">
+        {hasSelectedItems && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteSelected}
+            className="flex items-center"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Selected
+          </Button>
+        )}
+        <Button
+          variant="default"
+          size="sm"
+          onClick={handleAddRow}
+          className="flex items-center"
         >
-          <Trash2 className="h-4 w-4 mr-1" />
-          Delete Selected
-        </Button>
-        <Button onClick={handleAddRow} size="sm" className="text-sm">
-          <PlusCircle className="h-4 w-4 mr-1" />
+          <PlusCircle className="h-4 w-4 mr-2" />
           Add Row
         </Button>
       </div>

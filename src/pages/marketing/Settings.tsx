@@ -39,6 +39,11 @@ interface SubService {
   name: string;
 }
 
+interface ContentPillar {
+  id: string;
+  name: string;
+}
+
 const Settings = () => {
   const navigate = useNavigate();
   const { employees, isLoading, deleteEmployee } = useEmployees();
@@ -78,6 +83,15 @@ const Settings = () => {
   ]);
   const [newSubService, setNewSubService] = useState("");
   const [selectedServiceForSubService, setSelectedServiceForSubService] = useState("");
+
+  // State for content pillars management
+  const [contentPillars, setContentPillars] = useState<ContentPillar[]>([
+    { id: "1", name: "Awareness" },
+    { id: "2", name: "Consideration" },
+    { id: "3", name: "Decision" },
+    { id: "4", name: "Loyalty" }
+  ]);
+  const [newContentPillar, setNewContentPillar] = useState("");
 
   useEffect(() => {
     // Filter employees by organization "Digital Marketing" when employees data changes
@@ -205,14 +219,44 @@ const Settings = () => {
     toast.success("Sub-service deleted");
   };
 
-  // Store content types, services, and sub-services in localStorage when they change
+  // Function to add a new content pillar
+  const handleAddContentPillar = () => {
+    if (newContentPillar.trim() === "") {
+      toast.error("Content pillar name cannot be empty");
+      return;
+    }
+    
+    // Check if content pillar already exists
+    if (contentPillars.some(pillar => pillar.name.toLowerCase() === newContentPillar.toLowerCase())) {
+      toast.error("This content pillar already exists");
+      return;
+    }
+    
+    const newPillar = {
+      id: `${Date.now()}`,
+      name: newContentPillar
+    };
+    
+    setContentPillars([...contentPillars, newPillar]);
+    setNewContentPillar("");
+    toast.success("Content pillar added");
+  };
+
+  // Function to delete a content pillar
+  const handleDeleteContentPillar = (id: string) => {
+    setContentPillars(contentPillars.filter(pillar => pillar.id !== id));
+    toast.success("Content pillar deleted");
+  };
+
+  // Store content types, services, sub-services, and content pillars in localStorage when they change
   useEffect(() => {
     localStorage.setItem("marketingContentTypes", JSON.stringify(contentTypes));
     localStorage.setItem("marketingServices", JSON.stringify(services));
     localStorage.setItem("marketingSubServices", JSON.stringify(subServices));
-  }, [contentTypes, services, subServices]);
+    localStorage.setItem("marketingContentPillars", JSON.stringify(contentPillars));
+  }, [contentTypes, services, subServices, contentPillars]);
 
-  // Load content types, services, and sub-services from localStorage on component mount
+  // Load content types, services, sub-services, and content pillars from localStorage on component mount
   useEffect(() => {
     const storedTypes = localStorage.getItem("marketingContentTypes");
     if (storedTypes) {
@@ -227,6 +271,11 @@ const Settings = () => {
     const storedSubServices = localStorage.getItem("marketingSubServices");
     if (storedSubServices) {
       setSubServices(JSON.parse(storedSubServices));
+    }
+
+    const storedContentPillars = localStorage.getItem("marketingContentPillars");
+    if (storedContentPillars) {
+      setContentPillars(JSON.parse(storedContentPillars));
     }
   }, []);
 
@@ -296,6 +345,7 @@ const Settings = () => {
             <TabsTrigger value="content-types">Content Types</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="sub-services">Sub Services</TabsTrigger>
+            <TabsTrigger value="content-pillars">Content Pillars</TabsTrigger>
           </TabsList>
           
           <TabsContent value="team-members">
@@ -590,6 +640,64 @@ const Settings = () => {
                       <tr>
                         <td colSpan={3} className="py-6 text-center text-muted-foreground">
                           No sub-services defined yet
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="content-pillars">
+            <div>
+              <h2 className="text-lg font-medium mb-4">Content Pillars</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add or remove content pillars that will be available in the content management table.
+              </p>
+              
+              <div className="flex gap-2 mb-6">
+                <Input 
+                  placeholder="New content pillar name" 
+                  value={newContentPillar} 
+                  onChange={(e) => setNewContentPillar(e.target.value)}
+                  className="max-w-sm"
+                />
+                <Button onClick={handleAddContentPillar} size="sm">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Content Pillar
+                </Button>
+              </div>
+              
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="py-3 px-4 text-left font-medium">Name</th>
+                      <th className="py-3 px-4 text-right font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contentPillars.length > 0 ? (
+                      contentPillars.map((pillar) => (
+                        <tr key={pillar.id} className="border-t hover:bg-muted/30">
+                          <td className="py-3 px-4">{pillar.name}</td>
+                          <td className="py-3 px-4 text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDeleteContentPillar(pillar.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={2} className="py-6 text-center text-muted-foreground">
+                          No content pillars defined yet
                         </td>
                       </tr>
                     )}

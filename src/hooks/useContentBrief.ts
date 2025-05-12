@@ -1,36 +1,55 @@
+import { useState, useCallback } from "react";
 
-import { useState } from "react";
-import { ContentItem } from "@/hooks/useContentManagement";
+interface UpdateContentItemFunction {
+  (itemId: string, updates: any): void;
+}
 
-export const useContentBrief = (updateContentItem: (itemId: string, updates: Partial<ContentItem>) => void) => {
+export const useContentBrief = (updateContentItem: UpdateContentItemFunction) => {
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
   const [currentBrief, setCurrentBrief] = useState("");
   const [currentItemId, setCurrentItemId] = useState("");
   const [briefDialogMode, setBriefDialogMode] = useState<"edit" | "view">("edit");
 
-  // Function to check and extract Google Docs link
+  // Extract Google Docs link if it exists in the brief
   const extractGoogleDocsLink = (text: string): string | null => {
-    const googleDocsRegex = /https:\/\/docs\.google\.com\/[^\s]+/g;
+    const googleDocsRegex = /(https:\/\/docs\.google\.com\/\S+)/i;
     const match = text.match(googleDocsRegex);
-    return match ? match[0] : null;
+    return match ? match[1] : null;
   };
 
-  // Function to display brief text with truncation
+  // Format brief text for display in the table cell
   const displayBrief = (brief: string): string => {
-    return brief.length > 25 ? brief.substring(0, 25) + "..." : brief;
+    // Check if there's a Google Docs link
+    const link = extractGoogleDocsLink(brief);
+    
+    // If there is a link, show "Google Doc" as the display text
+    if (link) {
+      return "Google Doc";
+    }
+    
+    // Otherwise, truncate the brief text if it's too long
+    if (brief.length > 20) {
+      return brief.substring(0, 20) + "...";
+    }
+    
+    return brief;
   };
 
-  const openBriefDialog = (itemId: string, brief: string, mode: "edit" | "view" = "edit") => {
+  // Open the brief dialog
+  const openBriefDialog = (itemId: string, brief: string, mode: "edit" | "view") => {
     setCurrentItemId(itemId);
     setCurrentBrief(brief);
     setBriefDialogMode(mode);
     setIsBriefDialogOpen(true);
   };
 
-  const saveBrief = () => {
-    updateContentItem(currentItemId, { brief: currentBrief });
-    setIsBriefDialogOpen(false);
-  };
+  // Save the brief
+  const saveBrief = useCallback(() => {
+    if (currentItemId) {
+      updateContentItem(currentItemId, { brief: currentBrief });
+      setIsBriefDialogOpen(false);
+    }
+  }, [currentItemId, currentBrief, updateContentItem]);
 
   return {
     isBriefDialogOpen,

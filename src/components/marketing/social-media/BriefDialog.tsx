@@ -1,13 +1,19 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ExternalLink } from "lucide-react";
 
 interface BriefDialogProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (isOpen: boolean) => void;
   currentBrief: string;
   setCurrentBrief: (brief: string) => void;
   mode: "edit" | "view";
@@ -24,60 +30,71 @@ export const BriefDialog: React.FC<BriefDialogProps> = ({
   mode,
   setMode,
   saveBrief,
-  extractGoogleDocsLink
+  extractGoogleDocsLink,
 }) => {
+  const isViewMode = mode === "view";
+  const googleDocsLink = extractGoogleDocsLink(currentBrief);
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === "edit" ? "Edit Brief" : "View Brief"}
+            {isViewMode ? "View Brief" : "Edit Brief"}
           </DialogTitle>
         </DialogHeader>
-        
-        <div className="py-4">
-          {mode === "edit" ? (
-            <Textarea 
-              value={currentBrief} 
-              onChange={(e) => setCurrentBrief(e.target.value)}
-              placeholder="Enter brief details here..."
-              className="min-h-[200px]"
-            />
-          ) : (
-            <div className="space-y-4">
-              <ScrollArea className="h-[200px] rounded-md border p-4">
-                <div className="whitespace-pre-wrap break-words">
-                  {currentBrief}
-                </div>
-              </ScrollArea>
-              
-              {extractGoogleDocsLink(currentBrief) && (
-                <div className="border rounded-md overflow-hidden mt-4">
-                  <iframe 
-                    src={`${extractGoogleDocsLink(currentBrief)}?embedded=true`}
-                    className="w-full h-[300px]"
-                    title="Google Doc"
-                  ></iframe>
+        <div className="grid gap-4 py-4">
+          {isViewMode ? (
+            <div className="whitespace-pre-wrap text-sm">
+              {currentBrief}
+              {googleDocsLink && (
+                <div className="mt-4 pt-4 border-t">
+                  <a
+                    href={googleDocsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-blue-600 hover:underline"
+                  >
+                    Open in Google Docs
+                    <ExternalLink className="ml-2 h-3 w-3" />
+                  </a>
                 </div>
               )}
             </div>
+          ) : (
+            <Textarea
+              value={currentBrief}
+              onChange={(e) => setCurrentBrief(e.target.value)}
+              placeholder="Enter the brief details for this content..."
+              rows={10}
+              className="resize-none"
+            />
           )}
         </div>
-        
         <DialogFooter>
-          {mode === "edit" ? (
-            <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button onClick={saveBrief}>Save Brief</Button>
-            </>
+          {isViewMode ? (
+            <Button
+              type="button"
+              onClick={() => setMode("edit")}
+            >
+              Edit Brief
+            </Button>
           ) : (
             <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Close
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="mr-2"
+              >
+                Cancel
               </Button>
-              <Button onClick={() => setMode("edit")}>Edit</Button>
+              <Button
+                type="button"
+                onClick={saveBrief}
+              >
+                Save Brief
+              </Button>
             </>
           )}
         </DialogFooter>

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, PlusCircle, Trash2, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw, Clock, Upload } from "lucide-react";
+import { CalendarIcon, PlusCircle, Trash2, ExternalLink, Edit, FileText, List, CircleDot } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, parseISO } from "date-fns";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
@@ -27,7 +27,6 @@ interface ContentTableProps {
   contentPlanners: any[];
   contentPillars: ContentPillar[];
   isCalendarOpen: { [key: string]: boolean };
-  isUserManager: boolean; 
   toggleCalendar: (itemId: string) => void;
   handleDateChange: (itemId: string, date: Date | undefined) => void;
   handleTypeChange: (itemId: string, typeId: string) => void;
@@ -37,7 +36,6 @@ interface ContentTableProps {
   handleTitleChange: (itemId: string, title: string) => void;
   handleContentPillarChange: (itemId: string, pillarId: string) => void;
   handleStatusChange: (itemId: string, status: string) => void;
-  handleApprovalChange: (itemId: string, isApproved: boolean) => void;
   toggleSelectItem: (itemId: string) => void;
   selectAll: boolean;
   handleSelectAll: (checked: boolean) => void;
@@ -45,7 +43,6 @@ interface ContentTableProps {
   getFilteredSubServicesByServiceId: (serviceId: string) => SubService[];
   extractGoogleDocsLink: (text: string) => string | null;
   displayBrief: (brief: string) => string;
-  resetRevisionCounter: (itemId: string) => void;
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -56,7 +53,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   contentPlanners,
   contentPillars,
   isCalendarOpen,
-  isUserManager,
   toggleCalendar,
   handleDateChange,
   handleTypeChange,
@@ -66,28 +62,14 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   handleTitleChange,
   handleContentPillarChange,
   handleStatusChange,
-  handleApprovalChange,
   toggleSelectItem,
   selectAll,
   handleSelectAll,
   openBriefDialog,
   getFilteredSubServicesByServiceId,
   extractGoogleDocsLink,
-  displayBrief,
-  resetRevisionCounter
+  displayBrief
 }) => {
-  // Function to format date for "Tanggal Selesai" column
-  const formatCompletionDate = (dateString: string | undefined): string => {
-    if (!dateString) return "-";
-    try {
-      const date = parseISO(dateString);
-      return format(date, "dd MMM yyyy - HH:mm");
-    } catch (error) {
-      console.error("Error formatting completion date:", error);
-      return "-";
-    }
-  };
-
   return (
     <div className="relative w-full overflow-hidden">
       <ScrollArea className="h-[calc(100vh-220px)] w-full">
@@ -111,10 +93,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                 <TableHead className="w-[150px] text-center">Content Pillar</TableHead>
                 <TableHead className="w-[180px] text-center">Brief</TableHead>
                 <TableHead className="w-[140px] text-center">Status</TableHead>
-                <TableHead className="w-[100px] text-center">Revision</TableHead>
-                <TableHead className="w-[100px] text-center">Approved</TableHead>
-                <TableHead className="w-[150px] text-center">Tanggal Selesai</TableHead>
-                <TableHead className="w-[150px] text-center">Tanggal Upload</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -318,57 +296,11 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="p-2">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium text-center w-full">
-                          {item.revisionCount || 0}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => resetRevisionCounter(item.id)}
-                          title="Reset revision counter"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="p-2 text-center">
-                      <Checkbox
-                        checked={item.isApproved}
-                        onCheckedChange={(checked) => 
-                          handleApprovalChange(item.id, checked === true)
-                        }
-                        disabled={!isUserManager}
-                        aria-label="Approve content"
-                        className="mx-auto"
-                      />
-                    </TableCell>
-
-                    <TableCell className="p-2">
-                      <div className="flex items-center">
-                        {item.status === "review" && (
-                          <>
-                            <Clock className="h-4 w-4 text-muted-foreground mr-2" />
-                            <span>{formatCompletionDate(item.completionDate)}</span>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="p-2">
-                      <div className="flex items-center">
-                        <Upload className="h-4 w-4 text-muted-foreground mr-2" />
-                        <span>{item.postDate || "-"}</span>
-                      </div>
-                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={14} className="h-24 text-center">
+                  <TableCell colSpan={10} className="h-24 text-center">
                     No content items. Click "Add Row" to create one.
                   </TableCell>
                 </TableRow>
@@ -381,4 +313,3 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     </div>
   );
 };
-

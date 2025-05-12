@@ -20,7 +20,6 @@ const CreateContent = () => {
     contentPillars,
     addContentItem,
     updateContentItem,
-    resetRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
     selectAllItems,
@@ -29,17 +28,6 @@ const CreateContent = () => {
 
   const [selectAll, setSelectAll] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState<{ [key: string]: boolean }>({});
-  
-  // Simulate a user role check - in a real app, this would come from authentication
-  const [isUserManager, setIsUserManager] = useState(true);
-  
-  // Simulate loading user role from localStorage
-  useEffect(() => {
-    // In a real application, you would get this from your auth system
-    // For now, we'll hardcode it to true for testing purposes
-    const savedUserRole = localStorage.getItem("userRole");
-    setIsUserManager(savedUserRole === "manager" || true); // Default to true for testing
-  }, []);
   
   const {
     isBriefDialogOpen,
@@ -111,22 +99,6 @@ const CreateContent = () => {
     updateContentItem(itemId, { status });
   };
 
-  // New handler for the Approved checkbox
-  const handleApprovalChange = (itemId: string, isApproved: boolean) => {
-    // Only managers can change approval status
-    if (isUserManager) {
-      updateContentItem(itemId, { isApproved });
-      
-      if (isApproved) {
-        toast.success("Content has been approved");
-      } else {
-        toast.info("Approval has been removed");
-      }
-    } else {
-      toast.error("Only managers can approve content");
-    }
-  };
-
   const handleDeleteSelected = () => {
     const selectedIds = contentItems
       .filter(item => item.isSelected)
@@ -174,7 +146,6 @@ const CreateContent = () => {
           contentPlanners={contentPlanners}
           contentPillars={contentPillars}
           isCalendarOpen={isCalendarOpen}
-          isUserManager={isUserManager}
           toggleCalendar={toggleCalendar}
           handleDateChange={handleDateChange}
           handleTypeChange={handleTypeChange}
@@ -184,7 +155,6 @@ const CreateContent = () => {
           handleTitleChange={handleTitleChange}
           handleContentPillarChange={handleContentPillarChange}
           handleStatusChange={handleStatusChange}
-          handleApprovalChange={handleApprovalChange}
           toggleSelectItem={toggleSelectItem}
           selectAll={selectAll}
           handleSelectAll={handleSelectAll}
@@ -192,7 +162,6 @@ const CreateContent = () => {
           getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
           extractGoogleDocsLink={extractGoogleDocsLink}
           displayBrief={displayBrief}
-          resetRevisionCounter={resetRevisionCounter}
         />
       </CardContent>
       
@@ -216,4 +185,3 @@ const CreateContent = () => {
 };
 
 export default CreateContent;
-
