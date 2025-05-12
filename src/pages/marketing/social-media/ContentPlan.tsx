@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select, 
@@ -133,8 +132,8 @@ const ContentPlan = () => {
         <div className="border rounded-md overflow-auto">
           {/* Main scroll container for vertical scrolling */}
           <ScrollArea className="h-[calc(100vh-230px)] overflow-x-auto">
-            {/* Container for horizontal scrolling with minimum width */}
-            <div className="min-w-[1500px]">
+            {/* Container for horizontal scrolling with minimum and maximum width */}
+            <div className="min-w-[1200px] max-w-[1300px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
@@ -146,10 +145,10 @@ const ContentPlan = () => {
                         className="ml-2"
                       />
                     </TableHead>
-                    <TableHead className="w-[150px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
-                    <TableHead className="w-[150px] text-center whitespace-nowrap">Tipe Content</TableHead>
-                    <TableHead className="w-[150px] text-center whitespace-nowrap">PIC</TableHead>
-                    <TableHead className="w-[150px] text-center whitespace-nowrap">Layanan</TableHead>
+                    <TableHead className="w-[300px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
+                    <TableHead className="w-[300px] text-center whitespace-nowrap">Tipe Content</TableHead>
+                    <TableHead className="w-[300px] text-center whitespace-nowrap">PIC</TableHead>
+                    <TableHead className="w-[300px] text-center whitespace-nowrap">Layanan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -269,12 +268,12 @@ const ContentPlan = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Input
+              <input
                 id="title"
                 value={currentTitle}
                 onChange={(e) => setCurrentTitle(e.target.value)}
                 placeholder="Enter complete title"
-                className="w-full"
+                className="w-full p-2 border rounded"
               />
             </div>
             <div className="flex justify-end">
