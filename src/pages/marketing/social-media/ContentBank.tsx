@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Eye, Edit, Trash2 } from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const mockData = [
   {
@@ -70,53 +71,65 @@ const ContentBank = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[300px]">Title</TableHead>
-              <TableHead>Platform</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Created Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockData.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.title}</TableCell>
-                <TableCell>{item.platform}</TableCell>
-                <TableCell>{item.type}</TableCell>
-                <TableCell>{item.createdDate}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={`
-                      ${item.status === "Published" ? "border-green-500 text-green-600 bg-green-50" : ""}
-                      ${item.status === "Draft" ? "border-gray-500 text-gray-600 bg-gray-50" : ""}
-                      ${item.status === "Scheduled" ? "border-blue-500 text-blue-600 bg-blue-50" : ""}
-                    `}
-                  >
-                    {item.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        {/* Fixed size ScrollArea with both vertical and horizontal scrolling */}
+        <div className="h-[400px] w-full border rounded-md">
+          <ScrollArea className="h-full w-full" type="always">
+            <div className="min-w-[1000px]">
+              <Table>
+                <TableHeader className="sticky top-0 bg-white z-10">
+                  <TableRow>
+                    <TableHead className="w-[50px]">Select</TableHead>
+                    <TableHead className="w-[200px]">Title</TableHead>
+                    <TableHead className="w-[120px] text-center">Platform</TableHead>
+                    <TableHead className="w-[120px] text-center">Type</TableHead>
+                    <TableHead className="w-[120px] text-center">Created Date</TableHead>
+                    <TableHead className="w-[120px] text-center">Status</TableHead>
+                    <TableHead className="w-[150px] text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockData.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="w-[50px]">
+                        <input type="checkbox" className="h-4 w-4" />
+                      </TableCell>
+                      <TableCell className="font-medium w-[200px]">{item.title}</TableCell>
+                      <TableCell className="w-[120px] text-center">{item.platform}</TableCell>
+                      <TableCell className="w-[120px] text-center">{item.type}</TableCell>
+                      <TableCell className="w-[120px] text-center">{item.createdDate}</TableCell>
+                      <TableCell className="w-[120px] text-center">
+                        <Badge
+                          variant="outline"
+                          className={`
+                            ${item.status === "Published" ? "border-green-500 text-green-600 bg-green-50" : ""}
+                            ${item.status === "Draft" ? "border-gray-500 text-gray-600 bg-gray-50" : ""}
+                            ${item.status === "Scheduled" ? "border-blue-500 text-blue-600 bg-blue-50" : ""}
+                          `}
+                        >
+                          {item.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="w-[150px] text-right">
+                        <div className="flex justify-end space-x-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
