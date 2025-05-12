@@ -12,7 +12,7 @@ export const ContentFooter: React.FC<ContentFooterProps> = ({
   selectedItemsCount
 }) => {
   return (
-    <CardFooter className="pt-2 flex justify-between border-t">
+    <CardFooter className="pt-2 flex justify-between">
       <div className="text-sm text-muted-foreground">
         {totalItems} item{totalItems !== 1 ? 's' : ''} 
         {selectedItemsCount > 0 && ` (${selectedItemsCount} selected)`}
