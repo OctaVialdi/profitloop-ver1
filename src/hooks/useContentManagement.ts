@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 
 export interface ContentType {
@@ -138,10 +139,11 @@ export const useContentManagement = () => {
 
   // Add a new content item
   const addContentItem = () => {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     const newItem: ContentItem = {
       id: `${Date.now()}`,
-      postDate: undefined,
-      contentType: "",
+      postDate: today,
+      contentType: contentTypes.length > 0 ? contentTypes[0].id : "",
       isSelected: false,
       pic: "",
       service: "",
@@ -159,33 +161,6 @@ export const useContentManagement = () => {
 
   // Update a content item
   const updateContentItem = (itemId: string, updates: Partial<ContentItem>) => {
-    // Increment revision count if changing status to "revisi"
-    if (updates.status === "revisi") {
-      const currentItem = contentItems.find(item => item.id === itemId);
-      if (currentItem && currentItem.status !== "revisi") {
-        updates.revisionCount = (currentItem.revisionCount || 0) + 1;
-      }
-    }
-    
-    // Set completion date if status is changing to "review" and there's no completion date yet
-    if (updates.status === "review") {
-      const currentItem = contentItems.find(item => item.id === itemId);
-      if (currentItem && !currentItem.completionDate) {
-        updates.completionDate = new Date().toISOString();
-      }
-    } else if (updates.status && updates.status !== "review") {
-      // Clear completion date if status is changing away from "review"
-      const currentItem = contentItems.find(item => item.id === itemId);
-      if (currentItem && currentItem.status === "review") {
-        updates.completionDate = undefined;
-      }
-    }
-    
-    // Check if brief is being changed, and if so, reset status
-    if (updates.brief !== undefined) {
-      updates.status = "none";
-    }
-    
     setContentItems(prevItems =>
       prevItems.map(item =>
         item.id === itemId ? { ...item, ...updates } : item
