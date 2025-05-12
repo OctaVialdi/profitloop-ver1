@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -129,11 +128,11 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-md overflow-auto">
+        <div className="border rounded-md overflow-hidden">
           {/* Main scroll container for vertical scrolling */}
-          <ScrollArea className="h-[calc(100vh-230px)] overflow-x-auto">
-            {/* Container for horizontal scrolling with minimum and maximum width */}
-            <div className="min-w-[1200px] max-w-[1300px]">
+          <ScrollArea className="h-[calc(100vh-230px)]">
+            {/* Container for horizontal scrolling with fixed column widths */}
+            <div className="min-w-[1200px] w-full" style={{ tableLayout: 'fixed' }}>
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
