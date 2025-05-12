@@ -17,8 +17,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, RefreshCcw } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ContentPlan = () => {
+  const isMobile = useIsMobile();
+  
   const { 
     contentTypes, 
     services, 
@@ -156,10 +159,26 @@ const ContentPlan = () => {
   const isGoogleDocsLink = (text: string) => {
     return text.includes("docs.google.com");
   };
+
+  // Get visible columns based on screen size
+  const getMobileColumns = () => {
+    if (isMobile) {
+      return [
+        { id: "postDate", name: "Tanggal" },
+        { id: "title", name: "Judul" },
+        { id: "brief", name: "Brief" },
+        { id: "status", name: "Status" }
+      ];
+    }
+    
+    return null; // Return null for desktop view (show all columns)
+  };
+  
+  const mobileColumns = getMobileColumns();
   
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle>Content Plan</CardTitle>
         <div className="flex gap-2">
           {isManager && selectedItems.length > 0 && (
@@ -171,22 +190,18 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Container with explicit width to enable horizontal scrolling */}
+        {/* Responsive container */}
         <div className="w-full">
-          {/* Border container */}
           <div className="rounded-md border">
-            {/* Relative container to handle sticky positioning */}
             <div className="relative">
-              {/* Vertical Scroll Container with fixed height */}
               <ScrollArea className="h-[calc(100vh-350px)]">
-                {/* Horizontal Scroll Container with minimum width to ensure horizontal scrolling */}
-                <div className="overflow-x-auto" style={{ minWidth: "100%" }}>
+                {isMobile ? (
+                  // Mobile view - simplified table with fewer columns
                   <Table>
-                    {/* Sticky header with high z-index */}
-                    <TableHeader className="sticky top-0 bg-white z-30">
+                    <TableHeader className="sticky top-0 bg-white z-10">
                       <TableRow>
                         {isManager && (
-                          <TableHead className="w-[50px] text-center sticky left-0 bg-white z-40">
+                          <TableHead className="w-[40px] text-center">
                             <input 
                               type="checkbox" 
                               checked={allSelected}
@@ -195,21 +210,125 @@ const ContentPlan = () => {
                             />
                           </TableHead>
                         )}
-                        <TableHead className="w-[120px] whitespace-nowrap">Tanggal Posting</TableHead>
-                        <TableHead className="w-[150px] whitespace-nowrap">Tipe Content</TableHead>
-                        <TableHead className="w-[120px] whitespace-nowrap">PIC</TableHead>
-                        <TableHead className="w-[150px] whitespace-nowrap">Layanan</TableHead>
-                        <TableHead className="w-[150px] whitespace-nowrap">Sub Layanan</TableHead>
-                        <TableHead className="w-[180px] whitespace-nowrap">Judul Content</TableHead>
-                        <TableHead className="w-[150px] whitespace-nowrap">Content Pillar</TableHead>
-                        <TableHead className="w-[150px] whitespace-nowrap sticky right-[550px] bg-white z-20">Brief</TableHead>
-                        {/* Columns after Brief will require horizontal scrolling to see */}
-                        <TableHead className="w-[150px] whitespace-nowrap">Status</TableHead>
-                        <TableHead className="w-[100px] whitespace-nowrap">Revision</TableHead>
-                        <TableHead className="w-[100px] whitespace-nowrap">Approved</TableHead>
-                        <TableHead className="w-[150px] whitespace-nowrap">Tanggal Selesai</TableHead>
-                        <TableHead className="w-[120px] whitespace-nowrap">Tanggal Upload</TableHead>
-                        <TableHead className="w-[150px] whitespace-nowrap">Tipe Content</TableHead>
+                        <TableHead>Tanggal</TableHead>
+                        <TableHead>Judul</TableHead>
+                        <TableHead>Brief</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {contentItems.length === 0 ? (
+                        <TableRow>
+                          <TableHead colSpan={isManager ? 5 : 4} className="text-center h-32 text-muted-foreground">
+                            No content items yet. Click "Add Row" to create one.
+                          </TableHead>
+                        </TableRow>
+                      ) : (
+                        contentItems.map((item) => (
+                          <TableRow key={item.id}>
+                            {isManager && (
+                              <TableHead className="text-center">
+                                <input 
+                                  type="checkbox" 
+                                  checked={!!item.isSelected}
+                                  onChange={() => toggleItemSelection(item.id)}
+                                  className="h-4 w-4 rounded border-gray-300"
+                                />
+                              </TableHead>
+                            )}
+                            <TableHead>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="w-full justify-start text-left font-normal text-xs"
+                                  >
+                                    <CalendarIcon className="mr-1 h-3 w-3" />
+                                    {item.postDate ? format(new Date(item.postDate), "dd MMM") : "Select"}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={item.postDate ? new Date(item.postDate) : undefined}
+                                    onSelect={(date) => updateContentItem(item.id, { postDate: date?.toISOString() })}
+                                    className="p-3 pointer-events-auto"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </TableHead>
+                            <TableHead>
+                              <Button 
+                                variant="ghost" 
+                                className="w-full text-left justify-start h-auto py-1 px-2 text-xs"
+                                onClick={() => openTitleDialog(item.id, item.title)}
+                              >
+                                <span className="truncate block">
+                                  {formatTitleText(item.title)}
+                                </span>
+                              </Button>
+                            </TableHead>
+                            <TableHead>
+                              <Button 
+                                variant="ghost" 
+                                className="w-full text-left justify-start h-auto py-1 px-2 text-xs"
+                                onClick={() => openBriefDialog(item.id, item.brief)}
+                              >
+                                <span className="truncate block">
+                                  {formatBriefText(item.brief)}
+                                </span>
+                              </Button>
+                            </TableHead>
+                            <TableHead>
+                              <Select
+                                value={item.status || "none"}
+                                onValueChange={(value) => updateContentItem(item.id, { status: value })}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="-" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">-</SelectItem>
+                                  <SelectItem value="review">Review</SelectItem>
+                                  <SelectItem value="revisi">Revisi</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableHead>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  // Desktop view - full table with all columns
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-white z-30">
+                      <TableRow>
+                        {isManager && (
+                          <TableHead className="w-[50px] text-center">
+                            <input 
+                              type="checkbox" 
+                              checked={allSelected}
+                              onChange={toggleSelectAll}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                          </TableHead>
+                        )}
+                        <TableHead className="w-[120px]">Tanggal Posting</TableHead>
+                        <TableHead className="w-[150px]">Tipe Content</TableHead>
+                        <TableHead className="w-[120px]">PIC</TableHead>
+                        <TableHead className="w-[150px]">Layanan</TableHead>
+                        <TableHead className="w-[150px]">Sub Layanan</TableHead>
+                        <TableHead className="w-[180px]">Judul Content</TableHead>
+                        <TableHead className="w-[150px]">Content Pillar</TableHead>
+                        <TableHead className="w-[150px]">Brief</TableHead>
+                        <TableHead className="w-[150px]">Status</TableHead>
+                        <TableHead className="w-[100px]">Revision</TableHead>
+                        <TableHead className="w-[100px]">Approved</TableHead>
+                        <TableHead className="w-[150px]">Tanggal Selesai</TableHead>
+                        <TableHead className="w-[120px]">Tanggal Upload</TableHead>
+                        <TableHead className="w-[150px]">Tipe Content</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -223,7 +342,7 @@ const ContentPlan = () => {
                         contentItems.map((item) => (
                           <TableRow key={item.id}>
                             {isManager && (
-                              <TableHead className="text-center sticky left-0 bg-white z-20">
+                              <TableHead className="text-center">
                                 <input 
                                   type="checkbox" 
                                   checked={!!item.isSelected}
@@ -232,7 +351,7 @@ const ContentPlan = () => {
                                 />
                               </TableHead>
                             )}
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button 
@@ -254,7 +373,7 @@ const ContentPlan = () => {
                                 </PopoverContent>
                               </Popover>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               <Select
                                 value={item.contentType || ""}
                                 onValueChange={(value) => updateContentItem(item.id, { contentType: value })}
@@ -270,7 +389,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               <Select
                                 value={item.pic || ""}
                                 onValueChange={(value) => updateContentItem(item.id, { pic: value })}
@@ -286,7 +405,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               <Select
                                 value={item.service || ""}
                                 onValueChange={(value) => {
@@ -305,7 +424,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               <Select
                                 value={item.subService || ""}
                                 onValueChange={(value) => updateContentItem(item.id, { subService: value })}
@@ -322,7 +441,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               <Button 
                                 variant="ghost" 
                                 className="w-full text-left justify-start h-auto py-1 px-2"
@@ -333,7 +452,7 @@ const ContentPlan = () => {
                                 </span>
                               </Button>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               <Select
                                 value={item.contentPillar || ""}
                                 onValueChange={(value) => updateContentItem(item.id, { contentPillar: value })}
@@ -349,7 +468,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap sticky right-[550px] bg-white z-20">
+                            <TableHead>
                               <Button 
                                 variant="ghost" 
                                 className="w-full text-left justify-start h-auto py-1 px-2"
@@ -360,7 +479,7 @@ const ContentPlan = () => {
                                 </span>
                               </Button>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               <Select
                                 value={item.status || "none"}
                                 onValueChange={(value) => updateContentItem(item.id, { status: value })}
@@ -375,7 +494,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead className="text-center whitespace-nowrap">
+                            <TableHead className="text-center">
                               <div className="flex items-center justify-center gap-2">
                                 <span>{item.revisionCount || 0}</span>
                                 <Button 
@@ -388,7 +507,7 @@ const ContentPlan = () => {
                                 </Button>
                               </div>
                             </TableHead>
-                            <TableHead className="text-center whitespace-nowrap">
+                            <TableHead className="text-center">
                               <input 
                                 type="checkbox" 
                                 checked={!!item.isApproved}
@@ -396,14 +515,14 @@ const ContentPlan = () => {
                                 className="h-4 w-4 rounded border-gray-300"
                               />
                             </TableHead>
-                            <TableHead className="text-center whitespace-nowrap">
+                            <TableHead className="text-center">
                               {item.status === "review" && item.completionDate && 
                                 format(new Date(item.completionDate), "dd MMM yyyy - HH:mm")}
                             </TableHead>
-                            <TableHead className="text-center whitespace-nowrap">
+                            <TableHead className="text-center">
                               {item.postDate && format(new Date(item.postDate), "dd MMM yyyy")}
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead>
                               {item.contentType && contentTypes.find(type => type.id === item.contentType)?.name}
                             </TableHead>
                           </TableRow>
@@ -411,7 +530,7 @@ const ContentPlan = () => {
                       )}
                     </TableBody>
                   </Table>
-                </div>
+                )}
               </ScrollArea>
             </div>
           </div>
@@ -420,7 +539,7 @@ const ContentPlan = () => {
       
       {/* Brief Dialog */}
       <Dialog open={briefOpen} onOpenChange={setBriefOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className={`${isMobile ? 'max-w-[95vw]' : 'sm:max-w-[500px]'}`}>
           <DialogHeader>
             <DialogTitle>Edit Brief</DialogTitle>
           </DialogHeader>
@@ -433,7 +552,7 @@ const ContentPlan = () => {
               className="resize-none"
             />
             {isGoogleDocsLink(briefContent) && (
-              <div className="border rounded-md p-4 h-80">
+              <div className={`border rounded-md p-4 ${isMobile ? 'h-60' : 'h-80'}`}>
                 <iframe 
                   src={briefContent.includes('?') ? `${briefContent}&embedded=true` : `${briefContent}?embedded=true`}
                   title="Google Doc Preview"
@@ -451,7 +570,7 @@ const ContentPlan = () => {
       
       {/* Title Dialog */}
       <Dialog open={titleOpen} onOpenChange={setTitleOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className={`${isMobile ? 'max-w-[95vw]' : 'sm:max-w-[500px]'}`}>
           <DialogHeader>
             <DialogTitle>Edit Title</DialogTitle>
           </DialogHeader>
