@@ -121,16 +121,6 @@ const ContentPlan = () => {
         console.error("Error parsing employees from localStorage:", e);
       }
     }
-
-    // Ensure we have some sample data
-    if (contentItems.length === 0) {
-      // Add sample data for testing horizontal scroll
-      setTimeout(() => {
-        for (let i = 0; i < 3; i++) {
-          addContentItem();
-        }
-      }, 500);
-    }
   }, []);
 
   // Handler to toggle calendar for date selection
@@ -293,37 +283,35 @@ const ContentPlan = () => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-0 relative">
-        <div className="w-full overflow-hidden">
-          <ContentTabsTable
-            contentItems={contentItems}
-            contentTypes={contentTypes}
-            services={services}
-            subServices={subServices}
-            contentPlanners={contentPlanners}
-            contentPillars={contentPillars}
-            isCalendarOpen={isCalendarOpen}
-            isUserManager={isUserManager}
-            toggleCalendar={toggleCalendar}
-            handleDateChange={handleDateChange}
-            handleTypeChange={handleTypeChange}
-            handlePICChange={handlePICChange}
-            handleServiceChange={handleServiceChange}
-            handleSubServiceChange={handleSubServiceChange}
-            handleTitleChange={handleTitleChange}
-            handleContentPillarChange={handleContentPillarChange}
-            handleStatusChange={handleStatusChange}
-            toggleSelectItem={handleToggleSelectItem}
-            selectAll={selectAll}
-            handleSelectAll={handleSelectAll}
-            openBriefDialog={openBriefDialog}
-            getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
-            extractGoogleDocsLink={extractGoogleDocsLink}
-            displayBrief={displayBrief}
-            resetRevisionCounter={resetRevisionCounter}
-            toggleApproved={toggleApproved}
-          />
-        </div>
+      <CardContent>
+        <ContentTabsTable
+          contentItems={contentItems}
+          contentTypes={contentTypes}
+          services={services}
+          subServices={subServices}
+          contentPlanners={contentPlanners}
+          contentPillars={contentPillars}
+          isCalendarOpen={isCalendarOpen}
+          isUserManager={isUserManager}
+          toggleCalendar={toggleCalendar}
+          handleDateChange={handleDateChange}
+          handleTypeChange={handleTypeChange}
+          handlePICChange={handlePICChange}
+          handleServiceChange={handleServiceChange}
+          handleSubServiceChange={handleSubServiceChange}
+          handleTitleChange={handleTitleChange}
+          handleContentPillarChange={handleContentPillarChange}
+          handleStatusChange={handleStatusChange}
+          toggleSelectItem={handleToggleSelectItem}
+          selectAll={selectAll}
+          handleSelectAll={handleSelectAll}
+          openBriefDialog={openBriefDialog}
+          getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
+          extractGoogleDocsLink={extractGoogleDocsLink}
+          displayBrief={displayBrief}
+          resetRevisionCounter={resetRevisionCounter}
+          toggleApproved={toggleApproved}
+        />
       </CardContent>
 
       {/* Brief Dialog */}

@@ -33,45 +33,17 @@ interface ContentTabsTableProps {
 }
 
 export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
-  // Define the fixed column (only the select column)
-  const fixedColumns = ["selectColumn"];
-  
-  // Define initially visible columns (up to brief, excluding status)
-  const initialVisibleColumns = ["postDate", "contentType", "pic", "service", "subService", "title", "contentPillar", "brief"];
-  
-  // Additional columns that require horizontal scrolling to view (starting with status)
-  const scrollableColumns = ["status", "revision", "approved", "completionDate", "mirrorPostDate", "mirrorContentType", "mirrorTitle"];
-  
-  // All columns combined
-  const allColumns = [...fixedColumns, ...initialVisibleColumns, ...scrollableColumns];
-
-  // Define fixed widths for each column type
-  const columnWidths = {
-    selectColumn: 50,
-    postDate: 180,
-    contentType: 150,
-    pic: 150,
-    service: 180,
-    subService: 180,
-    title: 200,
-    contentPillar: 150,
-    brief: 200,
-    status: 150,
-    revision: 120,
-    approved: 100,
-    completionDate: 180,
-    mirrorPostDate: 150,
-    mirrorContentType: 150,
-    mirrorTitle: 200
-  };
+  // Define all columns for the single table
+  const allColumns = [
+    "selectColumn", "postDate", "contentType", "pic", "service", "subService", "title", 
+    "contentPillar", "brief", "status", "revision", "approved", "completionDate", 
+    "mirrorPostDate", "mirrorContentType", "mirrorTitle"
+  ];
 
   return (
     <ContentTable
       {...props}
       visibleColumns={allColumns}
-      fixedColumnsCount={fixedColumns.length}
-      initialVisibleColumnsCount={fixedColumns.length + initialVisibleColumns.length}
-      columnWidths={columnWidths}
     />
   );
 };

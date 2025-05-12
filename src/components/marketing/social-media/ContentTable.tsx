@@ -3,6 +3,7 @@ import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -46,9 +47,6 @@ interface ContentTableProps {
   resetRevisionCounter: (itemId: string) => void;
   toggleApproved: (itemId: string, isApproved: boolean) => void;
   visibleColumns?: string[];
-  fixedColumnsCount?: number;
-  initialVisibleColumnsCount?: number;
-  columnWidths?: {[key: string]: number};
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -79,9 +77,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   resetRevisionCounter,
   toggleApproved,
   visibleColumns = [],
-  fixedColumnsCount = 1,
-  initialVisibleColumnsCount = 10,
-  columnWidths = {},
 }) => {
   // Format completion date for display
   const formatCompletionDate = (dateString: string | undefined) => {
@@ -95,424 +90,348 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     return visibleColumns.length === 0 || visibleColumns.includes(columnName);
   };
 
-  // Helper function to check if a column should be fixed
-  const isColumnFixed = (columnIndex: number) => {
-    return columnIndex < fixedColumnsCount;
-  };
-
-  // Helper function to check if a column is part of initially visible columns
-  const isInitiallyVisible = (columnIndex: number) => {
-    return columnIndex < initialVisibleColumnsCount;
-  };
-
-  // Get column width from columnWidths object or return default
-  const getColumnWidth = (columnName: string) => {
-    return columnWidths[columnName] || 150;
-  };
-
-  // Get visible column names
-  const getVisibleColumnNames = () => {
-    if (visibleColumns.length === 0) {
-      return [
-        "selectColumn", "postDate", "contentType", "pic", "service", "subService", "title", 
-        "contentPillar", "brief", "status", "revision", "approved", "completionDate", 
-        "mirrorPostDate", "mirrorContentType", "mirrorTitle"
-      ];
-    }
-    return visibleColumns;
-  };
-
-  const columnNames = getVisibleColumnNames();
-
-  // Calculate the total table width based on column widths
-  const totalTableWidth = columnNames.reduce((total, columnName) => {
-    return total + getColumnWidth(columnName);
-  }, 0);
-
   return (
-    <div className="w-full relative">
-      <div className="border border-slate-200 rounded-md overflow-hidden">
-        {/* Horizontal scrolling container with fixed width */}
-        <div className="overflow-x-auto" style={{ 
-          maxWidth: '100%', 
-          position: 'relative', 
-          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-        }}>
-          <div style={{ width: `${totalTableWidth}px`, minWidth: '100%' }}>
+    <div className="w-full">
+      <div className="relative">
+        <ScrollArea className="h-[calc(100vh-220px)]">
+          <div className="overflow-auto min-w-[1700px]">
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
-                  {columnNames.map((columnName, index) => {
-                    let content = null;
-                    const isFixed = isColumnFixed(index);
-                    const columnWidth = getColumnWidth(columnName);
-                    
-                    const cellClassName = `text-center font-medium whitespace-nowrap ${
-                      isFixed ? "sticky left-0 bg-slate-50 shadow-[1px_0_0_0_#e5e7eb] z-30" : ""
-                    }`;
-
-                    switch (columnName) {
-                      case "selectColumn":
-                        content = (
-                          <Checkbox 
-                            checked={selectAll} 
-                            onCheckedChange={handleSelectAll}
-                            aria-label="Select all"
-                            className="mt-1"
-                          />
-                        );
-                        break;
-                      case "postDate":
-                        content = "Tanggal Posting";
-                        break;
-                      case "contentType":
-                        content = "Tipe Content";
-                        break;
-                      case "pic":
-                        content = "PIC";
-                        break;
-                      case "service":
-                        content = "Layanan";
-                        break;
-                      case "subService":
-                        content = "Sub Layanan";
-                        break;
-                      case "title":
-                        content = "Judul Content";
-                        break;
-                      case "contentPillar":
-                        content = "Content Pillar";
-                        break;
-                      case "brief":
-                        content = "Brief";
-                        break;
-                      case "status":
-                        content = "Status";
-                        break;
-                      case "revision":
-                        content = "Revision";
-                        break;
-                      case "approved":
-                        content = "Approved";
-                        break;
-                      case "completionDate":
-                        content = "Tanggal Selesai";
-                        break;
-                      case "mirrorPostDate":
-                        content = "Tanggal Upload";
-                        break;
-                      case "mirrorContentType":
-                        content = "Tipe Content";
-                        break;
-                      case "mirrorTitle":
-                        content = "Judul Content";
-                        break;
-                      default:
-                        content = columnName;
-                    }
-
-                    return (
-                      <TableHead 
-                        key={columnName} 
-                        className={cellClassName}
-                        style={{
-                          position: isFixed ? 'sticky' : 'static',
-                          left: isFixed ? 0 : 'auto',
-                          width: `${columnWidth}px`,
-                          minWidth: `${columnWidth}px`,
-                          maxWidth: `${columnWidth}px`,
-                          backgroundColor: isFixed ? '#f8fafc' : '#f1f5f9',
-                          boxSizing: 'border-box'
-                        }}
-                      >
-                        {content}
-                      </TableHead>
-                    );
-                  })}
+                  {isColumnVisible("selectColumn") && (
+                    <TableHead className="w-[50px] text-center sticky left-0 bg-slate-50 z-30 border-r">
+                      <Checkbox 
+                        checked={selectAll} 
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Select all"
+                        className="mt-1"
+                      />
+                    </TableHead>
+                  )}
+                  {isColumnVisible("postDate") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Posting</TableHead>
+                  )}
+                  {isColumnVisible("contentType") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                  )}
+                  {isColumnVisible("pic") && (
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">PIC</TableHead>
+                  )}
+                  {isColumnVisible("service") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Layanan</TableHead>
+                  )}
+                  {isColumnVisible("subService") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Sub Layanan</TableHead>
+                  )}
+                  {isColumnVisible("title") && (
+                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                  )}
+                  {isColumnVisible("contentPillar") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
+                  )}
+                  {isColumnVisible("brief") && (
+                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Brief</TableHead>
+                  )}
+                  {isColumnVisible("status") && (
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Status</TableHead>
+                  )}
+                  {isColumnVisible("revision") && (
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Revision</TableHead>
+                  )}
+                  {isColumnVisible("approved") && (
+                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Approved</TableHead>
+                  )}
+                  {isColumnVisible("completionDate") && (
+                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Tanggal Selesai</TableHead>
+                  )}
+                  {isColumnVisible("mirrorPostDate") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Upload</TableHead>
+                  )}
+                  {isColumnVisible("mirrorContentType") && (
+                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                  )}
+                  {isColumnVisible("mirrorTitle") && (
+                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {contentItems.length > 0 ? (
                   contentItems.map(item => (
-                    <TableRow key={item.id} className="hover:bg-slate-50/60 relative">
-                      {columnNames.map((columnName, index) => {
-                        const isFixed = isColumnFixed(index);
-                        const columnWidth = getColumnWidth(columnName);
-                        const cellClassName = `p-2 whitespace-nowrap ${
-                          isFixed ? "sticky left-0 bg-white shadow-[1px_0_0_0_#e5e7eb] z-10" : ""
-                        }`;
-
-                        return (
-                          <TableCell 
-                            key={`${item.id}-${columnName}`} 
-                            className={cellClassName}
-                            style={{
-                              position: isFixed ? 'sticky' : 'static',
-                              left: isFixed ? 0 : 'auto',
-                              width: `${columnWidth}px`,
-                              minWidth: `${columnWidth}px`,
-                              maxWidth: `${columnWidth}px`,
-                              backgroundColor: isFixed ? 'white' : 'white',
-                              boxSizing: 'border-box',
-                              overflow: 'hidden'
-                            }}
+                    <TableRow key={item.id} className="hover:bg-slate-50/60">
+                      {isColumnVisible("selectColumn") && (
+                        <TableCell className="text-center sticky left-0 bg-white z-10 border-r">
+                          <Checkbox 
+                            checked={item.isSelected} 
+                            onCheckedChange={() => toggleSelectItem(item.id)}
+                            aria-label="Select row"
+                          />
+                        </TableCell>
+                      )}
+                      {isColumnVisible("postDate") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Popover 
+                            open={isCalendarOpen[item.id]} 
+                            onOpenChange={() => toggleCalendar(item.id)}
                           >
-                            {columnName === "selectColumn" && (
-                              <Checkbox 
-                                checked={item.isSelected} 
-                                onCheckedChange={() => toggleSelectItem(item.id)}
-                                aria-label="Select row"
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start text-left font-normal"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {item.postDate || 'Select date'}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={item.postDate ? new Date(item.postDate) : undefined}
+                                onSelect={(date) => handleDateChange(item.id, date)}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
                               />
-                            )}
-                            {columnName === "postDate" && (
-                              <Popover 
-                                open={isCalendarOpen[item.id]} 
-                                onOpenChange={() => toggleCalendar(item.id)}
-                              >
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className="w-full justify-start text-left font-normal truncate"
-                                    style={{ maxWidth: `${columnWidth - 10}px` }}
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-                                    <span className="truncate">{item.postDate || 'Select date'}</span>
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={item.postDate ? new Date(item.postDate) : undefined}
-                                    onSelect={(date) => handleDateChange(item.id, date)}
-                                    initialFocus
-                                    className="p-3 pointer-events-auto"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            )}
-                            {columnName === "contentType" && (
-                              <Select 
-                                value={item.contentType} 
-                                onValueChange={(value) => handleTypeChange(item.id, value)}
-                              >
-                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                  <SelectValue placeholder="Select content type" className="truncate" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {contentTypes.map((type) => (
-                                    <SelectItem key={type.id} value={type.id}>
-                                      {type.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                            {columnName === "pic" && (
-                              <Select 
-                                value={item.pic} 
-                                onValueChange={(value) => handlePICChange(item.id, value)}
-                              >
-                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                  <SelectValue placeholder="Select PIC" className="truncate" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {contentPlanners.length > 0 ? (
-                                    contentPlanners.map((planner) => (
-                                      <SelectItem key={planner.id} value={planner.name}>
-                                        {planner.name}
-                                      </SelectItem>
-                                    ))
-                                  ) : (
-                                    <SelectItem value="no-pic-found" disabled>
-                                      No content planners found
-                                    </SelectItem>
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            )}
-                            {columnName === "service" && (
-                              <Select 
-                                value={item.service} 
-                                onValueChange={(value) => handleServiceChange(item.id, value)}
-                              >
-                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                  <SelectValue placeholder="Select service" className="truncate" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {services.map((service) => (
-                                    <SelectItem key={service.id} value={service.id}>
-                                      {service.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                            {columnName === "subService" && (
-                              <Select 
-                                value={item.subService} 
-                                onValueChange={(value) => handleSubServiceChange(item.id, value)}
-                                disabled={!item.service}
-                              >
-                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                  <SelectValue placeholder="Select sub-service" className="truncate" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {item.service ? (
-                                    getFilteredSubServicesByServiceId(item.service).map((subService) => (
-                                      <SelectItem key={subService.id} value={subService.id}>
-                                        {subService.name}
-                                      </SelectItem>
-                                    ))
-                                  ) : (
-                                    <SelectItem value="select-service-first" disabled>
-                                      Select a service first
-                                    </SelectItem>
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            )}
-                            {columnName === "title" && (
-                              <div className="flex items-center" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
-                                <Input
-                                  value={item.title || ""}
-                                  onChange={(e) => handleTitleChange(item.id, e.target.value)}
-                                  placeholder="Enter title"
-                                  className="w-full bg-white"
-                                  maxLength={25}
-                                  style={{ maxWidth: `${columnWidth - 30}px` }}
-                                />
-                              </div>
-                            )}
-                            {columnName === "contentPillar" && (
-                              <Select 
-                                value={item.contentPillar} 
-                                onValueChange={(value) => handleContentPillarChange(item.id, value)}
-                              >
-                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                  <div className="flex items-center truncate">
-                                    <List className="h-4 w-4 mr-2 flex-shrink-0" />
-                                    <SelectValue placeholder="Select pillar" className="truncate" />
-                                  </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {contentPillars.map((pillar) => (
-                                    <SelectItem key={pillar.id} value={pillar.id}>
-                                      {pillar.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                            {columnName === "brief" && (
-                              item.brief ? (
-                                <div className="flex items-center space-x-2" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                  <Button 
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-left truncate bg-white"
-                                    onClick={() => openBriefDialog(item.id, item.brief!, "view")}
-                                    style={{ maxWidth: `${columnWidth - 40}px` }}
-                                  >
-                                    <span className="truncate">{displayBrief(item.brief)}</span>
-                                    {extractGoogleDocsLink(item.brief) && (
-                                      <ExternalLink className="ml-2 h-3 w-3 flex-shrink-0" />
-                                    )}
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 flex-shrink-0" 
-                                    onClick={() => openBriefDialog(item.id, item.brief!, "edit")}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                            </PopoverContent>
+                          </Popover>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("contentType") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.contentType} 
+                            onValueChange={(value) => handleTypeChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Select content type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {contentTypes.map((type) => (
+                                <SelectItem key={type.id} value={type.id}>
+                                  {type.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("pic") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.pic} 
+                            onValueChange={(value) => handlePICChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Select PIC" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {contentPlanners.length > 0 ? (
+                                contentPlanners.map((planner) => (
+                                  <SelectItem key={planner.id} value={planner.name}>
+                                    {planner.name}
+                                  </SelectItem>
+                                ))
                               ) : (
-                                <Button
-                                  variant="ghost"
-                                  className="w-full justify-center truncate"
-                                  onClick={() => openBriefDialog(item.id, "", "edit")}
-                                  style={{ maxWidth: `${columnWidth - 10}px` }}
-                                >
-                                  <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span className="truncate">Click to add brief</span>
-                                </Button>
-                              )
-                            )}
-                            {columnName === "status" && (
-                              <Select 
-                                value={item.status || "none"} 
-                                onValueChange={(value) => handleStatusChange(item.id, value)}
+                                <SelectItem value="no-pic-found" disabled>
+                                  No content planners found
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("service") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.service} 
+                            onValueChange={(value) => handleServiceChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Select service" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {services.map((service) => (
+                                <SelectItem key={service.id} value={service.id}>
+                                  {service.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("subService") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.subService} 
+                            onValueChange={(value) => handleSubServiceChange(item.id, value)}
+                            disabled={!item.service}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Select sub-service" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {item.service ? (
+                                getFilteredSubServicesByServiceId(item.service).map((subService) => (
+                                  <SelectItem key={subService.id} value={subService.id}>
+                                    {subService.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="select-service-first" disabled>
+                                  Select a service first
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("title") && (
+                        <TableCell className="p-2">
+                          <div className="flex items-center">
+                            <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
+                            <Input
+                              value={item.title || ""}
+                              onChange={(e) => handleTitleChange(item.id, e.target.value)}
+                              placeholder="Enter title"
+                              className="w-full bg-white"
+                              maxLength={25}
+                            />
+                          </div>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("contentPillar") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.contentPillar} 
+                            onValueChange={(value) => handleContentPillarChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <div className="flex items-center">
+                                <List className="h-4 w-4 mr-2" />
+                                <SelectValue placeholder="Select pillar" />
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {contentPillars.map((pillar) => (
+                                <SelectItem key={pillar.id} value={pillar.id}>
+                                  {pillar.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("brief") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          {item.brief ? (
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                variant="outline"
+                                size="sm"
+                                className="text-left truncate w-full bg-white"
+                                onClick={() => openBriefDialog(item.id, item.brief!, "view")}
                               >
-                                <SelectTrigger className="w-full bg-white" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                  <div className="flex items-center truncate">
-                                    <CircleDot className="h-4 w-4 mr-2 flex-shrink-0" />
-                                    <SelectValue placeholder="-" className="truncate" />
-                                  </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="none">-</SelectItem>
-                                  <SelectItem value="review">Butuh Di Review</SelectItem>
-                                  <SelectItem value="revisi">Request Revisi</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                            {columnName === "revision" && (
-                              <div className="flex items-center justify-between" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[30px]">
-                                  {item.revisionCount || 0}
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 flex-shrink-0"
-                                  onClick={() => resetRevisionCounter(item.id)}
-                                  title="Reset revision counter"
-                                >
-                                  <RefreshCw className="h-3.5 w-3.5" />
-                                </Button>
+                                {displayBrief(item.brief)}
+                                {extractGoogleDocsLink(item.brief) && (
+                                  <ExternalLink className="ml-2 h-3 w-3 inline" />
+                                )}
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8" 
+                                onClick={() => openBriefDialog(item.id, item.brief!, "edit")}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-center"
+                              onClick={() => openBriefDialog(item.id, "", "edit")}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              Click to add brief
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
+                      {isColumnVisible("status") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <Select 
+                            value={item.status || "none"} 
+                            onValueChange={(value) => handleStatusChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <div className="flex items-center">
+                                <CircleDot className="h-4 w-4 mr-2" />
+                                <SelectValue placeholder="-" />
                               </div>
-                            )}
-                            {columnName === "approved" && (
-                              <div className="flex justify-center" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                <Checkbox 
-                                  checked={item.isApproved} 
-                                  onCheckedChange={(checked) => toggleApproved(item.id, checked as boolean)}
-                                  aria-label="Approve content"
-                                />
-                              </div>
-                            )}
-                            {columnName === "completionDate" && (
-                              item.status === "review" && item.completionDate ? (
-                                <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md text-xs truncate" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                  {formatCompletionDate(item.completionDate)}
-                                </div>
-                              ) : null
-                            )}
-                            {columnName === "mirrorPostDate" && (
-                              <div className="text-center text-sm text-slate-600 truncate" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                {item.postDate || "-"}
-                              </div>
-                            )}
-                            {columnName === "mirrorContentType" && (
-                              <div className="text-center text-sm text-slate-600 truncate" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
-                              </div>
-                            )}
-                            {columnName === "mirrorTitle" && (
-                              <div className="text-center text-sm text-slate-600 truncate" style={{ maxWidth: `${columnWidth - 10}px` }}>
-                                {item.title || "-"}
-                              </div>
-                            )}
-                          </TableCell>
-                        );
-                      })}
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              <SelectItem value="review">Butuh Di Review</SelectItem>
+                              <SelectItem value="revisi">Request Revisi</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("revision") && (
+                        <TableCell className="p-2 whitespace-nowrap">
+                          <div className="flex items-center justify-between">
+                            <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[30px]">
+                              {item.revisionCount || 0}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => resetRevisionCounter(item.id)}
+                              title="Reset revision counter"
+                            >
+                              <RefreshCw className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                      {isColumnVisible("approved") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          <Checkbox 
+                            checked={item.isApproved} 
+                            onCheckedChange={(checked) => toggleApproved(item.id, checked as boolean)}
+                            aria-label="Approve content"
+                          />
+                        </TableCell>
+                      )}
+                      {isColumnVisible("completionDate") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {item.status === "review" && item.completionDate && (
+                            <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md">
+                              {formatCompletionDate(item.completionDate)}
+                            </div>
+                          )}
+                        </TableCell>
+                      )}
+                      {isColumnVisible("mirrorPostDate") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {item.postDate || "-"}
+                        </TableCell>
+                      )}
+                      {isColumnVisible("mirrorContentType") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
+                        </TableCell>
+                      )}
+                      {isColumnVisible("mirrorTitle") && (
+                        <TableCell className="p-2 text-center whitespace-nowrap">
+                          {item.title || "-"}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={columnNames.length} className="h-24 text-center">
+                    <TableCell colSpan={16} className="h-24 text-center">
                       No content items. Click "Add Row" to create one.
                     </TableCell>
                   </TableRow>
@@ -520,11 +439,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
               </TableBody>
             </Table>
           </div>
-        </div>
+        </ScrollArea>
       </div>
-      
-      {/* Visual indicator that more content is available horizontally */}
-      <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-slate-50 to-transparent" />
     </div>
   );
 };
