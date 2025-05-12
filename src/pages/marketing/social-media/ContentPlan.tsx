@@ -393,14 +393,14 @@ const ContentPlan = () => {
         <div className="border rounded-md overflow-hidden">
           {/* Vertical scroll container */}
           <ScrollArea className="h-[calc(100vh-230px)]">
-            {/* Horizontal scroll container - added overflow-x-auto to ensure horizontal scrolling */}
+            {/* Horizontal scroll container */}
             <div className="overflow-x-auto">
               {/* Fixed width container for the table */}
-              <div className="min-w-[1200px] max-w-[1300px] w-full">
+              <div className="w-[2800px]">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10">
-                    <TableRow className="bg-slate-50">
-                      <TableHead className="w-[60px] text-center sticky left-0 bg-slate-50 z-20">
+                  <TableHeader className="sticky top-0 bg-white z-20">
+                    <TableRow className="bg-slate-50 border-b border-slate-200">
+                      <TableHead className="w-[60px] text-center sticky left-0 bg-slate-50 z-30 border-r">
                         <Checkbox 
                           checked={selectAll} 
                           onCheckedChange={handleSelectAll}
@@ -408,48 +408,48 @@ const ContentPlan = () => {
                           className="ml-2"
                         />
                       </TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Tipe Content</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">PIC</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Layanan</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Sub Layanan</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Judul Content</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Content Pillar</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Brief</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Status</TableHead>
-                      <TableHead className="w-[80px] text-center whitespace-nowrap">Revision</TableHead>
-                      <TableHead className="w-[80px] text-center whitespace-nowrap">Approved</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Tanggal Selesai</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Tanggal Upload</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Tipe Content</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Judul Content</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">PIC Produksi</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Link Google Drive</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Status Produksi</TableHead>
-                      <TableHead className="w-[80px] text-center whitespace-nowrap">Revisi Counter</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Tanggal Selesai Produksi</TableHead>
-                      <TableHead className="w-[80px] text-center whitespace-nowrap">Approved</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Tanggal Approved</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Download Link File</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Link Post</TableHead>
-                      <TableHead className="w-[80px] text-center whitespace-nowrap">Done</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Actual Post</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">On Time Status</TableHead>
-                      <TableHead className="w-[120px] text-center whitespace-nowrap">Status Content</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Posting</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Tipe Content</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">PIC</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Layanan</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Sub Layanan</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Judul Content</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Content Pillar</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Brief</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Status</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Revision</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Approved</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Selesai</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Upload</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Tipe Content</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Judul Content</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">PIC Produksi</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Link Google Drive</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap border-r px-3 py-2">Status Produksi</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Revisi Counter</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Selesai Produksi</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Approved</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Tanggal Approved</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Download Link File</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Link Post</TableHead>
+                      <TableHead className="w-[100px] text-center whitespace-nowrap border-r px-3 py-2">Done</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">Actual Post</TableHead>
+                      <TableHead className="w-[150px] text-center whitespace-nowrap border-r px-3 py-2">On Time Status</TableHead>
+                      <TableHead className="w-[120px] text-center whitespace-nowrap px-3 py-2">Status Content</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {contentItems.length > 0 ? (
                       contentItems.map(item => (
-                        <TableRow key={item.id} className="hover:bg-slate-50/60">
-                          <TableCell className="text-center sticky left-0 bg-white z-10">
+                        <TableRow key={item.id} className="hover:bg-slate-50/60 border-b">
+                          <TableCell className="text-center sticky left-0 bg-white z-10 border-r">
                             <Checkbox 
                               checked={item.isSelected} 
                               onCheckedChange={() => toggleSelectItem(item.id)}
                               aria-label="Select row"
                             />
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Popover 
                               open={isCalendarOpen[`${item.id}-postDate`]} 
                               onOpenChange={() => toggleCalendar(item.id, 'postDate')}
@@ -474,7 +474,7 @@ const ContentPlan = () => {
                               </PopoverContent>
                             </Popover>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Select 
                               value={item.contentType} 
                               onValueChange={(value) => handleTypeChange(item.id, value)}
@@ -491,7 +491,7 @@ const ContentPlan = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Select 
                               value={item.pic} 
                               onValueChange={(value) => handlePICChange(item.id, value)}
@@ -514,7 +514,7 @@ const ContentPlan = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Select 
                               value={item.service} 
                               onValueChange={(value) => handleServiceChange(item.id, value)}
@@ -531,7 +531,7 @@ const ContentPlan = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Select 
                               value={item.subService} 
                               onValueChange={(value) => handleSubServiceChange(item.id, value)}
@@ -555,10 +555,10 @@ const ContentPlan = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left font-normal truncate"
+                              className="w-full justify-start text-left font-normal overflow-hidden text-ellipsis"
                               onClick={() => openTitleDialog(item.id, item.title)}
                             >
                               {item.title ? 
@@ -568,7 +568,7 @@ const ContentPlan = () => {
                                 'Click to add title'}
                             </Button>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Select 
                               value={item.contentPillar} 
                               onValueChange={(value) => handleContentPillarChange(item.id, value)}
@@ -585,7 +585,7 @@ const ContentPlan = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Button
                               variant="outline"
                               className="w-full justify-start text-left font-normal"
@@ -595,7 +595,7 @@ const ContentPlan = () => {
                               {item.brief ? displayBrief(item.brief) : 'Click to add brief'}
                             </Button>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Select 
                               value={item.status} 
                               onValueChange={(value) => handleStatusChange(item.id, value)}
@@ -610,7 +610,7 @@ const ContentPlan = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="p-2 text-center">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             <div className="flex items-center justify-center space-x-2">
                               <span>{item.revisionCount || 0}</span>
                               <Button
@@ -623,7 +623,7 @@ const ContentPlan = () => {
                               </Button>
                             </div>
                           </TableCell>
-                          <TableCell className="p-2 text-center">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             <Checkbox 
                               checked={item.isApproved}
                               onCheckedChange={(checked) => {
@@ -634,30 +634,32 @@ const ContentPlan = () => {
                               disabled={item.isApproved} // Once checked, it can't be unchecked
                             />
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             {item.status === "review" && item.completionDate ? (
                               <div className="text-center">
                                 {formatDisplayDate(item.completionDate)}
                               </div>
                             ) : null}
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             {/* Mirroring the postDate column */}
                             {item.postDate ? formatDisplayDate(item.postDate, false) : "-"}
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             {/* Mirroring the contentType column */}
                             {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             {/* Mirroring the title column */}
-                            {item.title ? 
-                              (item.title.length > 25 ? 
-                                `${item.title.substring(0, 25)}...` : 
-                                item.title) : 
-                              '-'}
+                            <div className="overflow-hidden text-ellipsis max-w-full">
+                              {item.title ? 
+                                (item.title.length > 25 ? 
+                                  `${item.title.substring(0, 25)}...` : 
+                                  item.title) : 
+                                '-'}
+                            </div>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Select 
                               value={item.picProduction} 
                               onValueChange={(value) => handlePICProductionChange(item.id, value)}
@@ -680,10 +682,10 @@ const ContentPlan = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left font-normal"
+                              className="w-full justify-start text-left font-normal overflow-hidden text-ellipsis"
                               onClick={() => openLinkDialog(item.id, "googleDrive", item.googleDriveLink)}
                             >
                               <Link className="mr-2 h-4 w-4" />
@@ -694,7 +696,7 @@ const ContentPlan = () => {
                                 'Add Google Drive link'}
                             </Button>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Select 
                               value={item.productionStatus} 
                               onValueChange={(value) => handleProductionStatusChange(item.id, value)}
@@ -709,7 +711,7 @@ const ContentPlan = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="p-2 text-center">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             <div className="flex items-center justify-center space-x-2">
                               <span>{item.productionRevisionCount || 0}</span>
                               <Button
@@ -722,14 +724,14 @@ const ContentPlan = () => {
                               </Button>
                             </div>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             {item.productionStatus === "review" && item.productionCompletionDate ? (
                               <div className="text-center">
                                 {formatDisplayDate(item.productionCompletionDate)}
                               </div>
                             ) : null}
                           </TableCell>
-                          <TableCell className="p-2 text-center">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             <Checkbox 
                               checked={item.productionApproved}
                               onCheckedChange={(checked) => {
@@ -737,14 +739,14 @@ const ContentPlan = () => {
                               }}
                             />
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             {item.productionApproved && item.productionApprovedDate ? (
                               <div className="text-center">
                                 {formatDisplayDate(item.productionApprovedDate)}
                               </div>
                             ) : null}
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             {item.productionApproved && item.googleDriveLink ? (
                               <Button
                                 variant="outline"
@@ -756,10 +758,10 @@ const ContentPlan = () => {
                               </Button>
                             ) : null}
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap border-r">
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left font-normal"
+                              className="w-full justify-start text-left font-normal overflow-hidden text-ellipsis"
                               onClick={() => openLinkDialog(item.id, "postLink", item.postLink)}
                             >
                               <ExternalLink className="mr-2 h-4 w-4" />
@@ -770,7 +772,7 @@ const ContentPlan = () => {
                                 'Add post link'}
                             </Button>
                           </TableCell>
-                          <TableCell className="p-2 text-center">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             <Checkbox 
                               checked={item.isDone}
                               onCheckedChange={(checked) => {
@@ -778,19 +780,19 @@ const ContentPlan = () => {
                               }}
                             />
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             {item.actualPostDate ? (
                               <div className="text-center">
                                 {formatDisplayDate(item.actualPostDate)}
                               </div>
                             ) : null}
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 text-center whitespace-nowrap border-r">
                             <div className={`text-center ${item.onTimeStatus?.startsWith('Late') ? 'text-red-500 font-medium' : 'text-green-500 font-medium'}`}>
                               {item.onTimeStatus || "-"}
                             </div>
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell className="p-2 whitespace-nowrap">
                             <Select 
                               value={item.contentStatus} 
                               onValueChange={(value) => handleContentStatusChange(item.id, value)}
