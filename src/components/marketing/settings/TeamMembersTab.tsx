@@ -3,13 +3,16 @@ import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useContentManagement } from "@/hooks/useContentManagement";
-import { useEmployees } from "@/hooks/useEmployees";
+import { useEmployees, convertToLegacyFormat } from "@/hooks/useEmployees";
 
 const TeamMembersTab = () => {
   const { employees } = useEmployees();
   
+  // Convert employees to legacy format and filter for Digital Marketing employees
+  const legacyEmployees = employees.map(convertToLegacyFormat);
+  
   // Filter for Digital Marketing employees, especially Content Planners
-  const marketingEmployees = employees.filter(
+  const marketingEmployees = legacyEmployees.filter(
     emp => emp.organization === "Digital Marketing"
   );
   
@@ -42,7 +45,7 @@ const TeamMembersTab = () => {
               marketingEmployees.map((employee) => (
                 <TableRow key={employee.id}>
                   <TableCell className="font-medium">
-                    {employee.fullName || `${employee.firstName} ${employee.lastName}`.trim()}
+                    {employee.name}
                   </TableCell>
                   <TableCell>{employee.email}</TableCell>
                   <TableCell>{employee.jobPosition || "Not specified"}</TableCell>
@@ -85,7 +88,7 @@ const TeamMembersTab = () => {
                 contentPlanners.map((planner) => (
                   <TableRow key={planner.id}>
                     <TableCell className="font-medium">
-                      {planner.fullName || `${planner.firstName} ${planner.lastName}`.trim()}
+                      {planner.name}
                     </TableCell>
                     <TableCell>{planner.email}</TableCell>
                   </TableRow>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useEmployees, LegacyEmployee, convertToLegacyFormat } from "@/hooks/useEmployees";
 
@@ -136,7 +135,7 @@ export const useContentManagement = () => {
         .filter(emp => emp.jobPosition === "Content Planner" && emp.organization === "Digital Marketing")
         .map(emp => ({
           id: emp.id,
-          name: emp.fullName || `${emp.firstName} ${emp.lastName}`.trim(),
+          name: emp.name,
           email: emp.email || ""
         }));
       
