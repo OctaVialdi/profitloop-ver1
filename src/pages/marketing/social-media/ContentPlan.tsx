@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -170,16 +171,16 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Fixed width container - limit width to create horizontal scroll */}
+        {/* Container with explicit width to enable horizontal scrolling */}
         <div className="w-full">
-          {/* Main scrollable container with borders */}
-          <div className="rounded-md border overflow-hidden">
+          {/* Border container */}
+          <div className="rounded-md border">
             {/* Relative container to handle sticky positioning */}
             <div className="relative">
-              {/* Vertical Scroll Container */}
+              {/* Vertical Scroll Container with fixed height */}
               <ScrollArea className="h-[calc(100vh-350px)]">
-                {/* Horizontal Scroll Container - force fixed width to ensure horizontal scrolling */}
-                <div className="overflow-x-auto" style={{ width: "100%", minWidth: "100%" }}>
+                {/* Horizontal Scroll Container with minimum width to ensure horizontal scrolling */}
+                <div className="overflow-x-auto" style={{ minWidth: "100%" }}>
                   <Table>
                     {/* Sticky header with high z-index */}
                     <TableHeader className="sticky top-0 bg-white z-30">
@@ -201,7 +202,7 @@ const ContentPlan = () => {
                         <TableHead className="w-[150px] whitespace-nowrap">Sub Layanan</TableHead>
                         <TableHead className="w-[180px] whitespace-nowrap">Judul Content</TableHead>
                         <TableHead className="w-[150px] whitespace-nowrap">Content Pillar</TableHead>
-                        <TableHead className="w-[150px] whitespace-nowrap">Brief</TableHead>
+                        <TableHead className="w-[150px] whitespace-nowrap sticky right-[550px] bg-white z-20">Brief</TableHead>
                         {/* Columns after Brief will require horizontal scrolling to see */}
                         <TableHead className="w-[150px] whitespace-nowrap">Status</TableHead>
                         <TableHead className="w-[100px] whitespace-nowrap">Revision</TableHead>
@@ -348,7 +349,7 @@ const ContentPlan = () => {
                                 </SelectContent>
                               </Select>
                             </TableHead>
-                            <TableHead className="whitespace-nowrap">
+                            <TableHead className="whitespace-nowrap sticky right-[550px] bg-white z-20">
                               <Button 
                                 variant="ghost" 
                                 className="w-full text-left justify-start h-auto py-1 px-2"
