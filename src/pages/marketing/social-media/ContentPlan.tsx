@@ -43,8 +43,8 @@ const ContentPlan = () => {
   useEffect(() => {
     const currentUser = employees.find(emp => {
       const legacyEmp = convertToLegacyFormat(emp);
-      return legacyEmp.organization_name === "Digital Marketing" && 
-             legacyEmp.job_position?.toLowerCase().includes("manager");
+      return legacyEmp.organization === "Digital Marketing" && 
+             legacyEmp.jobPosition?.toLowerCase().includes("manager");
     });
     
     setIsManager(!!currentUser);
@@ -242,6 +242,7 @@ const ContentPlan = () => {
                                     mode="single"
                                     selected={item.postDate ? new Date(item.postDate) : undefined}
                                     onSelect={(date) => updateContentItem(item.id, { postDate: date?.toISOString() })}
+                                    className="p-3 pointer-events-auto"
                                   />
                                 </PopoverContent>
                               </Popover>
