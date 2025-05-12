@@ -40,10 +40,31 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
     "mirrorPostDate", "mirrorContentType", "mirrorTitle"
   ];
 
+  // Define fixed widths for all columns
+  const columnWidths = {
+    selectColumn: 50,
+    postDate: 120,
+    contentType: 120,
+    pic: 100,
+    service: 120,
+    subService: 120,
+    title: 180,
+    contentPillar: 120,
+    brief: 180,
+    status: 100,
+    revision: 100,
+    approved: 100,
+    completionDate: 150,
+    mirrorPostDate: 120,
+    mirrorContentType: 120,
+    mirrorTitle: 180
+  };
+
   return (
     <ContentTable
       {...props}
       visibleColumns={allColumns}
+      columnWidths={columnWidths}
     />
   );
 };

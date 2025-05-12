@@ -47,6 +47,7 @@ interface ContentTableProps {
   resetRevisionCounter: (itemId: string) => void;
   toggleApproved: (itemId: string, isApproved: boolean) => void;
   visibleColumns?: string[];
+  columnWidths?: {[key: string]: number};
 }
 
 export const ContentTable: React.FC<ContentTableProps> = ({
@@ -77,6 +78,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
   resetRevisionCounter,
   toggleApproved,
   visibleColumns = [],
+  columnWidths = {}
 }) => {
   // Format completion date for display
   const formatCompletionDate = (dateString: string | undefined) => {
@@ -90,16 +92,33 @@ export const ContentTable: React.FC<ContentTableProps> = ({
     return visibleColumns.length === 0 || visibleColumns.includes(columnName);
   };
 
+  // Get column width or default
+  const getColumnWidth = (columnName: string) => {
+    return columnWidths[columnName] || 100; // Default width if not specified
+  };
+
+  // Calculate total table width based on visible columns
+  const calculateTableWidth = () => {
+    return visibleColumns.reduce((total, column) => {
+      return total + getColumnWidth(column);
+    }, 0);
+  };
+
+  const tableWidth = calculateTableWidth();
+
   return (
-    <div className="w-full">
+    <div className="w-full overflow-hidden">
       <div className="relative">
         <ScrollArea className="h-[calc(100vh-220px)]">
-          <div className="overflow-auto min-w-[1700px]">
+          <div className="overflow-x-auto" style={{ minWidth: "100%", width: `${tableWidth}px` }}>
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
                   {isColumnVisible("selectColumn") && (
-                    <TableHead className="w-[50px] text-center sticky left-0 bg-slate-50 z-30 border-r">
+                    <TableHead 
+                      className="text-center sticky left-0 bg-slate-50 z-30 border-r" 
+                      style={{ width: `${getColumnWidth("selectColumn")}px`, minWidth: `${getColumnWidth("selectColumn")}px` }}
+                    >
                       <Checkbox 
                         checked={selectAll} 
                         onCheckedChange={handleSelectAll}
@@ -109,49 +128,124 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                     </TableHead>
                   )}
                   {isColumnVisible("postDate") && (
-                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Posting</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("postDate")}px`, minWidth: `${getColumnWidth("postDate")}px` }}
+                    >
+                      Tanggal Posting
+                    </TableHead>
                   )}
                   {isColumnVisible("contentType") && (
-                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("contentType")}px`, minWidth: `${getColumnWidth("contentType")}px` }}
+                    >
+                      Tipe Content
+                    </TableHead>
                   )}
                   {isColumnVisible("pic") && (
-                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">PIC</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("pic")}px`, minWidth: `${getColumnWidth("pic")}px` }}
+                    >
+                      PIC
+                    </TableHead>
                   )}
                   {isColumnVisible("service") && (
-                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Layanan</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("service")}px`, minWidth: `${getColumnWidth("service")}px` }}
+                    >
+                      Layanan
+                    </TableHead>
                   )}
                   {isColumnVisible("subService") && (
-                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Sub Layanan</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("subService")}px`, minWidth: `${getColumnWidth("subService")}px` }}
+                    >
+                      Sub Layanan
+                    </TableHead>
                   )}
                   {isColumnVisible("title") && (
-                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("title")}px`, minWidth: `${getColumnWidth("title")}px` }}
+                    >
+                      Judul Content
+                    </TableHead>
                   )}
                   {isColumnVisible("contentPillar") && (
-                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("contentPillar")}px`, minWidth: `${getColumnWidth("contentPillar")}px` }}
+                    >
+                      Content Pillar
+                    </TableHead>
                   )}
                   {isColumnVisible("brief") && (
-                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Brief</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("brief")}px`, minWidth: `${getColumnWidth("brief")}px` }}
+                    >
+                      Brief
+                    </TableHead>
                   )}
                   {isColumnVisible("status") && (
-                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Status</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("status")}px`, minWidth: `${getColumnWidth("status")}px` }}
+                    >
+                      Status
+                    </TableHead>
                   )}
                   {isColumnVisible("revision") && (
-                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Revision</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("revision")}px`, minWidth: `${getColumnWidth("revision")}px` }}
+                    >
+                      Revision
+                    </TableHead>
                   )}
                   {isColumnVisible("approved") && (
-                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Approved</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("approved")}px`, minWidth: `${getColumnWidth("approved")}px` }}
+                    >
+                      Approved
+                    </TableHead>
                   )}
                   {isColumnVisible("completionDate") && (
-                    <TableHead className="w-[150px] text-center font-medium whitespace-nowrap">Tanggal Selesai</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("completionDate")}px`, minWidth: `${getColumnWidth("completionDate")}px` }}
+                    >
+                      Tanggal Selesai
+                    </TableHead>
                   )}
                   {isColumnVisible("mirrorPostDate") && (
-                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tanggal Upload</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("mirrorPostDate")}px`, minWidth: `${getColumnWidth("mirrorPostDate")}px` }}
+                    >
+                      Tanggal Upload
+                    </TableHead>
                   )}
                   {isColumnVisible("mirrorContentType") && (
-                    <TableHead className="w-[120px] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("mirrorContentType")}px`, minWidth: `${getColumnWidth("mirrorContentType")}px` }}
+                    >
+                      Tipe Content
+                    </TableHead>
                   )}
                   {isColumnVisible("mirrorTitle") && (
-                    <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                    <TableHead 
+                      className="text-center font-medium whitespace-nowrap"
+                      style={{ width: `${getColumnWidth("mirrorTitle")}px`, minWidth: `${getColumnWidth("mirrorTitle")}px` }}
+                    >
+                      Judul Content
+                    </TableHead>
                   )}
                 </TableRow>
               </TableHeader>
@@ -160,7 +254,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                   contentItems.map(item => (
                     <TableRow key={item.id} className="hover:bg-slate-50/60">
                       {isColumnVisible("selectColumn") && (
-                        <TableCell className="text-center sticky left-0 bg-white z-10 border-r">
+                        <TableCell 
+                          className="text-center sticky left-0 bg-white z-10 border-r"
+                          style={{ width: `${getColumnWidth("selectColumn")}px`, minWidth: `${getColumnWidth("selectColumn")}px` }}
+                        >
                           <Checkbox 
                             checked={item.isSelected} 
                             onCheckedChange={() => toggleSelectItem(item.id)}
@@ -169,7 +266,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("postDate") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("postDate")}px`, minWidth: `${getColumnWidth("postDate")}px` }}
+                        >
                           <Popover 
                             open={isCalendarOpen[item.id]} 
                             onOpenChange={() => toggleCalendar(item.id)}
@@ -178,9 +278,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <Button
                                 variant="outline"
                                 className="w-full justify-start text-left font-normal"
+                                style={{ maxWidth: `${getColumnWidth("postDate") - 10}px` }}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {item.postDate || 'Select date'}
+                                <span className="truncate">{item.postDate || 'Select date'}</span>
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
@@ -196,12 +297,18 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("contentType") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("contentType")}px`, minWidth: `${getColumnWidth("contentType")}px` }}
+                        >
                           <Select 
                             value={item.contentType} 
                             onValueChange={(value) => handleTypeChange(item.id, value)}
                           >
-                            <SelectTrigger className="w-full bg-white">
+                            <SelectTrigger 
+                              className="w-full bg-white"
+                              style={{ maxWidth: `${getColumnWidth("contentType") - 10}px` }}
+                            >
                               <SelectValue placeholder="Select content type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -215,12 +322,18 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("pic") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("pic")}px`, minWidth: `${getColumnWidth("pic")}px` }}
+                        >
                           <Select 
                             value={item.pic} 
                             onValueChange={(value) => handlePICChange(item.id, value)}
                           >
-                            <SelectTrigger className="w-full bg-white">
+                            <SelectTrigger 
+                              className="w-full bg-white"
+                              style={{ maxWidth: `${getColumnWidth("pic") - 10}px` }}
+                            >
                               <SelectValue placeholder="Select PIC" />
                             </SelectTrigger>
                             <SelectContent>
@@ -240,12 +353,18 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("service") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("service")}px`, minWidth: `${getColumnWidth("service")}px` }}
+                        >
                           <Select 
                             value={item.service} 
                             onValueChange={(value) => handleServiceChange(item.id, value)}
                           >
-                            <SelectTrigger className="w-full bg-white">
+                            <SelectTrigger 
+                              className="w-full bg-white"
+                              style={{ maxWidth: `${getColumnWidth("service") - 10}px` }}
+                            >
                               <SelectValue placeholder="Select service" />
                             </SelectTrigger>
                             <SelectContent>
@@ -259,13 +378,19 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("subService") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("subService")}px`, minWidth: `${getColumnWidth("subService")}px` }}
+                        >
                           <Select 
                             value={item.subService} 
                             onValueChange={(value) => handleSubServiceChange(item.id, value)}
                             disabled={!item.service}
                           >
-                            <SelectTrigger className="w-full bg-white">
+                            <SelectTrigger 
+                              className="w-full bg-white"
+                              style={{ maxWidth: `${getColumnWidth("subService") - 10}px` }}
+                            >
                               <SelectValue placeholder="Select sub-service" />
                             </SelectTrigger>
                             <SelectContent>
@@ -285,7 +410,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("title") && (
-                        <TableCell className="p-2">
+                        <TableCell 
+                          className="p-2"
+                          style={{ width: `${getColumnWidth("title")}px`, minWidth: `${getColumnWidth("title")}px` }}
+                        >
                           <div className="flex items-center">
                             <FileText className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
                             <Input
@@ -293,18 +421,25 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               onChange={(e) => handleTitleChange(item.id, e.target.value)}
                               placeholder="Enter title"
                               className="w-full bg-white"
+                              style={{ maxWidth: `${getColumnWidth("title") - 30}px` }}
                               maxLength={25}
                             />
                           </div>
                         </TableCell>
                       )}
                       {isColumnVisible("contentPillar") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("contentPillar")}px`, minWidth: `${getColumnWidth("contentPillar")}px` }}
+                        >
                           <Select 
                             value={item.contentPillar} 
                             onValueChange={(value) => handleContentPillarChange(item.id, value)}
                           >
-                            <SelectTrigger className="w-full bg-white">
+                            <SelectTrigger 
+                              className="w-full bg-white"
+                              style={{ maxWidth: `${getColumnWidth("contentPillar") - 10}px` }}
+                            >
                               <div className="flex items-center">
                                 <List className="h-4 w-4 mr-2" />
                                 <SelectValue placeholder="Select pillar" />
@@ -321,24 +456,28 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("brief") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("brief")}px`, minWidth: `${getColumnWidth("brief")}px` }}
+                        >
                           {item.brief ? (
                             <div className="flex items-center space-x-2">
                               <Button 
                                 variant="outline"
                                 size="sm"
-                                className="text-left truncate w-full bg-white"
+                                className="text-left truncate bg-white"
+                                style={{ maxWidth: `${getColumnWidth("brief") - 40}px` }}
                                 onClick={() => openBriefDialog(item.id, item.brief!, "view")}
                               >
-                                {displayBrief(item.brief)}
+                                <span className="truncate">{displayBrief(item.brief)}</span>
                                 {extractGoogleDocsLink(item.brief) && (
-                                  <ExternalLink className="ml-2 h-3 w-3 inline" />
+                                  <ExternalLink className="ml-2 h-3 w-3 inline flex-shrink-0" />
                                 )}
                               </Button>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8" 
+                                className="h-8 w-8 flex-shrink-0" 
                                 onClick={() => openBriefDialog(item.id, item.brief!, "edit")}
                               >
                                 <Edit className="h-4 w-4" />
@@ -348,21 +487,28 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                             <Button
                               variant="ghost"
                               className="w-full justify-center"
+                              style={{ maxWidth: `${getColumnWidth("brief") - 10}px` }}
                               onClick={() => openBriefDialog(item.id, "", "edit")}
                             >
                               <FileText className="h-4 w-4 mr-2" />
-                              Click to add brief
+                              <span className="truncate">Click to add brief</span>
                             </Button>
                           )}
                         </TableCell>
                       )}
                       {isColumnVisible("status") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("status")}px`, minWidth: `${getColumnWidth("status")}px` }}
+                        >
                           <Select 
                             value={item.status || "none"} 
                             onValueChange={(value) => handleStatusChange(item.id, value)}
                           >
-                            <SelectTrigger className="w-full bg-white">
+                            <SelectTrigger 
+                              className="w-full bg-white"
+                              style={{ maxWidth: `${getColumnWidth("status") - 10}px` }}
+                            >
                               <div className="flex items-center">
                                 <CircleDot className="h-4 w-4 mr-2" />
                                 <SelectValue placeholder="-" />
@@ -377,7 +523,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("revision") && (
-                        <TableCell className="p-2 whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("revision")}px`, minWidth: `${getColumnWidth("revision")}px` }}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[30px]">
                               {item.revisionCount || 0}
@@ -395,7 +544,10 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("approved") && (
-                        <TableCell className="p-2 text-center whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 text-center whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("approved")}px`, minWidth: `${getColumnWidth("approved")}px` }}
+                        >
                           <Checkbox 
                             checked={item.isApproved} 
                             onCheckedChange={(checked) => toggleApproved(item.id, checked as boolean)}
@@ -404,26 +556,38 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         </TableCell>
                       )}
                       {isColumnVisible("completionDate") && (
-                        <TableCell className="p-2 text-center whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 text-center whitespace-nowrap"
+                          style={{ width: `${getColumnWidth("completionDate")}px`, minWidth: `${getColumnWidth("completionDate")}px` }}
+                        >
                           {item.status === "review" && item.completionDate && (
-                            <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md">
+                            <div className="bg-green-50 text-green-700 px-3 py-1 rounded-md truncate">
                               {formatCompletionDate(item.completionDate)}
                             </div>
                           )}
                         </TableCell>
                       )}
                       {isColumnVisible("mirrorPostDate") && (
-                        <TableCell className="p-2 text-center whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 text-center whitespace-nowrap truncate"
+                          style={{ width: `${getColumnWidth("mirrorPostDate")}px`, minWidth: `${getColumnWidth("mirrorPostDate")}px` }}
+                        >
                           {item.postDate || "-"}
                         </TableCell>
                       )}
                       {isColumnVisible("mirrorContentType") && (
-                        <TableCell className="p-2 text-center whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 text-center whitespace-nowrap truncate"
+                          style={{ width: `${getColumnWidth("mirrorContentType")}px`, minWidth: `${getColumnWidth("mirrorContentType")}px` }}
+                        >
                           {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
                         </TableCell>
                       )}
                       {isColumnVisible("mirrorTitle") && (
-                        <TableCell className="p-2 text-center whitespace-nowrap">
+                        <TableCell 
+                          className="p-2 text-center whitespace-nowrap truncate"
+                          style={{ width: `${getColumnWidth("mirrorTitle")}px`, minWidth: `${getColumnWidth("mirrorTitle")}px` }}
+                        >
                           {item.title || "-"}
                         </TableCell>
                       )}
