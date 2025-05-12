@@ -32,7 +32,7 @@ export interface ContentItem {
   subService: string;
   title: string;
   contentPillar: string;
-  brief: string;  // Added brief field
+  brief: string;
   status: string;
   revisionCount: number;
   isApproved: boolean;
@@ -150,7 +150,7 @@ export const useContentManagement = () => {
       subService: "",
       title: "",
       contentPillar: "",
-      brief: "", // Initialize brief as empty string
+      brief: "",
       status: "none",
       revisionCount: 0,
       isApproved: false,
