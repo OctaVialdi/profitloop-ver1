@@ -17,7 +17,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, FileText } from "lucide-react";
-import { format } from "date-fns";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -177,12 +176,14 @@ const ContentPlan = () => {
       </CardHeader>
       <CardContent>
         <div className="border rounded-md">
+          {/* Main scroll container for vertical scrolling */}
           <ScrollArea className="h-[calc(100vh-230px)]">
-            <div className="overflow-x-auto">
+            {/* Container for horizontal scrolling */}
+            <div className="overflow-x-auto min-w-[1200px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-[60px] text-center">
+                    <TableHead className="w-[60px] text-center sticky left-0 bg-slate-50 z-20">
                       <Checkbox 
                         checked={selectAll} 
                         onCheckedChange={handleSelectAll}
@@ -203,7 +204,7 @@ const ContentPlan = () => {
                   {contentItems.length > 0 ? (
                     contentItems.map(item => (
                       <TableRow key={item.id} className="hover:bg-slate-50/60">
-                        <TableCell className="text-center">
+                        <TableCell className="text-center sticky left-0 bg-white z-10">
                           <Checkbox 
                             checked={item.isSelected} 
                             onCheckedChange={() => toggleSelectItem(item.id)}
@@ -224,7 +225,7 @@ const ContentPlan = () => {
                                 {item.postDate || 'Select date'}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0 z-50" align="start">
                               <Calendar
                                 mode="single"
                                 selected={item.postDate ? new Date(item.postDate) : undefined}
