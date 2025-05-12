@@ -35,7 +35,8 @@ const ContentPlan = () => {
     toggleSelectItem,
     selectAllItems,
     getFilteredSubServices,
-    contentPlanners
+    contentPlanners,
+    contentPillars
   } = useContentManagement();
 
   // State for calendar popovers
@@ -116,6 +117,11 @@ const ContentPlan = () => {
     updateContentItem(itemId, { subService: subServiceId });
   };
 
+  // Handle content pillar change
+  const handleContentPillarChange = (itemId: string, pillarId: string) => {
+    updateContentItem(itemId, { contentPillar: pillarId });
+  };
+
   // Handle title change from inline input
   const handleTitleChange = (itemId: string, title: string) => {
     updateContentItem(itemId, { title });
@@ -190,6 +196,7 @@ const ContentPlan = () => {
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Layanan</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Sub Layanan</TableHead>
                     <TableHead className="w-[200px] text-center whitespace-nowrap">Judul Content</TableHead>
+                    <TableHead className="w-[150px] text-center whitespace-nowrap">Content Pillar</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -321,11 +328,34 @@ const ContentPlan = () => {
                             />
                           </div>
                         </TableCell>
+                        <TableCell className="p-2">
+                          <Select 
+                            value={item.contentPillar} 
+                            onValueChange={(value) => handleContentPillarChange(item.id, value)}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Select pillar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {contentPillars.length > 0 ? (
+                                contentPillars.map((pillar) => (
+                                  <SelectItem key={pillar.id} value={pillar.id}>
+                                    {pillar.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="no-pillar-found" disabled>
+                                  No content pillars found
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
+                      <TableCell colSpan={8} className="h-24 text-center">
                         No content items. Click "Add Row" to create one.
                       </TableCell>
                     </TableRow>
