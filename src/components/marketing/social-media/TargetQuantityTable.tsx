@@ -60,7 +60,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
         <Table className="w-full">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-7 whitespace-nowrap py-1 w-auto min-w-[120px]">PIC</TableHead>
+              <TableHead className="h-7 whitespace-nowrap py-1 w-[90px] min-w-[90px]">PIC</TableHead>
               <TableHead className="h-7 text-center py-1 w-[90px]">
                 <DateSelector 
                   selectedDate={selectedDate}
@@ -90,7 +90,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
           <TableBody>
             {contentManagers.map((manager) => (
               <TableRow key={manager.name} className="hover:bg-gray-50/80">
-                <TableCell className="py-1 px-2 font-medium text-sm">{manager.name}</TableCell>
+                <TableCell className="py-1 px-2 font-medium text-sm truncate">{manager.name}</TableCell>
                 <TableCell className="py-1 px-2 text-center text-sm">{manager.dailyTarget}</TableCell>
                 <TableCell className="py-1 px-2 text-center text-sm">{manager.monthlyTarget}</TableCell>
                 <TableCell className="py-1 px-2 text-center text-sm">
