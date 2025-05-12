@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -139,7 +138,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                     <TableHead className="w-[180px] text-center font-medium whitespace-nowrap">Brief</TableHead>
                   )}
                   {isColumnVisible("status") && (
-                    <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Status</TableHead>
+                    <TableHead className="w-[200px] text-center font-medium whitespace-nowrap">Status</TableHead>
                   )}
                   {isColumnVisible("revision") && (
                     <TableHead className="w-[100px] text-center font-medium whitespace-nowrap">Revision</TableHead>
