@@ -160,22 +160,6 @@ const ContentPlan = () => {
     return text.includes("docs.google.com");
   };
 
-  // Get visible columns based on screen size
-  const getMobileColumns = () => {
-    if (isMobile) {
-      return [
-        { id: "postDate", name: "Tanggal" },
-        { id: "title", name: "Judul" },
-        { id: "brief", name: "Brief" },
-        { id: "status", name: "Status" }
-      ];
-    }
-    
-    return null; // Return null for desktop view (show all columns)
-  };
-  
-  const mobileColumns = getMobileColumns();
-  
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
@@ -190,11 +174,11 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Responsive container */}
-        <div className="w-full">
-          <div className="rounded-md border">
-            <div className="relative">
-              <ScrollArea className="h-[calc(100vh-350px)]">
+        {/* Fixed height container to prevent page size changes */}
+        <div className="w-full" style={{ minHeight: isMobile ? '500px' : '600px' }}>
+          <div className="rounded-md border h-full">
+            <div className="relative h-full flex flex-col">
+              <ScrollArea className="flex-1" style={{ height: isMobile ? '500px' : 'calc(100vh - 350px)' }}>
                 {isMobile ? (
                   // Mobile view - simplified table with fewer columns
                   <Table>
@@ -301,8 +285,8 @@ const ContentPlan = () => {
                     </TableBody>
                   </Table>
                 ) : (
-                  // Desktop view - full table with all columns
-                  <Table>
+                  // Desktop view - full table with all columns and fixed layout
+                  <Table className="table-fixed">
                     <TableHeader className="sticky top-0 bg-white z-30">
                       <TableRow>
                         {isManager && (
