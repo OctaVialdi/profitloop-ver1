@@ -20,6 +20,7 @@ const CreateContent = () => {
     contentPillars,
     addContentItem,
     updateContentItem,
+    resetRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
     selectAllItems,
@@ -162,6 +163,7 @@ const CreateContent = () => {
           getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
           extractGoogleDocsLink={extractGoogleDocsLink}
           displayBrief={displayBrief}
+          resetRevisionCounter={resetRevisionCounter}
         />
       </CardContent>
       

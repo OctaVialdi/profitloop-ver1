@@ -34,6 +34,7 @@ export interface ContentItem {
   contentPillar: string;
   brief: string;
   status: string;
+  revisionCount: number; // Added revision counter
 }
 
 export const useContentManagement = () => {
@@ -147,13 +148,22 @@ export const useContentManagement = () => {
       title: "",
       contentPillar: "",
       brief: "",
-      status: "none" // Changed from empty string to "none"
+      status: "none", // Changed from empty string to "none"
+      revisionCount: 0 // Initialize revision counter to 0
     };
     setContentItems([...contentItems, newItem]);
   };
 
   // Update a content item
   const updateContentItem = (itemId: string, updates: Partial<ContentItem>) => {
+    // Increment revision count if changing status to "revisi"
+    if (updates.status === "revisi") {
+      const currentItem = contentItems.find(item => item.id === itemId);
+      if (currentItem && currentItem.status !== "revisi") {
+        updates.revisionCount = (currentItem.revisionCount || 0) + 1;
+      }
+    }
+    
     // Check if brief is being changed, and if so, reset status
     if (updates.brief !== undefined) {
       updates.status = "none"; // Changed from empty string to "none"
@@ -162,6 +172,15 @@ export const useContentManagement = () => {
     setContentItems(prevItems =>
       prevItems.map(item =>
         item.id === itemId ? { ...item, ...updates } : item
+      )
+    );
+  };
+
+  // Reset revision counter for a specific item
+  const resetRevisionCounter = (itemId: string) => {
+    setContentItems(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId ? { ...item, revisionCount: 0 } : item
       )
     );
   };
@@ -203,6 +222,7 @@ export const useContentManagement = () => {
     contentPillars,
     addContentItem,
     updateContentItem,
+    resetRevisionCounter,
     deleteContentItems,
     toggleSelectItem,
     selectAllItems,
