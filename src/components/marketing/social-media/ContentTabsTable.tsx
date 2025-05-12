@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ContentTable } from "./ContentTable";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
+import { primaryColumns, detailsColumns, publishingColumns } from "./ContentColumnConfig";
 
 interface ContentTabsTableProps {
   contentItems: ContentItem[];
@@ -34,12 +35,7 @@ interface ContentTabsTableProps {
 }
 
 export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
-  const [activeTab, setActiveTab] = useState("primary");
-  
-  // Define column sets for each tab
-  const primaryColumns = ["selectColumn", "postDate", "contentType", "pic", "service", "subService", "title"];
-  const detailsColumns = ["selectColumn", "contentPillar", "brief", "status", "revision", "approved"];
-  const publishingColumns = ["selectColumn", "completionDate", "mirrorPostDate", "mirrorContentType", "mirrorTitle"];
+  const [activeTab, setActiveTab] = useState<string>("primary");
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -58,6 +54,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
           {...props}
           visibleColumns={primaryColumns}
           activeTab="primary"
+          toggleApproval={props.toggleApproved}
         />
       </TabsContent>
 
@@ -66,6 +63,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
           {...props}
           visibleColumns={detailsColumns}
           activeTab="details"
+          toggleApproval={props.toggleApproved}
         />
       </TabsContent>
 
@@ -74,6 +72,7 @@ export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
           {...props}
           visibleColumns={publishingColumns}
           activeTab="publishing"
+          toggleApproval={props.toggleApproved}
         />
       </TabsContent>
     </Tabs>
