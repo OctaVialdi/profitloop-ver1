@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw } from "lucide-react";
+import { CalendarIcon, ExternalLink, Edit, FileText, List, CircleDot, RefreshCw, ChevronRight } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ContentItem, ContentType, ContentPillar, Service, SubService } from "@/hooks/useContentManagement";
 import { format } from "date-fns";
@@ -94,23 +94,35 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 
   // Get column width or default
   const getColumnWidth = (columnName: string) => {
-    return columnWidths[columnName] || 100; // Default width if not specified
+    return columnWidths[columnName] || 150; // Default width if not specified
   };
 
   // Calculate total table width based on visible columns
   const calculateTableWidth = () => {
-    return visibleColumns.reduce((total, column) => {
-      return total + getColumnWidth(column);
-    }, 0);
+    let total = 0;
+    visibleColumns.forEach(column => {
+      total += getColumnWidth(column);
+    });
+    return total;
   };
 
-  const tableWidth = calculateTableWidth();
+  // Calculate visible width to know if scroll indicator is needed
+  const visibleTableWidth = calculateTableWidth();
+  
+  // Add scroll indicator if needed
+  const showScrollIndicator = visibleColumns.length > 0 && Object.keys(columnWidths).length > visibleColumns.length;
 
   return (
     <div className="w-full overflow-hidden">
       <div className="relative">
+        {showScrollIndicator && (
+          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white/80 p-1 rounded-l-md z-30 shadow-md">
+            <ChevronRight className="h-5 w-5 text-muted-foreground animate-pulse" />
+          </div>
+        )}
+        
         <ScrollArea className="h-[calc(100vh-220px)]">
-          <div className="overflow-x-auto" style={{ minWidth: "100%", width: `${tableWidth}px` }}>
+          <div className="overflow-x-auto" style={{ minWidth: "100%" }}>
             <Table>
               <TableHeader className="sticky top-0 bg-white z-20">
                 <TableRow className="bg-slate-50">
@@ -278,7 +290,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               <Button
                                 variant="outline"
                                 className="w-full justify-start text-left font-normal"
-                                style={{ maxWidth: `${getColumnWidth("postDate") - 10}px` }}
+                                style={{ maxWidth: `${getColumnWidth("postDate") - 16}px` }}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 <span className="truncate">{item.postDate || 'Select date'}</span>
@@ -307,7 +319,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           >
                             <SelectTrigger 
                               className="w-full bg-white"
-                              style={{ maxWidth: `${getColumnWidth("contentType") - 10}px` }}
+                              style={{ maxWidth: `${getColumnWidth("contentType") - 16}px` }}
                             >
                               <SelectValue placeholder="Select content type" />
                             </SelectTrigger>
@@ -332,7 +344,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           >
                             <SelectTrigger 
                               className="w-full bg-white"
-                              style={{ maxWidth: `${getColumnWidth("pic") - 10}px` }}
+                              style={{ maxWidth: `${getColumnWidth("pic") - 16}px` }}
                             >
                               <SelectValue placeholder="Select PIC" />
                             </SelectTrigger>
@@ -363,7 +375,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           >
                             <SelectTrigger 
                               className="w-full bg-white"
-                              style={{ maxWidth: `${getColumnWidth("service") - 10}px` }}
+                              style={{ maxWidth: `${getColumnWidth("service") - 16}px` }}
                             >
                               <SelectValue placeholder="Select service" />
                             </SelectTrigger>
@@ -389,7 +401,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           >
                             <SelectTrigger 
                               className="w-full bg-white"
-                              style={{ maxWidth: `${getColumnWidth("subService") - 10}px` }}
+                              style={{ maxWidth: `${getColumnWidth("subService") - 16}px` }}
                             >
                               <SelectValue placeholder="Select sub-service" />
                             </SelectTrigger>
@@ -421,8 +433,8 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                               onChange={(e) => handleTitleChange(item.id, e.target.value)}
                               placeholder="Enter title"
                               className="w-full bg-white"
-                              style={{ maxWidth: `${getColumnWidth("title") - 30}px` }}
-                              maxLength={25}
+                              style={{ maxWidth: `${getColumnWidth("title") - 36}px` }}
+                              maxLength={35}
                             />
                           </div>
                         </TableCell>
@@ -438,7 +450,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           >
                             <SelectTrigger 
                               className="w-full bg-white"
-                              style={{ maxWidth: `${getColumnWidth("contentPillar") - 10}px` }}
+                              style={{ maxWidth: `${getColumnWidth("contentPillar") - 16}px` }}
                             >
                               <div className="flex items-center">
                                 <List className="h-4 w-4 mr-2" />
@@ -466,7 +478,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                                 variant="outline"
                                 size="sm"
                                 className="text-left truncate bg-white"
-                                style={{ maxWidth: `${getColumnWidth("brief") - 40}px` }}
+                                style={{ maxWidth: `${getColumnWidth("brief") - 50}px` }}
                                 onClick={() => openBriefDialog(item.id, item.brief!, "view")}
                               >
                                 <span className="truncate">{displayBrief(item.brief)}</span>
@@ -487,7 +499,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                             <Button
                               variant="ghost"
                               className="w-full justify-center"
-                              style={{ maxWidth: `${getColumnWidth("brief") - 10}px` }}
+                              style={{ maxWidth: `${getColumnWidth("brief") - 16}px` }}
                               onClick={() => openBriefDialog(item.id, "", "edit")}
                             >
                               <FileText className="h-4 w-4 mr-2" />
@@ -507,7 +519,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           >
                             <SelectTrigger 
                               className="w-full bg-white"
-                              style={{ maxWidth: `${getColumnWidth("status") - 10}px` }}
+                              style={{ maxWidth: `${getColumnWidth("status") - 16}px` }}
                             >
                               <div className="flex items-center">
                                 <CircleDot className="h-4 w-4 mr-2" />
@@ -528,7 +540,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                           style={{ width: `${getColumnWidth("revision")}px`, minWidth: `${getColumnWidth("revision")}px` }}
                         >
                           <div className="flex items-center justify-between">
-                            <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[30px]">
+                            <div className="bg-slate-100 px-3 py-1 rounded-md text-center min-w-[40px]">
                               {item.revisionCount || 0}
                             </div>
                             <Button
