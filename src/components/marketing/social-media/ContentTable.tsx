@@ -85,49 +85,49 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                     </TableHead>
                   )}
                   {isColumnVisible("postDate") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Tanggal Posting</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Tanggal Posting</TableHead>
                   )}
                   {isColumnVisible("contentType") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
                   )}
                   {isColumnVisible("pic") && (
-                    <TableHead className="w-[7%] text-center font-medium whitespace-nowrap">PIC</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">PIC</TableHead>
                   )}
                   {isColumnVisible("service") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Layanan</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Layanan</TableHead>
                   )}
                   {isColumnVisible("subService") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Sub Layanan</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Sub Layanan</TableHead>
                   )}
                   {isColumnVisible("title") && (
-                    <TableHead className="w-[10%] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Judul Content</TableHead>
                   )}
                   {isColumnVisible("contentPillar") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Content Pillar</TableHead>
                   )}
                   {isColumnVisible("brief") && (
-                    <TableHead className="w-[10%] text-center font-medium whitespace-nowrap">Brief</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Brief</TableHead>
                   )}
                   {isColumnVisible("status") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Status</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Status</TableHead>
                   )}
                   {isColumnVisible("revision") && (
-                    <TableHead className="w-[6%] text-center font-medium whitespace-nowrap">Revision</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Revision</TableHead>
                   )}
                   {isColumnVisible("approved") && (
-                    <TableHead className="w-[6%] text-center font-medium whitespace-nowrap">Approved</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Approved</TableHead>
                   )}
                   {isColumnVisible("completionDate") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Tanggal Selesai</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Tanggal Selesai</TableHead>
                   )}
                   {isColumnVisible("mirrorPostDate") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Tanggal Upload</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Tanggal Upload</TableHead>
                   )}
                   {isColumnVisible("mirrorContentType") && (
-                    <TableHead className="w-[8%] text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Tipe Content</TableHead>
                   )}
                   {isColumnVisible("mirrorTitle") && (
-                    <TableHead className="w-[10%] text-center font-medium whitespace-nowrap">Judul Content</TableHead>
+                    <TableHead className="text-center font-medium whitespace-nowrap">Judul Content</TableHead>
                   )}
                 </TableRow>
               </TableHeader>
