@@ -20,6 +20,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useContentManagement } from "@/hooks/useContentManagement";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ContentPlan = () => {
   const { toast } = useToast();
@@ -45,6 +46,10 @@ const ContentPlan = () => {
   
   // Check if any items are selected
   const hasSelectedItems = contentItems.some(item => item.isSelected);
+
+  // State for full title dialog
+  const [isFullTitleOpen, setIsFullTitleOpen] = useState(false);
+  const [currentFullTitle, setCurrentFullTitle] = useState("");
 
   // Toggle calendar for a specific item
   const toggleCalendar = (itemId: string) => {
@@ -110,6 +115,19 @@ const ContentPlan = () => {
     updateContentItem(itemId, { subService: subServiceId });
   };
 
+  // Handle title change
+  const handleTitleChange = (itemId: string, title: string) => {
+    updateContentItem(itemId, { title });
+  };
+
+  // Show full title in dialog
+  const showFullTitle = (title: string) => {
+    if (title && title.length > 0) {
+      setCurrentFullTitle(title);
+      setIsFullTitleOpen(true);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="py-3 flex flex-row items-center justify-between">
@@ -139,7 +157,7 @@ const ContentPlan = () => {
       <CardContent>
         <div className="relative border rounded-md">
           <ScrollArea className="h-[calc(100vh-230px)]">
-            <div className="overflow-x-auto min-w-max">
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
@@ -156,6 +174,7 @@ const ContentPlan = () => {
                     <TableHead className="w-[150px] text-center whitespace-nowrap">PIC</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Layanan</TableHead>
                     <TableHead className="w-[150px] text-center whitespace-nowrap">Sub Layanan</TableHead>
+                    <TableHead className="w-[180px] text-center whitespace-nowrap">Judul Content</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -275,11 +294,31 @@ const ContentPlan = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
+                        <TableCell className="p-2">
+                          <div 
+                            className="relative cursor-pointer"
+                            onClick={() => showFullTitle(item.title || "")}
+                          >
+                            <Input
+                              value={item.title || ""}
+                              onChange={(e) => handleTitleChange(item.id, e.target.value)}
+                              placeholder="Enter title"
+                              className="w-full bg-white"
+                              maxLength={100}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            {item.title && item.title.length > 25 && (
+                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+                                ...
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
+                      <TableCell colSpan={7} className="h-24 text-center">
                         No content items. Click "Add Row" to create one.
                       </TableCell>
                     </TableRow>
@@ -290,6 +329,18 @@ const ContentPlan = () => {
           </ScrollArea>
         </div>
       </CardContent>
+
+      {/* Full Title Dialog */}
+      <Dialog open={isFullTitleOpen} onOpenChange={setIsFullTitleOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Content Title</DialogTitle>
+          </DialogHeader>
+          <div className="p-4 border rounded-md bg-slate-50">
+            {currentFullTitle}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
