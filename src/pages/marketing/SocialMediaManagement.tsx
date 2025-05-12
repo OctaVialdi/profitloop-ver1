@@ -56,7 +56,6 @@ const SocialMediaManagement = () => {
 
   const secondaryTabs: TabData[] = [
     { id: "dashboard", label: "Dashboard", path: "/marketing/social-media" },
-    { id: "create-content", label: "Create Content", path: "/marketing/social-media/create-content" },
     { id: "content-bank", label: "Content Bank", path: "/marketing/social-media/content-bank" },
     { id: "content-qc", label: "Content QC", path: "/marketing/social-media/content-qc" }
   ];
