@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const ContentPlan = () => {
   const {
     contentTypes,
     services,
+    subServices,
     contentItems,
     addContentItem,
     updateContentItem,
@@ -31,6 +33,7 @@ const ContentPlan = () => {
     toggleSelectItem,
     selectAllItems,
     contentPlanners,
+    getFilteredSubServices
   } = useContentManagement();
 
   // State for calendar popovers
@@ -98,7 +101,13 @@ const ContentPlan = () => {
 
   // Handle service change
   const handleServiceChange = (itemId: string, serviceId: string) => {
-    updateContentItem(itemId, { service: serviceId });
+    // When service changes, we need to reset the subService
+    updateContentItem(itemId, { service: serviceId, subService: "" });
+  };
+  
+  // Handle subService change
+  const handleSubServiceChange = (itemId: string, subServiceId: string) => {
+    updateContentItem(itemId, { subService: subServiceId });
   };
 
   return (
@@ -132,7 +141,7 @@ const ContentPlan = () => {
           {/* Main scroll container for vertical scrolling */}
           <ScrollArea className="h-[calc(100vh-230px)]">
             {/* Container for horizontal scrolling with fixed column widths */}
-            <div className="min-w-[1200px] w-full" style={{ tableLayout: 'fixed' }}>
+            <div className="min-w-[1200px] max-w-[1300px] w-full" style={{ tableLayout: 'fixed' }}>
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
@@ -144,10 +153,11 @@ const ContentPlan = () => {
                         className="ml-2"
                       />
                     </TableHead>
-                    <TableHead className="w-[300px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
-                    <TableHead className="w-[300px] text-center whitespace-nowrap">Tipe Content</TableHead>
-                    <TableHead className="w-[300px] text-center whitespace-nowrap">PIC</TableHead>
-                    <TableHead className="w-[300px] text-center whitespace-nowrap">Layanan</TableHead>
+                    <TableHead className="w-[200px] text-center whitespace-nowrap">Tanggal Posting</TableHead>
+                    <TableHead className="w-[200px] text-center whitespace-nowrap">Tipe Content</TableHead>
+                    <TableHead className="w-[200px] text-center whitespace-nowrap">PIC</TableHead>
+                    <TableHead className="w-[200px] text-center whitespace-nowrap">Layanan</TableHead>
+                    <TableHead className="w-[200px] text-center whitespace-nowrap">Sub Layanan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -243,11 +253,35 @@ const ContentPlan = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
+                        <TableCell className="p-2">
+                          <Select 
+                            value={item.subService} 
+                            onValueChange={(value) => handleSubServiceChange(item.id, value)}
+                            disabled={!item.service} // Disable if no service is selected
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Select sub service" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {item.service ? (
+                                getFilteredSubServices(item.service).map((subService) => (
+                                  <SelectItem key={subService.id} value={subService.id}>
+                                    {subService.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="no-subservice" disabled>
+                                  Select a service first
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
+                      <TableCell colSpan={6} className="h-24 text-center">
                         No content items. Click "Add Row" to create one.
                       </TableCell>
                     </TableRow>
