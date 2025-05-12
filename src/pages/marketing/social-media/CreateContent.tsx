@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -158,44 +157,42 @@ const CreateContent = () => {
   const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <Card className="w-full h-full">
+    <Card className="w-full h-full overflow-hidden">
       <ContentHeader 
         handleDeleteSelected={handleDeleteSelected}
         handleAddRow={handleAddRow}
         hasSelectedItems={hasSelectedItems}
       />
       
-      <CardContent className="p-0">
-        <div className="h-[calc(100vh-220px)]">
-          <ContentTable
-            contentItems={contentItems}
-            contentTypes={contentTypes}
-            services={services}
-            subServices={subServices}
-            contentPlanners={contentPlanners}
-            contentPillars={contentPillars}
-            isCalendarOpen={isCalendarOpen}
-            isUserManager={isUserManager}
-            toggleCalendar={toggleCalendar}
-            handleDateChange={handleDateChange}
-            handleTypeChange={handleTypeChange}
-            handlePICChange={handlePICChange}
-            handleServiceChange={handleServiceChange}
-            handleSubServiceChange={handleSubServiceChange}
-            handleTitleChange={handleTitleChange}
-            handleContentPillarChange={handleContentPillarChange}
-            handleStatusChange={handleStatusChange}
-            handleApprovalChange={handleApprovalChange}
-            toggleSelectItem={toggleSelectItem}
-            selectAll={selectAll}
-            handleSelectAll={handleSelectAll}
-            openBriefDialog={openBriefDialog}
-            getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
-            extractGoogleDocsLink={extractGoogleDocsLink}
-            displayBrief={displayBrief}
-            resetRevisionCounter={resetRevisionCounter}
-          />
-        </div>
+      <CardContent className="p-0 overflow-hidden">
+        <ContentTable
+          contentItems={contentItems}
+          contentTypes={contentTypes}
+          services={services}
+          subServices={subServices}
+          contentPlanners={contentPlanners}
+          contentPillars={contentPillars}
+          isCalendarOpen={isCalendarOpen}
+          isUserManager={isUserManager}
+          toggleCalendar={toggleCalendar}
+          handleDateChange={handleDateChange}
+          handleTypeChange={handleTypeChange}
+          handlePICChange={handlePICChange}
+          handleServiceChange={handleServiceChange}
+          handleSubServiceChange={handleSubServiceChange}
+          handleTitleChange={handleTitleChange}
+          handleContentPillarChange={handleContentPillarChange}
+          handleStatusChange={handleStatusChange}
+          handleApprovalChange={handleApprovalChange}
+          toggleSelectItem={toggleSelectItem}
+          selectAll={selectAll}
+          handleSelectAll={handleSelectAll}
+          openBriefDialog={openBriefDialog}
+          getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
+          extractGoogleDocsLink={extractGoogleDocsLink}
+          displayBrief={displayBrief}
+          resetRevisionCounter={resetRevisionCounter}
+        />
       </CardContent>
       
       <ContentFooter 
