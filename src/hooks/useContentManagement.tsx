@@ -7,16 +7,51 @@ export interface ContentType {
   name: string;
 }
 
+export interface PICOption {
+  id: string;
+  name: string;
+}
+
+export interface ServiceOption {
+  id: string;
+  name: string;
+}
+
+export interface SubServiceOption {
+  id: string;
+  parentId: string;
+  name: string;
+}
+
+export interface ContentPillarOption {
+  id: string;
+  name: string;
+}
+
 export interface ContentItem {
   id: string;
   postDate: string;
   contentType: string;
+  picId?: string;
+  serviceId?: string;
+  subServiceId?: string;
+  title?: string;
+  contentPillarId?: string;
+  brief?: string;
+  status?: string;
+  revisionCount?: number;
+  isApproved?: boolean;
+  completionDate?: string;
   isSelected?: boolean;
 }
 
 export const useContentManagement = () => {
   const { employees } = useEmployees();
   const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
+  const [picOptions, setPICOptions] = useState<PICOption[]>([]);
+  const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
+  const [subServiceOptions, setSubServiceOptions] = useState<SubServiceOption[]>([]);
+  const [contentPillarOptions, setContentPillarOptions] = useState<ContentPillarOption[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [currentUser, setCurrentUser] = useState<LegacyEmployee | null>(null);
 
@@ -37,12 +72,73 @@ export const useContentManagement = () => {
       localStorage.setItem("marketingContentTypes", JSON.stringify(defaultTypes));
     }
     
+    // Load PIC options (Content Planners from the team members)
+    const contentPlanners = employees
+      .map(convertToLegacyFormat)
+      .filter(employee => 
+        employee.jobPosition?.toLowerCase().includes("content planner"))
+      .map(employee => ({
+        id: employee.id,
+        name: employee.name
+      }));
+    setPICOptions(contentPlanners);
+
+    // Load service options from localStorage
+    const storedServices = localStorage.getItem("marketingServices");
+    if (storedServices) {
+      setServiceOptions(JSON.parse(storedServices));
+    } else {
+      // Default services if none exist
+      const defaultServices = [
+        { id: "s1", name: "Social Media Management" },
+        { id: "s2", name: "Content Creation" },
+        { id: "s3", name: "Digital Advertising" }
+      ];
+      setServiceOptions(defaultServices);
+      localStorage.setItem("marketingServices", JSON.stringify(defaultServices));
+    }
+
+    // Load sub-service options from localStorage
+    const storedSubServices = localStorage.getItem("marketingSubServices");
+    if (storedSubServices) {
+      setSubServiceOptions(JSON.parse(storedSubServices));
+    } else {
+      // Default sub-services if none exist
+      const defaultSubServices = [
+        { id: "ss1", parentId: "s1", name: "Instagram" },
+        { id: "ss2", parentId: "s1", name: "Facebook" },
+        { id: "ss3", parentId: "s1", name: "Twitter" },
+        { id: "ss4", parentId: "s2", name: "Blog Posts" },
+        { id: "ss5", parentId: "s2", name: "Graphics Design" },
+        { id: "ss6", parentId: "s3", name: "Google Ads" },
+        { id: "ss7", parentId: "s3", name: "Facebook Ads" }
+      ];
+      setSubServiceOptions(defaultSubServices);
+      localStorage.setItem("marketingSubServices", JSON.stringify(defaultSubServices));
+    }
+
+    // Load content pillar options from localStorage
+    const storedPillars = localStorage.getItem("marketingContentPillars");
+    if (storedPillars) {
+      setContentPillarOptions(JSON.parse(storedPillars));
+    } else {
+      // Default content pillars if none exist
+      const defaultPillars = [
+        { id: "p1", name: "Educational" },
+        { id: "p2", name: "Inspirational" },
+        { id: "p3", name: "Promotional" },
+        { id: "p4", name: "Entertainment" }
+      ];
+      setContentPillarOptions(defaultPillars);
+      localStorage.setItem("marketingContentPillars", JSON.stringify(defaultPillars));
+    }
+    
     // Load content items if they exist
     const storedItems = localStorage.getItem("marketingContentItems");
     if (storedItems) {
       setContentItems(JSON.parse(storedItems));
     }
-  }, []);
+  }, [employees]);
 
   // Save content items when they change
   useEffect(() => {
@@ -76,8 +172,9 @@ export const useContentManagement = () => {
     const newItem: ContentItem = {
       id: `content-${Date.now()}`,
       postDate: today,
-      contentType: contentTypes.length > 0 ? contentTypes[0].id : "",
-      isSelected: false
+      contentType: contentTypes.length > 0 ? contentTypes[0].id : "placeholder",
+      isSelected: false,
+      revisionCount: 0
     };
     
     setContentItems(prev => [newItem, ...prev]);
@@ -108,14 +205,23 @@ export const useContentManagement = () => {
     );
   };
 
+  const getSubServices = (serviceId: string) => {
+    return subServiceOptions.filter(subService => subService.parentId === serviceId);
+  };
+
   return {
     contentTypes,
     contentItems,
+    picOptions,
+    serviceOptions,
+    subServiceOptions,
+    contentPillarOptions,
     currentUser,
     addContentItem,
     updateContentItem,
     deleteContentItems,
     toggleSelectItem,
-    selectAllItems
+    selectAllItems,
+    getSubServices
   };
 };
