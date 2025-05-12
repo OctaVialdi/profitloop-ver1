@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Table, 
@@ -55,7 +54,7 @@ export const TargetQuantityTable: React.FC<TargetQuantityTableProps> = ({
   renderMonthCalendar
 }) => {
   return (
-    <ScrollArea className="w-full" orientation="horizontal">
+    <ScrollArea className="w-full">
       <div className="min-w-max">
         <Table className="w-full">
           <TableHeader>

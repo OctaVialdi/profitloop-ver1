@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -72,7 +71,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 }) => {
   return (
     <div className="relative w-full">
-      <ScrollArea className="w-full" orientation="horizontal">
+      <ScrollArea className="w-full">
         <div className="min-w-max">
           <Table className="w-full">
             <TableHeader>
