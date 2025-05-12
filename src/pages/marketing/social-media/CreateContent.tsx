@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -138,7 +139,7 @@ const CreateContent = () => {
       />
       
       <CardContent className="p-0">
-        <div className="w-full overflow-hidden">
+        <div className="w-full">
           <ContentTable
             contentItems={contentItems}
             contentTypes={contentTypes}
