@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { ContentTable } from "@/components/marketing/social-media/ContentTable";
 import { ContentHeader } from "@/components/marketing/social-media/ContentHeader";
 import { ContentFooter } from "@/components/marketing/social-media/ContentFooter";
 import { BriefDialog } from "@/components/marketing/social-media/BriefDialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CreateContent = () => {
   const {
@@ -157,42 +159,44 @@ const CreateContent = () => {
   const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <Card className="w-full h-full overflow-hidden">
+    <Card className="w-full h-[calc(100vh-140px)] flex flex-col overflow-hidden">
       <ContentHeader 
         handleDeleteSelected={handleDeleteSelected}
         handleAddRow={handleAddRow}
         hasSelectedItems={hasSelectedItems}
       />
       
-      <CardContent className="p-0 overflow-hidden">
-        <ContentTable
-          contentItems={contentItems}
-          contentTypes={contentTypes}
-          services={services}
-          subServices={subServices}
-          contentPlanners={contentPlanners}
-          contentPillars={contentPillars}
-          isCalendarOpen={isCalendarOpen}
-          isUserManager={isUserManager}
-          toggleCalendar={toggleCalendar}
-          handleDateChange={handleDateChange}
-          handleTypeChange={handleTypeChange}
-          handlePICChange={handlePICChange}
-          handleServiceChange={handleServiceChange}
-          handleSubServiceChange={handleSubServiceChange}
-          handleTitleChange={handleTitleChange}
-          handleContentPillarChange={handleContentPillarChange}
-          handleStatusChange={handleStatusChange}
-          handleApprovalChange={handleApprovalChange}
-          toggleSelectItem={toggleSelectItem}
-          selectAll={selectAll}
-          handleSelectAll={handleSelectAll}
-          openBriefDialog={openBriefDialog}
-          getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
-          extractGoogleDocsLink={extractGoogleDocsLink}
-          displayBrief={displayBrief}
-          resetRevisionCounter={resetRevisionCounter}
-        />
+      <CardContent className="flex-grow p-0 overflow-hidden">
+        <ScrollArea className="h-[calc(100vh-190px)]">
+          <ContentTable
+            contentItems={contentItems}
+            contentTypes={contentTypes}
+            services={services}
+            subServices={subServices}
+            contentPlanners={contentPlanners}
+            contentPillars={contentPillars}
+            isCalendarOpen={isCalendarOpen}
+            isUserManager={isUserManager}
+            toggleCalendar={toggleCalendar}
+            handleDateChange={handleDateChange}
+            handleTypeChange={handleTypeChange}
+            handlePICChange={handlePICChange}
+            handleServiceChange={handleServiceChange}
+            handleSubServiceChange={handleSubServiceChange}
+            handleTitleChange={handleTitleChange}
+            handleContentPillarChange={handleContentPillarChange}
+            handleStatusChange={handleStatusChange}
+            handleApprovalChange={handleApprovalChange}
+            toggleSelectItem={toggleSelectItem}
+            selectAll={selectAll}
+            handleSelectAll={handleSelectAll}
+            openBriefDialog={openBriefDialog}
+            getFilteredSubServicesByServiceId={getFilteredSubServicesByServiceId}
+            extractGoogleDocsLink={extractGoogleDocsLink}
+            displayBrief={displayBrief}
+            resetRevisionCounter={resetRevisionCounter}
+          />
+        </ScrollArea>
       </CardContent>
       
       <ContentFooter 
