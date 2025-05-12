@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 
 export interface ContentType {
@@ -140,7 +141,7 @@ export const useContentManagement = () => {
   const addContentItem = () => {
     const newItem: ContentItem = {
       id: `${Date.now()}`,
-      postDate: undefined,
+      postDate: new Date().toISOString().split('T')[0],
       contentType: "",
       isSelected: false,
       pic: "",

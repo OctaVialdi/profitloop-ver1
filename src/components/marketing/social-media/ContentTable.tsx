@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                 <TableHead className="w-[100px] text-center">Approved</TableHead>
                 <TableHead className="w-[150px] text-center">Tanggal Selesai</TableHead>
                 <TableHead className="w-[150px] text-center">Tanggal Upload</TableHead>
+                <TableHead className="w-[150px] text-center">Tipe Content</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -363,11 +365,17 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                         <span>{item.postDate || "-"}</span>
                       </div>
                     </TableCell>
+
+                    <TableCell className="p-2">
+                      <div className="flex items-center justify-center">
+                        {contentTypes.find(type => type.id === item.contentType)?.name || "-"}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={14} className="h-24 text-center">
+                  <TableCell colSpan={15} className="h-24 text-center">
                     No content items. Click "Add Row" to create one.
                   </TableCell>
                 </TableRow>
