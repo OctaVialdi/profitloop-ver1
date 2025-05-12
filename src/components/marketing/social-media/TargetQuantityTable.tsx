@@ -11,6 +11,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
+import { format } from "date-fns";
 import { DateSelector } from "./DateSelector";
 import { MonthSelector } from "./MonthSelector";
 
