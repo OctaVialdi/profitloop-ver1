@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -170,20 +171,21 @@ const ContentPlan = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Fixed width container with horizontal scroll */}
+        {/* Fixed width container */}
         <div className="w-full">
-          <div className="rounded-md border">
+          {/* Enhanced scrolling container with better horizontal scroll handling */}
+          <div className="rounded-md border overflow-hidden">
             <div className="relative">
-              {/* ScrollArea for vertical scrolling */}
+              {/* ScrollArea component handles vertical scrolling */}
               <ScrollArea className="h-[calc(100vh-350px)]">
-                {/* Container for horizontal scrolling */}
-                <div className="overflow-x-auto">
+                {/* Dedicated horizontal scrolling container with improved styling */}
+                <div className="overflow-x-auto min-w-full">
                   <Table>
                     {/* Sticky header with proper z-index */}
                     <TableHeader className="sticky top-0 bg-white z-10">
                       <TableRow>
                         {isManager && (
-                          <TableHead className="w-[50px] text-center">
+                          <TableHead className="w-[50px] text-center sticky left-0 bg-white z-20">
                             <input 
                               type="checkbox" 
                               checked={allSelected}
