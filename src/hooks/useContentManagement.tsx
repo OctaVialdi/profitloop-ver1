@@ -172,7 +172,7 @@ export const useContentManagement = () => {
     const newItem: ContentItem = {
       id: `content-${Date.now()}`,
       postDate: today,
-      contentType: contentTypes.length > 0 ? contentTypes[0].id : "",
+      contentType: contentTypes.length > 0 ? contentTypes[0].id : "placeholder",
       isSelected: false,
       revisionCount: 0
     };

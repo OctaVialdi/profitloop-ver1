@@ -223,31 +223,31 @@ const CreateContent = () => {
         <div className="border rounded-md">
           <div className="overflow-hidden">
             <ScrollArea className="h-[400px]">
-              <div className="w-[1800px] min-w-full">
+              <div className="w-[1800px] min-w-full overflow-x-auto">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 bg-background z-20">
                     <TableRow>
-                      <TableHead className="w-12 text-center sticky left-0 bg-background z-10">
+                      <TableHead className="w-12 text-center sticky left-0 bg-background z-30">
                         <Checkbox 
                           checked={selectAll} 
                           onCheckedChange={handleSelectAll}
                           aria-label="Select all"
                         />
                       </TableHead>
-                      <TableHead className="w-40 text-center">Tanggal Posting</TableHead>
-                      <TableHead className="w-40 text-center">Tipe Content</TableHead>
-                      <TableHead className="w-40 text-center">PIC</TableHead>
-                      <TableHead className="w-40 text-center">Layanan</TableHead>
-                      <TableHead className="w-40 text-center">Sub Layanan</TableHead>
-                      <TableHead className="w-40 text-center">Judul Content</TableHead>
-                      <TableHead className="w-40 text-center">Content Pillar</TableHead>
-                      <TableHead className="w-40 text-center">Brief</TableHead>
-                      <TableHead className="w-40 text-center">Status</TableHead>
-                      <TableHead className="w-32 text-center">Revision</TableHead>
-                      <TableHead className="w-32 text-center">Approved</TableHead>
-                      <TableHead className="w-40 text-center">Tanggal Selesai</TableHead>
-                      <TableHead className="w-40 text-center">Tanggal Upload</TableHead>
-                      <TableHead className="w-40 text-center">Tipe Content</TableHead>
+                      <TableHead className="w-36 text-center">Tanggal Posting</TableHead>
+                      <TableHead className="w-36 text-center">Tipe Content</TableHead>
+                      <TableHead className="w-36 text-center">PIC</TableHead>
+                      <TableHead className="w-36 text-center">Layanan</TableHead>
+                      <TableHead className="w-36 text-center">Sub Layanan</TableHead>
+                      <TableHead className="w-36 text-center">Judul Content</TableHead>
+                      <TableHead className="w-36 text-center">Content Pillar</TableHead>
+                      <TableHead className="w-36 text-center">Brief</TableHead>
+                      <TableHead className="w-36 text-center">Status</TableHead>
+                      <TableHead className="w-24 text-center">Revision</TableHead>
+                      <TableHead className="w-24 text-center">Approved</TableHead>
+                      <TableHead className="w-36 text-center">Tanggal Selesai</TableHead>
+                      <TableHead className="w-36 text-center">Tanggal Upload</TableHead>
+                      <TableHead className="w-36 text-center">Tipe Content</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -288,14 +288,14 @@ const CreateContent = () => {
                           </TableCell>
                           <TableCell>
                             <Select 
-                              value={item.contentType || ""} 
+                              value={item.contentType || "placeholder"} 
                               onValueChange={(value) => handleTypeChange(item.id, value)}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="-" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">-</SelectItem>
+                                <SelectItem value="placeholder">-</SelectItem>
                                 {contentTypes.map((type) => (
                                   <SelectItem key={type.id} value={type.id}>
                                     {type.name}
@@ -306,14 +306,14 @@ const CreateContent = () => {
                           </TableCell>
                           <TableCell>
                             <Select 
-                              value={item.picId || ""} 
+                              value={item.picId || "placeholder"} 
                               onValueChange={(value) => handlePICChange(item.id, value)}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="-" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">-</SelectItem>
+                                <SelectItem value="placeholder">-</SelectItem>
                                 {picOptions.map((pic) => (
                                   <SelectItem key={pic.id} value={pic.id}>
                                     {pic.name}
@@ -324,14 +324,14 @@ const CreateContent = () => {
                           </TableCell>
                           <TableCell>
                             <Select 
-                              value={item.serviceId || ""} 
+                              value={item.serviceId || "placeholder"} 
                               onValueChange={(value) => handleServiceChange(item.id, value)}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="-" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">-</SelectItem>
+                                <SelectItem value="placeholder">-</SelectItem>
                                 {serviceOptions.map((service) => (
                                   <SelectItem key={service.id} value={service.id}>
                                     {service.name}
@@ -342,16 +342,16 @@ const CreateContent = () => {
                           </TableCell>
                           <TableCell>
                             <Select 
-                              value={item.subServiceId || ""} 
+                              value={item.subServiceId || "placeholder"} 
                               onValueChange={(value) => handleSubServiceChange(item.id, value)}
-                              disabled={!item.serviceId}
+                              disabled={!item.serviceId || item.serviceId === "placeholder"}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="-" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">-</SelectItem>
-                                {item.serviceId && subServiceOptions
+                                <SelectItem value="placeholder">-</SelectItem>
+                                {item.serviceId && item.serviceId !== "placeholder" && subServiceOptions
                                   .filter(sub => sub.parentId === item.serviceId)
                                   .map((subService) => (
                                     <SelectItem key={subService.id} value={subService.id}>
@@ -392,14 +392,14 @@ const CreateContent = () => {
                           </TableCell>
                           <TableCell>
                             <Select 
-                              value={item.contentPillarId || ""} 
+                              value={item.contentPillarId || "placeholder"} 
                               onValueChange={(value) => handleContentPillarChange(item.id, value)}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="-" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">-</SelectItem>
+                                <SelectItem value="placeholder">-</SelectItem>
                                 {contentPillarOptions.map((pillar) => (
                                   <SelectItem key={pillar.id} value={pillar.id}>
                                     {pillar.name}
@@ -448,14 +448,14 @@ const CreateContent = () => {
                           </TableCell>
                           <TableCell>
                             <Select
-                              value={item.status || ""}
+                              value={item.status || "placeholder"}
                               onValueChange={(value) => handleStatusChange(item.id, value)}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="-" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">-</SelectItem>
+                                <SelectItem value="placeholder">-</SelectItem>
                                 <SelectItem value="needs-review">Butuh Di Review</SelectItem>
                                 <SelectItem value="request-revision">Request Revisi</SelectItem>
                               </SelectContent>
