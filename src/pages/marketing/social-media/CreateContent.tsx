@@ -157,14 +157,14 @@ const CreateContent = () => {
   const selectedItemsCount = contentItems.filter(item => item.isSelected).length;
 
   return (
-    <Card className="w-full h-full flex flex-col overflow-hidden">
+    <Card className="w-full h-full overflow-hidden">
       <ContentHeader 
         handleDeleteSelected={handleDeleteSelected}
         handleAddRow={handleAddRow}
         hasSelectedItems={hasSelectedItems}
       />
       
-      <CardContent className="flex-grow overflow-hidden p-0">
+      <CardContent className="p-0 overflow-hidden">
         <ContentTable
           contentItems={contentItems}
           contentTypes={contentTypes}

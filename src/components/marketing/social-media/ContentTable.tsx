@@ -26,7 +26,7 @@ interface ContentTableProps {
   contentPlanners: any[];
   contentPillars: ContentPillar[];
   isCalendarOpen: { [key: string]: boolean };
-  isUserManager: boolean; // New prop to check if user is a manager
+  isUserManager: boolean; 
   toggleCalendar: (itemId: string) => void;
   handleDateChange: (itemId: string, date: Date | undefined) => void;
   handleTypeChange: (itemId: string, typeId: string) => void;
@@ -36,7 +36,7 @@ interface ContentTableProps {
   handleTitleChange: (itemId: string, title: string) => void;
   handleContentPillarChange: (itemId: string, pillarId: string) => void;
   handleStatusChange: (itemId: string, status: string) => void;
-  handleApprovalChange: (itemId: string, isApproved: boolean) => void; // New handler for approval
+  handleApprovalChange: (itemId: string, isApproved: boolean) => void;
   toggleSelectItem: (itemId: string) => void;
   selectAll: boolean;
   handleSelectAll: (checked: boolean) => void;
@@ -89,7 +89,7 @@ export const ContentTable: React.FC<ContentTableProps> = ({
 
   return (
     <div className="relative w-full overflow-hidden">
-      <ScrollArea className="h-[calc(100vh-300px)] w-full">
+      <ScrollArea className="h-[calc(100vh-220px)] w-full">
         <div className="w-[1800px]">
           <Table className="w-full table-fixed">
             <TableHeader className="sticky top-0 bg-white z-20">
@@ -334,7 +334,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       </div>
                     </TableCell>
 
-                    {/* New column 12: Approved checkbox (only clickable by managers) */}
                     <TableCell className="p-2 text-center">
                       <Checkbox
                         checked={item.isApproved}
@@ -347,7 +346,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       />
                     </TableCell>
 
-                    {/* New column 13: Tanggal Selesai (Completion Date) */}
                     <TableCell className="p-2">
                       <div className="flex items-center">
                         {item.status === "review" && (
@@ -359,7 +357,6 @@ export const ContentTable: React.FC<ContentTableProps> = ({
                       </div>
                     </TableCell>
 
-                    {/* New column 14: Tanggal Upload (mirroring posting date) */}
                     <TableCell className="p-2">
                       <div className="flex items-center">
                         <Upload className="h-4 w-4 text-muted-foreground mr-2" />
