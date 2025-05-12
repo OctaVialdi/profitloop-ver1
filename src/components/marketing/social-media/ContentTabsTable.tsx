@@ -34,16 +34,26 @@ interface ContentTabsTableProps {
 
 export const ContentTabsTable: React.FC<ContentTabsTableProps> = (props) => {
   // Define all columns for the single table with horizontal scrolling
-  const allColumns = [
+  // Only columns up to "status" are visible by default
+  const fixedColumns = [
     "selectColumn", "postDate", "contentType", "pic", "service", "subService", "title", 
-    "contentPillar", "brief", "status", "revision", "approved", "completionDate", 
+    "contentPillar", "brief", "status"
+  ];
+  
+  // Additional columns that require horizontal scrolling to view
+  const scrollableColumns = [
+    "revision", "approved", "completionDate", 
     "mirrorPostDate", "mirrorContentType", "mirrorTitle"
   ];
+  
+  // All columns combined
+  const allColumns = [...fixedColumns, ...scrollableColumns];
 
   return (
     <ContentTable
       {...props}
       visibleColumns={allColumns}
+      fixedColumnsCount={fixedColumns.length}
     />
   );
 };
