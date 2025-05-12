@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -246,18 +245,15 @@ export const ContentTable: React.FC<ContentTableProps> = ({
         </div>
       </div>
 
-      <div className="w-full border rounded-md relative">
+      <div className="w-full border rounded-md relative" style={{ height: "calc(100vh - 220px)" }}>
         {/* Left shadow indicator */}
         <div className="absolute left-[50px] top-0 bottom-0 w-4 bg-gradient-to-r from-black/5 to-transparent z-20 pointer-events-none" />
         
         {/* Right shadow indicator */}
         <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-black/5 to-transparent z-20 pointer-events-none" />
         
-        <ScrollArea 
-          className="h-[calc(100vh-220px)]"
-          onScroll={(e) => setScrollLeft((e.target as HTMLDivElement).scrollLeft)}
-          ref={setScrollContainer}
-        >
+        {/* Main ScrollArea with fixed height */}
+        <ScrollArea className="h-full">
           <div className="w-full overflow-x-auto">
             <Table className="min-w-max">
               <TableHeader className="sticky top-0 bg-white z-20">
