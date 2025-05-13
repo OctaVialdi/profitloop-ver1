@@ -7,23 +7,23 @@ export interface ContentPlanItem {
   id: string;
   post_date: string;
   content_type_id: string;
-  content_type?: string;
+  content_type?: { name: string };
   pic_id: string;
-  pic?: string;
+  pic?: { name: string };
   service_id: string;
-  service?: string;
+  service?: { name: string };
   sub_service_id: string | null;
-  sub_service?: string;
+  sub_service?: { name: string };
   title: string;
   content_pillar_id: string | null;
-  content_pillar?: string;
+  content_pillar?: { name: string };
   brief: string | null;
   status: string;
   revision_count: number;
   approved: boolean;
   completion_date: string | null;
   pic_production_id: string | null;
-  pic_production?: string;
+  pic_production?: { name: string };
   google_drive_link: string | null;
   production_status: string;
   production_revision_count: number;
@@ -33,17 +33,46 @@ export interface ContentPlanItem {
   post_link: string | null;
   done: boolean;
   actual_post_date: string | null;
+  status_content: string | null;
   created_at: string;
   updated_at: string;
 }
 
+interface ContentType {
+  id: string;
+  name: string;
+}
+
+interface TeamMember {
+  id: string;
+  name: string;
+  department: string;
+  role: string;
+}
+
+interface Service {
+  id: string;
+  name: string;
+}
+
+interface SubService {
+  id: string;
+  name: string;
+  service_id: string;
+}
+
+interface ContentPillar {
+  id: string;
+  name: string;
+}
+
 export function useContentPlan() {
   const [contentPlans, setContentPlans] = useState<ContentPlanItem[]>([]);
-  const [contentTypes, setContentTypes] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
-  const [subServices, setSubServices] = useState<any[]>([]);
-  const [contentPillars, setContentPillars] = useState<any[]>([]);
+  const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [subServices, setSubServices] = useState<SubService[]>([]);
+  const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
@@ -77,13 +106,13 @@ export function useContentPlan() {
       
       const formattedData = data?.map(item => ({
         ...item,
-        content_type: item.content_type?.name,
-        service: item.service?.name,
-        sub_service: item.sub_service?.name,
-        content_pillar: item.content_pillar?.name,
-        pic: item.pic?.name,
-        pic_production: item.pic_production?.name
-      })) || [];
+        content_type: item.content_type?.name || null,
+        service: item.service?.name || null,
+        sub_service: item.sub_service?.name || null,
+        content_pillar: item.content_pillar?.name || null,
+        pic: item.pic?.name || null,
+        pic_production: item.pic_production?.name || null
+      })) as ContentPlanItem[];
       
       setContentPlans(formattedData);
     } catch (err: any) {

@@ -717,6 +717,178 @@ export type Database = {
           },
         ]
       }
+      content_pillars: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_plans: {
+        Row: {
+          actual_post_date: string | null
+          approved: boolean | null
+          brief: string | null
+          completion_date: string | null
+          content_pillar_id: string | null
+          content_type_id: string | null
+          created_at: string
+          done: boolean | null
+          google_drive_link: string | null
+          id: string
+          pic_id: string | null
+          pic_production_id: string | null
+          post_date: string | null
+          post_link: string | null
+          production_approved: boolean | null
+          production_approved_date: string | null
+          production_completion_date: string | null
+          production_revision_count: number | null
+          production_status: string | null
+          revision_count: number | null
+          service_id: string | null
+          status: string | null
+          status_content: string | null
+          sub_service_id: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          actual_post_date?: string | null
+          approved?: boolean | null
+          brief?: string | null
+          completion_date?: string | null
+          content_pillar_id?: string | null
+          content_type_id?: string | null
+          created_at?: string
+          done?: boolean | null
+          google_drive_link?: string | null
+          id?: string
+          pic_id?: string | null
+          pic_production_id?: string | null
+          post_date?: string | null
+          post_link?: string | null
+          production_approved?: boolean | null
+          production_approved_date?: string | null
+          production_completion_date?: string | null
+          production_revision_count?: number | null
+          production_status?: string | null
+          revision_count?: number | null
+          service_id?: string | null
+          status?: string | null
+          status_content?: string | null
+          sub_service_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actual_post_date?: string | null
+          approved?: boolean | null
+          brief?: string | null
+          completion_date?: string | null
+          content_pillar_id?: string | null
+          content_type_id?: string | null
+          created_at?: string
+          done?: boolean | null
+          google_drive_link?: string | null
+          id?: string
+          pic_id?: string | null
+          pic_production_id?: string | null
+          post_date?: string | null
+          post_link?: string | null
+          production_approved?: boolean | null
+          production_approved_date?: string | null
+          production_completion_date?: string | null
+          production_revision_count?: number | null
+          production_status?: string | null
+          revision_count?: number | null
+          service_id?: string | null
+          status?: string | null
+          status_content?: string | null
+          sub_service_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_plans_content_pillar_id_fkey"
+            columns: ["content_pillar_id"]
+            isOneToOne: false
+            referencedRelation: "content_pillars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_content_type_id_fkey"
+            columns: ["content_type_id"]
+            isOneToOne: false
+            referencedRelation: "content_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_pic_id_fkey"
+            columns: ["pic_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_pic_production_id_fkey"
+            columns: ["pic_production_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_sub_service_id_fkey"
+            columns: ["sub_service_id"]
+            isOneToOne: false
+            referencedRelation: "sub_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_metrics: {
         Row: {
           category: string | null
@@ -2226,6 +2398,59 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sub_services: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_analytics: {
         Row: {
           additional_data: Json | null
@@ -2475,6 +2700,33 @@ export type Database = {
           ticket_id?: string | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          created_at: string
+          department: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          id?: string
+          name: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
         }
         Relationships: []
       }
