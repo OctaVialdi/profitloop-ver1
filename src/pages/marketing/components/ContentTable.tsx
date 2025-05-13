@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Pencil, Package, FileText } from "lucide-react";
@@ -442,7 +441,7 @@ export default function ContentTable() {
                           </Select>
                         </TableCell>
 
-                        {/* 9. Brief */}
+                        {/* 9. Brief - Simplified to only show one button */}
                         <TableCell className="p-1 w-[120px]">
                           <Button 
                             variant="ghost" 
@@ -541,7 +540,7 @@ export default function ContentTable() {
                           </div>
                         </TableCell>
 
-                        {/* 17. PIC Produksi - Updated to use teamMembers from Creative department */}
+                        {/* 17. PIC Produksi - Updated to use teamMembers from Produksi */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
                           <Select 
                             value={item.pic_production_id || "none"} 
@@ -559,7 +558,7 @@ export default function ContentTable() {
                           </Select>
                         </TableCell>
 
-                        {/* 18. Link Google Drive - Updated to match Link Post format */}
+                        {/* 18. Link Google Drive - Formatted to match Link Post format */}
                         <TableCell className="p-1 w-[160px]">
                           <div className="flex flex-col gap-1">
                             {item.google_drive_link ? (
@@ -767,114 +766,4 @@ export default function ContentTable() {
 
       {/* Brief Dialog */}
       <Dialog open={isBriefDialogOpen} onOpenChange={setIsBriefDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Brief</DialogTitle>
-            <DialogDescription>
-              Enter the content brief details below. You can also include Google Docs links.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Textarea 
-              value={currentBrief} 
-              onChange={(e) => setCurrentBrief(e.target.value)} 
-              placeholder="Enter brief content..." 
-              className="min-h-[200px]" 
-            />
-            {extractGoogleDocsLink(currentBrief) && (
-              <div className="p-4 border rounded-md">
-                <div className="mb-2 font-medium">Detected link:</div>
-                <a 
-                  href={extractGoogleDocsLink(currentBrief)!} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-600 hover:underline flex items-center gap-2"
-                >
-                  {truncateText(extractGoogleDocsLink(currentBrief)!, 40)}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsBriefDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={saveBrief}>
-              Save Brief
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Title Dialog */}
-      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Title</DialogTitle>
-            <DialogDescription>
-              Enter the content title below.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Textarea 
-              value={currentTitle} 
-              onChange={(e) => setCurrentTitle(e.target.value)} 
-              placeholder="Enter content title..." 
-              className="min-h-[100px]" 
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsTitleDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={saveTitle}>
-              Save Title
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* URL Dialog (for both post link and google drive link) */}
-      <Dialog open={isUrlDialogOpen} onOpenChange={setIsUrlDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{currentUrlTitle}</DialogTitle>
-            <DialogDescription>
-              Enter the URL below.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input 
-              value={currentUrl} 
-              onChange={(e) => setCurrentUrl(e.target.value)} 
-              placeholder="Enter URL..." 
-            />
-            {currentUrl && (
-              <div className="p-4 border rounded-md">
-                <div className="mb-2 font-medium">Preview:</div>
-                <a 
-                  href={currentUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-600 hover:underline flex items-center gap-2"
-                >
-                  {truncateText(currentUrl, 40)}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsUrlDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={saveUrl}>
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+        <

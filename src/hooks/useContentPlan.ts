@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
@@ -271,7 +272,7 @@ export function useContentPlan() {
     updateContentPlan(id, { [field]: 0 });
   }, [updateContentPlan]);
 
-  // Filter team members by department
+  // Filter team members by role
   const getFilteredTeamMembers = useCallback((role: string) => {
     return teamMembers.filter(member => member.role === role);
   }, [teamMembers]);
