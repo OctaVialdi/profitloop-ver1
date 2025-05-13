@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
@@ -207,7 +208,7 @@ export function ContentPlan() {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 py-3 px-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={addNewRow}>+ Add Row</Button>
@@ -219,7 +220,7 @@ export function ContentPlan() {
         </div>
       </div>
       
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-md border overflow-hidden mt-3">
         <div className="h-[600px] overflow-hidden">
           <ScrollArea className="h-full">
             <div className="min-w-[2000px] table-fixed">
