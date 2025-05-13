@@ -4,11 +4,12 @@ import { Link, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatePresence, motion } from "framer-motion";
-import { Settings } from "lucide-react";
+import { Settings, FileText } from "lucide-react";
 
 interface Tab {
   name: string;
   href: string;
+  icon?: React.ReactNode;
 }
 
 interface MarketingLayoutProps {
@@ -21,10 +22,11 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
   const tabs: Tab[] = [
     { name: "Ads Performance", href: "/marketing/ads-performance" },
     { name: "Social Media Management", href: "/marketing/social-media" },
+    { name: "Content Plan", href: "/marketing/content-plan", icon: <FileText className="mr-2 h-4 w-4" /> },
     { name: "KOL Management", href: "/marketing/kol" },
     { name: "SEO Management", href: "/marketing/seo" },
     { name: "Rating Performance", href: "/marketing/ratings" },
-    { name: "Settings", href: "/marketing/settings" },
+    { name: "Settings", href: "/marketing/settings", icon: <Settings className="mr-2 h-4 w-4" /> },
   ];
   
   const currentPath = location.pathname;
@@ -51,10 +53,10 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
                 asChild
               >
                 <Link to={tab.href}>
-                  {tab.name === "Settings" ? (
+                  {tab.icon ? (
                     <div className="flex items-center">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      {tab.icon}
+                      {tab.name}
                     </div>
                   ) : (
                     tab.name

@@ -10,6 +10,7 @@ import SeoManagement from "@/pages/marketing/SeoManagement";
 import RatingPerformance from "@/pages/marketing/RatingPerformance";
 import AgencyComparison from "@/pages/marketing/AgencyComparison";
 import Settings from "@/pages/marketing/Settings";
+import ContentPlan from "@/pages/marketing/components/ContentPlan";
 import { Outlet } from "react-router-dom";
 
 export const marketingRoutes = (
@@ -32,6 +33,7 @@ export const marketingRoutes = (
     <Route path="seo" element={<SeoManagement />} />
     <Route path="ratings" element={<RatingPerformance />} />
     <Route path="agency-comparison" element={<AgencyComparison />} />
+    <Route path="content-plan" element={<ContentPlan />} />
     <Route path="settings" element={<Settings />} />
     {/* Redirect to ads performance if no path matches */}
     <Route path="" element={<Navigate to="/marketing/ads-performance" replace />} />
