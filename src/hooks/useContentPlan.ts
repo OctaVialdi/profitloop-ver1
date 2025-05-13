@@ -1,4 +1,4 @@
 
-import { useContentPlan } from './content-plan/useContentPlan';
+import { useContentPlan } from './content-plan';
 export { useContentPlan };
-export type { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar, ContentPlanHookReturn } from './content-plan/types';
+export type { ContentPlanItem } from './content-plan';
