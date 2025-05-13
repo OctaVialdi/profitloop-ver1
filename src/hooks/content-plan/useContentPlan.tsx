@@ -33,43 +33,57 @@ export function useContentPlan(): ContentPlanHookReturn {
   const { toast } = useToast();
   const { organization } = useOrganization();
 
+  // Effect to fetch data when organization is available
   useEffect(() => {
     if (organization?.id) {
       console.log('Organization ID available, fetching content plan data:', organization.id);
       fetchAllContentPlanData();
+      // Clear any previous organization-related errors
+      setError(null);
     } else {
       console.log('No organization ID available, cannot fetch content plan data.');
       setError(new Error('No organization ID available'));
+      setLoading(false);
     }
   }, [organization?.id]);
 
   const fetchAllContentPlanData = async () => {
     try {
       console.log('Fetching all content plan data...');
-      await fetchContentPlansData();
-      await fetchContentTypesData();
-      await fetchTeamMembersData();
-      await fetchServicesData();
-      await fetchSubServicesData();
-      await fetchContentPillarsData();
+      setLoading(true);
+      
+      // Run these fetch operations in parallel for better performance
+      await Promise.all([
+        fetchContentPlansData(),
+        fetchContentTypesData(),
+        fetchTeamMembersData(),
+        fetchServicesData(),
+        fetchSubServicesData(),
+        fetchContentPillarsData(),
+      ]);
+      
       console.log('All content plan data fetched successfully.');
     } catch (error) {
       console.error("Error fetching content plan data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchContentPlansData = async () => {
     try {
-      setLoading(true);
-      console.log(`Fetching content plans for organization: ${organization?.id}`);
-      const data = await fetchContentPlans(organization?.id);
+      if (!organization?.id) {
+        console.log('Skipping content plans fetch - no organization ID');
+        return;
+      }
+      
+      console.log(`Fetching content plans for organization: ${organization.id}`);
+      const data = await fetchContentPlans(organization.id);
       console.log(`Fetched ${data.length} content plans:`, data);
       setContentPlans(data);
     } catch (err: any) {
       console.error("Error in fetchContentPlansData:", err);
       setError(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -84,7 +98,12 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const fetchTeamMembersData = async () => {
     try {
-      const data = await fetchTeamMembers(organization?.id);
+      if (!organization?.id) {
+        console.log('Skipping team members fetch - no organization ID');
+        return;
+      }
+      
+      const data = await fetchTeamMembers(organization.id);
       setTeamMembers(data);
     } catch (err) {
       console.error('Error fetching team members:', err);
@@ -120,11 +139,11 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const addContentPlan = async (newPlan: Partial<ContentPlanItem>) => {
     try {
-      console.log(`Adding content plan for organization: ${organization?.id}`, newPlan);
-      
       if (!organization?.id) {
         throw new Error('No organization ID available');
       }
+      
+      console.log(`Adding content plan for organization: ${organization.id}`, newPlan);
       
       const data = await addContentPlanItem(newPlan, organization.id);
       
@@ -149,11 +168,11 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const updateContentPlan = async (id: string, updates: Partial<ContentPlanItem>) => {
     try {
-      console.log(`Updating content plan ${id} for organization: ${organization?.id}`, updates);
-      
       if (!organization?.id) {
         throw new Error('No organization ID available');
       }
+      
+      console.log(`Updating content plan ${id} for organization: ${organization.id}`, updates);
       
       await updateContentPlanItem(id, updates, organization.id);
       
@@ -178,11 +197,11 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const deleteContentPlan = async (id: string) => {
     try {
-      console.log(`Deleting content plan ${id} for organization: ${organization?.id}`);
-      
       if (!organization?.id) {
         throw new Error('No organization ID available');
       }
+      
+      console.log(`Deleting content plan ${id} for organization: ${organization.id}`);
       
       await deleteContentPlanItem(id, organization.id);
       
@@ -209,6 +228,18 @@ export function useContentPlan(): ContentPlanHookReturn {
     return updateContentPlan(id, { [field]: 0 });
   };
 
+  // Utility function to get only Content Planner team members from the list
+  const getContentPlannerTeamMembers = () => {
+    return teamMembers.filter(member => 
+      member.job_position === "Content Planner" || member.department === "Content Planner");
+  };
+  
+  // Utility function to get only Creative team members from the list
+  const getCreativeTeamMembers = () => {
+    return teamMembers.filter(member => 
+      member.job_position === "Creative" || member.department === "Creative" || member.role === "Produksi");
+  };
+
   return {
     contentPlans: getContentPlansWithFormattedData(contentPlans),
     contentTypes,
@@ -222,9 +253,11 @@ export function useContentPlan(): ContentPlanHookReturn {
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
-    getFilteredTeamMembers: (department: string) => getFilteredTeamMembers(teamMembers, department),
-    getFilteredSubServices: (serviceId: string) => getFilteredSubServices(subServices, serviceId),
+    getFilteredTeamMembers,
+    getFilteredSubServices,
     resetRevisionCounter,
-    formatDisplayDate
+    formatDisplayDate,
+    getContentPlannerTeamMembers,
+    getCreativeTeamMembers
   };
 }

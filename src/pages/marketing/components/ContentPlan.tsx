@@ -10,17 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
+import { ContentPlanItem, useContentPlan } from "@/hooks/content-plan";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useOrganization } from "@/hooks/useOrganization";
 
-export function ContentPlan() {
+export default function ContentPlan() {
   const {
     contentPlans,
     contentTypes,
-    teamMembers,
     services,
     subServices,
     contentPillars,
@@ -29,11 +27,13 @@ export function ContentPlan() {
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
-    getFilteredTeamMembers,
     getFilteredSubServices,
     resetRevisionCounter,
-    formatDisplayDate
+    formatDisplayDate,
+    getContentPlannerTeamMembers,
+    getCreativeTeamMembers
   } = useContentPlan();
+  
   const { organization } = useOrganization();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
@@ -41,6 +41,12 @@ export function ContentPlan() {
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
   const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
   const [currentTitle, setCurrentTitle] = useState("");
+
+  // Content planners for PIC dropdown
+  const contentPlanners = getContentPlannerTeamMembers();
+  
+  // Creative team members for PIC Production dropdown
+  const creativeTeamMembers = getCreativeTeamMembers();
 
   // For adding new rows
   const addNewRow = () => {
@@ -307,7 +313,7 @@ export function ContentPlan() {
                           </Select>
                         </TableCell>
 
-                        {/* 4. PIC */}
+                        {/* 4. PIC - Now references Content Planners */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px] border-r">
                           <Select value={item.pic_id || "none"} onValueChange={value => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
@@ -315,7 +321,7 @@ export function ContentPlan() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Content Planner").map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
+                              {contentPlanners.map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -433,7 +439,7 @@ export function ContentPlan() {
                           </div>
                         </TableCell>
 
-                        {/* 17. PIC Produksi */}
+                        {/* 17. PIC Produksi - Now references Creative team members */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
                           <Select value={item.pic_production_id || "none"} onValueChange={value => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
@@ -441,7 +447,7 @@ export function ContentPlan() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Creative").filter(m => m.role === "Produksi").map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
+                              {creativeTeamMembers.map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </TableCell>

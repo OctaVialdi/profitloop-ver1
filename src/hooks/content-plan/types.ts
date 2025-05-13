@@ -1,25 +1,19 @@
 
 export interface ContentPlanItem {
   id: string;
-  post_date: string;
-  content_type_id: string;
-  content_type: { name: string } | string | null;
-  pic_id: string;
-  pic: { name: string } | string | null;
-  service_id: string;
-  service: { name: string } | string | null;
+  post_date: string | null;
+  content_type_id: string | null;
+  pic_id: string | null;
+  service_id: string | null;
   sub_service_id: string | null;
-  sub_service: { name: string } | string | null;
-  title: string;
+  title: string | null;
   content_pillar_id: string | null;
-  content_pillar: { name: string } | string | null;
   brief: string | null;
   status: string;
   revision_count: number;
   approved: boolean;
   completion_date: string | null;
   pic_production_id: string | null;
-  pic_production: { name: string } | string | null;
   google_drive_link: string | null;
   production_status: string;
   production_revision_count: number;
@@ -29,11 +23,41 @@ export interface ContentPlanItem {
   post_link: string | null;
   done: boolean;
   actual_post_date: string | null;
-  status_content: string | null;
-  on_time_status?: string;
-  created_at: string;
-  updated_at: string;
   organization_id: string | null;
+  
+  // Virtual/computed fields
+  on_time_status?: string;
+  status_content?: string;
+  
+  // Populated references
+  content_type?: {
+    id: string;
+    name: string;
+  };
+  pic?: {
+    id: string;
+    name: string;
+    job_position: string;
+    department: string;
+  };
+  service?: {
+    id: string;
+    name: string;
+  };
+  sub_service?: {
+    id: string;
+    name: string;
+  };
+  content_pillar?: {
+    id: string;
+    name: string;
+  };
+  pic_production?: {
+    id: string;
+    name: string;
+    job_position: string;
+    department: string;
+  };
 }
 
 export interface ContentType {
@@ -44,9 +68,10 @@ export interface ContentType {
 export interface TeamMember {
   id: string;
   name: string;
+  job_position: string;
   department: string;
-  role: string;
-  organization_id?: string;
+  role?: string;
+  organization_id: string;
 }
 
 export interface Service {
@@ -56,13 +81,14 @@ export interface Service {
 
 export interface SubService {
   id: string;
-  name: string;
   service_id: string;
+  name: string;
 }
 
 export interface ContentPillar {
   id: string;
   name: string;
+  funnel_stage?: string;
 }
 
 export interface ContentPlanHookReturn {
@@ -75,11 +101,13 @@ export interface ContentPlanHookReturn {
   loading: boolean;
   error: Error | null;
   fetchContentPlans: () => Promise<void>;
-  addContentPlan: (newPlan: Partial<ContentPlanItem>) => Promise<ContentPlanItem | null>;
+  addContentPlan: (newPlan: Partial<ContentPlanItem>) => Promise<any>;
   updateContentPlan: (id: string, updates: Partial<ContentPlanItem>) => Promise<boolean>;
   deleteContentPlan: (id: string) => Promise<boolean>;
   getFilteredTeamMembers: (department: string) => TeamMember[];
   getFilteredSubServices: (serviceId: string) => SubService[];
   resetRevisionCounter: (id: string, field: 'revision_count' | 'production_revision_count') => Promise<boolean>;
   formatDisplayDate: (dateString: string | null, includeTime?: boolean) => string;
+  getContentPlannerTeamMembers: () => TeamMember[];
+  getCreativeTeamMembers: () => TeamMember[];
 }
