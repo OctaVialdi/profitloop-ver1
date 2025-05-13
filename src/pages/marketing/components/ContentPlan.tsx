@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
@@ -221,446 +220,448 @@ export function ContentPlan() {
       </div>
       
       <div className="rounded-md border overflow-hidden">
-        <div className="overflow-x-auto" style={{ maxHeight: "calc(100vh - 180px)", overflow: "visible" }}>
-          <div className="min-w-[2000px]">
-            <Table className="w-full table-fixed">
-              <TableHeader className="sticky top-0 bg-white z-10">
-                <TableRow>
-                  <TableHead className="text-center whitespace-nowrap sticky left-0 bg-white z-20 w-[60px]">Action</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[120px]">Tanggal Posting</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[120px]">Layanan</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[150px]">Sub Layanan</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[140px]">Content Pillar</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[120px]">Brief</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[120px]">Status</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[100px]">Revision</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[100px]">Approved</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Selesai</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[120px]">Tanggal Upload</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[140px]">PIC Produksi</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[160px]">Link Google Drive</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[140px]">Status Produksi</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[120px]">Revisi Counter</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Selesai Produksi</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[100px]">Approved</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Approved</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[150px]">Download Link File</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[150px]">Link Post</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[80px]">Done</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[160px]">Actual Post</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[140px]">On Time Status</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[160px]">Status Content</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
+        <div className="h-[600px] overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="min-w-[2000px] table-fixed">
+              <Table className="w-full">
+                <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow>
-                    <TableCell colSpan={28} className="text-center py-4">Loading content plans...</TableCell>
+                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-white z-20 w-[60px]">Action</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[120px]">Tanggal Posting</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[120px]">Layanan</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[150px]">Sub Layanan</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[140px]">Content Pillar</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[120px]">Brief</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[120px]">Status</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[100px]">Revision</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[100px]">Approved</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Selesai</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[120px]">Tanggal Upload</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[140px]">PIC Produksi</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[160px]">Link Google Drive</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[140px]">Status Produksi</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[120px]">Revisi Counter</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Selesai Produksi</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[100px]">Approved</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Approved</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[150px]">Download Link File</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[150px]">Link Post</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[80px]">Done</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[160px]">Actual Post</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[140px]">On Time Status</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[160px]">Status Content</TableHead>
                   </TableRow>
-                ) : contentPlans.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={28} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
-                  </TableRow>
-                ) : (
-                  contentPlans.map((item: any) => (
-                    <TableRow key={item.id}>
-                      {/* 1. Action (Checkbox) */}
-                      <TableCell className="text-center whitespace-nowrap sticky left-0 bg-white z-20 w-[60px]">
-                        <div className="flex justify-center">
-                          <Checkbox 
-                            checked={selectedItems.includes(item.id)} 
-                            onCheckedChange={(checked) => handleSelectItem(item.id, !!checked)} 
-                          />
-                        </div>
-                      </TableCell>
-
-                      {/* 2. Tanggal Posting */}
-                      <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="w-full h-8">
-                              {item.post_date ? formatDisplayDate(item.post_date) : "Select date"}
-                              <CalendarIcon className="ml-2 h-4 w-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={item.post_date ? new Date(item.post_date) : undefined}
-                              onSelect={(date) => handleDateChange(item.id, date)}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </TableCell>
-
-                      {/* 3. Tipe Content */}
-                      <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                        <Select 
-                          value={item.content_type_id || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            {contentTypes.map((type) => (
-                              <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* 4. PIC */}
-                      <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                        <Select 
-                          value={item.pic_id || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            {getFilteredTeamMembers("Content Planner").map((member) => (
-                              <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* 5. Layanan */}
-                      <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                        <Select 
-                          value={item.service_id || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            {services.map((service) => (
-                              <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* 6. Sub Layanan */}
-                      <TableCell className="whitespace-nowrap p-1 w-[150px]">
-                        <Select 
-                          value={item.sub_service_id || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)}
-                          disabled={!item.service_id}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            {item.service_id && getFilteredSubServices(item.service_id).map((subService) => (
-                              <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* 7. Judul Content */}
-                      <TableCell className="p-1 w-[180px]">
-                        <Input
-                          value={item.title || ""}
-                          onChange={(e) => handleFieldChange(item.id, 'title', e.target.value)}
-                          placeholder="Enter title"
-                          title={item.title || ""}
-                          className="w-full h-8 truncate"
-                        />
-                      </TableCell>
-
-                      {/* 8. Content Pillar */}
-                      <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                        <Select 
-                          value={item.content_pillar_id || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'content_pillar_id', value === "none" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            {contentPillars.map((pillar) => (
-                              <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* 9. Brief */}
-                      <TableCell className="p-1 w-[120px]">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => openBriefDialog(item.id, item.brief)}
-                          className="w-full h-8 flex items-center justify-center gap-1 truncate"
-                        >
-                          {item.brief ? truncateText(item.brief) : "Click to add brief"}
-                        </Button>
-                        {extractGoogleDocsLink(item.brief) && (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="mt-1 w-full h-7"
-                            asChild
-                          >
-                            <a href={extractGoogleDocsLink(item.brief)!} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-3 w-3 mr-1" /> Open Doc
-                            </a>
-                          </Button>
-                        )}
-                      </TableCell>
-
-                      {/* 10. Status */}
-                      <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                        <Select 
-                          value={item.status || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'status', value === "none" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
-                            <SelectItem value="Request Revisi">Request Revisi</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* 11. Revision */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
-                        <div className="flex items-center justify-center gap-1">
-                          <span>{item.revision_count || 0}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6"
-                            onClick={() => resetRevisionCounter(item.id, 'revision_count')}
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-
-                      {/* 12. Approved */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
-                        <div className="flex justify-center">
-                          <Checkbox 
-                            checked={item.approved} 
-                            onCheckedChange={(checked) => handleFieldChange(item.id, 'approved', !!checked)}
-                          />
-                        </div>
-                      </TableCell>
-
-                      {/* 13. Tanggal Selesai */}
-                      <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                        {item.status === "Butuh Di Review" && item.completion_date && (
-                          <div className="text-center">
-                            {formatDisplayDate(item.completion_date, true)}
-                          </div>
-                        )}
-                      </TableCell>
-
-                      {/* 14. Tanggal Upload (Mirror of Tanggal Posting) */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[120px]">
-                        {formatDisplayDate(item.post_date)}
-                      </TableCell>
-
-                      {/* 15. Tipe Content (Mirror) */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[140px]">
-                        <div className="truncate" title={item.content_type?.name || item.content_type || "-"}>
-                          {item.content_type?.name || item.content_type || "-"}
-                        </div>
-                      </TableCell>
-
-                      {/* 16. Judul Content (Mirror) */}
-                      <TableCell className="whitespace-nowrap p-1 w-[180px]">
-                        <div className="truncate max-w-full" title={item.title || ""}>
-                          {truncateText(item.title)}
-                        </div>
-                      </TableCell>
-
-                      {/* 17. PIC Produksi */}
-                      <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                        <Select 
-                          value={item.pic_production_id || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            {getFilteredTeamMembers("Creative").filter(m => m.role === "Produksi").map((member) => (
-                              <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* 18. Link Google Drive */}
-                      <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                        <Input
-                          value={item.google_drive_link || ""}
-                          onChange={(e) => handleFieldChange(item.id, 'google_drive_link', e.target.value)}
-                          placeholder="Enter link"
-                          className="w-full h-8 truncate"
-                        />
-                      </TableCell>
-
-                      {/* 19. Status Produksi */}
-                      <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                        <Select 
-                          value={item.production_status || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'production_status', value === "none" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
-                            <SelectItem value="Request Revisi">Request Revisi</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* 20. Revisi Counter (Production) */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[120px]">
-                        <div className="flex items-center justify-center gap-1">
-                          <span>{item.production_revision_count || 0}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6"
-                            onClick={() => resetRevisionCounter(item.id, 'production_revision_count')}
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-
-                      {/* 21. Tanggal Selesai Produksi */}
-                      <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                        {item.production_status === "Butuh Di Review" && item.production_completion_date && (
-                          <div className="text-center">
-                            {formatDisplayDate(item.production_completion_date, true)}
-                          </div>
-                        )}
-                      </TableCell>
-
-                      {/* 22. Approved (Production) */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
-                        <div className="flex justify-center">
-                          <Checkbox 
-                            checked={item.production_approved} 
-                            onCheckedChange={(checked) => handleFieldChange(item.id, 'production_approved', !!checked)}
-                          />
-                        </div>
-                      </TableCell>
-
-                      {/* 23. Tanggal Approved */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[160px]">
-                        {item.production_approved && item.production_approved_date ? formatDisplayDate(item.production_approved_date, true) : ""}
-                      </TableCell>
-
-                      {/* 24. Download Link File (Mirror of Google Drive Link if approved) */}
-                      <TableCell className="p-1 w-[150px]">
-                        {item.production_approved && item.google_drive_link && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="w-full h-8"
-                            asChild
-                          >
-                            <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
-                              <Link className="h-3 w-3 mr-1" /> Download
-                            </a>
-                          </Button>
-                        )}
-                      </TableCell>
-
-                      {/* 25. Link Post */}
-                      <TableCell className="p-1 w-[150px]">
-                        <Input
-                          value={item.post_link || ""}
-                          onChange={(e) => handleFieldChange(item.id, 'post_link', e.target.value)}
-                          placeholder="Enter post link"
-                          className="w-full h-8 truncate"
-                        />
-                        {item.post_link && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="mt-1 w-full h-7"
-                            asChild
-                          >
-                            <a href={item.post_link} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-3 w-3 mr-1" /> View
-                            </a>
-                          </Button>
-                        )}
-                      </TableCell>
-
-                      {/* 26. Done */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[80px]">
-                        <div className="flex justify-center">
-                          <Checkbox 
-                            checked={item.done} 
-                            onCheckedChange={(checked) => handleFieldChange(item.id, 'done', !!checked)}
-                          />
-                        </div>
-                      </TableCell>
-
-                      {/* 27. Actual Post */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[160px]">
-                        {item.actual_post_date ? formatDisplayDate(item.actual_post_date, true) : ""}
-                      </TableCell>
-
-                      {/* 28. On Time Status */}
-                      <TableCell className="text-center whitespace-nowrap p-1 w-[140px]">
-                        <div className="truncate" title={item.on_time_status || ""}>
-                          {item.on_time_status || ""}
-                        </div>
-                      </TableCell>
-
-                      {/* 29. Status Content */}
-                      <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                        <Select 
-                          value={item.status_content || "none"} 
-                          onValueChange={(value) => handleFieldChange(item.id, 'status_content', value === "none" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            <SelectItem value="Recomended For Ads">Recomended For Ads</SelectItem>
-                            <SelectItem value="Cancel">Cancel</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={28} className="text-center py-4">Loading content plans...</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : contentPlans.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={28} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
+                    </TableRow>
+                  ) : (
+                    contentPlans.map((item: any) => (
+                      <TableRow key={item.id}>
+                        {/* 1. Action (Checkbox) */}
+                        <TableCell className="text-center whitespace-nowrap sticky left-0 bg-white z-20 w-[60px]">
+                          <div className="flex justify-center">
+                            <Checkbox 
+                              checked={selectedItems.includes(item.id)} 
+                              onCheckedChange={(checked) => handleSelectItem(item.id, !!checked)} 
+                            />
+                          </div>
+                        </TableCell>
+
+                        {/* 2. Tanggal Posting */}
+                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" size="sm" className="w-full h-8">
+                                {item.post_date ? formatDisplayDate(item.post_date) : "Select date"}
+                                <CalendarIcon className="ml-2 h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={item.post_date ? new Date(item.post_date) : undefined}
+                                onSelect={(date) => handleDateChange(item.id, date)}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </TableCell>
+
+                        {/* 3. Tipe Content */}
+                        <TableCell className="whitespace-nowrap p-1 w-[140px]">
+                          <Select 
+                            value={item.content_type_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              {contentTypes.map((type) => (
+                                <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+
+                        {/* 4. PIC */}
+                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
+                          <Select 
+                            value={item.pic_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              {getFilteredTeamMembers("Content Planner").map((member) => (
+                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+
+                        {/* 5. Layanan */}
+                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
+                          <Select 
+                            value={item.service_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              {services.map((service) => (
+                                <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+
+                        {/* 6. Sub Layanan */}
+                        <TableCell className="whitespace-nowrap p-1 w-[150px]">
+                          <Select 
+                            value={item.sub_service_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)}
+                            disabled={!item.service_id}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              {item.service_id && getFilteredSubServices(item.service_id).map((subService) => (
+                                <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+
+                        {/* 7. Judul Content */}
+                        <TableCell className="p-1 w-[180px]">
+                          <Input
+                            value={item.title || ""}
+                            onChange={(e) => handleFieldChange(item.id, 'title', e.target.value)}
+                            placeholder="Enter title"
+                            title={item.title || ""}
+                            className="w-full h-8 truncate"
+                          />
+                        </TableCell>
+
+                        {/* 8. Content Pillar */}
+                        <TableCell className="whitespace-nowrap p-1 w-[140px]">
+                          <Select 
+                            value={item.content_pillar_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'content_pillar_id', value === "none" ? "" : value)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              {contentPillars.map((pillar) => (
+                                <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+
+                        {/* 9. Brief */}
+                        <TableCell className="p-1 w-[120px]">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => openBriefDialog(item.id, item.brief)}
+                            className="w-full h-8 flex items-center justify-center gap-1 truncate"
+                          >
+                            {item.brief ? truncateText(item.brief) : "Click to add brief"}
+                          </Button>
+                          {extractGoogleDocsLink(item.brief) && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="mt-1 w-full h-7"
+                              asChild
+                            >
+                              <a href={extractGoogleDocsLink(item.brief)!} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-3 w-3 mr-1" /> Open Doc
+                              </a>
+                            </Button>
+                          )}
+                        </TableCell>
+
+                        {/* 10. Status */}
+                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
+                          <Select 
+                            value={item.status || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'status', value === "none" ? "" : value)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
+                              <SelectItem value="Request Revisi">Request Revisi</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+
+                        {/* 11. Revision */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
+                          <div className="flex items-center justify-center gap-1">
+                            <span>{item.revision_count || 0}</span>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={() => resetRevisionCounter(item.id, 'revision_count')}
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+
+                        {/* 12. Approved */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
+                          <div className="flex justify-center">
+                            <Checkbox 
+                              checked={item.approved} 
+                              onCheckedChange={(checked) => handleFieldChange(item.id, 'approved', !!checked)}
+                            />
+                          </div>
+                        </TableCell>
+
+                        {/* 13. Tanggal Selesai */}
+                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
+                          {item.status === "Butuh Di Review" && item.completion_date && (
+                            <div className="text-center">
+                              {formatDisplayDate(item.completion_date, true)}
+                            </div>
+                          )}
+                        </TableCell>
+
+                        {/* 14. Tanggal Upload (Mirror of Tanggal Posting) */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[120px]">
+                          {formatDisplayDate(item.post_date)}
+                        </TableCell>
+
+                        {/* 15. Tipe Content (Mirror) */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[140px]">
+                          <div className="truncate" title={item.content_type?.name || item.content_type || "-"}>
+                            {item.content_type?.name || item.content_type || "-"}
+                          </div>
+                        </TableCell>
+
+                        {/* 16. Judul Content (Mirror) */}
+                        <TableCell className="whitespace-nowrap p-1 w-[180px]">
+                          <div className="truncate max-w-full" title={item.title || ""}>
+                            {truncateText(item.title)}
+                          </div>
+                        </TableCell>
+
+                        {/* 17. PIC Produksi */}
+                        <TableCell className="whitespace-nowrap p-1 w-[140px]">
+                          <Select 
+                            value={item.pic_production_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              {getFilteredTeamMembers("Creative").filter(m => m.role === "Produksi").map((member) => (
+                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+
+                        {/* 18. Link Google Drive */}
+                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
+                          <Input
+                            value={item.google_drive_link || ""}
+                            onChange={(e) => handleFieldChange(item.id, 'google_drive_link', e.target.value)}
+                            placeholder="Enter link"
+                            className="w-full h-8 truncate"
+                          />
+                        </TableCell>
+
+                        {/* 19. Status Produksi */}
+                        <TableCell className="whitespace-nowrap p-1 w-[140px]">
+                          <Select 
+                            value={item.production_status || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'production_status', value === "none" ? "" : value)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
+                              <SelectItem value="Request Revisi">Request Revisi</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+
+                        {/* 20. Revisi Counter (Production) */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[120px]">
+                          <div className="flex items-center justify-center gap-1">
+                            <span>{item.production_revision_count || 0}</span>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={() => resetRevisionCounter(item.id, 'production_revision_count')}
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+
+                        {/* 21. Tanggal Selesai Produksi */}
+                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
+                          {item.production_status === "Butuh Di Review" && item.production_completion_date && (
+                            <div className="text-center">
+                              {formatDisplayDate(item.production_completion_date, true)}
+                            </div>
+                          )}
+                        </TableCell>
+
+                        {/* 22. Approved (Production) */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
+                          <div className="flex justify-center">
+                            <Checkbox 
+                              checked={item.production_approved} 
+                              onCheckedChange={(checked) => handleFieldChange(item.id, 'production_approved', !!checked)}
+                            />
+                          </div>
+                        </TableCell>
+
+                        {/* 23. Tanggal Approved */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[160px]">
+                          {item.production_approved && item.production_approved_date ? formatDisplayDate(item.production_approved_date, true) : ""}
+                        </TableCell>
+
+                        {/* 24. Download Link File (Mirror of Google Drive Link if approved) */}
+                        <TableCell className="p-1 w-[150px]">
+                          {item.production_approved && item.google_drive_link && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="w-full h-8"
+                              asChild
+                            >
+                              <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
+                                <Link className="h-3 w-3 mr-1" /> Download
+                              </a>
+                            </Button>
+                          )}
+                        </TableCell>
+
+                        {/* 25. Link Post */}
+                        <TableCell className="p-1 w-[150px]">
+                          <Input
+                            value={item.post_link || ""}
+                            onChange={(e) => handleFieldChange(item.id, 'post_link', e.target.value)}
+                            placeholder="Enter post link"
+                            className="w-full h-8 truncate"
+                          />
+                          {item.post_link && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="mt-1 w-full h-7"
+                              asChild
+                            >
+                              <a href={item.post_link} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-3 w-3 mr-1" /> View
+                              </a>
+                            </Button>
+                          )}
+                        </TableCell>
+
+                        {/* 26. Done */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[80px]">
+                          <div className="flex justify-center">
+                            <Checkbox 
+                              checked={item.done} 
+                              onCheckedChange={(checked) => handleFieldChange(item.id, 'done', !!checked)}
+                            />
+                          </div>
+                        </TableCell>
+
+                        {/* 27. Actual Post */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[160px]">
+                          {item.actual_post_date ? formatDisplayDate(item.actual_post_date, true) : ""}
+                        </TableCell>
+
+                        {/* 28. On Time Status */}
+                        <TableCell className="text-center whitespace-nowrap p-1 w-[140px]">
+                          <div className="truncate" title={item.on_time_status || ""}>
+                            {item.on_time_status || ""}
+                          </div>
+                        </TableCell>
+
+                        {/* 29. Status Content */}
+                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
+                          <Select 
+                            value={item.status_content || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'status_content', value === "none" ? "" : value)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-</SelectItem>
+                              <SelectItem value="Recomended For Ads">Recomended For Ads</SelectItem>
+                              <SelectItem value="Cancel">Cancel</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </ScrollArea>
         </div>
       </div>
 
