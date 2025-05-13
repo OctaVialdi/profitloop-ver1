@@ -22,25 +22,39 @@ export function useFilteredEmployees(jobPosition?: string) {
       try {
         setIsLoading(true);
         
-        let query = supabase
+        // First check if employee_employment table has job_position column
+        const { data: employeeData, error: employeeError } = await supabase
           .from('employees')
-          .select('id, name, organization_id, job_position, job_level');
+          .select('id, name, organization_id')
+          .eq('organization_id', organization?.id || '');
 
-        // Filter by organization
-        if (organization?.id) {
-          query = query.eq('organization_id', organization.id);
-        }
+        if (employeeError) throw employeeError;
+
+        // Then get job positions from employee_employment table
+        const { data: employmentData, error: employmentError } = await supabase
+          .from('employee_employment')
+          .select('employee_id, job_position, job_level');
+
+        if (employmentError) throw employmentError;
+
+        // Combine the data
+        const combinedData = employeeData.map(employee => {
+          const employment = employmentData.find(e => e.employee_id === employee.id);
+          
+          return {
+            id: employee.id,
+            name: employee.name,
+            job_position: employment?.job_position || '',
+            job_level: employment?.job_level || ''
+          };
+        });
 
         // Filter by job position if provided
-        if (jobPosition) {
-          query = query.eq('job_position', jobPosition);
-        }
+        const filteredEmployees = jobPosition 
+          ? combinedData.filter(emp => emp.job_position === jobPosition)
+          : combinedData;
         
-        const { data, error } = await query;
-
-        if (error) throw error;
-
-        setEmployees(data || []);
+        setEmployees(filteredEmployees);
       } catch (err) {
         console.error('Error fetching employees:', err);
         setError(err instanceof Error ? err : new Error('Unknown error'));
@@ -49,7 +63,9 @@ export function useFilteredEmployees(jobPosition?: string) {
       }
     }
 
-    fetchEmployees();
+    if (organization?.id) {
+      fetchEmployees();
+    }
   }, [organization?.id, jobPosition]);
 
   return { employees, isLoading, error };

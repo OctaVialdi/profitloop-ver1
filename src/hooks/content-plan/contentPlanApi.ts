@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from './types';
 
@@ -54,22 +55,34 @@ export const fetchContentTypes = async () => {
 
 export const fetchTeamMembers = async (organizationId: string | undefined) => {
   try {
-    const { data, error } = await supabase
+    // First get employees from the employees table
+    const { data: employeesData, error: employeesError } = await supabase
       .from('employees')
-      .select('id, name, job_position, job_level')
+      .select('id, name, organization_id')
       .eq('organization_id', organizationId)
       .order('name');
 
-    if (error) throw error;
-    
-    // Map the employee data to the TeamMember interface
-    const teamMembers = (data || []).map(employee => ({
-      id: employee.id,
-      name: employee.name,
-      department: 'Digital Marketing', // Default department
-      job_position: employee.job_position || '',
-      role: employee.job_level || ''
-    }));
+    if (employeesError) throw employeesError;
+
+    // Then get job positions from employee_employment table
+    const { data: employmentData, error: employmentError } = await supabase
+      .from('employee_employment')
+      .select('employee_id, job_position, job_level');
+
+    if (employmentError) throw employmentError;
+
+    // Combine the data to create team members
+    const teamMembers = employeesData.map(employee => {
+      const employment = employmentData.find(e => e.employee_id === employee.id);
+      
+      return {
+        id: employee.id,
+        name: employee.name,
+        department: 'Digital Marketing', // Default department
+        job_position: employment?.job_position || '',
+        role: employment?.job_level || ''
+      };
+    });
     
     return teamMembers as TeamMember[];
   } catch (err) {
