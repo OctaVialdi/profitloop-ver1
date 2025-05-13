@@ -425,7 +425,7 @@ const SocialMediaManagement = () => {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 px-0">
       {/* Primary Tab Navigation - Updated to be more compact */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
@@ -539,7 +539,14 @@ const SocialMediaManagement = () => {
       </div>
 
       {/* Dashboard Content */}
-      {renderSecondaryTabContent()}
+      <Card className="w-full border shadow-sm">
+        <CardHeader className="py-4">
+          <CardTitle className="text-lg">{activeSubTab} Content</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {renderSecondaryTabContent()}
+        </CardContent>
+      </Card>
 
       {/* Edit Target Dialog */}
       <Dialog open={isEditTargetOpen} onOpenChange={setIsEditTargetOpen}>
