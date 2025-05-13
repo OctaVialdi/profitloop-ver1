@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useOrganization } from '@/hooks/useOrganization';
@@ -208,21 +209,6 @@ export function useContentPlan(): ContentPlanHookReturn {
     return updateContentPlan(id, { [field]: 0 });
   };
 
-  // New function to filter team members by job position
-  const getTeamMembersByJobPosition = (jobPosition: string): TeamMember[] => {
-    return teamMembers.filter(member => member.job_position === jobPosition);
-  };
-
-  // Specialized function for content planners
-  const getContentPlanners = (): TeamMember[] => {
-    return getTeamMembersByJobPosition('Content Planner');
-  };
-
-  // Specialized function for creative team members
-  const getCreativeTeamMembers = (): TeamMember[] => {
-    return getTeamMembersByJobPosition('Creative');
-  };
-
   return {
     contentPlans: getContentPlansWithFormattedData(contentPlans),
     contentTypes,
@@ -239,10 +225,6 @@ export function useContentPlan(): ContentPlanHookReturn {
     getFilteredTeamMembers: (department: string) => getFilteredTeamMembers(teamMembers, department),
     getFilteredSubServices: (serviceId: string) => getFilteredSubServices(subServices, serviceId),
     resetRevisionCounter,
-    formatDisplayDate,
-    // Add the new specialized functions to the return object
-    getTeamMembersByJobPosition,
-    getContentPlanners,
-    getCreativeTeamMembers
+    formatDisplayDate
   };
 }
