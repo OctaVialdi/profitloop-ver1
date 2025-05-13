@@ -33,7 +33,12 @@ export function TeamMembersTab() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentMember, setCurrentMember] = useState<TeamMember | null>(null);
-  const [formData, setFormData] = useState<Partial<TeamMember>>({
+  const [formData, setFormData] = useState<{
+    name: string;
+    department: string;
+    job_position: string;
+    role: string;
+  }>({
     name: '',
     department: 'Digital Marketing',
     job_position: '',
@@ -96,9 +101,17 @@ export function TeamMembersTab() {
         return;
       }
 
+      // Fix: Ensure formData has all required properties with non-null values
+      const newMember = {
+        name: formData.name,
+        department: formData.department,
+        job_position: formData.job_position,
+        role: formData.role
+      };
+
       const { data, error } = await supabase
         .from('team_members')
-        .insert([formData])
+        .insert([newMember])
         .select();
 
       if (error) throw error;
@@ -131,9 +144,17 @@ export function TeamMembersTab() {
         return;
       }
 
+      // Fix: Ensure formData has all required properties with non-null values
+      const updatedMember = {
+        name: formData.name,
+        department: formData.department,
+        job_position: formData.job_position,
+        role: formData.role
+      };
+
       const { error } = await supabase
         .from('team_members')
-        .update(formData)
+        .update(updatedMember)
         .eq('id', currentMember.id);
 
       if (error) throw error;
