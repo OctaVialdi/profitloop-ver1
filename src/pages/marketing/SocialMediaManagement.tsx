@@ -43,6 +43,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ContentPlan from "./components/ContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Link } from "react-router-dom";
 
 interface ContentManager {
   name: string;
@@ -462,24 +463,24 @@ const SocialMediaManagement = () => {
       {/* Content Section */}
       {renderTabContent()}
 
-      {/* Pagination - Make it more compact */}
+      {/* Pagination - Updated to use Link components */}
       <div className="flex justify-end">
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious href="#" className="h-7 text-xs" />
+              <PaginationPrevious to="#" component={Link} className="h-7 text-xs" />
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink href="#" className="h-7 w-7 text-xs">1</PaginationLink>
+              <PaginationLink to="#" component={Link} className="h-7 w-7 text-xs">1</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink href="#" className="h-7 w-7 text-xs" isActive>2</PaginationLink>
+              <PaginationLink to="#" component={Link} className="h-7 w-7 text-xs" isActive>2</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink href="#" className="h-7 w-7 text-xs">3</PaginationLink>
+              <PaginationLink to="#" component={Link} className="h-7 w-7 text-xs">3</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationNext href="#" className="h-7 text-xs" />
+              <PaginationNext to="#" component={Link} className="h-7 text-xs" />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
