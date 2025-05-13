@@ -6,6 +6,7 @@ import { useFetchContentPlan } from './hooks/useFetchContentPlan';
 import { useMutateContentPlan } from './hooks/useMutateContentPlan';
 import { useTeamMembersFilter } from './hooks/useTeamMembersFilter';
 import { useCallback, useMemo } from 'react';
+import { LegacyEmployee } from '@/hooks/useEmployees';
 
 export function useContentPlan(): ContentPlanHookReturn {
   // Fetch content plan data

@@ -11,11 +11,12 @@ import {
   fetchContentPillars
 } from '../contentPlanApi';
 import { useQuery } from '@tanstack/react-query';
+import { LegacyEmployee } from '@/hooks/useEmployees';
 
 export interface FetchContentPlanReturn {
   contentPlans: ContentPlanItem[];
   contentTypes: ContentType[];
-  teamMembers: TeamMember[];
+  teamMembers: LegacyEmployee[];
   services: Service[];
   subServices: SubService[];
   contentPillars: ContentPillar[];

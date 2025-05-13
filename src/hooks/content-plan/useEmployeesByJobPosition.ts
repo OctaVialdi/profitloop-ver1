@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { LegacyEmployee, convertToLegacyFormat } from '@/hooks/useEmployees';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useEmployeesByJobPosition() {
   const [contentPlanners, setContentPlanners] = useState<LegacyEmployee[]>([]);

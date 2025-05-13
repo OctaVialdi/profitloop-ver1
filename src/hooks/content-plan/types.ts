@@ -1,4 +1,6 @@
 
+import { LegacyEmployee } from '@/hooks/useEmployees';
+
 export interface ContentPlanItem {
   id: string;
   post_date: string | null;
@@ -24,6 +26,8 @@ export interface ContentPlanItem {
   done: boolean;
   actual_post_date: string | null;
   organization_id: string | null;
+  created_at?: string;
+  updated_at?: string;
   
   // Virtual/computed fields
   on_time_status?: string;
@@ -63,6 +67,8 @@ export interface ContentPlanItem {
 export interface ContentType {
   id: string;
   name: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface TeamMember {
@@ -70,31 +76,37 @@ export interface TeamMember {
   name: string;
   job_position: string;
   department: string;
-  role?: string;
-  organization_id: string;
+  role: string;
+  organization_id?: string;
 }
 
 export interface Service {
   id: string;
   name: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SubService {
   id: string;
   service_id: string;
   name: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ContentPillar {
   id: string;
   name: string;
   funnel_stage?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ContentPlanHookReturn {
   contentPlans: ContentPlanItem[];
   contentTypes: ContentType[];
-  teamMembers: TeamMember[];
+  teamMembers: LegacyEmployee[];
   services: Service[];
   subServices: SubService[];
   contentPillars: ContentPillar[];
@@ -104,10 +116,10 @@ export interface ContentPlanHookReturn {
   addContentPlan: (newPlan: Partial<ContentPlanItem>) => Promise<any>;
   updateContentPlan: (id: string, updates: Partial<ContentPlanItem>) => Promise<boolean>;
   deleteContentPlan: (id: string) => Promise<boolean>;
-  getFilteredTeamMembers: (department: string) => TeamMember[];
+  getFilteredTeamMembers: (department: string) => LegacyEmployee[];
   getFilteredSubServices: (serviceId: string) => SubService[];
   resetRevisionCounter: (id: string, field: 'revision_count' | 'production_revision_count') => Promise<boolean>;
   formatDisplayDate: (dateString: string | null, includeTime?: boolean) => string;
-  getContentPlannerTeamMembers: () => TeamMember[];
-  getCreativeTeamMembers: () => TeamMember[];
+  getContentPlannerTeamMembers: () => LegacyEmployee[];
+  getCreativeTeamMembers: () => LegacyEmployee[];
 }
