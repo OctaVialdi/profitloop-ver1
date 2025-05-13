@@ -15,7 +15,7 @@ interface DeleteConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedCount: number;
-  onConfirm: () => Promise<void>;
+  onConfirm: () => Promise<boolean | void>;
 }
 
 export default function DeleteConfirmDialog({
