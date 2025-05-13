@@ -227,7 +227,7 @@ export function ContentPlan() {
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow>
                     <TableHead className="text-center whitespace-nowrap sticky left-0 bg-white z-20 w-[60px]">Action</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">Tanggal Posting</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Posting</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">Layanan</TableHead>
@@ -280,7 +280,7 @@ export function ContentPlan() {
                         </TableCell>
 
                         {/* 2. Tanggal Posting */}
-                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
+                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button variant="outline" size="sm" className="w-full h-8">
