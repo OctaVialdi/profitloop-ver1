@@ -80,6 +80,7 @@ const SocialMediaManagement = () => {
 
   const secondaryTabs: TabData[] = [
     { id: "dashboard", label: "Dashboard" },
+    { id: "content", label: "Content" },
     { id: "create-content", label: "Create Content" },
     { id: "content-bank", label: "Content Bank" },
     { id: "content-qc", label: "Content QC" }
@@ -406,6 +407,39 @@ const SocialMediaManagement = () => {
             </CardHeader>
             <CardContent className="p-0">
               <ContentPlan />
+            </CardContent>
+          </Card>
+        );
+      case "content":
+        return (
+          <Card className="w-full">
+            <CardHeader className="py-3">
+              <CardTitle className="text-lg">Content Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="py-6">
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="rounded-full bg-gray-100 p-3 mb-4">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-8 w-8 text-gray-500" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={1.5} 
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium mb-2">Content Tab</h3>
+                <p className="text-gray-500 mb-6 max-w-md">
+                  This space is ready for your content management needs. You can customize it based on your requirements.
+                </p>
+                <Button variant="outline">Add Content</Button>
+              </div>
             </CardContent>
           </Card>
         );
