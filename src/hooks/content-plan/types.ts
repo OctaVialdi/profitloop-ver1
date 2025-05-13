@@ -46,6 +46,7 @@ export interface TeamMember {
   name: string;
   department: string;
   role: string;
+  job_position: string;
   organization_id?: string;
 }
 
@@ -82,4 +83,8 @@ export interface ContentPlanHookReturn {
   getFilteredSubServices: (serviceId: string) => SubService[];
   resetRevisionCounter: (id: string, field: 'revision_count' | 'production_revision_count') => Promise<boolean>;
   formatDisplayDate: (dateString: string | null, includeTime?: boolean) => string;
+  // New specialized functions
+  getTeamMembersByJobPosition: (jobPosition: string) => TeamMember[];
+  getContentPlanners: () => TeamMember[];
+  getCreativeTeamMembers: () => TeamMember[];
 }
