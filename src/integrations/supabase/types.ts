@@ -2702,13 +2702,14 @@ export type Database = {
         }
         Relationships: []
       }
-      team_members: {
+      team_members_digital_marketing: {
         Row: {
           created_at: string
           department: string
           id: string
           job_position: string
           name: string
+          organization_id: string | null
           role: string
           updated_at: string
         }
@@ -2718,6 +2719,7 @@ export type Database = {
           id?: string
           job_position: string
           name: string
+          organization_id?: string | null
           role: string
           updated_at?: string
         }
@@ -2727,10 +2729,19 @@ export type Database = {
           id?: string
           job_position?: string
           name?: string
+          organization_id?: string | null
           role?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "team_members_digital_marketing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {

@@ -46,6 +46,7 @@ export interface TeamMember {
   name: string;
   department: string;
   role: string;
+  organization_id?: string;
 }
 
 export interface Service {

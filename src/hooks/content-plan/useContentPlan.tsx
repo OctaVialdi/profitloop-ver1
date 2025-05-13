@@ -84,7 +84,7 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const fetchTeamMembersData = async () => {
     try {
-      const data = await fetchTeamMembers();
+      const data = await fetchTeamMembers(organization?.id);
       setTeamMembers(data);
     } catch (err) {
       console.error('Error fetching team members:', err);
@@ -228,4 +228,3 @@ export function useContentPlan(): ContentPlanHookReturn {
     formatDisplayDate
   };
 }
-
