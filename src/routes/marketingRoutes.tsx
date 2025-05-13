@@ -12,12 +12,6 @@ import AgencyComparison from "@/pages/marketing/AgencyComparison";
 import Settings from "@/pages/marketing/Settings";
 import { Outlet } from "react-router-dom";
 
-// Import Social Media tab components
-import SocialMediaDashboard from "@/pages/marketing/social-media/Dashboard";
-import ContentPlan from "@/pages/marketing/social-media/ContentPlan";
-import ContentBank from "@/pages/marketing/social-media/ContentBank";
-import ContentQC from "@/pages/marketing/social-media/ContentQC";
-
 export const marketingRoutes = (
   <Route
     key="marketing"
@@ -33,15 +27,7 @@ export const marketingRoutes = (
     }
   >
     <Route path="ads-performance" element={<AdsPerformance />} />
-    
-    {/* Social Media Management with nested routes */}
-    <Route path="social-media" element={<SocialMediaManagement />}>
-      <Route index element={<SocialMediaDashboard />} />
-      <Route path="content" element={<ContentPlan />} />
-      <Route path="content-bank" element={<ContentBank />} />
-      <Route path="content-qc" element={<ContentQC />} />
-    </Route>
-    
+    <Route path="social-media" element={<SocialMediaManagement />} />
     <Route path="kol" element={<KolManagement />} />
     <Route path="seo" element={<SeoManagement />} />
     <Route path="ratings" element={<RatingPerformance />} />
