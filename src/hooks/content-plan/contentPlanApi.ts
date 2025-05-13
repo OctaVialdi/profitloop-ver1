@@ -25,7 +25,38 @@ export async function fetchContentPlans(organizationId: string): Promise<Content
       throw new Error(`Error fetching content plans: ${error.message}`);
     }
 
-    return data as ContentPlanItem[];
+    // Safely cast the data by first checking for error cases in the joined fields
+    return (data as any[]).map(item => {
+      // Create a safe version of the item with error fields replaced with nulls
+      const safeItem = { ...item };
+      
+      // Check joined fields and handle any error objects
+      if (safeItem.pic && typeof safeItem.pic === 'object' && 'error' in safeItem.pic) {
+        safeItem.pic = null;
+      }
+      
+      if (safeItem.content_type && typeof safeItem.content_type === 'object' && 'error' in safeItem.content_type) {
+        safeItem.content_type = null;
+      }
+      
+      if (safeItem.service && typeof safeItem.service === 'object' && 'error' in safeItem.service) {
+        safeItem.service = null;
+      }
+      
+      if (safeItem.sub_service && typeof safeItem.sub_service === 'object' && 'error' in safeItem.sub_service) {
+        safeItem.sub_service = null;
+      }
+      
+      if (safeItem.content_pillar && typeof safeItem.content_pillar === 'object' && 'error' in safeItem.content_pillar) {
+        safeItem.content_pillar = null;
+      }
+      
+      if (safeItem.pic_production && typeof safeItem.pic_production === 'object' && 'error' in safeItem.pic_production) {
+        safeItem.pic_production = null;
+      }
+      
+      return safeItem as ContentPlanItem;
+    });
   } catch (error) {
     console.error('Unexpected error in fetchContentPlans:', error);
     throw error;

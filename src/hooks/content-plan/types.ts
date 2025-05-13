@@ -1,4 +1,3 @@
-
 export interface ContentPlanItem {
   id: string;
   post_date: string | null;
@@ -29,35 +28,35 @@ export interface ContentPlanItem {
   on_time_status?: string;
   status_content?: string;
   
-  // Populated references
+  // Populated references - now with nullable fields to handle errors
   content_type?: {
     id: string;
     name: string;
-  };
+  } | null;
   pic?: {
     id: string;
     name: string;
     job_position: string;
     department: string;
-  };
+  } | null;
   service?: {
     id: string;
     name: string;
-  };
+  } | null;
   sub_service?: {
     id: string;
     name: string;
-  };
+  } | null;
   content_pillar?: {
     id: string;
     name: string;
-  };
+  } | null;
   pic_production?: {
     id: string;
     name: string;
     job_position: string;
     department: string;
-  };
+  } | null;
 }
 
 export interface ContentType {

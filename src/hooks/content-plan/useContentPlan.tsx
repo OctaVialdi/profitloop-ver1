@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useOrganization } from '@/hooks/useOrganization';
@@ -228,6 +227,16 @@ export function useContentPlan(): ContentPlanHookReturn {
     return updateContentPlan(id, { [field]: 0 });
   };
 
+  // Modified function to match the required signature in ContentPlanHookReturn
+  const getFilteredTeamMembersWrapper = (department: string): TeamMember[] => {
+    return getFilteredTeamMembers(teamMembers, department);
+  };
+
+  // Modified function to match the required signature in ContentPlanHookReturn
+  const getFilteredSubServicesWrapper = (serviceId: string): SubService[] => {
+    return getFilteredSubServices(subServices, serviceId);
+  };
+
   // Utility function to get only Content Planner team members from the list
   const getContentPlannerTeamMembers = () => {
     return teamMembers.filter(member => 
@@ -253,8 +262,8 @@ export function useContentPlan(): ContentPlanHookReturn {
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
-    getFilteredTeamMembers,
-    getFilteredSubServices,
+    getFilteredTeamMembers: getFilteredTeamMembersWrapper,
+    getFilteredSubServices: getFilteredSubServicesWrapper,
     resetRevisionCounter,
     formatDisplayDate,
     getContentPlannerTeamMembers,
