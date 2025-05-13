@@ -1,3 +1,3 @@
 
-import ContentPlan from "./content-plan";
+import ContentPlan from "./content-plan/ContentPlan";
 export default ContentPlan;
