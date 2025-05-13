@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Card, 
@@ -44,6 +43,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ContentPlan } from "./components/ContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 interface ContentManager {
   name: string;
@@ -541,6 +541,52 @@ const SocialMediaManagement = () => {
 
       {/* Dashboard Content */}
       {renderSecondaryTabContent()}
+
+      {/* New Section Added Inside Py-2 Div */}
+      <div className="py-2">
+        <Card className="w-full shadow-sm">
+          <CardHeader className="py-3">
+            <CardTitle className="text-lg">Content Performance Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <h3 className="font-medium text-sm text-gray-700 mb-2">Content Production</h3>
+                <div className="flex items-end justify-between">
+                  <div className="text-2xl font-bold">87%</div>
+                  <div className="text-green-600 text-sm font-medium">+12% ↑</div>
+                </div>
+                <Progress value={87} className="h-1.5 mt-2" />
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <h3 className="font-medium text-sm text-gray-700 mb-2">Engagement Rate</h3>
+                <div className="flex items-end justify-between">
+                  <div className="text-2xl font-bold">4.8%</div>
+                  <div className="text-red-600 text-sm font-medium">-0.3% ↓</div>
+                </div>
+                <Progress value={48} className="h-1.5 mt-2" />
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <h3 className="font-medium text-sm text-gray-700 mb-2">On-Time Delivery</h3>
+                <div className="flex items-end justify-between">
+                  <div className="text-2xl font-bold">92%</div>
+                  <div className="text-green-600 text-sm font-medium">+5% ↑</div>
+                </div>
+                <Progress value={92} className="h-1.5 mt-2" />
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium">Recent Content Performance</h3>
+              <Button variant="outline" size="sm" className="text-xs h-7">View Details</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Edit Target Dialog */}
       <Dialog open={isEditTargetOpen} onOpenChange={setIsEditTargetOpen}>
