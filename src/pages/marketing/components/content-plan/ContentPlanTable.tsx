@@ -1,8 +1,9 @@
+
 import React from "react";
 import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from "@/hooks/content-plan";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import ContentPlanTableRow from "./table-row";
+import { ContentPlanTableHeader, ContentPlanTableBody } from "./table";
 
 interface ContentPlanTableProps {
   contentPlans: ContentPlanItem[];
@@ -51,72 +52,27 @@ export default function ContentPlanTable({
         <ScrollArea className="h-full">
           <div className="min-width-3200 table-auto">
             <Table className="w-full">
-              <TableHeader className="sticky top-0 bg-background z-10">
-                <TableRow>
-                  <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px] border-r">Action</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Tanggal Posting</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Tipe Content</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">PIC</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Layanan</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Sub Layanan</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Judul Content</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Content Pillar</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Brief</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Status</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Revision</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Approved</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Tanggal Selesai</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Tanggal Upload</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Tipe Content</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Judul Content</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">PIC Produksi</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Link Google Drive</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Status Produksi</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Revisi Counter</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Tanggal Selesai Produksi</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Approved</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Tanggal Approved</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Download Link File</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Link Post</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Done</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Actual Post</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px] border-r">On Time Status</TableHead>
-                  <TableHead className="text-center whitespace-nowrap w-[220px]">Status Content</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={29} className="text-center py-4">Loading content plans...</TableCell>
-                  </TableRow>
-                ) : contentPlans.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={29} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
-                  </TableRow>
-                ) : (
-                  contentPlans.map((item: ContentPlanItem) => (
-                    <ContentPlanTableRow
-                      key={item.id}
-                      item={item}
-                      contentTypes={contentTypes}
-                      services={services}
-                      contentPillars={contentPillars}
-                      contentPlanners={contentPlanners}
-                      creativeTeamMembers={creativeTeamMembers}
-                      selectedItems={selectedItems}
-                      getFilteredSubServices={getFilteredSubServices}
-                      handleSelectItem={handleSelectItem}
-                      handleDateChange={handleDateChange}
-                      handleFieldChange={handleFieldChange}
-                      resetRevisionCounter={resetRevisionCounter}
-                      formatDisplayDate={formatDisplayDate}
-                      extractLink={extractLink}
-                      openBriefDialog={openBriefDialog}
-                      openTitleDialog={openTitleDialog}
-                    />
-                  ))
-                )}
-              </TableBody>
+              <ContentPlanTableHeader />
+              <ContentPlanTableBody
+                contentPlans={contentPlans}
+                contentTypes={contentTypes}
+                services={services}
+                subServices={subServices}
+                contentPillars={contentPillars}
+                contentPlanners={contentPlanners}
+                creativeTeamMembers={creativeTeamMembers}
+                loading={loading}
+                selectedItems={selectedItems}
+                handleSelectItem={handleSelectItem}
+                handleDateChange={handleDateChange}
+                handleFieldChange={handleFieldChange}
+                getFilteredSubServices={getFilteredSubServices}
+                resetRevisionCounter={resetRevisionCounter}
+                formatDisplayDate={formatDisplayDate}
+                extractLink={extractLink}
+                openBriefDialog={openBriefDialog}
+                openTitleDialog={openTitleDialog}
+              />
             </Table>
           </div>
         </ScrollArea>

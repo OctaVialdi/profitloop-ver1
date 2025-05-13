@@ -1,14 +1,21 @@
 
-import React, { useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import React, { useState, useEffect, useCallback } from "react";
+import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
-import { ContentPlanItem, useContentPlan } from "@/hooks/content-plan";
-import { useOrganization } from "@/hooks/useOrganization";
-import { format } from 'date-fns';
-
-import ContentPlanToolbar from "./ContentPlanToolbar";
+import { Plus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useContentPlan } from "@/hooks/useContentPlan";
 import ContentPlanTable from "./ContentPlanTable";
+import ContentPlanToolbar from "./ContentPlanToolbar";
 import BriefDialog from "./dialogs/BriefDialog";
 import TitleDialog from "./dialogs/TitleDialog";
 
@@ -21,6 +28,7 @@ export default function ContentPlan() {
     contentPillars,
     loading,
     error,
+    fetchContentPlans,
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
@@ -30,198 +38,187 @@ export default function ContentPlan() {
     getContentPlannerTeamMembers,
     getCreativeTeamMembers
   } = useContentPlan();
-  
-  const { organization } = useOrganization();
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
-  const [currentBrief, setCurrentBrief] = useState("");
-  const [currentItemId, setCurrentItemId] = useState<string | null>(null);
-  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
-  const [currentTitle, setCurrentTitle] = useState("");
 
-  // Content planners for PIC dropdown
-  const contentPlanners = getContentPlannerTeamMembers();
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
+  const [briefDialogOpen, setBriefDialogOpen] = useState<boolean>(false);
+  const [titleDialogOpen, setTitleDialogOpen] = useState<boolean>(false);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [activeItemContent, setActiveItemContent] = useState<string | null>(null);
   
-  // Creative team members for PIC Production dropdown
+  const contentPlanners = getContentPlannerTeamMembers();
   const creativeTeamMembers = getCreativeTeamMembers();
 
-  // For adding new rows
-  const addNewRow = () => {
-    if (!organization?.id) {
-      console.error("Cannot add row: No organization ID available");
-      return;
+  useEffect(() => {
+    fetchContentPlans();
+  }, [fetchContentPlans]);
+
+  const handleAddRow = async () => {
+    try {
+      await addContentPlan({
+        status: "",
+        revision_count: 0,
+        approved: false,
+        production_status: "",
+        production_revision_count: 0,
+        production_approved: false,
+        done: false
+      });
+      toast({
+        title: "Row added successfully",
+        description: "A new row has been added to the content plan."
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Error adding row",
+        description: "There was a problem adding a new row."
+      });
     }
-    
-    console.log("Adding new row with organization ID:", organization.id);
-    const today = new Date();
-    const formattedDate = format(today, "yyyy-MM-dd");
-    addContentPlan({
-      post_date: formattedDate,
-      revision_count: 0,
-      production_revision_count: 0,
-      approved: false,
-      production_approved: false,
-      done: false,
-      status: "",
-      production_status: "",
-      organization_id: organization.id
-    });
   };
 
-  // Handler for checkbox selection
+  const handleDeleteSelected = async () => {
+    try {
+      const deletePromises = selectedItems.map(id => deleteContentPlan(id));
+      await Promise.all(deletePromises);
+      setSelectedItems([]);
+      toast({
+        title: "Items deleted",
+        description: `${selectedItems.length} item(s) have been deleted.`
+      });
+      setDeleteConfirmOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Error deleting items",
+        description: "There was a problem deleting the selected items."
+      });
+    }
+  };
+
   const handleSelectItem = (id: string, checked: boolean) => {
     if (checked) {
-      setSelectedItems([...selectedItems, id]);
+      setSelectedItems(prev => [...prev, id]);
     } else {
-      setSelectedItems(selectedItems.filter(itemId => itemId !== id));
+      setSelectedItems(prev => prev.filter(itemId => itemId !== id));
     }
   };
 
-  // Handler for deleting selected items
-  const handleDeleteSelected = async () => {
-    for (const id of selectedItems) {
-      await deleteContentPlan(id);
-    }
-    setSelectedItems([]);
-  };
-
-  // Handler for updating date
   const handleDateChange = async (id: string, date: Date | undefined) => {
     if (!date) return;
-    const formattedDate = format(date, "yyyy-MM-dd");
-    await updateContentPlan(id, {
-      post_date: formattedDate
-    });
+    try {
+      await updateContentPlan(id, { post_date: date.toISOString() });
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Error updating date",
+        description: "There was a problem updating the date."
+      });
+    }
   };
 
-  // Handler for updating fields
   const handleFieldChange = async (id: string, field: string, value: any) => {
-    let updates: any = {
-      [field]: value
-    };
-
-    // Reset status fields when brief changes
-    if (field === 'brief') {
-      updates.status = "";
-    }
-
-    // Reset production status when google drive link changes
-    if (field === 'google_drive_link') {
-      updates.production_status = "";
-    }
-
-    // Auto-populate completion date when status is "Butuh Di Review"
-    if (field === 'status' && value === "Butuh Di Review") {
-      const now = new Date();
-      updates.completion_date = format(now, "yyyy-MM-dd HH:mm");
-    } else if (field === 'status' && value !== "Butuh Di Review") {
-      updates.completion_date = null;
-    }
-
-    // Auto-populate production completion date when production status is "Butuh Di Review"
-    if (field === 'production_status' && value === "Butuh Di Review") {
-      const now = new Date();
-      updates.production_completion_date = format(now, "yyyy-MM-dd HH:mm");
-    } else if (field === 'production_status' && value !== "Butuh Di Review") {
-      updates.production_completion_date = null;
-    }
-
-    // Auto-populate actual post date when post link is added
-    if (field === 'post_link' && value) {
-      const now = new Date();
-      updates.actual_post_date = format(now, "yyyy-MM-dd");
-    } else if (field === 'post_link' && !value) {
-      updates.actual_post_date = null;
-    }
-
-    // If status changes to "Request Revisi", increment revision count
-    if (field === 'status' && value === "Request Revisi") {
-      const item = contentPlans.find(plan => plan.id === id);
-      if (item) {
-        updates.revision_count = (item.revision_count || 0) + 1;
+    try {
+      const updates: any = { [field]: value };
+      
+      // Add timestamp when certain fields are updated
+      if (field === 'status' && value === 'Butuh Di Review') {
+        updates.completion_date = new Date().toISOString();
       }
-    }
-
-    // If production status changes to "Request Revisi", increment production revision count
-    if (field === 'production_status' && value === "Request Revisi") {
-      const item = contentPlans.find(plan => plan.id === id);
-      if (item) {
-        updates.production_revision_count = (item.production_revision_count || 0) + 1;
+      
+      if (field === 'production_status' && value === 'Butuh Di Review') {
+        updates.production_completion_date = new Date().toISOString();
       }
-    }
 
-    // If approved is set, auto-populate production_approved_date
-    if (field === 'production_approved' && value === true) {
-      const now = new Date();
-      updates.production_approved_date = format(now, "yyyy-MM-dd HH:mm");
-    } else if (field === 'production_approved' && value === false) {
-      updates.production_approved_date = null;
+      if (field === 'production_approved' && value === true) {
+        updates.production_approved_date = new Date().toISOString();
+      }
+
+      if (field === 'done' && value === true) {
+        updates.actual_post_date = new Date().toISOString();
+      }
+      
+      await updateContentPlan(id, updates);
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Error updating field",
+        description: "There was a problem updating the field."
+      });
     }
-    await updateContentPlan(id, updates);
   };
 
-  // Check if a Google Docs link is present in the brief
-  const extractLink = (text: string | null) => {
+  const openBriefDialog = useCallback((id: string, brief: string | null) => {
+    setActiveItemId(id);
+    setActiveItemContent(brief);
+    setBriefDialogOpen(true);
+  }, []);
+
+  const openTitleDialog = useCallback((id: string, title: string | null) => {
+    setActiveItemId(id);
+    setActiveItemContent(title);
+    setTitleDialogOpen(true);
+  }, []);
+
+  const handleBriefSubmit = async (content: string) => {
+    if (!activeItemId) return;
+    try {
+      await updateContentPlan(activeItemId, { brief: content });
+      setBriefDialogOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Error updating brief",
+        description: "There was a problem updating the brief."
+      });
+    }
+  };
+
+  const handleTitleSubmit = async (content: string) => {
+    if (!activeItemId) return;
+    try {
+      await updateContentPlan(activeItemId, { title: content });
+      setTitleDialogOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Error updating title",
+        description: "There was a problem updating the title."
+      });
+    }
+  };
+
+  const extractLink = (text: string | null): string | null => {
     if (!text) return null;
-    const regex = /(https?:\/\/\S+)/g;
-    const match = text.match(regex);
-    return match ? match[0] : null;
+    
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const matches = text.match(urlRegex);
+    
+    return matches ? matches[0] : null;
   };
 
-  // Handle brief dialog
-  const openBriefDialog = (id: string, brief: string | null) => {
-    setCurrentItemId(id);
-    setCurrentBrief(brief || "");
-    setIsBriefDialogOpen(true);
-  };
-  const saveBrief = async () => {
-    if (currentItemId) {
-      await handleFieldChange(currentItemId, 'brief', currentBrief);
-    }
-    setIsBriefDialogOpen(false);
-  };
-
-  // Handle title dialog
-  const openTitleDialog = (id: string, title: string | null) => {
-    setCurrentItemId(id);
-    setCurrentTitle(title || "");
-    setIsTitleDialogOpen(true);
-  };
-  const saveTitle = async () => {
-    if (currentItemId) {
-      await handleFieldChange(currentItemId, 'title', currentTitle);
-    }
-    setIsTitleDialogOpen(false);
-  };
+  if (error) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-500">Error loading content plan: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full space-y-4 p-6">
-      <ContentPlanToolbar 
-        selectedItems={selectedItems}
-        onAddNewRow={addNewRow}
-        onDeleteSelected={handleDeleteSelected}
+    <div className="space-y-4 p-4">
+      <ContentPlanToolbar
+        selectedCount={selectedItems.length}
+        onAddRow={handleAddRow}
+        onConfirmDelete={() => setDeleteConfirmOpen(true)}
       />
-      
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            {error.message || "Failed to load content plan data. Please check your organization settings and try again."}
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {!organization?.id && (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Organization Required</AlertTitle>
-          <AlertDescription>
-            No organization context found. Please ensure you're logged in and belong to an organization.
-          </AlertDescription>
-        </Alert>
-      )}
-      
+
       <ContentPlanTable
         contentPlans={contentPlans}
         contentTypes={contentTypes}
@@ -243,20 +240,38 @@ export default function ContentPlan() {
         openTitleDialog={openTitleDialog}
       />
 
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to delete {selectedItems.length} item(s). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSelected} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Brief Dialog */}
       <BriefDialog
-        open={isBriefDialogOpen}
-        onOpenChange={setIsBriefDialogOpen}
-        brief={currentBrief}
-        onBriefChange={setCurrentBrief}
-        onSave={saveBrief}
+        open={briefDialogOpen}
+        onClose={() => setBriefDialogOpen(false)}
+        content={activeItemContent}
+        onSubmit={handleBriefSubmit}
       />
 
+      {/* Title Dialog */}
       <TitleDialog
-        open={isTitleDialogOpen}
-        onOpenChange={setIsTitleDialogOpen}
-        title={currentTitle}
-        onTitleChange={setCurrentTitle}
-        onSave={saveTitle}
+        open={titleDialogOpen}
+        onClose={() => setTitleDialogOpen(false)}
+        content={activeItemContent}
+        onSubmit={handleTitleSubmit}
       />
     </div>
   );
