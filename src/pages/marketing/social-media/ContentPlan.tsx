@@ -393,10 +393,10 @@ const ContentPlan = () => {
         <div className="border rounded-md overflow-hidden">
           {/* Vertical scroll container */}
           <ScrollArea className="h-[calc(100vh-230px)]">
-            {/* Horizontal scroll container - updated to ensure full width */}
-            <div className="w-full overflow-x-auto">
-              {/* Removed fixed width constraints to allow table to expand fully */}
-              <div className="w-full">
+            {/* Horizontal scroll container - added overflow-x-auto to ensure horizontal scrolling */}
+            <div className="overflow-x-auto">
+              {/* Fixed width container for the table */}
+              <div className="min-w-[1200px] max-w-[1300px] w-full">
                 <Table>
                   <TableHeader className="sticky top-0 bg-white z-10">
                     <TableRow className="bg-slate-50">
