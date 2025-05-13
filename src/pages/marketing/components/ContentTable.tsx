@@ -234,6 +234,9 @@ export default function ContentTable() {
     }
   };
 
+  // Get content planners for the PIC Content dropdown
+  const contentPlanners = getFilteredTeamMembers("Content Planner");
+
   return (
     <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
@@ -350,7 +353,7 @@ export default function ContentTable() {
                           </Select>
                         </TableCell>
 
-                        {/* 4. PIC Content - Updated to use teamMembers from Content Planner */}
+                        {/* 4. PIC Content - Connect to team members with "Content Planner" job position */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px]">
                           <Select 
                             value={item.pic_id || "none"} 
@@ -361,7 +364,7 @@ export default function ContentTable() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Content Planner").map(member => (
+                              {contentPlanners.map(member => (
                                 <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
                               ))}
                             </SelectContent>
