@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
@@ -13,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 export function ContentPlan() {
   const {
     contentPlans,
@@ -141,7 +139,6 @@ export function ContentPlan() {
     } else if (field === 'production_approved' && value === false) {
       updates.production_approved_date = null;
     }
-    
     await updateContentPlan(id, updates);
   };
 
@@ -165,14 +162,12 @@ export function ContentPlan() {
     setCurrentBrief(brief || "");
     setIsBriefDialogOpen(true);
   };
-  
   const saveBrief = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, 'brief', currentBrief);
     }
     setIsBriefDialogOpen(false);
   };
-
   return <div className="w-full space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
