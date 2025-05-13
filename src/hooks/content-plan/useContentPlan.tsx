@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useOrganization } from '@/hooks/useOrganization';
@@ -40,12 +41,14 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const fetchAllContentPlanData = async () => {
     try {
+      console.log("Fetching all content plan data...");
       await fetchContentPlansData();
       await fetchContentTypesData();
       await fetchTeamMembersData();
       await fetchServicesData();
       await fetchSubServicesData();
       await fetchContentPillarsData();
+      console.log("All content plan data fetched successfully");
     } catch (error) {
       console.error("Error fetching content plan data:", error);
     }
@@ -54,9 +57,12 @@ export function useContentPlan(): ContentPlanHookReturn {
   const fetchContentPlansData = async () => {
     try {
       setLoading(true);
+      console.log("Fetching content plans for organization:", organization?.id);
       const data = await fetchContentPlans(organization?.id);
+      console.log("Content plans fetched:", data.length, "items");
       setContentPlans(data);
     } catch (err: any) {
+      console.error("Error in fetchContentPlansData:", err);
       setError(err);
     } finally {
       setLoading(false);
@@ -110,6 +116,7 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const addContentPlan = async (newPlan: Partial<ContentPlanItem>) => {
     try {
+      console.log("Adding new content plan:", newPlan);
       const data = await addContentPlanItem(newPlan, organization?.id);
       
       toast({
@@ -117,7 +124,10 @@ export function useContentPlan(): ContentPlanHookReturn {
         description: "Content plan added successfully",
       });
       
+      // Fetch latest data from the server instead of updating state directly
       await fetchContentPlansData();
+      console.log("Data refetched after adding content plan");
+      
       return data;
     } catch (err: any) {
       console.error('Error adding content plan:', err);
@@ -132,6 +142,7 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const updateContentPlan = async (id: string, updates: Partial<ContentPlanItem>) => {
     try {
+      console.log("Updating content plan:", id, updates);
       await updateContentPlanItem(id, updates, organization?.id);
       
       toast({
@@ -139,7 +150,10 @@ export function useContentPlan(): ContentPlanHookReturn {
         description: "Content plan updated successfully",
       });
       
+      // Fetch latest data from the server instead of updating state directly
       await fetchContentPlansData();
+      console.log("Data refetched after updating content plan");
+      
       return true;
     } catch (err: any) {
       console.error('Error updating content plan:', err);
@@ -154,6 +168,7 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const deleteContentPlan = async (id: string) => {
     try {
+      console.log("Deleting content plan:", id);
       await deleteContentPlanItem(id, organization?.id);
       
       toast({
@@ -161,7 +176,10 @@ export function useContentPlan(): ContentPlanHookReturn {
         description: "Content plan deleted successfully",
       });
       
+      // Fetch latest data from the server instead of updating state directly
       await fetchContentPlansData();
+      console.log("Data refetched after deleting content plan");
+      
       return true;
     } catch (err: any) {
       console.error('Error deleting content plan:', err);

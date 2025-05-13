@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,18 +31,27 @@ export function ContentPlan() {
     resetRevisionCounter,
     formatDisplayDate
   } = useContentPlan();
+  
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
   const [currentBrief, setCurrentBrief] = useState("");
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
   const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
   const [currentTitle, setCurrentTitle] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key to force re-render
+
+  // Log the contentPlans when they change
+  useEffect(() => {
+    console.log("ContentPlans updated in ContentPlan component:", contentPlans.length, "items");
+  }, [contentPlans]);
 
   // For adding new rows
-  const addNewRow = () => {
+  const addNewRow = async () => {
     const today = new Date();
     const formattedDate = format(today, "yyyy-MM-dd");
-    addContentPlan({
+    console.log("Adding new row with date:", formattedDate);
+    
+    const result = await addContentPlan({
       post_date: formattedDate,
       revision_count: 0,
       production_revision_count: 0,
@@ -52,7 +61,17 @@ export function ContentPlan() {
       status: "",
       production_status: ""
     });
+    
+    console.log("Add new row result:", result);
+    
+    // Force a re-render to ensure the UI updates
+    setRefreshKey(prev => prev + 1);
   };
+
+  // Reset selected items when content plans change
+  useEffect(() => {
+    setSelectedItems([]);
+  }, [contentPlans]);
 
   // Handler for checkbox selection
   const handleSelectItem = (id: string, checked: boolean) => {
@@ -82,6 +101,8 @@ export function ContentPlan() {
 
   // Handler for updating fields
   const handleFieldChange = async (id: string, field: string, value: any) => {
+    console.log(`Updating field ${field} on item ${id} with value:`, value);
+    
     let updates: any = {
       [field]: value
     };
@@ -143,6 +164,7 @@ export function ContentPlan() {
     } else if (field === 'production_approved' && value === false) {
       updates.production_approved_date = null;
     }
+    
     await updateContentPlan(id, updates);
   };
 
@@ -192,6 +214,12 @@ export function ContentPlan() {
     setIsTitleDialogOpen(false);
   };
 
+  // Add manual refresh functionality
+  const handleManualRefresh = () => {
+    console.log("Manual refresh requested");
+    setRefreshKey(prev => prev + 1);
+  };
+
   return <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -200,6 +228,10 @@ export function ContentPlan() {
               Delete Selected ({selectedItems.length})
             </Button>}
         </div>
+        <Button variant="outline" onClick={handleManualRefresh} className="flex items-center gap-2">
+          <RefreshCw size={16} />
+          Refresh
+        </Button>
       </div>
       
       <div className="rounded-md border overflow-hidden">

@@ -4,6 +4,7 @@ import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentP
 
 export const fetchContentPlans = async (organizationId: string | undefined) => {
   try {
+    console.log("API: Fetching content plans for organization:", organizationId);
     const { data, error } = await supabase
       .from('content_plans')
       .select(`
@@ -19,6 +20,8 @@ export const fetchContentPlans = async (organizationId: string | undefined) => {
       .order('post_date');
 
     if (error) throw error;
+    
+    console.log("API: Content plans fetched successfully, count:", data?.length || 0);
     
     // Type assertion to handle the mapping more safely
     const formattedData = (data || []).map(item => ({
@@ -138,6 +141,8 @@ export const fetchContentPillars = async () => {
 
 export const addContentPlanItem = async (newPlan: Partial<ContentPlanItem>, organizationId: string | undefined) => {
   try {
+    console.log("API: Adding new content plan item for organization:", organizationId, "with data:", newPlan);
+    
     // Include the organization ID in the new plan
     const planWithOrgId = {
       ...newPlan,
@@ -149,9 +154,13 @@ export const addContentPlanItem = async (newPlan: Partial<ContentPlanItem>, orga
       .insert(planWithOrgId)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error("API: Error in insert operation:", error);
+      throw error;
+    }
     
-    return data[0] as ContentPlanItem;
+    console.log("API: Content plan item added successfully:", data?.[0]?.id);
+    return data?.[0] as ContentPlanItem;
   } catch (err) {
     console.error('Error adding content plan:', err);
     throw err;
@@ -160,14 +169,20 @@ export const addContentPlanItem = async (newPlan: Partial<ContentPlanItem>, orga
 
 export const updateContentPlanItem = async (id: string, updates: Partial<ContentPlanItem>, organizationId: string | undefined) => {
   try {
+    console.log("API: Updating content plan item", id, "with data:", updates);
+    
     const { error } = await supabase
       .from('content_plans')
       .update(updates)
       .eq('id', id)
       .eq('organization_id', organizationId);
 
-    if (error) throw error;
+    if (error) {
+      console.error("API: Error in update operation:", error);
+      throw error;
+    }
     
+    console.log("API: Content plan item updated successfully");
     return true;
   } catch (err) {
     console.error('Error updating content plan:', err);
@@ -177,14 +192,20 @@ export const updateContentPlanItem = async (id: string, updates: Partial<Content
 
 export const deleteContentPlanItem = async (id: string, organizationId: string | undefined) => {
   try {
+    console.log("API: Deleting content plan item", id);
+    
     const { error } = await supabase
       .from('content_plans')
       .delete()
       .eq('id', id)
       .eq('organization_id', organizationId);
 
-    if (error) throw error;
+    if (error) {
+      console.error("API: Error in delete operation:", error);
+      throw error;
+    }
     
+    console.log("API: Content plan item deleted successfully");
     return true;
   } catch (err) {
     console.error('Error deleting content plan:', err);
