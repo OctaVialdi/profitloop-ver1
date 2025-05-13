@@ -222,6 +222,18 @@ export default function ContentTable() {
     }
   };
 
+  // Function to get the funnel stage label safely
+  const getFunnelStageLabel = (pillar: any) => {
+    if (!pillar || !pillar.funnel_stage) return '';
+    
+    switch(pillar.funnel_stage) {
+      case "top": return "(Top)";
+      case "middle": return "(Middle)";
+      case "bottom": return "(Bottom)";
+      default: return "";
+    }
+  };
+
   return (
     <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
@@ -417,12 +429,15 @@ export default function ContentTable() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {contentPillars.map(pillar => (
-                                <SelectItem key={pillar.id} value={pillar.id}>
-                                  {pillar.name}
-                                  {pillar.funnel_stage && ` (${pillar.funnel_stage})`}
-                                </SelectItem>
-                              ))}
+                              {contentPillars.map(pillar => {
+                                // Safely get the funnel stage label
+                                const funnelStageLabel = getFunnelStageLabel(pillar);
+                                return (
+                                  <SelectItem key={pillar.id} value={pillar.id}>
+                                    {pillar.name} {funnelStageLabel}
+                                  </SelectItem>
+                                );
+                              })}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -537,7 +552,7 @@ export default function ContentTable() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Creative").map(member => (
+                              {getFilteredTeamMembers("Produksi").map(member => (
                                 <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
                               ))}
                             </SelectContent>

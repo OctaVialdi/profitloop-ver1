@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
@@ -59,6 +58,7 @@ interface SubService {
 interface ContentPillar {
   id: string;
   name: string;
+  funnel_stage?: string; // Added funnel_stage as an optional property
 }
 
 // Mock data functions
@@ -99,12 +99,12 @@ const generateMockData = () => {
     { id: 'ss7', name: 'Backend', service_id: 's3' },
   ];
 
-  // Content Pillars
+  // Content Pillars with funnel_stage property
   const contentPillars: ContentPillar[] = [
-    { id: 'cp1', name: 'Education' },
-    { id: 'cp2', name: 'Entertainment' },
-    { id: 'cp3', name: 'Inspiration' },
-    { id: 'cp4', name: 'Promotion' },
+    { id: 'cp1', name: 'Education', funnel_stage: 'top' },
+    { id: 'cp2', name: 'Entertainment', funnel_stage: 'middle' },
+    { id: 'cp3', name: 'Inspiration', funnel_stage: 'middle' },
+    { id: 'cp4', name: 'Promotion', funnel_stage: 'bottom' },
   ];
 
   // Sample content plans
