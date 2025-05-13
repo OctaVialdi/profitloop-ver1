@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
@@ -13,8 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { toast } from "@/components/ui/use-toast";
 
 export function ContentPlan() {
   const {
@@ -37,7 +34,6 @@ export function ContentPlan() {
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
   const [currentBrief, setCurrentBrief] = useState("");
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
-  const [selectAll, setSelectAll] = useState(false);
 
   // For adding new rows
   const addNewRow = () => {
@@ -55,54 +51,21 @@ export function ContentPlan() {
     });
   };
 
-  // Handler for select all checkbox
-  const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
-    if (checked) {
-      // Select all items
-      setSelectedItems(contentPlans.map(item => item.id));
-    } else {
-      // Deselect all items
-      setSelectedItems([]);
-    }
-  };
-
   // Handler for checkbox selection
   const handleSelectItem = (id: string, checked: boolean) => {
     if (checked) {
       setSelectedItems([...selectedItems, id]);
     } else {
       setSelectedItems(selectedItems.filter(itemId => itemId !== id));
-      // If we're deselecting an item, also uncheck the "select all" checkbox
-      if (selectAll) {
-        setSelectAll(false);
-      }
     }
   };
 
   // Handler for deleting selected items
   const handleDeleteSelected = async () => {
-    if (selectedItems.length === 0) {
-      toast({
-        title: "No items selected",
-        description: "Please select items to delete",
-        variant: "destructive",
-      });
-      return;
+    for (const id of selectedItems) {
+      await deleteContentPlan(id);
     }
-
-    // Ask for confirmation
-    if (window.confirm(`Are you sure you want to delete ${selectedItems.length} item(s)?`)) {
-      for (const id of selectedItems) {
-        await deleteContentPlan(id);
-      }
-      setSelectedItems([]);
-      setSelectAll(false);
-      toast({
-        title: "Deletion successful",
-        description: `${selectedItems.length} item(s) deleted successfully`,
-      });
-    }
+    setSelectedItems([]);
   };
 
   // Handler for updating date
@@ -177,37 +140,6 @@ export function ContentPlan() {
     } else if (field === 'production_approved' && value === false) {
       updates.production_approved_date = null;
     }
-
-    // Update on_time_status based on actual_post_date and post_date
-    if (field === 'actual_post_date' || field === 'post_date' || field === 'post_link') {
-      const item = contentPlans.find(plan => plan.id === id);
-      if (item) {
-        const postDate = field === 'post_date' ? value : item.post_date;
-        const actualPostDate = field === 'actual_post_date' ? value : item.actual_post_date;
-        
-        if (postDate && actualPostDate) {
-          // Compare dates to determine on-time status
-          const postDateObj = new Date(postDate);
-          const actualPostDateObj = new Date(actualPostDate);
-          
-          // Set the hours, minutes, seconds, and milliseconds to 0 for both dates
-          postDateObj.setHours(0, 0, 0, 0);
-          actualPostDateObj.setHours(0, 0, 0, 0);
-          
-          // Check if the dates are the same day
-          if (postDateObj.getTime() === actualPostDateObj.getTime()) {
-            updates.on_time_status = 'On Time';
-          } else if (actualPostDateObj > postDateObj) {
-            const diffDays = Math.floor((actualPostDateObj.getTime() - postDateObj.getTime()) / (1000 * 60 * 60 * 24));
-            updates.on_time_status = `Late [${diffDays}] Day/s`;
-          } else {
-            const diffDays = Math.floor((postDateObj.getTime() - actualPostDateObj.getTime()) / (1000 * 60 * 60 * 24));
-            updates.on_time_status = `Early [${diffDays}] Day/s`;
-          }
-        }
-      }
-    }
-
     await updateContentPlan(id, updates);
   };
 
@@ -237,21 +169,13 @@ export function ContentPlan() {
     }
     setIsBriefDialogOpen(false);
   };
-
-  return (
-    <div className="w-full space-y-4 p-6">
+  return <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={addNewRow} className="bg-white hover:bg-gray-100">+ Add Row</Button>
-          <Button 
-            variant="destructive" 
-            onClick={handleDeleteSelected} 
-            className="flex items-center gap-1"
-            disabled={selectedItems.length === 0}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete Selected ({selectedItems.length})
-          </Button>
+          <Button variant="outline" onClick={addNewRow}>+ Add Row</Button>
+          {selectedItems.length > 0 && <Button variant="destructive" onClick={handleDeleteSelected}>
+              Delete Selected ({selectedItems.length})
+            </Button>}
         </div>
       </div>
       
@@ -262,11 +186,7 @@ export function ContentPlan() {
               <Table className="w-full">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">
-                      <div className="flex justify-center">
-                        <Checkbox checked={selectAll} onCheckedChange={checked => handleSelectAll(!!checked)} />
-                      </div>
-                    </TableHead>
+                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">Action</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[180px]">Tanggal Posting</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
@@ -298,24 +218,15 @@ export function ContentPlan() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading ? (
-                    <TableRow>
+                  {loading ? <TableRow>
                       <TableCell colSpan={29} className="text-center py-4">Loading content plans...</TableCell>
-                    </TableRow>
-                  ) : contentPlans.length === 0 ? (
-                    <TableRow>
+                    </TableRow> : contentPlans.length === 0 ? <TableRow>
                       <TableCell colSpan={29} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
-                    </TableRow>
-                  ) : (
-                    contentPlans.map((item: any) => (
-                      <TableRow key={item.id}>
+                    </TableRow> : contentPlans.map((item: any) => <TableRow key={item.id}>
                         {/* 1. Action (Checkbox) */}
                         <TableCell className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">
                           <div className="flex justify-center">
-                            <Checkbox 
-                              checked={selectedItems.includes(item.id)} 
-                              onCheckedChange={checked => handleSelectItem(item.id, !!checked)} 
-                            />
+                            <Checkbox checked={selectedItems.includes(item.id)} onCheckedChange={checked => handleSelectItem(item.id, !!checked)} />
                           </div>
                         </TableCell>
 
@@ -567,15 +478,7 @@ export function ContentPlan() {
 
                         {/* 28. On Time Status */}
                         <TableCell className="text-center whitespace-nowrap p-1 w-[140px]">
-                          <div className={`truncate px-2 py-1 rounded-full text-xs font-medium ${
-                            item.on_time_status === "On Time" 
-                              ? "bg-green-100 text-green-800" 
-                              : item.on_time_status?.includes("Late") 
-                              ? "bg-red-100 text-red-800"
-                              : item.on_time_status?.includes("Early")
-                              ? "bg-blue-100 text-blue-800"
-                              : ""
-                          }`} title={item.on_time_status || ""}>
+                          <div className="truncate" title={item.on_time_status || ""}>
                             {item.on_time_status || ""}
                           </div>
                         </TableCell>
@@ -593,9 +496,7 @@ export function ContentPlan() {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                      </TableRow>)}
                 </TableBody>
               </Table>
             </div>
@@ -625,6 +526,5 @@ export function ContentPlan() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 }
