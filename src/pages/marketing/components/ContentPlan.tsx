@@ -12,8 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trash2, Edit, CheckCircle, FileEdit } from "lucide-react";
 
 export function ContentPlan() {
   const {
@@ -36,8 +34,6 @@ export function ContentPlan() {
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
   const [currentBrief, setCurrentBrief] = useState("");
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
-  const [bulkActionDialogOpen, setBulkActionDialogOpen] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
 
   // For adding new rows
   const addNewRow = () => {
@@ -64,54 +60,12 @@ export function ContentPlan() {
     }
   };
 
-  // Handle select all checkbox
-  const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
-    if (checked) {
-      setSelectedItems(contentPlans.map(item => item.id));
-    } else {
-      setSelectedItems([]);
-    }
-  };
-
   // Handler for deleting selected items
   const handleDeleteSelected = async () => {
     for (const id of selectedItems) {
       await deleteContentPlan(id);
     }
     setSelectedItems([]);
-    setSelectAll(false);
-  };
-
-  // Handler for bulk actions
-  const handleBulkAction = async (action: string) => {
-    // Example bulk actions
-    switch(action) {
-      case "approve":
-        for (const id of selectedItems) {
-          await updateContentPlan(id, { approved: true });
-        }
-        break;
-      case "production-approve":
-        for (const id of selectedItems) {
-          await updateContentPlan(id, { production_approved: true });
-        }
-        break;
-      case "mark-done":
-        for (const id of selectedItems) {
-          await updateContentPlan(id, { done: true });
-        }
-        break;
-      case "reset-revision":
-        for (const id of selectedItems) {
-          await resetRevisionCounter(id, 'revision_count');
-        }
-        break;
-      default:
-        break;
-    }
-    
-    setBulkActionDialogOpen(false);
   };
 
   // Handler for updating date
@@ -219,32 +173,9 @@ export function ContentPlan() {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={addNewRow}>+ Add Row</Button>
-          {selectedItems.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="secondary" className="flex items-center gap-1">
-                  Bulk Actions ({selectedItems.length}) <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuItem onClick={() => setBulkActionDialogOpen(true)} className="flex items-center gap-2">
-                  <FileEdit className="h-4 w-4" /> Edit Selected
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkAction("approve")} className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" /> Approve Selected
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkAction("mark-done")} className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" /> Mark Done
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkAction("reset-revision")} className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4" /> Reset Revisions
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDeleteSelected} className="flex items-center gap-2 text-red-600">
-                  <Trash2 className="h-4 w-4" /> Delete Selected
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {selectedItems.length > 0 && <Button variant="destructive" onClick={handleDeleteSelected}>
+              Delete Selected ({selectedItems.length})
+            </Button>}
         </div>
       </div>
       
@@ -255,12 +186,7 @@ export function ContentPlan() {
               <Table className="w-full">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">
-                      <Checkbox 
-                        checked={selectAll} 
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </TableHead>
+                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">Action</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[180px]">Tanggal Posting</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
@@ -300,10 +226,7 @@ export function ContentPlan() {
                         {/* 1. Action (Checkbox) */}
                         <TableCell className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">
                           <div className="flex justify-center">
-                            <Checkbox 
-                              checked={selectedItems.includes(item.id)} 
-                              onCheckedChange={checked => handleSelectItem(item.id, !!checked)} 
-                            />
+                            <Checkbox checked={selectedItems.includes(item.id)} onCheckedChange={checked => handleSelectItem(item.id, !!checked)} />
                           </div>
                         </TableCell>
 
@@ -599,42 +522,6 @@ export function ContentPlan() {
             </Button>
             <Button type="button" onClick={saveBrief}>
               Save Brief
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Bulk Action Dialog */}
-      <Dialog open={bulkActionDialogOpen} onOpenChange={setBulkActionDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Bulk Actions</DialogTitle>
-            <DialogDescription>
-              Select an action to apply to the {selectedItems.length} selected item(s).
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="w-full" onClick={() => handleBulkAction("approve")}>
-                <CheckCircle className="h-4 w-4 mr-2" /> Approve All
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => handleBulkAction("production-approve")}>
-                <CheckCircle className="h-4 w-4 mr-2" /> Approve Production
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => handleBulkAction("mark-done")}>
-                <CheckCircle className="h-4 w-4 mr-2" /> Mark Done
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => handleBulkAction("reset-revision")}>
-                <RefreshCw className="h-4 w-4 mr-2" /> Reset Revisions
-              </Button>
-              <Button variant="destructive" className="col-span-2" onClick={handleDeleteSelected}>
-                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected
-              </Button>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkActionDialogOpen(false)}>
-              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
