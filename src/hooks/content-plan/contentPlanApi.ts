@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from './types';
 
@@ -53,42 +52,26 @@ export const fetchContentTypes = async () => {
   }
 };
 
-export const fetchTeamMembers = async () => {
+export const fetchTeamMembers = async (organizationId: string | undefined) => {
   try {
-    // Create dummy team members since the employees table doesn't have the required columns
-    // This is a temporary solution until the database schema is updated
-    const dummyTeamMembers: TeamMember[] = [
-      {
-        id: '7c4f277a-b3cf-4562-a21a-2b355c635848',
-        name: 'Fajar Budiansyah',
-        department: 'Digital Marketing',
-        job_position: 'Content Planner',
-        role: 'Senior'
-      },
-      {
-        id: '966202b8-6e1a-4003-a448-5e8c6a3a4a4a',
-        name: 'Yudi',
-        department: 'Digital Marketing',
-        job_position: 'Creative',
-        role: 'Junior'
-      },
-      {
-        id: '3a5b8c7d-9e0f-1a2b-3c4d-5e6f7a8b9c0d',
-        name: 'Ahmad Rizal',
-        department: 'Digital Marketing',
-        job_position: 'Content Planner',
-        role: 'Mid'
-      },
-      {
-        id: '4b6c9d0e-2f3g-4h5i-6j7k-8l9m0n1o2p3',
-        name: 'Sinta Dewi',
-        department: 'Digital Marketing',
-        job_position: 'Creative',
-        role: 'Senior'
-      }
-    ];
+    const { data, error } = await supabase
+      .from('employees')
+      .select('id, name, job_position, job_level')
+      .eq('organization_id', organizationId)
+      .order('name');
+
+    if (error) throw error;
     
-    return dummyTeamMembers;
+    // Map the employee data to the TeamMember interface
+    const teamMembers = (data || []).map(employee => ({
+      id: employee.id,
+      name: employee.name,
+      department: 'Digital Marketing', // Default department
+      job_position: employee.job_position || '',
+      role: employee.job_level || ''
+    }));
+    
+    return teamMembers as TeamMember[];
   } catch (err) {
     console.error('Error fetching team members:', err);
     throw err;

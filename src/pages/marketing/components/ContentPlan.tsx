@@ -165,7 +165,7 @@ export function ContentPlan() {
   
   // Get Creative team members for PIC Produksi dropdown
   const creativeTeamMembers = getFilteredTeamMembers("Creative");
-
+  
   // Handle brief dialog
   const openBriefDialog = (id: string, brief: string | null) => {
     setCurrentItemId(id);
