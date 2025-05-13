@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
+import { useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
@@ -160,6 +160,12 @@ export function ContentPlan() {
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
+  // Get Content Planner team members for PIC dropdown
+  const contentPlannerMembers = getFilteredTeamMembers("Content Planner");
+  
+  // Get Creative team members for PIC Produksi dropdown
+  const creativeTeamMembers = getFilteredTeamMembers("Creative");
+
   // Handle brief dialog
   const openBriefDialog = (id: string, brief: string | null) => {
     setCurrentItemId(id);
@@ -277,13 +283,18 @@ export function ContentPlan() {
 
                         {/* 4. PIC */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px] border-r">
-                          <Select value={item.pic_id || "none"} onValueChange={value => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.pic_id || "unassigned"} 
+                            onValueChange={value => handleFieldChange(item.id, 'pic_id', value === "unassigned" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Content Planner").map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
+                              <SelectItem value="unassigned">-</SelectItem>
+                              {contentPlannerMembers.map(member => (
+                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -403,13 +414,18 @@ export function ContentPlan() {
 
                         {/* 17. PIC Produksi */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
-                          <Select value={item.pic_production_id || "none"} onValueChange={value => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.pic_production_id || "unassigned"} 
+                            onValueChange={value => handleFieldChange(item.id, 'pic_production_id', value === "unassigned" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Creative").filter(m => m.role === "Produksi").map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
+                              <SelectItem value="unassigned">-</SelectItem>
+                              {creativeTeamMembers.map(member => (
+                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -522,7 +538,8 @@ export function ContentPlan() {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                      </TableRow>)}
+                      </TableRow>)
+                  )}
                 </TableBody>
               </Table>
             </div>
