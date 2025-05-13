@@ -1,164 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, LineChart, ChartContainer } from "@/components/ui/chart";
-import { useToast } from "@/components/ui/use-toast";
-import { AlertCircle, Info } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { subscriptionAnalyticsService } from "@/services/subscription"; 
+
+import React from 'react';
+import { useSubscriptionAnalytics } from './subscription-analytics';
+import { EventTypeChart } from './subscription-analytics';
+import { FeatureConversionChart } from './subscription-analytics';
+import { TrialConversionMetrics } from './subscription-analytics';
 
 const SubscriptionAnalytics = () => {
-  const [eventCounts, setEventCounts] = useState<{ [key: string]: number } | null>(null);
-  const [featureConversions, setFeatureConversions] = useState<{ feature: string; conversions: number; }[] | null>(null);
-  const [trialMetrics, setTrialMetrics] = useState<{ totalTrials: number; totalConversions: number; conversionRate: string; } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch event counts
-        const eventCountsData = await subscriptionAnalyticsService.getAnalyticsByEventType();
-        setEventCounts(eventCountsData);
-
-        // Fetch feature conversion analytics
-        const featureConversionData = await subscriptionAnalyticsService.getFeatureConversionAnalytics();
-        setFeatureConversions(featureConversionData);
-
-        // Fetch trial conversion metrics
-        const trialConversionMetrics = await subscriptionAnalyticsService.getTrialConversionMetrics();
-        setTrialMetrics(trialConversionMetrics);
-      } catch (error) {
-        console.error("Error fetching analytics data:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load analytics data. Please try again."
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [toast]);
-
-  // Helper function to format data for the charts
-  function formatEventTypeData() {
-    if (!eventCounts) return [];
-    
-    return Object.entries(eventCounts).map(([name, value]) => ({
-      name,
-      value
-    }));
-  }
-
-  function formatFeatureData() {
-    if (!featureConversions) return [];
-    
-    return featureConversions.map(item => ({
-      name: item.feature,
-      value: item.conversions
-    }));
-  }
+  const { eventCounts, featureConversions, trialMetrics, isLoading } = useSubscriptionAnalytics();
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* Event Type Analytics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Analitik Tipe Event</CardTitle>
-          <CardDescription>Jumlah setiap tipe event</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Info className="mr-2 h-4 w-4 animate-spin" />
-              Memuat data...
-            </div>
-          ) : eventCounts && Object.keys(eventCounts).length > 0 ? (
-            <ChartContainer
-              className="h-80"
-              config={{
-                value: { theme: { light: 'rgba(54, 162, 235, 0.6)', dark: 'rgba(54, 162, 235, 1)' } }
-              }}
-            >
-              <BarChart data={formatEventTypeData()} />
-            </ChartContainer>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Tidak ada data event yang tersedia.</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+      <EventTypeChart eventCounts={eventCounts} isLoading={isLoading} />
 
       {/* Feature Conversion Analytics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Analitik Konversi Fitur</CardTitle>
-          <CardDescription>Jumlah konversi per fitur</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Info className="mr-2 h-4 w-4 animate-spin" />
-              Memuat data...
-            </div>
-          ) : featureConversions && featureConversions.length > 0 ? (
-            <ChartContainer 
-              className="h-80"
-              config={{
-                value: { theme: { light: 'rgba(75, 192, 192, 0.2)', dark: 'rgba(75, 192, 192, 1)' } }
-              }}
-            >
-              <LineChart data={formatFeatureData()} />
-            </ChartContainer>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Tidak ada data konversi fitur yang tersedia.</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+      <FeatureConversionChart featureConversions={featureConversions} isLoading={isLoading} />
 
       {/* Trial Conversion Metrics */}
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle>Metrik Konversi Trial</CardTitle>
-          <CardDescription>Jumlah total trial, konversi, dan tingkat konversi</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Info className="mr-2 h-4 w-4 animate-spin" />
-              Memuat data...
-            </div>
-          ) : trialMetrics ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <div className="text-lg font-semibold">Total Trial</div>
-                <div className="text-2xl font-bold">{trialMetrics.totalTrials}</div>
-              </div>
-              <div>
-                <div className="text-lg font-semibold">Total Konversi</div>
-                <div className="text-2xl font-bold">{trialMetrics.totalConversions}</div>
-              </div>
-              <div>
-                <div className="text-lg font-semibold">Tingkat Konversi</div>
-                <div className="text-2xl font-bold">{trialMetrics.conversionRate}%</div>
-              </div>
-            </div>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Tidak ada data metrik trial yang tersedia.</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+      <TrialConversionMetrics trialMetrics={trialMetrics} isLoading={isLoading} />
     </div>
   );
 };
