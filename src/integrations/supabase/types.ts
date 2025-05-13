@@ -753,6 +753,7 @@ export type Database = {
           done: boolean | null
           google_drive_link: string | null
           id: string
+          organization_id: string | null
           pic_id: string | null
           pic_production_id: string | null
           post_date: string | null
@@ -781,6 +782,7 @@ export type Database = {
           done?: boolean | null
           google_drive_link?: string | null
           id?: string
+          organization_id?: string | null
           pic_id?: string | null
           pic_production_id?: string | null
           post_date?: string | null
@@ -809,6 +811,7 @@ export type Database = {
           done?: boolean | null
           google_drive_link?: string | null
           id?: string
+          organization_id?: string | null
           pic_id?: string | null
           pic_production_id?: string | null
           post_date?: string | null
@@ -839,6 +842,13 @@ export type Database = {
             columns: ["content_type_id"]
             isOneToOne: false
             referencedRelation: "content_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {

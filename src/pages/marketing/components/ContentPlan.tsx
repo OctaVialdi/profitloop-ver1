@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+
 export function ContentPlan() {
   const {
     contentPlans,
@@ -184,6 +185,7 @@ export function ContentPlan() {
     }
     setIsTitleDialogOpen(false);
   };
+
   return <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -225,7 +227,7 @@ export function ContentPlan() {
                     <TableHead className="text-center whitespace-nowrap w-[100px] border-r">Approved</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[160px] border-r">Tanggal Approved</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[150px] border-r">Download Link File</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[180px] border-r">Link Post</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[220px] border-r">Link Post</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[80px] border-r">Done</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[160px] border-r">Actual Post</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px] border-r">On Time Status</TableHead>
@@ -332,18 +334,14 @@ export function ContentPlan() {
                           </Select>
                         </TableCell>
 
-                        {/* 9. Brief - Modified to use a single field with integrated link button */}
+                        {/* 9. Brief - Modified to use a single field */}
                         <TableCell className="p-1 w-[150px] border-r">
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" className="flex-grow h-8 flex items-center justify-start px-3 hover:bg-gray-50 truncate text-left" onClick={() => openBriefDialog(item.id, item.brief)}>
+                          <Button variant="ghost" className="w-full h-8 flex items-center justify-between px-3 hover:bg-gray-50 text-left" onClick={() => openBriefDialog(item.id, item.brief)}>
+                            <span className="truncate flex-grow text-left">
                               {item.brief ? truncateText(item.brief) : "Add brief"}
-                            </Button>
-                            {extractLink(item.brief) && <Button size="sm" variant="ghost" className="h-8 px-2 flex-shrink-0" asChild>
-                                <a href={extractLink(item.brief)!} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              </Button>}
-                          </div>
+                            </span>
+                            {extractLink(item.brief) && <ExternalLink className="h-4 w-4 ml-1 flex-shrink-0" />}
+                          </Button>
                         </TableCell>
 
                         {/* 10. Status */}
@@ -480,8 +478,8 @@ export function ContentPlan() {
                             </Button>}
                         </TableCell>
 
-                        {/* 25. Link Post - Modified to use a single field with improved width */}
-                        <TableCell className="p-1 w-[180px] border-r">
+                        {/* 25. Link Post - Modified to be wider and use a single field with integrated button */}
+                        <TableCell className="p-1 w-[220px] border-r">
                           <div className="flex items-center gap-1">
                             <Input value={item.post_link || ""} onChange={e => handleFieldChange(item.id, 'post_link', e.target.value)} placeholder="Enter post link" className="w-full h-8 text-xs" />
                             {item.post_link && <Button size="sm" variant="ghost" className="h-8 px-2 flex-shrink-0" asChild>

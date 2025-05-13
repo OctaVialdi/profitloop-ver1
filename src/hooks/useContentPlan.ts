@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, differenceInDays } from 'date-fns';
+import { useOrganization } from '@/hooks/useOrganization';
 
 export interface ContentPlanItem {
   id: string;
@@ -38,6 +39,7 @@ export interface ContentPlanItem {
   on_time_status?: string;
   created_at: string;
   updated_at: string;
+  organization_id: string | null;
 }
 
 interface ContentType {
@@ -78,15 +80,18 @@ export function useContentPlan() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const { currentOrganization } = useOrganization();
 
   useEffect(() => {
-    fetchContentPlans();
-    fetchContentTypes();
-    fetchTeamMembers();
-    fetchServices();
-    fetchSubServices();
-    fetchContentPillars();
-  }, []);
+    if (currentOrganization?.id) {
+      fetchContentPlans();
+      fetchContentTypes();
+      fetchTeamMembers();
+      fetchServices();
+      fetchSubServices();
+      fetchContentPillars();
+    }
+  }, [currentOrganization]);
 
   const fetchContentPlans = async () => {
     try {
@@ -102,6 +107,7 @@ export function useContentPlan() {
           pic:pic_id(name),
           pic_production:pic_production_id(name)
         `)
+        .eq('organization_id', currentOrganization?.id)
         .order('post_date');
 
       if (error) throw error;
@@ -221,9 +227,15 @@ export function useContentPlan() {
 
   const addContentPlan = async (newPlan: Partial<ContentPlanItem>) => {
     try {
+      // Include the organization ID in the new plan
+      const planWithOrgId = {
+        ...newPlan,
+        organization_id: currentOrganization?.id
+      };
+      
       const { data, error } = await supabase
         .from('content_plans')
-        .insert(newPlan)
+        .insert(planWithOrgId)
         .select();
 
       if (error) throw error;
@@ -251,7 +263,8 @@ export function useContentPlan() {
       const { error } = await supabase
         .from('content_plans')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('organization_id', currentOrganization?.id);
 
       if (error) throw error;
       
@@ -278,7 +291,8 @@ export function useContentPlan() {
       const { error } = await supabase
         .from('content_plans')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('organization_id', currentOrganization?.id);
 
       if (error) throw error;
       
