@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Pencil, Package, FileText } from "lucide-react";
@@ -551,7 +552,7 @@ export default function ContentTable() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Produksi").map(member => (
+                              {getFilteredTeamMembers("Creative").map(member => (
                                 <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
                               ))}
                             </SelectContent>
@@ -766,4 +767,73 @@ export default function ContentTable() {
 
       {/* Brief Dialog */}
       <Dialog open={isBriefDialogOpen} onOpenChange={setIsBriefDialogOpen}>
-        <
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Brief</DialogTitle>
+            <DialogDescription>
+              Enter the brief details for the content.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="my-4">
+            <Textarea 
+              value={currentBrief} 
+              onChange={(e) => setCurrentBrief(e.target.value)} 
+              placeholder="Enter brief details here..."
+              className="min-h-[150px]"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBriefDialogOpen(false)}>Cancel</Button>
+            <Button onClick={saveBrief}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Title Dialog */}
+      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Title</DialogTitle>
+          </DialogHeader>
+          
+          <div className="my-4">
+            <Input 
+              value={currentTitle} 
+              onChange={(e) => setCurrentTitle(e.target.value)} 
+              placeholder="Enter content title"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTitleDialogOpen(false)}>Cancel</Button>
+            <Button onClick={saveTitle}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* URL Dialog */}
+      <Dialog open={isUrlDialogOpen} onOpenChange={setIsUrlDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{currentUrlTitle}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="my-4">
+            <Input 
+              value={currentUrl} 
+              onChange={(e) => setCurrentUrl(e.target.value)} 
+              placeholder={`Enter ${currentUrlField === "post_link" ? "post" : "Google Drive"} link`}
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUrlDialogOpen(false)}>Cancel</Button>
+            <Button onClick={saveUrl}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
