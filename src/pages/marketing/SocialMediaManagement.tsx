@@ -17,7 +17,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Edit, X } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Edit, X, Trash, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ContentPlan } from "./components/ContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ContentManager {
   name: string;
@@ -71,6 +72,8 @@ const SocialMediaManagement = () => {
   const [isEditTargetOpen, setIsEditTargetOpen] = useState(false);
   const [editingManager, setEditingManager] = useState<ContentManager | null>(null);
   const [targetValue, setTargetValue] = useState<string>("20");
+  const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
+  const [bulkActionDialogOpen, setBulkActionDialogOpen] = useState(false);
   
   const primaryTabs: TabData[] = [
     { id: "content-planner", label: "Content Planner" },
@@ -159,6 +162,30 @@ const SocialMediaManagement = () => {
     // In a real app, you would update the manager's target here
     setIsEditTargetOpen(false);
     setEditingManager(null);
+  };
+
+  const handleSelectAllManagers = (checked: boolean) => {
+    if (checked) {
+      setSelectedManagers(contentManagers.map(manager => manager.name));
+    } else {
+      setSelectedManagers([]);
+    }
+  };
+
+  const handleSelectManager = (name: string, checked: boolean) => {
+    if (checked) {
+      setSelectedManagers([...selectedManagers, name]);
+    } else {
+      setSelectedManagers(selectedManagers.filter((managerName) => managerName !== name));
+    }
+  };
+
+  const handleBulkAction = (action: string) => {
+    // Handle bulk actions like setting targets, deleting, etc.
+    console.log(`Performing ${action} on:`, selectedManagers);
+    setBulkActionDialogOpen(false);
+    // Reset selection after action
+    setSelectedManagers([]);
   };
 
   const months = [
@@ -268,6 +295,13 @@ const SocialMediaManagement = () => {
                 <Table className="w-full">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
+                      <TableHead className="h-8 w-[40px] py-1 text-center">
+                        <Checkbox 
+                          checked={selectedManagers.length === contentManagers.length && contentManagers.length > 0}
+                          onCheckedChange={handleSelectAllManagers}
+                          aria-label="Select all"
+                        />
+                      </TableHead>
                       <TableHead className="h-8 w-[150px] py-1 text-center">PIC</TableHead>
                       <TableHead className="h-8 text-center w-[150px] py-1">
                         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -346,6 +380,13 @@ const SocialMediaManagement = () => {
                   <TableBody>
                     {contentManagers.map((manager) => (
                       <TableRow key={manager.name} className="hover:bg-gray-50/80">
+                        <TableCell className="py-1 px-4 text-center">
+                          <Checkbox 
+                            checked={selectedManagers.includes(manager.name)}
+                            onCheckedChange={(checked) => handleSelectManager(manager.name, !!checked)}
+                            aria-label={`Select ${manager.name}`}
+                          />
+                        </TableCell>
                         <TableCell className="py-1 px-4 font-medium text-sm text-center">{manager.name}</TableCell>
                         <TableCell className="py-1 px-4 text-center text-sm">{manager.dailyTarget}</TableCell>
                         <TableCell className="py-1 px-4 text-center text-sm">{manager.monthlyTarget}</TableCell>
@@ -401,8 +442,17 @@ const SocialMediaManagement = () => {
       case "dashboard":
         return (
           <Card className="w-full">
-            <CardHeader className="py-3">
+            <CardHeader className="py-3 flex flex-row justify-between">
               <CardTitle className="text-lg">Dashboard Content</CardTitle>
+              {selectedManagers.length > 0 && (
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={() => setBulkActionDialogOpen(true)}
+                >
+                  Actions ({selectedManagers.length})
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               <ContentPlan />
@@ -426,7 +476,7 @@ const SocialMediaManagement = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-4 max-w-7xl">
+    <div className="w-full px-0 space-y-4 max-w-full">
       {/* Primary Tab Navigation - Updated to be more compact */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
@@ -596,6 +646,66 @@ const SocialMediaManagement = () => {
               onClick={handleSaveTarget}
             >
               Save Target
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Action Dialog */}
+      <Dialog open={bulkActionDialogOpen} onOpenChange={setBulkActionDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Bulk Actions
+            </DialogTitle>
+            <button 
+              onClick={() => setBulkActionDialogOpen(false)} 
+              className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-gray-500">
+              Selected {selectedManagers.length} content manager{selectedManagers.length !== 1 ? 's' : ''}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 justify-center" 
+                onClick={() => handleBulkAction("set-target")}
+              >
+                <Edit className="h-4 w-4" /> Set Target
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 justify-center" 
+                onClick={() => handleBulkAction("reset")}
+              >
+                <RotateCw className="h-4 w-4" /> Reset
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 justify-center" 
+                onClick={() => handleBulkAction("approve")}
+              >
+                <Check className="h-4 w-4" /> Approve
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex items-center gap-2 justify-center text-red-600" 
+                onClick={() => handleBulkAction("delete")}
+              >
+                <Trash className="h-4 w-4" /> Delete
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setBulkActionDialogOpen(false)}
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
