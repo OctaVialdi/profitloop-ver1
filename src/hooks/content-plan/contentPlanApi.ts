@@ -111,18 +111,40 @@ export async function fetchContentPillars(): Promise<ContentPillar[]> {
 }
 
 export async function addContentPlanItem(item: Partial<ContentPlanItem>, organizationId: string): Promise<ContentPlanItem> {
-  // Ensure organization_id is set
-  const itemWithOrg = {
+  // Extract the IDs for insert, excluding the relational objects
+  const itemToInsert = {
     ...item,
-    organization_id: organizationId
+    organization_id: organizationId,
+    content_type_id: item.content_type_id,
+    pic_id: item.pic_id,
+    service_id: item.service_id,
+    sub_service_id: item.sub_service_id,
+    content_pillar_id: item.content_pillar_id,
+    pic_production_id: item.pic_production_id
   };
   
-  console.log(`Adding content plan with org ID ${organizationId}:`, itemWithOrg);
+  // Remove any relational objects that might be in the item
+  delete (itemToInsert as any).content_type;
+  delete (itemToInsert as any).pic;
+  delete (itemToInsert as any).service;
+  delete (itemToInsert as any).sub_service;
+  delete (itemToInsert as any).content_pillar;
+  delete (itemToInsert as any).pic_production;
+  
+  console.log(`Adding content plan with org ID ${organizationId}:`, itemToInsert);
   
   const { data, error } = await supabase
     .from('content_plans')
-    .insert(itemWithOrg)
-    .select();
+    .insert(itemToInsert)
+    .select(`
+      *,
+      content_type:content_type_id(name),
+      pic:pic_id(name),
+      service:service_id(name),
+      sub_service:sub_service_id(name),
+      content_pillar:content_pillar_id(name),
+      pic_production:pic_production_id(name)
+    `);
     
   if (error) {
     console.error('Error adding content plan item:', error);
@@ -133,15 +155,26 @@ export async function addContentPlanItem(item: Partial<ContentPlanItem>, organiz
     throw new Error('No data returned after insert');
   }
   
-  return data[0];
+  return data[0] as ContentPlanItem;
 }
 
 export async function updateContentPlanItem(id: string, updates: Partial<ContentPlanItem>, organizationId: string): Promise<void> {
-  console.log(`Updating content plan ${id} for org ${organizationId}:`, updates);
+  // Extract the IDs for update, excluding the relational objects
+  const updatesToApply = { ...updates };
+  
+  // Remove any relational objects that might be in the updates
+  delete (updatesToApply as any).content_type;
+  delete (updatesToApply as any).pic;
+  delete (updatesToApply as any).service;
+  delete (updatesToApply as any).sub_service;
+  delete (updatesToApply as any).content_pillar;
+  delete (updatesToApply as any).pic_production;
+  
+  console.log(`Updating content plan ${id} for org ${organizationId}:`, updatesToApply);
   
   const { error } = await supabase
     .from('content_plans')
-    .update(updates)
+    .update(updatesToApply)
     .eq('id', id)
     .eq('organization_id', organizationId);
     

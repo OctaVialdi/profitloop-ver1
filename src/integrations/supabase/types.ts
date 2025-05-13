@@ -852,6 +852,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "content_plans_pic_id_fkey"
+            columns: ["pic_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_digital_marketing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_pic_production_id_fkey"
+            columns: ["pic_production_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_digital_marketing"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "content_plans_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false

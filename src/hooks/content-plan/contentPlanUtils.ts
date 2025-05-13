@@ -1,59 +1,70 @@
 
-import { format, parseISO, differenceInDays } from 'date-fns';
 import { ContentPlanItem, TeamMember, SubService } from './types';
+import { format } from 'date-fns';
 
+// Format date for display
+export const formatDisplayDate = (dateString: string | null, includeTime: boolean = false): string => {
+  if (!dateString) return '-';
+  
+  try {
+    const date = new Date(dateString);
+    return includeTime 
+      ? format(date, 'dd MMM yyyy HH:mm')
+      : format(date, 'dd MMM yyyy');
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return dateString;
+  }
+};
+
+// Calculate on-time status
+export const calculateOnTimeStatus = (item: ContentPlanItem): string => {
+  if (!item.post_date || !item.actual_post_date) return 'Unknown';
+  
+  const plannedDate = new Date(item.post_date);
+  const actualDate = new Date(item.actual_post_date);
+  
+  // Reset hours to compare just the dates
+  plannedDate.setHours(0, 0, 0, 0);
+  actualDate.setHours(0, 0, 0, 0);
+  
+  if (actualDate.getTime() === plannedDate.getTime()) {
+    return 'On Time';
+  } else if (actualDate.getTime() < plannedDate.getTime()) {
+    return 'Early';
+  } else {
+    return 'Late';
+  }
+};
+
+// Process content plans to include on-time status
 export const getContentPlansWithFormattedData = (contentPlans: ContentPlanItem[]): ContentPlanItem[] => {
   return contentPlans.map(plan => {
-    // Calculate on time status
-    let onTimeStatus = '';
-    if (plan.actual_post_date && plan.post_date) {
-      const actualDate = new Date(plan.actual_post_date);
-      const plannedDate = new Date(plan.post_date);
-      
-      if (actualDate <= plannedDate) {
-        onTimeStatus = 'On Time';
-      } else {
-        const diffDays = differenceInDays(actualDate, plannedDate);
-        onTimeStatus = `Late [${diffDays}] Day/s`;
-      }
+    let onTimeStatus = 'N/A';
+    
+    if (plan.done && plan.actual_post_date && plan.post_date) {
+      onTimeStatus = calculateOnTimeStatus(plan);
     }
-
+    
     return {
       ...plan,
-      on_time_status: onTimeStatus
+      on_time_status: onTimeStatus,
     };
   });
 };
 
+// Filter team members by department
 export const getFilteredTeamMembers = (teamMembers: TeamMember[], department: string): TeamMember[] => {
-  return teamMembers.filter(member => member.department === department);
-};
-
-export const getFilteredSubServices = (subServices: SubService[], serviceId: string): SubService[] => {
-  return subServices.filter(subService => subService.service_id === serviceId);
-};
-
-export const formatDisplayDate = (dateString: string | null, includeTime: boolean = false): string => {
-  if (!dateString) return "";
-  try {
-    const date = parseISO(dateString);
-    return includeTime 
-      ? format(date, "dd MMM yyyy - HH:mm") 
-      : format(date, "dd MMM yyyy");
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return dateString || "";
+  if (!department || department === 'all') {
+    return teamMembers;
   }
+  return teamMembers.filter(member => member.department.toLowerCase() === department.toLowerCase());
 };
 
-export const extractLink = (text: string | null): string | null => {
-  if (!text) return null;
-  const regex = /(https?:\/\/\S+)/g;
-  const match = text.match(regex);
-  return match ? match[0] : null;
-};
-
-export const truncateText = (text: string | null, maxLength: number = 25): string => {
-  if (!text) return "";
-  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+// Filter sub-services by service ID
+export const getFilteredSubServices = (subServices: SubService[], serviceId: string): SubService[] => {
+  if (!serviceId) {
+    return [];
+  }
+  return subServices.filter(subService => subService.service_id === serviceId);
 };
