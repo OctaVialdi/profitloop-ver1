@@ -19,13 +19,15 @@ export function useSubscriptionAnalytics(): AnalyticsData {
     queryFn: subscriptionAnalyticsService.getAnalyticsByEventType,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
-    onError: (error) => {
-      console.error("Error fetching event counts:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load analytics event data."
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error("Error fetching event counts:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load analytics event data."
+        });
+      }
     }
   });
 
@@ -35,13 +37,15 @@ export function useSubscriptionAnalytics(): AnalyticsData {
     queryFn: subscriptionAnalyticsService.getFeatureConversionAnalytics,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
-    onError: (error) => {
-      console.error("Error fetching feature conversions:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load feature conversion data."
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error("Error fetching feature conversions:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load feature conversion data."
+        });
+      }
     }
   });
 
@@ -51,13 +55,15 @@ export function useSubscriptionAnalytics(): AnalyticsData {
     queryFn: subscriptionAnalyticsService.getTrialConversionMetrics,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
-    onError: (error) => {
-      console.error("Error fetching trial metrics:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load trial conversion metrics."
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error("Error fetching trial metrics:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load trial conversion metrics."
+        });
+      }
     }
   });
 

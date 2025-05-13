@@ -51,6 +51,11 @@ export default function ContentPlan() {
     return <ContentPlanError error={error} />;
   }
 
+  // Create a wrapper function to convert Promise<boolean> to Promise<void>
+  const handleDeleteSelectedWrapper = async () => {
+    await handleDeleteSelected();
+  };
+
   return (
     <div className="space-y-4 p-4">
       <ContentPlanToolbar
@@ -85,7 +90,7 @@ export default function ContentPlan() {
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         selectedCount={selectedItems.length}
-        onConfirm={handleDeleteSelected}
+        onConfirm={handleDeleteSelectedWrapper}
       />
 
       {/* Brief Dialog */}
