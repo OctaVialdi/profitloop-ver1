@@ -42,3 +42,17 @@ export const getFilteredTeamMembers = (teamMembers: TeamMember[], jobPosition: s
 export const getFilteredSubServices = (subServices: SubService[], serviceId: string): SubService[] => {
   return subServices.filter(subService => subService.service_id === serviceId);
 };
+
+// Helper for extracting links from text
+export const extractLink = (text: string | null): string | null => {
+  if (!text) return null;
+  const regex = /(https?:\/\/\S+)/g;
+  const match = text.match(regex);
+  return match ? match[0] : null;
+};
+
+// Helper for truncating text
+export const truncateText = (text: string | null, maxLength: number = 25): string => {
+  if (!text) return "";
+  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+};
