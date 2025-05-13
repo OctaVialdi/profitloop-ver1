@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 export function ContentPlan() {
   const {
     contentPlans,
@@ -168,7 +169,7 @@ export function ContentPlan() {
     }
     setIsBriefDialogOpen(false);
   };
-  return <div className="w-full space-y-4">
+  return <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={addNewRow}>+ Add Row</Button>
