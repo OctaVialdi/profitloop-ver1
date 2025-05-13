@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,12 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 interface TitleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
-  onTitleChange: (title: string) => void;
-  onSave: () => void;
+  content: string | null;
+  onSubmit: (content: string) => void;
 }
 
-export default function TitleDialog({ open, onOpenChange, title, onTitleChange, onSave }: TitleDialogProps) {
+export default function TitleDialog({ open, onOpenChange, content, onSubmit }: TitleDialogProps) {
+  const [title, setTitle] = useState(content || '');
+  
+  const handleSave = () => {
+    onSubmit(title);
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -25,7 +30,7 @@ export default function TitleDialog({ open, onOpenChange, title, onTitleChange, 
         <div className="grid gap-4 py-4">
           <Textarea 
             value={title} 
-            onChange={e => onTitleChange(e.target.value)} 
+            onChange={e => setTitle(e.target.value)} 
             placeholder="Enter content title..." 
             className="min-h-[120px]" 
           />
@@ -34,7 +39,7 @@ export default function TitleDialog({ open, onOpenChange, title, onTitleChange, 
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button type="button" onClick={onSave}>
+          <Button type="button" onClick={handleSave}>
             Save Title
           </Button>
         </DialogFooter>
