@@ -1,11 +1,7 @@
 
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import LoginFormErrorAlert from "./LoginFormErrorAlert";
 import UnverifiedEmailAlert from "./UnverifiedEmailAlert";
+import LoginFormFields from "./LoginFormFields";
 
 interface LoginFormProps {
   email: string;
@@ -36,12 +32,7 @@ const LoginForm = ({
 }: LoginFormProps) => {
   return (
     <>
-      {loginError && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{loginError}</AlertDescription>
-        </Alert>
-      )}
+      <LoginFormErrorAlert loginError={loginError} />
       
       {isEmailUnverified && (
         <UnverifiedEmailAlert 
@@ -50,46 +41,15 @@ const LoginForm = ({
         />
       )}
       
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="nama@perusahaan.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            readOnly={isEmailReadOnly}
-            className={isEmailReadOnly ? "bg-gray-100" : ""}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link to="/auth/forgot-password" className="text-sm text-blue-500 hover:text-blue-700">
-              Lupa password?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {email ? "Memeriksa..." : "Memproses..."}
-            </>
-          ) : (
-            "Login"
-          )}
-        </Button>
-      </form>
+      <LoginFormFields
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        isLoading={isLoading}
+        onSubmit={onSubmit}
+        isEmailReadOnly={isEmailReadOnly}
+      />
     </>
   );
 };

@@ -1,44 +1,34 @@
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-export const useUser = () => {
-  const [user, setUser] = useState<User | null>(null);
+export function useUser() {
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
-    // Get initial user state
+    // Check for existing user session
     const getUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } catch (error) {
-        console.error('Error getting user:', error);
-      } finally {
-        setLoading(false);
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      setLoading(false);
     };
-
+    
     getUser();
-
-    // Subscribe to auth changes
+    
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_, session) => {
+      (_event, session) => {
+        // Only set user state using the session's user 
         setUser(session?.user || null);
-        setLoading(false);
       }
     );
-
-    // Cleanup subscription
+    
+    // Clean up subscription when unmounting
     return () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  return {
-    user,
-    loading,
-    isAuthenticated: !!user
-  };
-};
+  
+  return { user, loading };
+}
