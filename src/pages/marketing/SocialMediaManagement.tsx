@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Card, 
@@ -42,7 +43,7 @@ import {
 } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ContentPlan } from "./components/ContentPlan";
-import { ContentTable } from "./components/ContentTable";
+import ContentTable from "./components/ContentTable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 

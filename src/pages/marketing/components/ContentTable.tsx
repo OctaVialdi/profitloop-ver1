@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export function ContentTable() {
+export default function ContentTable() {
   const {
     contentPlans,
     contentTypes,
@@ -40,9 +40,11 @@ export function ContentTable() {
   const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
   const [currentTitle, setCurrentTitle] = useState("");
 
-  // For link post editing
-  const [isPostLinkDialogOpen, setIsPostLinkDialogOpen] = useState(false);
-  const [currentPostLink, setCurrentPostLink] = useState("");
+  // For URL editing (both post link and google drive link)
+  const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState("");
+  const [currentUrlField, setCurrentUrlField] = useState<"post_link" | "google_drive_link">("post_link");
+  const [currentUrlTitle, setCurrentUrlTitle] = useState("");
 
   // For adding new rows
   const addNewRow = () => {
@@ -192,17 +194,20 @@ export function ContentTable() {
     setIsTitleDialogOpen(false);
   };
 
-  // Handle post link dialog
-  const openPostLinkDialog = (id: string, postLink: string | null) => {
+  // Handle URL dialog (for both post link and google drive link)
+  const openUrlDialog = (id: string, url: string | null, field: "post_link" | "google_drive_link") => {
     setCurrentItemId(id);
-    setCurrentPostLink(postLink || "");
-    setIsPostLinkDialogOpen(true);
+    setCurrentUrl(url || "");
+    setCurrentUrlField(field);
+    setCurrentUrlTitle(field === "post_link" ? "Edit Post Link" : "Edit Google Drive Link");
+    setIsUrlDialogOpen(true);
   };
-  const savePostLink = async () => {
+  
+  const saveUrl = async () => {
     if (currentItemId) {
-      await handleFieldChange(currentItemId, 'post_link', currentPostLink);
+      await handleFieldChange(currentItemId, currentUrlField, currentUrl);
     }
-    setIsPostLinkDialogOpen(false);
+    setIsUrlDialogOpen(false);
   };
 
   // Format actual post date without time
@@ -240,7 +245,7 @@ export function ContentTable() {
                     <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">Action</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[180px]">Tanggal Posting</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[120px]">PIC Content</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">Layanan</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[150px]">Sub Layanan</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
@@ -315,7 +320,7 @@ export function ContentTable() {
                           </Popover>
                         </TableCell>
 
-                        {/* 3. Tipe Content */}
+                        {/* 3. Tipe Content - Updated to use contentTypes from settings */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
                           <Select 
                             value={item.content_type_id || "none"} 
@@ -333,7 +338,7 @@ export function ContentTable() {
                           </Select>
                         </TableCell>
 
-                        {/* 4. PIC */}
+                        {/* 4. PIC Content - Updated to use teamMembers from Content Planner */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px]">
                           <Select 
                             value={item.pic_id || "none"} 
@@ -351,7 +356,7 @@ export function ContentTable() {
                           </Select>
                         </TableCell>
 
-                        {/* 5. Layanan */}
+                        {/* 5. Layanan - Updated to use services from settings */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px]">
                           <Select 
                             value={item.service_id || "none"} 
@@ -369,7 +374,7 @@ export function ContentTable() {
                           </Select>
                         </TableCell>
 
-                        {/* 6. Sub Layanan */}
+                        {/* 6. Sub Layanan - Updated to use subServices from settings and filter by service_id */}
                         <TableCell className="whitespace-nowrap p-1 w-[150px]">
                           <Select 
                             value={item.sub_service_id || "none"} 
@@ -388,7 +393,7 @@ export function ContentTable() {
                           </Select>
                         </TableCell>
 
-                        {/* 7. Judul Content - Modified to use dialog */}
+                        {/* 7. Judul Content */}
                         <TableCell className="p-1 w-[180px]">
                           <Button 
                             variant="ghost" 
@@ -401,7 +406,7 @@ export function ContentTable() {
                           </Button>
                         </TableCell>
 
-                        {/* 8. Content Pillar */}
+                        {/* 8. Content Pillar - Updated to use contentPillars from settings */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
                           <Select 
                             value={item.content_pillar_id || "none"} 
@@ -413,7 +418,10 @@ export function ContentTable() {
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
                               {contentPillars.map(pillar => (
-                                <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
+                                <SelectItem key={pillar.id} value={pillar.id}>
+                                  {pillar.name}
+                                  {pillar.funnel_stage && ` (${pillar.funnel_stage})`}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -518,7 +526,7 @@ export function ContentTable() {
                           </div>
                         </TableCell>
 
-                        {/* 17. PIC Produksi */}
+                        {/* 17. PIC Produksi - Updated to use teamMembers from Creative department */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
                           <Select 
                             value={item.pic_production_id || "none"} 
@@ -529,36 +537,49 @@ export function ContentTable() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Produksi").map(member => (
+                              {getFilteredTeamMembers("Creative").map(member => (
                                 <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
 
-                        {/* 18. Link Google Drive */}
-                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          <div className="flex gap-1">
-                            <Input 
-                              value={item.google_drive_link || ""} 
-                              onChange={(e) => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
-                              placeholder="Enter link" 
-                              className="w-full h-8 truncate" 
-                            />
-                            {item.google_drive_link && (
+                        {/* 18. Link Google Drive - Updated to match Link Post format */}
+                        <TableCell className="p-1 w-[160px]">
+                          <div className="flex flex-col gap-1">
+                            {item.google_drive_link ? (
                               <Button 
                                 variant="outline" 
                                 size="sm" 
-                                className="h-8 flex-shrink-0" 
-                                asChild
+                                className="w-full h-8 flex items-center justify-between" 
+                                onClick={() => openUrlDialog(item.id, item.google_drive_link, "google_drive_link")}
                               >
-                                <a 
-                                  href={item.google_drive_link} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
+                                <div className="truncate flex-1 text-left" title={item.google_drive_link}>
+                                  {truncateText(item.google_drive_link, 15)}
+                                </div>
+                                <div className="flex gap-1">
+                                  <a 
+                                    href={item.google_drive_link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="p-1 hover:bg-accent rounded" 
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                  <div className="p-1 hover:bg-accent rounded">
+                                    <Pencil className="h-3 w-3" />
+                                  </div>
+                                </div>
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="w-full h-8" 
+                                onClick={() => openUrlDialog(item.id, null, "google_drive_link")}
+                              >
+                                Add drive link
                               </Button>
                             )}
                           </div>
@@ -648,7 +669,7 @@ export function ContentTable() {
                                 variant="outline" 
                                 size="sm" 
                                 className="w-full h-8 flex items-center justify-between" 
-                                onClick={() => openPostLinkDialog(item.id, item.post_link)}
+                                onClick={() => openUrlDialog(item.id, item.post_link, "post_link")}
                               >
                                 <div className="truncate flex-1 text-left" title={item.post_link}>
                                   {truncateText(item.post_link, 15)}
@@ -673,7 +694,7 @@ export function ContentTable() {
                                 variant="ghost" 
                                 size="sm" 
                                 className="w-full h-8" 
-                                onClick={() => openPostLinkDialog(item.id, null)}
+                                onClick={() => openUrlDialog(item.id, null, "post_link")}
                               >
                                 Add post link
                               </Button>
@@ -799,42 +820,42 @@ export function ContentTable() {
         </DialogContent>
       </Dialog>
       
-      {/* Post Link Dialog */}
-      <Dialog open={isPostLinkDialogOpen} onOpenChange={setIsPostLinkDialogOpen}>
+      {/* URL Dialog (for both post link and google drive link) */}
+      <Dialog open={isUrlDialogOpen} onOpenChange={setIsUrlDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Post Link</DialogTitle>
+            <DialogTitle>{currentUrlTitle}</DialogTitle>
             <DialogDescription>
-              Enter the post link URL below.
+              Enter the URL below.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Input 
-              value={currentPostLink} 
-              onChange={(e) => setCurrentPostLink(e.target.value)} 
-              placeholder="Enter post link URL..." 
+              value={currentUrl} 
+              onChange={(e) => setCurrentUrl(e.target.value)} 
+              placeholder="Enter URL..." 
             />
-            {currentPostLink && (
+            {currentUrl && (
               <div className="p-4 border rounded-md">
                 <div className="mb-2 font-medium">Preview:</div>
                 <a 
-                  href={currentPostLink} 
+                  href={currentUrl} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-blue-600 hover:underline flex items-center gap-2"
                 >
-                  {truncateText(currentPostLink, 40)}
+                  {truncateText(currentUrl, 40)}
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsPostLinkDialogOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsUrlDialogOpen(false)}>
               Cancel
             </Button>
-            <Button type="button" onClick={savePostLink}>
-              Save Link
+            <Button type="button" onClick={saveUrl}>
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
