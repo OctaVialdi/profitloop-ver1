@@ -7,23 +7,23 @@ export interface ContentPlanItem {
   id: string;
   post_date: string;
   content_type_id: string;
-  content_type?: { name: string };
+  content_type: { name: string } | string | null;
   pic_id: string;
-  pic?: { name: string };
+  pic: { name: string } | string | null;
   service_id: string;
-  service?: { name: string };
+  service: { name: string } | string | null;
   sub_service_id: string | null;
-  sub_service?: { name: string };
+  sub_service: { name: string } | string | null;
   title: string;
   content_pillar_id: string | null;
-  content_pillar?: { name: string };
+  content_pillar: { name: string } | string | null;
   brief: string | null;
   status: string;
   revision_count: number;
   approved: boolean;
   completion_date: string | null;
   pic_production_id: string | null;
-  pic_production?: { name: string };
+  pic_production: { name: string } | string | null;
   google_drive_link: string | null;
   production_status: string;
   production_revision_count: number;
@@ -104,15 +104,16 @@ export function useContentPlan() {
 
       if (error) throw error;
       
-      const formattedData = data?.map(item => ({
+      // Type assertion to handle the mapping more safely
+      const formattedData = (data || []).map(item => ({
         ...item,
-        content_type: item.content_type?.name || null,
-        service: item.service?.name || null,
-        sub_service: item.sub_service?.name || null,
-        content_pillar: item.content_pillar?.name || null,
-        pic: item.pic?.name || null,
-        pic_production: item.pic_production?.name || null
-      })) as ContentPlanItem[];
+        content_type: item.content_type || null,
+        service: item.service || null,
+        sub_service: item.sub_service || null,
+        content_pillar: item.content_pillar || null,
+        pic: item.pic || null,
+        pic_production: item.pic_production || null
+      })) as unknown as ContentPlanItem[];
       
       setContentPlans(formattedData);
     } catch (err: any) {
