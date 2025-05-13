@@ -16,7 +16,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Edit, X } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Edit, X, Package } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ContentPlan } from "./components/ContentPlan";
+import { ContentTable } from "./components/ContentTable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
@@ -414,7 +415,18 @@ const SocialMediaManagement = () => {
         return (
           <Card className="w-full">
             <CardHeader className="py-3">
-              <CardTitle className="text-lg">Content Overview</CardTitle>
+              <CardTitle className="text-lg">Content Management</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ContentTable />
+            </CardContent>
+          </Card>
+        );
+      case "create-content":
+        return (
+          <Card className="w-full">
+            <CardHeader className="py-3">
+              <CardTitle className="text-lg">Create Content</CardTitle>
             </CardHeader>
             <CardContent className="py-6">
               <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -430,15 +442,15 @@ const SocialMediaManagement = () => {
                       strokeLinecap="round" 
                       strokeLinejoin="round" 
                       strokeWidth={1.5} 
-                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
+                      d="M12 4v16m8-8H4" 
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium mb-2">Content Tab</h3>
+                <h3 className="text-lg font-medium mb-2">Create New Content</h3>
                 <p className="text-gray-500 mb-6 max-w-md">
-                  This space is ready for your content management needs. You can customize it based on your requirements.
+                  Create and publish new content for your social media channels. You can customize the workflow based on your requirements.
                 </p>
-                <Button variant="outline">Add Content</Button>
+                <Button variant="outline">Create Content</Button>
               </div>
             </CardContent>
           </Card>
@@ -461,7 +473,7 @@ const SocialMediaManagement = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-4 max-w-7xl">
-      {/* Primary Tab Navigation - Updated to be more compact */}
+      {/* Primary Tab Navigation */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
           {primaryTabs.map((tab) => (
@@ -520,9 +532,9 @@ const SocialMediaManagement = () => {
         </Pagination>
       </div>
 
-      {/* Secondary Tab Navigation - Updated to be more compact */}
+      {/* Secondary Tab Navigation */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
-        <div className="grid grid-cols-4 w-full">
+        <div className="grid grid-cols-5 w-full">
           {secondaryTabs.map((tab) => (
             <button
               key={tab.id}
@@ -533,40 +545,69 @@ const SocialMediaManagement = () => {
                   : "bg-gray-50 text-gray-600 hover:bg-gray-100"
               }`}
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-4 w-4" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                {tab.id === "dashboard" ? (
+              {tab.id === "dashboard" ? (
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-4 w-4" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
                   <path 
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
                     d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" 
                   />
-                ) : tab.id === "create-content" ? (
+                </svg>
+              ) : tab.id === "content" ? (
+                <Package className="h-4 w-4" />
+              ) : tab.id === "create-content" ? (
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-4 w-4" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
                   <path 
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
                     d="M12 4v16m8-8H4" 
                   />
-                ) : tab.id === "content-bank" ? (
+                </svg>
+              ) : tab.id === "content-bank" ? (
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-4 w-4" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
                   <path 
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
                   />
-                ) : (
+                </svg>
+              ) : (
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-4 w-4" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
                   <path 
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
                   />
-                )}
-              </svg>
+                </svg>
+              )}
               {tab.label}
             </button>
           ))}
