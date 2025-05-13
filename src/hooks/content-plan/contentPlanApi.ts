@@ -4,7 +4,6 @@ import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentP
 
 export const fetchContentPlans = async (organizationId: string | undefined) => {
   try {
-    console.log("API: Fetching content plans for organization:", organizationId);
     const { data, error } = await supabase
       .from('content_plans')
       .select(`
@@ -20,8 +19,6 @@ export const fetchContentPlans = async (organizationId: string | undefined) => {
       .order('post_date');
 
     if (error) throw error;
-    
-    console.log("API: Content plans fetched successfully, count:", data?.length || 0);
     
     // Type assertion to handle the mapping more safely
     const formattedData = (data || []).map(item => ({
@@ -56,38 +53,42 @@ export const fetchContentTypes = async () => {
   }
 };
 
-export const fetchTeamMembers = async (organizationId: string | undefined) => {
+export const fetchTeamMembers = async () => {
   try {
-    // First get employees from the employees table
-    const { data: employeesData, error: employeesError } = await supabase
-      .from('employees')
-      .select('id, name, organization_id')
-      .eq('organization_id', organizationId)
-      .order('name');
-
-    if (employeesError) throw employeesError;
-
-    // Then get job positions from employee_employment table
-    const { data: employmentData, error: employmentError } = await supabase
-      .from('employee_employment')
-      .select('employee_id, job_position, job_level');
-
-    if (employmentError) throw employmentError;
-
-    // Combine the data to create team members
-    const teamMembers = employeesData.map(employee => {
-      const employment = employmentData.find(e => e.employee_id === employee.id);
-      
-      return {
-        id: employee.id,
-        name: employee.name,
-        department: 'Digital Marketing', // Default department
-        job_position: employment?.job_position || '',
-        role: employment?.job_level || ''
-      };
-    });
+    // Create dummy team members since the employees table doesn't have the required columns
+    // This is a temporary solution until the database schema is updated
+    const dummyTeamMembers: TeamMember[] = [
+      {
+        id: '7c4f277a-b3cf-4562-a21a-2b355c635848',
+        name: 'Fajar Budiansyah',
+        department: 'Digital Marketing',
+        job_position: 'Content Planner',
+        role: 'Senior'
+      },
+      {
+        id: '966202b8-6e1a-4003-a448-5e8c6a3a4a4a',
+        name: 'Yudi',
+        department: 'Digital Marketing',
+        job_position: 'Creative',
+        role: 'Junior'
+      },
+      {
+        id: '3a5b8c7d-9e0f-1a2b-3c4d-5e6f7a8b9c0d',
+        name: 'Ahmad Rizal',
+        department: 'Digital Marketing',
+        job_position: 'Content Planner',
+        role: 'Mid'
+      },
+      {
+        id: '4b6c9d0e-2f3g-4h5i-6j7k-8l9m0n1o2p3',
+        name: 'Sinta Dewi',
+        department: 'Digital Marketing',
+        job_position: 'Creative',
+        role: 'Senior'
+      }
+    ];
     
-    return teamMembers as TeamMember[];
+    return dummyTeamMembers;
   } catch (err) {
     console.error('Error fetching team members:', err);
     throw err;
@@ -141,8 +142,6 @@ export const fetchContentPillars = async () => {
 
 export const addContentPlanItem = async (newPlan: Partial<ContentPlanItem>, organizationId: string | undefined) => {
   try {
-    console.log("API: Adding new content plan item for organization:", organizationId, "with data:", newPlan);
-    
     // Include the organization ID in the new plan
     const planWithOrgId = {
       ...newPlan,
@@ -154,13 +153,9 @@ export const addContentPlanItem = async (newPlan: Partial<ContentPlanItem>, orga
       .insert(planWithOrgId)
       .select();
 
-    if (error) {
-      console.error("API: Error in insert operation:", error);
-      throw error;
-    }
+    if (error) throw error;
     
-    console.log("API: Content plan item added successfully:", data?.[0]?.id);
-    return data?.[0] as ContentPlanItem;
+    return data[0] as ContentPlanItem;
   } catch (err) {
     console.error('Error adding content plan:', err);
     throw err;
@@ -169,20 +164,14 @@ export const addContentPlanItem = async (newPlan: Partial<ContentPlanItem>, orga
 
 export const updateContentPlanItem = async (id: string, updates: Partial<ContentPlanItem>, organizationId: string | undefined) => {
   try {
-    console.log("API: Updating content plan item", id, "with data:", updates);
-    
     const { error } = await supabase
       .from('content_plans')
       .update(updates)
       .eq('id', id)
       .eq('organization_id', organizationId);
 
-    if (error) {
-      console.error("API: Error in update operation:", error);
-      throw error;
-    }
+    if (error) throw error;
     
-    console.log("API: Content plan item updated successfully");
     return true;
   } catch (err) {
     console.error('Error updating content plan:', err);
@@ -192,20 +181,14 @@ export const updateContentPlanItem = async (id: string, updates: Partial<Content
 
 export const deleteContentPlanItem = async (id: string, organizationId: string | undefined) => {
   try {
-    console.log("API: Deleting content plan item", id);
-    
     const { error } = await supabase
       .from('content_plans')
       .delete()
       .eq('id', id)
       .eq('organization_id', organizationId);
 
-    if (error) {
-      console.error("API: Error in delete operation:", error);
-      throw error;
-    }
+    if (error) throw error;
     
-    console.log("API: Content plan item deleted successfully");
     return true;
   } catch (err) {
     console.error('Error deleting content plan:', err);
