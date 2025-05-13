@@ -6,49 +6,36 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function SubServicesTab() {
-  const [services, setServices] = useState<any[]>([]);
   const [subServices, setSubServices] = useState<any[]>([]);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [services, setServices] = useState<any[]>([]);
   const [newSubService, setNewSubService] = useState("");
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    fetchServices();
     fetchSubServices();
+    fetchServices();
   }, []);
-
-  const fetchServices = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .order("name");
-      
-      if (error) throw error;
-      setServices(data || []);
-      if (data && data.length > 0 && !selectedService) {
-        setSelectedService(data[0].id);
-      }
-    } catch (error: any) {
-      console.error("Error fetching services:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load services",
-        variant: "destructive",
-      });
-    }
-  };
 
   const fetchSubServices = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from("sub_services")
-        .select("*")
+        .select(`
+          *,
+          service:service_id(id, name)
+        `)
         .order("name");
       
       if (error) throw error;
@@ -65,16 +52,32 @@ export function SubServicesTab() {
     }
   };
 
+  const fetchServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .order("name");
+      
+      if (error) throw error;
+      setServices(data || []);
+    } catch (error: any) {
+      console.error("Error fetching services:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load services",
+        variant: "destructive",
+      });
+    }
+  };
+
   const addSubService = async () => {
-    if (!newSubService.trim() || !selectedService) return;
+    if (!newSubService.trim() || !selectedServiceId) return;
     
     try {
       const { error } = await supabase
         .from("sub_services")
-        .insert({ 
-          name: newSubService.trim(),
-          service_id: selectedService
-        });
+        .insert({ name: newSubService.trim(), service_id: selectedServiceId });
       
       if (error) throw error;
       
@@ -84,6 +87,7 @@ export function SubServicesTab() {
       });
       
       setNewSubService("");
+      setSelectedServiceId(null);
       fetchSubServices();
     } catch (error: any) {
       console.error("Error adding sub service:", error);
@@ -120,55 +124,58 @@ export function SubServicesTab() {
     }
   };
 
-  // Filter sub-services by selected service
-  const filteredSubServices = selectedService 
-    ? subServices.filter(subService => subService.service_id === selectedService) 
-    : [];
+  const getServiceName = (serviceId: string) => {
+    const service = services.find(s => s.id === serviceId);
+    return service ? service.name : "Unknown Service";
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <Select 
-          value={selectedService || ""} 
-          onValueChange={setSelectedService}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Select
+          value={selectedServiceId || "none"}
+          onValueChange={(value) => setSelectedServiceId(value === "none" ? null : value)}
         >
-          <SelectTrigger className="max-w-[200px]">
-            <SelectValue placeholder="Select service" />
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Select a service" />
           </SelectTrigger>
           <SelectContent>
-            {services.map((service) => (
+            <SelectItem value="none">Select a service</SelectItem>
+            {services.map(service => (
               <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Input
-          placeholder="Enter new sub-service"
-          value={newSubService}
-          onChange={(e) => setNewSubService(e.target.value)}
-          className="max-w-sm"
-          disabled={!selectedService}
-        />
-        <Button 
-          onClick={addSubService} 
-          disabled={!newSubService.trim() || !selectedService || isLoading}
-        >
-          <Plus className="h-4 w-4 mr-1" /> Add
-        </Button>
+        <div className="flex gap-2 flex-1">
+          <Input
+            placeholder="Enter new sub service"
+            value={newSubService}
+            onChange={(e) => setNewSubService(e.target.value)}
+            className="flex-1"
+          />
+          <Button 
+            onClick={addSubService} 
+            disabled={!newSubService.trim() || !selectedServiceId || isLoading}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add
+          </Button>
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-4">
-          {!selectedService && (
-            <p className="text-sm text-muted-foreground">Please select a service first.</p>
-          )}
-          {selectedService && filteredSubServices.length === 0 && (
-            <p className="text-sm text-muted-foreground">No sub-services defined for this service yet.</p>
-          )}
-          {selectedService && filteredSubServices.length > 0 && (
+          {subServices.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No sub services defined yet.</p>
+          ) : (
             <ul className="space-y-2">
-              {filteredSubServices.map((subService) => (
+              {subServices.map((subService) => (
                 <li key={subService.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <span>{subService.name}</span>
+                  <div>
+                    <span>{subService.name}</span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      ({getServiceName(subService.service_id)})
+                    </span>
+                  </div>
                   <Button 
                     variant="ghost" 
                     size="icon" 
