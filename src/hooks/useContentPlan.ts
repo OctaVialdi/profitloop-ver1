@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
+import { format, parseISO, differenceInDays } from 'date-fns';
 
 export interface ContentPlanItem {
   id: string;
@@ -34,6 +35,7 @@ export interface ContentPlanItem {
   done: boolean;
   actual_post_date: string | null;
   status_content: string | null;
+  on_time_status?: string;
   created_at: string;
   updated_at: string;
 }
@@ -205,8 +207,7 @@ export function useContentPlan() {
         if (actualDate <= plannedDate) {
           onTimeStatus = 'On Time';
         } else {
-          const diffTime = Math.abs(actualDate.getTime() - plannedDate.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          const diffDays = differenceInDays(actualDate, plannedDate);
           onTimeStatus = `Late [${diffDays}] Day/s`;
         }
       }
@@ -311,6 +312,90 @@ export function useContentPlan() {
     return updateContentPlan(id, { [field]: 0 });
   };
 
+  const formatDisplayDate = (dateString: string | null, includeTime: boolean = false) => {
+    if (!dateString) return "";
+    try {
+      const date = parseISO(dateString);
+      return includeTime 
+        ? format(date, "dd MMM yyyy - HH:mm") 
+        : format(date, "dd MMM yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString || "";
+    }
+  };
+
+  // Preserve the existing fetch functions without changes
+  const fetchContentTypes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('content_types')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setContentTypes(data || []);
+    } catch (err) {
+      console.error('Error fetching content types:', err);
+    }
+  };
+
+  const fetchTeamMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setTeamMembers(data || []);
+    } catch (err) {
+      console.error('Error fetching team members:', err);
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setServices(data || []);
+    } catch (err) {
+      console.error('Error fetching services:', err);
+    }
+  };
+
+  const fetchSubServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sub_services')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setSubServices(data || []);
+    } catch (err) {
+      console.error('Error fetching sub services:', err);
+    }
+  };
+
+  const fetchContentPillars = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('content_pillars')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setContentPillars(data || []);
+    } catch (err) {
+      console.error('Error fetching content pillars:', err);
+    }
+  };
+
   return {
     contentPlans: getContentPlansWithFormattedData(),
     contentTypes,
@@ -326,6 +411,7 @@ export function useContentPlan() {
     deleteContentPlan,
     getFilteredTeamMembers,
     getFilteredSubServices,
-    resetRevisionCounter
+    resetRevisionCounter,
+    formatDisplayDate
   };
 }
