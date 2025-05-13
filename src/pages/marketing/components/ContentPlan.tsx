@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Pencil } from "lucide-react";
@@ -12,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 export function ContentPlan() {
   const {
     contentPlans,
@@ -214,13 +216,17 @@ export function ContentPlan() {
       return dateString || "";
     }
   };
-  return <div className="w-full space-y-4 p-6">
+
+  return (
+    <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={addNewRow}>+ Add Row</Button>
-          {selectedItems.length > 0 && <Button variant="destructive" onClick={handleDeleteSelected}>
+          {selectedItems.length > 0 && (
+            <Button variant="destructive" onClick={handleDeleteSelected}>
               Delete Selected ({selectedItems.length})
-            </Button>}
+            </Button>
+          )}
         </div>
       </div>
       
@@ -263,15 +269,24 @@ export function ContentPlan() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading ? <TableRow>
+                  {loading ? (
+                    <TableRow>
                       <TableCell colSpan={29} className="text-center py-4">Loading content plans...</TableCell>
-                    </TableRow> : contentPlans.length === 0 ? <TableRow>
+                    </TableRow>
+                  ) : contentPlans.length === 0 ? (
+                    <TableRow>
                       <TableCell colSpan={29} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
-                    </TableRow> : contentPlans.map((item: any) => <TableRow key={item.id}>
+                    </TableRow>
+                  ) : (
+                    contentPlans.map((item: any) => (
+                      <TableRow key={item.id}>
                         {/* 1. Action (Checkbox) */}
                         <TableCell className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">
                           <div className="flex justify-center">
-                            <Checkbox checked={selectedItems.includes(item.id)} onCheckedChange={checked => handleSelectItem(item.id, !!checked)} />
+                            <Checkbox 
+                              checked={selectedItems.includes(item.id)} 
+                              onCheckedChange={(checked) => handleSelectItem(item.id, !!checked)} 
+                            />
                           </div>
                         </TableCell>
 
@@ -279,104 +294,163 @@ export function ContentPlan() {
                         <TableCell className="whitespace-nowrap p-1 w-[180px]">
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" size="sm" className="w-full h-8">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full h-8"
+                              >
                                 {item.post_date ? formatDisplayDate(item.post_date) : "Select date"}
                                 <CalendarIcon className="ml-2 h-4 w-4" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar mode="single" selected={item.post_date ? new Date(item.post_date) : undefined} onSelect={date => handleDateChange(item.id, date)} initialFocus />
+                              <Calendar 
+                                mode="single" 
+                                selected={item.post_date ? new Date(item.post_date) : undefined} 
+                                onSelect={(date) => handleDateChange(item.id, date)} 
+                                initialFocus 
+                              />
                             </PopoverContent>
                           </Popover>
                         </TableCell>
 
                         {/* 3. Tipe Content */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                          <Select value={item.content_type_id || "none"} onValueChange={value => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.content_type_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {contentTypes.map(type => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
+                              {contentTypes.map(type => (
+                                <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
 
                         {/* 4. PIC */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                          <Select value={item.pic_id || "none"} onValueChange={value => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.pic_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Content Planner").map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
+                              {getFilteredTeamMembers("Content Planner").map(member => (
+                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
 
                         {/* 5. Layanan */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                          <Select value={item.service_id || "none"} onValueChange={value => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.service_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {services.map(service => <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>)}
+                              {services.map(service => (
+                                <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
 
                         {/* 6. Sub Layanan */}
                         <TableCell className="whitespace-nowrap p-1 w-[150px]">
-                          <Select value={item.sub_service_id || "none"} onValueChange={value => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)} disabled={!item.service_id}>
+                          <Select 
+                            value={item.sub_service_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)}
+                            disabled={!item.service_id}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {item.service_id && getFilteredSubServices(item.service_id).map(subService => <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>)}
+                              {item.service_id && getFilteredSubServices(item.service_id).map(subService => (
+                                <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
 
                         {/* 7. Judul Content - Modified to use dialog */}
                         <TableCell className="p-1 w-[180px]">
-                          <Button variant="ghost" size="sm" onClick={() => openTitleDialog(item.id, item.title)} className="w-full h-8 flex items-center justify-center gap-1 truncate">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => openTitleDialog(item.id, item.title)} 
+                            className="w-full h-8 flex items-center justify-center gap-1 truncate"
+                          >
                             {item.title ? truncateText(item.title) : "Click to add title"}
                           </Button>
                         </TableCell>
 
                         {/* 8. Content Pillar */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                          <Select value={item.content_pillar_id || "none"} onValueChange={value => handleFieldChange(item.id, 'content_pillar_id', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.content_pillar_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'content_pillar_id', value === "none" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {contentPillars.map(pillar => <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>)}
+                              {contentPillars.map(pillar => (
+                                <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
 
                         {/* 9. Brief */}
                         <TableCell className="p-1 w-[120px]">
-                          <Button variant="ghost" size="sm" onClick={() => openBriefDialog(item.id, item.brief)} className="w-full h-8 flex items-center justify-center gap-1 truncate">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => openBriefDialog(item.id, item.brief)} 
+                            className="w-full h-8 flex items-center justify-center gap-1 truncate"
+                          >
                             {item.brief ? truncateText(item.brief) : "Click to add brief"}
                           </Button>
-                          {extractGoogleDocsLink(item.brief) && <Button size="sm" variant="outline" className="mt-1 w-full h-7" asChild>
-                              <a href={extractGoogleDocsLink(item.brief)!} target="_blank" rel="noopener noreferrer">
+                          {extractGoogleDocsLink(item.brief) && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="mt-1 w-full h-7" 
+                              asChild
+                            >
+                              <a 
+                                href={extractGoogleDocsLink(item.brief)!} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                              >
                                 <ExternalLink className="h-3 w-3 mr-1" /> Open Doc
                               </a>
-                            </Button>}
+                            </Button>
+                          )}
                         </TableCell>
 
                         {/* 10. Status */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                          <Select value={item.status || "none"} onValueChange={value => handleFieldChange(item.id, 'status', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.status || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'status', value === "none" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
@@ -392,7 +466,12 @@ export function ContentPlan() {
                         <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
                           <div className="flex items-center justify-center gap-1">
                             <span>{item.revision_count || 0}</span>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => resetRevisionCounter(item.id, 'revision_count')}>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6" 
+                              onClick={() => resetRevisionCounter(item.id, 'revision_count')}
+                            >
                               <RefreshCw className="h-3 w-3" />
                             </Button>
                           </div>
@@ -401,15 +480,20 @@ export function ContentPlan() {
                         {/* 12. Approved */}
                         <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
                           <div className="flex justify-center">
-                            <Checkbox checked={item.approved} onCheckedChange={checked => handleFieldChange(item.id, 'approved', !!checked)} />
+                            <Checkbox 
+                              checked={item.approved} 
+                              onCheckedChange={(checked) => handleFieldChange(item.id, 'approved', !!checked)} 
+                            />
                           </div>
                         </TableCell>
 
                         {/* 13. Tanggal Selesai */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          {item.status === "Butuh Di Review" && item.completion_date && <div className="text-center">
+                          {item.status === "Butuh Di Review" && item.completion_date && (
+                            <div className="text-center">
                               {formatDisplayDate(item.completion_date, true)}
-                            </div>}
+                            </div>
+                          )}
                         </TableCell>
 
                         {/* 14. Tanggal Upload (Mirror of Tanggal Posting) */}
@@ -433,13 +517,18 @@ export function ContentPlan() {
 
                         {/* 17. PIC Produksi */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                          <Select value={item.pic_production_id || "none"} onValueChange={value => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.pic_production_id || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Creative").filter(m => m.role === "Produksi").map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
+                              {getFilteredTeamMembers("Creative").filter(m => m.role === "Produksi").map(member => (
+                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -447,18 +536,37 @@ export function ContentPlan() {
                         {/* 18. Link Google Drive - Modified to be clickable */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px]">
                           <div className="flex gap-1">
-                            <Input value={item.google_drive_link || ""} onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} placeholder="Enter link" className="w-full h-8 truncate" />
-                            {item.google_drive_link && <Button variant="outline" size="sm" className="h-8 flex-shrink-0" asChild>
-                                <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
+                            <Input 
+                              value={item.google_drive_link || ""} 
+                              onChange={(e) => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
+                              placeholder="Enter link" 
+                              className="w-full h-8 truncate" 
+                            />
+                            {item.google_drive_link && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 flex-shrink-0" 
+                                asChild
+                              >
+                                <a 
+                                  href={item.google_drive_link} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                >
                                   <ExternalLink className="h-4 w-4" />
                                 </a>
-                              </Button>}
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
 
                         {/* 19. Status Produksi */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                          <Select value={item.production_status || "none"} onValueChange={value => handleFieldChange(item.id, 'production_status', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.production_status || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'production_status', value === "none" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
@@ -474,7 +582,12 @@ export function ContentPlan() {
                         <TableCell className="text-center whitespace-nowrap p-1 w-[120px]">
                           <div className="flex items-center justify-center gap-1">
                             <span>{item.production_revision_count || 0}</span>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => resetRevisionCounter(item.id, 'production_revision_count')}>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6" 
+                              onClick={() => resetRevisionCounter(item.id, 'production_revision_count')}
+                            >
                               <RefreshCw className="h-3 w-3" />
                             </Button>
                           </div>
@@ -482,15 +595,20 @@ export function ContentPlan() {
 
                         {/* 21. Tanggal Selesai Produksi */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          {item.production_status === "Butuh Di Review" && item.production_completion_date && <div className="text-center">
+                          {item.production_status === "Butuh Di Review" && item.production_completion_date && (
+                            <div className="text-center">
                               {formatDisplayDate(item.production_completion_date, true)}
-                            </div>}
+                            </div>
+                          )}
                         </TableCell>
 
                         {/* 22. Approved (Production) */}
                         <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
                           <div className="flex justify-center">
-                            <Checkbox checked={item.production_approved} onCheckedChange={checked => handleFieldChange(item.id, 'production_approved', !!checked)} />
+                            <Checkbox 
+                              checked={item.production_approved} 
+                              onCheckedChange={(checked) => handleFieldChange(item.id, 'production_approved', !!checked)} 
+                            />
                           </div>
                         </TableCell>
 
@@ -501,38 +619,72 @@ export function ContentPlan() {
 
                         {/* 24. Download Link File (Mirror of Google Drive Link if approved) */}
                         <TableCell className="p-1 w-[150px]">
-                          {item.production_approved && item.google_drive_link && <Button variant="outline" size="sm" className="w-full h-8" asChild>
-                              <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
+                          {item.production_approved && item.google_drive_link && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full h-8" 
+                              asChild
+                            >
+                              <a 
+                                href={item.google_drive_link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                              >
                                 <Link className="h-3 w-3 mr-1" /> Download
                               </a>
-                            </Button>}
+                            </Button>
+                          )}
                         </TableCell>
 
                         {/* 25. Link Post - Modified to use single field with view/edit */}
                         <TableCell className="p-1 w-[150px]">
                           <div className="flex flex-col gap-1">
-                            {item.post_link ? <Button variant="outline" size="sm" className="w-full h-8 flex items-center justify-between" onClick={() => openPostLinkDialog(item.id, item.post_link)}>
+                            {item.post_link ? (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full h-8 flex items-center justify-between" 
+                                onClick={() => openPostLinkDialog(item.id, item.post_link)}
+                              >
                                 <div className="truncate flex-1 text-left" title={item.post_link}>
                                   {truncateText(item.post_link, 15)}
                                 </div>
                                 <div className="flex gap-1">
-                                  <a href={item.post_link} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-accent rounded" onClick={e => e.stopPropagation()}>
+                                  <a 
+                                    href={item.post_link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="p-1 hover:bg-accent rounded" 
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     <ExternalLink className="h-3 w-3" />
                                   </a>
                                   <div className="p-1 hover:bg-accent rounded">
                                     <Pencil className="h-3 w-3" />
                                   </div>
                                 </div>
-                              </Button> : <Button variant="ghost" size="sm" className="w-full h-8" onClick={() => openPostLinkDialog(item.id, null)}>
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="w-full h-8" 
+                                onClick={() => openPostLinkDialog(item.id, null)}
+                              >
                                 Add post link
-                              </Button>}
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
 
                         {/* 26. Done */}
                         <TableCell className="text-center whitespace-nowrap p-1 w-[80px]">
                           <div className="flex justify-center">
-                            <Checkbox checked={item.done} onCheckedChange={checked => handleFieldChange(item.id, 'done', !!checked)} />
+                            <Checkbox 
+                              checked={item.done} 
+                              onCheckedChange={(checked) => handleFieldChange(item.id, 'done', !!checked)} 
+                            />
                           </div>
                         </TableCell>
 
@@ -550,7 +702,10 @@ export function ContentPlan() {
 
                         {/* 29. Status Content */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          <Select value={item.status_content || "none"} onValueChange={value => handleFieldChange(item.id, 'status_content', value === "none" ? "" : value)}>
+                          <Select 
+                            value={item.status_content || "none"} 
+                            onValueChange={(value) => handleFieldChange(item.id, 'status_content', value === "none" ? "" : value)}
+                          >
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
@@ -561,7 +716,9 @@ export function ContentPlan() {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                      </TableRow>)}
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -579,14 +736,26 @@ export function ContentPlan() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Textarea value={currentBrief} onChange={e => setCurrentBrief(e.target.value)} placeholder="Enter brief content..." className="min-h-[200px]" />
-            {extractGoogleDocsLink(currentBrief) && <div className="p-4 border rounded-md">
+            <Textarea 
+              value={currentBrief} 
+              onChange={(e) => setCurrentBrief(e.target.value)} 
+              placeholder="Enter brief content..." 
+              className="min-h-[200px]" 
+            />
+            {extractGoogleDocsLink(currentBrief) && (
+              <div className="p-4 border rounded-md">
                 <div className="mb-2 font-medium">Detected link:</div>
-                <a href={extractGoogleDocsLink(currentBrief)!} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-2">
+                <a 
+                  href={extractGoogleDocsLink(currentBrief)!} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-600 hover:underline flex items-center gap-2"
+                >
                   {truncateText(extractGoogleDocsLink(currentBrief)!, 40)}
                   <ExternalLink className="h-4 w-4" />
                 </a>
-              </div>}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsBriefDialogOpen(false)}>
@@ -609,7 +778,12 @@ export function ContentPlan() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Textarea value={currentTitle} onChange={e => setCurrentTitle(e.target.value)} placeholder="Enter content title..." className="min-h-[100px]" />
+            <Textarea 
+              value={currentTitle} 
+              onChange={(e) => setCurrentTitle(e.target.value)} 
+              placeholder="Enter content title..." 
+              className="min-h-[100px]" 
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsTitleDialogOpen(false)}>
@@ -632,14 +806,25 @@ export function ContentPlan() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Input value={currentPostLink} onChange={e => setCurrentPostLink(e.target.value)} placeholder="Enter post link URL..." />
-            {currentPostLink && <div className="p-4 border rounded-md">
+            <Input 
+              value={currentPostLink} 
+              onChange={(e) => setCurrentPostLink(e.target.value)} 
+              placeholder="Enter post link URL..." 
+            />
+            {currentPostLink && (
+              <div className="p-4 border rounded-md">
                 <div className="mb-2 font-medium">Preview:</div>
-                <a href={currentPostLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-2">
+                <a 
+                  href={currentPostLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-600 hover:underline flex items-center gap-2"
+                >
                   {truncateText(currentPostLink, 40)}
                   <ExternalLink className="h-4 w-4" />
                 </a>
-              </div>}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsPostLinkDialogOpen(false)}>
@@ -651,5 +836,6 @@ export function ContentPlan() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 }
