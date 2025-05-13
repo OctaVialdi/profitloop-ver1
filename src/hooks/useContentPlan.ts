@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays, isSameDay } from 'date-fns';
 
 export interface ContentPlanItem {
   id: string;
@@ -198,14 +197,16 @@ export function useContentPlan() {
 
   const getContentPlansWithFormattedData = () => {
     return contentPlans.map(plan => {
-      // Calculate on time status
+      // Calculate on time status - considering only dates (not time)
       let onTimeStatus = '';
       if (plan.actual_post_date && plan.post_date) {
         const actualDate = new Date(plan.actual_post_date);
         const plannedDate = new Date(plan.post_date);
         
-        if (actualDate <= plannedDate) {
+        if (isSameDay(actualDate, plannedDate)) {
           onTimeStatus = 'On Time';
+        } else if (actualDate < plannedDate) {
+          onTimeStatus = 'Early';
         } else {
           const diffDays = differenceInDays(actualDate, plannedDate);
           onTimeStatus = `Late [${diffDays}] Day/s`;

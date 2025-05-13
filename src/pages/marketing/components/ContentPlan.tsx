@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
@@ -169,6 +170,19 @@ export function ContentPlan() {
     }
     setIsBriefDialogOpen(false);
   };
+  
+  // Format actual post date without time
+  const formatActualPostDate = (dateString: string | null) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      return format(date, "dd MMM yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString || "";
+    }
+  };
+  
   return <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -473,7 +487,7 @@ export function ContentPlan() {
 
                         {/* 27. Actual Post */}
                         <TableCell className="text-center whitespace-nowrap p-1 w-[160px]">
-                          {item.actual_post_date ? formatDisplayDate(item.actual_post_date, true) : ""}
+                          {item.actual_post_date ? formatActualPostDate(item.actual_post_date) : ""}
                         </TableCell>
 
                         {/* 28. On Time Status */}
@@ -528,3 +542,4 @@ export function ContentPlan() {
       </Dialog>
     </div>;
 }
+
