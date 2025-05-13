@@ -6,18 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export function ContentPillarsTab() {
   const [contentPillars, setContentPillars] = useState<any[]>([]);
-  const [newName, setNewName] = useState("");
-  const [funnelStage, setFunnelStage] = useState("top");
+  const [newContentPillar, setNewContentPillar] = useState("");
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,12 +40,12 @@ export function ContentPillarsTab() {
   };
 
   const addContentPillar = async () => {
-    if (!newName.trim()) return;
+    if (!newContentPillar.trim()) return;
     
     try {
       const { error } = await supabase
         .from("content_pillars")
-        .insert({ name: newName.trim(), funnel_stage: funnelStage });
+        .insert({ name: newContentPillar.trim() });
       
       if (error) throw error;
       
@@ -62,8 +54,7 @@ export function ContentPillarsTab() {
         description: "Content pillar added successfully",
       });
       
-      setNewName("");
-      setFunnelStage("top");
+      setNewContentPillar("");
       fetchContentPillars();
     } catch (error: any) {
       console.error("Error adding content pillar:", error);
@@ -100,38 +91,16 @@ export function ContentPillarsTab() {
     }
   };
 
-  const getFunnelStageLabel = (stage: string) => {
-    switch(stage) {
-      case "top": return "Top of Funnel";
-      case "middle": return "Middle of Funnel";
-      case "bottom": return "Bottom of Funnel";
-      default: return stage;
-    }
-  };
-
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex gap-2">
         <Input
-          placeholder="Enter content pillar name"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          className="flex-1"
+          placeholder="Enter new content pillar"
+          value={newContentPillar}
+          onChange={(e) => setNewContentPillar(e.target.value)}
+          className="max-w-sm"
         />
-        <Select
-          value={funnelStage}
-          onValueChange={setFunnelStage}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select funnel stage" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="top">Top of Funnel</SelectItem>
-            <SelectItem value="middle">Middle of Funnel</SelectItem>
-            <SelectItem value="bottom">Bottom of Funnel</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button onClick={addContentPillar} disabled={!newName.trim() || isLoading}>
+        <Button onClick={addContentPillar} disabled={!newContentPillar.trim() || isLoading}>
           <Plus className="h-4 w-4 mr-1" /> Add
         </Button>
       </div>
@@ -144,14 +113,7 @@ export function ContentPillarsTab() {
             <ul className="space-y-2">
               {contentPillars.map((pillar) => (
                 <li key={pillar.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <div>
-                    <span>{pillar.name}</span>
-                    {pillar.funnel_stage && (
-                      <span className="text-xs text-gray-500 ml-2">
-                        {getFunnelStageLabel(pillar.funnel_stage)}
-                      </span>
-                    )}
-                  </div>
+                  <span>{pillar.name}</span>
                   <Button 
                     variant="ghost" 
                     size="icon" 
