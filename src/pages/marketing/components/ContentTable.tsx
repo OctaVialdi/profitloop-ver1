@@ -442,7 +442,7 @@ export default function ContentTable() {
                           </Select>
                         </TableCell>
 
-                        {/* 9. Brief - Simplified to only show one button */}
+                        {/* 9. Brief - Simplified to show a single button per your request */}
                         <TableCell className="p-1 w-[120px]">
                           <Button 
                             variant="ghost" 
@@ -451,24 +451,8 @@ export default function ContentTable() {
                             className="w-full h-8 flex items-center justify-center gap-1 truncate"
                           >
                             <FileText className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            {item.brief ? truncateText(item.brief) : "Click to add brief"}
+                            {item.brief ? truncateText(item.brief) : "Add brief"}
                           </Button>
-                          {extractGoogleDocsLink(item.brief) && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="mt-1 w-full h-7" 
-                              asChild
-                            >
-                              <a 
-                                href={extractGoogleDocsLink(item.brief)!} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                              >
-                                <ExternalLink className="h-3 w-3 mr-1" /> Open Doc
-                              </a>
-                            </Button>
-                          )}
                         </TableCell>
 
                         {/* 10. Status */}
@@ -541,7 +525,7 @@ export default function ContentTable() {
                           </div>
                         </TableCell>
 
-                        {/* 17. PIC Produksi - Updated to use teamMembers from Produksi */}
+                        {/* 17. PIC Produksi - Updated to use teamMembers from Creative */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
                           <Select 
                             value={item.pic_production_id || "none"} 
