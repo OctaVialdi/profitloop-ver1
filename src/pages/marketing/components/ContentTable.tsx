@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Pencil, Package, FileText } from "lucide-react";
+import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Pencil, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "@/components/ui/use-toast";
 
 export default function ContentTable() {
   const {
@@ -60,6 +61,10 @@ export default function ContentTable() {
       status: "",
       production_status: ""
     });
+    toast({
+      title: "New row added",
+      description: "A new content plan row has been added.",
+    });
   };
 
   // Handler for checkbox selection
@@ -77,6 +82,10 @@ export default function ContentTable() {
       await deleteContentPlan(id);
     }
     setSelectedItems([]);
+    toast({
+      title: "Items deleted",
+      description: `${selectedItems.length} item(s) have been deleted.`,
+    });
   };
 
   // Handler for updating date
@@ -151,7 +160,17 @@ export default function ContentTable() {
     } else if (field === 'production_approved' && value === false) {
       updates.production_approved_date = null;
     }
-    await updateContentPlan(id, updates);
+    
+    try {
+      await updateContentPlan(id, updates);
+    } catch (error) {
+      console.error("Error updating content plan:", error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update the content plan.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Check if a Google Docs link is present in the brief
@@ -174,9 +193,14 @@ export default function ContentTable() {
     setCurrentBrief(brief || "");
     setIsBriefDialogOpen(true);
   };
+  
   const saveBrief = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, 'brief', currentBrief);
+      toast({
+        title: "Brief updated",
+        description: "Content brief has been updated successfully.",
+      });
     }
     setIsBriefDialogOpen(false);
   };
@@ -187,9 +211,14 @@ export default function ContentTable() {
     setCurrentTitle(title || "");
     setIsTitleDialogOpen(true);
   };
+  
   const saveTitle = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, 'title', currentTitle);
+      toast({
+        title: "Title updated",
+        description: "Content title has been updated successfully.",
+      });
     }
     setIsTitleDialogOpen(false);
   };
@@ -206,6 +235,10 @@ export default function ContentTable() {
   const saveUrl = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, currentUrlField, currentUrl);
+      toast({
+        title: "Link updated",
+        description: `${currentUrlField === "post_link" ? "Post link" : "Google Drive link"} has been updated successfully.`,
+      });
     }
     setIsUrlDialogOpen(false);
   };
@@ -236,6 +269,9 @@ export default function ContentTable() {
 
   // Get content planners for the PIC Content dropdown
   const contentPlanners = getFilteredTeamMembers("Content Planner");
+  
+  // Get creative team members for PIC Production dropdown
+  const creativeTeamMembers = getFilteredTeamMembers("Produksi");
 
   return (
     <div className="w-full space-y-4 p-6">
@@ -528,7 +564,7 @@ export default function ContentTable() {
                           </div>
                         </TableCell>
 
-                        {/* 17. PIC Produksi - Updated to use teamMembers from Creative */}
+                        {/* 17. PIC Produksi - Updated to use teamMembers from Creative with Produksi role */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px]">
                           <Select 
                             value={item.pic_production_id || "none"} 
@@ -539,7 +575,7 @@ export default function ContentTable() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Creative").map(member => (
+                              {creativeTeamMembers.map(member => (
                                 <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
                               ))}
                             </SelectContent>
@@ -769,6 +805,20 @@ export default function ContentTable() {
               placeholder="Enter brief details here..."
               className="min-h-[150px]"
             />
+            
+            {extractGoogleDocsLink(currentBrief) && (
+              <div className="mt-2">
+                <a 
+                  href={extractGoogleDocsLink(currentBrief) || "#"} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-sm text-blue-600 hover:underline"
+                >
+                  <FileText className="h-3.5 w-3.5 mr-1" />
+                  Open Google Docs link
+                </a>
+              </div>
+            )}
           </div>
           
           <DialogFooter>

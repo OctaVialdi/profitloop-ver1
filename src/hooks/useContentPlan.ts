@@ -73,13 +73,15 @@ const generateMockData = () => {
     { id: 'ct5', name: 'Podcast' },
   ];
 
-  // Team Members
+  // Team Members - Updated to include proper roles and departments
   const teamMembers: TeamMember[] = [
     { id: 'tm1', name: 'John Doe', department: 'Marketing', role: 'Content Planner' },
     { id: 'tm2', name: 'Jane Smith', department: 'Marketing', role: 'Content Planner' },
     { id: 'tm3', name: 'Mike Johnson', department: 'Creative', role: 'Produksi' },
     { id: 'tm4', name: 'Sarah Davis', department: 'Creative', role: 'Produksi' },
     { id: 'tm5', name: 'Robert Wilson', department: 'Creative', role: 'Designer' },
+    { id: 'tm6', name: 'Fajar', department: 'Marketing', role: 'Content Planner' },
+    { id: 'tm7', name: 'Fajar Budiansyah', department: 'Marketing', role: 'Content Planner' },
   ];
 
   // Services
@@ -142,7 +144,7 @@ const generateMockData = () => {
       id: uuidv4(),
       post_date: format(new Date(today.getTime() + 86400000), 'yyyy-MM-dd'),
       content_type_id: 'ct1',
-      pic_id: 'tm2',
+      pic_id: 'tm6', // Using Fajar as PIC
       service_id: 's2',
       sub_service_id: 'ss4',
       title: 'Logo Design Trends for Startups',
@@ -236,6 +238,7 @@ export function useContentPlan() {
         ...newPlan
       }
     ]);
+    return Promise.resolve();
   }, []);
 
   // Update a content plan
