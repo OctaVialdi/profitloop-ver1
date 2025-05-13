@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
@@ -14,7 +13,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-
 export function ContentPlan() {
   const {
     contentPlans,
@@ -167,7 +165,6 @@ export function ContentPlan() {
     setCurrentBrief(brief || "");
     setIsBriefDialogOpen(true);
   };
-  
   const saveBrief = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, 'brief', currentBrief);
@@ -181,14 +178,12 @@ export function ContentPlan() {
     setCurrentTitle(title || "");
     setIsTitleDialogOpen(true);
   };
-  
   const saveTitle = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, 'title', currentTitle);
     }
     setIsTitleDialogOpen(false);
   };
-
   return <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -319,13 +314,7 @@ export function ContentPlan() {
 
                         {/* 7. Judul Content - Modified to add popup view */}
                         <TableCell className="p-1 w-[180px] border-r">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => openTitleDialog(item.id, item.title)} 
-                            className="w-full h-8 flex items-center justify-start px-3 hover:bg-gray-50 truncate text-left"
-                            title={item.title || ""}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => openTitleDialog(item.id, item.title)} className="w-full h-8 flex items-center justify-start px-3 hover:bg-gray-50 truncate text-left" title={item.title || ""}>
                             {item.title ? truncateText(item.title) : "Click to add title"}
                           </Button>
                         </TableCell>
@@ -346,25 +335,14 @@ export function ContentPlan() {
                         {/* 9. Brief - Modified to use a single field with integrated link button */}
                         <TableCell className="p-1 w-[150px] border-r">
                           <div className="flex items-center gap-1">
-                            <Button 
-                              variant="ghost" 
-                              className="flex-grow h-8 flex items-center justify-start px-3 hover:bg-gray-50 truncate text-left"
-                              onClick={() => openBriefDialog(item.id, item.brief)}
-                            >
+                            <Button variant="ghost" className="flex-grow h-8 flex items-center justify-start px-3 hover:bg-gray-50 truncate text-left" onClick={() => openBriefDialog(item.id, item.brief)}>
                               {item.brief ? truncateText(item.brief) : "Add brief"}
                             </Button>
-                            {extractLink(item.brief) && (
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-8 px-2 flex-shrink-0" 
-                                asChild
-                              >
+                            {extractLink(item.brief) && <Button size="sm" variant="ghost" className="h-8 px-2 flex-shrink-0" asChild>
                                 <a href={extractLink(item.brief)!} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="h-4 w-4" />
                                 </a>
-                              </Button>
-                            )}
+                              </Button>}
                           </div>
                         </TableCell>
 
@@ -441,24 +419,12 @@ export function ContentPlan() {
                         {/* 18. Link Google Drive - Modified to use a single field */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px] border-r">
                           <div className="flex items-center gap-1">
-                            <Input 
-                              value={item.google_drive_link || ""} 
-                              onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
-                              placeholder="Enter link" 
-                              className="w-full h-8 text-xs" 
-                            />
-                            {item.google_drive_link && (
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-8 px-2 flex-shrink-0" 
-                                asChild
-                              >
+                            <Input value={item.google_drive_link || ""} onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} placeholder="Enter link" className="w-full h-8 text-xs" />
+                            {item.google_drive_link && <Button size="sm" variant="ghost" className="h-8 px-2 flex-shrink-0" asChild>
                                 <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="h-4 w-4" />
                                 </a>
-                              </Button>
-                            )}
+                              </Button>}
                           </div>
                         </TableCell>
 
@@ -517,24 +483,12 @@ export function ContentPlan() {
                         {/* 25. Link Post - Modified to use a single field with improved width */}
                         <TableCell className="p-1 w-[180px] border-r">
                           <div className="flex items-center gap-1">
-                            <Input 
-                              value={item.post_link || ""} 
-                              onChange={e => handleFieldChange(item.id, 'post_link', e.target.value)} 
-                              placeholder="Enter post link" 
-                              className="w-full h-8 text-xs" 
-                            />
-                            {item.post_link && (
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-8 px-2 flex-shrink-0" 
-                                asChild
-                              >
+                            <Input value={item.post_link || ""} onChange={e => handleFieldChange(item.id, 'post_link', e.target.value)} placeholder="Enter post link" className="w-full h-8 text-xs" />
+                            {item.post_link && <Button size="sm" variant="ghost" className="h-8 px-2 flex-shrink-0" asChild>
                                 <a href={item.post_link} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="h-4 w-4" />
                                 </a>
-                              </Button>
-                            )}
+                              </Button>}
                           </div>
                         </TableCell>
 
@@ -625,4 +579,3 @@ export function ContentPlan() {
       </Dialog>
     </div>;
 }
-
