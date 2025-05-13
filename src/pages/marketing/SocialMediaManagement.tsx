@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ContentPlan } from "./components/ContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 interface ContentManager {
   name: string;
   dailyTarget: number;
@@ -315,7 +316,7 @@ const SocialMediaManagement = () => {
           </Card>;
     }
   };
-  return <div className="container mx-auto p-4 md:p-6 space-y-4 max-w-7xl">
+  return <div className="w-full px-0 space-y-4 max-w-full">
       {/* Primary Tab Navigation - Updated to be more compact */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
