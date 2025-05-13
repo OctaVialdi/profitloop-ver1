@@ -1,844 +1,751 @@
 
-import React, { useState } from "react";
-import { format } from 'date-fns';
-import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Pencil, Package, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from "react";
+import { 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { 
+  Popover, PopoverContent, PopoverTrigger 
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+} from "@/components/ui/select";
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter 
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  RefreshCcw, Calendar as CalendarIcon, ExternalLink, Pencil
+} from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { useContentPlan, ContentPlanItem } from "@/hooks/useContentPlan";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
-export function ContentTable() {
-  const {
-    contentPlans,
+interface LinkFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
+
+const LinkField: React.FC<LinkFieldProps> = ({ value, onChange, placeholder = "Add link..." }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [linkText, setLinkText] = useState(value);
+
+  const handleSave = () => {
+    onChange(linkText);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSave();
+    }
+    if (e.key === "Escape") {
+      setIsEditing(false);
+      setLinkText(value);
+    }
+  };
+
+  return (
+    <div className="relative">
+      {isEditing ? (
+        <div className="flex gap-1">
+          <Input 
+            value={linkText}
+            onChange={(e) => setLinkText(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={handleKeyDown}
+            className="text-xs h-7 w-full"
+            autoFocus
+          />
+        </div>
+      ) : (
+        <div 
+          className="flex items-center gap-1 cursor-pointer group"
+          onClick={() => setIsEditing(true)}
+        >
+          {value ? (
+            <>
+              <div className="truncate max-w-[150px] text-blue-600 hover:underline">
+                {value}
+              </div>
+              <a 
+                href={value.startsWith("http") ? value : `https://${value}`} 
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+              </a>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Pencil className="h-3.5 w-3.5 text-gray-500" />
+              </button>
+            </>
+          ) : (
+            <span className="text-gray-400 text-xs">{placeholder}</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ContentTable: React.FC = () => {
+  const { 
+    contentPlans, 
+    addContentPlan, 
+    updateContentPlan, 
+    deleteContentPlan, 
     contentTypes,
     teamMembers,
     services,
     subServices,
     contentPillars,
     loading,
-    addContentPlan,
-    updateContentPlan,
-    deleteContentPlan,
-    getFilteredTeamMembers,
-    getFilteredSubServices,
     resetRevisionCounter,
-    formatDisplayDate
+    formatDisplayDate,
+    getFilteredSubServices
   } = useContentPlan();
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
-  const [currentBrief, setCurrentBrief] = useState("");
-  const [currentItemId, setCurrentItemId] = useState<string | null>(null);
 
-  // For title editing
-  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
-  const [currentTitle, setCurrentTitle] = useState("");
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [openBriefDialog, setOpenBriefDialog] = useState<string | null>(null);
+  const [briefText, setBriefText] = useState("");
+  const [openTitleDialog, setOpenTitleDialog] = useState<string | null>(null);
+  const [titleText, setTitleText] = useState("");
 
-  // For link post editing
-  const [isPostLinkDialogOpen, setIsPostLinkDialogOpen] = useState(false);
-  const [currentPostLink, setCurrentPostLink] = useState("");
-
-  // For adding new rows
-  const addNewRow = () => {
-    const today = new Date();
-    const formattedDate = format(today, "yyyy-MM-dd");
-    addContentPlan({
-      post_date: formattedDate,
-      revision_count: 0,
-      production_revision_count: 0,
-      approved: false,
-      production_approved: false,
-      done: false,
-      status: "",
-      production_status: ""
-    });
-  };
-
-  // Handler for checkbox selection
-  const handleSelectItem = (id: string, checked: boolean) => {
+  const { toast } = useToast();
+  
+  const handleRowCheckbox = (id: string, checked: boolean) => {
     if (checked) {
-      setSelectedItems([...selectedItems, id]);
+      setSelectedRows([...selectedRows, id]);
     } else {
-      setSelectedItems(selectedItems.filter(itemId => itemId !== id));
+      setSelectedRows(selectedRows.filter((rowId) => rowId !== id));
     }
   };
 
-  // Handler for deleting selected items
-  const handleDeleteSelected = async () => {
-    for (const id of selectedItems) {
-      await deleteContentPlan(id);
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRows(contentPlans.map(plan => plan.id));
+    } else {
+      setSelectedRows([]);
     }
-    setSelectedItems([]);
   };
 
-  // Handler for updating date
-  const handleDateChange = async (id: string, date: Date | undefined) => {
+  const handleDeleteSelected = () => {
+    if (selectedRows.length === 0) return;
+
+    // Confirm before deleting
+    if (window.confirm(`Delete ${selectedRows.length} selected items?`)) {
+      selectedRows.forEach(id => {
+        deleteContentPlan(id);
+      });
+      setSelectedRows([]);
+      toast({
+        title: "Success",
+        description: `${selectedRows.length} items have been deleted`,
+      });
+    }
+  };
+
+  const handleDateChange = (id: string, date: Date | undefined) => {
     if (!date) return;
-    const formattedDate = format(date, "yyyy-MM-dd");
-    await updateContentPlan(id, {
-      post_date: formattedDate
+    updateContentPlan(id, { post_date: format(date, 'yyyy-MM-dd') });
+  };
+
+  const handleAddRow = () => {
+    const today = new Date();
+    addContentPlan({ 
+      post_date: format(today, 'yyyy-MM-dd'),
+    });
+    toast({
+      title: "New row added",
+      description: "A new content plan item has been added",
     });
   };
 
-  // Handler for updating fields
-  const handleFieldChange = async (id: string, field: string, value: any) => {
-    let updates: any = {
-      [field]: value
-    };
+  const handleBriefSave = (id: string) => {
+    updateContentPlan(id, { 
+      brief: briefText,
+      status: "" // Reset status when brief changes
+    });
+    setOpenBriefDialog(null);
+  };
 
-    // Reset status fields when brief changes
-    if (field === 'brief') {
-      updates.status = "";
+  const handleTitleSave = (id: string) => {
+    updateContentPlan(id, { title: titleText });
+    setOpenTitleDialog(null);
+  };
+
+  const handleStatusChange = (id: string, status: string) => {
+    const updates: Partial<ContentPlanItem> = { status };
+    
+    // If status is "Butuh Di Review", set completion date
+    if (status === "Butuh Di Review") {
+      updates.completion_date = format(new Date(), 'yyyy-MM-dd HH:mm');
+    } else if (status === "") {
+      updates.completion_date = undefined;
     }
+    
+    updateContentPlan(id, updates);
+  };
 
-    // Reset production status when google drive link changes
+  const handleProductionStatusChange = (id: string, status: string) => {
+    const updates: Partial<ContentPlanItem> = { production_status: status };
+    
+    // If status is "Butuh Di Review", set production completion date
+    if (status === "Butuh Di Review") {
+      updates.production_completion_date = format(new Date(), 'yyyy-MM-dd HH:mm');
+    } else if (status === "") {
+      updates.production_completion_date = undefined;
+    }
+    
+    updateContentPlan(id, updates);
+  };
+
+  const handleResetRevision = (id: string, field: 'revision_count' | 'production_revision_count') => {
+    resetRevisionCounter(id, field);
+  };
+
+  const handleApprovalChange = (id: string, field: 'approved' | 'production_approved', checked: boolean) => {
+    const updates: Partial<ContentPlanItem> = { [field]: checked };
+    
+    // For production approval, also set the approval date
+    if (field === 'production_approved') {
+      updates.production_approved_date = checked ? format(new Date(), 'yyyy-MM-dd HH:mm') : undefined;
+    }
+    
+    updateContentPlan(id, updates);
+  };
+
+  const handleLinkChange = (id: string, field: string, value: string) => {
+    const updates: Partial<ContentPlanItem> = { [field]: value };
+    
+    // Reset status when link changes for production
     if (field === 'google_drive_link') {
       updates.production_status = "";
     }
-
-    // Auto-populate completion date when status is "Butuh Di Review"
-    if (field === 'status' && value === "Butuh Di Review") {
-      const now = new Date();
-      updates.completion_date = format(now, "yyyy-MM-dd HH:mm");
-    } else if (field === 'status' && value !== "Butuh Di Review") {
-      updates.completion_date = null;
-    }
-
-    // Auto-populate production completion date when production status is "Butuh Di Review"
-    if (field === 'production_status' && value === "Butuh Di Review") {
-      const now = new Date();
-      updates.production_completion_date = format(now, "yyyy-MM-dd HH:mm");
-    } else if (field === 'production_status' && value !== "Butuh Di Review") {
-      updates.production_completion_date = null;
-    }
-
-    // Auto-populate actual post date when post link is added
+    
+    // If adding post link, set actual post date
     if (field === 'post_link' && value) {
-      const now = new Date();
-      updates.actual_post_date = format(now, "yyyy-MM-dd HH:mm");
+      updates.actual_post_date = format(new Date(), 'yyyy-MM-dd');
     } else if (field === 'post_link' && !value) {
-      updates.actual_post_date = null;
+      updates.actual_post_date = undefined;
+      updates.on_time_status = undefined;
     }
-
-    // If status changes to "Request Revisi", increment revision count
-    if (field === 'status' && value === "Request Revisi") {
-      const item = contentPlans.find(plan => plan.id === id);
-      if (item) {
-        updates.revision_count = (item.revision_count || 0) + 1;
-      }
-    }
-
-    // If production status changes to "Request Revisi", increment production revision count
-    if (field === 'production_status' && value === "Request Revisi") {
-      const item = contentPlans.find(plan => plan.id === id);
-      if (item) {
-        updates.production_revision_count = (item.production_revision_count || 0) + 1;
-      }
-    }
-
-    // If approved is set, auto-populate production_approved_date
-    if (field === 'production_approved' && value === true) {
-      const now = new Date();
-      updates.production_approved_date = format(now, "yyyy-MM-dd HH:mm");
-    } else if (field === 'production_approved' && value === false) {
-      updates.production_approved_date = null;
-    }
-    await updateContentPlan(id, updates);
+    
+    updateContentPlan(id, updates);
   };
 
-  // Check if a Google Docs link is present in the brief
-  const extractGoogleDocsLink = (brief: string | null) => {
-    if (!brief) return null;
-    const regex = /(https:\/\/docs\.google\.com\S+)/g;
-    const match = brief.match(regex);
-    return match ? match[0] : null;
-  };
-
-  // Display text in table cell with truncation
-  const truncateText = (text: string | null, maxLength: number = 25) => {
-    if (!text) return "";
-    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
-  };
-
-  // Handle brief dialog
-  const openBriefDialog = (id: string, brief: string | null) => {
-    setCurrentItemId(id);
-    setCurrentBrief(brief || "");
-    setIsBriefDialogOpen(true);
-  };
-  const saveBrief = async () => {
-    if (currentItemId) {
-      await handleFieldChange(currentItemId, 'brief', currentBrief);
-    }
-    setIsBriefDialogOpen(false);
-  };
-
-  // Handle title dialog
-  const openTitleDialog = (id: string, title: string | null) => {
-    setCurrentItemId(id);
-    setCurrentTitle(title || "");
-    setIsTitleDialogOpen(true);
-  };
-  const saveTitle = async () => {
-    if (currentItemId) {
-      await handleFieldChange(currentItemId, 'title', currentTitle);
-    }
-    setIsTitleDialogOpen(false);
-  };
-
-  // Handle post link dialog
-  const openPostLinkDialog = (id: string, postLink: string | null) => {
-    setCurrentItemId(id);
-    setCurrentPostLink(postLink || "");
-    setIsPostLinkDialogOpen(true);
-  };
-  const savePostLink = async () => {
-    if (currentItemId) {
-      await handleFieldChange(currentItemId, 'post_link', currentPostLink);
-    }
-    setIsPostLinkDialogOpen(false);
-  };
-
-  // Format actual post date without time
-  const formatActualPostDate = (dateString: string | null) => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      return format(date, "dd MMM yyyy");
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return dateString || "";
-    }
+  const getFilteredTeamMembers = (role: string) => {
+    return teamMembers.filter(member => member.role === role);
   };
 
   return (
-    <div className="w-full space-y-4 p-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={addNewRow}>+ Add Row</Button>
-          {selectedItems.length > 0 && (
-            <Button variant="destructive" onClick={handleDeleteSelected}>
-              Delete Selected ({selectedItems.length})
+    <div className="w-full space-y-2">
+      <div className="flex justify-between items-center mb-4 px-4">
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleAddRow}
+          >
+            Add Row
+          </Button>
+          {selectedRows.length > 0 && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleDeleteSelected}
+            >
+              Delete Selected ({selectedRows.length})
             </Button>
           )}
         </div>
       </div>
-      
-      <div className="rounded-md border overflow-hidden">
-        <div className="h-[600px] overflow-hidden">
-          <ScrollArea className="h-full">
-            <div className="min-width-3200 table-auto">
-              <Table className="w-full">
-                <TableHeader className="sticky top-0 bg-background z-10">
-                  <TableRow>
-                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">Action</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[180px]">Tanggal Posting</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">Layanan</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[150px]">Sub Layanan</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[140px]">Content Pillar</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">Brief</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">Status</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[100px]">Revision</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[100px]">Approved</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Selesai</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">Tanggal Upload</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[140px]">PIC Produksi</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[160px]">Link Google Drive</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[140px]">Status Produksi</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">Revisi Counter</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Selesai Produksi</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[100px]">Approved</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Approved</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[150px]">Download Link File</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[150px]">Link Post</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[80px]">Done</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[160px]">Actual Post</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[140px]">On Time Status</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[160px]">Status Content</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={29} className="text-center py-4">Loading content plans...</TableCell>
-                    </TableRow>
-                  ) : contentPlans.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={29} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
-                    </TableRow>
-                  ) : (
-                    contentPlans.map((item: any) => (
-                      <TableRow key={item.id}>
-                        {/* 1. Action (Checkbox) */}
-                        <TableCell className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">
-                          <div className="flex justify-center">
-                            <Checkbox 
-                              checked={selectedItems.includes(item.id)} 
-                              onCheckedChange={(checked) => handleSelectItem(item.id, !!checked)} 
+
+      <ScrollArea className="h-[calc(100vh-300px)]">
+        <div className="rounded-md border overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-gray-50">
+                <TableRow>
+                  <TableHead className="w-[50px] text-center sticky left-0 bg-gray-50 shadow-sm z-20">
+                    <Checkbox 
+                      checked={selectedRows.length === contentPlans.length && contentPlans.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">Tanggal Posting</TableHead>
+                  <TableHead className="whitespace-nowrap">Tipe Content</TableHead>
+                  <TableHead className="whitespace-nowrap">PIC Content</TableHead>
+                  <TableHead className="whitespace-nowrap">Layanan</TableHead>
+                  <TableHead className="whitespace-nowrap">Sub Layanan</TableHead>
+                  <TableHead className="whitespace-nowrap">Judul Content</TableHead>
+                  <TableHead className="whitespace-nowrap">Content Pillar</TableHead>
+                  <TableHead className="whitespace-nowrap">Brief</TableHead>
+                  <TableHead className="whitespace-nowrap">Status</TableHead>
+                  <TableHead className="whitespace-nowrap">Revision</TableHead>
+                  <TableHead className="whitespace-nowrap">Approved</TableHead>
+                  <TableHead className="whitespace-nowrap">Tanggal Selesai</TableHead>
+                  <TableHead className="whitespace-nowrap">Tanggal Upload</TableHead>
+                  <TableHead className="whitespace-nowrap">Tipe Content</TableHead>
+                  <TableHead className="whitespace-nowrap">Judul Content</TableHead>
+                  <TableHead className="whitespace-nowrap">PIC Produksi</TableHead>
+                  <TableHead className="whitespace-nowrap">Link Google Drive</TableHead>
+                  <TableHead className="whitespace-nowrap">Status Produksi</TableHead>
+                  <TableHead className="whitespace-nowrap">Revisi Counter</TableHead>
+                  <TableHead className="whitespace-nowrap">Tanggal Selesai Produksi</TableHead>
+                  <TableHead className="whitespace-nowrap">Approved</TableHead>
+                  <TableHead className="whitespace-nowrap">Tanggal Approved</TableHead>
+                  <TableHead className="whitespace-nowrap">Download Link File</TableHead>
+                  <TableHead className="whitespace-nowrap">Link Post</TableHead>
+                  <TableHead className="whitespace-nowrap">Done</TableHead>
+                  <TableHead className="whitespace-nowrap">Actual Post</TableHead>
+                  <TableHead className="whitespace-nowrap">On Time Status</TableHead>
+                  <TableHead className="whitespace-nowrap">Status Content</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {contentPlans.map((plan) => {
+                  const postDate = plan.post_date ? new Date(plan.post_date) : new Date();
+                  const service = services.find(s => s.id === plan.service_id);
+                  const availableSubServices = getFilteredSubServices(plan.service_id || '');
+                  
+                  return (
+                    <TableRow key={plan.id}>
+                      <TableCell className="sticky left-0 bg-white shadow-sm z-10">
+                        <Checkbox 
+                          checked={selectedRows.includes(plan.id)}
+                          onCheckedChange={(checked) => handleRowCheckbox(plan.id, !!checked)}
+                        />
+                      </TableCell>
+                      
+                      {/* Tanggal Posting */}
+                      <TableCell>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button 
+                              variant={"outline"} 
+                              className="w-[150px] justify-start text-left text-xs font-normal h-7"
+                            >
+                              {plan.post_date ? format(new Date(plan.post_date), 'dd MMM yyyy') : 'Select date'}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={postDate}
+                              onSelect={(date) => handleDateChange(plan.id, date)}
+                              initialFocus
+                              className={cn("p-3 pointer-events-auto")}
                             />
-                          </div>
-                        </TableCell>
-
-                        {/* 2. Tanggal Posting */}
-                        <TableCell className="whitespace-nowrap p-1 w-[180px]">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full h-8"
-                              >
-                                {item.post_date ? formatDisplayDate(item.post_date) : "Select date"}
-                                <CalendarIcon className="ml-2 h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar 
-                                mode="single" 
-                                selected={item.post_date ? new Date(item.post_date) : undefined} 
-                                onSelect={(date) => handleDateChange(item.id, date)} 
-                                initialFocus 
-                                className="pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-
-                        {/* 3. Tipe Content */}
-                        <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                          <Select 
-                            value={item.content_type_id || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}
+                          </PopoverContent>
+                        </Popover>
+                      </TableCell>
+                      
+                      {/* Tipe Content */}
+                      <TableCell>
+                        <Select
+                          value={plan.content_type_id || "none"}
+                          onValueChange={(value) => updateContentPlan(plan.id, { content_type_id: value === "none" ? undefined : value })}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            {contentTypes.map(type => (
+                              <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      
+                      {/* PIC Content */}
+                      <TableCell>
+                        <Select
+                          value={plan.pic_id || "none"}
+                          onValueChange={(value) => updateContentPlan(plan.id, { pic_id: value === "none" ? undefined : value })}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="Select person" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            {getFilteredTeamMembers("Content Planner").map(member => (
+                              <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      
+                      {/* Layanan */}
+                      <TableCell>
+                        <Select
+                          value={plan.service_id || "none"}
+                          onValueChange={(value) => updateContentPlan(plan.id, { 
+                            service_id: value === "none" ? undefined : value,
+                            sub_service_id: undefined // Reset sub service when service changes
+                          })}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="Select service" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            {services.map(service => (
+                              <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      
+                      {/* Sub Layanan */}
+                      <TableCell>
+                        <Select
+                          value={plan.sub_service_id || "none"}
+                          onValueChange={(value) => updateContentPlan(plan.id, { 
+                            sub_service_id: value === "none" ? undefined : value 
+                          })}
+                          disabled={!plan.service_id}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="Select sub service" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            {availableSubServices.map(subService => (
+                              <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      
+                      {/* Judul Content */}
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-7 text-xs justify-start font-normal w-[150px] overflow-hidden"
+                          onClick={() => {
+                            setTitleText(plan.title || "");
+                            setOpenTitleDialog(plan.id);
+                          }}
+                        >
+                          {plan.title || "Click to add title"}
+                        </Button>
+                      </TableCell>
+                      
+                      {/* Content Pillar */}
+                      <TableCell>
+                        <Select
+                          value={plan.content_pillar_id || "none"}
+                          onValueChange={(value) => updateContentPlan(plan.id, { 
+                            content_pillar_id: value === "none" ? undefined : value 
+                          })}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="Select pillar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            {contentPillars.map(pillar => (
+                              <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      
+                      {/* Brief */}
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-7 text-xs justify-start font-normal w-[150px] truncate"
+                          onClick={() => {
+                            setBriefText(plan.brief || "");
+                            setOpenBriefDialog(plan.id);
+                          }}
+                        >
+                          {plan.brief || "Click to add brief"}
+                        </Button>
+                      </TableCell>
+                      
+                      {/* Status */}
+                      <TableCell>
+                        <Select
+                          value={plan.status || "none"}
+                          onValueChange={(value) => handleStatusChange(plan.id, value === "none" ? "" : value)}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="-" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
+                            <SelectItem value="Request Revisi">Request Revisi</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      
+                      {/* Revision */}
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs">{plan.revision_count}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5"
+                            onClick={() => handleResetRevision(plan.id, 'revision_count')}
                           >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              {contentTypes.map(type => (
-                                <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* 4. PIC */}
-                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                          <Select 
-                            value={item.pic_id || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}
-                          >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Content Planner").map(member => (
-                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* 5. Layanan */}
-                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                          <Select 
-                            value={item.service_id || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}
-                          >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              {services.map(service => (
-                                <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* 6. Sub Layanan */}
-                        <TableCell className="whitespace-nowrap p-1 w-[150px]">
-                          <Select 
-                            value={item.sub_service_id || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)}
-                            disabled={!item.service_id}
-                          >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              {item.service_id && getFilteredSubServices(item.service_id).map(subService => (
-                                <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* 7. Judul Content - Modified to use dialog */}
-                        <TableCell className="p-1 w-[180px]">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => openTitleDialog(item.id, item.title)} 
-                            className="w-full h-8 flex items-center justify-center gap-1 truncate"
-                          >
-                            <FileText className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            {item.title ? truncateText(item.title) : "Click to add title"}
+                            <RefreshCcw className="h-3 w-3" />
                           </Button>
-                        </TableCell>
-
-                        {/* 8. Content Pillar */}
-                        <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                          <Select 
-                            value={item.content_pillar_id || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'content_pillar_id', value === "none" ? "" : value)}
+                        </div>
+                      </TableCell>
+                      
+                      {/* Approved */}
+                      <TableCell>
+                        <Checkbox 
+                          checked={plan.approved}
+                          onCheckedChange={(checked) => handleApprovalChange(plan.id, 'approved', !!checked)}
+                        />
+                      </TableCell>
+                      
+                      {/* Tanggal Selesai */}
+                      <TableCell>
+                        {plan.status === "Butuh Di Review" && plan.completion_date && (
+                          <span className="text-xs">{formatDisplayDate(plan.completion_date, true)}</span>
+                        )}
+                      </TableCell>
+                      
+                      {/* Tanggal Upload (Mirror of Tanggal Posting) */}
+                      <TableCell>
+                        {plan.post_date && (
+                          <span className="text-xs">{format(new Date(plan.post_date), 'dd MMM yyyy')}</span>
+                        )}
+                      </TableCell>
+                      
+                      {/* Tipe Content (Mirror) */}
+                      <TableCell>
+                        {contentTypes.find(type => type.id === plan.content_type_id)?.name || "-"}
+                      </TableCell>
+                      
+                      {/* Judul Content (Mirror) */}
+                      <TableCell>
+                        <div className="truncate w-[150px]">
+                          {plan.title || "-"}
+                        </div>
+                      </TableCell>
+                      
+                      {/* PIC Produksi */}
+                      <TableCell>
+                        <Select
+                          value={plan.pic_production_id || "none"}
+                          onValueChange={(value) => updateContentPlan(plan.id, { 
+                            pic_production_id: value === "none" ? undefined : value 
+                          })}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="Select person" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            {getFilteredTeamMembers("Produksi").map(member => (
+                              <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      
+                      {/* Link Google Drive */}
+                      <TableCell>
+                        <LinkField 
+                          value={plan.google_drive_link || ""}
+                          onChange={(value) => handleLinkChange(plan.id, 'google_drive_link', value)}
+                          placeholder="Add Google Drive link..."
+                        />
+                      </TableCell>
+                      
+                      {/* Status Produksi */}
+                      <TableCell>
+                        <Select
+                          value={plan.production_status || "none"}
+                          onValueChange={(value) => handleProductionStatusChange(plan.id, value === "none" ? "" : value)}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="-" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
+                            <SelectItem value="Request Revisi">Request Revisi</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      
+                      {/* Revisi Counter (Production) */}
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs">{plan.production_revision_count}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5"
+                            onClick={() => handleResetRevision(plan.id, 'production_revision_count')}
                           >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              {contentPillars.map(pillar => (
-                                <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* 9. Brief */}
-                        <TableCell className="p-1 w-[120px]">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => openBriefDialog(item.id, item.brief)} 
-                            className="w-full h-8 flex items-center justify-center gap-1 truncate"
-                          >
-                            <FileText className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            {item.brief ? truncateText(item.brief) : "Click to add brief"}
+                            <RefreshCcw className="h-3 w-3" />
                           </Button>
-                          {extractGoogleDocsLink(item.brief) && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="mt-1 w-full h-7" 
-                              asChild
-                            >
-                              <a 
-                                href={extractGoogleDocsLink(item.brief)!} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                              >
-                                <ExternalLink className="h-3 w-3 mr-1" /> Open Doc
-                              </a>
-                            </Button>
-                          )}
-                        </TableCell>
-
-                        {/* 10. Status */}
-                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
-                          <Select 
-                            value={item.status || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'status', value === "none" ? "" : value)}
-                          >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
-                              <SelectItem value="Request Revisi">Request Revisi</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* 11. Revision */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
-                          <div className="flex items-center justify-center gap-1">
-                            <span>{item.revision_count || 0}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6" 
-                              onClick={() => resetRevisionCounter(item.id, 'revision_count')}
-                            >
-                              <RefreshCw className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-
-                        {/* 12. Approved */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
-                          <div className="flex justify-center">
-                            <Checkbox 
-                              checked={item.approved} 
-                              onCheckedChange={(checked) => handleFieldChange(item.id, 'approved', !!checked)} 
-                            />
-                          </div>
-                        </TableCell>
-
-                        {/* 13. Tanggal Selesai */}
-                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          {item.status === "Butuh Di Review" && item.completion_date && (
-                            <div className="text-center">
-                              {formatDisplayDate(item.completion_date, true)}
-                            </div>
-                          )}
-                        </TableCell>
-
-                        {/* 14. Tanggal Upload (Mirror of Tanggal Posting) */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[120px]">
-                          {formatDisplayDate(item.post_date)}
-                        </TableCell>
-
-                        {/* 15. Tipe Content (Mirror) */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[140px]">
-                          <div className="truncate" title={item.content_type?.name || "-"}>
-                            {contentTypes.find(type => type.id === item.content_type_id)?.name || "-"}
-                          </div>
-                        </TableCell>
-
-                        {/* 16. Judul Content (Mirror) */}
-                        <TableCell className="whitespace-nowrap p-1 w-[180px]">
-                          <div className="truncate max-w-full" title={item.title || ""}>
-                            {truncateText(item.title)}
-                          </div>
-                        </TableCell>
-
-                        {/* 17. PIC Produksi */}
-                        <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                          <Select 
-                            value={item.pic_production_id || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}
-                          >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              {getFilteredTeamMembers("Produksi").map(member => (
-                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* 18. Link Google Drive */}
-                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          <div className="flex gap-1">
-                            <Input 
-                              value={item.google_drive_link || ""} 
-                              onChange={(e) => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
-                              placeholder="Enter link" 
-                              className="w-full h-8 truncate" 
-                            />
-                            {item.google_drive_link && (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 flex-shrink-0" 
-                                asChild
-                              >
-                                <a 
-                                  href={item.google_drive_link} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        {/* 19. Status Produksi */}
-                        <TableCell className="whitespace-nowrap p-1 w-[140px]">
-                          <Select 
-                            value={item.production_status || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'production_status', value === "none" ? "" : value)}
-                          >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
-                              <SelectItem value="Request Revisi">Request Revisi</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* 20. Revisi Counter (Production) */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[120px]">
-                          <div className="flex items-center justify-center gap-1">
-                            <span>{item.production_revision_count || 0}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6" 
-                              onClick={() => resetRevisionCounter(item.id, 'production_revision_count')}
-                            >
-                              <RefreshCw className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-
-                        {/* 21. Tanggal Selesai Produksi */}
-                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          {item.production_status === "Butuh Di Review" && item.production_completion_date && (
-                            <div className="text-center">
-                              {formatDisplayDate(item.production_completion_date, true)}
-                            </div>
-                          )}
-                        </TableCell>
-
-                        {/* 22. Approved (Production) */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[100px]">
-                          <div className="flex justify-center">
-                            <Checkbox 
-                              checked={item.production_approved} 
-                              onCheckedChange={(checked) => handleFieldChange(item.id, 'production_approved', !!checked)} 
-                            />
-                          </div>
-                        </TableCell>
-
-                        {/* 23. Tanggal Approved */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[160px]">
-                          {item.production_approved && item.production_approved_date ? formatDisplayDate(item.production_approved_date, true) : ""}
-                        </TableCell>
-
-                        {/* 24. Download Link File (Mirror of Google Drive Link if approved) */}
-                        <TableCell className="p-1 w-[150px]">
-                          {item.production_approved && item.google_drive_link && (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="w-full h-8" 
-                              asChild
-                            >
-                              <a 
-                                href={item.google_drive_link} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                              >
-                                <Link className="h-3 w-3 mr-1" /> Download
-                              </a>
-                            </Button>
-                          )}
-                        </TableCell>
-
-                        {/* 25. Link Post */}
-                        <TableCell className="p-1 w-[150px]">
-                          <div className="flex flex-col gap-1">
-                            {item.post_link ? (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full h-8 flex items-center justify-between" 
-                                onClick={() => openPostLinkDialog(item.id, item.post_link)}
-                              >
-                                <div className="truncate flex-1 text-left" title={item.post_link}>
-                                  {truncateText(item.post_link, 15)}
-                                </div>
-                                <div className="flex gap-1">
-                                  <a 
-                                    href={item.post_link} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="p-1 hover:bg-accent rounded" 
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                  </a>
-                                  <div className="p-1 hover:bg-accent rounded">
-                                    <Pencil className="h-3 w-3" />
-                                  </div>
-                                </div>
-                              </Button>
-                            ) : (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="w-full h-8" 
-                                onClick={() => openPostLinkDialog(item.id, null)}
-                              >
-                                Add post link
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        {/* 26. Done */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[80px]">
-                          <div className="flex justify-center">
-                            <Checkbox 
-                              checked={item.done} 
-                              onCheckedChange={(checked) => handleFieldChange(item.id, 'done', !!checked)} 
-                            />
-                          </div>
-                        </TableCell>
-
-                        {/* 27. Actual Post */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[160px]">
-                          {item.actual_post_date ? formatActualPostDate(item.actual_post_date) : ""}
-                        </TableCell>
-
-                        {/* 28. On Time Status */}
-                        <TableCell className="text-center whitespace-nowrap p-1 w-[140px]">
-                          <div className="truncate" title={item.on_time_status || ""}>
-                            {item.on_time_status || ""}
-                          </div>
-                        </TableCell>
-
-                        {/* 29. Status Content */}
-                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          <Select 
-                            value={item.status_content || "none"} 
-                            onValueChange={(value) => handleFieldChange(item.id, 'status_content', value === "none" ? "" : value)}
-                          >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="-" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-</SelectItem>
-                              <SelectItem value="Recomended For Ads">Recomended For Ads</SelectItem>
-                              <SelectItem value="Cancel">Cancel</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </ScrollArea>
+                        </div>
+                      </TableCell>
+                      
+                      {/* Tanggal Selesai Produksi */}
+                      <TableCell>
+                        {plan.production_status === "Butuh Di Review" && plan.production_completion_date && (
+                          <span className="text-xs">{formatDisplayDate(plan.production_completion_date, true)}</span>
+                        )}
+                      </TableCell>
+                      
+                      {/* Approved (Production) */}
+                      <TableCell>
+                        <Checkbox 
+                          checked={plan.production_approved}
+                          onCheckedChange={(checked) => handleApprovalChange(plan.id, 'production_approved', !!checked)}
+                        />
+                      </TableCell>
+                      
+                      {/* Tanggal Approved */}
+                      <TableCell>
+                        {plan.production_approved && plan.production_approved_date && (
+                          <span className="text-xs">{formatDisplayDate(plan.production_approved_date, true)}</span>
+                        )}
+                      </TableCell>
+                      
+                      {/* Download Link File (Mirror of Google Drive if approved) */}
+                      <TableCell>
+                        {plan.production_approved && plan.google_drive_link && (
+                          <LinkField 
+                            value={plan.google_drive_link}
+                            onChange={(value) => handleLinkChange(plan.id, 'google_drive_link', value)}
+                          />
+                        )}
+                      </TableCell>
+                      
+                      {/* Link Post */}
+                      <TableCell>
+                        <LinkField 
+                          value={plan.post_link || ""}
+                          onChange={(value) => handleLinkChange(plan.id, 'post_link', value)}
+                          placeholder="Add post link..."
+                        />
+                      </TableCell>
+                      
+                      {/* Done */}
+                      <TableCell>
+                        <Checkbox 
+                          checked={plan.done}
+                          onCheckedChange={(checked) => updateContentPlan(plan.id, { done: !!checked })}
+                        />
+                      </TableCell>
+                      
+                      {/* Actual Post Date */}
+                      <TableCell>
+                        {plan.actual_post_date && (
+                          <span className="text-xs">{format(new Date(plan.actual_post_date), 'dd MMM yyyy')}</span>
+                        )}
+                      </TableCell>
+                      
+                      {/* On Time Status */}
+                      <TableCell>
+                        {plan.on_time_status && (
+                          <span className={`text-xs ${plan.on_time_status.includes("Late") ? "text-red-500" : "text-green-500"}`}>
+                            {plan.on_time_status}
+                          </span>
+                        )}
+                      </TableCell>
+                      
+                      {/* Status Content */}
+                      <TableCell>
+                        <Select
+                          value={plan.status_content || "none"}
+                          onValueChange={(value) => updateContentPlan(plan.id, { 
+                            status_content: value === "none" ? undefined : value 
+                          })}
+                        >
+                          <SelectTrigger className="w-[150px] h-7 text-xs">
+                            <SelectValue placeholder="-" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-</SelectItem>
+                            <SelectItem value="Recomended For Ads">Recomended For Ads</SelectItem>
+                            <SelectItem value="Cancel">Cancel</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
-      </div>
-
+      </ScrollArea>
+      
       {/* Brief Dialog */}
-      <Dialog open={isBriefDialogOpen} onOpenChange={setIsBriefDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={!!openBriefDialog} onOpenChange={(open) => !open && setOpenBriefDialog(null)}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Brief</DialogTitle>
-            <DialogDescription>
-              Enter the content brief details below. You can also include Google Docs links.
-            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Textarea 
-              value={currentBrief} 
-              onChange={(e) => setCurrentBrief(e.target.value)} 
-              placeholder="Enter brief content..." 
-              className="min-h-[200px]" 
-            />
-            {extractGoogleDocsLink(currentBrief) && (
-              <div className="p-4 border rounded-md">
-                <div className="mb-2 font-medium">Detected link:</div>
-                <a 
-                  href={extractGoogleDocsLink(currentBrief)!} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-600 hover:underline flex items-center gap-2"
-                >
-                  {truncateText(extractGoogleDocsLink(currentBrief)!, 40)}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsBriefDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={saveBrief}>
-              Save Brief
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Title Dialog */}
-      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Title</DialogTitle>
-            <DialogDescription>
-              Enter the content title below.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Textarea 
-              value={currentTitle} 
-              onChange={(e) => setCurrentTitle(e.target.value)} 
-              placeholder="Enter content title..." 
-              className="min-h-[100px]" 
+              value={briefText} 
+              onChange={(e) => setBriefText(e.target.value)}
+              placeholder="Enter brief details here..."
+              className="min-h-[200px]"
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsTitleDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={saveTitle}>
-              Save Title
-            </Button>
+            <Button variant="outline" onClick={() => setOpenBriefDialog(null)}>Cancel</Button>
+            <Button onClick={() => openBriefDialog && handleBriefSave(openBriefDialog)}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Post Link Dialog */}
-      <Dialog open={isPostLinkDialogOpen} onOpenChange={setIsPostLinkDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      {/* Title Dialog */}
+      <Dialog open={!!openTitleDialog} onOpenChange={(open) => !open && setOpenTitleDialog(null)}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Post Link</DialogTitle>
-            <DialogDescription>
-              Enter the post link URL below.
-            </DialogDescription>
+            <DialogTitle>Edit Title</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Input 
-              value={currentPostLink} 
-              onChange={(e) => setCurrentPostLink(e.target.value)} 
-              placeholder="Enter post link URL..." 
+              value={titleText} 
+              onChange={(e) => setTitleText(e.target.value)}
+              placeholder="Enter content title here..."
             />
-            {currentPostLink && (
-              <div className="p-4 border rounded-md">
-                <div className="mb-2 font-medium">Preview:</div>
-                <a 
-                  href={currentPostLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-600 hover:underline flex items-center gap-2"
-                >
-                  {truncateText(currentPostLink, 40)}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
-            )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsPostLinkDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={savePostLink}>
-              Save Link
-            </Button>
+            <Button variant="outline" onClick={() => setOpenTitleDialog(null)}>Cancel</Button>
+            <Button onClick={() => openTitleDialog && handleTitleSave(openTitleDialog)}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
-}
+};
+
+export default ContentTable;
