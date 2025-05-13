@@ -1,9 +1,8 @@
-
 import React from "react";
 import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from "@/hooks/content-plan";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import ContentPlanTableRow from "./ContentPlanTableRow";
+import ContentPlanTableRow from "./table-row";
 
 interface ContentPlanTableProps {
   contentPlans: ContentPlanItem[];
