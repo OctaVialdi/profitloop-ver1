@@ -1,7 +1,8 @@
 
 import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from "@/hooks/content-plan";
+import { ContentPlanItem, ContentType, Service, SubService, ContentPillar } from "@/hooks/content-plan";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 import ActionCell from "./cells/ActionCell";
 import DatePostingCell from "./cells/DatePostingCell";
 import ContentTypeCell from "./cells/ContentTypeCell";
@@ -23,8 +24,8 @@ interface ContentPlanTableRowProps {
   contentTypes: ContentType[];
   services: Service[];
   contentPillars: ContentPillar[];
-  contentPlanners: TeamMember[];
-  creativeTeamMembers: TeamMember[];
+  contentPlanners: LegacyEmployee[];
+  creativeTeamMembers: LegacyEmployee[];
   selectedItems: string[];
   getFilteredSubServices: (serviceId: string) => SubService[];
   handleSelectItem: (id: string, checked: boolean) => void;

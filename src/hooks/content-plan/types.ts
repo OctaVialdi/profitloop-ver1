@@ -76,7 +76,7 @@ export interface TeamMember {
   name: string;
   job_position: string;
   department: string;
-  role: string;
+  role?: string;
   organization_id?: string;
 }
 
