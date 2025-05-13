@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -226,9 +225,9 @@ export function TeamMembersTab() {
                   {digitalMarketingEmployees.map((employee) => (
                     <TableRow key={employee.id}>
                       <TableCell className="font-medium">{employee.name}</TableCell>
-                      <TableCell>{employee.organization || employee.organization_name}</TableCell>
-                      <TableCell>{employee.jobPosition || employee.job_position}</TableCell>
-                      <TableCell>{employee.jobLevel || employee.job_level}</TableCell>
+                      <TableCell>{employee.organization_name}</TableCell>
+                      <TableCell>{employee.job_position}</TableCell>
+                      <TableCell>{employee.job_level}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

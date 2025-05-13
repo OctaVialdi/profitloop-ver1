@@ -10,7 +10,7 @@ export function useFilteredEmployees(organizationFilter?: string) {
     
     return employees.filter(employee => 
       employee.organization_name === organizationFilter || 
-      employee.organization === organizationFilter
+      employee.organization_id === organizationFilter
     );
   }, [employees, organizationFilter]);
 
