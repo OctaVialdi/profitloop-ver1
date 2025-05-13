@@ -17,17 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useContentPlan, ContentPlanItem } from "@/hooks/useContentPlan";
+import { useContentPlan } from "@/hooks/useContentPlan";
 import { useEmployeesByPosition } from "@/hooks/useEmployeesByPosition";
 import { format } from "date-fns";
 
 export const ContentPlan: React.FC = () => {
-  const { contentPlans, loading: isLoading } = useContentPlan();
+  const { contentPlans, loading } = useContentPlan();
   const { employees: contentPlanners, isLoading: isLoadingContentPlanners } = useEmployeesByPosition("Content Planner");
   const { employees: creatives, isLoading: isLoadingCreatives } = useEmployeesByPosition("Creative");
   
-  const [selectedContentPlanner, setSelectedContentPlanner] = useState<string>("");
-  const [selectedCreative, setSelectedCreative] = useState<string>("");
+  const [selectedContentPlanner, setSelectedContentPlanner] = useState<string>("all");
+  const [selectedCreative, setSelectedCreative] = useState<string>("all");
 
   return (
     <ScrollArea className="h-[500px]">
@@ -40,7 +40,7 @@ export const ContentPlan: React.FC = () => {
                 <SelectValue placeholder="Select content planner" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Content Planners</SelectItem>
+                <SelectItem value="all">All Content Planners</SelectItem>
                 {!isLoadingContentPlanners && contentPlanners.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
                     {employee.name}
@@ -56,7 +56,7 @@ export const ContentPlan: React.FC = () => {
                 <SelectValue placeholder="Select creative" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Creatives</SelectItem>
+                <SelectItem value="all">All Creatives</SelectItem>
                 {!isLoadingCreatives && creatives.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
                     {employee.name}
@@ -67,7 +67,7 @@ export const ContentPlan: React.FC = () => {
           </div>
         </div>
       
-        {isLoading ? (
+        {loading ? (
           <div className="flex items-center justify-center h-40">
             <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
@@ -113,7 +113,7 @@ export const ContentPlan: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Select defaultValue={item.pic_id || ""}>
+                      <Select defaultValue={item.pic_id || "unassigned"}>
                         <SelectTrigger className="w-[140px]">
                           <SelectValue placeholder="Select PIC" />
                         </SelectTrigger>
@@ -123,11 +123,12 @@ export const ContentPlan: React.FC = () => {
                               {planner.name}
                             </SelectItem>
                           ))}
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Select defaultValue={item.pic_production_id || ""}>
+                      <Select defaultValue={item.pic_production_id || "unassigned"}>
                         <SelectTrigger className="w-[140px]">
                           <SelectValue placeholder="Select Production" />
                         </SelectTrigger>
@@ -137,6 +138,7 @@ export const ContentPlan: React.FC = () => {
                               {creative.name}
                             </SelectItem>
                           ))}
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
