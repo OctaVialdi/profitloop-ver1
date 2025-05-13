@@ -20,8 +20,8 @@ export const ContentPlanCard: React.FC<ContentPlanCardProps> = ({
   hasSelectedItems
 }) => {
   return (
-    <Card className="w-full">
-      <CardHeader className="py-3 flex flex-row items-center justify-between">
+    <Card className="w-full h-full flex flex-col">
+      <CardHeader className="py-3 flex flex-row items-center justify-between shrink-0">
         <CardTitle className="text-lg">{title}</CardTitle>
         <div className="flex space-x-2">
           {hasSelectedItems && (
@@ -45,7 +45,7 @@ export const ContentPlanCard: React.FC<ContentPlanCardProps> = ({
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 flex-grow overflow-hidden">
         {children}
       </CardContent>
     </Card>

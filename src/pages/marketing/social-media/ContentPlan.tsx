@@ -363,19 +363,17 @@ const ContentPlan = () => {
   };
 
   return (
-    <ContentPlanCard
-      title="Content Plan"
-      onAddRow={addContentItem}
-      onDeleteSelected={handleDeleteSelected}
-      hasSelectedItems={hasSelectedItems}
-    >
-      <div className="border rounded-md overflow-hidden">
-        {/* Vertical scroll container */}
-        <ScrollArea className="h-[calc(100vh-230px)]">
-          {/* Horizontal scroll container - added overflow-x-auto to ensure horizontal scrolling */}
-          <div className="overflow-x-auto">
-            {/* Fixed width container for the table */}
-            <div className="min-w-[1200px] max-w-[1300px] w-full">
+    <div className="h-[calc(100vh-180px)] flex flex-col">
+      <ContentPlanCard
+        title="Content Plan"
+        onAddRow={addContentItem}
+        onDeleteSelected={handleDeleteSelected}
+        hasSelectedItems={hasSelectedItems}
+      >
+        <div className="border rounded-md h-full overflow-hidden">
+          {/* Full height ScrollArea */}
+          <ScrollArea className="h-full">
+            <div className="min-w-[1200px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow className="bg-slate-50">
@@ -796,9 +794,9 @@ const ContentPlan = () => {
                 </TableBody>
               </Table>
             </div>
-          </div>
-        </ScrollArea>
-      </div>
+          </ScrollArea>
+        </div>
+      </ContentPlanCard>
 
       {/* Dialog for full title editing */}
       <Dialog open={titleDialogOpen} onOpenChange={setTitleDialogOpen}>
@@ -852,7 +850,7 @@ const ContentPlan = () => {
         saveBrief={saveBrief}
         extractGoogleDocsLink={extractGoogleDocsLink}
       />
-    </ContentPlanCard>
+    </div>
   );
 };
 

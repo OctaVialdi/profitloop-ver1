@@ -46,7 +46,7 @@ export const TargetQuantityCard: React.FC<TargetQuantityCardProps> = ({
   };
 
   return (
-    <Card className="w-full border shadow-sm">
+    <Card className="w-full border shadow-sm mb-4">
       <CardHeader className="pb-2 pt-3">
         <CardTitle className="text-lg">{getTabTitle()}</CardTitle>
       </CardHeader>

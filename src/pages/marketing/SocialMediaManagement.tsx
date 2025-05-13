@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { PrimaryTabNavigation } from "@/components/marketing/social-media/PrimaryTabNavigation";
@@ -120,7 +119,7 @@ const SocialMediaManagement = () => {
   };
 
   return (
-    <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 space-y-4">
+    <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 flex flex-col">
       {/* Primary Tab Navigation */}
       <PrimaryTabNavigation 
         tabs={primaryTabs}
@@ -145,7 +144,7 @@ const SocialMediaManagement = () => {
       />
 
       {/* Pagination */}
-      <div className="flex justify-end">
+      <div className="flex justify-end mb-4">
         <Pagination>
           <PaginationContent>
             <PaginationItem>
@@ -174,7 +173,9 @@ const SocialMediaManagement = () => {
       />
 
       {/* Content for the active tab */}
-      <Outlet />
+      <div className="flex-grow flex">
+        <Outlet />
+      </div>
 
       {/* Edit Target Dialog */}
       <EditTargetDialog 
