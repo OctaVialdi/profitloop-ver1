@@ -55,12 +55,11 @@ export const fetchContentTypes = async () => {
 
 export const fetchTeamMembers = async () => {
   try {
-    // Now fetch team members from the database
     const { data, error } = await supabase
       .from('team_members')
       .select('*')
       .order('name');
-      
+
     if (error) throw error;
     return data || [] as TeamMember[];
   } catch (err) {

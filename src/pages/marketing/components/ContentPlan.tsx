@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useContentPlan } from "@/hooks/useContentPlan";
+import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
@@ -160,12 +160,6 @@ export function ContentPlan() {
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
-  // Get Content Planner team members for PIC dropdown
-  const contentPlannerMembers = getFilteredTeamMembers("Content Planner");
-  
-  // Get Creative team members for PIC Produksi dropdown
-  const creativeTeamMembers = getFilteredTeamMembers("Creative");
-
   // Handle brief dialog
   const openBriefDialog = (id: string, brief: string | null) => {
     setCurrentItemId(id);
@@ -245,8 +239,7 @@ export function ContentPlan() {
                       <TableCell colSpan={29} className="text-center py-4">Loading content plans...</TableCell>
                     </TableRow> : contentPlans.length === 0 ? <TableRow>
                       <TableCell colSpan={29} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
-                    </TableRow> : contentPlans.map((item: any) => (
-                      <TableRow key={item.id}>
+                    </TableRow> : contentPlans.map((item: any) => <TableRow key={item.id}>
                         {/* 1. Action (Checkbox) */}
                         <TableCell className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px] border-r">
                           <div className="flex justify-center">
@@ -271,12 +264,12 @@ export function ContentPlan() {
 
                         {/* 3. Tipe Content */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
-                          <Select value={item.content_type_id || "unassigned"} onValueChange={value => handleFieldChange(item.id, 'content_type_id', value === "unassigned" ? "" : value)}>
+                          <Select value={item.content_type_id || "none"} onValueChange={value => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {contentTypes.map(type => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -284,30 +277,25 @@ export function ContentPlan() {
 
                         {/* 4. PIC */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px] border-r">
-                          <Select 
-                            value={item.pic_id || "unassigned"} 
-                            onValueChange={value => handleFieldChange(item.id, 'pic_id', value === "unassigned" ? "" : value)}
-                          >
+                          <Select value={item.pic_id || "none"} onValueChange={value => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
-                              {contentPlannerMembers.map(member => (
-                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                              ))}
+                              <SelectItem value="none">-</SelectItem>
+                              {getFilteredTeamMembers("Content Planner").map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </TableCell>
 
                         {/* 5. Layanan */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px] border-r">
-                          <Select value={item.service_id || "unassigned"} onValueChange={value => handleFieldChange(item.id, 'service_id', value === "unassigned" ? "" : value)}>
+                          <Select value={item.service_id || "none"} onValueChange={value => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {services.map(service => <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -315,12 +303,12 @@ export function ContentPlan() {
 
                         {/* 6. Sub Layanan */}
                         <TableCell className="whitespace-nowrap p-1 w-[150px] border-r">
-                          <Select value={item.sub_service_id || "unassigned"} onValueChange={value => handleFieldChange(item.id, 'sub_service_id', value === "unassigned" ? "" : value)} disabled={!item.service_id}>
+                          <Select value={item.sub_service_id || "none"} onValueChange={value => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)} disabled={!item.service_id}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {item.service_id && getFilteredSubServices(item.service_id).map(subService => <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -335,12 +323,12 @@ export function ContentPlan() {
 
                         {/* 8. Content Pillar */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
-                          <Select value={item.content_pillar_id || "unassigned"} onValueChange={value => handleFieldChange(item.id, 'content_pillar_id', value === "unassigned" ? "" : value)}>
+                          <Select value={item.content_pillar_id || "none"} onValueChange={value => handleFieldChange(item.id, 'content_pillar_id', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               {contentPillars.map(pillar => <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -358,12 +346,12 @@ export function ContentPlan() {
 
                         {/* 10. Status */}
                         <TableCell className="whitespace-nowrap p-1 w-[120px] border-r">
-                          <Select value={item.status || "unassigned"} onValueChange={value => handleFieldChange(item.id, 'status', value === "unassigned" ? "" : value)}>
+                          <Select value={item.status || "none"} onValueChange={value => handleFieldChange(item.id, 'status', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
                               <SelectItem value="Request Revisi">Request Revisi</SelectItem>
                             </SelectContent>
@@ -415,18 +403,13 @@ export function ContentPlan() {
 
                         {/* 17. PIC Produksi */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
-                          <Select 
-                            value={item.pic_production_id || "unassigned"} 
-                            onValueChange={value => handleFieldChange(item.id, 'pic_production_id', value === "unassigned" ? "" : value)}
-                          >
+                          <Select value={item.pic_production_id || "none"} onValueChange={value => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
-                              {creativeTeamMembers.map(member => (
-                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                              ))}
+                              <SelectItem value="none">-</SelectItem>
+                              {getFilteredTeamMembers("Creative").filter(m => m.role === "Produksi").map(member => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -445,12 +428,12 @@ export function ContentPlan() {
 
                         {/* 19. Status Produksi */}
                         <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
-                          <Select value={item.production_status || "unassigned"} onValueChange={value => handleFieldChange(item.id, 'production_status', value === "unassigned" ? "" : value)}>
+                          <Select value={item.production_status || "none"} onValueChange={value => handleFieldChange(item.id, 'production_status', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
                               <SelectItem value="Request Revisi">Request Revisi</SelectItem>
                             </SelectContent>
@@ -528,19 +511,18 @@ export function ContentPlan() {
 
                         {/* 29. Status Content */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          <Select value={item.status_content || "unassigned"} onValueChange={value => handleFieldChange(item.id, 'status_content', value === "unassigned" ? "" : value)}>
+                          <Select value={item.status_content || "none"} onValueChange={value => handleFieldChange(item.id, 'status_content', value === "none" ? "" : value)}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="-" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned">-</SelectItem>
+                              <SelectItem value="none">-</SelectItem>
                               <SelectItem value="Recomended For Ads">Recomended For Ads</SelectItem>
                               <SelectItem value="Cancel">Cancel</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
-                      </TableRow>
-                    ))}
+                      </TableRow>)}
                 </TableBody>
               </Table>
             </div>

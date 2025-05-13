@@ -41,30 +41,26 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const fetchAllContentPlanData = async () => {
     try {
-      setLoading(true);
-      await Promise.all([
-        fetchContentPlansData(),
-        fetchContentTypesData(),
-        fetchTeamMembersData(),
-        fetchServicesData(),
-        fetchSubServicesData(),
-        fetchContentPillarsData()
-      ]);
+      await fetchContentPlansData();
+      await fetchContentTypesData();
+      await fetchTeamMembersData();
+      await fetchServicesData();
+      await fetchSubServicesData();
+      await fetchContentPillarsData();
     } catch (error) {
       console.error("Error fetching content plan data:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchContentPlansData = async () => {
     try {
+      setLoading(true);
       const data = await fetchContentPlans(organization?.id);
-      console.log("Fetched content plans:", data);
       setContentPlans(data);
     } catch (err: any) {
-      console.error('Error fetching content plans:', err);
       setError(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,7 +76,6 @@ export function useContentPlan(): ContentPlanHookReturn {
   const fetchTeamMembersData = async () => {
     try {
       const data = await fetchTeamMembers();
-      console.log("Fetched team members:", data);
       setTeamMembers(data);
     } catch (err) {
       console.error('Error fetching team members:', err);
@@ -116,7 +111,6 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const addContentPlan = async (newPlan: Partial<ContentPlanItem>) => {
     try {
-      console.log("Adding content plan:", newPlan);
       const data = await addContentPlanItem(newPlan, organization?.id);
       
       toast({
@@ -139,7 +133,6 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const updateContentPlan = async (id: string, updates: Partial<ContentPlanItem>) => {
     try {
-      console.log("Updating content plan:", id, updates);
       await updateContentPlanItem(id, updates, organization?.id);
       
       toast({
@@ -162,7 +155,6 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   const deleteContentPlan = async (id: string) => {
     try {
-      console.log("Deleting content plan:", id);
       await deleteContentPlanItem(id, organization?.id);
       
       toast({
@@ -200,7 +192,7 @@ export function useContentPlan(): ContentPlanHookReturn {
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
-    getFilteredTeamMembers: (jobPosition: string) => getFilteredTeamMembers(teamMembers, jobPosition),
+    getFilteredTeamMembers: (department: string) => getFilteredTeamMembers(teamMembers, department),
     getFilteredSubServices: (serviceId: string) => getFilteredSubServices(subServices, serviceId),
     resetRevisionCounter,
     formatDisplayDate

@@ -852,6 +852,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "content_plans_pic_id_fkey"
+            columns: ["pic_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_pic_production_id_fkey"
+            columns: ["pic_production_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "content_plans_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -2707,7 +2721,6 @@ export type Database = {
           created_at: string
           department: string
           id: string
-          job_position: string
           name: string
           role: string
           updated_at: string
@@ -2716,7 +2729,6 @@ export type Database = {
           created_at?: string
           department: string
           id?: string
-          job_position: string
           name: string
           role: string
           updated_at?: string
@@ -2725,7 +2737,6 @@ export type Database = {
           created_at?: string
           department?: string
           id?: string
-          job_position?: string
           name?: string
           role?: string
           updated_at?: string
