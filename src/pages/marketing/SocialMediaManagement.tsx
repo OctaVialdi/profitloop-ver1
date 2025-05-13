@@ -17,7 +17,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Edit, X, Trash, Check } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Edit, X, Trash, Check, RotateCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
