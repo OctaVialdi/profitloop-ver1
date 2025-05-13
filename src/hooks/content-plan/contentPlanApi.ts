@@ -1,9 +1,15 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from './types';
 
 export const fetchContentPlans = async (organizationId: string | undefined) => {
   try {
+    if (!organizationId) {
+      console.error("fetchContentPlans: No organization ID provided");
+      return [];
+    }
+
+    console.log(`Executing fetchContentPlans query with organization_id: ${organizationId}`);
+    
     const { data, error } = await supabase
       .from('content_plans')
       .select(`
@@ -18,7 +24,12 @@ export const fetchContentPlans = async (organizationId: string | undefined) => {
       .eq('organization_id', organizationId)
       .order('post_date');
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase error in fetchContentPlans:", error);
+      throw error;
+    }
+    
+    console.log(`fetchContentPlans returned ${data?.length} results`);
     
     // Type assertion to handle the mapping more safely
     const formattedData = (data || []).map(item => ({
@@ -33,7 +44,7 @@ export const fetchContentPlans = async (organizationId: string | undefined) => {
     
     return formattedData;
   } catch (err: any) {
-    console.error('Error fetching content plans:', err);
+    console.error('Error in fetchContentPlans:', err);
     throw err;
   }
 };
@@ -115,56 +126,92 @@ export const fetchContentPillars = async () => {
 
 export const addContentPlanItem = async (newPlan: Partial<ContentPlanItem>, organizationId: string | undefined) => {
   try {
+    if (!organizationId) {
+      console.error("addContentPlanItem: No organization ID provided");
+      throw new Error("Organization ID is required");
+    }
+
     // Include the organization ID in the new plan
     const planWithOrgId = {
       ...newPlan,
       organization_id: organizationId
     };
     
+    console.log("Adding new content plan item:", planWithOrgId);
+    
     const { data, error } = await supabase
       .from('content_plans')
       .insert(planWithOrgId)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase error in addContentPlanItem:", error);
+      throw error;
+    }
+
+    console.log("Added content plan item successfully:", data);
     
     return data[0] as ContentPlanItem;
   } catch (err) {
-    console.error('Error adding content plan:', err);
+    console.error('Error in addContentPlanItem:', err);
     throw err;
   }
 };
 
 export const updateContentPlanItem = async (id: string, updates: Partial<ContentPlanItem>, organizationId: string | undefined) => {
   try {
+    if (!organizationId) {
+      console.error("updateContentPlanItem: No organization ID provided");
+      throw new Error("Organization ID is required");
+    }
+
+    console.log(`Updating content plan item ${id} with:`, updates);
+    
     const { error } = await supabase
       .from('content_plans')
       .update(updates)
       .eq('id', id)
       .eq('organization_id', organizationId);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase error in updateContentPlanItem:", error);
+      throw error;
+    }
+
+    console.log(`Content plan item ${id} updated successfully`);
     
     return true;
   } catch (err) {
-    console.error('Error updating content plan:', err);
+    console.error('Error in updateContentPlanItem:', err);
     throw err;
   }
 };
 
 export const deleteContentPlanItem = async (id: string, organizationId: string | undefined) => {
   try {
+    if (!organizationId) {
+      console.error("deleteContentPlanItem: No organization ID provided");
+      throw new Error("Organization ID is required");
+    }
+
+    console.log(`Deleting content plan item ${id}`);
+    
     const { error } = await supabase
       .from('content_plans')
       .delete()
       .eq('id', id)
       .eq('organization_id', organizationId);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase error in deleteContentPlanItem:", error);
+      throw error;
+    }
+
+    console.log(`Content plan item ${id} deleted successfully`);
     
     return true;
   } catch (err) {
-    console.error('Error deleting content plan:', err);
+    console.error('Error in deleteContentPlanItem:', err);
     throw err;
   }
 };

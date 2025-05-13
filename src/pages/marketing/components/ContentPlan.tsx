@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
+import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
@@ -13,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useOrganization } from "@/hooks/useOrganization";
 
 export function ContentPlan() {
   const {
@@ -23,6 +25,7 @@ export function ContentPlan() {
     subServices,
     contentPillars,
     loading,
+    error,
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
@@ -31,6 +34,7 @@ export function ContentPlan() {
     resetRevisionCounter,
     formatDisplayDate
   } = useContentPlan();
+  const { organization } = useOrganization();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
   const [currentBrief, setCurrentBrief] = useState("");
@@ -40,6 +44,13 @@ export function ContentPlan() {
 
   // For adding new rows
   const addNewRow = () => {
+    if (!organization?.id) {
+      console.error("Cannot add row: No organization ID available");
+      // Maybe show an error toast here
+      return;
+    }
+    
+    console.log("Adding new row with organization ID:", organization.id);
     const today = new Date();
     const formattedDate = format(today, "yyyy-MM-dd");
     addContentPlan({
@@ -50,7 +61,8 @@ export function ContentPlan() {
       production_approved: false,
       done: false,
       status: "",
-      production_status: ""
+      production_status: "",
+      organization_id: organization.id
     });
   };
 
@@ -195,6 +207,26 @@ export function ContentPlan() {
             </Button>}
         </div>
       </div>
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error.message || "Failed to load content plan data. Please check your organization settings and try again."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {!organization?.id && (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Organization Required</AlertTitle>
+          <AlertDescription>
+            No organization context found. Please ensure you're logged in and belong to an organization.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="rounded-md border overflow-hidden">
         <div className="h-[600px] overflow-hidden">
