@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
@@ -12,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 export function ContentPlan() {
   const {
     contentPlans,
@@ -26,7 +28,8 @@ export function ContentPlan() {
     deleteContentPlan,
     getFilteredTeamMembers,
     getFilteredSubServices,
-    resetRevisionCounter
+    resetRevisionCounter,
+    formatDisplayDate
   } = useContentPlan();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
@@ -138,31 +141,8 @@ export function ContentPlan() {
     } else if (field === 'production_approved' && value === false) {
       updates.production_approved_date = null;
     }
+    
     await updateContentPlan(id, updates);
-  };
-
-  // Format date for display
-  const formatDisplayDate = (dateString: string | null, includeTime: boolean = false) => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      return includeTime ? format(date, "dd MMM yyyy - HH:mm") : format(date, "dd MMM yyyy");
-    } catch (error) {
-      return dateString;
-    }
-  };
-
-  // Handle brief dialog
-  const openBriefDialog = (id: string, brief: string | null) => {
-    setCurrentItemId(id);
-    setCurrentBrief(brief || "");
-    setIsBriefDialogOpen(true);
-  };
-  const saveBrief = async () => {
-    if (currentItemId) {
-      await handleFieldChange(currentItemId, 'brief', currentBrief);
-    }
-    setIsBriefDialogOpen(false);
   };
 
   // Check if a Google Docs link is present in the brief
@@ -178,6 +158,21 @@ export function ContentPlan() {
     if (!text) return "";
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
+
+  // Handle brief dialog
+  const openBriefDialog = (id: string, brief: string | null) => {
+    setCurrentItemId(id);
+    setCurrentBrief(brief || "");
+    setIsBriefDialogOpen(true);
+  };
+  
+  const saveBrief = async () => {
+    if (currentItemId) {
+      await handleFieldChange(currentItemId, 'brief', currentBrief);
+    }
+    setIsBriefDialogOpen(false);
+  };
+
   return <div className="w-full space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -191,12 +186,12 @@ export function ContentPlan() {
       <div className="rounded-md border overflow-hidden">
         <div className="h-[600px] overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="min-w-[2000px] table-fixed">
+            <div className="min-width-3200 table-auto">
               <Table className="w-full">
-                <TableHeader className="sticky top-0 bg-white z-10">
+                <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-white z-20 w-[60px]">Action</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px]">Tanggal Posting</TableHead>
+                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">Action</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[180px]">Tanggal Posting</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">Layanan</TableHead>
@@ -228,19 +223,19 @@ export function ContentPlan() {
                 </TableHeader>
                 <TableBody>
                   {loading ? <TableRow>
-                      <TableCell colSpan={28} className="text-center py-4">Loading content plans...</TableCell>
+                      <TableCell colSpan={29} className="text-center py-4">Loading content plans...</TableCell>
                     </TableRow> : contentPlans.length === 0 ? <TableRow>
-                      <TableCell colSpan={28} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
+                      <TableCell colSpan={29} className="text-center py-4">No content plans available. Add a new row to get started.</TableCell>
                     </TableRow> : contentPlans.map((item: any) => <TableRow key={item.id}>
                         {/* 1. Action (Checkbox) */}
-                        <TableCell className="text-center whitespace-nowrap sticky left-0 bg-white z-20 w-[60px]">
+                        <TableCell className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">
                           <div className="flex justify-center">
                             <Checkbox checked={selectedItems.includes(item.id)} onCheckedChange={checked => handleSelectItem(item.id, !!checked)} />
                           </div>
                         </TableCell>
 
                         {/* 2. Tanggal Posting */}
-                        <TableCell className="whitespace-nowrap p-1 w-[120px]">
+                        <TableCell className="whitespace-nowrap p-1 w-[180px]">
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button variant="outline" size="sm" className="w-full h-8">
