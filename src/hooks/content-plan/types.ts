@@ -45,6 +45,7 @@ export interface TeamMember {
   id: string;
   name: string;
   department: string;
+  job_position: string;
   role: string;
 }
 
@@ -77,7 +78,7 @@ export interface ContentPlanHookReturn {
   addContentPlan: (newPlan: Partial<ContentPlanItem>) => Promise<ContentPlanItem | null>;
   updateContentPlan: (id: string, updates: Partial<ContentPlanItem>) => Promise<boolean>;
   deleteContentPlan: (id: string) => Promise<boolean>;
-  getFilteredTeamMembers: (department: string) => TeamMember[];
+  getFilteredTeamMembers: (jobPosition: string) => TeamMember[];
   getFilteredSubServices: (serviceId: string) => SubService[];
   resetRevisionCounter: (id: string, field: 'revision_count' | 'production_revision_count') => Promise<boolean>;
   formatDisplayDate: (dateString: string | null, includeTime?: boolean) => string;

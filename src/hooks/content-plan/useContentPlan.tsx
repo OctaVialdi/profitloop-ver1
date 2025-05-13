@@ -192,7 +192,7 @@ export function useContentPlan(): ContentPlanHookReturn {
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
-    getFilteredTeamMembers: (department: string) => getFilteredTeamMembers(teamMembers, department),
+    getFilteredTeamMembers: (jobPosition: string) => getFilteredTeamMembers(teamMembers, jobPosition),
     getFilteredSubServices: (serviceId: string) => getFilteredSubServices(subServices, serviceId),
     resetRevisionCounter,
     formatDisplayDate

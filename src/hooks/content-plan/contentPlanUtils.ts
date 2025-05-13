@@ -25,8 +25,8 @@ export const getContentPlansWithFormattedData = (contentPlans: ContentPlanItem[]
   });
 };
 
-export const getFilteredTeamMembers = (teamMembers: TeamMember[], department: string): TeamMember[] => {
-  return teamMembers.filter(member => member.department === department);
+export const getFilteredTeamMembers = (teamMembers: TeamMember[], jobPosition: string): TeamMember[] => {
+  return teamMembers.filter(member => member.job_position === jobPosition);
 };
 
 export const getFilteredSubServices = (subServices: SubService[], serviceId: string): SubService[] => {

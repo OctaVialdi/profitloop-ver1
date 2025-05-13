@@ -55,13 +55,24 @@ export const fetchContentTypes = async () => {
 
 export const fetchTeamMembers = async () => {
   try {
+    // Modified to fetch employees from the user's table
     const { data, error } = await supabase
-      .from('team_members')
-      .select('*')
+      .from('employees')
+      .select('id, name, organization_name, job_position, job_level')
       .order('name');
 
     if (error) throw error;
-    return data || [] as TeamMember[];
+    
+    // Map the employee data to the TeamMember interface
+    const teamMembers = (data || []).map(employee => ({
+      id: employee.id,
+      name: employee.name,
+      department: employee.organization_name || 'Digital Marketing',
+      job_position: employee.job_position || '',
+      role: employee.job_level || ''
+    }));
+    
+    return teamMembers as TeamMember[];
   } catch (err) {
     console.error('Error fetching team members:', err);
     throw err;
