@@ -53,6 +53,13 @@ export default function ContentPlanTableRow({
   openBriefDialog,
   openTitleDialog
 }: ContentPlanTableRowProps) {
+  // Helper function to safely get the name of a content type
+  const getContentTypeName = () => {
+    if (!item.content_type) return "-";
+    if (typeof item.content_type === "string") return item.content_type;
+    return item.content_type.name || "-";
+  };
+
   return (
     <TableRow key={item.id}>
       {/* 1. Action (Checkbox) */}
@@ -66,7 +73,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 2. Tanggal Posting */}
-      <TableCell className="whitespace-nowrap p-1 w-[180px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="w-full h-8">
@@ -86,7 +93,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 3. Tipe Content */}
-      <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Select 
           value={item.content_type_id || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}
@@ -104,7 +111,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 4. PIC - Content Planners */}
-      <TableCell className="whitespace-nowrap p-1 w-[120px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Select 
           value={item.pic_id || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}
@@ -122,7 +129,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 5. Layanan */}
-      <TableCell className="whitespace-nowrap p-1 w-[120px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Select 
           value={item.service_id || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}
@@ -140,7 +147,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 6. Sub Layanan */}
-      <TableCell className="whitespace-nowrap p-1 w-[150px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Select 
           value={item.sub_service_id || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)} 
@@ -159,7 +166,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 7. Judul Content */}
-      <TableCell className="p-1 w-[180px] border-r">
+      <TableCell className="p-1 w-[220px] border-r">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -172,7 +179,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 8. Content Pillar */}
-      <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Select 
           value={item.content_pillar_id || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'content_pillar_id', value === "none" ? "" : value)}
@@ -190,7 +197,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 9. Brief */}
-      <TableCell className="p-1 w-[150px] border-r">
+      <TableCell className="p-1 w-[220px] border-r">
         <Button 
           variant="ghost" 
           className="w-full h-8 flex items-center justify-between px-3 hover:bg-gray-50 text-left" 
@@ -204,7 +211,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 10. Status */}
-      <TableCell className="whitespace-nowrap p-1 w-[120px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Select 
           value={item.status || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'status', value === "none" ? "" : value)}
@@ -221,7 +228,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 11. Revision */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[100px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         <div className="flex items-center justify-center gap-1">
           <span>{item.revision_count || 0}</span>
           <Button 
@@ -236,7 +243,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 12. Approved */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[100px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         <div className="flex justify-center">
           <Checkbox 
             checked={item.approved} 
@@ -246,7 +253,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 13. Tanggal Selesai */}
-      <TableCell className="whitespace-nowrap p-1 w-[160px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         {item.status === "Butuh Di Review" && item.completion_date && (
           <div className="text-center">
             {formatDisplayDate(item.completion_date, true)}
@@ -255,26 +262,26 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 14. Tanggal Upload */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[120px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         {formatDisplayDate(item.post_date)}
       </TableCell>
 
       {/* 15. Tipe Content (Mirror) */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[140px] border-r">
-        <div className="truncate" title={item.content_type?.name || item.content_type || "-"}>
-          {item.content_type?.name || item.content_type || "-"}
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
+        <div className="truncate" title={getContentTypeName()}>
+          {getContentTypeName()}
         </div>
       </TableCell>
 
       {/* 16. Judul Content (Mirror) */}
-      <TableCell className="whitespace-nowrap p-1 w-[180px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <div className="truncate max-w-full" title={item.title || ""}>
           {truncateText(item.title)}
         </div>
       </TableCell>
 
       {/* 17. PIC Produksi */}
-      <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Select 
           value={item.pic_production_id || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}
@@ -292,7 +299,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 18. Link Google Drive */}
-      <TableCell className="whitespace-nowrap p-1 w-[160px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <div className="flex items-center gap-1">
           <Input 
             value={item.google_drive_link || ""} 
@@ -311,7 +318,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 19. Status Produksi */}
-      <TableCell className="whitespace-nowrap p-1 w-[140px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         <Select 
           value={item.production_status || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'production_status', value === "none" ? "" : value)}
@@ -328,7 +335,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 20. Revisi Counter (Production) */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[120px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         <div className="flex items-center justify-center gap-1">
           <span>{item.production_revision_count || 0}</span>
           <Button 
@@ -343,7 +350,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 21. Tanggal Selesai Produksi */}
-      <TableCell className="whitespace-nowrap p-1 w-[160px] border-r">
+      <TableCell className="whitespace-nowrap p-1 w-[220px] border-r">
         {item.production_status === "Butuh Di Review" && item.production_completion_date && (
           <div className="text-center">
             {formatDisplayDate(item.production_completion_date, true)}
@@ -352,7 +359,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 22. Approved (Production) */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[100px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         <div className="flex justify-center">
           <Checkbox 
             checked={item.production_approved} 
@@ -362,12 +369,12 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 23. Tanggal Approved */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[160px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         {item.production_approved && item.production_approved_date ? formatDisplayDate(item.production_approved_date, true) : ""}
       </TableCell>
 
       {/* 24. Download Link File */}
-      <TableCell className="p-1 w-[150px] border-r">
+      <TableCell className="p-1 w-[220px] border-r">
         {item.production_approved && item.google_drive_link && (
           <Button variant="outline" size="sm" className="w-full h-8" asChild>
             <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
@@ -397,7 +404,7 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 26. Done */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[80px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         <div className="flex justify-center">
           <Checkbox 
             checked={item.done} 
@@ -407,19 +414,19 @@ export default function ContentPlanTableRow({
       </TableCell>
 
       {/* 27. Actual Post */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[160px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         {item.actual_post_date ? format(new Date(item.actual_post_date), "dd MMM yyyy") : ""}
       </TableCell>
 
       {/* 28. On Time Status */}
-      <TableCell className="text-center whitespace-nowrap p-1 w-[140px] border-r">
+      <TableCell className="text-center whitespace-nowrap p-1 w-[220px] border-r">
         <div className="truncate" title={item.on_time_status || ""}>
           {item.on_time_status || ""}
         </div>
       </TableCell>
 
       {/* 29. Status Content */}
-      <TableCell className="whitespace-nowrap p-1 w-[160px]">
+      <TableCell className="whitespace-nowrap p-1 w-[220px]">
         <Select 
           value={item.status_content || "none"} 
           onValueChange={value => handleFieldChange(item.id, 'status_content', value === "none" ? "" : value)}
