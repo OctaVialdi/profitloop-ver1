@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Card, 
@@ -44,8 +43,11 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ContentPlan } from "./components/ContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEmployeesByPosition } from "@/hooks/useEmployeesByPosition";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ContentManager {
+  id: string;
   name: string;
   dailyTarget: number;
   monthlyTarget: number;
@@ -71,6 +73,10 @@ const SocialMediaManagement = () => {
   const [isEditTargetOpen, setIsEditTargetOpen] = useState(false);
   const [editingManager, setEditingManager] = useState<ContentManager | null>(null);
   const [targetValue, setTargetValue] = useState<string>("20");
+  const { toast } = useToast();
+  
+  // Get employees who are content planners for the table
+  const { employees: contentPlanners, isLoading: isLoadingContentPlanners } = useEmployeesByPosition("Content Planner");
   
   const primaryTabs: TabData[] = [
     { id: "content-planner", label: "Content Planner" },
@@ -85,48 +91,18 @@ const SocialMediaManagement = () => {
     { id: "content-qc", label: "Content QC" }
   ];
 
-  const contentManagers: ContentManager[] = [
-    {
-      name: "John Doe",
-      dailyTarget: 20,
-      monthlyTarget: 20,
-      monthlyTargetAdjusted: 20,
-      progress: 75,
-      onTimeRate: 80,
-      effectiveRate: 90,
-      score: 82
-    },
-    {
-      name: "Jane Smith",
-      dailyTarget: 20,
-      monthlyTarget: 20,
-      monthlyTargetAdjusted: 15,
-      progress: 80,
-      onTimeRate: 70,
-      effectiveRate: 85,
-      score: 78
-    },
-    {
-      name: "Mike Johnson",
-      dailyTarget: 15,
-      monthlyTarget: 15,
-      monthlyTargetAdjusted: 18,
-      progress: 65,
-      onTimeRate: 75,
-      effectiveRate: 80,
-      score: 76
-    },
-    {
-      name: "Sara Williams",
-      dailyTarget: 18,
-      monthlyTarget: 18,
-      monthlyTargetAdjusted: 20,
-      progress: 85,
-      onTimeRate: 85,
-      effectiveRate: 88,
-      score: 86
-    }
-  ];
+  // Map employees to content manager structure
+  const contentManagers: ContentManager[] = contentPlanners.map(employee => ({
+    id: employee.id,
+    name: employee.name,
+    dailyTarget: 20,
+    monthlyTarget: 20,
+    monthlyTargetAdjusted: 20,
+    progress: 75,
+    onTimeRate: 80,
+    effectiveRate: 90,
+    score: 82
+  }));
 
   const getTabTitle = () => {
     switch (activeTab) {
@@ -156,7 +132,13 @@ const SocialMediaManagement = () => {
   };
 
   const handleSaveTarget = () => {
-    // In a real app, you would update the manager's target here
+    if (!editingManager) return;
+    
+    toast({
+      title: "Target saved",
+      description: `Updated target for ${editingManager.name} to ${targetValue}`,
+    });
+    
     setIsEditTargetOpen(false);
     setEditingManager(null);
   };
@@ -344,35 +326,52 @@ const SocialMediaManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contentManagers.map((manager) => (
-                      <TableRow key={manager.name} className="hover:bg-gray-50/80">
-                        <TableCell className="py-1 px-4 font-medium text-sm text-center">{manager.name}</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.dailyTarget}</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.monthlyTarget}</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">
-                          <div className="flex items-center justify-center gap-1">
-                            <span>{manager.monthlyTargetAdjusted}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-4 w-4"
-                              onClick={() => handleEditTarget(manager)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
+                    {isLoadingContentPlanners ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-4">
+                          <div className="flex items-center justify-center">
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                            <span className="ml-2">Loading employees...</span>
                           </div>
                         </TableCell>
-                        <TableCell className="py-1 px-4">
-                          <div className="flex items-center gap-2">
-                            <Progress value={manager.progress} className="h-1.5" />
-                            <span className="text-xs">{manager.progress}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.onTimeRate}%</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.effectiveRate}%</TableCell>
-                        <TableCell className="py-1 px-4 text-center text-sm">{manager.score}</TableCell>
                       </TableRow>
-                    ))}
+                    ) : contentManagers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-4">
+                          No Content Planners found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      contentManagers.map((manager) => (
+                        <TableRow key={manager.id} className="hover:bg-gray-50/80">
+                          <TableCell className="py-1 px-4 font-medium text-sm text-center">{manager.name}</TableCell>
+                          <TableCell className="py-1 px-4 text-center text-sm">{manager.dailyTarget}</TableCell>
+                          <TableCell className="py-1 px-4 text-center text-sm">{manager.monthlyTarget}</TableCell>
+                          <TableCell className="py-1 px-4 text-center text-sm">
+                            <div className="flex items-center justify-center gap-1">
+                              <span>{manager.monthlyTargetAdjusted}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-4 w-4"
+                                onClick={() => handleEditTarget(manager)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-1 px-4">
+                            <div className="flex items-center gap-2">
+                              <Progress value={manager.progress} className="h-1.5" />
+                              <span className="text-xs">{manager.progress}%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-1 px-4 text-center text-sm">{manager.onTimeRate}%</TableCell>
+                          <TableCell className="py-1 px-4 text-center text-sm">{manager.effectiveRate}%</TableCell>
+                          <TableCell className="py-1 px-4 text-center text-sm">{manager.score}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -427,7 +426,7 @@ const SocialMediaManagement = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-4 max-w-7xl">
-      {/* Primary Tab Navigation - Updated to be more compact */}
+      {/* Primary Tab Navigation */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
           {primaryTabs.map((tab) => (
@@ -463,7 +462,7 @@ const SocialMediaManagement = () => {
       {/* Content Section */}
       {renderTabContent()}
 
-      {/* Pagination - Make it more compact */}
+      {/* Pagination */}
       <div className="flex justify-end">
         <Pagination>
           <PaginationContent>
@@ -486,7 +485,7 @@ const SocialMediaManagement = () => {
         </Pagination>
       </div>
 
-      {/* Secondary Tab Navigation - Updated to be more compact */}
+      {/* Secondary Tab Navigation */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-4 w-full">
           {secondaryTabs.map((tab) => (
