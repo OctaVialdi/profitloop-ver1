@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Card, 
@@ -425,7 +426,7 @@ const SocialMediaManagement = () => {
   };
 
   return (
-    <div className="w-full space-y-4 px-0">
+    <div className="container mx-auto p-4 md:p-6 space-y-4 max-w-7xl">
       {/* Primary Tab Navigation - Updated to be more compact */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
@@ -539,14 +540,7 @@ const SocialMediaManagement = () => {
       </div>
 
       {/* Dashboard Content */}
-      <Card className="w-full border shadow-sm">
-        <CardHeader className="py-4">
-          <CardTitle className="text-lg">{activeSubTab} Content</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {renderSecondaryTabContent()}
-        </CardContent>
-      </Card>
+      {renderSecondaryTabContent()}
 
       {/* Edit Target Dialog */}
       <Dialog open={isEditTargetOpen} onOpenChange={setIsEditTargetOpen}>
