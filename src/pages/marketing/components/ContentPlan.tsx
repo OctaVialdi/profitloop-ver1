@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
@@ -220,39 +221,39 @@ export function ContentPlan() {
       </div>
       
       <div className="rounded-md border overflow-hidden">
-        <div className="overflow-x-auto" style={{ maxHeight: "calc(100vh - 180px)" }}>
-          <Table className="w-auto min-w-full">
+        <ScrollArea className="h-[calc(100vh-180px)]">
+          <Table>
             <TableHeader className="sticky top-0 bg-white z-10">
               <TableRow>
-                <TableHead className="text-center whitespace-nowrap w-[50px] sticky left-0 bg-white z-20">Action</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[140px]">Tanggal Posting</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Tipe Content</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">PIC</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Layanan</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Sub Layanan</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Content Pillar</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Brief</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Status</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[80px]">Revision</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[80px]">Approved</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Tanggal Selesai</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[120px]">Tanggal Upload</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Tipe Content</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[180px]">Judul Content</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">PIC Produksi</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Link Google Drive</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Status Produksi</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[80px]">Revisi Counter</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Tanggal Selesai Produksi</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[80px]">Approved</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Tanggal Approved</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Download Link File</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Link Post</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[80px]">Done</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Actual Post</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">On Time Status</TableHead>
-                <TableHead className="text-center whitespace-nowrap w-[150px]">Status Content</TableHead>
+                <TableHead className="text-center w-[50px]">Action</TableHead>
+                <TableHead className="text-center w-[120px]">Tanggal Posting</TableHead>
+                <TableHead className="text-center w-[150px]">Tipe Content</TableHead>
+                <TableHead className="text-center w-[150px]">PIC</TableHead>
+                <TableHead className="text-center w-[150px]">Layanan</TableHead>
+                <TableHead className="text-center w-[150px]">Sub Layanan</TableHead>
+                <TableHead className="text-center w-[180px]">Judul Content</TableHead>
+                <TableHead className="text-center w-[150px]">Content Pillar</TableHead>
+                <TableHead className="text-center w-[150px]">Brief</TableHead>
+                <TableHead className="text-center w-[150px]">Status</TableHead>
+                <TableHead className="text-center w-[80px]">Revision</TableHead>
+                <TableHead className="text-center w-[80px]">Approved</TableHead>
+                <TableHead className="text-center w-[150px]">Tanggal Selesai</TableHead>
+                <TableHead className="text-center w-[120px]">Tanggal Upload</TableHead>
+                <TableHead className="text-center w-[150px]">Tipe Content</TableHead>
+                <TableHead className="text-center w-[180px]">Judul Content</TableHead>
+                <TableHead className="text-center w-[150px]">PIC Produksi</TableHead>
+                <TableHead className="text-center w-[150px]">Link Google Drive</TableHead>
+                <TableHead className="text-center w-[150px]">Status Produksi</TableHead>
+                <TableHead className="text-center w-[80px]">Revisi Counter</TableHead>
+                <TableHead className="text-center w-[150px]">Tanggal Selesai Produksi</TableHead>
+                <TableHead className="text-center w-[80px]">Approved</TableHead>
+                <TableHead className="text-center w-[150px]">Tanggal Approved</TableHead>
+                <TableHead className="text-center w-[150px]">Download Link File</TableHead>
+                <TableHead className="text-center w-[150px]">Link Post</TableHead>
+                <TableHead className="text-center w-[80px]">Done</TableHead>
+                <TableHead className="text-center w-[150px]">Actual Post</TableHead>
+                <TableHead className="text-center w-[150px]">On Time Status</TableHead>
+                <TableHead className="text-center w-[150px]">Status Content</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -268,7 +269,7 @@ export function ContentPlan() {
                 contentPlans.map((item: any) => (
                   <TableRow key={item.id}>
                     {/* 1. Action (Checkbox) */}
-                    <TableCell className="text-center whitespace-nowrap sticky left-0 bg-white z-20">
+                    <TableCell className="text-center">
                       <Checkbox 
                         checked={selectedItems.includes(item.id)} 
                         onCheckedChange={(checked) => handleSelectItem(item.id, !!checked)} 
@@ -276,7 +277,7 @@ export function ContentPlan() {
                     </TableCell>
 
                     {/* 2. Tanggal Posting */}
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="outline" size="sm" className="w-full">
@@ -296,7 +297,7 @@ export function ContentPlan() {
                     </TableCell>
 
                     {/* 3. Tipe Content */}
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell>
                       <Select 
                         value={item.content_type_id || "none"} 
                         onValueChange={(value) => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}
@@ -314,7 +315,7 @@ export function ContentPlan() {
                     </TableCell>
 
                     {/* 4. PIC */}
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell>
                       <Select 
                         value={item.pic_id || "none"} 
                         onValueChange={(value) => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}
@@ -332,7 +333,7 @@ export function ContentPlan() {
                     </TableCell>
 
                     {/* 5. Layanan */}
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell>
                       <Select 
                         value={item.service_id || "none"} 
                         onValueChange={(value) => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}
@@ -350,7 +351,7 @@ export function ContentPlan() {
                     </TableCell>
 
                     {/* 6. Sub Layanan */}
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell>
                       <Select 
                         value={item.sub_service_id || "none"} 
                         onValueChange={(value) => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)}
@@ -646,7 +647,7 @@ export function ContentPlan() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
       </div>
 
       {/* Brief Dialog */}
