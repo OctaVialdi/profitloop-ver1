@@ -3,3 +3,11 @@
 .min-width-3200 {
   min-width: 3200px;
 }
+
+/* Add border styles for better table separation */
+.separator-vertical {
+  width: 1px;
+  height: 100%;
+  background-color: #e2e8f0;
+}
+
