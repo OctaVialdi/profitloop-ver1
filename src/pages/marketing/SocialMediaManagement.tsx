@@ -463,24 +463,24 @@ const SocialMediaManagement = () => {
       {/* Content Section */}
       {renderTabContent()}
 
-      {/* Pagination - Updated to use Link components */}
+      {/* Pagination - Fixed to use correct props */}
       <div className="flex justify-end">
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious to="#" component={Link} className="h-7 text-xs" />
+              <PaginationPrevious href="#" />
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink to="#" component={Link} className="h-7 w-7 text-xs">1</PaginationLink>
+              <PaginationLink href="#" className="h-7 w-7 text-xs">1</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink to="#" component={Link} className="h-7 w-7 text-xs" isActive>2</PaginationLink>
+              <PaginationLink href="#" className="h-7 w-7 text-xs" isActive>2</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink to="#" component={Link} className="h-7 w-7 text-xs">3</PaginationLink>
+              <PaginationLink href="#" className="h-7 w-7 text-xs">3</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationNext to="#" component={Link} className="h-7 text-xs" />
+              <PaginationNext href="#" />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
