@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { subscriptionAnalyticsService } from "@/services/subscription";
+import { useQuery } from "@tanstack/react-query";
 
 export interface AnalyticsData {
   eventCounts: { [key: string]: number } | null;
@@ -11,46 +11,65 @@ export interface AnalyticsData {
 }
 
 export function useSubscriptionAnalytics(): AnalyticsData {
-  const [eventCounts, setEventCounts] = useState<{ [key: string]: number } | null>(null);
-  const [featureConversions, setFeatureConversions] = useState<{ feature: string; conversions: number; }[] | null>(null);
-  const [trialMetrics, setTrialMetrics] = useState<{ totalTrials: number; totalConversions: number; conversionRate: string; } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch event counts
-        const eventCountsData = await subscriptionAnalyticsService.getAnalyticsByEventType();
-        setEventCounts(eventCountsData);
+  // Event counts query
+  const eventCountsQuery = useQuery({
+    queryKey: ['analytics', 'eventCounts'],
+    queryFn: subscriptionAnalyticsService.getAnalyticsByEventType,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    onError: (error) => {
+      console.error("Error fetching event counts:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load analytics event data."
+      });
+    }
+  });
 
-        // Fetch feature conversion analytics
-        const featureConversionData = await subscriptionAnalyticsService.getFeatureConversionAnalytics();
-        setFeatureConversions(featureConversionData);
+  // Feature conversion analytics query
+  const featureConversionsQuery = useQuery({
+    queryKey: ['analytics', 'featureConversions'],
+    queryFn: subscriptionAnalyticsService.getFeatureConversionAnalytics,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    onError: (error) => {
+      console.error("Error fetching feature conversions:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load feature conversion data."
+      });
+    }
+  });
 
-        // Fetch trial conversion metrics
-        const trialConversionMetrics = await subscriptionAnalyticsService.getTrialConversionMetrics();
-        setTrialMetrics(trialConversionMetrics);
-      } catch (error) {
-        console.error("Error fetching analytics data:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load analytics data. Please try again."
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Trial conversion metrics query
+  const trialMetricsQuery = useQuery({
+    queryKey: ['analytics', 'trialMetrics'],
+    queryFn: subscriptionAnalyticsService.getTrialConversionMetrics,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    onError: (error) => {
+      console.error("Error fetching trial metrics:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load trial conversion metrics."
+      });
+    }
+  });
 
-    fetchData();
-  }, [toast]);
+  const isLoading = 
+    eventCountsQuery.isLoading || 
+    featureConversionsQuery.isLoading || 
+    trialMetricsQuery.isLoading;
 
   return {
-    eventCounts,
-    featureConversions,
-    trialMetrics,
+    eventCounts: eventCountsQuery.data || null,
+    featureConversions: featureConversionsQuery.data || null,
+    trialMetrics: trialMetricsQuery.data || null,
     isLoading
   };
 }

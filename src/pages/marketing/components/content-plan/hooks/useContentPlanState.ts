@@ -4,6 +4,7 @@ import { useSelectedItems } from "./useSelectedItems";
 import { useDialogState } from "./useDialogState";
 import { useContentPlanMutations } from "./useContentPlanMutations";
 import { useContentUtils } from "./useContentUtils";
+import { useCallback, useMemo } from "react";
 
 export function useContentPlanState() {
   // Get content plan data and operations from the main hook
@@ -56,34 +57,37 @@ export function useContentPlanState() {
   // Content utility functions
   const { extractLink } = useContentUtils();
   
-  // Get team members
-  const contentPlanners = getContentPlannerTeamMembers();
-  const creativeTeamMembers = getCreativeTeamMembers();
+  // Memoize team members lists
+  const contentPlanners = useMemo(() => getContentPlannerTeamMembers(), [getContentPlannerTeamMembers]);
+  const creativeTeamMembers = useMemo(() => getCreativeTeamMembers(), [getCreativeTeamMembers]);
 
-  // Combined handler functions
-  const handleDeleteSelected = async () => {
+  // Memoize handler functions
+  const handleDeleteSelected = useCallback(async () => {
     const success = await handleDeleteSelectedItems(selectedItems);
     if (success) {
       setSelectedItems([]);
       setDeleteConfirmOpen(false);
     }
-  };
+    return success;
+  }, [selectedItems, handleDeleteSelectedItems, setSelectedItems, setDeleteConfirmOpen]);
 
-  const handleBriefSubmit = async (content: string) => {
-    if (!activeItemId) return;
+  const handleBriefSubmit = useCallback(async (content: string) => {
+    if (!activeItemId) return false;
     const success = await handleBriefSubmitMutation(activeItemId, content);
     if (success) {
       setBriefDialogOpen(false);
     }
-  };
+    return success;
+  }, [activeItemId, handleBriefSubmitMutation, setBriefDialogOpen]);
 
-  const handleTitleSubmit = async (content: string) => {
-    if (!activeItemId) return;
+  const handleTitleSubmit = useCallback(async (content: string) => {
+    if (!activeItemId) return false;
     const success = await handleTitleSubmitMutation(activeItemId, content);
     if (success) {
       setTitleDialogOpen(false);
     }
-  };
+    return success;
+  }, [activeItemId, handleTitleSubmitMutation, setTitleDialogOpen]);
 
   return {
     // Data

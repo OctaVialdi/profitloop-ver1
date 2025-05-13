@@ -10,6 +10,7 @@ import {
   fetchSubServices, 
   fetchContentPillars
 } from '../contentPlanApi';
+import { useQuery } from '@tanstack/react-query';
 
 export interface FetchContentPlanReturn {
   contentPlans: ContentPlanItem[];
@@ -24,53 +25,54 @@ export interface FetchContentPlanReturn {
 }
 
 export function useFetchContentPlan(): FetchContentPlanReturn {
-  const [contentPlans, setContentPlans] = useState<ContentPlanItem[]>([]);
-  const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [subServices, setSubServices] = useState<SubService[]>([]);
-  const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { organization } = useOrganization();
+  
+  // Query for content plans
+  const contentPlansQuery = useQuery({
+    queryKey: ['contentPlans', organization?.id],
+    queryFn: () => organization?.id ? fetchContentPlans(organization.id) : Promise.resolve([]),
+    enabled: !!organization?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  // Effect to fetch data when organization is available
-  useEffect(() => {
-    if (organization?.id) {
-      console.log('Organization ID available, fetching content plan data:', organization.id);
-      fetchAllContentPlanData();
-      // Clear any previous organization-related errors
-      setError(null);
-    } else {
-      console.log('No organization ID available, cannot fetch content plan data.');
-      setError(new Error('No organization ID available'));
-      setLoading(false);
-    }
-  }, [organization?.id]);
+  // Query for content types
+  const contentTypesQuery = useQuery({
+    queryKey: ['contentTypes'],
+    queryFn: fetchContentTypes,
+    staleTime: 30 * 60 * 1000, // 30 minutes (less frequent updates)
+  });
 
-  const fetchAllContentPlanData = async () => {
-    try {
-      console.log('Fetching all content plan data...');
-      setLoading(true);
-      
-      // Run these fetch operations in parallel for better performance
-      await Promise.all([
-        fetchContentPlansData(),
-        fetchContentTypesData(),
-        fetchTeamMembersData(),
-        fetchServicesData(),
-        fetchSubServicesData(),
-        fetchContentPillarsData(),
-      ]);
-      
-      console.log('All content plan data fetched successfully.');
-    } catch (error) {
-      console.error("Error fetching content plan data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Query for team members
+  const teamMembersQuery = useQuery({
+    queryKey: ['teamMembers', organization?.id],
+    queryFn: () => organization?.id ? fetchTeamMembers(organization.id) : Promise.resolve([]),
+    enabled: !!organization?.id,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+  });
 
+  // Query for services
+  const servicesQuery = useQuery({
+    queryKey: ['services'],
+    queryFn: fetchServices,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  // Query for sub-services
+  const subServicesQuery = useQuery({
+    queryKey: ['subServices'],
+    queryFn: fetchSubServices,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  // Query for content pillars
+  const contentPillarsQuery = useQuery({
+    queryKey: ['contentPillars'],
+    queryFn: fetchContentPillars,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  // Manually fetch content plans (for refreshing after mutations)
   const fetchContentPlansData = async () => {
     try {
       if (!organization?.id) {
@@ -78,75 +80,36 @@ export function useFetchContentPlan(): FetchContentPlanReturn {
         return;
       }
       
-      console.log(`Fetching content plans for organization: ${organization.id}`);
-      const data = await fetchContentPlans(organization.id);
-      console.log(`Fetched ${data.length} content plans:`, data);
-      setContentPlans(data);
+      await contentPlansQuery.refetch();
     } catch (err: any) {
       console.error("Error in fetchContentPlansData:", err);
       setError(err);
     }
   };
 
-  const fetchContentTypesData = async () => {
-    try {
-      const data = await fetchContentTypes();
-      setContentTypes(data);
-    } catch (err) {
-      console.error('Error fetching content types:', err);
-    }
-  };
-
-  const fetchTeamMembersData = async () => {
-    try {
-      if (!organization?.id) {
-        console.log('Skipping team members fetch - no organization ID');
-        return;
-      }
-      
-      const data = await fetchTeamMembers(organization.id);
-      setTeamMembers(data);
-    } catch (err) {
-      console.error('Error fetching team members:', err);
-    }
-  };
-
-  const fetchServicesData = async () => {
-    try {
-      const data = await fetchServices();
-      setServices(data);
-    } catch (err) {
-      console.error('Error fetching services:', err);
-    }
-  };
-
-  const fetchSubServicesData = async () => {
-    try {
-      const data = await fetchSubServices();
-      setSubServices(data);
-    } catch (err) {
-      console.error('Error fetching sub services:', err);
-    }
-  };
-
-  const fetchContentPillarsData = async () => {
-    try {
-      const data = await fetchContentPillars();
-      setContentPillars(data);
-    } catch (err) {
-      console.error('Error fetching content pillars:', err);
-    }
-  };
+  const loading = 
+    contentPlansQuery.isLoading || 
+    contentTypesQuery.isLoading || 
+    teamMembersQuery.isLoading || 
+    servicesQuery.isLoading || 
+    subServicesQuery.isLoading || 
+    contentPillarsQuery.isLoading;
 
   return {
-    contentPlans,
-    contentTypes,
-    teamMembers,
-    services,
-    subServices,
-    contentPillars,
+    contentPlans: contentPlansQuery.data || [],
+    contentTypes: contentTypesQuery.data || [],
+    teamMembers: teamMembersQuery.data || [],
+    services: servicesQuery.data || [],
+    subServices: subServicesQuery.data || [],
+    contentPillars: contentPillarsQuery.data || [],
     loading,
-    error,
+    error: error || 
+      contentPlansQuery.error || 
+      contentTypesQuery.error || 
+      teamMembersQuery.error || 
+      servicesQuery.error || 
+      subServicesQuery.error || 
+      contentPillarsQuery.error,
     fetchContentPlans: fetchContentPlansData
   };
 }

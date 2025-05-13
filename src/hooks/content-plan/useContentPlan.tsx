@@ -5,6 +5,7 @@ import { ContentPlanHookReturn } from './types';
 import { useFetchContentPlan } from './hooks/useFetchContentPlan';
 import { useMutateContentPlan } from './hooks/useMutateContentPlan';
 import { useTeamMembersFilter } from './hooks/useTeamMembersFilter';
+import { useCallback, useMemo } from 'react';
 
 export function useContentPlan(): ContentPlanHookReturn {
   // Fetch content plan data
@@ -26,7 +27,7 @@ export function useContentPlan(): ContentPlanHookReturn {
     updateContentPlan,
     deleteContentPlan,
     resetRevisionCounter
-  } = useMutateContentPlan(fetchContentPlans);
+  } = useMutateContentPlan();
 
   // Team members filter hooks
   const {
@@ -36,8 +37,22 @@ export function useContentPlan(): ContentPlanHookReturn {
     getCreativeTeamMembers
   } = useTeamMembersFilter(teamMembers, subServices);
 
-  // Format content plans with computed fields
-  const contentPlans = getContentPlansWithFormattedData(rawContentPlans);
+  // Memoize content plans with computed fields
+  const contentPlans = useMemo(() => 
+    getContentPlansWithFormattedData(rawContentPlans),
+    [rawContentPlans]
+  );
+
+  // Memoize team member getter functions
+  const memoizedGetContentPlannerTeamMembers = useCallback(() => 
+    getContentPlannerTeamMembers(teamMembers),
+    [teamMembers, getContentPlannerTeamMembers]
+  );
+  
+  const memoizedGetCreativeTeamMembers = useCallback(() => 
+    getCreativeTeamMembers(teamMembers),
+    [teamMembers, getCreativeTeamMembers]
+  );
 
   return {
     contentPlans,
@@ -56,7 +71,7 @@ export function useContentPlan(): ContentPlanHookReturn {
     getFilteredSubServices,
     resetRevisionCounter,
     formatDisplayDate,
-    getContentPlannerTeamMembers: () => getContentPlannerTeamMembers(teamMembers),
-    getCreativeTeamMembers: () => getCreativeTeamMembers(teamMembers)
+    getContentPlannerTeamMembers: memoizedGetContentPlannerTeamMembers,
+    getCreativeTeamMembers: memoizedGetCreativeTeamMembers
   };
 }

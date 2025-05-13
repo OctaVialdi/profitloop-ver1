@@ -1,12 +1,13 @@
 
 import { toast } from "@/components/ui/use-toast";
+import { useCallback } from "react";
 
 export function useContentPlanMutations(
   addContentPlan: (data: any) => Promise<any>,
   updateContentPlan: (id: string, updates: any) => Promise<boolean>,
   deleteContentPlan: (id: string) => Promise<boolean>
 ) {
-  const handleAddRow = async () => {
+  const handleAddRow = useCallback(async () => {
     try {
       await addContentPlan({
         status: "",
@@ -29,9 +30,9 @@ export function useContentPlanMutations(
         description: "There was a problem adding a new row."
       });
     }
-  };
+  }, [addContentPlan]);
 
-  const handleDeleteSelected = async (selectedItems: string[]) => {
+  const handleDeleteSelected = useCallback(async (selectedItems: string[]) => {
     try {
       const deletePromises = selectedItems.map(id => deleteContentPlan(id));
       await Promise.all(deletePromises);
@@ -49,9 +50,9 @@ export function useContentPlanMutations(
       });
       return false;
     }
-  };
+  }, [deleteContentPlan]);
 
-  const handleDateChange = async (id: string, date: Date | undefined) => {
+  const handleDateChange = useCallback(async (id: string, date: Date | undefined) => {
     if (!date) return;
     try {
       await updateContentPlan(id, { post_date: date.toISOString() });
@@ -63,9 +64,9 @@ export function useContentPlanMutations(
         description: "There was a problem updating the date."
       });
     }
-  };
+  }, [updateContentPlan]);
 
-  const handleFieldChange = async (id: string, field: string, value: any) => {
+  const handleFieldChange = useCallback(async (id: string, field: string, value: any) => {
     try {
       const updates: any = { [field]: value };
       
@@ -95,10 +96,10 @@ export function useContentPlanMutations(
         description: "There was a problem updating the field."
       });
     }
-  };
+  }, [updateContentPlan]);
 
-  const handleBriefSubmit = async (id: string, content: string) => {
-    if (!id) return;
+  const handleBriefSubmit = useCallback(async (id: string, content: string) => {
+    if (!id) return false;
     try {
       await updateContentPlan(id, { brief: content });
       return true;
@@ -111,10 +112,10 @@ export function useContentPlanMutations(
       });
       return false;
     }
-  };
+  }, [updateContentPlan]);
 
-  const handleTitleSubmit = async (id: string, content: string) => {
-    if (!id) return;
+  const handleTitleSubmit = useCallback(async (id: string, content: string) => {
+    if (!id) return false;
     try {
       await updateContentPlan(id, { title: content });
       return true;
@@ -127,7 +128,7 @@ export function useContentPlanMutations(
       });
       return false;
     }
-  };
+  }, [updateContentPlan]);
 
   return {
     handleAddRow,

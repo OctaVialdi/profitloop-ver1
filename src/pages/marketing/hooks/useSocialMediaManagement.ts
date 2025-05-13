@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { ContentManager } from "../types/socialMedia";
 import { addMonths, subMonths } from "date-fns";
 
@@ -14,20 +14,21 @@ export const useSocialMediaManagement = () => {
   const [editingManager, setEditingManager] = useState<ContentManager | null>(null);
   const [targetValue, setTargetValue] = useState<string>("20");
   
-  const primaryTabs = [
+  // Memoize static data
+  const primaryTabs = useMemo(() => [
     { id: "content-planner", label: "Content Planner" },
     { id: "production", label: "Production" },
     { id: "content-post", label: "Content Post" }
-  ];
+  ], []);
 
-  const secondaryTabs = [
+  const secondaryTabs = useMemo(() => [
     { id: "dashboard", label: "Dashboard" },
     { id: "create-content", label: "Create Content" },
     { id: "content-bank", label: "Content Bank" },
     { id: "content-qc", label: "Content QC" }
-  ];
+  ], []);
 
-  const contentManagers: ContentManager[] = [
+  const contentManagers = useMemo(() => [
     {
       name: "John Doe",
       dailyTarget: 20,
@@ -68,9 +69,10 @@ export const useSocialMediaManagement = () => {
       effectiveRate: 88,
       score: 86
     }
-  ];
+  ], []);
 
-  const getTabTitle = () => {
+  // Memoize computed values
+  const getTabTitle = useCallback(() => {
     switch (activeTab) {
       case "content-planner":
         return "Target Quantity Content Planner";
@@ -81,27 +83,27 @@ export const useSocialMediaManagement = () => {
       default:
         return "Social Media Management";
     }
-  };
+  }, [activeTab]);
 
-  const handlePreviousMonth = () => {
-    setSelectedMonth(subMonths(selectedMonth, 1));
-  };
+  // Memoize handler functions
+  const handlePreviousMonth = useCallback(() => {
+    setSelectedMonth(prevMonth => subMonths(prevMonth, 1));
+  }, []);
 
-  const handleNextMonth = () => {
-    setSelectedMonth(addMonths(selectedMonth, 1));
-  };
+  const handleNextMonth = useCallback(() => {
+    setSelectedMonth(prevMonth => addMonths(prevMonth, 1));
+  }, []);
 
-  const handleEditTarget = (manager: ContentManager) => {
+  const handleEditTarget = useCallback((manager: ContentManager) => {
     setEditingManager(manager);
     setTargetValue(manager.monthlyTargetAdjusted.toString());
     setIsEditTargetOpen(true);
-  };
+  }, []);
 
-  const handleSaveTarget = () => {
-    // In a real app, you would update the manager's target here
+  const handleSaveTarget = useCallback(() => {
     setIsEditTargetOpen(false);
     setEditingManager(null);
-  };
+  }, []);
 
   return {
     activeTab,
