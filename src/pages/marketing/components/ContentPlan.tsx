@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
+import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,6 +34,14 @@ export function ContentPlan() {
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
   const [currentBrief, setCurrentBrief] = useState("");
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
+  
+  // For title editing
+  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
+  const [currentTitle, setCurrentTitle] = useState("");
+  
+  // For link post editing
+  const [isPostLinkDialogOpen, setIsPostLinkDialogOpen] = useState(false);
+  const [currentPostLink, setCurrentPostLink] = useState("");
 
   // For adding new rows
   const addNewRow = () => {
@@ -169,6 +176,34 @@ export function ContentPlan() {
       await handleFieldChange(currentItemId, 'brief', currentBrief);
     }
     setIsBriefDialogOpen(false);
+  };
+  
+  // Handle title dialog
+  const openTitleDialog = (id: string, title: string | null) => {
+    setCurrentItemId(id);
+    setCurrentTitle(title || "");
+    setIsTitleDialogOpen(true);
+  };
+  
+  const saveTitle = async () => {
+    if (currentItemId) {
+      await handleFieldChange(currentItemId, 'title', currentTitle);
+    }
+    setIsTitleDialogOpen(false);
+  };
+
+  // Handle post link dialog
+  const openPostLinkDialog = (id: string, postLink: string | null) => {
+    setCurrentItemId(id);
+    setCurrentPostLink(postLink || "");
+    setIsPostLinkDialogOpen(true);
+  };
+  
+  const savePostLink = async () => {
+    if (currentItemId) {
+      await handleFieldChange(currentItemId, 'post_link', currentPostLink);
+    }
+    setIsPostLinkDialogOpen(false);
   };
   
   // Format actual post date without time
@@ -311,9 +346,11 @@ export function ContentPlan() {
                           </Select>
                         </TableCell>
 
-                        {/* 7. Judul Content */}
+                        {/* 7. Judul Content - Modified to use dialog */}
                         <TableCell className="p-1 w-[180px]">
-                          <Input value={item.title || ""} onChange={e => handleFieldChange(item.id, 'title', e.target.value)} placeholder="Enter title" title={item.title || ""} className="w-full h-8 truncate" />
+                          <Button variant="ghost" size="sm" onClick={() => openTitleDialog(item.id, item.title)} className="w-full h-8 flex items-center justify-center gap-1 truncate">
+                            {item.title ? truncateText(item.title) : "Click to add title"}
+                          </Button>
                         </TableCell>
 
                         {/* 8. Content Pillar */}
@@ -411,9 +448,23 @@ export function ContentPlan() {
                           </Select>
                         </TableCell>
 
-                        {/* 18. Link Google Drive */}
+                        {/* 18. Link Google Drive - Modified to be clickable */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          <Input value={item.google_drive_link || ""} onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} placeholder="Enter link" className="w-full h-8 truncate" />
+                          <div className="flex gap-1">
+                            <Input 
+                              value={item.google_drive_link || ""} 
+                              onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
+                              placeholder="Enter link" 
+                              className="w-full h-8 truncate"
+                            />
+                            {item.google_drive_link && (
+                              <Button variant="outline" size="sm" className="h-8 flex-shrink-0" asChild>
+                                <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
 
                         {/* 19. Status Produksi */}
@@ -468,14 +519,45 @@ export function ContentPlan() {
                             </Button>}
                         </TableCell>
 
-                        {/* 25. Link Post */}
+                        {/* 25. Link Post - Modified to use single field with view/edit */}
                         <TableCell className="p-1 w-[150px]">
-                          <Input value={item.post_link || ""} onChange={e => handleFieldChange(item.id, 'post_link', e.target.value)} placeholder="Enter post link" className="w-full h-8 truncate" />
-                          {item.post_link && <Button variant="outline" size="sm" className="mt-1 w-full h-7" asChild>
-                              <a href={item.post_link} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-3 w-3 mr-1" /> View
-                              </a>
-                            </Button>}
+                          <div className="flex flex-col gap-1">
+                            {item.post_link ? (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full h-8 flex items-center justify-between"
+                                onClick={() => openPostLinkDialog(item.id, item.post_link)}
+                              >
+                                <div className="truncate flex-1 text-left" title={item.post_link}>
+                                  {truncateText(item.post_link, 15)}
+                                </div>
+                                <div className="flex gap-1">
+                                  <a 
+                                    href={item.post_link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="p-1 hover:bg-accent rounded"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                  <div className="p-1 hover:bg-accent rounded">
+                                    <Pencil className="h-3 w-3" />
+                                  </div>
+                                </div>
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="w-full h-8"
+                                onClick={() => openPostLinkDialog(item.id, null)}
+                              >
+                                Add post link
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
 
                         {/* 26. Done */}
@@ -529,6 +611,20 @@ export function ContentPlan() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Textarea value={currentBrief} onChange={e => setCurrentBrief(e.target.value)} placeholder="Enter brief content..." className="min-h-[200px]" />
+            {extractGoogleDocsLink(currentBrief) && (
+              <div className="p-4 border rounded-md">
+                <div className="mb-2 font-medium">Detected link:</div>
+                <a 
+                  href={extractGoogleDocsLink(currentBrief)!} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline flex items-center gap-2"
+                >
+                  {truncateText(extractGoogleDocsLink(currentBrief)!, 40)}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsBriefDialogOpen(false)}>
@@ -540,6 +636,69 @@ export function ContentPlan() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Title Dialog */}
+      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Title</DialogTitle>
+            <DialogDescription>
+              Enter the content title below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea value={currentTitle} onChange={e => setCurrentTitle(e.target.value)} placeholder="Enter content title..." className="min-h-[100px]" />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsTitleDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={saveTitle}>
+              Save Title
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Post Link Dialog */}
+      <Dialog open={isPostLinkDialogOpen} onOpenChange={setIsPostLinkDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Post Link</DialogTitle>
+            <DialogDescription>
+              Enter the post link URL below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input 
+              value={currentPostLink} 
+              onChange={e => setCurrentPostLink(e.target.value)} 
+              placeholder="Enter post link URL..."
+            />
+            {currentPostLink && (
+              <div className="p-4 border rounded-md">
+                <div className="mb-2 font-medium">Preview:</div>
+                <a 
+                  href={currentPostLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline flex items-center gap-2"
+                >
+                  {truncateText(currentPostLink, 40)}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsPostLinkDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={savePostLink}>
+              Save Link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>;
 }
-
