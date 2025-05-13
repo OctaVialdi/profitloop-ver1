@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
@@ -213,7 +214,7 @@ export function ContentPlan() {
                     <TableHead className="text-center whitespace-nowrap w-[150px] border-r">Sub Layanan</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[180px] border-r">Judul Content</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px] border-r">Content Pillar</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[120px] border-r">Brief</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[150px] border-r">Brief</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px] border-r">Status</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[100px] border-r">Revision</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[100px] border-r">Approved</TableHead>
@@ -229,7 +230,7 @@ export function ContentPlan() {
                     <TableHead className="text-center whitespace-nowrap w-[100px] border-r">Approved</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[160px] border-r">Tanggal Approved</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[150px] border-r">Download Link File</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[150px] border-r">Link Post</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[180px] border-r">Link Post</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[80px] border-r">Done</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[160px] border-r">Actual Post</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px] border-r">On Time Status</TableHead>
@@ -342,26 +343,25 @@ export function ContentPlan() {
                           </Select>
                         </TableCell>
 
-                        {/* 9. Brief - Modified to use a single field with link detection */}
-                        <TableCell className="p-1 w-[120px] border-r">
-                          <div className="flex flex-col gap-1">
+                        {/* 9. Brief - Modified to use a single field with integrated link button */}
+                        <TableCell className="p-1 w-[150px] border-r">
+                          <div className="flex items-center gap-1">
                             <Button 
                               variant="ghost" 
-                              size="sm" 
-                              onClick={() => openBriefDialog(item.id, item.brief)} 
-                              className="w-full h-8 flex items-center justify-start px-3 hover:bg-gray-50 truncate text-left"
+                              className="flex-grow h-8 flex items-center justify-start px-3 hover:bg-gray-50 truncate text-left"
+                              onClick={() => openBriefDialog(item.id, item.brief)}
                             >
                               {item.brief ? truncateText(item.brief) : "Add brief"}
                             </Button>
                             {extractLink(item.brief) && (
                               <Button 
                                 size="sm" 
-                                variant="outline" 
-                                className="w-full h-7 text-xs"
+                                variant="ghost" 
+                                className="h-8 px-2 flex-shrink-0" 
                                 asChild
                               >
                                 <a href={extractLink(item.brief)!} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-3 w-3 mr-1" /> Open Link
+                                  <ExternalLink className="h-4 w-4" />
                                 </a>
                               </Button>
                             )}
@@ -438,29 +438,27 @@ export function ContentPlan() {
                           </Select>
                         </TableCell>
 
-                        {/* 18. Link Google Drive - Modified to use a single field with view button */}
+                        {/* 18. Link Google Drive - Modified to use a single field */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px] border-r">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1">
-                              <Input 
-                                value={item.google_drive_link || ""} 
-                                onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
-                                placeholder="Enter link" 
-                                className="w-full h-8 text-xs" 
-                              />
-                              {item.google_drive_link && (
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  className="h-8 px-2 flex-shrink-0" 
-                                  asChild
-                                >
-                                  <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
+                          <div className="flex items-center gap-1">
+                            <Input 
+                              value={item.google_drive_link || ""} 
+                              onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
+                              placeholder="Enter link" 
+                              className="w-full h-8 text-xs" 
+                            />
+                            {item.google_drive_link && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 px-2 flex-shrink-0" 
+                                asChild
+                              >
+                                <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
 
@@ -516,29 +514,27 @@ export function ContentPlan() {
                             </Button>}
                         </TableCell>
 
-                        {/* 25. Link Post - Modified to use a single field with view button */}
-                        <TableCell className="p-1 w-[150px] border-r">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1">
-                              <Input 
-                                value={item.post_link || ""} 
-                                onChange={e => handleFieldChange(item.id, 'post_link', e.target.value)} 
-                                placeholder="Enter post link" 
-                                className="w-full h-8 text-xs" 
-                              />
-                              {item.post_link && (
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  className="h-8 px-2 flex-shrink-0" 
-                                  asChild
-                                >
-                                  <a href={item.post_link} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
+                        {/* 25. Link Post - Modified to use a single field with improved width */}
+                        <TableCell className="p-1 w-[180px] border-r">
+                          <div className="flex items-center gap-1">
+                            <Input 
+                              value={item.post_link || ""} 
+                              onChange={e => handleFieldChange(item.id, 'post_link', e.target.value)} 
+                              placeholder="Enter post link" 
+                              className="w-full h-8 text-xs" 
+                            />
+                            {item.post_link && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 px-2 flex-shrink-0" 
+                                asChild
+                              >
+                                <a href={item.post_link} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
 
@@ -629,3 +625,4 @@ export function ContentPlan() {
       </Dialog>
     </div>;
 }
+
