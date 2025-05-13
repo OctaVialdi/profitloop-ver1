@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
@@ -36,6 +35,7 @@ export interface ContentPlanItem {
   status_content: string | null;
   created_at: string;
   updated_at: string;
+  on_time_status?: string;
 }
 
 interface ContentType {
@@ -311,6 +311,36 @@ export function useContentPlan() {
     return updateContentPlan(id, { [field]: 0 });
   };
 
+  const handleStatusChange = async (id: string, status: string) => {
+    const updates: Partial<ContentPlanItem> = { status };
+    
+    // Set completion date if status is "Butuh Di Review"
+    if (status === "Butuh Di Review") {
+      updates.completion_date = new Date().toISOString();
+    } else if (status === "") {
+      updates.completion_date = null;
+    }
+    
+    await updateContentPlan(id, updates);
+  };
+
+  const handleProductionStatusChange = async (id: string, status: string) => {
+    const updates: Partial<ContentPlanItem> = { production_status: status };
+    
+    // Set production completion date if status is "Butuh Di Review"
+    if (status === "Butuh Di Review") {
+      updates.production_completion_date = new Date().toISOString();
+    } else if (status === "") {
+      updates.production_completion_date = null;
+    }
+    
+    await updateContentPlan(id, updates);
+  };
+
+  const handleStatusContentChange = async (id: string, status: string) => {
+    await updateContentPlan(id, { status_content: status });
+  };
+
   return {
     contentPlans: getContentPlansWithFormattedData(),
     contentTypes,
@@ -326,6 +356,9 @@ export function useContentPlan() {
     deleteContentPlan,
     getFilteredTeamMembers,
     getFilteredSubServices,
-    resetRevisionCounter
+    resetRevisionCounter,
+    handleStatusChange,
+    handleProductionStatusChange,
+    handleStatusContentChange
   };
 }
