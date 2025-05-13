@@ -2,6 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 export const ContentPlan = () => {
   // Sample data for the content plan
@@ -14,33 +16,48 @@ export const ContentPlan = () => {
     { id: 6, title: 'Behind the Scenes', platform: 'Instagram', date: '2025-05-25', status: 'Draft' },
   ];
 
+  const getStatusBadgeStyle = (status) => {
+    switch(status) {
+      case 'Scheduled':
+        return 'bg-blue-100 text-blue-700';
+      case 'Draft':
+        return 'bg-gray-100 text-gray-700';
+      case 'In Review':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'Approved':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   return (
     <div className="p-4">
       <ScrollArea className="h-[400px]">
-        <div className="space-y-4">
-          {contentItems.map((item) => (
-            <Card key={item.id} className="border border-gray-200">
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">{item.title}</h3>
-                    <p className="text-sm text-gray-500">{item.platform} • {item.date}</p>
-                  </div>
-                  <div>
-                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                      item.status === 'Scheduled' ? 'bg-blue-100 text-blue-700' :
-                      item.status === 'Draft' ? 'bg-gray-100 text-gray-700' :
-                      item.status === 'In Review' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-green-100 text-green-700'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Platform</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {contentItems.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{item.title}</TableCell>
+                <TableCell>{item.platform}</TableCell>
+                <TableCell>{item.date}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusBadgeStyle(item.status)} variant="outline">
+                    {item.status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </ScrollArea>
     </div>
   );
