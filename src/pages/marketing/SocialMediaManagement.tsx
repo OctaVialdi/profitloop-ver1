@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Card, 
@@ -41,7 +42,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import ContentPlan from "./components/ContentPlan";
+import { ContentPlan } from "./components/ContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ContentManager {
