@@ -299,14 +299,14 @@ export function ContentPlan() {
                     {/* 3. Tipe Content */}
                     <TableCell>
                       <Select 
-                        value={item.content_type_id || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'content_type_id', value)}
+                        value={item.content_type_id || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'content_type_id', value === "none" ? "" : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           {contentTypes.map((type) => (
                             <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
                           ))}
@@ -317,14 +317,14 @@ export function ContentPlan() {
                     {/* 4. PIC */}
                     <TableCell>
                       <Select 
-                        value={item.pic_id || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'pic_id', value)}
+                        value={item.pic_id || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'pic_id', value === "none" ? "" : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           {getFilteredTeamMembers("Content Planner").map((member) => (
                             <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
                           ))}
@@ -335,14 +335,14 @@ export function ContentPlan() {
                     {/* 5. Layanan */}
                     <TableCell>
                       <Select 
-                        value={item.service_id || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'service_id', value)}
+                        value={item.service_id || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'service_id', value === "none" ? "" : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           {services.map((service) => (
                             <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
                           ))}
@@ -353,15 +353,15 @@ export function ContentPlan() {
                     {/* 6. Sub Layanan */}
                     <TableCell>
                       <Select 
-                        value={item.sub_service_id || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'sub_service_id', value)}
+                        value={item.sub_service_id || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'sub_service_id', value === "none" ? "" : value)}
                         disabled={!item.service_id}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           {item.service_id && getFilteredSubServices(item.service_id).map((subService) => (
                             <SelectItem key={subService.id} value={subService.id}>{subService.name}</SelectItem>
                           ))}
@@ -383,14 +383,14 @@ export function ContentPlan() {
                     {/* 8. Content Pillar */}
                     <TableCell>
                       <Select 
-                        value={item.content_pillar_id || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'content_pillar_id', value)}
+                        value={item.content_pillar_id || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'content_pillar_id', value === "none" ? "" : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           {contentPillars.map((pillar) => (
                             <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
                           ))}
@@ -425,14 +425,14 @@ export function ContentPlan() {
                     {/* 10. Status */}
                     <TableCell>
                       <Select 
-                        value={item.status || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'status', value)}
+                        value={item.status || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'status', value === "none" ? "" : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
                           <SelectItem value="Request Revisi">Request Revisi</SelectItem>
                         </SelectContent>
@@ -478,7 +478,7 @@ export function ContentPlan() {
 
                     {/* 15. Tipe Content (Mirror) */}
                     <TableCell className="text-center">
-                      {item.content_type || "-"}
+                      {item.content_type?.name || item.content_type || "-"}
                     </TableCell>
 
                     {/* 16. Judul Content (Mirror) */}
@@ -491,14 +491,14 @@ export function ContentPlan() {
                     {/* 17. PIC Produksi */}
                     <TableCell>
                       <Select 
-                        value={item.pic_production_id || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'pic_production_id', value)}
+                        value={item.pic_production_id || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'pic_production_id', value === "none" ? "" : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           {getFilteredTeamMembers("Creative").filter(m => m.role === "Produksi").map((member) => (
                             <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
                           ))}
@@ -519,14 +519,14 @@ export function ContentPlan() {
                     {/* 19. Status Produksi */}
                     <TableCell>
                       <Select 
-                        value={item.production_status || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'production_status', value)}
+                        value={item.production_status || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'production_status', value === "none" ? "" : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
                           <SelectItem value="Request Revisi">Request Revisi</SelectItem>
                         </SelectContent>
@@ -629,14 +629,14 @@ export function ContentPlan() {
                     {/* 29. Status Content */}
                     <TableCell>
                       <Select 
-                        value={item.status_content || ""} 
-                        onValueChange={(value) => handleFieldChange(item.id, 'status_content', value)}
+                        value={item.status_content || "none"} 
+                        onValueChange={(value) => handleFieldChange(item.id, 'status_content', value === "none" ? "" : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           <SelectItem value="Recomended For Ads">Recomended For Ads</SelectItem>
                           <SelectItem value="Cancel">Cancel</SelectItem>
                         </SelectContent>
