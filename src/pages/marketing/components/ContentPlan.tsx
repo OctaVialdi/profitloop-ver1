@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 export function ContentPlan() {
   const {
     contentPlans,
@@ -191,12 +192,12 @@ export function ContentPlan() {
       <div className="rounded-md border overflow-hidden">
         <div className="h-[600px] overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="min-w-[2000px] table-fixed">
-              <Table className="w-full">
+            <div className="min-w-[3200px]">
+              <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow>
                     <TableHead className="text-center whitespace-nowrap sticky left-0 bg-white z-20 w-[60px]">Action</TableHead>
-                    <TableHead className="text-center whitespace-nowrap w-[160px]">Tanggal Posting</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[180px]">Tanggal Posting</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">Layanan</TableHead>
@@ -240,7 +241,7 @@ export function ContentPlan() {
                         </TableCell>
 
                         {/* 2. Tanggal Posting */}
-                        <TableCell className="whitespace-nowrap p-1 w-[160px]">
+                        <TableCell className="whitespace-nowrap p-1 w-[180px]">
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button variant="outline" size="sm" className="w-full h-8">
