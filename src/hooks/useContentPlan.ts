@@ -80,10 +80,10 @@ export function useContentPlan() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
-  const { currentOrganization } = useOrganization();
+  const { organization } = useOrganization();
 
   useEffect(() => {
-    if (currentOrganization?.id) {
+    if (organization?.id) {
       fetchContentPlans();
       fetchContentTypes();
       fetchTeamMembers();
@@ -91,7 +91,7 @@ export function useContentPlan() {
       fetchSubServices();
       fetchContentPillars();
     }
-  }, [currentOrganization]);
+  }, [organization]);
 
   const fetchContentPlans = async () => {
     try {
@@ -107,7 +107,7 @@ export function useContentPlan() {
           pic:pic_id(name),
           pic_production:pic_production_id(name)
         `)
-        .eq('organization_id', currentOrganization?.id)
+        .eq('organization_id', organization?.id)
         .order('post_date');
 
       if (error) throw error;
@@ -230,7 +230,7 @@ export function useContentPlan() {
       // Include the organization ID in the new plan
       const planWithOrgId = {
         ...newPlan,
-        organization_id: currentOrganization?.id
+        organization_id: organization?.id
       };
       
       const { data, error } = await supabase
@@ -264,7 +264,7 @@ export function useContentPlan() {
         .from('content_plans')
         .update(updates)
         .eq('id', id)
-        .eq('organization_id', currentOrganization?.id);
+        .eq('organization_id', organization?.id);
 
       if (error) throw error;
       
@@ -292,7 +292,7 @@ export function useContentPlan() {
         .from('content_plans')
         .delete()
         .eq('id', id)
-        .eq('organization_id', currentOrganization?.id);
+        .eq('organization_id', organization?.id);
 
       if (error) throw error;
       
