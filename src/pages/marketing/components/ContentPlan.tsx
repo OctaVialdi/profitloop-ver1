@@ -22,7 +22,7 @@ import { useEmployeesByPosition } from "@/hooks/useEmployeesByPosition";
 import { format } from "date-fns";
 
 export const ContentPlan: React.FC = () => {
-  const { contentItems, isLoading: isLoadingContent } = useContentPlan();
+  const { contentPlans, loading: isLoading } = useContentPlan();
   const { employees: contentPlanners, isLoading: isLoadingContentPlanners } = useEmployeesByPosition("Content Planner");
   const { employees: creatives, isLoading: isLoadingCreatives } = useEmployeesByPosition("Creative");
   
@@ -67,7 +67,7 @@ export const ContentPlan: React.FC = () => {
           </div>
         </div>
       
-        {isLoadingContent ? (
+        {isLoading ? (
           <div className="flex items-center justify-center h-40">
             <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
@@ -85,12 +85,12 @@ export const ContentPlan: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contentItems.length === 0 ? (
+              {contentPlans.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-4">No content plan items found</TableCell>
                 </TableRow>
               ) : (
-                contentItems.map((item) => (
+                contentPlans.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
                       {item.post_date ? format(new Date(item.post_date), 'dd MMM yyyy') : 'Not set'}
