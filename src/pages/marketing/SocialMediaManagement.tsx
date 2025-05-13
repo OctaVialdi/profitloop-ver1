@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { PrimaryTabNavigation } from "@/components/marketing/social-media/PrimaryTabNavigation";
 import { SecondaryTabNavigation } from "@/components/marketing/social-media/SecondaryTabNavigation";
-import { TargetQuantityTable } from "@/components/marketing/social-media/TargetQuantityTable";
+import { TargetQuantityCard } from "@/components/marketing/social-media/TargetQuantityCard";
 import { EditTargetDialog } from "@/components/marketing/social-media/EditTargetDialog";
 import { useTargetManagement } from "@/hooks/useTargetManagement";
 import { format } from "date-fns";
@@ -113,19 +114,6 @@ const SocialMediaManagement = () => {
     }
   }, [location.pathname]);
 
-  const getTabTitle = () => {
-    switch (activeTab) {
-      case "content-planner":
-        return "Target Quantity Content Planner";
-      case "production":
-        return "Target Quantity Production Team";
-      case "content-post":
-        return "Target Quantity Post Content";
-      default:
-        return "Social Media Management";
-    }
-  };
-
   // Get subservices for a specific service
   const getSubServicesForService = (serviceId: string) => {
     return subServices.filter(subService => subService.serviceId === serviceId);
@@ -140,27 +128,21 @@ const SocialMediaManagement = () => {
         setActiveTab={setActiveTab}
       />
 
-      {/* Content Section */}
-      <Card className="w-full border shadow-sm">
-        <CardHeader className="pb-2 pt-3">
-          <CardTitle className="text-lg">{getTabTitle()}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <TargetQuantityTable 
-            contentManagers={contentManagers}
-            selectedDate={selectedDate}
-            selectedMonth={selectedMonth}
-            isCalendarOpen={isCalendarOpen}
-            isMonthSelectorOpen={isMonthSelectorOpen}
-            setIsCalendarOpen={setIsCalendarOpen}
-            setIsMonthSelectorOpen={setIsMonthSelectorOpen}
-            handleEditTarget={handleEditTarget}
-            setSelectedDate={setSelectedDate}
-            setSelectedMonth={setSelectedMonth}
-            renderMonthCalendar={renderMonthCalendar}
-          />
-        </CardContent>
-      </Card>
+      {/* Content Section - Target Quantity Card */}
+      <TargetQuantityCard
+        contentManagers={contentManagers}
+        selectedDate={selectedDate}
+        selectedMonth={selectedMonth}
+        isCalendarOpen={isCalendarOpen}
+        isMonthSelectorOpen={isMonthSelectorOpen}
+        setIsCalendarOpen={setIsCalendarOpen}
+        setIsMonthSelectorOpen={setIsMonthSelectorOpen}
+        handleEditTarget={handleEditTarget}
+        setSelectedDate={setSelectedDate}
+        setSelectedMonth={setSelectedMonth}
+        renderMonthCalendar={renderMonthCalendar}
+        activeTab={activeTab}
+      />
 
       {/* Pagination */}
       <div className="flex justify-end">
