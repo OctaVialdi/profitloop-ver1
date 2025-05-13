@@ -2,9 +2,9 @@
 import React from "react";
 import ContentPlan from "./components/ContentPlan";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import EngagementAnalysis from "./components/EngagementAnalysis";
-import ConversionMetrics from "./components/ConversionMetrics";
-import RoiAnalysis from "./components/RoiAnalysis";
+import { EngagementAnalysis } from "./components/EngagementAnalysis";
+import { ConversionMetrics } from "./components/ConversionMetrics";
+import { RoiAnalysis } from "./components/RoiAnalysis";
 
 export default function SocialMediaManagement() {
   return (
@@ -29,15 +29,15 @@ export default function SocialMediaManagement() {
         </TabsContent>
         
         <TabsContent value="engagement" className="mt-4">
-          <EngagementAnalysis />
+          <EngagementAnalysis timeFilter="month" />
         </TabsContent>
         
         <TabsContent value="conversion" className="mt-4">
-          <ConversionMetrics />
+          <ConversionMetrics timeFilter="month" />
         </TabsContent>
         
         <TabsContent value="roi" className="mt-4">
-          <RoiAnalysis />
+          <RoiAnalysis timeFilter="month" />
         </TabsContent>
       </Tabs>
     </div>

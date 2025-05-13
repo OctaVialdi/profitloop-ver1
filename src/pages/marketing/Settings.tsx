@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { ServicesTab } from "./settings/ServicesTab";
 import { SubServicesTab } from "./settings/SubServicesTab";
-import { TeamMembersTab } from "./settings/TeamMembersTab";
+import TeamMembersTab from "./settings/TeamMembersTab";
 import { ContentTypesTab } from "./settings/ContentTypesTab";
 import { ContentPillarsTab } from "./settings/ContentPillarsTab";
 
