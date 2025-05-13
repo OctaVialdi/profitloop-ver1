@@ -1,10 +1,8 @@
 
 import React from "react";
 import { TableBody } from "@/components/ui/table";
-import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from "@/hooks/content-plan";
 import ContentPlanTableRow from "../table-row";
-import ContentPlanEmptyState from "./ContentPlanEmptyState";
-import ContentPlanLoadingState from "./ContentPlanLoadingState";
+import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from "@/hooks/content-plan";
 
 interface ContentPlanTableBodyProps {
   contentPlans: ContentPlanItem[];
@@ -50,7 +48,11 @@ export default function ContentPlanTableBody({
   if (loading) {
     return (
       <TableBody>
-        <ContentPlanLoadingState />
+        <tr>
+          <td colSpan={29} className="h-24 text-center">
+            Loading content plan data...
+          </td>
+        </tr>
       </TableBody>
     );
   }
@@ -58,14 +60,18 @@ export default function ContentPlanTableBody({
   if (contentPlans.length === 0) {
     return (
       <TableBody>
-        <ContentPlanEmptyState />
+        <tr>
+          <td colSpan={29} className="h-24 text-center">
+            No content plans found. Click "Add Row" to create one.
+          </td>
+        </tr>
       </TableBody>
     );
   }
 
   return (
     <TableBody>
-      {contentPlans.map((item: ContentPlanItem) => (
+      {contentPlans.map(item => (
         <ContentPlanTableRow
           key={item.id}
           item={item}
