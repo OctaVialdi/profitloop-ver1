@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useFilteredEmployees } from "@/hooks/useFilteredEmployees";
 import {
   Select,
   SelectContent,
@@ -14,6 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export function TeamMembersTab() {
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
@@ -23,6 +32,9 @@ export function TeamMembersTab() {
   const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Use our custom hook to get employees that belong to Digital Marketing
+  const { employees: digitalMarketingEmployees, isLoading: isLoadingEmployees } = useFilteredEmployees("Digital Marketing");
 
   useEffect(() => {
     fetchTeamMembers();
@@ -165,6 +177,7 @@ export function TeamMembersTab() {
 
         <Card>
           <CardContent className="p-4">
+            <h3 className="font-medium text-lg mb-4">Team Members</h3>
             {filteredTeamMembers.length === 0 ? (
               <p className="text-sm text-muted-foreground">No team members found in this category.</p>
             ) : (
@@ -188,6 +201,38 @@ export function TeamMembersTab() {
                   </li>
                 ))}
               </ul>
+            )}
+
+            <h3 className="font-medium text-lg my-6">Digital Marketing Employees</h3>
+            
+            {isLoadingEmployees ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                <span className="ml-2">Loading employees...</span>
+              </div>
+            ) : digitalMarketingEmployees.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No Digital Marketing employees found.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Employee Name</TableHead>
+                    <TableHead>Organization</TableHead>
+                    <TableHead>Job Position</TableHead>
+                    <TableHead>Job Level</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {digitalMarketingEmployees.map((employee) => (
+                    <TableRow key={employee.id}>
+                      <TableCell className="font-medium">{employee.name}</TableCell>
+                      <TableCell>{employee.organization || employee.organization_name}</TableCell>
+                      <TableCell>{employee.jobPosition || employee.job_position}</TableCell>
+                      <TableCell>{employee.jobLevel || employee.job_level}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
