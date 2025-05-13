@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContentPlanItem, useContentPlan } from "@/hooks/useContentPlan";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 export function ContentPlan() {
   const {
     contentPlans,
@@ -34,11 +33,11 @@ export function ContentPlan() {
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
   const [currentBrief, setCurrentBrief] = useState("");
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
-  
+
   // For title editing
   const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
   const [currentTitle, setCurrentTitle] = useState("");
-  
+
   // For link post editing
   const [isPostLinkDialogOpen, setIsPostLinkDialogOpen] = useState(false);
   const [currentPostLink, setCurrentPostLink] = useState("");
@@ -177,14 +176,13 @@ export function ContentPlan() {
     }
     setIsBriefDialogOpen(false);
   };
-  
+
   // Handle title dialog
   const openTitleDialog = (id: string, title: string | null) => {
     setCurrentItemId(id);
     setCurrentTitle(title || "");
     setIsTitleDialogOpen(true);
   };
-  
   const saveTitle = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, 'title', currentTitle);
@@ -198,14 +196,13 @@ export function ContentPlan() {
     setCurrentPostLink(postLink || "");
     setIsPostLinkDialogOpen(true);
   };
-  
   const savePostLink = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, 'post_link', currentPostLink);
     }
     setIsPostLinkDialogOpen(false);
   };
-  
+
   // Format actual post date without time
   const formatActualPostDate = (dateString: string | null) => {
     if (!dateString) return "";
@@ -217,7 +214,6 @@ export function ContentPlan() {
       return dateString || "";
     }
   };
-  
   return <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -451,19 +447,12 @@ export function ContentPlan() {
                         {/* 18. Link Google Drive - Modified to be clickable */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px]">
                           <div className="flex gap-1">
-                            <Input 
-                              value={item.google_drive_link || ""} 
-                              onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
-                              placeholder="Enter link" 
-                              className="w-full h-8 truncate"
-                            />
-                            {item.google_drive_link && (
-                              <Button variant="outline" size="sm" className="h-8 flex-shrink-0" asChild>
+                            <Input value={item.google_drive_link || ""} onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} placeholder="Enter link" className="w-full h-8 truncate" />
+                            {item.google_drive_link && <Button variant="outline" size="sm" className="h-8 flex-shrink-0" asChild>
                                 <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="h-4 w-4" />
                                 </a>
-                              </Button>
-                            )}
+                              </Button>}
                           </div>
                         </TableCell>
 
@@ -522,41 +511,21 @@ export function ContentPlan() {
                         {/* 25. Link Post - Modified to use single field with view/edit */}
                         <TableCell className="p-1 w-[150px]">
                           <div className="flex flex-col gap-1">
-                            {item.post_link ? (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full h-8 flex items-center justify-between"
-                                onClick={() => openPostLinkDialog(item.id, item.post_link)}
-                              >
+                            {item.post_link ? <Button variant="outline" size="sm" className="w-full h-8 flex items-center justify-between" onClick={() => openPostLinkDialog(item.id, item.post_link)}>
                                 <div className="truncate flex-1 text-left" title={item.post_link}>
                                   {truncateText(item.post_link, 15)}
                                 </div>
                                 <div className="flex gap-1">
-                                  <a 
-                                    href={item.post_link} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="p-1 hover:bg-accent rounded"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
+                                  <a href={item.post_link} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-accent rounded" onClick={e => e.stopPropagation()}>
                                     <ExternalLink className="h-3 w-3" />
                                   </a>
                                   <div className="p-1 hover:bg-accent rounded">
                                     <Pencil className="h-3 w-3" />
                                   </div>
                                 </div>
-                              </Button>
-                            ) : (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="w-full h-8"
-                                onClick={() => openPostLinkDialog(item.id, null)}
-                              >
+                              </Button> : <Button variant="ghost" size="sm" className="w-full h-8" onClick={() => openPostLinkDialog(item.id, null)}>
                                 Add post link
-                              </Button>
-                            )}
+                              </Button>}
                           </div>
                         </TableCell>
 
@@ -611,20 +580,13 @@ export function ContentPlan() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Textarea value={currentBrief} onChange={e => setCurrentBrief(e.target.value)} placeholder="Enter brief content..." className="min-h-[200px]" />
-            {extractGoogleDocsLink(currentBrief) && (
-              <div className="p-4 border rounded-md">
+            {extractGoogleDocsLink(currentBrief) && <div className="p-4 border rounded-md">
                 <div className="mb-2 font-medium">Detected link:</div>
-                <a 
-                  href={extractGoogleDocsLink(currentBrief)!} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline flex items-center gap-2"
-                >
+                <a href={extractGoogleDocsLink(currentBrief)!} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-2">
                   {truncateText(extractGoogleDocsLink(currentBrief)!, 40)}
                   <ExternalLink className="h-4 w-4" />
                 </a>
-              </div>
-            )}
+              </div>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsBriefDialogOpen(false)}>
@@ -670,25 +632,14 @@ export function ContentPlan() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Input 
-              value={currentPostLink} 
-              onChange={e => setCurrentPostLink(e.target.value)} 
-              placeholder="Enter post link URL..."
-            />
-            {currentPostLink && (
-              <div className="p-4 border rounded-md">
+            <Input value={currentPostLink} onChange={e => setCurrentPostLink(e.target.value)} placeholder="Enter post link URL..." />
+            {currentPostLink && <div className="p-4 border rounded-md">
                 <div className="mb-2 font-medium">Preview:</div>
-                <a 
-                  href={currentPostLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline flex items-center gap-2"
-                >
+                <a href={currentPostLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-2">
                   {truncateText(currentPostLink, 40)}
                   <ExternalLink className="h-4 w-4" />
                 </a>
-              </div>
-            )}
+              </div>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsPostLinkDialogOpen(false)}>
