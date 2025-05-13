@@ -165,7 +165,9 @@ export function TeamMembersTab() {
 
         <Card>
           <CardContent className="p-4">
-            {filteredTeamMembers.length === 0 ? (
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading team members...</p>
+            ) : filteredTeamMembers.length === 0 ? (
               <p className="text-sm text-muted-foreground">No team members found in this category.</p>
             ) : (
               <ul className="space-y-2">
