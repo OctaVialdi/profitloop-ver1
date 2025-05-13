@@ -76,7 +76,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
             duration: 0.15,
             ease: "easeInOut"
           }}
-          className="will-change-transform w-full"
+          className="pb-4 will-change-transform w-full"
         >
           {children}
         </motion.div>
