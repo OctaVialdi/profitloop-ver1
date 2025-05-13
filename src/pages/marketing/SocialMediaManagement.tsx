@@ -295,7 +295,6 @@ const SocialMediaManagement = () => {
     switch (activeSubTab) {
       case "dashboard":
         return <Card className="w-full">
-            
             <CardContent className="p-0">
               <ContentPlan />
             </CardContent>
@@ -313,7 +312,9 @@ const SocialMediaManagement = () => {
           </Card>;
     }
   };
-  return <div className="w-full space-y-4">
+  
+  return (
+    <div className="w-full space-y-4">
       {/* Primary Tab Navigation - Updated to be more compact */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
@@ -409,6 +410,8 @@ const SocialMediaManagement = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 };
+
 export default SocialMediaManagement;

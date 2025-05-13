@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -494,14 +493,14 @@ export const ContentPlan = () => {
                       {/* 10. Status */}
                       <TableCell className="py-2">
                         <Select 
-                          value={plan.status || ""} 
-                          onValueChange={(value) => handleStatusChange(plan.id, value)}
+                          value={plan.status || "none"} 
+                          onValueChange={(value) => handleStatusChange(plan.id, value === "none" ? "" : value)}
                         >
                           <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="-" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">-</SelectItem>
+                            <SelectItem value="none">-</SelectItem>
                             <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
                             <SelectItem value="Request Revisi">Request Revisi</SelectItem>
                           </SelectContent>
@@ -585,14 +584,14 @@ export const ContentPlan = () => {
                       {/* 19. Status Produksi */}
                       <TableCell className="py-2">
                         <Select 
-                          value={plan.production_status || ""} 
-                          onValueChange={(value) => handleProductionStatusChange(plan.id, value)}
+                          value={plan.production_status || "none"} 
+                          onValueChange={(value) => handleProductionStatusChange(plan.id, value === "none" ? "" : value)}
                         >
                           <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="-" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">-</SelectItem>
+                            <SelectItem value="none">-</SelectItem>
                             <SelectItem value="Butuh Di Review">Butuh Di Review</SelectItem>
                             <SelectItem value="Request Revisi">Request Revisi</SelectItem>
                           </SelectContent>
@@ -679,14 +678,14 @@ export const ContentPlan = () => {
                       {/* 29. Status Content */}
                       <TableCell className="py-2">
                         <Select 
-                          value={plan.status_content || ""} 
-                          onValueChange={(value) => handleStatusContentChange(plan.id, value)}
+                          value={plan.status_content || "none"} 
+                          onValueChange={(value) => handleStatusContentChange(plan.id, value === "none" ? "" : value)}
                         >
                           <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="-" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">-</SelectItem>
+                            <SelectItem value="none">-</SelectItem>
                             <SelectItem value="Recomended For Ads">Recomended For Ads</SelectItem>
                             <SelectItem value="Cancel">Cancel</SelectItem>
                           </SelectContent>
