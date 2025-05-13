@@ -1,7 +1,6 @@
-
-import React, { useState, useCallback, useEffect } from "react";
-import { format, isSameDay } from 'date-fns';
-import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link, Edit, Eye } from "lucide-react";
+import React, { useState } from "react";
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,11 +34,6 @@ export function ContentPlan() {
   const [isBriefDialogOpen, setIsBriefDialogOpen] = useState(false);
   const [currentBrief, setCurrentBrief] = useState("");
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
-  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
-  const [currentTitle, setCurrentTitle] = useState("");
-  const [linkPreview, setLinkPreview] = useState<string | null>(null);
-  const [isLinkPostDialogOpen, setIsLinkPostDialogOpen] = useState(false);
-  const [currentLinkPost, setCurrentLinkPost] = useState("");
 
   // For adding new rows
   const addNewRow = () => {
@@ -63,16 +57,6 @@ export function ContentPlan() {
       setSelectedItems([...selectedItems, id]);
     } else {
       setSelectedItems(selectedItems.filter(itemId => itemId !== id));
-    }
-  };
-  
-  // Select all handler
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const allItemIds = contentPlans.map(item => item.id);
-      setSelectedItems(allItemIds);
-    } else {
-      setSelectedItems([]);
     }
   };
 
@@ -129,26 +113,8 @@ export function ContentPlan() {
     if (field === 'post_link' && value) {
       const now = new Date();
       updates.actual_post_date = format(now, "yyyy-MM-dd HH:mm");
-      
-      // Calculate on_time_status by comparing dates (ignoring time)
-      const item = contentPlans.find(plan => plan.id === id);
-      if (item && item.post_date) {
-        const plannedDate = new Date(item.post_date);
-        const actualDate = new Date(updates.actual_post_date);
-        
-        // Just compare the date (ignoring time)
-        if (isSameDay(actualDate, plannedDate)) {
-          updates.on_time_status = 'On Time';
-        } else if (actualDate < plannedDate) {
-          updates.on_time_status = 'Early';
-        } else {
-          const diffDays = Math.ceil((actualDate.getTime() - plannedDate.getTime()) / (1000 * 60 * 60 * 24));
-          updates.on_time_status = `Late [${diffDays}] Day/s`;
-        }
-      }
     } else if (field === 'post_link' && !value) {
       updates.actual_post_date = null;
-      updates.on_time_status = "";
     }
 
     // If status changes to "Request Revisi", increment revision count
@@ -185,13 +151,6 @@ export function ContentPlan() {
     return match ? match[0] : null;
   };
 
-  // Extract any link from text
-  const extractLinks = (text: string | null) => {
-    if (!text) return [];
-    const regex = /(https?:\/\/[^\s]+)/g;
-    return text.match(regex) || [];
-  };
-
   // Display text in table cell with truncation
   const truncateText = (text: string | null, maxLength: number = 25) => {
     if (!text) return "";
@@ -202,52 +161,14 @@ export function ContentPlan() {
   const openBriefDialog = (id: string, brief: string | null) => {
     setCurrentItemId(id);
     setCurrentBrief(brief || "");
-    const links = extractLinks(brief || "");
-    setLinkPreview(links.length > 0 ? links[0] : null);
     setIsBriefDialogOpen(true);
   };
-  
   const saveBrief = async () => {
     if (currentItemId) {
       await handleFieldChange(currentItemId, 'brief', currentBrief);
     }
     setIsBriefDialogOpen(false);
   };
-
-  // Handle title dialog
-  const openTitleDialog = (id: string, title: string | null) => {
-    setCurrentItemId(id);
-    setCurrentTitle(title || "");
-    setIsTitleDialogOpen(true);
-  };
-
-  const saveTitle = async () => {
-    if (currentItemId) {
-      await handleFieldChange(currentItemId, 'title', currentTitle);
-    }
-    setIsTitleDialogOpen(false);
-  };
-
-  // Handle link post dialog
-  const openLinkPostDialog = (id: string, postLink: string | null) => {
-    setCurrentItemId(id);
-    setCurrentLinkPost(postLink || "");
-    setIsLinkPostDialogOpen(true);
-  };
-
-  const saveLinkPost = async () => {
-    if (currentItemId) {
-      await handleFieldChange(currentItemId, 'post_link', currentLinkPost);
-    }
-    setIsLinkPostDialogOpen(false);
-  };
-
-  // Effect to update link preview when brief changes
-  useEffect(() => {
-    const links = extractLinks(currentBrief);
-    setLinkPreview(links.length > 0 ? links[0] : null);
-  }, [currentBrief]);
-
   return <div className="w-full space-y-4 p-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -261,16 +182,11 @@ export function ContentPlan() {
       <div className="rounded-md border overflow-hidden">
         <div className="h-[600px] overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="w-full table-auto">
+            <div className="min-width-3200 table-auto">
               <Table className="w-full">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">
-                      <Checkbox 
-                        checked={contentPlans.length > 0 && selectedItems.length === contentPlans.length} 
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </TableHead>
+                    <TableHead className="text-center whitespace-nowrap sticky left-0 bg-background z-20 w-[60px]">Action</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[180px]">Tanggal Posting</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[140px]">Tipe Content</TableHead>
                     <TableHead className="text-center whitespace-nowrap w-[120px]">PIC</TableHead>
@@ -383,15 +299,7 @@ export function ContentPlan() {
 
                         {/* 7. Judul Content */}
                         <TableCell className="p-1 w-[180px]">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full h-8 flex items-center justify-between gap-1 truncate text-left"
-                            onClick={() => openTitleDialog(item.id, item.title)}
-                          >
-                            <span className="truncate">{item.title || "Click to add title"}</span>
-                            <Edit className="h-3 w-3 flex-shrink-0" />
-                          </Button>
+                          <Input value={item.title || ""} onChange={e => handleFieldChange(item.id, 'title', e.target.value)} placeholder="Enter title" title={item.title || ""} className="w-full h-8 truncate" />
                         </TableCell>
 
                         {/* 8. Content Pillar */}
@@ -409,9 +317,8 @@ export function ContentPlan() {
 
                         {/* 9. Brief */}
                         <TableCell className="p-1 w-[120px]">
-                          <Button variant="ghost" size="sm" onClick={() => openBriefDialog(item.id, item.brief)} className="w-full h-8 flex items-center justify-between gap-1 truncate text-left">
-                            <span className="truncate">{item.brief ? truncateText(item.brief) : "Click to add brief"}</span>
-                            <Edit className="h-3 w-3 flex-shrink-0" />
+                          <Button variant="ghost" size="sm" onClick={() => openBriefDialog(item.id, item.brief)} className="w-full h-8 flex items-center justify-center gap-1 truncate">
+                            {item.brief ? truncateText(item.brief) : "Click to add brief"}
                           </Button>
                           {extractGoogleDocsLink(item.brief) && <Button size="sm" variant="outline" className="mt-1 w-full h-7" asChild>
                               <a href={extractGoogleDocsLink(item.brief)!} target="_blank" rel="noopener noreferrer">
@@ -492,21 +399,7 @@ export function ContentPlan() {
 
                         {/* 18. Link Google Drive */}
                         <TableCell className="whitespace-nowrap p-1 w-[160px]">
-                          <div className="flex flex-col gap-1">
-                            <Input 
-                              value={item.google_drive_link || ""} 
-                              onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} 
-                              placeholder="Enter link" 
-                              className="w-full h-8 truncate" 
-                            />
-                            {item.google_drive_link && (
-                              <Button variant="outline" size="sm" className="w-full h-7" asChild>
-                                <a href={item.google_drive_link} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-3 w-3 mr-1" /> Open Link
-                                </a>
-                              </Button>
-                            )}
-                          </div>
+                          <Input value={item.google_drive_link || ""} onChange={e => handleFieldChange(item.id, 'google_drive_link', e.target.value)} placeholder="Enter link" className="w-full h-8 truncate" />
                         </TableCell>
 
                         {/* 19. Status Produksi */}
@@ -561,30 +454,14 @@ export function ContentPlan() {
                             </Button>}
                         </TableCell>
 
-                        {/* 25. Link Post - Combined field */}
+                        {/* 25. Link Post */}
                         <TableCell className="p-1 w-[150px]">
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full h-8 flex items-center justify-between gap-1 truncate text-left"
-                              onClick={() => openLinkPostDialog(item.id, item.post_link)}
-                            >
-                              <span className="truncate">{item.post_link ? truncateText(item.post_link) : "Click to add link"}</span>
-                              <div className="flex gap-1 flex-shrink-0">
-                                {item.post_link && <Eye className="h-3 w-3" />}
-                                <Edit className="h-3 w-3" />
-                              </div>
-                            </Button>
-                            
-                            {item.post_link && (
-                              <Button variant="outline" size="sm" className="w-full h-7" asChild>
-                                <a href={item.post_link} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-3 w-3 mr-1" /> View
-                                </a>
-                              </Button>
-                            )}
-                          </div>
+                          <Input value={item.post_link || ""} onChange={e => handleFieldChange(item.id, 'post_link', e.target.value)} placeholder="Enter post link" className="w-full h-8 truncate" />
+                          {item.post_link && <Button variant="outline" size="sm" className="mt-1 w-full h-7" asChild>
+                              <a href={item.post_link} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-3 w-3 mr-1" /> View
+                              </a>
+                            </Button>}
                         </TableCell>
 
                         {/* 26. Done */}
@@ -601,9 +478,7 @@ export function ContentPlan() {
 
                         {/* 28. On Time Status */}
                         <TableCell className="text-center whitespace-nowrap p-1 w-[140px]">
-                          <div className={`truncate font-medium ${item.on_time_status?.includes('Late') ? 'text-red-500' : 
-                                           item.on_time_status === 'On Time' ? 'text-green-500' : 
-                                           item.on_time_status === 'Early' ? 'text-blue-500' : ''}`}>
+                          <div className="truncate" title={item.on_time_status || ""}>
                             {item.on_time_status || ""}
                           </div>
                         </TableCell>
@@ -640,23 +515,6 @@ export function ContentPlan() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Textarea value={currentBrief} onChange={e => setCurrentBrief(e.target.value)} placeholder="Enter brief content..." className="min-h-[200px]" />
-            
-            {linkPreview && (
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Link Preview:</div>
-                <div className="p-3 border rounded-md bg-slate-50 break-all">
-                  <a 
-                    href={linkPreview} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-blue-600 hover:underline flex items-center gap-1"
-                  >
-                    {linkPreview}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              </div>
-            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsBriefDialogOpen(false)}>
@@ -664,73 +522,6 @@ export function ContentPlan() {
             </Button>
             <Button type="button" onClick={saveBrief}>
               Save Brief
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Title Dialog */}
-      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Title</DialogTitle>
-            <DialogDescription>
-              Enter the content title below.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input 
-              value={currentTitle} 
-              onChange={e => setCurrentTitle(e.target.value)} 
-              placeholder="Enter content title..."
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsTitleDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={saveTitle}>
-              Save Title
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Link Post Dialog */}
-      <Dialog open={isLinkPostDialogOpen} onOpenChange={setIsLinkPostDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Post Link</DialogTitle>
-            <DialogDescription>
-              Enter the post link below.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input 
-              value={currentLinkPost} 
-              onChange={e => setCurrentLinkPost(e.target.value)} 
-              placeholder="Enter post link..."
-            />
-            {currentLinkPost && (
-              <div className="p-3 border rounded-md bg-slate-50 break-all">
-                <a 
-                  href={currentLinkPost} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-600 hover:underline flex items-center gap-1"
-                >
-                  {currentLinkPost}
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsLinkPostDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={saveLinkPost}>
-              Save Link
             </Button>
           </DialogFooter>
         </DialogContent>
