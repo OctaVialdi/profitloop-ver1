@@ -43,7 +43,7 @@ export default function MyFilesPage() {
 
   if (!employeeId) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-96 page-transition">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">No employee ID provided</h2>
           <Button onClick={() => navigate("/hr/data")}>Back to Employee List</Button>
@@ -54,7 +54,7 @@ export default function MyFilesPage() {
   
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 page-transition">
         <div className="flex items-center justify-between">
           <Skeleton className="h-10 w-40" />
         </div>
@@ -65,7 +65,7 @@ export default function MyFilesPage() {
   
   if (!employee) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-96 page-transition">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Employee not found</h2>
           <Button onClick={() => navigate("/hr/data")}>Back to Employee List</Button>
@@ -76,7 +76,7 @@ export default function MyFilesPage() {
 
   return (
     <QueryProvider>
-      <div className="space-y-6">
+      <div className="space-y-6 page-transition">
         <div className="flex items-center justify-between">
           <Button 
             variant="ghost" 

@@ -56,7 +56,7 @@ const HeaderOnlyLayout = ({ children }: HeaderOnlyLayoutProps) => {
               duration: 0.15,
               ease: "easeInOut"
             }}
-            className="will-change-transform"
+            className="page-transition"
           >
             {children}
           </motion.div>

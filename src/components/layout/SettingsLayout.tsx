@@ -84,7 +84,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
             duration: 0.15,
             ease: "easeInOut"
           }}
-          className="pb-4 will-change-transform"
+          className="pb-4 page-transition"
         >
           {children}
         </motion.div>

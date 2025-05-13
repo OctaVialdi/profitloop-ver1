@@ -140,7 +140,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   duration: 0.15,
                   ease: "easeInOut"
                 }}
-                className="will-change-transform"
+                className="page-transition"
               >
                 {children || <Outlet />}
               </motion.div>

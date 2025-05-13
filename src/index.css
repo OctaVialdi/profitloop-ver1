@@ -126,3 +126,10 @@
     background: hsl(var(--muted-foreground) / 0.5);
   }
 }
+
+/* Page transition utilities */
+@layer utilities {
+  .page-transition {
+    will-change: transform, opacity;
+  }
+}

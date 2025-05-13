@@ -74,7 +74,7 @@ export default function OperationsLayout({ children }: OperationsLayoutProps) {
             duration: 0.15,
             ease: "easeInOut"
           }}
-          className="pb-4 will-change-transform"
+          className="pb-4 page-transition"
         >
           {children}
         </motion.div>
