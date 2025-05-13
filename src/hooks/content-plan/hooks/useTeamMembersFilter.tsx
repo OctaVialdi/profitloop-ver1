@@ -1,21 +1,24 @@
 
-import { TeamMember, SubService } from '../types';
-import { getFilteredTeamMembers, getFilteredSubServices } from '../contentPlanUtils';
+import { LegacyEmployee } from '@/hooks/useEmployees';
+import { SubService } from '../types';
+import { getFilteredSubServices } from '../contentPlanUtils';
 
 export interface TeamMembersFilterReturn {
-  getFilteredTeamMembers: (department: string) => TeamMember[];
+  getFilteredTeamMembers: (position: string) => LegacyEmployee[];
   getFilteredSubServices: (serviceId: string) => SubService[];
-  getContentPlannerTeamMembers: (teamMembers: TeamMember[]) => TeamMember[];
-  getCreativeTeamMembers: (teamMembers: TeamMember[]) => TeamMember[];
+  getContentPlannerTeamMembers: (teamMembers: LegacyEmployee[]) => LegacyEmployee[];
+  getCreativeTeamMembers: (teamMembers: LegacyEmployee[]) => LegacyEmployee[];
 }
 
 export function useTeamMembersFilter(
-  teamMembers: TeamMember[], 
+  teamMembers: LegacyEmployee[], 
   subServices: SubService[]
 ): TeamMembersFilterReturn {
-  // Modified function to match the required signature in ContentPlanHookReturn
-  const getFilteredTeamMembersWrapper = (department: string): TeamMember[] => {
-    return getFilteredTeamMembers(teamMembers, department);
+  // Filter employees by job position
+  const getFilteredTeamMembers = (position: string): LegacyEmployee[] => {
+    return teamMembers.filter(member => 
+      member.jobPosition === position
+    );
   };
 
   // Modified function to match the required signature in ContentPlanHookReturn
@@ -24,19 +27,19 @@ export function useTeamMembersFilter(
   };
 
   // Utility function to get only Content Planner team members from the list
-  const getContentPlannerTeamMembers = (teamMembers: TeamMember[]) => {
+  const getContentPlannerTeamMembers = (teamMembers: LegacyEmployee[]) => {
     return teamMembers.filter(member => 
-      member.job_position === "Content Planner" || member.department === "Content Planner");
+      member.jobPosition === "Content Planner");
   };
   
   // Utility function to get only Creative team members from the list
-  const getCreativeTeamMembers = (teamMembers: TeamMember[]) => {
+  const getCreativeTeamMembers = (teamMembers: LegacyEmployee[]) => {
     return teamMembers.filter(member => 
-      member.job_position === "Creative" || member.department === "Creative" || member.role === "Produksi");
+      member.jobPosition === "Creative");
   };
 
   return {
-    getFilteredTeamMembers: getFilteredTeamMembersWrapper,
+    getFilteredTeamMembers,
     getFilteredSubServices: getFilteredSubServicesWrapper,
     getContentPlannerTeamMembers,
     getCreativeTeamMembers

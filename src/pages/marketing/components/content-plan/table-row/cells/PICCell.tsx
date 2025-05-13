@@ -2,12 +2,12 @@
 import React from "react";
 import { TableCell } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TeamMember } from "@/hooks/content-plan";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 
 interface PICCellProps {
   id: string;
   picId: string | null;
-  teamMembers: TeamMember[];
+  teamMembers: LegacyEmployee[];
   onChange: (id: string, field: string, value: any) => void;
   fieldName: string;
 }
