@@ -1,3 +1,4 @@
+
 export interface ContentPlanItem {
   id: string;
   post_date: string | null;
@@ -32,7 +33,7 @@ export interface ContentPlanItem {
   content_type?: {
     id: string;
     name: string;
-  } | null;
+  } | string | null;
   pic?: {
     id: string;
     name: string;
