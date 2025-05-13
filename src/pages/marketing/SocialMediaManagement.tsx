@@ -426,7 +426,7 @@ const SocialMediaManagement = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-4 max-w-7xl">
+    <div className="w-full space-y-4">
       {/* Primary Tab Navigation - Updated to be more compact */}
       <div className="bg-gray-50 rounded-md overflow-hidden border">
         <div className="grid grid-cols-3 w-full">
