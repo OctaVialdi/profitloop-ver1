@@ -55,10 +55,10 @@ export const fetchContentTypes = async () => {
 
 export const fetchTeamMembers = async () => {
   try {
-    // Modified to fetch employees from the user's table
+    // Modified to fetch employees from the employees table with the correct columns
     const { data, error } = await supabase
       .from('employees')
-      .select('id, name, organization_name, job_position, job_level')
+      .select('id, name, job_position, job_level')
       .order('name');
 
     if (error) throw error;
@@ -67,7 +67,7 @@ export const fetchTeamMembers = async () => {
     const teamMembers = (data || []).map(employee => ({
       id: employee.id,
       name: employee.name,
-      department: employee.organization_name || 'Digital Marketing',
+      department: 'Digital Marketing', // Since organization_name doesn't exist, use a default
       job_position: employee.job_position || '',
       role: employee.job_level || ''
     }));
