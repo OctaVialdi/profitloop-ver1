@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +59,67 @@ export const useKols = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [kols, setKols] = useState<Kol[]>([]);
   const { organization } = useOrganization();
+  
+  // Helper function to fetch a single KOL with all its details
+  // Moved this function definition up before it's used below
+  const fetchKolWithDetails = async (kolId: string) => {
+    try {
+      // Fetch the KOL base data
+      const { data: kolData, error: kolError } = await supabase
+        .from('data_kol')
+        .select('*')
+        .eq('id', kolId)
+        .single();
+        
+      if (kolError) {
+        throw kolError;
+      }
+      
+      // Fetch social media platforms
+      const { data: socialMediaData, error: socialMediaError } = await supabase
+        .from('kol_social_media')
+        .select('*')
+        .eq('kol_id', kolId);
+        
+      if (socialMediaError) {
+        throw socialMediaError;
+      }
+      
+      // Fetch rates
+      const { data: ratesData, error: ratesError } = await supabase
+        .from('kol_rates')
+        .select('*')
+        .eq('kol_id', kolId);
+        
+      if (ratesError) {
+        throw ratesError;
+      }
+      
+      // Fetch metrics
+      const { data: metricsData, error: metricsError } = await supabase
+        .from('kol_metrics')
+        .select('*')
+        .eq('kol_id', kolId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+        
+      if (metricsError) {
+        throw metricsError;
+      }
+      
+      // Combine all the data
+      return {
+        ...kolData,
+        social_media: socialMediaData || [],
+        platforms: socialMediaData ? socialMediaData.map(sm => sm.platform) : [],
+        rates: ratesData || [],
+        metrics: metricsData && metricsData.length > 0 ? metricsData[0] : null
+      };
+    } catch (error) {
+      console.error('Error fetching KOL details:', error);
+      throw error;
+    }
+  };
   
   // Fetch kols when organization is available
   const fetchKols = useCallback(async () => {
@@ -794,67 +856,7 @@ export const useKols = () => {
     } finally {
       setIsUpdating(false);
     }
-  }, [fetchKolWithDetails]);
-
-  // Helper function to fetch a single KOL with all its details
-  const fetchKolWithDetails = async (kolId: string) => {
-    try {
-      // Fetch the KOL base data
-      const { data: kolData, error: kolError } = await supabase
-        .from('data_kol')
-        .select('*')
-        .eq('id', kolId)
-        .single();
-        
-      if (kolError) {
-        throw kolError;
-      }
-      
-      // Fetch social media platforms
-      const { data: socialMediaData, error: socialMediaError } = await supabase
-        .from('kol_social_media')
-        .select('*')
-        .eq('kol_id', kolId);
-        
-      if (socialMediaError) {
-        throw socialMediaError;
-      }
-      
-      // Fetch rates
-      const { data: ratesData, error: ratesError } = await supabase
-        .from('kol_rates')
-        .select('*')
-        .eq('kol_id', kolId);
-        
-      if (ratesError) {
-        throw ratesError;
-      }
-      
-      // Fetch metrics
-      const { data: metricsData, error: metricsError } = await supabase
-        .from('kol_metrics')
-        .select('*')
-        .eq('kol_id', kolId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-        
-      if (metricsError) {
-        throw metricsError;
-      }
-      
-      // Combine all the data
-      return {
-        ...kolData,
-        social_media: socialMediaData || [],
-        platforms: socialMediaData ? socialMediaData.map(sm => sm.platform) : [],
-        rates: ratesData || [],
-        metrics: metricsData && metricsData.length > 0 ? metricsData[0] : null
-      };
-    } catch (error) {
-      console.error('Error fetching KOL details:', error);
-      throw error;
-    }
-  };
+  }, []);
   
   // Initial fetch when the component mounts and has organization data
   useEffect(() => {
