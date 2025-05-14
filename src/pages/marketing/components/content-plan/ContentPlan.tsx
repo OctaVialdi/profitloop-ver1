@@ -8,16 +8,6 @@ import DeleteConfirmDialog from "./dialogs/DeleteConfirmDialog";
 import ContentPlanError from "./ContentPlanError";
 import { useContentPlanState } from "./hooks/useContentPlanState";
 import { LegacyEmployee } from "@/hooks/useEmployees";
-import { TeamMember } from "@/hooks/content-plan/types";
-
-// Helper function to adapt LegacyEmployee to TeamMember interface
-const adaptToTeamMember = (employee: LegacyEmployee): TeamMember => ({
-  id: employee.id,
-  name: employee.name,
-  job_position: employee.jobPosition || "",
-  department: employee.organization || "",
-  role: employee.role || ""
-});
 
 export default function ContentPlan() {
   const {
@@ -26,8 +16,8 @@ export default function ContentPlan() {
     services,
     subServices,
     contentPillars,
-    contentPlanners: rawContentPlanners,
-    creativeTeamMembers: rawCreativeTeamMembers,
+    contentPlanners,
+    creativeTeamMembers,
     loading,
     error,
     selectedItems,
@@ -53,10 +43,6 @@ export default function ContentPlan() {
     setBriefDialogOpen,
     setTitleDialogOpen
   } = useContentPlanState();
-
-  // Use the raw employees as LegacyEmployee without conversion since we've updated the component interfaces
-  const contentPlanners = rawContentPlanners;
-  const creativeTeamMembers = rawCreativeTeamMembers;
 
   useEffect(() => {
     fetchContentPlans();

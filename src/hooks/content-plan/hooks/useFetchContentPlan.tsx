@@ -106,13 +106,18 @@ export function useFetchContentPlan(): FetchContentPlanReturn {
     subServicesQuery.error || 
     contentPillarsQuery.error;
   
-  // Convert team members to LegacyEmployee format
+  // Convert team members to LegacyEmployee format with correct property mapping
   const convertedTeamMembers = (teamMembersQuery.data || []).map(member => ({
     id: member.id,
     name: member.name,
     jobPosition: member.job_position || '',
     organization: member.department || '',
-    role: member.role || ''
+    role: member.role || '',
+    organization_id: organization?.id || '', // Add the required organization_id field
+    email: '',  // Add empty required fields to satisfy the type
+    status: 'Active',
+    employee_id: member.id, // Use the member ID as employee_id
+    employeeId: member.id // Legacy alias
   }));
 
   return {

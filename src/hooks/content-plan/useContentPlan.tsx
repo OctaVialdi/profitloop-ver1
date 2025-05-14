@@ -33,31 +33,19 @@ export const useContentPlan = () => {
 
   // Filter team members by job position
   const getContentPlannerTeamMembers = useCallback((): LegacyEmployee[] => {
-    // Convert teamMembers to LegacyEmployee format
+    // Filter teamMembers for content planners
     return teamMembers.filter(member => 
-      member.job_position?.toLowerCase().includes('content') || 
-      member.department?.toLowerCase().includes('marketing')
-    ).map(member => ({
-      id: member.id,
-      name: member.name,
-      jobPosition: member.job_position || '',
-      organization: member.department || '',
-      role: member.role || ''
-    }));
+      member.jobPosition?.toLowerCase().includes('content') || 
+      member.organization?.toLowerCase().includes('marketing')
+    );
   }, [teamMembers]);
 
   const getCreativeTeamMembers = useCallback((): LegacyEmployee[] => {
-    // Convert teamMembers to LegacyEmployee format
+    // Filter teamMembers for creative team
     return teamMembers.filter(member => 
-      member.job_position?.toLowerCase().includes('creative') || 
-      member.job_position?.toLowerCase().includes('design')
-    ).map(member => ({
-      id: member.id,
-      name: member.name,
-      jobPosition: member.job_position || '',
-      organization: member.department || '',
-      role: member.role || ''
-    }));
+      member.jobPosition?.toLowerCase().includes('creative') || 
+      member.jobPosition?.toLowerCase().includes('design')
+    );
   }, [teamMembers]);
 
   return {
