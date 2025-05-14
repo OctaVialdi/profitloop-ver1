@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -477,41 +478,44 @@ export const useKols = () => {
         throw rateInsertError;
       }
       
-      // Get current KOL
-      const kol = kols.find(k => k.id === kolId);
-      if (!kol) {
-        throw new Error("KOL not found");
+      // Fetch the updated KOL data with rates
+      const { data: kolData, error: kolError } = await supabase
+        .from('data_kol')
+        .select('*')
+        .eq('id', kolId)
+        .single();
+
+      if (kolError) {
+        throw kolError;
       }
 
-      // Create or update rates array
-      const currentRates = kol.rates || [];
-      const newRates = [...currentRates, rateData];
-      
-      // Update KOL with new rate card
-      const { data, error } = await supabase
-        .from('data_kol')
-        .update({
-          rates: newRates
-        })
-        .eq('id', kolId)
-        .select()
-        .single();
-        
-      if (error) {
-        throw error;
+      // Fetch all rates for this KOL
+      const { data: allRates, error: ratesError } = await supabase
+        .from('kol_rates')
+        .select('*')
+        .eq('kol_id', kolId);
+
+      if (ratesError) {
+        throw ratesError;
       }
+
+      // Combine the KOL data with all rates
+      const updatedKol = {
+        ...kolData,
+        rates: allRates || []
+      };
       
       toast({
         title: 'Success',
         description: 'Rate card added successfully',
       });
       
-      // Update local state
+      // Update local state with the updated KOL data
       setKols(prevKols => prevKols.map(kol => 
-        kol.id === kolId ? data : kol
+        kol.id === kolId ? updatedKol : kol
       ));
       
-      return data;
+      return updatedKol;
     } catch (error: any) {
       console.error('Error adding rate card:', error);
       toast({
@@ -523,7 +527,7 @@ export const useKols = () => {
     } finally {
       setIsUpdating(false);
     }
-  }, [kols]);
+  }, []);
   
   // Initial fetch when the component mounts and has organization data
   useEffect(() => {
