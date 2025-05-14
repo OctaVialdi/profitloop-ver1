@@ -54,16 +54,27 @@ const Login = () => {
     }
   }, [location.search]);
 
+  // Check if user is already logged in
   useEffect(() => {
-    // Check if user is already logged in
+    let isMounted = true;
+    
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/organizations");
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (isMounted && data.session) {
+          // Navigate to organizations without triggering another render cycle
+          navigate("/organizations", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
       }
     };
     
     checkSession();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [navigate]);
 
   return (
