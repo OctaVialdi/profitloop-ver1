@@ -19,8 +19,9 @@ export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
   
   const { addRateCard, isUpdating } = useKols();
   
-  // Initialize rates with an empty array if it doesn't exist
+  // Get rates from the selectedKol object
   const rates = selectedKol?.rates || [];
+  console.log("Rate cards data:", rates);
   
   const handleAddRateCard = async () => {
     if (!platform || !minRate) {

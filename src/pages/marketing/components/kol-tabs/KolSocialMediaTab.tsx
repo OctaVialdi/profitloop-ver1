@@ -21,8 +21,9 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
   
   const { addPlatform, isUpdating } = useKols();
 
-  // Initialize platforms with an empty array if it doesn't exist
-  const platforms = selectedKol?.platforms || [];
+  // Get social media from the selectedKol object
+  const socialMedia = selectedKol?.social_media || [];
+  console.log("Social Media data:", socialMedia);
 
   const handleAddPlatform = async () => {
     if (!platform) {
@@ -124,7 +125,7 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
         </Button>
       </div>
       
-      {platforms && platforms.length > 0 ? (
+      {socialMedia && socialMedia.length > 0 ? (
         <div className="border rounded-md p-6">
           <div className="flex justify-between items-center mb-4">
             <div>
@@ -133,11 +134,11 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
             </div>
           </div>
           
-          {platforms.map((platform: string, index: number) => (
+          {socialMedia.map((platform: any, index: number) => (
             <div key={index} className="border-b py-4 flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-100 p-2 rounded-md">
-                  {platform === "Instagram" || platform === "instagram" ? 
+                  {platform.platform === "instagram" ? 
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-700">
                       <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
                       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
@@ -150,16 +151,16 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
                   }
                 </div>
                 <div>
-                  <div className="font-medium">{platform}</div>
-                  <div className="text-sm text-gray-500">@{selectedKol?.handle || handle || selectedKol?.name?.toLowerCase().replace(' ', '') || selectedKol?.full_name?.toLowerCase().replace(' ', '') || 'username'}</div>
+                  <div className="font-medium capitalize">{platform.platform}</div>
+                  <div className="text-sm text-gray-500">@{platform.handle || 'username'}</div>
                 </div>
               </div>
               <div className="flex gap-2 items-center">
                 <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-200">
-                  {formatNumber(selectedKol.total_followers / (platforms?.length || 1))} followers
+                  {formatNumber(platform.followers || 0)} followers
                 </Badge>
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                  {selectedKol.engagement || selectedKol.engagement_rate || 0}% engagement
+                  {platform.engagement_rate || 0}% engagement
                 </Badge>
                 <Button variant="ghost" className="text-gray-500 p-2 h-auto">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
