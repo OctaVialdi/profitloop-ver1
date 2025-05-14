@@ -50,7 +50,7 @@ export const EngagementAnalysis: React.FC<EngagementAnalysisProps> = ({ timeFilt
           <Card>
             <CardContent className="p-4">
               <div className="font-bold text-2xl">{kols.filter(kol => (kol.engagement || 0) > 3).length}</div>
-              <div className="text-sm text-gray-500">KOLs with >3% engagement</div>
+              <div className="text-sm text-gray-500">KOLs with &gt;3% engagement</div>
             </CardContent>
           </Card>
         </div>
