@@ -3,12 +3,13 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route } from "react-router-dom";
 import AuthLayout from "@/components/layout/AuthLayout";
 
-// Lazy loaded components
-const Login = lazy(() => import("@/pages/auth/Login"));
-const Register = lazy(() => import("@/pages/auth/Register"));
-const VerificationSent = lazy(() => import("@/pages/auth/VerificationSent"));
-const AcceptInvitation = lazy(() => import("@/pages/auth/AcceptInvitation"));
-const MagicLinkJoin = lazy(() => import("@/pages/auth/MagicLinkJoin"));
+// Using importPath as an explicit string for lazy loading
+// This helps avoid issues with dynamic imports
+const Login = lazy(() => import("../pages/auth/Login"));
+const Register = lazy(() => import("../pages/auth/Register"));
+const VerificationSent = lazy(() => import("../pages/auth/VerificationSent"));
+const AcceptInvitation = lazy(() => import("../pages/auth/AcceptInvitation"));
+const MagicLinkJoin = lazy(() => import("../pages/auth/MagicLinkJoin"));
 
 // Loading fallback component
 const LoadingFallback = () => (

@@ -24,6 +24,7 @@ export function useLoginSubmit() {
   ) => {
     setIsEmailUnverified(false);
     setIsLoading(true);
+    setLoginError(null);
     
     try {
       // First check if the email exists in our database
@@ -32,7 +33,12 @@ export function useLoginSubmit() {
       if (!emailExists) {
         // If email doesn't exist, redirect to registration
         toast.info("Email tidak ditemukan. Silakan daftar terlebih dahulu.");
-        navigate("/auth/register", { state: { email } });
+        
+        // Use state to pass the email to registration page
+        navigate("/auth/register", { 
+          state: { email },
+          replace: true // Use replace to avoid back button issues
+        });
         return;
       }
       
@@ -64,20 +70,32 @@ export function useLoginSubmit() {
         // Handle magic link token if present
         const magicLinkToken = location.state?.magicLinkToken;
         if (magicLinkToken) {
-          const success = await processMagicLinkToken(data.user.id, magicLinkToken);
-          // If successful, the navigation happens inside processMagicLinkToken
-          if (success) return;
+          setTimeout(async () => {
+            const success = await processMagicLinkToken(data.user.id, magicLinkToken);
+            // If successful, the navigation happens inside processMagicLinkToken
+            if (!success) {
+              await processUserAuth(data.user.id);
+            }
+          }, 100);
+          return;
         }
         
         // Handle invitation token (legacy) if present
         else if (location.state?.invitationToken) {
-          const success = await processInvitationToken(data.user.id, location.state.invitationToken);
-          // If successful, the navigation happens inside processInvitationToken
-          if (success) return;
+          setTimeout(async () => {
+            const success = await processInvitationToken(data.user.id, location.state.invitationToken);
+            // If successful, the navigation happens inside processInvitationToken
+            if (!success) {
+              await processUserAuth(data.user.id);
+            }
+          }, 100);
+          return;
         }
         
-        // Standard auth flow navigation
-        await processUserAuth(data.user.id);
+        // Standard auth flow navigation with delay to avoid race conditions
+        setTimeout(async () => {
+          await processUserAuth(data.user.id);
+        }, 100);
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -87,6 +105,8 @@ export function useLoginSubmit() {
           error.message.toLowerCase().includes("email") && error.message.toLowerCase().includes("konfirmasi")) {
         setLoginError("Email belum dikonfirmasi. Silakan periksa kotak masuk email Anda atau kirim ulang email verifikasi.");
         setIsEmailUnverified(true);
+      } else {
+        setLoginError(error.message || "Gagal login. Silakan coba lagi.");
       }
       // Database errors are already handled in useAuth hook
     } finally {

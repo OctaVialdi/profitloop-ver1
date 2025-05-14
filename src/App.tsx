@@ -33,6 +33,12 @@ function AppContent() {
   
   // Run trial period fix and check if trial has expired
   useEffect(() => {
+    // Only run this effect for authenticated users and non-excluded routes
+    if (isExcludedRoute) {
+      setShowTrialExpiredModal(false);
+      return;
+    }
+
     const checkTrialStatus = async () => {
       try {
         // Check if the user is authenticated
@@ -60,7 +66,7 @@ function AppContent() {
             
             // Show the trial expired modal if trial has expired, no active subscription, and not on excluded routes
             if (orgData && (orgData.trial_expired || orgData.subscription_status === 'expired') && 
-                !orgData.subscription_plan_id && !isExcludedRoute) {
+                !orgData.subscription_plan_id) {
               setShowTrialExpiredModal(true);
               setOrganizationName(orgData.name || "your organization");
             }
@@ -71,11 +77,7 @@ function AppContent() {
       }
     };
 
-    if (!isExcludedRoute) {
-      checkTrialStatus();
-    } else {
-      setShowTrialExpiredModal(false);
-    }
+    checkTrialStatus();
   }, [location.pathname, isExcludedRoute]);
 
   const handleUpgrade = () => {

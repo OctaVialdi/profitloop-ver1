@@ -8,40 +8,45 @@ export function useAuthState(): AuthState {
   const [state, setState] = useState<AuthState>({
     user: null,
     profile: null,
-    session: null, // Added session property
+    session: null,
     isLoading: true,
     isAuthenticated: false,
     error: null,
   });
 
   const fetchUserProfile = useCallback(async (user: User) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching profile:", error);
-        setState((prev) => ({ ...prev, profile: null, error }));
-        return;
+    // Use setTimeout to prevent potential deadlocks with auth state changes
+    setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+  
+        if (error) {
+          console.error("Error fetching profile:", error);
+          setState((prev) => ({ ...prev, profile: null, error, isLoading: false }));
+          return;
+        }
+  
+        setState((prev) => ({
+          ...prev,
+          profile: data,
+          isLoading: false,
+          isAuthenticated: true,
+        }));
+      } catch (error: any) {
+        console.error("Exception fetching profile:", error);
+        setState((prev) => ({ ...prev, profile: null, error, isLoading: false }));
       }
-
-      setState((prev) => ({
-        ...prev,
-        profile: data,
-        isLoading: false,
-        isAuthenticated: true,
-      }));
-    } catch (error: any) {
-      console.error("Exception fetching profile:", error);
-      setState((prev) => ({ ...prev, profile: null, error, isLoading: false }));
-    }
+    }, 0);
   }, []);
 
   const handleAuthStateChange = useCallback(
-    async (event: string, session: Session | null) => {
+    (event: string, session: Session | null) => {
+      console.log("Auth state change event:", event);
+      
       if (!session) {
         setState({
           user: null,
@@ -54,50 +59,73 @@ export function useAuthState(): AuthState {
         return;
       }
 
-      try {
-        const user = session.user;
-        setState((prev) => ({ ...prev, user, session, isLoading: true }));
-        await fetchUserProfile(user);
-      } catch (error: any) {
-        console.error("Error handling auth state change:", error);
-        setState((prev) => ({ ...prev, error, isLoading: false }));
-      }
+      // Only set user and session synchronously
+      setState((prev) => ({ 
+        ...prev, 
+        user: session.user, 
+        session, 
+        isLoading: true,
+        isAuthenticated: true,
+      }));
+      
+      // Then fetch profile asynchronously
+      fetchUserProfile(session.user);
     },
     [fetchUserProfile]
   );
 
   useEffect(() => {
+    let mounted = true;
+    
     const initializeAuth = async () => {
       try {
+        // Set up auth listener first
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          handleAuthStateChange
+        );
+
+        // Then check for existing session
         const { data } = await supabase.auth.getSession();
-        if (data && data.session) {
-          const user = data.session.user;
-          setState((prev) => ({ ...prev, user, session: data.session, isLoading: true }));
-          await fetchUserProfile(user);
-        } else {
-          setState((prev) => ({
-            ...prev,
-            user: null,
-            profile: null,
-            session: null,
-            isLoading: false,
-            isAuthenticated: false,
-          }));
+        
+        if (mounted) {
+          if (data && data.session) {
+            const user = data.session.user;
+            setState((prev) => ({ 
+              ...prev, 
+              user, 
+              session: data.session, 
+              isLoading: true,
+              isAuthenticated: true,
+            }));
+            fetchUserProfile(user);
+          } else {
+            setState((prev) => ({
+              ...prev,
+              user: null,
+              profile: null,
+              session: null,
+              isLoading: false,
+              isAuthenticated: false,
+            }));
+          }
         }
+
+        return () => {
+          mounted = false;
+          authListener.subscription.unsubscribe();
+        };
       } catch (error: any) {
         console.error("Error initializing auth:", error);
-        setState((prev) => ({ ...prev, error, isLoading: false }));
+        if (mounted) {
+          setState((prev) => ({ ...prev, error, isLoading: false }));
+        }
       }
     };
 
     initializeAuth();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      handleAuthStateChange
-    );
-
     return () => {
-      authListener.subscription.unsubscribe();
+      mounted = false;
     };
   }, [fetchUserProfile, handleAuthStateChange]);
 

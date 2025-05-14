@@ -8,6 +8,8 @@ export function useTokenProcessor() {
   // Check user organization status and navigate accordingly
   const processUserAuth = async (userId: string) => {
     try {
+      console.log("Processing user auth for ID:", userId);
+      
       // Check if user's profile exists and get relevant data
       const { data: profileData } = await supabase
         .from('profiles')
@@ -15,6 +17,8 @@ export function useTokenProcessor() {
         .eq('id', userId)
         .maybeSingle();
           
+      console.log("Profile data:", profileData);
+      
       // Follow the authentication flow according to the flowchart
       if (profileData && !profileData.email_verified) {
         // Email not verified in our database, update the flag
@@ -30,6 +34,8 @@ export function useTokenProcessor() {
         
       // Check if user has organization and follow the flow chart
       if (profileData?.organization_id) {
+        console.log("User has organization, redirecting based on welcome status");
+        
         if (!profileData.has_seen_welcome) {
           navigate("/employee-welcome", { replace: true });
         } else {
@@ -37,6 +43,8 @@ export function useTokenProcessor() {
         }
         return true;
       } else {
+        console.log("User has no organization, redirecting to organizations page");
+        
         // Always redirect to organizations if user doesn't have organization
         navigate("/organizations", { replace: true });
         return true;
