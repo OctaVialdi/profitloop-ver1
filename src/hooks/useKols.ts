@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -753,6 +752,9 @@ export const useKols = () => {
       purchases?: number;
       revenue?: number;
       cost?: number;
+      impressions?: number;
+      video_data?: string;
+      total_engagement_rate?: number;
     }
   ) => {
     setIsUpdating(true);
@@ -791,8 +793,11 @@ export const useKols = () => {
             purchases: metricData.purchases,
             revenue: metricData.revenue,
             cost: metricData.cost,
+            impressions: metricData.impressions,
+            video_data: metricData.video_data,
             conversion_rate: conversionRate,
             roi: roi,
+            total_engagement_rate: metricData.total_engagement_rate,
             updated_at: new Date().toISOString()
           })
           .eq('id', metricsId)
@@ -825,8 +830,11 @@ export const useKols = () => {
             purchases: metricData.purchases,
             revenue: metricData.revenue,
             cost: metricData.cost,
+            impressions: metricData.impressions,
+            video_data: metricData.video_data,
             conversion_rate: conversionRate,
-            roi: roi
+            roi: roi,
+            total_engagement_rate: metricData.total_engagement_rate
           })
           .select()
           .single();

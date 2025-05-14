@@ -1,29 +1,20 @@
 
 import React, { useState, useRef } from "react";
-import { NewKolData, useKols } from "@/hooks/useKols";
-import { toast } from "@/components/ui/use-toast";
-import { KolFormTabs } from "./KolFormTabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftCircle, Camera } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/components/ui/use-toast";
+import { useKols } from "@/hooks/useKols";
+import { PlusIcon, ImageIcon } from "lucide-react";
+import { KolFormTabs } from "./KolFormTabs";
 
-interface KolAddFormProps {
-  setCurrentView: (view: string) => void;
-}
-
-export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
-  // Categories for new KOL
+export const KolAddForm = ({ setCurrentView }: { setCurrentView: (view: string) => void }) => {
   const categories = [
-    "Beauty", "Fashion", "Lifestyle", "Food", "Travel", "Fitness",
+    "Fashion", "Beauty", "Food", "Travel", "Fitness", "Lifestyle", 
     "Tech", "Gaming", "Entertainment", "Business", "Education"
   ];
 
-  const { addKol, isLoading, fetchKols, uploadKolPhoto, addPlatform, addRateCard } = useKols();
+  const { addKol, isLoading, fetchKols, uploadKolPhoto, addPlatform, addRateCard, updateMetrics } = useKols();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
@@ -33,75 +24,127 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
     engagement_rate: 0,
     is_active: false,
     tempSocialMedia: [] as any[],
-    tempRates: [] as any[]
+    tempRates: [] as any[],
+    // Metrics data
+    likes: 0,
+    comments: 0,
+    shares: 0,
+    clicks: 0,
+    purchases: 0,
+    revenue: 0,
+    cost: 0,
+    impressions: 0
   });
 
   const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState("general");
-
-  const handleChange = (field: keyof typeof formData | string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handlePhotoClick = () => {
-    fileInputRef.current?.click();
-  };
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Preview the file immediately
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setLocalPhotoUrl(e.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
-    
-    // Store the file for later upload
-    setPhotoFile(file);
+    if (file) {
+      setPhotoFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setLocalPhotoUrl(objectUrl);
+    }
   };
 
-  const handleSubmit = async () => {
-    if (!formData.full_name) {
-      toast({
-        title: "Error",
-        description: "Please enter the KOL name",
-        variant: "destructive",
-      });
-      return;
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
+  };
 
-    if (!formData.category) {
-      toast({
-        title: "Error",
-        description: "Please select a category",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
+  const handleAddSocialMedia = (platform: string, handle: string, url: string, followers: number, engagement: number) => {
+    const newPlatform = {
+      platform,
+      handle,
+      profile_url: url,
+      followers: Number(followers),
+      engagement: Number(engagement)
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      tempSocialMedia: [...prev.tempSocialMedia, newPlatform],
+      // Update total followers
+      total_followers: Number(prev.total_followers) + Number(followers)
+    }));
+  };
+
+  const handleRemoveSocialMedia = (index: number) => {
+    const platformToRemove = formData.tempSocialMedia[index];
+    const followersToRemove = platformToRemove.followers || 0;
+    
+    setFormData(prev => ({
+      ...prev,
+      tempSocialMedia: prev.tempSocialMedia.filter((_, i) => i !== index),
+      // Update total followers
+      total_followers: Math.max(0, Number(prev.total_followers) - Number(followersToRemove))
+    }));
+  };
+
+  const handleAddRate = (platform: string, currency: string, minRate: number, maxRate: number) => {
+    const newRate = {
+      platform,
+      currency,
+      min_rate: minRate,
+      max_rate: maxRate
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      tempRates: [...prev.tempRates, newRate]
+    }));
+  };
+  
+  const handleRemoveRate = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      tempRates: prev.tempRates.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
-      const newKolData: Omit<NewKolData, 'organization_id'> = {
+      // Basic validation
+      if (!formData.full_name || !formData.category) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Extract only the needed fields for KOL creation
+      const kolData = {
         full_name: formData.full_name,
         category: formData.category,
-        total_followers: Number(formData.total_followers),
-        engagement_rate: Number(formData.engagement_rate),
-        is_active: formData.is_active
+        total_followers: formData.total_followers,
+        engagement_rate: formData.engagement_rate,
+        is_active: formData.is_active,
       };
-
-      const result = await addKol(newKolData);
+      
+      // Create the KOL
+      const result = await addKol(kolData);
+      
       if (result) {
-        // If we have a photo file, upload it
-        if (photoFile && result.id) {
+        // Upload photo if selected
+        if (photoFile) {
           await uploadKolPhoto(result.id, photoFile);
         }
         
-        // Now add any social media platforms
+        // Add social media platforms if any are defined
         if (formData.tempSocialMedia && formData.tempSocialMedia.length > 0) {
           for (const platform of formData.tempSocialMedia) {
             await addPlatform(result.id, platform);
@@ -120,14 +163,28 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
           }
         }
         
-        // Make sure to call fetchKols to update the KOL list
-        await fetchKols();
-        setCurrentView("list");
+        // Add metrics data if available
+        const metricsData = {
+          likes: formData.likes || 0,
+          comments: formData.comments || 0,
+          shares: formData.shares || 0,
+          clicks: formData.clicks || 0,
+          purchases: formData.purchases || 0,
+          revenue: formData.revenue || 0,
+          cost: formData.cost || 0,
+          impressions: formData.impressions || 0
+        };
+        
+        await updateMetrics(result.id, metricsData);
         
         toast({
           title: "Success",
           description: "KOL has been added successfully",
         });
+        
+        // Reset form and go back to list view
+        await fetchKols();
+        setCurrentView("list");
       }
     } catch (error) {
       console.error("Error adding KOL:", error);
@@ -138,189 +195,185 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
       });
     }
   };
-
-  // Generate display name for avatar fallback
-  const getInitials = (name: string) => {
-    return name ? name.charAt(0).toUpperCase() : "K";
-  };
-
+  
   return (
-    <div className="flex flex-col space-y-6 p-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="hover:bg-transparent p-0"
-              onClick={() => setCurrentView("list")}
-            >
-              <ArrowLeftCircle size={20} className="mr-2 text-gray-500" />
-            </Button>
-            Add New KOL
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">Create a new KOL profile with details, social media platforms, and rates</p>
+          <h3 className="text-xl font-semibold">Add New KOL</h3>
+          <p className="text-sm text-gray-500">Create a new Key Opinion Leader profile</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setCurrentView("list")}>
+          <Button 
+            variant="outline" 
+            onClick={() => setCurrentView("list")}
+          >
             Cancel
           </Button>
           <Button 
-            className="bg-purple-600 hover:bg-purple-700"
             onClick={handleSubmit}
             disabled={isLoading}
+            className="bg-purple-600 hover:bg-purple-700"
           >
-            {isLoading ? "Adding..." : "Add KOL"}
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Adding...
+              </span>
+            ) : "Add KOL"}
           </Button>
         </div>
       </div>
       
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-1/3">
+      <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6">
+        <Card className="p-4 h-fit">
           <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <Avatar className="w-32 h-32 border-2 border-gray-200">
-                <AvatarImage src={localPhotoUrl || undefined} alt={formData.full_name} className="object-cover" />
-                <AvatarFallback className="bg-purple-100 text-purple-700 text-2xl">
-                  {getInitials(formData.full_name)}
-                </AvatarFallback>
-              </Avatar>
-              
-              <Button
-                size="icon"
-                variant="outline"
-                className="absolute bottom-0 right-0 rounded-full bg-white h-8 w-8"
-                onClick={handlePhotoClick}
-                disabled={isUploading}
-              >
-                {isUploading ? (
-                  <span className="animate-spin">
-                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  </span>
-                ) : (
-                  <Camera size={14} />
-                )}
-              </Button>
-              
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-                accept="image/*"
-              />
-            </div>
-            
-            <div className="text-xs text-gray-500 text-center">
-              Recommended: Square image, at least 300x300px
-            </div>
-          </div>
-        </div>
-        
-        <div className="w-full md:w-2/3 space-y-4">
-          <div>
-            <Label htmlFor="kol-name">Full Name</Label>
-            <Input
-              id="kol-name"
-              placeholder="Enter KOL's full name"
-              value={formData.full_name}
-              onChange={(e) => handleChange("full_name", e.target.value)}
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="kol-category">Category</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => handleChange("category", value)}
+            <div 
+              className="w-40 h-40 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 cursor-pointer overflow-hidden"
+              onClick={triggerFileInput}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="w-full md:w-1/2">
-              <Label htmlFor="kol-followers">Total Followers</Label>
-              <Input
-                id="kol-followers"
-                placeholder="0"
-                type="number"
-                value={formData.total_followers || ""}
-                onChange={(e) => handleChange("total_followers", e.target.value)}
-              />
+              {localPhotoUrl ? (
+                <img 
+                  src={localPhotoUrl} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-center p-4">
+                  <ImageIcon className="h-10 w-10 text-gray-400 mx-auto" />
+                  <span className="text-sm text-gray-500 block mt-2">Upload Photo</span>
+                </div>
+              )}
             </div>
-            
-            <div className="w-full md:w-1/2">
-              <Label htmlFor="kol-engagement">Engagement Rate (%)</Label>
-              <Input
-                id="kol-engagement"
-                placeholder="0"
-                type="number"
-                step="0.01"
-                value={formData.engagement_rate || ""}
-                onChange={(e) => handleChange("engagement_rate", e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2 pt-2">
-            <Switch 
-              id="kol-active" 
-              checked={formData.is_active}
-              onCheckedChange={(checked) => handleChange("is_active", checked)}
+            <input 
+              type="file" 
+              className="hidden" 
+              accept="image/*" 
+              ref={fileInputRef} 
+              onChange={handleFileChange}
             />
-            <Label htmlFor="kol-active">Active KOL</Label>
+            <Button 
+              variant="outline" 
+              className="w-full text-sm"
+              onClick={triggerFileInput}
+            >
+              <PlusIcon className="h-4 w-4 mr-2" /> 
+              {localPhotoUrl ? "Change Photo" : "Add Photo"}
+            </Button>
+            <div className="text-xs text-gray-500 text-center">
+              Recommended: Square image, 300x300px or larger
+            </div>
           </div>
-        </div>
+        </Card>
+        
+        <Tabs defaultValue="general" onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-4 mb-4">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="social">Social Media</TabsTrigger>
+            <TabsTrigger value="rates">Rates</TabsTrigger>
+            <TabsTrigger value="metrics">Metrics</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="general" className="mt-4">
+            <div className="space-y-4 p-4 border rounded-md">
+              <div>
+                <label className="block text-sm font-medium mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+                  value={formData.full_name}
+                  onChange={(e) => handleChange('full_name', e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Category *</label>
+                <select
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+                  value={formData.category}
+                  onChange={(e) => handleChange('category', e.target.value)}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category, index) => (
+                    <option key={index} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Total Followers</label>
+                  <input
+                    type="number"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+                    value={formData.total_followers}
+                    onChange={(e) => handleChange('total_followers', Number(e.target.value))}
+                    disabled={formData.tempSocialMedia.length > 0}
+                    title={formData.tempSocialMedia.length > 0 ? "This is calculated from social media platforms" : ""}
+                  />
+                  {formData.tempSocialMedia.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">Automatically calculated from platforms</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Engagement Rate (%)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+                    value={formData.engagement_rate}
+                    onChange={(e) => handleChange('engagement_rate', Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center mt-4">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                  checked={formData.is_active}
+                  onChange={(e) => handleChange('is_active', e.target.checked)}
+                />
+                <label htmlFor="is_active" className="ml-2 text-sm">Active KOL</label>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="social" className="mt-6">
+            <KolFormTabs 
+              formData={formData}
+              handleChange={handleChange}
+              categories={categories}
+              activeTab="social"
+            />
+          </TabsContent>
+          
+          <TabsContent value="rates" className="mt-6">
+            <KolFormTabs 
+              formData={formData}
+              handleChange={handleChange}
+              categories={categories}
+              activeTab="rates"
+            />
+          </TabsContent>
+          
+          <TabsContent value="metrics" className="mt-6">
+            <KolFormTabs 
+              formData={formData}
+              handleChange={handleChange}
+              categories={categories}
+              activeTab="metrics"
+            />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 bg-gray-100/50 rounded-md">
-          <TabsTrigger value="general" className="data-[state=active]:bg-white">General</TabsTrigger>
-          <TabsTrigger value="social" className="data-[state=active]:bg-white">Social Media</TabsTrigger>
-          <TabsTrigger value="rates" className="data-[state=active]:bg-white">Rates</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="general" className="mt-6">
-          {/* General tab content */}
-          <div className="space-y-4 p-4">
-            <h4 className="font-medium">Basic Information</h4>
-            <p className="text-sm text-gray-500 mb-4">
-              Add basic information about the KOL here.
-            </p>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="social" className="mt-6">
-          {/* Use the SocialMediaTab here */}
-          <KolFormTabs 
-            formData={formData}
-            handleChange={handleChange}
-            categories={categories}
-            activeTab="social"
-          />
-        </TabsContent>
-        
-        <TabsContent value="rates" className="mt-6">
-          {/* Rates tab content */}
-          <KolFormTabs 
-            formData={formData}
-            handleChange={handleChange}
-            categories={categories}
-            activeTab="rates"
-          />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };

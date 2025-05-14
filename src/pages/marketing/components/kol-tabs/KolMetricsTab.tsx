@@ -3,12 +3,22 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useKols } from "@/hooks/useKols";
 
 interface KolMetricsTabProps {
   selectedKol: any;
+}
+
+interface VideoMetric {
+  id?: string;
+  title: string;
+  url: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  impressions: number;
 }
 
 export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => {
@@ -20,7 +30,10 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
     purchases: 0,
     revenue: 0,
     cost: 0,
+    impressions: 0,
   });
+  
+  const [videoMetrics, setVideoMetrics] = useState<VideoMetric[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const { updateMetrics, isUpdating } = useKols();
@@ -36,7 +49,20 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
         purchases: selectedKol.metrics.purchases || 0,
         revenue: selectedKol.metrics.revenue || 0,
         cost: selectedKol.metrics.cost || 0,
+        impressions: selectedKol.metrics.impressions || 0,
       });
+
+      if (selectedKol.metrics.video_data) {
+        try {
+          const parsedVideoData = typeof selectedKol.metrics.video_data === 'string' 
+            ? JSON.parse(selectedKol.metrics.video_data) 
+            : selectedKol.metrics.video_data;
+          setVideoMetrics(parsedVideoData || []);
+        } catch (error) {
+          console.error("Error parsing video data:", error);
+          setVideoMetrics([]);
+        }
+      }
     }
   }, [selectedKol?.metrics]);
 
@@ -47,10 +73,62 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
     }));
   };
 
+  const handleAddVideo = () => {
+    setVideoMetrics(prev => [...prev, { 
+      title: '', 
+      url: '', 
+      likes: 0, 
+      comments: 0, 
+      shares: 0,
+      impressions: 0 
+    }]);
+  };
+
+  const handleRemoveVideo = (index: number) => {
+    setVideoMetrics(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleVideoMetricChange = (index: number, field: string, value: string | number) => {
+    setVideoMetrics(prev => 
+      prev.map((video, i) => 
+        i === index ? { ...video, [field]: field === 'url' || field === 'title' ? value : Number(value) || 0 } : video
+      )
+    );
+  };
+
+  const calculateTotalEngagement = () => {
+    let totalLikes = metrics.likes;
+    let totalComments = metrics.comments;
+    let totalShares = metrics.shares;
+    let totalImpressions = metrics.impressions;
+    
+    videoMetrics.forEach(video => {
+      totalLikes += video.likes || 0;
+      totalComments += video.comments || 0;
+      totalShares += video.shares || 0;
+      totalImpressions += video.impressions || 0;
+    });
+
+    // Calculate engagement rate only if impressions exist to avoid division by zero
+    const engagementRate = totalImpressions > 0 
+      ? (((totalLikes + totalComments + totalShares) / totalImpressions) * 100).toFixed(2)
+      : "0.00";
+
+    return {
+      totalLikes,
+      totalComments,
+      totalShares,
+      totalImpressions,
+      engagementRate
+    };
+  };
+
   const handleSaveMetrics = async () => {
     try {
       setIsLoading(true);
-      // Ensure we pass all metric fields to the updateMetrics function
+      const engagement = calculateTotalEngagement();
+      
+      // Prepare data to be stored
       const updatedMetrics = await updateMetrics(selectedKol.id, {
         likes: metrics.likes,
         comments: metrics.comments,
@@ -58,7 +136,10 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
         clicks: metrics.clicks,
         purchases: metrics.purchases,
         revenue: metrics.revenue,
-        cost: metrics.cost
+        cost: metrics.cost,
+        impressions: metrics.impressions,
+        video_data: JSON.stringify(videoMetrics),
+        total_engagement_rate: Number(engagement.engagementRate)
       });
       
       if (updatedMetrics) {
@@ -90,6 +171,8 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
   const roi = metrics.cost > 0 
     ? (((metrics.revenue - metrics.cost) / metrics.cost) * 100).toFixed(2)
     : "0.00";
+    
+  const engagement = calculateTotalEngagement();
 
   return (
     <div className="space-y-6">
@@ -106,7 +189,7 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
           <CardContent>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Likes</label>
+                <label className="block text-sm font-medium mb-1">Likes (Overall)</label>
                 <Input 
                   type="number" 
                   placeholder="0" 
@@ -115,7 +198,7 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Comments</label>
+                <label className="block text-sm font-medium mb-1">Comments (Overall)</label>
                 <Input 
                   type="number" 
                   placeholder="0" 
@@ -124,13 +207,34 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Shares</label>
+                <label className="block text-sm font-medium mb-1">Shares (Overall)</label>
                 <Input 
                   type="number" 
                   placeholder="0" 
                   value={metrics.shares}
                   onChange={(e) => handleInputChange('shares', e.target.value)}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Impressions (Overall)</label>
+                <Input 
+                  type="number" 
+                  placeholder="0" 
+                  value={metrics.impressions}
+                  onChange={(e) => handleInputChange('impressions', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Total Engagement Rate</label>
+                <Input 
+                  type="text" 
+                  value={`${engagement.engagementRate}%`}
+                  disabled
+                  className="bg-gray-50"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Calculated as (Likes + Comments + Shares) / Impressions × 100
+                </p>
               </div>
             </div>
           </CardContent>
@@ -212,6 +316,139 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
           </div>
         </CardContent>
       </Card>
+
+      {/* Video Metrics Tracking Section */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base">KOL Video Tracking</CardTitle>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleAddVideo}
+              className="flex items-center gap-1"
+            >
+              <PlusIcon size={14} /> Add Video
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {videoMetrics.length === 0 ? (
+            <div className="text-center py-4 text-gray-500">
+              No videos added yet. Click "Add Video" to start tracking KOL videos.
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {videoMetrics.map((video, index) => (
+                <div key={index} className="border rounded-md p-4 relative">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="absolute top-2 right-2 text-gray-500 hover:text-red-600" 
+                    onClick={() => handleRemoveVideo(index)}
+                  >
+                    <TrashIcon size={16} />
+                  </Button>
+                  
+                  <h4 className="font-medium mb-3">Video {index + 1}</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Title</label>
+                      <Input 
+                        type="text"
+                        placeholder="Video title"
+                        value={video.title}
+                        onChange={(e) => handleVideoMetricChange(index, 'title', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Video URL</label>
+                      <Input 
+                        type="url"
+                        placeholder="https://..."
+                        value={video.url}
+                        onChange={(e) => handleVideoMetricChange(index, 'url', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Likes</label>
+                      <Input 
+                        type="number"
+                        placeholder="0"
+                        value={video.likes}
+                        onChange={(e) => handleVideoMetricChange(index, 'likes', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Comments</label>
+                      <Input 
+                        type="number"
+                        placeholder="0"
+                        value={video.comments}
+                        onChange={(e) => handleVideoMetricChange(index, 'comments', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Shares</label>
+                      <Input 
+                        type="number"
+                        placeholder="0"
+                        value={video.shares}
+                        onChange={(e) => handleVideoMetricChange(index, 'shares', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Impressions</label>
+                      <Input 
+                        type="number"
+                        placeholder="0"
+                        value={video.impressions}
+                        onChange={(e) => handleVideoMetricChange(index, 'impressions', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Video Metrics Summary Card */}
+      {videoMetrics.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Video Metrics Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <span className="text-sm font-medium text-gray-500">Videos Tracked</span>
+                <p className="text-xl font-bold">{videoMetrics.length}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-gray-500">Total Likes</span>
+                <p className="text-xl font-bold">{videoMetrics.reduce((sum, video) => sum + (video.likes || 0), 0)}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-gray-500">Total Comments</span>
+                <p className="text-xl font-bold">{videoMetrics.reduce((sum, video) => sum + (video.comments || 0), 0)}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-gray-500">Total Shares</span>
+                <p className="text-xl font-bold">{videoMetrics.reduce((sum, video) => sum + (video.shares || 0), 0)}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-gray-500">Total Impressions</span>
+                <p className="text-xl font-bold">{videoMetrics.reduce((sum, video) => sum + (video.impressions || 0), 0)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-end">
         <Button 
