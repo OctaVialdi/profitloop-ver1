@@ -41,6 +41,7 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
   // Initialize form with existing data when component mounts or when selectedKol changes
   useEffect(() => {
     if (selectedKol?.metrics) {
+      console.log("Loading metrics:", selectedKol.metrics);
       setMetrics({
         likes: selectedKol.metrics.likes || 0,
         comments: selectedKol.metrics.comments || 0,
@@ -54,6 +55,7 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
 
       if (selectedKol.metrics.video_data) {
         try {
+          console.log("Video data from DB:", selectedKol.metrics.video_data);
           const parsedVideoData = typeof selectedKol.metrics.video_data === 'string' 
             ? JSON.parse(selectedKol.metrics.video_data) 
             : selectedKol.metrics.video_data;
@@ -127,6 +129,9 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
     try {
       setIsLoading(true);
       const engagement = calculateTotalEngagement();
+      
+      console.log("Saving video metrics:", videoMetrics);
+      console.log("Stringified video data:", JSON.stringify(videoMetrics));
       
       // Prepare data to be stored
       const updatedMetrics = await updateMetrics(selectedKol.id, {
