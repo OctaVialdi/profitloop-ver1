@@ -60,10 +60,8 @@ export const useKols = () => {
   const { organization } = useOrganization();
   
   // Helper function to fetch a single KOL with all its details
-  // Moved this function definition up before it's used below
   const fetchKolWithDetails = async (kolId: string) => {
     try {
-      // Fetch the KOL base data
       const { data: kolData, error: kolError } = await supabase
         .from('data_kol')
         .select('*')
@@ -74,7 +72,6 @@ export const useKols = () => {
         throw kolError;
       }
       
-      // Fetch social media platforms
       const { data: socialMediaData, error: socialMediaError } = await supabase
         .from('kol_social_media')
         .select('*')
@@ -84,7 +81,6 @@ export const useKols = () => {
         throw socialMediaError;
       }
       
-      // Fetch rates
       const { data: ratesData, error: ratesError } = await supabase
         .from('kol_rates')
         .select('*')
@@ -94,7 +90,6 @@ export const useKols = () => {
         throw ratesError;
       }
       
-      // Fetch metrics
       const { data: metricsData, error: metricsError } = await supabase
         .from('kol_metrics')
         .select('*')
@@ -106,7 +101,6 @@ export const useKols = () => {
         throw metricsError;
       }
       
-      // Combine all the data
       return {
         ...kolData,
         social_media: socialMediaData || [],
@@ -137,11 +131,9 @@ export const useKols = () => {
         throw error;
       }
 
-      // For each KOL, fetch associated platforms and rates
       if (data && data.length > 0) {
         const kolsWithDetails = await Promise.all(
           data.map(async (kol) => {
-            // Fetch social media platforms for this KOL
             const { data: socialMediaData, error: socialMediaError } = await supabase
               .from('kol_social_media')
               .select('*')
@@ -152,7 +144,6 @@ export const useKols = () => {
               return { ...kol, social_media: [] };
             }
 
-            // Fetch rates for this KOL
             const { data: ratesData, error: ratesError } = await supabase
               .from('kol_rates')
               .select('*')
@@ -167,7 +158,6 @@ export const useKols = () => {
               };
             }
 
-            // Fetch metrics for this KOL
             const { data: metricsData, error: metricsError } = await supabase
               .from('kol_metrics')
               .select('*')
@@ -179,7 +169,6 @@ export const useKols = () => {
               console.error('Error fetching metrics for KOL:', metricsError);
             }
 
-            // Update platforms array based on social media entries
             let platforms = socialMediaData ? socialMediaData.map(item => item.platform) : [];
             
             return { 
@@ -215,7 +204,6 @@ export const useKols = () => {
     
     setIsLoading(true);
     try {
-      // Prepare the data with organization_id
       const newKol: NewKolData = {
         ...kolData,
         organization_id: organization.id,
@@ -239,7 +227,6 @@ export const useKols = () => {
       
       console.log("Added KOL successfully:", data);
       
-      // Add KOL to local state
       setKols(prevKols => [data, ...prevKols]);
       
       return data;
@@ -275,7 +262,6 @@ export const useKols = () => {
         description: 'KOL has been updated successfully',
       });
       
-      // Update the local state with the updated KOL
       setKols(prevKols => prevKols.map(kol => kol.id === id ? data : kol));
       
       return data;
@@ -297,7 +283,6 @@ export const useKols = () => {
     try {
       const kolToDelete = kols.find(kol => kol.id === id);
       
-      // If KOL has a photo, delete it from storage first
       if (kolToDelete?.photo_path) {
         await deleteProfilePhoto(kolToDelete.photo_path);
       }
@@ -316,7 +301,6 @@ export const useKols = () => {
         description: 'KOL has been deleted successfully',
       });
       
-      // Update the local state by removing the deleted KOL
       setKols(prevKols => prevKols.filter(kol => kol.id !== id));
       
       return true;
@@ -352,7 +336,6 @@ export const useKols = () => {
         throw new Error("Failed to upload photo");
       }
 
-      // Update KOL record with the photo URL and path
       const { data, error: updateError } = await supabase
         .from('data_kol')
         .update({
@@ -372,7 +355,6 @@ export const useKols = () => {
         description: 'Profile photo uploaded successfully',
       });
 
-      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === id ? { ...kol, photo_url: url, photo_path: filePath } : kol
       ));
@@ -394,11 +376,9 @@ export const useKols = () => {
   const removeKolPhoto = useCallback(async (id: string) => {
     setIsUploading(true);
     try {
-      // Find the KOL to get the photo path
       const kolToUpdate = kols.find(kol => kol.id === id);
       
       if (!kolToUpdate?.photo_path) {
-        // If there's no photo path, just update the record to remove photo references
         const { data, error: updateError } = await supabase
           .from('data_kol')
           .update({
@@ -413,7 +393,6 @@ export const useKols = () => {
           throw updateError;
         }
 
-        // Update local state immediately
         setKols(prevKols => prevKols.map(kol => 
           kol.id === id ? { ...kol, photo_url: null, photo_path: null } : kol
         ));
@@ -421,14 +400,12 @@ export const useKols = () => {
         return data;
       }
 
-      // Delete from storage
       const { error: deleteError } = await deleteProfilePhoto(kolToUpdate.photo_path);
       
       if (deleteError) {
         throw deleteError;
       }
 
-      // Update KOL record to remove photo references
       const { data, error: updateError } = await supabase
         .from('data_kol')
         .update({
@@ -443,7 +420,6 @@ export const useKols = () => {
         throw updateError;
       }
 
-      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === id ? { ...kol, photo_url: null, photo_path: null } : kol
       ));
@@ -474,7 +450,6 @@ export const useKols = () => {
   ) => {
     setIsUpdating(true);
     try {
-      // First, insert into kol_social_media table
       const { data: socialData, error: socialError } = await supabase
         .from('kol_social_media')
         .insert({
@@ -492,22 +467,18 @@ export const useKols = () => {
         throw socialError;
       }
 
-      // Get current KOL
       const kol = kols.find(k => k.id === kolId);
       if (!kol) {
         throw new Error("KOL not found");
       }
 
-      // Create or update platforms array
       const currentPlatforms = kol.platforms || [];
       const newPlatforms = [...currentPlatforms, platformData.platform];
       
-      // Update KOL with new platform
       const { data, error } = await supabase
         .from('data_kol')
         .update({
           platforms: newPlatforms,
-          // Update followers if provided
           ...(platformData.followers && { total_followers: Number(kol.total_followers) + Number(platformData.followers) })
         })
         .eq('id', kolId)
@@ -518,7 +489,6 @@ export const useKols = () => {
         throw error;
       }
 
-      // Insert metrics data
       if (platformData.engagement > 0 || platformData.followers > 0) {
         const { data: metricsData, error: metricsError } = await supabase
           .from('kol_metrics')
@@ -546,10 +516,8 @@ export const useKols = () => {
         description: 'Platform added successfully',
       });
 
-      // Fetch the updated KOL data with all details
       const updatedKol = await fetchKolWithDetails(kolId);
       
-      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -571,7 +539,6 @@ export const useKols = () => {
   const deletePlatform = useCallback(async (kolId: string, platformId: string) => {
     setIsUpdating(true);
     try {
-      // Get the platform info before deleting (to update follower count)
       const { data: platformData, error: platformError } = await supabase
         .from('kol_social_media')
         .select('*')
@@ -582,7 +549,6 @@ export const useKols = () => {
         throw platformError;
       }
       
-      // Delete the platform
       const { error: deleteError } = await supabase
         .from('kol_social_media')
         .delete()
@@ -592,20 +558,16 @@ export const useKols = () => {
         throw deleteError;
       }
       
-      // Get current KOL
       const kol = kols.find(k => k.id === kolId);
       if (!kol) {
         throw new Error("KOL not found");
       }
       
-      // Update platforms list and total followers if needed
       const currentPlatforms = kol.platforms || [];
       const updatedPlatforms = currentPlatforms.filter(p => p !== platformData.platform);
       
-      // Update KOL record
       const updateData: any = { platforms: updatedPlatforms };
       
-      // Reduce follower count if needed
       if (platformData.followers > 0) {
         const newFollowers = Math.max(0, kol.total_followers - platformData.followers);
         updateData.total_followers = newFollowers;
@@ -625,10 +587,8 @@ export const useKols = () => {
         description: 'Platform deleted successfully',
       });
       
-      // Fetch updated KOL data
       const updatedKol = await fetchKolWithDetails(kolId);
       
-      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -658,7 +618,6 @@ export const useKols = () => {
   ) => {
     setIsUpdating(true);
     try {
-      // First insert into kol_rates table
       const { data: rateRecord, error: rateInsertError } = await supabase
         .from('kol_rates')
         .insert({
@@ -680,10 +639,8 @@ export const useKols = () => {
         description: 'Rate card added successfully',
       });
       
-      // Fetch the updated KOL with all details
       const updatedKol = await fetchKolWithDetails(kolId);
       
-      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -705,7 +662,6 @@ export const useKols = () => {
   const deleteRateCard = useCallback(async (kolId: string, rateCardId: string) => {
     setIsUpdating(true);
     try {
-      // Delete the rate card
       const { error: deleteError } = await supabase
         .from('kol_rates')
         .delete()
@@ -720,10 +676,8 @@ export const useKols = () => {
         description: 'Rate card deleted successfully',
       });
       
-      // Fetch updated KOL data
       const updatedKol = await fetchKolWithDetails(kolId);
       
-      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -759,7 +713,6 @@ export const useKols = () => {
   ) => {
     setIsUpdating(true);
     try {
-      // Check if metrics exist for this KOL
       const { data: existingMetrics, error: checkError } = await supabase
         .from('kol_metrics')
         .select('*')
@@ -771,7 +724,6 @@ export const useKols = () => {
         throw checkError;
       }
       
-      // Calculate derived metrics
       const clicks = metricData.clicks || 0;
       const purchases = metricData.purchases || 0;
       const revenue = metricData.revenue || 0;
@@ -781,7 +733,6 @@ export const useKols = () => {
       const roi = cost > 0 ? ((revenue - cost) / cost) * 100 : 0;
       
       if (existingMetrics && existingMetrics.length > 0) {
-        // Update existing metrics
         metricsId = existingMetrics[0].id;
         const { data: updatedMetrics, error: updateError } = await supabase
           .from('kol_metrics')
@@ -808,17 +759,14 @@ export const useKols = () => {
           throw updateError;
         }
         
-        // After successful update, fetch the updated KOL with all details
         const updatedKol = await fetchKolWithDetails(kolId);
         
-        // Update local state
         setKols(prevKols => prevKols.map(kol => 
           kol.id === kolId ? updatedKol : kol
         ));
         
         return updatedMetrics;
       } else {
-        // Create new metrics
         const { data: newMetrics, error: insertError } = await supabase
           .from('kol_metrics')
           .insert({
@@ -843,10 +791,8 @@ export const useKols = () => {
           throw insertError;
         }
         
-        // After successful update, fetch the updated KOL with all details
         const updatedKol = await fetchKolWithDetails(kolId);
         
-        // Update local state
         setKols(prevKols => prevKols.map(kol => 
           kol.id === kolId ? updatedKol : kol
         ));
@@ -864,9 +810,8 @@ export const useKols = () => {
     } finally {
       setIsUpdating(false);
     }
-  };
+  }, []);
   
-  // Initial fetch when the component mounts and has organization data
   useEffect(() => {
     if (organization?.id) {
       fetchKols();
