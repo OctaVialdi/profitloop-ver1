@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SaveIcon, PlusIcon, TrashIcon } from "lucide-react";
+import { SaveIcon, PlusIcon, TrashIcon, Link as LinkIcon, Film } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useKols } from "@/hooks/useKols";
 
@@ -174,12 +174,96 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
     
   const engagement = calculateTotalEngagement();
 
+  // Function to extract video ID from various video platforms
+  const getVideoId = (url: string) => {
+    if (!url) return null;
+    
+    // YouTube
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const youtubeMatch = url.match(youtubeRegex);
+    if (youtubeMatch) return { platform: 'youtube', id: youtubeMatch[1] };
+    
+    // TikTok
+    const tiktokRegex = /tiktok\.com\/.+\/video\/(\d+)/;
+    const tiktokMatch = url.match(tiktokRegex);
+    if (tiktokMatch) return { platform: 'tiktok', id: tiktokMatch[1] };
+    
+    // Instagram - note that Instagram doesn't easily allow embedding, so we just return the URL
+    if (url.includes('instagram.com')) {
+      return { platform: 'instagram', id: url };
+    }
+    
+    return null;
+  };
+
+  const getVideoThumbnail = (url: string) => {
+    const videoInfo = getVideoId(url);
+    if (!videoInfo) return null;
+    
+    if (videoInfo.platform === 'youtube') {
+      return `https://img.youtube.com/vi/${videoInfo.id}/mqdefault.jpg`;
+    }
+    
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h4 className="font-semibold mb-1">Performance Metrics</h4>
         <p className="text-sm text-gray-500 mb-6">Track KOL campaign performance and return on investment</p>
       </div>
+
+      {/* Combined Metrics Summary Card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Metrics Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div>
+              <span className="text-sm font-medium text-gray-500">Total Videos</span>
+              <p className="text-xl font-bold">{videoMetrics.length}</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Total Likes</span>
+              <p className="text-xl font-bold">{engagement.totalLikes}</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Total Comments</span>
+              <p className="text-xl font-bold">{engagement.totalComments}</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Total Shares</span>
+              <p className="text-xl font-bold">{engagement.totalShares}</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Engagement Rate</span>
+              <p className="text-xl font-bold">{engagement.engagementRate}%</p>
+              <p className="text-xs text-gray-500">
+                (Likes + Comments + Shares) / Impressions × 100
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div>
+              <span className="text-sm font-medium text-gray-500">Conversion Rate</span>
+              <p className="text-xl font-bold">{conversionRate}%</p>
+              <p className="text-xs text-gray-500">Purchases / Clicks × 100</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">ROI</span>
+              <p className="text-xl font-bold">{roi}%</p>
+              <p className="text-xs text-gray-500">(Revenue - Cost) / Cost × 100</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Total Impressions</span>
+              <p className="text-xl font-bold">{engagement.totalImpressions}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
@@ -224,25 +308,13 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
                   onChange={(e) => handleInputChange('impressions', e.target.value)}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Total Engagement Rate</label>
-                <Input 
-                  type="text" 
-                  value={`${engagement.engagementRate}%`}
-                  disabled
-                  className="bg-gray-50"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Calculated as (Likes + Comments + Shares) / Impressions × 100
-                </p>
-              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Conversion Metrics</CardTitle>
+            <CardTitle className="text-base">Conversion & Financial Metrics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -265,57 +337,27 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Conversion Rate</label>
+                <label className="block text-sm font-medium mb-1">Revenue Generated</label>
                 <Input 
-                  type="text" 
-                  value={`${conversionRate}%`}
-                  disabled
-                  className="bg-gray-50"
+                  type="number" 
+                  placeholder="0" 
+                  value={metrics.revenue}
+                  onChange={(e) => handleInputChange('revenue', e.target.value)}
                 />
-                <p className="text-xs text-gray-500 mt-1">Calculated automatically from clicks and purchases</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Campaign Cost</label>
+                <Input 
+                  type="number" 
+                  placeholder="0" 
+                  value={metrics.cost}
+                  onChange={(e) => handleInputChange('cost', e.target.value)}
+                />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Financial Metrics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Campaign Cost</label>
-              <Input 
-                type="number" 
-                placeholder="0" 
-                value={metrics.cost}
-                onChange={(e) => handleInputChange('cost', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Revenue Generated</label>
-              <Input 
-                type="number" 
-                placeholder="0" 
-                value={metrics.revenue}
-                onChange={(e) => handleInputChange('revenue', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">ROI</label>
-              <Input 
-                type="text" 
-                value={`${roi}%`}
-                disabled
-                className="bg-gray-50"
-              />
-              <p className="text-xs text-gray-500 mt-1">Calculated automatically from cost and revenue</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Video Metrics Tracking Section */}
       <Card>
@@ -363,14 +405,46 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Video URL</label>
-                      <Input 
-                        type="url"
-                        placeholder="https://..."
-                        value={video.url}
-                        onChange={(e) => handleVideoMetricChange(index, 'url', e.target.value)}
-                      />
+                      <div className="relative">
+                        <Input 
+                          type="url"
+                          placeholder="https://..."
+                          value={video.url}
+                          onChange={(e) => handleVideoMetricChange(index, 'url', e.target.value)}
+                          className="pr-10"
+                        />
+                        {video.url && (
+                          <a 
+                            href={video.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+                          >
+                            <LinkIcon size={16} />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Video thumbnail preview */}
+                  {video.url && getVideoThumbnail(video.url) && (
+                    <div className="mb-4 flex items-center">
+                      <div className="relative rounded-md overflow-hidden w-32 h-20 mr-3 border">
+                        <a href={video.url} target="_blank" rel="noopener noreferrer">
+                          <img 
+                            src={getVideoThumbnail(video.url)} 
+                            alt="Video thumbnail" 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                            <Film size={24} className="text-white" />
+                          </div>
+                        </a>
+                      </div>
+                      <span className="text-sm text-gray-600">Click thumbnail to view video</span>
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
@@ -416,39 +490,6 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
           )}
         </CardContent>
       </Card>
-
-      {/* Video Metrics Summary Card */}
-      {videoMetrics.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Video Metrics Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div>
-                <span className="text-sm font-medium text-gray-500">Videos Tracked</span>
-                <p className="text-xl font-bold">{videoMetrics.length}</p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-500">Total Likes</span>
-                <p className="text-xl font-bold">{videoMetrics.reduce((sum, video) => sum + (video.likes || 0), 0)}</p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-500">Total Comments</span>
-                <p className="text-xl font-bold">{videoMetrics.reduce((sum, video) => sum + (video.comments || 0), 0)}</p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-500">Total Shares</span>
-                <p className="text-xl font-bold">{videoMetrics.reduce((sum, video) => sum + (video.shares || 0), 0)}</p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-500">Total Impressions</span>
-                <p className="text-xl font-bold">{videoMetrics.reduce((sum, video) => sum + (video.impressions || 0), 0)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <div className="flex justify-end">
         <Button 
