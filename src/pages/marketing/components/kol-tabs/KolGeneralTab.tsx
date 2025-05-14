@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +30,7 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
   const [isDeletePhotoDialogOpen, setIsDeletePhotoDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadKolPhoto, removeKolPhoto } = useKols();
@@ -44,6 +44,7 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
       setEngagement(selectedKol.engagement_rate?.toString() || "0");
       setIsActive(selectedKol.is_active || false);
       setLocalPhotoUrl(null);
+      setPhotoRemoved(false);
     }
   }, [selectedKol]);
   
@@ -77,6 +78,7 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
     reader.onload = (e) => {
       if (e.target?.result) {
         setLocalPhotoUrl(e.target.result as string);
+        setPhotoRemoved(false);
       }
     };
     reader.readAsDataURL(file);
@@ -112,8 +114,12 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
     setIsRemoving(true);
     try {
       await removeKolPhoto(selectedKol.id);
+      
+      // Immediately update the UI
       setLocalPhotoUrl(null);
+      setPhotoRemoved(true);
       setIsDeletePhotoDialogOpen(false);
+      
       toast({
         title: "Success",
         description: "Photo removed successfully",
@@ -131,7 +137,7 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
   };
   
   // Get display photo URL (local preview or stored URL)
-  const displayPhotoUrl = localPhotoUrl || selectedKol?.photo_url;
+  const displayPhotoUrl = photoRemoved ? null : (localPhotoUrl || selectedKol?.photo_url);
   
   // Check if KOL has a photo (either locally or stored)
   const hasPhoto = !!displayPhotoUrl;

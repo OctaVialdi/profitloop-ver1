@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -338,7 +337,27 @@ export const useKols = () => {
       const kolToUpdate = kols.find(kol => kol.id === id);
       
       if (!kolToUpdate?.photo_path) {
-        throw new Error("No photo to delete");
+        // If there's no photo path, just update the record to remove photo references
+        const { data, error: updateError } = await supabase
+          .from('data_kol')
+          .update({
+            photo_url: null,
+            photo_path: null
+          })
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        // Update local state immediately
+        setKols(prevKols => prevKols.map(kol => 
+          kol.id === id ? { ...kol, photo_url: null, photo_path: null } : kol
+        ));
+
+        return data;
       }
 
       // Delete from storage
@@ -363,12 +382,7 @@ export const useKols = () => {
         throw updateError;
       }
 
-      toast({
-        title: 'Success',
-        description: 'Profile photo removed successfully',
-      });
-
-      // Update local state
+      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === id ? { ...kol, photo_url: null, photo_path: null } : kol
       ));
@@ -708,10 +722,16 @@ export const useKols = () => {
         const { data: updatedMetrics, error: updateError } = await supabase
           .from('kol_metrics')
           .update({
-            ...metricData,
+            likes: metricData.likes,
+            comments: metricData.comments,
+            shares: metricData.shares,
+            clicks: metricData.clicks,
+            purchases: metricData.purchases,
+            revenue: metricData.revenue,
+            cost: metricData.cost,
             conversion_rate: conversionRate,
             roi: roi,
-            updated_at: new Date().toISOString() // Fixed by converting Date to ISO string
+            updated_at: new Date().toISOString()
           })
           .eq('id', metricsId)
           .select()
@@ -720,11 +740,6 @@ export const useKols = () => {
         if (updateError) {
           throw updateError;
         }
-        
-        toast({
-          title: 'Success',
-          description: 'Metrics updated successfully',
-        });
         
         // After successful update, fetch the updated KOL with all details
         const updatedKol = await fetchKolWithDetails(kolId);
@@ -741,7 +756,13 @@ export const useKols = () => {
           .from('kol_metrics')
           .insert({
             kol_id: kolId,
-            ...metricData,
+            likes: metricData.likes,
+            comments: metricData.comments,
+            shares: metricData.shares,
+            clicks: metricData.clicks,
+            purchases: metricData.purchases,
+            revenue: metricData.revenue,
+            cost: metricData.cost,
             conversion_rate: conversionRate,
             roi: roi
           })
@@ -751,11 +772,6 @@ export const useKols = () => {
         if (insertError) {
           throw insertError;
         }
-        
-        toast({
-          title: 'Success',
-          description: 'Metrics added successfully',
-        });
         
         // After successful update, fetch the updated KOL with all details
         const updatedKol = await fetchKolWithDetails(kolId);
@@ -778,8 +794,8 @@ export const useKols = () => {
     } finally {
       setIsUpdating(false);
     }
-  }, []);
-  
+  }, [fetchKolWithDetails]);
+
   // Helper function to fetch a single KOL with all its details
   const fetchKolWithDetails = async (kolId: string) => {
     try {

@@ -50,11 +50,25 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
   const handleSaveMetrics = async () => {
     try {
       setIsLoading(true);
-      await updateMetrics(selectedKol.id, metrics);
-      toast({
-        title: "Success",
-        description: "Metrics saved successfully",
+      // Ensure we pass all metric fields to the updateMetrics function
+      const updatedMetrics = await updateMetrics(selectedKol.id, {
+        likes: metrics.likes,
+        comments: metrics.comments,
+        shares: metrics.shares,
+        clicks: metrics.clicks,
+        purchases: metrics.purchases,
+        revenue: metrics.revenue,
+        cost: metrics.cost
       });
+      
+      if (updatedMetrics) {
+        toast({
+          title: "Success",
+          description: "Metrics saved successfully",
+        });
+      } else {
+        throw new Error("Failed to save metrics");
+      }
     } catch (error) {
       console.error("Error saving metrics:", error);
       toast({
@@ -203,9 +217,9 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
         <Button 
           className="bg-green-600 hover:bg-green-700"
           onClick={handleSaveMetrics}
-          disabled={isLoading}
+          disabled={isLoading || isUpdating}
         >
-          {isLoading ? (
+          {(isLoading || isUpdating) ? (
             <span className="flex items-center">
               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
