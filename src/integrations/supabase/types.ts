@@ -1845,16 +1845,13 @@ export type Database = {
           cost: number | null
           created_at: string | null
           id: string
-          impressions: number | null
           kol_id: string | null
           likes: number | null
           purchases: number | null
           revenue: number | null
           roi: number | null
           shares: number | null
-          total_engagement_rate: number | null
           updated_at: string | null
-          video_data: Json | null
         }
         Insert: {
           clicks?: number | null
@@ -1863,16 +1860,13 @@ export type Database = {
           cost?: number | null
           created_at?: string | null
           id?: string
-          impressions?: number | null
           kol_id?: string | null
           likes?: number | null
           purchases?: number | null
           revenue?: number | null
           roi?: number | null
           shares?: number | null
-          total_engagement_rate?: number | null
           updated_at?: string | null
-          video_data?: Json | null
         }
         Update: {
           clicks?: number | null
@@ -1881,16 +1875,13 @@ export type Database = {
           cost?: number | null
           created_at?: string | null
           id?: string
-          impressions?: number | null
           kol_id?: string | null
           likes?: number | null
           purchases?: number | null
           revenue?: number | null
           roi?: number | null
           shares?: number | null
-          total_engagement_rate?: number | null
           updated_at?: string | null
-          video_data?: Json | null
         }
         Relationships: [
           {

@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useLoginForm } from "@/hooks/useLoginForm";
+import { useLoginForm } from "@/hooks/auth/useLoginForm";
 import LoginForm from "@/components/auth/LoginForm";
 
 const Login = () => {
@@ -57,13 +57,9 @@ const Login = () => {
   useEffect(() => {
     // Check if user is already logged in
     const checkSession = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          navigate("/organizations", { replace: true });
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/organizations");
       }
     };
     
@@ -123,5 +119,4 @@ const Login = () => {
   );
 };
 
-// Make sure we export the component as default
 export default Login;

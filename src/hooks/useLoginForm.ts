@@ -1,5 +1,4 @@
 
-import { useLoginForm as useLoginFormImplementation } from "./auth/useLoginForm";
+import { useLoginForm } from "./auth/useLoginForm";
 
-// Export the hook directly to avoid circular dependencies
-export const useLoginForm = useLoginFormImplementation;
+export { useLoginForm };
