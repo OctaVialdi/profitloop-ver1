@@ -96,39 +96,21 @@ export function useFetchContentPlan(): FetchContentPlanReturn {
     subServicesQuery.isLoading || 
     contentPillarsQuery.isLoading;
 
-  // Combine errors from all queries
-  const combinedError = 
-    error || 
-    contentPlansQuery.error || 
-    contentTypesQuery.error || 
-    teamMembersQuery.error || 
-    servicesQuery.error || 
-    subServicesQuery.error || 
-    contentPillarsQuery.error;
-  
-  // Convert team members to LegacyEmployee format with correct property mapping
-  const convertedTeamMembers = (teamMembersQuery.data || []).map(member => ({
-    id: member.id,
-    name: member.name,
-    jobPosition: member.job_position || '',
-    organization: member.department || '',
-    role: member.role || '',
-    organization_id: organization?.id || '', // Add the required organization_id field
-    email: '',  // Add empty required fields to satisfy the type
-    status: 'Active',
-    employee_id: member.id, // Use the member ID as employee_id
-    employeeId: member.id // Legacy alias
-  }));
-
   return {
     contentPlans: contentPlansQuery.data || [],
     contentTypes: contentTypesQuery.data || [],
-    teamMembers: convertedTeamMembers,
+    teamMembers: teamMembersQuery.data || [],
     services: servicesQuery.data || [],
     subServices: subServicesQuery.data || [],
     contentPillars: contentPillarsQuery.data || [],
     loading,
-    error: combinedError as Error | null,
+    error: error || 
+      contentPlansQuery.error || 
+      contentTypesQuery.error || 
+      teamMembersQuery.error || 
+      servicesQuery.error || 
+      subServicesQuery.error || 
+      contentPillarsQuery.error,
     fetchContentPlans: fetchContentPlansData
   };
 }

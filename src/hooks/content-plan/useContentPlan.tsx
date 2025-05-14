@@ -1,19 +1,17 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/hooks/useOrganization';
-import { ContentPlanItem, ContentType, Service, SubService, ContentPillar } from './types';
-import { formatDisplayDate, getFilteredSubServices } from './contentPlanUtils';
+import { formatDisplayDate } from './contentPlanUtils';
+import { getContentPlansWithFormattedData } from './contentPlanUtils';
+import { ContentPlanHookReturn } from './types';
 import { useFetchContentPlan } from './hooks/useFetchContentPlan';
 import { useMutateContentPlan } from './hooks/useMutateContentPlan';
+import { useTeamMembersFilter } from './hooks/useTeamMembersFilter';
+import { useCallback, useMemo } from 'react';
 import { LegacyEmployee } from '@/hooks/useEmployees';
 
-export const useContentPlan = () => {
-  const { organization } = useOrganization();
-  
-  // Use existing hooks for data fetching and mutations
+export function useContentPlan(): ContentPlanHookReturn {
+  // Fetch content plan data
   const {
-    contentPlans,
+    contentPlans: rawContentPlans,
     contentTypes,
     teamMembers,
     services,
@@ -24,6 +22,7 @@ export const useContentPlan = () => {
     fetchContentPlans
   } = useFetchContentPlan();
 
+  // Content plan mutation hooks
   const {
     addContentPlan,
     updateContentPlan,
@@ -31,40 +30,49 @@ export const useContentPlan = () => {
     resetRevisionCounter
   } = useMutateContentPlan();
 
-  // Filter team members by job position
-  const getContentPlannerTeamMembers = useCallback((): LegacyEmployee[] => {
-    // Filter teamMembers for content planners
-    return teamMembers.filter(member => 
-      member.jobPosition?.toLowerCase().includes('content') || 
-      member.organization?.toLowerCase().includes('marketing')
-    );
-  }, [teamMembers]);
+  // Team members filter hooks
+  const {
+    getFilteredTeamMembers,
+    getFilteredSubServices,
+    getContentPlannerTeamMembers,
+    getCreativeTeamMembers
+  } = useTeamMembersFilter(teamMembers, subServices);
 
-  const getCreativeTeamMembers = useCallback((): LegacyEmployee[] => {
-    // Filter teamMembers for creative team
-    return teamMembers.filter(member => 
-      member.jobPosition?.toLowerCase().includes('creative') || 
-      member.jobPosition?.toLowerCase().includes('design')
-    );
-  }, [teamMembers]);
+  // Memoize content plans with computed fields
+  const contentPlans = useMemo(() => 
+    getContentPlansWithFormattedData(rawContentPlans),
+    [rawContentPlans]
+  );
+
+  // Update the return type specification for these functions
+  const memoizedGetContentPlannerTeamMembers = useCallback((): LegacyEmployee[] => 
+    getContentPlannerTeamMembers(teamMembers) as LegacyEmployee[],
+    [teamMembers, getContentPlannerTeamMembers]
+  );
+  
+  const memoizedGetCreativeTeamMembers = useCallback((): LegacyEmployee[] => 
+    getCreativeTeamMembers(teamMembers) as LegacyEmployee[],
+    [teamMembers, getCreativeTeamMembers]
+  );
 
   return {
     contentPlans,
     contentTypes,
+    teamMembers,
     services,
     subServices,
     contentPillars,
-    teamMembers,
     loading,
     error,
     fetchContentPlans,
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
-    getFilteredSubServices: (serviceId: string) => getFilteredSubServices(subServices, serviceId),
+    getFilteredTeamMembers,
+    getFilteredSubServices,
     resetRevisionCounter,
     formatDisplayDate,
-    getContentPlannerTeamMembers,
-    getCreativeTeamMembers
+    getContentPlannerTeamMembers: memoizedGetContentPlannerTeamMembers,
+    getCreativeTeamMembers: memoizedGetCreativeTeamMembers
   };
-};
+}

@@ -1,109 +1,74 @@
 
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import React from "react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface KolRatesTabProps {
-  kolId: string;
+  selectedKol: any;
 }
 
-interface Rate {
-  id: string;
-  platform: string;
-  min_rate: number;
-  max_rate: number;
-  currency: string;
-}
-
-const KolRatesTab: React.FC<KolRatesTabProps> = ({ kolId }) => {
-  const [rates, setRates] = useState<Rate[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRates = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("kol_rates")
-          .select("*")
-          .eq("kol_id", kolId)
-          .order("platform");
-
-        if (error) throw error;
-        setRates(data || []);
-      } catch (error) {
-        console.error("Error fetching rates:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRates();
-    
-    // Set up realtime subscription
-    const subscription = supabase
-      .channel(`kol_rates_${kolId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'kol_rates', filter: `kol_id=eq.${kolId}` }, () => {
-        fetchRates();
-      })
-      .subscribe();
-      
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [kolId]);
-
+export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Rate Cards</h3>
-        <Button variant="outline" size="sm">
-          <PlusCircle className="h-4 w-4 mr-1" /> Add Rate Card
+    <div className="space-y-6">
+      <div>
+        <h4 className="font-semibold mb-1">Rate Cards</h4>
+        <p className="text-sm text-gray-500 mb-6">Manage the KOL's pricing for different platforms and content types</p>
+      </div>
+      
+      <div className="border rounded-md p-6">
+        <h5 className="font-medium mb-4">Add New Rate Card</h5>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Platform</label>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select platform" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="instagram">Instagram</SelectItem>
+                <SelectItem value="tiktok">TikTok</SelectItem>
+                <SelectItem value="youtube">YouTube</SelectItem>
+                <SelectItem value="facebook">Facebook</SelectItem>
+                <SelectItem value="twitter">Twitter</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Currency</label>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="USD" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="usd">USD</SelectItem>
+                <SelectItem value="idr">IDR</SelectItem>
+                <SelectItem value="eur">EUR</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">Minimum Rate</label>
+            <Input placeholder="Minimum rate" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Maximum Rate</label>
+            <Input placeholder="Maximum rate" />
+          </div>
+        </div>
+        
+        <Button size="sm" className="bg-purple-100 text-purple-700 hover:bg-purple-200">
+          Add Rate Card
         </Button>
       </div>
       
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
-        </div>
-      ) : rates.length === 0 ? (
-        <div className="text-center py-10 border rounded-md bg-muted/20">
-          <p className="text-muted-foreground">No rate cards added yet</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-muted/50">
-                <th className="px-4 py-2 text-left">Platform</th>
-                <th className="px-4 py-2 text-left">Min Rate</th>
-                <th className="px-4 py-2 text-left">Max Rate</th>
-                <th className="px-4 py-2 text-left">Currency</th>
-                <th className="px-4 py-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rates.map((rate) => (
-                <tr key={rate.id} className="border-b hover:bg-muted/30">
-                  <td className="px-4 py-3">{rate.platform}</td>
-                  <td className="px-4 py-3">{rate.min_rate?.toLocaleString()}</td>
-                  <td className="px-4 py-3">{rate.max_rate?.toLocaleString()}</td>
-                  <td className="px-4 py-3">{rate.currency}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex space-x-2">
-                      <Button variant="ghost" size="sm">Edit</Button>
-                      <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div className="border rounded-md p-6 flex items-center justify-center flex-col py-12">
+        <p className="text-gray-500 mb-1">No rate cards defined yet</p>
+        <p className="text-xs text-gray-400">Add rates using the form above</p>
+      </div>
     </div>
   );
 };
-
-export default KolRatesTab;
