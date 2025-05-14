@@ -51,9 +51,53 @@ export const useKols = () => {
       if (error) {
         throw error;
       }
+
+      // For each KOL, fetch associated rates
+      if (data && data.length > 0) {
+        const kolsWithRates = await Promise.all(
+          data.map(async (kol) => {
+            // Fetch rates for this KOL
+            const { data: ratesData, error: ratesError } = await supabase
+              .from('kol_rates')
+              .select('*')
+              .eq('kol_id', kol.id);
+
+            if (ratesError) {
+              console.error('Error fetching rates for KOL:', ratesError);
+              return kol;
+            }
+
+            // Fetch social media for this KOL
+            const { data: socialMediaData, error: socialMediaError } = await supabase
+              .from('kol_social_media')
+              .select('*')
+              .eq('kol_id', kol.id);
+
+            if (socialMediaError) {
+              console.error('Error fetching social media for KOL:', socialMediaError);
+              return { ...kol, rates: ratesData || [] };
+            }
+
+            // Update platforms array based on social media entries if not already set
+            let platforms = kol.platforms || [];
+            if (socialMediaData && socialMediaData.length > 0 && (!kol.platforms || kol.platforms.length === 0)) {
+              platforms = socialMediaData.map(item => item.platform);
+            }
+
+            return { 
+              ...kol, 
+              rates: ratesData || [],
+              platforms
+            };
+          })
+        );
+        
+        setKols(kolsWithRates);
+      } else {
+        setKols(data || []);
+      }
       
       console.log("Fetched KOLs:", data);
-      setKols(data || []);
     } catch (error) {
       console.error('Error fetching KOLs:', error);
       toast({
@@ -315,6 +359,24 @@ export const useKols = () => {
   ) => {
     setIsUpdating(true);
     try {
+      // First, insert into kol_social_media table
+      const { data: socialData, error: socialError } = await supabase
+        .from('kol_social_media')
+        .insert({
+          kol_id: kolId,
+          platform: platformData.platform,
+          handle: platformData.handle,
+          profile_url: platformData.profile_url,
+          followers: platformData.followers,
+          engagement_rate: platformData.engagement
+        })
+        .select()
+        .single();
+        
+      if (socialError) {
+        throw socialError;
+      }
+
       // Get current KOL
       const kol = kols.find(k => k.id === kolId);
       if (!kol) {
@@ -339,6 +401,28 @@ export const useKols = () => {
         
       if (error) {
         throw error;
+      }
+
+      // Insert metrics data
+      if (platformData.engagement > 0 || platformData.followers > 0) {
+        const { error: metricsError } = await supabase
+          .from('kol_metrics')
+          .insert({
+            kol_id: kolId,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            clicks: 0,
+            purchases: 0,
+            revenue: 0,
+            cost: 0,
+            conversion_rate: 0,
+            roi: 0
+          });
+
+        if (metricsError) {
+          console.error('Error adding metrics:', metricsError);
+        }
       }
       
       toast({
@@ -376,6 +460,23 @@ export const useKols = () => {
   ) => {
     setIsUpdating(true);
     try {
+      // First insert into kol_rates table
+      const { data: rateRecord, error: rateInsertError } = await supabase
+        .from('kol_rates')
+        .insert({
+          kol_id: kolId,
+          platform: rateData.platform,
+          currency: rateData.currency,
+          min_rate: rateData.min_rate,
+          max_rate: rateData.max_rate
+        })
+        .select()
+        .single();
+        
+      if (rateInsertError) {
+        throw rateInsertError;
+      }
+      
       // Get current KOL
       const kol = kols.find(k => k.id === kolId);
       if (!kol) {

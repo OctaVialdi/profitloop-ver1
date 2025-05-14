@@ -1042,7 +1042,9 @@ export type Database = {
           id: string
           is_active: boolean | null
           organization_id: string
+          photo_path: string | null
           photo_url: string | null
+          platforms: string[] | null
           total_followers: number | null
           updated_at: string | null
         }
@@ -1054,7 +1056,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           organization_id: string
+          photo_path?: string | null
           photo_url?: string | null
+          platforms?: string[] | null
           total_followers?: number | null
           updated_at?: string | null
         }
@@ -1066,7 +1070,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           organization_id?: string
+          photo_path?: string | null
           photo_url?: string | null
+          platforms?: string[] | null
           total_followers?: number | null
           updated_at?: string | null
         }
