@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrganizationSetup } from './useOrganizationSetup';
@@ -22,7 +22,14 @@ export type NewKolData = Omit<Kol, 'id' | 'created_at' | 'updated_at'>;
 export const useKols = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [kols, setKols] = useState<Kol[]>([]);
-  const { organization } = useOrganizationSetup();
+  const { organization, fetchOrganization } = useOrganizationSetup();
+  
+  // Fetch organization if not already loaded
+  useEffect(() => {
+    if (!organization) {
+      fetchOrganization();
+    }
+  }, [organization, fetchOrganization]);
   
   const fetchKols = useCallback(async () => {
     if (!organization?.id) return;
