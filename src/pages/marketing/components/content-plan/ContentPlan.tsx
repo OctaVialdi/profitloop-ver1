@@ -54,7 +54,7 @@ export default function ContentPlan() {
     setTitleDialogOpen
   } = useContentPlanState();
 
-  // No need to adapt for the actual table since we've updated the component types
+  // Use the raw employees as LegacyEmployee without conversion since we've updated the component interfaces
   const contentPlanners = rawContentPlanners;
   const creativeTeamMembers = rawCreativeTeamMembers;
 

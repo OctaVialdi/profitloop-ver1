@@ -1,9 +1,10 @@
 
 import React from "react";
-import { ContentPlanItem, ContentType, TeamMember, Service, SubService, ContentPillar } from "@/hooks/content-plan";
+import { ContentPlanItem, ContentType, Service, SubService, ContentPillar } from "@/hooks/content-plan";
 import { Table } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContentPlanTableHeader, ContentPlanTableBody } from "./table";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 
 interface ContentPlanTableProps {
   contentPlans: ContentPlanItem[];
@@ -11,8 +12,8 @@ interface ContentPlanTableProps {
   services: Service[];
   subServices: SubService[];
   contentPillars: ContentPillar[];
-  contentPlanners: TeamMember[];
-  creativeTeamMembers: TeamMember[];
+  contentPlanners: LegacyEmployee[];
+  creativeTeamMembers: LegacyEmployee[];
   loading: boolean;
   selectedItems: string[];
   handleSelectItem: (id: string, checked: boolean) => void;

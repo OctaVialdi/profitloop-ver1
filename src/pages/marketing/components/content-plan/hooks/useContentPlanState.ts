@@ -5,6 +5,7 @@ import { useDialogState } from "./useDialogState";
 import { useContentPlanMutations } from "./useContentPlanMutations";
 import { useContentUtils } from "./useContentUtils";
 import { useCallback, useMemo } from "react";
+import { LegacyEmployee } from "@/hooks/useEmployees";
 
 export function useContentPlanState() {
   // Get content plan data and operations from the main hook
@@ -57,9 +58,16 @@ export function useContentPlanState() {
   // Content utility functions
   const { extractLink } = useContentUtils();
   
-  // Memoize team members lists
-  const contentPlanners = useMemo(() => getContentPlannerTeamMembers(), [getContentPlannerTeamMembers]);
-  const creativeTeamMembers = useMemo(() => getCreativeTeamMembers(), [getCreativeTeamMembers]);
+  // Memoize team members lists - ensure they are explicitly typed as LegacyEmployee arrays
+  const contentPlanners = useMemo<LegacyEmployee[]>(() => 
+    getContentPlannerTeamMembers() as LegacyEmployee[], 
+    [getContentPlannerTeamMembers]
+  );
+  
+  const creativeTeamMembers = useMemo<LegacyEmployee[]>(() => 
+    getCreativeTeamMembers() as LegacyEmployee[], 
+    [getCreativeTeamMembers]
+  );
 
   // Memoize handler functions
   const handleDeleteSelected = useCallback(async () => {

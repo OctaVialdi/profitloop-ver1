@@ -44,14 +44,14 @@ export function useContentPlan(): ContentPlanHookReturn {
     [rawContentPlans]
   );
 
-  // Memoize team member getter functions
-  const memoizedGetContentPlannerTeamMembers = useCallback(() => 
-    getContentPlannerTeamMembers(teamMembers),
+  // Update the return type specification for these functions
+  const memoizedGetContentPlannerTeamMembers = useCallback((): LegacyEmployee[] => 
+    getContentPlannerTeamMembers(teamMembers) as LegacyEmployee[],
     [teamMembers, getContentPlannerTeamMembers]
   );
   
-  const memoizedGetCreativeTeamMembers = useCallback(() => 
-    getCreativeTeamMembers(teamMembers),
+  const memoizedGetCreativeTeamMembers = useCallback((): LegacyEmployee[] => 
+    getCreativeTeamMembers(teamMembers) as LegacyEmployee[],
     [teamMembers, getCreativeTeamMembers]
   );
 
