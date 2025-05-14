@@ -1,5 +1,7 @@
 
 import { useOrganizationSetup } from "./organization/useOrganizationSetup";
-import { Organization, OrganizationFormData } from "@/types/organization";
+import { Organization } from "@/types/organization";
+import { OrganizationFormData } from "@/types/onboarding";
 
-export { useOrganizationSetup, Organization, OrganizationFormData };
+export { useOrganizationSetup };
+export type { Organization, OrganizationFormData };
