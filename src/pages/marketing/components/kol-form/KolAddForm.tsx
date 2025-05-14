@@ -4,6 +4,8 @@ import { NewKolData, useKols } from "@/hooks/useKols";
 import { toast } from "@/components/ui/use-toast";
 import { KolFormHeader } from "./KolFormHeader";
 import { KolFormTabs } from "./KolFormTabs";
+import { Button } from "@/components/ui/button";
+import { ArrowLeftCircle } from "lucide-react";
 
 interface KolAddFormProps {
   setCurrentView: (view: string) => void;
@@ -60,7 +62,7 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
 
       const result = await addKol(newKolData);
       if (result) {
-        // Pastikan untuk memanggil fetchKols untuk memperbarui daftar KOL
+        // Make sure to call fetchKols to update the KOL list
         await fetchKols();
         setCurrentView("list");
       }
@@ -70,12 +72,35 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
   };
 
   return (
-    <div className="flex flex-col space-y-6">
-      <KolFormHeader 
-        isLoading={isLoading}
-        onSubmit={handleSubmit}
-        onCancel={() => setCurrentView("list")}
-      />
+    <div className="flex flex-col space-y-6 p-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-xl font-semibold flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="hover:bg-transparent p-0"
+              onClick={() => setCurrentView("list")}
+            >
+              <ArrowLeftCircle size={20} className="mr-2 text-gray-500" />
+            </Button>
+            Add New KOL
+          </h3>
+          <p className="text-sm text-gray-500 mt-1">Create a new KOL profile with details, social media platforms, and rates</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setCurrentView("list")}>
+            Cancel
+          </Button>
+          <Button 
+            className="bg-purple-600 hover:bg-purple-700"
+            onClick={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? "Adding..." : "Add KOL"}
+          </Button>
+        </div>
+      </div>
       
       <KolFormTabs 
         formData={formData}
