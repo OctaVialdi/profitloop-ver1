@@ -1,61 +1,57 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ensureBucketExists, uploadFileToBucket } from '@/integrations/supabase/storage';
-import { toast } from '@/components/ui/use-toast';
 
-export async function uploadProfilePhoto(file: File, organizationId: string, kolId: string) {
+export const uploadProfilePhoto = async (
+  file: File,
+  organizationId: string,
+  kolId: string
+) => {
   try {
-    // Ensure the KOL photos bucket exists
-    const { success, error: bucketError } = await ensureBucketExists('kol-photos', true);
-    
-    if (!success) {
-      console.error('Error ensuring bucket exists:', bucketError);
-      throw new Error(bucketError || 'Failed to prepare storage');
-    }
-    
-    // Create a unique path for the file
+    // Generate a unique file path
     const fileExt = file.name.split('.').pop();
-    const filePath = `${organizationId}/${kolId}/${Date.now()}.${fileExt}`;
+    const filePath = `${organizationId}/${kolId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
     
-    // Upload the file
-    const { url, error } = await uploadFileToBucket(
-      'kol-photos',
-      filePath,
-      file
-    );
+    // Upload the file to storage
+    const { error: uploadError } = await supabase
+      .storage
+      .from('kol-photos')
+      .upload(filePath, file);
     
-    if (error) {
-      throw error;
+    if (uploadError) {
+      return { error: uploadError };
     }
     
-    return { url, filePath };
-  } catch (error: any) {
-    console.error('Error uploading profile photo:', error);
-    toast({
-      title: "Upload Failed",
-      description: error.message || "Could not upload photo",
-      variant: "destructive",
-    });
-    return { error };
+    // Get the public URL
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from('kol-photos')
+      .getPublicUrl(filePath);
+    
+    return {
+      url: publicUrl,
+      filePath,
+      error: null
+    };
+  } catch (error) {
+    console.error('Error in uploadProfilePhoto:', error);
+    return {
+      url: null,
+      filePath: null,
+      error
+    };
   }
-}
+};
 
-export async function deleteProfilePhoto(filePath: string) {
+export const deleteProfilePhoto = async (filePath: string) => {
   try {
-    const { error } = await supabase.storage
+    const { error } = await supabase
+      .storage
       .from('kol-photos')
       .remove([filePath]);
     
-    if (error) throw error;
-    
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error deleting profile photo:', error);
-    toast({
-      title: "Delete Failed",
-      description: error.message || "Could not delete photo",
-      variant: "destructive",
-    });
-    return { error, success: false };
+    return { error };
+  } catch (error) {
+    console.error('Error in deleteProfilePhoto:', error);
+    return { error };
   }
-}
+};
