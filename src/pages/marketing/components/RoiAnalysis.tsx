@@ -1,108 +1,109 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  LineChart,
-} from "recharts";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { Kol, KolMetrics } from "@/hooks/useKols";
 
 interface RoiAnalysisProps {
   timeFilter: string;
+  kols: Kol[];
+  metrics: KolMetrics[];
 }
 
-export const RoiAnalysis = ({ timeFilter }: RoiAnalysisProps) => {
-  // ROI data
-  const roiByKolData = [
-    { name: "Sarah Johnson", value: 75 },
-    { name: "Alex Chen", value: 72 },
-    { name: "Maria Rodriguez", value: 85 },
-    { name: "Emma Wilson", value: 78 },
-  ];
-
-  const roiTrendsData = [
-    { name: "Jan", value: 50 },
-    { name: "Feb", value: 45 },
-    { name: "Mar", value: 28 },
-    { name: "Apr", value: 55 },
-    { name: "May", value: 52 },
-    { name: "Jun", value: 22 },
-    { name: "Jul", value: 52 },
-    { name: "Aug", value: 38 },
-    { name: "Sep", value: 25 },
-  ];
-
+export const RoiAnalysis: React.FC<RoiAnalysisProps> = ({ timeFilter, kols, metrics }) => {
+  // Combine KOLs with their metrics data
+  const kolsWithMetrics = kols.map(kol => {
+    const kolMetrics = metrics.find(m => m.kol_id === kol.id);
+    const revenue = kolMetrics ? kolMetrics.revenue : 0;
+    const cost = kolMetrics ? kolMetrics.cost : 0;
+    const roi = cost > 0 ? ((revenue - cost) / cost) * 100 : 0;
+    
+    return {
+      name: kol.name,
+      roi: parseFloat(roi.toFixed(1)),
+      revenue,
+      cost
+    };
+  });
+  
+  // Sort by ROI and take top 10
+  const sortedData = [...kolsWithMetrics]
+    .filter(item => item.roi > 0)
+    .sort((a, b) => b.roi - a.roi)
+    .slice(0, 10);
+  
+  // Calculate total revenue and cost
+  const totalRevenue = kolsWithMetrics.reduce((sum, item) => sum + item.revenue, 0);
+  const totalCost = kolsWithMetrics.reduce((sum, item) => sum + item.cost, 0);
+  const averageROI = totalCost > 0 ? ((totalRevenue - totalCost) / totalCost) * 100 : 0;
+  
+  // Format currency
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+  
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="text-lg font-medium mb-4">ROI by KOL</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={roiByKolData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" fontSize={10} />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-white p-2 border rounded shadow-sm">
-                            <p className="font-medium">{`${payload[0].name}: ${payload[0].value}%`}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="value" fill="#F97316" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="text-lg font-medium mb-4">ROI Trends</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={roiTrendsData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 60]} />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-white p-2 border rounded shadow-sm">
-                            <p className="font-medium">{`${payload[0].name}: ${payload[0].value}%`}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#F97316"
-                    strokeWidth={2}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <Card className="col-span-4">
+      <CardHeader>
+        <CardTitle>ROI & Revenue Analysis</CardTitle>
+        <CardDescription>
+          Return on investment across all KOLs
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="font-bold text-2xl">{formatCurrency(totalRevenue)}</div>
+              <div className="text-sm text-gray-500">Total Revenue</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="font-bold text-2xl">{formatCurrency(totalCost)}</div>
+              <div className="text-sm text-gray-500">Total Cost</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="font-bold text-2xl">{averageROI.toFixed(1)}%</div>
+              <div className="text-sm text-gray-500">Average ROI</div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={sortedData}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 60,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45} 
+                textAnchor="end" 
+                interval={0}
+                height={60}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis />
+              <Tooltip formatter={(value) => [`${value}%`, 'ROI']} />
+              <Legend />
+              <Bar dataKey="roi" name="ROI (%)" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
