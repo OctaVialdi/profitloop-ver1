@@ -1,34 +1,82 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useOrganization } from '@/hooks/useOrganization';
+import { ContentPlanItem, ContentType, Service, SubService, ContentPillar } from './types';
+import { formatDisplayDate, getFilteredSubServices } from './contentPlanUtils';
+import { useFetchContentPlan } from './hooks/useFetchContentPlan';
+import { useMutateContentPlan } from './hooks/useMutateContentPlan';
+import { LegacyEmployee } from '@/hooks/useEmployees';
 
 export const useContentPlan = () => {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
-  const [error, setError] = useState<Error | null>(null);
+  const { organization } = useOrganization();
+  
+  // Use existing hooks for data fetching and mutations
+  const {
+    contentPlans,
+    contentTypes,
+    teamMembers,
+    services,
+    subServices,
+    contentPillars,
+    loading,
+    error,
+    fetchContentPlans
+  } = useFetchContentPlan();
 
-  useEffect(() => {
-    const fetchContentPlan = async () => {
-      try {
-        setLoading(true);
-        // Replace this with actual content plan fetching from Supabase
-        const { data, error } = await supabase
-          .from('content_plan')
-          .select('*')
-          .order('created_at', { ascending: false });
+  const {
+    addContentPlan,
+    updateContentPlan,
+    deleteContentPlan,
+    resetRevisionCounter
+  } = useMutateContentPlan();
 
-        if (error) throw error;
-        setData(data || []);
-      } catch (err) {
-        console.error('Error loading content plan:', err);
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Filter team members by job position
+  const getContentPlannerTeamMembers = useCallback((): LegacyEmployee[] => {
+    // Convert teamMembers to LegacyEmployee format
+    return teamMembers.filter(member => 
+      member.job_position?.toLowerCase().includes('content') || 
+      member.department?.toLowerCase().includes('marketing')
+    ).map(member => ({
+      id: member.id,
+      name: member.name,
+      jobPosition: member.job_position || '',
+      organization: member.department || '',
+      role: member.role || ''
+    }));
+  }, [teamMembers]);
 
-    fetchContentPlan();
-  }, []);
+  const getCreativeTeamMembers = useCallback((): LegacyEmployee[] => {
+    // Convert teamMembers to LegacyEmployee format
+    return teamMembers.filter(member => 
+      member.job_position?.toLowerCase().includes('creative') || 
+      member.job_position?.toLowerCase().includes('design')
+    ).map(member => ({
+      id: member.id,
+      name: member.name,
+      jobPosition: member.job_position || '',
+      organization: member.department || '',
+      role: member.role || ''
+    }));
+  }, [teamMembers]);
 
-  return { data, loading, error };
+  return {
+    contentPlans,
+    contentTypes,
+    services,
+    subServices,
+    contentPillars,
+    teamMembers,
+    loading,
+    error,
+    fetchContentPlans,
+    addContentPlan,
+    updateContentPlan,
+    deleteContentPlan,
+    getFilteredSubServices: (serviceId: string) => getFilteredSubServices(subServices, serviceId),
+    resetRevisionCounter,
+    formatDisplayDate,
+    getContentPlannerTeamMembers,
+    getCreativeTeamMembers
+  };
 };

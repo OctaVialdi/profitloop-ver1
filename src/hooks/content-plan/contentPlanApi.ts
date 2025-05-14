@@ -7,7 +7,7 @@ export async function fetchContentPlans(organizationId: string): Promise<Content
   
   try {
     const { data, error } = await supabase
-      .from('content_plans')
+      .from('content_plans')  // Using 'content_plans' table, not 'content_plan'
       .select(`
         *,
         content_type:content_type_id(id, name),
