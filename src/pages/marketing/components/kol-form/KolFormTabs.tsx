@@ -33,11 +33,10 @@ export const KolFormTabs: React.FC<KolFormTabsProps> = ({
       </TabsList>
       
       <TabsContent value="general" className="mt-6">
-        <GeneralTab 
-          formData={formData}
-          handleChange={handleChange}
-          categories={categories}
-        />
+        {/* General tab content is now moved to the main form */}
+        <div className="text-sm text-gray-500 italic">
+          General information is provided in the main form above
+        </div>
       </TabsContent>
       
       <TabsContent value="social" className="mt-6">
