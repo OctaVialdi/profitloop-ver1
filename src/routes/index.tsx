@@ -86,9 +86,19 @@ export const AppRoutes = () => {
         </Route>
         
         {/* Marketing Routes */}
-        <Route element={<ProtectedRoute />}>
-          {marketingRoutes}
-        </Route>
+        <Route path="/marketing/*" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/*" element={marketingRoutes.element}>
+                  {marketingRoutes.children.map((route, index) => (
+                    <Route key={index} path={route.path} element={route.element} />
+                  ))}
+                </Route>
+              </Routes>
+            </Suspense>
+          </ProtectedRoute>
+        } />
         
         {/* IT Routes */}
         <Route element={<ProtectedRoute />}>

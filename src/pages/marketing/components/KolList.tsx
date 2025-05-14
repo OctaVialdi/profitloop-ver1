@@ -1,115 +1,134 @@
 
-import React from "react";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, SlidersHorizontal } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface KolListProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  filteredKols: any[];
-  handleKolSelect: (kol: any) => void;
-  formatNumber: (num: number) => string;
-  getScoreBadgeColor: (score: number) => string;
-  getStatusBadgeColor: (status: string) => string;
+  onKolSelect: (kolId: string) => void;
 }
 
-export const KolList: React.FC<KolListProps> = ({
-  searchQuery,
-  setSearchQuery,
-  filteredKols,
-  handleKolSelect,
-  formatNumber,
-  getScoreBadgeColor,
-  getStatusBadgeColor
-}) => {
+interface Kol {
+  id: string;
+  full_name: string;
+  category: string;
+  total_followers: number;
+  engagement_rate: number;
+  photo_url: string | null;
+  is_active: boolean;
+}
+
+const KolList: React.FC<KolListProps> = ({ onKolSelect }) => {
+  const [kols, setKols] = useState<Kol[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const fetchKols = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("data_kol")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setKols(data || []);
+      } catch (error) {
+        console.error("Error fetching KOLs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchKols();
+    
+    // Set up realtime subscription
+    const subscription = supabase
+      .channel('public:data_kol')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'data_kol' }, (payload) => {
+        fetchKols();
+      })
+      .subscribe();
+      
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const filteredKols = kols.filter(kol => 
+    kol.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    kol.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Input 
-            placeholder="Search KOLs by name or category..." 
-            className="pl-10" 
-            value={searchQuery} 
-            onChange={e => setSearchQuery(e.target.value)} 
-          />
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Input 
+          placeholder="Search KOLs..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+        <Button variant="outline">Add New KOL</Button>
+      </div>
+      
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
-        <Button variant="outline" className="flex items-center gap-2">
-          <SlidersHorizontal size={16} />
-          <span>Filters</span>
-        </Button>
-      </div>
-
-      <div className="rounded-md border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="w-[250px]">NAME</TableHead>
-              <TableHead>CATEGORY</TableHead>
-              <TableHead>FOLLOWERS</TableHead>
-              <TableHead>ENGAGEMENT</TableHead>
-              <TableHead>SCORE</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredKols.map(kol => (
-              <TableRow key={kol.id} className="hover:bg-gray-50/50">
-                <TableCell className="font-medium">
-                  <div 
-                    className="flex items-center space-x-3 cursor-pointer" 
-                    onClick={() => handleKolSelect(kol)}
-                  >
-                    <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100">
-                      <img src={kol.photo_url} alt={kol.full_name} className="h-full w-full object-cover" />
-                    </div>
-                    <div>
-                      <div className="text-blue-600 hover:underline">{kol.full_name}</div>
-                      <div className="text-xs text-gray-500">
-                        {kol.kol_social_media?.map(sm => sm.platform).join(", ") || "No platforms"}
+      ) : filteredKols.length === 0 ? (
+        <div className="text-center py-10 border rounded-md bg-muted/20">
+          <p className="text-muted-foreground">No KOLs found</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-muted/50">
+                <th className="px-4 py-2 text-left">Name</th>
+                <th className="px-4 py-2 text-left">Category</th>
+                <th className="px-4 py-2 text-left">Followers</th>
+                <th className="px-4 py-2 text-left">Engagement</th>
+                <th className="px-4 py-2 text-left">Status</th>
+                <th className="px-4 py-2 text-left">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredKols.map((kol) => (
+                <tr key={kol.id} className="border-b hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-muted/50 overflow-hidden">
+                        {kol.photo_url && (
+                          <img src={kol.photo_url} alt={kol.full_name} className="w-full h-full object-cover" />
+                        )}
                       </div>
+                      <span>{kol.full_name}</span>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-md">
-                    {kol.category}
-                  </span>
-                </TableCell>
-                <TableCell>{formatNumber(kol.total_followers)}</TableCell>
-                <TableCell>{kol.engagement_rate}%</TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getScoreBadgeColor(kol.score || 0)}`}>
-                    {kol.score || "-"}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeColor(kol.is_active ? 'Active' : 'Inactive')}`}>
-                    {kol.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination className="mt-4">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>1</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+                  </td>
+                  <td className="px-4 py-3">{kol.category}</td>
+                  <td className="px-4 py-3">{kol.total_followers?.toLocaleString()}</td>
+                  <td className="px-4 py-3">{kol.engagement_rate?.toFixed(2)}%</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${kol.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {kol.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Button variant="ghost" size="sm" onClick={() => onKolSelect(kol.id)}>
+                      View
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
+
+export default KolList;

@@ -1,78 +1,34 @@
 
-import { formatDisplayDate } from './contentPlanUtils';
-import { getContentPlansWithFormattedData } from './contentPlanUtils';
-import { ContentPlanHookReturn } from './types';
-import { useFetchContentPlan } from './hooks/useFetchContentPlan';
-import { useMutateContentPlan } from './hooks/useMutateContentPlan';
-import { useTeamMembersFilter } from './hooks/useTeamMembersFilter';
-import { useCallback, useMemo } from 'react';
-import { LegacyEmployee } from '@/hooks/useEmployees';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-export function useContentPlan(): ContentPlanHookReturn {
-  // Fetch content plan data
-  const {
-    contentPlans: rawContentPlans,
-    contentTypes,
-    teamMembers,
-    services,
-    subServices,
-    contentPillars,
-    loading,
-    error,
-    fetchContentPlans
-  } = useFetchContentPlan();
+export const useContentPlan = () => {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState([]);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Content plan mutation hooks
-  const {
-    addContentPlan,
-    updateContentPlan,
-    deleteContentPlan,
-    resetRevisionCounter
-  } = useMutateContentPlan();
+  useEffect(() => {
+    const fetchContentPlan = async () => {
+      try {
+        setLoading(true);
+        // Replace this with actual content plan fetching from Supabase
+        const { data, error } = await supabase
+          .from('content_plan')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-  // Team members filter hooks
-  const {
-    getFilteredTeamMembers,
-    getFilteredSubServices,
-    getContentPlannerTeamMembers,
-    getCreativeTeamMembers
-  } = useTeamMembersFilter(teamMembers, subServices);
+        if (error) throw error;
+        setData(data || []);
+      } catch (err) {
+        console.error('Error loading content plan:', err);
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Memoize content plans with computed fields
-  const contentPlans = useMemo(() => 
-    getContentPlansWithFormattedData(rawContentPlans),
-    [rawContentPlans]
-  );
+    fetchContentPlan();
+  }, []);
 
-  // Update the return type specification for these functions
-  const memoizedGetContentPlannerTeamMembers = useCallback((): LegacyEmployee[] => 
-    getContentPlannerTeamMembers(teamMembers) as LegacyEmployee[],
-    [teamMembers, getContentPlannerTeamMembers]
-  );
-  
-  const memoizedGetCreativeTeamMembers = useCallback((): LegacyEmployee[] => 
-    getCreativeTeamMembers(teamMembers) as LegacyEmployee[],
-    [teamMembers, getCreativeTeamMembers]
-  );
-
-  return {
-    contentPlans,
-    contentTypes,
-    teamMembers,
-    services,
-    subServices,
-    contentPillars,
-    loading,
-    error,
-    fetchContentPlans,
-    addContentPlan,
-    updateContentPlan,
-    deleteContentPlan,
-    getFilteredTeamMembers,
-    getFilteredSubServices,
-    resetRevisionCounter,
-    formatDisplayDate,
-    getContentPlannerTeamMembers: memoizedGetContentPlannerTeamMembers,
-    getCreativeTeamMembers: memoizedGetCreativeTeamMembers
-  };
-}
+  return { data, loading, error };
+};

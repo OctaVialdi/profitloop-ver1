@@ -1,6 +1,6 @@
 
 import { lazy } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 
 const KolManagement = lazy(() => import("@/pages/marketing/KolManagement"));
@@ -10,10 +10,11 @@ const SeoManagement = lazy(() => import("@/pages/marketing/SeoManagement"));
 const AdsPerformance = lazy(() => import("@/pages/marketing/AdsPerformance"));
 const RatingPerformance = lazy(() => import("@/pages/marketing/RatingPerformance"));
 const AgencyComparison = lazy(() => import("@/pages/marketing/AgencyComparison"));
+const ContentPlan = lazy(() => import("@/pages/marketing/components/ContentPlan"));
 
 export const marketingRoutes = {
   path: "/marketing",
-  element: <MarketingLayout />,
+  element: <MarketingLayout><Outlet /></MarketingLayout>,
   children: [
     {
       path: "",
@@ -26,6 +27,10 @@ export const marketingRoutes = {
     {
       path: "kol-management",
       element: <KolManagement />,
+    },
+    {
+      path: "content-plan",
+      element: <ContentPlan />,
     },
     {
       path: "seo-management",
