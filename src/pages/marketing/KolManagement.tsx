@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { ConversionMetrics } from "./components/ConversionMetrics";
 
 // Import our components
 import { KolDetailView } from "./components/KolDetailView";
-import { KolAddForm } from "./components/kol-form"; // Updated import
+import { KolAddForm } from "./components/kol-form"; 
 import { KolList } from "./components/KolList";
 import { KolDashboardCards } from "./components/KolDashboardCards";
 import { KolAnalyticsHeader } from "./components/KolAnalyticsHeader";

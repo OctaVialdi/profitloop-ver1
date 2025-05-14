@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrganizationSetup } from './useOrganizationSetup';
+import { useOrganization } from './useOrganization';
 
 export interface Kol {
   id: string;
@@ -22,15 +22,9 @@ export type NewKolData = Omit<Kol, 'id' | 'created_at' | 'updated_at'>;
 export const useKols = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [kols, setKols] = useState<Kol[]>([]);
-  const { organization, fetchOrganization } = useOrganizationSetup();
+  const { organization } = useOrganization();
   
-  // Fetch organization if not already loaded
-  useEffect(() => {
-    if (!organization) {
-      fetchOrganization();
-    }
-  }, [organization, fetchOrganization]);
-  
+  // Fetch kols when organization is available
   const fetchKols = useCallback(async () => {
     if (!organization?.id) return;
     
@@ -171,6 +165,13 @@ export const useKols = () => {
       setIsLoading(false);
     }
   }, [fetchKols]);
+  
+  // Initial fetch when the component mounts and has organization data
+  useEffect(() => {
+    if (organization?.id) {
+      fetchKols();
+    }
+  }, [organization?.id, fetchKols]);
   
   return {
     kols,
