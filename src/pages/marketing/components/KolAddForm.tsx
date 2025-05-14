@@ -1,11 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Upload } from "lucide-react";
+import { useKols, NewKolData } from "@/hooks/useKols";
+import { toast } from "@/components/ui/use-toast";
 
 interface KolAddFormProps {
   setCurrentView: (view: string) => void;
@@ -18,6 +20,57 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
     "Tech", "Gaming", "Entertainment", "Business", "Education"
   ];
 
+  const { addKol, isLoading } = useKols();
+  
+  const [formData, setFormData] = useState({
+    full_name: "",
+    category: "",
+    total_followers: 0,
+    engagement_rate: 0,
+    is_active: false,
+  });
+
+  const handleChange = (field: keyof typeof formData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.full_name) {
+      toast({
+        title: "Error",
+        description: "Please enter the KOL name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.category) {
+      toast({
+        title: "Error",
+        description: "Please select a category",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const newKolData: Omit<NewKolData, 'organization_id'> = {
+        full_name: formData.full_name,
+        category: formData.category,
+        total_followers: Number(formData.total_followers),
+        engagement_rate: Number(formData.engagement_rate),
+        is_active: formData.is_active
+      };
+
+      const result = await addKol(newKolData);
+      if (result) {
+        setCurrentView("list");
+      }
+    } catch (error) {
+      console.error("Error adding KOL:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col space-y-6">
       <div className="flex justify-between items-center">
@@ -29,8 +82,12 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
           <Button variant="outline" onClick={() => setCurrentView("list")}>
             Cancel
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700">
-            Create KOL
+          <Button 
+            className="bg-purple-600 hover:bg-purple-700" 
+            onClick={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? "Creating..." : "Create KOL"}
           </Button>
         </div>
       </div>
@@ -65,13 +122,20 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Full Name</label>
-                  <Input placeholder="Enter KOL name" />
+                  <Input 
+                    placeholder="Enter KOL name" 
+                    value={formData.full_name}
+                    onChange={(e) => handleChange("full_name", e.target.value)}
+                  />
                   <p className="text-xs text-gray-500 mt-1">This will be displayed across the platform.</p>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">Category</label>
-                  <Select>
+                  <Select 
+                    value={formData.category}
+                    onValueChange={(value) => handleChange("category", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
@@ -89,22 +153,38 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Total Followers</label>
-                    <Input type="number" placeholder="0" />
+                    <Input 
+                      type="number" 
+                      placeholder="0" 
+                      value={formData.total_followers.toString()}
+                      onChange={(e) => handleChange("total_followers", parseInt(e.target.value) || 0)}
+                    />
                     <p className="text-xs text-gray-500 mt-1">Combined followers across all platforms.</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Engagement Rate (%)</label>
-                    <Input type="number" placeholder="0" />
+                    <Input 
+                      type="number" 
+                      placeholder="0" 
+                      value={formData.engagement_rate.toString()}
+                      onChange={(e) => handleChange("engagement_rate", parseFloat(e.target.value) || 0)}
+                    />
                     <p className="text-xs text-gray-500 mt-1">Average engagement rate across posts.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-2 pt-2">
-                  <Switch id="active" />
+                  <Switch 
+                    id="active" 
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => handleChange("is_active", checked)}
+                  />
                   <label htmlFor="active" className="text-sm font-medium">
                     Active Status
                   </label>
-                  <span className="text-xs text-gray-500 ml-2">Inactive - not available for campaigns</span>
+                  <span className="text-xs text-gray-500 ml-2">
+                    {formData.is_active ? "Active - available for campaigns" : "Inactive - not available for campaigns"}
+                  </span>
                 </div>
               </div>
             </div>

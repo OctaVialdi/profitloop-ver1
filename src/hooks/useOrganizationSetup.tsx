@@ -1,3 +1,4 @@
 
-import { useOrganizationSetup } from "./organization/useOrganizationSetup";
-export { useOrganizationSetup };
+import { useOrganizationSetup, Organization, OrganizationFormData } from "./organization/useOrganizationSetup";
+
+export { useOrganizationSetup, Organization, OrganizationFormData };

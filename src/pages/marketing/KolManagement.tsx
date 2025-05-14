@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Plus } from "lucide-react";
@@ -8,104 +8,52 @@ import { EngagementAnalysis } from "./components/EngagementAnalysis";
 import { RoiAnalysis } from "./components/RoiAnalysis";
 import { ConversionMetrics } from "./components/ConversionMetrics";
 
-// Import our new components
+// Import our components
 import { KolDetailView } from "./components/KolDetailView";
 import { KolAddForm } from "./components/KolAddForm";
 import { KolList } from "./components/KolList";
 import { KolDashboardCards } from "./components/KolDashboardCards";
 import { KolAnalyticsHeader } from "./components/KolAnalyticsHeader";
+import { useKols, Kol } from "@/hooks/useKols";
 
 const KolManagement = () => {
   const [activeTab, setActiveTab] = useState("engagement");
   const [timeFilter, setTimeFilter] = useState("last-month");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentView, setCurrentView] = useState("list"); // "list", "add", or "detail"
-  const [selectedKol, setSelectedKol] = useState(null);
+  const [selectedKol, setSelectedKol] = useState<Kol | null>(null);
 
-  // KOL data
-  const kolData = [{
-    id: 1,
-    name: "Sarah Johnson",
-    platforms: ["Instagram", "TikTok"],
-    category: "Beauty",
-    followers: 500000,
-    engagement: 3.2,
-    score: 78,
-    status: "Active",
-    avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png"
-  }, {
-    id: 2,
-    name: "Alex Chen",
-    platforms: ["Instagram", "TikTok"],
-    category: "Tech",
-    followers: 350000,
-    engagement: 2.8,
-    score: 72,
-    status: "Active",
-    avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png"
-  }, {
-    id: 3,
-    name: "Maria Rodriguez",
-    platforms: ["Instagram", "TikTok"],
-    category: "Fitness",
-    followers: 620000,
-    engagement: 4.5,
-    score: 86,
-    status: "Active",
-    avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png"
-  }, {
-    id: 4,
-    name: "David Kim",
-    platforms: ["Instagram"],
-    category: "Fashion",
-    followers: 280000,
-    engagement: 2.2,
-    score: 65,
-    status: "Inactive",
-    avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png"
-  }, {
-    id: 5,
-    name: "Emma Wilson",
-    platforms: ["Instagram", "TikTok"],
-    category: "Food",
-    followers: 420000,
-    engagement: 3.8,
-    score: 81,
-    status: "Active",
-    avatar: "/lovable-uploads/3159d9d9-d6f0-49d7-8c4a-fdf295581e99.png"
-  }];
+  const { kols, isLoading, fetchKols } = useKols();
 
-  // Handle KOL selection
-  const handleKolSelect = (kol) => {
-    setSelectedKol(kol);
-    setCurrentView("detail");
-  };
+  useEffect(() => {
+    fetchKols();
+  }, [fetchKols]);
 
   // Filter KOLs based on search query
-  const filteredKols = kolData.filter(kol => 
-    kol.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredKols = kols.filter(kol => 
+    kol.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     kol.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Format number with commas
-  const formatNumber = num => {
+  const formatNumber = (num: number) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   // Get badge color based on score
-  const getScoreBadgeColor = score => {
+  const getScoreBadgeColor = (score: number) => {
     if (score >= 80) return "bg-green-100 text-green-800";
     if (score >= 70) return "bg-yellow-100 text-yellow-800";
     return "bg-orange-100 text-orange-800";
   };
 
   // Get status badge color
-  const getStatusBadgeColor = status => {
+  const getStatusBadgeColor = (status: string) => {
     return status === "Active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800";
   };
 
   // Get active KOLs count
-  const activeKolsCount = kolData.filter(kol => kol.status === "Active").length;
+  const activeKolsCount = kols.filter(kol => kol.is_active).length;
 
   // Render the current view content
   const renderContent = () => {
@@ -141,10 +89,11 @@ const KolManagement = () => {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 filteredKols={filteredKols}
-                handleKolSelect={handleKolSelect}
+                handleKolSelect={setSelectedKol}
                 formatNumber={formatNumber}
                 getScoreBadgeColor={getScoreBadgeColor}
                 getStatusBadgeColor={getStatusBadgeColor}
+                isLoading={isLoading}
               />
             </CardContent>
           </Card>
@@ -204,7 +153,7 @@ const KolManagement = () => {
           
           <KolDashboardCards 
             activeKols={activeKolsCount} 
-            totalKols={kolData.length}
+            totalKols={kols.length}
           />
           
           <div className="mb-6"></div>

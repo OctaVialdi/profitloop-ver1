@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Kol } from "@/hooks/useKols";
 
 interface KolListProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  filteredKols: any[];
-  handleKolSelect: (kol: any) => void;
+  filteredKols: Kol[];
+  handleKolSelect: (kol: Kol) => void;
   formatNumber: (num: number) => string;
   getScoreBadgeColor: (score: number) => string;
   getStatusBadgeColor: (status: string) => string;
+  isLoading?: boolean;
 }
 
 export const KolList: React.FC<KolListProps> = ({
@@ -23,7 +25,8 @@ export const KolList: React.FC<KolListProps> = ({
   handleKolSelect,
   formatNumber,
   getScoreBadgeColor,
-  getStatusBadgeColor
+  getStatusBadgeColor,
+  isLoading = false
 }) => {
   return (
     <div className="flex flex-col space-y-4">
@@ -51,65 +54,84 @@ export const KolList: React.FC<KolListProps> = ({
               <TableHead>CATEGORY</TableHead>
               <TableHead>FOLLOWERS</TableHead>
               <TableHead>ENGAGEMENT</TableHead>
-              <TableHead>SCORE</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>STATUS</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredKols.map(kol => (
-              <TableRow key={kol.id} className="hover:bg-gray-50/50">
-                <TableCell className="font-medium">
-                  <div 
-                    className="flex items-center space-x-3 cursor-pointer" 
-                    onClick={() => handleKolSelect(kol)}
-                  >
-                    <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100">
-                      <img src={kol.avatar} alt={kol.name} className="h-full w-full object-cover" />
-                    </div>
-                    <div>
-                      <div className="text-blue-600 hover:underline">{kol.name}</div>
-                      <div className="text-xs text-gray-500">
-                        {kol.platforms.join(", ")}
-                      </div>
-                    </div>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700 mb-2"></div>
+                    <p className="text-sm text-gray-500">Loading KOLs...</p>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-md">
-                    {kol.category}
-                  </span>
-                </TableCell>
-                <TableCell>{formatNumber(kol.followers)}</TableCell>
-                <TableCell>{kol.engagement}%</TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getScoreBadgeColor(kol.score)}`}>
-                    {kol.score}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeColor(kol.status)}`}>
-                    {kol.status}
-                  </span>
+              </TableRow>
+            ) : filteredKols.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">
+                  <p className="text-gray-500">No KOLs found</p>
+                  {searchQuery && (
+                    <p className="text-sm text-gray-400 mt-1">Try adjusting your search criteria</p>
+                  )}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredKols.map(kol => (
+                <TableRow key={kol.id} className="hover:bg-gray-50/50">
+                  <TableCell className="font-medium">
+                    <div 
+                      className="flex items-center space-x-3 cursor-pointer" 
+                      onClick={() => handleKolSelect(kol)}
+                    >
+                      <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100">
+                        {kol.photo_url ? (
+                          <img src={kol.photo_url} alt={kol.full_name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-purple-100 text-purple-800 font-medium">
+                            {kol.full_name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-blue-600 hover:underline">{kol.full_name}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-md">
+                      {kol.category}
+                    </span>
+                  </TableCell>
+                  <TableCell>{formatNumber(kol.total_followers)}</TableCell>
+                  <TableCell>{kol.engagement_rate}%</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeColor(kol.is_active ? "Active" : "Inactive")}`}>
+                      {kol.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
-      <Pagination className="mt-4">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>1</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      {filteredKols.length > 0 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href="#" />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#" isActive>1</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext href="#" />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 };
