@@ -467,32 +467,7 @@ export const useKols = () => {
       });
 
       // After successful update, fetch the updated KOL data with all platforms
-      const { data: updatedKolData, error: kolError } = await supabase
-        .from('data_kol')
-        .select('*')
-        .eq('id', kolId)
-        .single();
-
-      if (kolError) {
-        throw kolError;
-      }
-
-      // Fetch all social media for this KOL
-      const { data: allSocialMediaData, error: socialMediaError } = await supabase
-        .from('kol_social_media')
-        .select('*')
-        .eq('kol_id', kolId);
-
-      if (socialMediaError) {
-        throw socialMediaError;
-      }
-
-      // Combine the data
-      const updatedKol = {
-        ...updatedKolData,
-        social_media: allSocialMediaData || [],
-        platforms: allSocialMediaData ? allSocialMediaData.map(sm => sm.platform) : []
-      };
+      const updatedKol = await fetchKolWithDetails(kolId);
       
       // Update local state
       setKols(prevKols => prevKols.map(kol => 
@@ -541,51 +516,15 @@ export const useKols = () => {
         throw rateInsertError;
       }
       
-      // Fetch the updated KOL data
-      const { data: kolData, error: kolError } = await supabase
-        .from('data_kol')
-        .select('*')
-        .eq('id', kolId)
-        .single();
-
-      if (kolError) {
-        throw kolError;
-      }
-
-      // Fetch all rates for this KOL
-      const { data: allRates, error: ratesError } = await supabase
-        .from('kol_rates')
-        .select('*')
-        .eq('kol_id', kolId);
-
-      if (ratesError) {
-        throw ratesError;
-      }
-
-      // Fetch all social media for this KOL
-      const { data: socialMediaData, error: socialMediaError } = await supabase
-        .from('kol_social_media')
-        .select('*')
-        .eq('kol_id', kolId);
-
-      if (socialMediaError) {
-        throw socialMediaError;
-      }
-
-      // Combine the KOL data with all rates and social media
-      const updatedKol = {
-        ...kolData,
-        rates: allRates || [],
-        social_media: socialMediaData || [],
-        platforms: socialMediaData ? socialMediaData.map(sm => sm.platform) : []
-      };
-      
       toast({
         title: 'Success',
         description: 'Rate card added successfully',
       });
       
-      // Update local state with the updated KOL data
+      // Fetch the updated KOL with all details
+      const updatedKol = await fetchKolWithDetails(kolId);
+      
+      // Update local state
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -648,7 +587,8 @@ export const useKols = () => {
             ...metricData,
             conversion_rate: conversionRate,
             roi: roi,
-            updated_at: new Date()
+            // Fix: Convert Date to ISO string
+            updated_at: new Date().toISOString()
           })
           .eq('id', metricsId)
           .select()
