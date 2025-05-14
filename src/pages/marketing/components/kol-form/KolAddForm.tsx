@@ -16,7 +16,7 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
     "Tech", "Gaming", "Entertainment", "Business", "Education"
   ];
 
-  const { addKol, isLoading } = useKols();
+  const { addKol, isLoading, fetchKols } = useKols();
   
   const [formData, setFormData] = useState({
     full_name: "",
@@ -60,6 +60,8 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
 
       const result = await addKol(newKolData);
       if (result) {
+        // Pastikan untuk memanggil fetchKols untuk memperbarui daftar KOL
+        await fetchKols();
         setCurrentView("list");
       }
     } catch (error) {

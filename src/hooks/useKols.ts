@@ -1,4 +1,5 @@
 
+
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +31,7 @@ export const useKols = () => {
     
     setIsLoading(true);
     try {
+      console.log("Fetching KOLs for organization:", organization.id);
       const { data, error } = await supabase
         .from('data_kol')
         .select('*')
@@ -40,6 +42,7 @@ export const useKols = () => {
         throw error;
       }
       
+      console.log("Fetched KOLs:", data);
       setKols(data || []);
     } catch (error) {
       console.error('Error fetching KOLs:', error);
@@ -64,6 +67,7 @@ export const useKols = () => {
         organization_id: organization.id,
       };
       
+      console.log("Adding new KOL:", newKol);
       const { data, error } = await supabase
         .from('data_kol')
         .insert([newKol])
@@ -79,8 +83,10 @@ export const useKols = () => {
         description: 'KOL has been added successfully',
       });
       
-      // Refresh the KOL list
-      await fetchKols();
+      console.log("Added KOL successfully:", data);
+      
+      // Tambahkan KOL yang baru ditambahkan ke state lokal
+      setKols(prevKols => [data, ...prevKols]);
       
       return data;
     } catch (error: any) {
@@ -94,7 +100,7 @@ export const useKols = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [organization?.id, fetchKols]);
+  }, [organization?.id]);
   
   const updateKol = useCallback(async (id: string, updates: Partial<Kol>) => {
     setIsLoading(true);
@@ -115,8 +121,8 @@ export const useKols = () => {
         description: 'KOL has been updated successfully',
       });
       
-      // Refresh the KOL list
-      await fetchKols();
+      // Update the local state with the updated KOL
+      setKols(prevKols => prevKols.map(kol => kol.id === id ? data : kol));
       
       return data;
     } catch (error: any) {
@@ -130,7 +136,7 @@ export const useKols = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchKols]);
+  }, []);
   
   const deleteKol = useCallback(async (id: string) => {
     setIsLoading(true);
@@ -149,8 +155,8 @@ export const useKols = () => {
         description: 'KOL has been deleted successfully',
       });
       
-      // Refresh the KOL list
-      await fetchKols();
+      // Update the local state by removing the deleted KOL
+      setKols(prevKols => prevKols.filter(kol => kol.id !== id));
       
       return true;
     } catch (error: any) {
@@ -164,7 +170,7 @@ export const useKols = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchKols]);
+  }, []);
   
   // Initial fetch when the component mounts and has organization data
   useEffect(() => {
@@ -182,3 +188,4 @@ export const useKols = () => {
     deleteKol,
   };
 };
+

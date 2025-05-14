@@ -25,14 +25,23 @@ const KolManagement = () => {
 
   const { kols, isLoading, fetchKols } = useKols();
 
+  // Memanggil fetchKols saat komponen dimuat dan ketika view berubah
   useEffect(() => {
     fetchKols();
-  }, [fetchKols]);
+  }, [fetchKols, currentView]);
+
+  // Fungsi untuk menangani perubahan view dengan refresh data
+  const handleViewChange = (view: string) => {
+    setCurrentView(view);
+    if (view === "list") {
+      fetchKols();
+    }
+  };
 
   // Filter KOLs based on search query
   const filteredKols = kols.filter(kol => 
-    kol.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    kol.category.toLowerCase().includes(searchQuery.toLowerCase())
+    kol.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    kol.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Format number with commas
@@ -64,7 +73,7 @@ const KolManagement = () => {
             <CardContent className="p-0">
               <KolDetailView 
                 selectedKol={selectedKol} 
-                setCurrentView={setCurrentView} 
+                setCurrentView={handleViewChange} 
                 formatNumber={formatNumber}
               />
             </CardContent>
@@ -75,7 +84,7 @@ const KolManagement = () => {
         return (
           <Card className="w-full bg-white shadow-sm border">
             <CardContent className="p-6">
-              <KolAddForm setCurrentView={setCurrentView} />
+              <KolAddForm setCurrentView={handleViewChange} />
             </CardContent>
           </Card>
         );
@@ -89,7 +98,10 @@ const KolManagement = () => {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 filteredKols={filteredKols}
-                handleKolSelect={setSelectedKol}
+                handleKolSelect={(kol) => {
+                  setSelectedKol(kol);
+                  handleViewChange("detail");
+                }}
                 formatNumber={formatNumber}
                 getScoreBadgeColor={getScoreBadgeColor}
                 getStatusBadgeColor={getStatusBadgeColor}
@@ -135,7 +147,7 @@ const KolManagement = () => {
               <Button 
                 variant="outline" 
                 className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] border-0 gap-2"
-                onClick={() => setCurrentView("list")}
+                onClick={() => handleViewChange("list")}
               >
                 <Users size={16} />
                 <span>KOL List</span>
@@ -143,7 +155,7 @@ const KolManagement = () => {
               <Button 
                 variant="outline" 
                 className="bg-[#1A1F2C] text-white hover:bg-gray-800 border-0 gap-2"
-                onClick={() => setCurrentView("add")}
+                onClick={() => handleViewChange("add")}
               >
                 <Plus size={16} />
                 <span>Add KOL</span>
