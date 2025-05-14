@@ -6,8 +6,19 @@ import { MetricsTab } from "./tabs/MetricsTab";
 import { GeneralTab } from "./tabs/GeneralTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Define a more specific interface for the formData to match what GeneralTab expects
+interface KolFormData {
+  full_name: string;
+  category: string;
+  total_followers: number;
+  engagement_rate: number;
+  is_active: boolean;
+  tempSocialMedia?: any[];
+  // Add any other fields that might be needed
+}
+
 interface KolFormTabsProps {
-  formData: Record<string, any>;
+  formData: KolFormData;
   handleChange: (field: string, value: any) => void;
   categories: string[];
 }

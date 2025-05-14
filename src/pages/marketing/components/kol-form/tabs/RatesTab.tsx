@@ -1,152 +1,161 @@
 
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CreditCard } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export const RatesTab: React.FC = () => {
-  const [platform, setPlatform] = useState<string>("");
-  const [currency, setCurrency] = useState<string>("usd");
-  const [minRate, setMinRate] = useState<string>("");
-  const [maxRate, setMaxRate] = useState<string>("");
-  const [rateCards, setRateCards] = useState<Array<{
-    platform: string;
-    currency: string;
-    minRate: number;
-    maxRate: number;
-  }>>([]);
+interface RatesTabProps {
+  formData: Record<string, any>;
+  handleChange: (field: string, value: any) => void;
+}
 
-  const handleAddRateCard = () => {
-    if (!platform || !minRate) return;
+export const RatesTab: React.FC<RatesTabProps> = ({ formData, handleChange }) => {
+  const [platform, setPlatform] = useState("");
+  const [minRate, setMinRate] = useState<number>(0);
+  const [maxRate, setMaxRate] = useState<number>(0);
+  const [currency, setCurrency] = useState("IDR");
+
+  // Initialize tempRates if it doesn't exist in formData
+  const rates = formData.tempRates || [];
+
+  const handleAddRate = () => {
+    if (!platform) {
+      alert("Please select a platform");
+      return;
+    }
     
-    setRateCards([...rateCards, {
+    const newRate = {
       platform,
-      currency,
-      minRate: Number(minRate),
-      maxRate: Number(maxRate) || Number(minRate),
-    }]);
+      min_rate: Number(minRate),
+      max_rate: Number(maxRate),
+      currency
+    };
     
-    // Reset form
+    const updatedRates = [...rates, newRate];
+    handleChange("tempRates", updatedRates);
+    
+    // Reset form fields
     setPlatform("");
-    setMinRate("");
-    setMaxRate("");
+    setMinRate(0);
+    setMaxRate(0);
+    setCurrency("IDR");
   };
 
-  // Helper function to format currency
+  const handleRemoveRate = (index: number) => {
+    const updatedRates = [...rates];
+    updatedRates.splice(index, 1);
+    handleChange("tempRates", updatedRates);
+  };
+
+  // Format currency
   const formatCurrency = (amount: number, currencyCode: string) => {
-    const formatter = new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: currencyCode.toUpperCase(),
+      currency: currencyCode,
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    
-    return formatter.format(amount);
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="font-semibold mb-1">Rate Cards</h4>
-        <p className="text-sm text-gray-500 mb-6">Manage the KOL's pricing for different platforms and content types</p>
+        <h3 className="text-lg font-medium">KOL Rate Card</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Add the KOL's rate ranges for different platforms
+        </p>
       </div>
       
-      <div className="border rounded-md p-6">
-        <h5 className="font-medium mb-4">Add New Rate Card</h5>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Platform</label>
-            <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select platform" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="instagram">Instagram</SelectItem>
-                <SelectItem value="tiktok">TikTok</SelectItem>
-                <SelectItem value="youtube">YouTube</SelectItem>
-                <SelectItem value="facebook">Facebook</SelectItem>
-                <SelectItem value="twitter">Twitter</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Currency</label>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Platform</label>
+          <Select value={platform} onValueChange={setPlatform}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select platform" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Instagram Post">Instagram Post</SelectItem>
+              <SelectItem value="Instagram Story">Instagram Story</SelectItem>
+              <SelectItem value="Instagram Reel">Instagram Reel</SelectItem>
+              <SelectItem value="TikTok">TikTok</SelectItem>
+              <SelectItem value="YouTube">YouTube</SelectItem>
+              <SelectItem value="Twitter">Twitter</SelectItem>
+              <SelectItem value="Facebook">Facebook</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Min Rate</label>
+          <Input 
+            type="number" 
+            placeholder="0" 
+            value={minRate.toString()}
+            onChange={(e) => setMinRate(parseInt(e.target.value) || 0)}
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Max Rate</label>
+          <Input 
+            type="number" 
+            placeholder="0" 
+            value={maxRate.toString()}
+            onChange={(e) => setMaxRate(parseInt(e.target.value) || 0)}
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Currency</label>
+          <div className="flex items-center space-x-2">
             <Select value={currency} onValueChange={setCurrency}>
-              <SelectTrigger>
-                <SelectValue placeholder="USD" />
+              <SelectTrigger className="flex-grow">
+                <SelectValue placeholder="Select currency" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="usd">USD</SelectItem>
-                <SelectItem value="idr">IDR</SelectItem>
-                <SelectItem value="eur">EUR</SelectItem>
+                <SelectItem value="IDR">IDR</SelectItem>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="SGD">SGD</SelectItem>
+                <SelectItem value="EUR">EUR</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              type="button" 
+              onClick={handleAddRate}
+              size="icon"
+              className="mt-0"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">Minimum Rate</label>
-            <Input 
-              placeholder="Minimum rate" 
-              type="number"
-              value={minRate}
-              onChange={(e) => setMinRate(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Maximum Rate</label>
-            <Input 
-              placeholder="Maximum rate" 
-              type="number"
-              value={maxRate}
-              onChange={(e) => setMaxRate(e.target.value)}
-            />
-          </div>
-        </div>
-        
-        <Button 
-          size="sm" 
-          className="bg-purple-100 text-purple-700 hover:bg-purple-200"
-          onClick={handleAddRateCard}
-          disabled={!platform || !minRate}
-        >
-          <CreditCard size={16} className="mr-1.5" />
-          Add Rate Card
-        </Button>
       </div>
       
-      {rateCards.length > 0 ? (
-        <div className="border rounded-md p-6">
-          <h5 className="font-medium mb-4">Rate Cards</h5>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {rateCards.map((card, index) => (
-              <div key={index} className="border rounded-md p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h6 className="font-medium capitalize">{card.platform}</h6>
-                  <Badge className="bg-green-100 text-green-700">{card.currency.toUpperCase()}</Badge>
+      {/* List of added rates */}
+      {rates.length > 0 && (
+        <div className="border rounded-md p-4 mt-4">
+          <h4 className="font-medium mb-2">Added Rate Cards</h4>
+          <div className="space-y-2">
+            {rates.map((item, index) => (
+              <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                <div>
+                  <span className="font-medium">{item.platform}</span>
+                  <span className="mx-2 text-gray-500">•</span>
+                  <span>
+                    {formatCurrency(item.min_rate, item.currency)} - {formatCurrency(item.max_rate, item.currency)}
+                  </span>
                 </div>
-                
-                <div className="text-sm text-gray-700 space-y-1">
-                  <div>
-                    <span className="text-gray-500">Min Rate:</span> {formatCurrency(card.minRate, card.currency)}
-                  </div>
-                  {card.maxRate > card.minRate && (
-                    <div>
-                      <span className="text-gray-500">Max Rate:</span> {formatCurrency(card.maxRate, card.currency)}
-                    </div>
-                  )}
-                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleRemoveRate(index)}
+                >
+                  <Trash2 className="h-4 w-4 text-gray-500" />
+                </Button>
               </div>
             ))}
           </div>
-        </div>
-      ) : (
-        <div className="border rounded-md p-6 flex items-center justify-center flex-col py-12">
-          <p className="text-gray-500 mb-1">No rate cards defined yet</p>
-          <p className="text-xs text-gray-400">Add rates using the form above</p>
         </div>
       )}
     </div>
