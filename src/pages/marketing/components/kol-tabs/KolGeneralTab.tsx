@@ -1,13 +1,15 @@
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Upload, Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pencil, Upload, X, Trash, Camera } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useKols } from "@/hooks/useKols";
+import { toast } from "@/components/ui/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface KolGeneralTabProps {
   selectedKol: any;
@@ -18,122 +20,104 @@ interface KolGeneralTabProps {
 export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({ 
   selectedKol, 
   formatNumber,
-  onDataChange
+  onDataChange 
 }) => {
+  const [name, setName] = useState(selectedKol?.full_name || "");
+  const [category, setCategory] = useState(selectedKol?.category || "");
+  const [followers, setFollowers] = useState(selectedKol?.total_followers?.toString() || "0");
+  const [engagement, setEngagement] = useState(selectedKol?.engagement_rate?.toString() || "0");
+  const [isActive, setIsActive] = useState(selectedKol?.is_active || false);
+  const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
+  const [isDeletePhotoDialogOpen, setIsDeletePhotoDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [photoChanged, setPhotoChanged] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadKolPhoto, removeKolPhoto } = useKols();
   
-  // Set initial preview URL from selectedKol
+  // Initialize state with selectedKol data when it changes
   useEffect(() => {
-    if (selectedKol?.photo_url) {
-      setPreviewUrl(selectedKol.photo_url);
-    } else {
-      setPreviewUrl(null);
+    if (selectedKol) {
+      setName(selectedKol.full_name || "");
+      setCategory(selectedKol.category || "");
+      setFollowers(selectedKol.total_followers?.toString() || "0");
+      setEngagement(selectedKol.engagement_rate?.toString() || "0");
+      setIsActive(selectedKol.is_active || false);
+      setLocalPhotoUrl(null);
     }
-  }, [selectedKol?.photo_url]);
+  }, [selectedKol]);
   
-  // Categories for KOL
-  const categories = [
-    "Beauty", "Fashion", "Lifestyle", "Food", "Travel", "Fitness",
-    "Tech", "Gaming", "Entertainment", "Business", "Education"
-  ];
+  // Update parent component with changes
+  useEffect(() => {
+    onDataChange("full_name", name);
+  }, [name, onDataChange]);
   
-  // Get the first letter of the KOL name or a fallback
-  const getNameInitial = () => {
-    if (selectedKol && selectedKol.name && typeof selectedKol.name === 'string') {
-      return selectedKol.name.charAt(0);
-    }
-    // Use full_name as a fallback if name is not available
-    if (selectedKol && selectedKol.full_name && typeof selectedKol.full_name === 'string') {
-      return selectedKol.full_name.charAt(0);
-    }
-    // Default fallback
-    return 'K';
-  };
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
+  useEffect(() => {
+    onDataChange("category", category);
+  }, [category, onDataChange]);
+  
+  useEffect(() => {
+    onDataChange("total_followers", parseInt(followers) || 0);
+  }, [followers, onDataChange]);
+  
+  useEffect(() => {
+    onDataChange("engagement_rate", parseFloat(engagement) || 0);
+  }, [engagement, onDataChange]);
+  
+  useEffect(() => {
+    onDataChange("is_active", isActive);
+  }, [isActive, onDataChange]);
+  
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     
-    const file = e.target.files[0];
-    // Validate file size (2MB limit)
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: "Error",
-        description: "Photo size must be less than 2MB",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Preview the file immediately
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setLocalPhotoUrl(e.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
     
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      toast({
-        title: "Error",
-        description: "Only JPEG, PNG, GIF, and WebP formats are supported",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Show preview immediately
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-    setPhotoChanged(true);
-    
-    // Notify parent about the change to enable the Update KOL button
-    onDataChange('photo_changed', true);
-    
+    // Upload the file
     setIsUploading(true);
     try {
-      const result = await uploadKolPhoto(selectedKol.id, file);
-      if (result) {
+      const updatedKol = await uploadKolPhoto(selectedKol.id, file);
+      if (updatedKol && updatedKol.photo_url) {
         toast({
           title: "Success",
-          description: "Photo uploaded successfully",
+          description: "Profile photo uploaded successfully",
         });
-        // Update the previewUrl with the actual URL from the server
-        setPreviewUrl(result.photo_url);
+        // Don't need to set localPhotoUrl as we already have the preview
       }
+    } catch (error) {
+      console.error("Error uploading photo:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload profile photo",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
-      // Reset the file input for future uploads
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
   };
-
+  
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+  
   const handleRemovePhoto = async () => {
+    setIsRemoving(true);
     try {
-      setIsUploading(true);
-      
-      if (selectedKol && selectedKol.photo_url) {
-        await removeKolPhoto(selectedKol.id);
-        setPreviewUrl(null);
-        setPhotoChanged(true);
-        
-        // Notify parent about the change to enable the Update KOL button
-        onDataChange('photo_url', null);
-        onDataChange('photo_path', null);
-        
-        toast({
-          title: "Success",
-          description: "Photo removed successfully",
-        });
-      } else {
-        // If there's just a preview but no actual upload yet
-        setPreviewUrl(null);
-        
-        toast({
-          title: "Success",
-          description: "Photo removed",
-        });
-      }
+      await removeKolPhoto(selectedKol.id);
+      setLocalPhotoUrl(null);
+      setIsDeletePhotoDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Photo removed successfully",
+      });
     } catch (error) {
       console.error("Error removing photo:", error);
       toast({
@@ -142,162 +126,176 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+      setIsRemoving(false);
     }
   };
   
+  // Get display photo URL (local preview or stored URL)
+  const displayPhotoUrl = localPhotoUrl || selectedKol?.photo_url;
+  
+  // Check if KOL has a photo (either locally or stored)
+  const hasPhoto = !!displayPhotoUrl;
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div>
-        <h4 className="font-semibold mb-1">Profile Photo</h4>
-        <p className="text-sm text-gray-500 mb-4">Upload a profile photo for this KOL</p>
-        
-        <div className="flex flex-col items-center space-y-3">
-          <div className="relative">
-            <Avatar className="w-32 h-32">
-              <AvatarImage 
-                src={previewUrl || selectedKol?.photo_url} 
-                alt={selectedKol?.full_name || 'KOL'} 
-                className="object-cover"
-              />
-              <AvatarFallback className="text-5xl font-light text-gray-400">
-                {getNameInitial()}
-              </AvatarFallback>
-            </Avatar>
-            
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handlePhotoUpload}
-              className="hidden"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-            />
-            
-            {/* Photo Upload Button */}
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="absolute -right-2 -bottom-2 rounded-full p-2 h-auto w-auto bg-white shadow-sm border"
-              onClick={triggerFileInput}
-              disabled={isUploading}
-            >
-              <Upload size={16} className="text-gray-500" />
-            </Button>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={triggerFileInput}
-              disabled={isUploading}
-              className="text-xs flex items-center gap-1"
-            >
-              <Upload size={14} />
-              Upload Photo
-            </Button>
-            
-            {(previewUrl || selectedKol?.photo_url) && (
-              <Button 
-                size="sm" 
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-1/3">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <Avatar className="w-32 h-32 border-2 border-gray-200">
+                <AvatarImage src={displayPhotoUrl || undefined} alt={name} className="object-cover" />
+                <AvatarFallback className="bg-purple-100 text-purple-700 text-2xl">
+                  {name ? name.charAt(0).toUpperCase() : "K"}
+                </AvatarFallback>
+              </Avatar>
+              
+              <Button
+                size="icon"
                 variant="outline"
-                onClick={handleRemovePhoto}
+                className="absolute bottom-0 right-0 rounded-full bg-white h-8 w-8"
+                onClick={handlePhotoClick}
                 disabled={isUploading}
-                className="text-xs text-red-500 flex items-center gap-1"
               >
-                <Trash2 size={14} />
-                Remove
+                {isUploading ? (
+                  <span className="animate-spin">
+                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </span>
+                ) : (
+                  <Camera size={14} />
+                )}
+              </Button>
+              
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+              />
+            </div>
+            
+            {hasPhoto && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                onClick={() => setIsDeletePhotoDialogOpen(true)}
+                disabled={isRemoving}
+              >
+                {isRemoving ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Removing...
+                  </span>
+                ) : (
+                  <>
+                    <Trash size={14} className="mr-1" /> Remove Photo
+                  </>
+                )}
               </Button>
             )}
+            
+            <div className="text-xs text-gray-500 text-center">
+              Recommended: Square image, at least 300x300px
+            </div>
           </div>
-          
-          <p className="text-xs text-gray-500 text-center">
-            Upload a square photo of the KOL.<br />Recommended size 500×500px.
-          </p>
         </div>
-      </div>
-      
-      <div className="col-span-2 space-y-6">
-        <h4 className="font-semibold mb-2">Basic Information</h4>
-        <p className="text-sm text-gray-500 mb-4">KOL profile information</p>
         
-        <div className="space-y-4">
+        <div className="w-full md:w-2/3 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Full Name</label>
-            <Input 
-              placeholder="Enter KOL name" 
-              defaultValue={selectedKol?.name || selectedKol?.full_name || ''} 
-              onChange={(e) => onDataChange('full_name', e.target.value)}
+            <Label htmlFor="kol-name">Full Name</Label>
+            <Input
+              id="kol-name"
+              placeholder="Enter KOL's full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
-            <p className="text-xs text-gray-500 mt-1">This will be displayed across the platform.</p>
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
-            <Select 
-              defaultValue={selectedKol?.category ? selectedKol.category.toLowerCase() : undefined}
-              onValueChange={(value) => onDataChange('category', value)}
+            <Label htmlFor="kol-category">Category</Label>
+            <Select
+              value={category}
+              onValueChange={setCategory}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectGroup>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category.toLowerCase()}>{category}</SelectItem>
-                  ))}
-                </SelectGroup>
+                <SelectItem value="Beauty">Beauty</SelectItem>
+                <SelectItem value="Fashion">Fashion</SelectItem>
+                <SelectItem value="Lifestyle">Lifestyle</SelectItem>
+                <SelectItem value="Travel">Travel</SelectItem>
+                <SelectItem value="Food">Food</SelectItem>
+                <SelectItem value="Tech">Tech</SelectItem>
+                <SelectItem value="Gaming">Gaming</SelectItem>
+                <SelectItem value="Fitness">Fitness</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-gray-500 mt-1">Primary content category for the KOL.</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Total Followers</label>
-              <Input 
-                type="number" 
-                placeholder="0" 
-                defaultValue={selectedKol?.followers || selectedKol?.total_followers || 0} 
-                onChange={(e) => onDataChange('total_followers', parseInt(e.target.value) || 0)}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="w-full md:w-1/2">
+              <Label htmlFor="kol-followers">Total Followers</Label>
+              <Input
+                id="kol-followers"
+                placeholder="0"
+                type="number"
+                value={followers}
+                onChange={(e) => setFollowers(e.target.value)}
               />
-              <p className="text-xs text-gray-500 mt-1">Combined followers across all platforms.</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Engagement Rate (%)</label>
-              <Input 
-                type="number" 
-                placeholder="0" 
-                defaultValue={selectedKol?.engagement || selectedKol?.engagement_rate || 0} 
-                onChange={(e) => onDataChange('engagement_rate', parseFloat(e.target.value) || 0)}
+            
+            <div className="w-full md:w-1/2">
+              <Label htmlFor="kol-engagement">Engagement Rate (%)</Label>
+              <Input
+                id="kol-engagement"
+                placeholder="0"
+                type="number"
+                step="0.01"
+                value={engagement}
+                onChange={(e) => setEngagement(e.target.value)}
               />
-              <p className="text-xs text-gray-500 mt-1">Average engagement rate across posts.</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-2 pt-2">
             <Switch 
-              id="active" 
-              defaultChecked={selectedKol?.status === "Active" || selectedKol?.is_active === true} 
-              onCheckedChange={(checked) => onDataChange('is_active', checked)}
+              id="kol-active" 
+              checked={isActive}
+              onCheckedChange={setIsActive}
             />
-            <label htmlFor="active" className="text-sm font-medium">
-              Active Status
-            </label>
-            <span className="text-xs text-gray-500 ml-2">
-              {selectedKol?.status === "Active" || selectedKol?.is_active === true 
-                ? "Active - available for campaigns" 
-                : "Inactive - not available for campaigns"}
-            </span>
+            <Label htmlFor="kol-active">Active KOL</Label>
           </div>
         </div>
       </div>
+      
+      {/* Delete Photo Confirmation Dialog */}
+      <AlertDialog open={isDeletePhotoDialogOpen} onOpenChange={setIsDeletePhotoDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Profile Photo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove the profile photo? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleRemovePhoto}
+            >
+              {isRemoving ? "Removing..." : "Remove"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

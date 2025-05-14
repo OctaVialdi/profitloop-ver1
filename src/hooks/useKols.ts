@@ -312,7 +312,7 @@ export const useKols = () => {
         description: 'Profile photo uploaded successfully',
       });
 
-      // Update local state
+      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === id ? { ...kol, photo_url: url, photo_path: filePath } : kol
       ));
@@ -471,10 +471,10 @@ export const useKols = () => {
         description: 'Platform added successfully',
       });
 
-      // After successful update, fetch the updated KOL data with all platforms
+      // Fetch the updated KOL data with all details
       const updatedKol = await fetchKolWithDetails(kolId);
       
-      // Update local state
+      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -553,7 +553,7 @@ export const useKols = () => {
       // Fetch updated KOL data
       const updatedKol = await fetchKolWithDetails(kolId);
       
-      // Update local state
+      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -608,7 +608,7 @@ export const useKols = () => {
       // Fetch the updated KOL with all details
       const updatedKol = await fetchKolWithDetails(kolId);
       
-      // Update local state
+      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -648,7 +648,7 @@ export const useKols = () => {
       // Fetch updated KOL data
       const updatedKol = await fetchKolWithDetails(kolId);
       
-      // Update local state
+      // Update local state immediately
       setKols(prevKols => prevKols.map(kol => 
         kol.id === kolId ? updatedKol : kol
       ));
@@ -711,8 +711,7 @@ export const useKols = () => {
             ...metricData,
             conversion_rate: conversionRate,
             roi: roi,
-            // Fix: Convert Date to ISO string
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString() // Fixed by converting Date to ISO string
           })
           .eq('id', metricsId)
           .select()

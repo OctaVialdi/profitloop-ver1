@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeftCircle } from "lucide-react";
@@ -87,7 +87,7 @@ export const KolDetailView: React.FC<KolDetailViewProps> = ({
           <Button 
             className="bg-purple-600 hover:bg-purple-700"
             onClick={handleUpdate}
-            disabled={isUpdating || Object.keys(updatedData).length === 0}
+            disabled={isUpdating}
           >
             {isUpdating ? "Updating..." : "Update KOL"}
           </Button>
