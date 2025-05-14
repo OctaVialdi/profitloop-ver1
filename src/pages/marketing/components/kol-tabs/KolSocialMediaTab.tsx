@@ -8,6 +8,7 @@ import { Link, Plus, MoreVertical, Trash } from "lucide-react";
 import { useKols } from "@/hooks/useKols";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/use-toast";
 
 interface KolSocialMediaTabProps {
   selectedKol: any;
@@ -30,6 +31,11 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
 
   const handleAddPlatform = async () => {
     if (!platform) {
+      toast({
+        title: "Error",
+        description: "Please select a platform",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -48,8 +54,18 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
       setProfileUrl("");
       setFollowers("");
       setEngagement("");
+      
+      toast({
+        title: "Success",
+        description: "Platform added successfully",
+      });
     } catch (error) {
       console.error("Error adding platform:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add platform",
+        variant: "destructive",
+      });
     }
   };
 
@@ -59,8 +75,18 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
     try {
       await deletePlatform(selectedKol.id, deletingPlatformId);
       setDeletingPlatformId(null);
+      
+      toast({
+        title: "Success",
+        description: "Platform deleted successfully",
+      });
     } catch (error) {
       console.error("Error deleting platform:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete platform",
+        variant: "destructive",
+      });
     }
   };
 
@@ -149,7 +175,7 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
           </div>
           
           {socialMedia.map((platform: any, index: number) => (
-            <div key={index} className="border-b py-4 flex justify-between items-center">
+            <div key={platform.id || index} className="border-b py-4 flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-100 p-2 rounded-md">
                   {platform.platform === "instagram" ? 

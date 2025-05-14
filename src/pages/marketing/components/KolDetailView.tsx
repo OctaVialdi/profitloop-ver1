@@ -25,7 +25,7 @@ export const KolDetailView: React.FC<KolDetailViewProps> = ({
   setCurrentView, 
   formatNumber 
 }) => {
-  const [updatedData, setUpdatedData] = useState({});
+  const [updatedData, setUpdatedData] = useState<Record<string, any>>({});
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { updateKol, deleteKol, isUpdating, isDeleting } = useKols();
   

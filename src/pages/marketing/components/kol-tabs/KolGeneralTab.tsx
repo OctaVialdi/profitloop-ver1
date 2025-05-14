@@ -22,6 +22,7 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [photoChanged, setPhotoChanged] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { uploadKolPhoto, removeKolPhoto } = useKols();
@@ -82,10 +83,22 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
     // Show preview immediately
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+    setPhotoChanged(true);
+    
+    // Notify parent about the change to enable the Update KOL button
+    onDataChange('photo_changed', true);
     
     setIsUploading(true);
     try {
-      await uploadKolPhoto(selectedKol.id, file);
+      const result = await uploadKolPhoto(selectedKol.id, file);
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Photo uploaded successfully",
+        });
+        // Update the previewUrl with the actual URL from the server
+        setPreviewUrl(result.photo_url);
+      }
     } finally {
       setIsUploading(false);
       // Reset the file input for future uploads
@@ -96,12 +109,38 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
   };
 
   const handleRemovePhoto = async () => {
-    if (!selectedKol || !selectedKol.photo_url) return;
-    
-    setIsUploading(true);
     try {
-      await removeKolPhoto(selectedKol.id);
-      setPreviewUrl(null); // Remove preview immediately
+      setIsUploading(true);
+      
+      if (selectedKol && selectedKol.photo_url) {
+        await removeKolPhoto(selectedKol.id);
+        setPreviewUrl(null);
+        setPhotoChanged(true);
+        
+        // Notify parent about the change to enable the Update KOL button
+        onDataChange('photo_url', null);
+        onDataChange('photo_path', null);
+        
+        toast({
+          title: "Success",
+          description: "Photo removed successfully",
+        });
+      } else {
+        // If there's just a preview but no actual upload yet
+        setPreviewUrl(null);
+        
+        toast({
+          title: "Success",
+          description: "Photo removed",
+        });
+      }
+    } catch (error) {
+      console.error("Error removing photo:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove photo",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
     }

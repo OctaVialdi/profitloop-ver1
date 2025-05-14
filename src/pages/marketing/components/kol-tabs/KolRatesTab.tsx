@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CreditCard, Trash } from "lucide-react";
 import { useKols } from "@/hooks/useKols";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface KolRatesTabProps {
@@ -27,6 +28,11 @@ export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
   
   const handleAddRateCard = async () => {
     if (!platform || !minRate) {
+      toast({
+        title: "Error",
+        description: "Platform and minimum rate are required",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -44,8 +50,18 @@ export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
       setPlatform("");
       setMinRate("");
       setMaxRate("");
+      
+      toast({
+        title: "Success",
+        description: "Rate card added successfully",
+      });
     } catch (error) {
       console.error("Error adding rate card:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add rate card",
+        variant: "destructive",
+      });
     }
   };
   
@@ -55,8 +71,18 @@ export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
     try {
       await deleteRateCard(selectedKol.id, deletingRateId);
       setDeletingRateId(null);
+      
+      toast({
+        title: "Success",
+        description: "Rate card deleted successfully",
+      });
     } catch (error) {
       console.error("Error deleting rate card:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete rate card",
+        variant: "destructive",
+      });
     }
   };
   
@@ -149,8 +175,8 @@ export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
           <h5 className="font-medium mb-4">Rate Cards</h5>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {rates.map((rate: any, index: number) => (
-              <div key={index} className="border rounded-md p-4 relative group">
+            {rates.map((rate: any) => (
+              <div key={rate.id} className="border rounded-md p-4 relative group">
                 <div className="flex justify-between items-center mb-2">
                   <h6 className="font-medium capitalize">{rate.platform}</h6>
                   <Badge className="bg-green-100 text-green-700">{rate.currency.toUpperCase()}</Badge>
