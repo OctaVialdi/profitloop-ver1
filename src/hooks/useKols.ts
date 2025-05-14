@@ -864,7 +864,7 @@ export const useKols = () => {
     } finally {
       setIsUpdating(false);
     }
-  }, []);
+  };
   
   // Initial fetch when the component mounts and has organization data
   useEffect(() => {
