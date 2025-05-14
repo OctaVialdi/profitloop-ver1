@@ -256,7 +256,6 @@ export default function ContentPlanTableRow({
         id={item.id} 
         done={item.done} 
         onChange={handleFieldChange} 
-        fieldName="done"
       />
 
       {/* 27. Actual Post */}
