@@ -4,9 +4,8 @@ import { SocialMediaTab } from "./tabs/SocialMediaTab";
 import { RatesTab } from "./tabs/RatesTab";
 import { MetricsTab } from "./tabs/MetricsTab";
 import { GeneralTab } from "./tabs/GeneralTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Define a more specific interface for the formData to match what GeneralTab expects
+// Define a more specific interface for the formData
 interface KolFormData {
   full_name: string;
   category: string;
@@ -14,6 +13,7 @@ interface KolFormData {
   engagement_rate: number;
   is_active: boolean;
   tempSocialMedia?: any[];
+  tempRates?: any[];
   // Add any other fields that might be needed
 }
 
@@ -21,11 +21,15 @@ interface KolFormTabsProps {
   formData: KolFormData;
   handleChange: (field: string, value: any) => void;
   categories: string[];
+  activeTab?: string;
 }
 
-export const KolFormTabs: React.FC<KolFormTabsProps> = ({ formData, handleChange, categories }) => {
-  const [activeTab, setActiveTab] = React.useState("social");
-
+export const KolFormTabs: React.FC<KolFormTabsProps> = ({ 
+  formData, 
+  handleChange, 
+  categories, 
+  activeTab = "social" 
+}) => {
   return (
     <div>
       {activeTab === "social" && (
@@ -36,6 +40,9 @@ export const KolFormTabs: React.FC<KolFormTabsProps> = ({ formData, handleChange
       )}
       {activeTab === "general" && (
         <GeneralTab formData={formData} handleChange={handleChange} categories={categories} />
+      )}
+      {activeTab === "metrics" && (
+        <MetricsTab formData={formData} handleChange={handleChange} />
       )}
     </div>
   );

@@ -23,7 +23,7 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
     "Tech", "Gaming", "Entertainment", "Business", "Education"
   ];
 
-  const { addKol, isLoading, fetchKols, uploadKolPhoto, addPlatform } = useKols();
+  const { addKol, isLoading, fetchKols, uploadKolPhoto, addPlatform, addRateCard } = useKols();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
@@ -32,7 +32,8 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
     total_followers: 0,
     engagement_rate: 0,
     is_active: false,
-    tempSocialMedia: [] as any[]
+    tempSocialMedia: [] as any[],
+    tempRates: [] as any[]
   });
 
   const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
@@ -104,6 +105,18 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
         if (formData.tempSocialMedia && formData.tempSocialMedia.length > 0) {
           for (const platform of formData.tempSocialMedia) {
             await addPlatform(result.id, platform);
+          }
+        }
+        
+        // Add rate cards if any are defined
+        if (formData.tempRates && formData.tempRates.length > 0) {
+          for (const rate of formData.tempRates) {
+            await addRateCard(result.id, {
+              platform: rate.platform,
+              currency: rate.currency,
+              min_rate: rate.min_rate,
+              max_rate: rate.max_rate
+            });
           }
         }
         
@@ -294,17 +307,18 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
             formData={formData}
             handleChange={handleChange}
             categories={categories}
+            activeTab="social"
           />
         </TabsContent>
         
         <TabsContent value="rates" className="mt-6">
           {/* Rates tab content */}
-          <div className="space-y-4 p-4">
-            <h4 className="font-medium">Rate Information</h4>
-            <p className="text-sm text-gray-500 mb-4">
-              Add rate card information for the KOL here.
-            </p>
-          </div>
+          <KolFormTabs 
+            formData={formData}
+            handleChange={handleChange}
+            categories={categories}
+            activeTab="rates"
+          />
         </TabsContent>
       </Tabs>
     </div>
