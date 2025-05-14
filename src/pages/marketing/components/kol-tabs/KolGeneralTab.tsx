@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -21,9 +21,19 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
   onDataChange
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { uploadKolPhoto, removeKolPhoto } = useKols();
+  
+  // Set initial preview URL from selectedKol
+  useEffect(() => {
+    if (selectedKol?.photo_url) {
+      setPreviewUrl(selectedKol.photo_url);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [selectedKol?.photo_url]);
   
   // Categories for KOL
   const categories = [
@@ -69,6 +79,10 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
       return;
     }
     
+    // Show preview immediately
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    
     setIsUploading(true);
     try {
       await uploadKolPhoto(selectedKol.id, file);
@@ -87,6 +101,7 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
     setIsUploading(true);
     try {
       await removeKolPhoto(selectedKol.id);
+      setPreviewUrl(null); // Remove preview immediately
     } finally {
       setIsUploading(false);
     }
@@ -108,7 +123,7 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
           <div className="relative">
             <Avatar className="w-32 h-32">
               <AvatarImage 
-                src={selectedKol?.photo_url} 
+                src={previewUrl || selectedKol?.photo_url} 
                 alt={selectedKol?.full_name || 'KOL'} 
                 className="object-cover"
               />
@@ -149,7 +164,7 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
               Upload Photo
             </Button>
             
-            {selectedKol?.photo_url && (
+            {(previewUrl || selectedKol?.photo_url) && (
               <Button 
                 size="sm" 
                 variant="outline"

@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Link, Plus } from "lucide-react";
+import { Link, Plus, MoreVertical, Trash } from "lucide-react";
 import { useKols } from "@/hooks/useKols";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface KolSocialMediaTabProps {
   selectedKol: any;
@@ -18,8 +20,9 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
   const [profileUrl, setProfileUrl] = useState<string>("");
   const [followers, setFollowers] = useState<string>("");
   const [engagement, setEngagement] = useState<string>("");
+  const [deletingPlatformId, setDeletingPlatformId] = useState<string | null>(null);
   
-  const { addPlatform, isUpdating } = useKols();
+  const { addPlatform, deletePlatform, isUpdating } = useKols();
 
   // Get social media from the selectedKol object
   const socialMedia = selectedKol?.social_media || [];
@@ -47,6 +50,17 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
       setEngagement("");
     } catch (error) {
       console.error("Error adding platform:", error);
+    }
+  };
+
+  const handleDeletePlatform = async () => {
+    if (!deletingPlatformId) return;
+    
+    try {
+      await deletePlatform(selectedKol.id, deletingPlatformId);
+      setDeletingPlatformId(null);
+    } catch (error) {
+      console.error("Error deleting platform:", error);
     }
   };
 
@@ -162,11 +176,22 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
                   {platform.engagement_rate || 0}% engagement
                 </Badge>
-                <Button variant="ghost" className="text-gray-500 p-2 h-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 12a1 1 0 1 0 2 0 1 1 0 1 0-2 0zM11 12a1 1 0 1 0 2 0 1 1 0 1 0-2 0zM18 12a1 1 0 1 0 2 0 1 1 0 1 0-2 0z"/>
-                  </svg>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="text-gray-500 p-2 h-auto">
+                      <MoreVertical size={16} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      className="text-red-500 focus:text-red-500 cursor-pointer"
+                      onClick={() => setDeletingPlatformId(platform.id)}
+                    >
+                      <Trash size={14} className="mr-2" />
+                      Delete Platform
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           ))}
@@ -177,6 +202,27 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
           <p className="text-xs text-gray-400">Add platforms using the form above</p>
         </div>
       )}
+
+      {/* Confirmation dialog for deleting platforms */}
+      <AlertDialog open={!!deletingPlatformId} onOpenChange={(open) => !open && setDeletingPlatformId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Platform</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this social media platform? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleDeletePlatform}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

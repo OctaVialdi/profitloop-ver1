@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,8 @@ export interface Kol {
   updated_at?: string;
   platforms?: Array<string>;
   rates?: Array<{
+    id: string;
+    kol_id: string;
     platform: string;
     currency: string;
     min_rate: number;
@@ -33,6 +36,8 @@ export interface Kol {
     engagement_rate: number;
   }>;
   metrics?: {
+    id: string;
+    kol_id: string;
     likes: number;
     comments: number;
     shares: number;
@@ -488,6 +493,85 @@ export const useKols = () => {
     }
   }, [kols]);
 
+  const deletePlatform = useCallback(async (kolId: string, platformId: string) => {
+    setIsUpdating(true);
+    try {
+      // Get the platform info before deleting (to update follower count)
+      const { data: platformData, error: platformError } = await supabase
+        .from('kol_social_media')
+        .select('*')
+        .eq('id', platformId)
+        .single();
+      
+      if (platformError) {
+        throw platformError;
+      }
+      
+      // Delete the platform
+      const { error: deleteError } = await supabase
+        .from('kol_social_media')
+        .delete()
+        .eq('id', platformId);
+        
+      if (deleteError) {
+        throw deleteError;
+      }
+      
+      // Get current KOL
+      const kol = kols.find(k => k.id === kolId);
+      if (!kol) {
+        throw new Error("KOL not found");
+      }
+      
+      // Update platforms list and total followers if needed
+      const currentPlatforms = kol.platforms || [];
+      const updatedPlatforms = currentPlatforms.filter(p => p !== platformData.platform);
+      
+      // Update KOL record
+      const updateData: any = { platforms: updatedPlatforms };
+      
+      // Reduce follower count if needed
+      if (platformData.followers > 0) {
+        const newFollowers = Math.max(0, kol.total_followers - platformData.followers);
+        updateData.total_followers = newFollowers;
+      }
+      
+      const { error: updateError } = await supabase
+        .from('data_kol')
+        .update(updateData)
+        .eq('id', kolId);
+        
+      if (updateError) {
+        throw updateError;
+      }
+      
+      toast({
+        title: 'Success',
+        description: 'Platform deleted successfully',
+      });
+      
+      // Fetch updated KOL data
+      const updatedKol = await fetchKolWithDetails(kolId);
+      
+      // Update local state
+      setKols(prevKols => prevKols.map(kol => 
+        kol.id === kolId ? updatedKol : kol
+      ));
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error deleting platform:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to delete platform: ${error.message}`,
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [kols]);
+
   const addRateCard = useCallback(async (
     kolId: string, 
     rateData: {
@@ -538,6 +622,46 @@ export const useKols = () => {
         variant: 'destructive',
       });
       return null;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, []);
+
+  const deleteRateCard = useCallback(async (kolId: string, rateCardId: string) => {
+    setIsUpdating(true);
+    try {
+      // Delete the rate card
+      const { error: deleteError } = await supabase
+        .from('kol_rates')
+        .delete()
+        .eq('id', rateCardId);
+        
+      if (deleteError) {
+        throw deleteError;
+      }
+      
+      toast({
+        title: 'Success',
+        description: 'Rate card deleted successfully',
+      });
+      
+      // Fetch updated KOL data
+      const updatedKol = await fetchKolWithDetails(kolId);
+      
+      // Update local state
+      setKols(prevKols => prevKols.map(kol => 
+        kol.id === kolId ? updatedKol : kol
+      ));
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error deleting rate card:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to delete rate card: ${error.message}`,
+        variant: 'destructive',
+      });
+      return false;
     } finally {
       setIsUpdating(false);
     }
@@ -603,6 +727,14 @@ export const useKols = () => {
           description: 'Metrics updated successfully',
         });
         
+        // After successful update, fetch the updated KOL with all details
+        const updatedKol = await fetchKolWithDetails(kolId);
+        
+        // Update local state
+        setKols(prevKols => prevKols.map(kol => 
+          kol.id === kolId ? updatedKol : kol
+        ));
+        
         return updatedMetrics;
       } else {
         // Create new metrics
@@ -626,18 +758,16 @@ export const useKols = () => {
           description: 'Metrics added successfully',
         });
         
-        metricsId = newMetrics.id;
+        // After successful update, fetch the updated KOL with all details
+        const updatedKol = await fetchKolWithDetails(kolId);
+        
+        // Update local state
+        setKols(prevKols => prevKols.map(kol => 
+          kol.id === kolId ? updatedKol : kol
+        ));
+        
         return newMetrics;
       }
-      
-      // After successful update, fetch the updated KOL with all details
-      const updatedKol = await fetchKolWithDetails(kolId);
-      
-      // Update local state
-      setKols(prevKols => prevKols.map(kol => 
-        kol.id === kolId ? updatedKol : kol
-      ));
-      
     } catch (error: any) {
       console.error('Error updating metrics:', error);
       toast({
@@ -731,7 +861,9 @@ export const useKols = () => {
     uploadKolPhoto,
     removeKolPhoto,
     addPlatform,
+    deletePlatform,
     addRateCard,
+    deleteRateCard,
     updateMetrics
   };
 };
