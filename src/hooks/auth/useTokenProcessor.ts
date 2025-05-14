@@ -31,16 +31,13 @@ export function useTokenProcessor() {
       // Check if user has organization and follow the flow chart
       if (profileData?.organization_id) {
         if (!profileData.has_seen_welcome) {
-          // Use replace: true to prevent back navigation to login page
           navigate("/employee-welcome", { replace: true });
         } else {
-          // Use replace: true to prevent back navigation to login page
           navigate("/dashboard", { replace: true });
         }
         return true;
       } else {
         // Always redirect to organizations if user doesn't have organization
-        // Use replace: true to prevent back navigation to login page
         navigate("/organizations", { replace: true });
         return true;
       }
