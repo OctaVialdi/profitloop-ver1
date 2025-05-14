@@ -118,14 +118,17 @@ export const fetchEmployeeReprimands = async (employeeId: string) => {
   }
 };
 
-export const createReprimand = async (reprimand: Omit<Reprimand, 'id' | 'created_at' | 'updated_at'>) => {
+export const createReprimand = async (reprimand: Reprimand) => {
   try {
+    // If id is not provided, generate one
+    const reprimandData = {
+      ...reprimand,
+      id: reprimand.id || uuidv4()
+    };
+    
     const { data, error } = await supabase
       .from('reprimands')
-      .insert({
-        ...reprimand,
-        id: uuidv4()
-      })
+      .insert(reprimandData)
       .select();
 
     if (error) throw error;

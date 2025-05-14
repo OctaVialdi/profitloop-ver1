@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Employee } from "@/hooks/useEmployees";
 import { EmptyDataDisplay } from "./EmptyDataDisplay";
-import { fetchEmployeeReprimands, Reprimand } from "@/services/reprimandService";
+import { fetchEmployeeReprimands, Reprimand, appealReprimand } from "@/services/reprimandService";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface ReprimandHistorySectionProps {
   reprimands: Reprimand[];
@@ -141,8 +143,20 @@ export const HistorySection: React.FC<HistorySectionProps> = ({
   };
 
   const handleAppealReprimand = async (reprimandId: string) => {
-    // Implementation for appealing a reprimand would go here
-    console.log("Appeal reprimand:", reprimandId);
+    try {
+      const updatedReprimand = await appealReprimand(reprimandId);
+      if (updatedReprimand) {
+        // Update the local state with the appealed reprimand
+        setReprimands(currentReprimands => 
+          currentReprimands.map(r => 
+            r.id === reprimandId ? { ...r, status: 'Appealed' } : r
+          )
+        );
+        toast.success("Reprimand appeal submitted successfully");
+      }
+    } catch (error) {
+      console.error("Error appealing reprimand:", error);
+    }
   };
 
   const historyTitle = activeTab === 'adjustment' ? 'Adjustment' : 

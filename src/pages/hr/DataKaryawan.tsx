@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -21,7 +22,10 @@ export default function HRDataKaryawan() {
       <div className="flex justify-between items-center">
         
         {activeTab === "employees" && <Link to="/hr/data/add-employee">
-            
+            <Button className="gap-2">
+              <PlusCircle className="h-4 w-4" />
+              Add Employee
+            </Button>
           </Link>}
       </div>
       

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -123,19 +124,12 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
 
   const uploadAttachments = async (organizationId: string, employeeId: string, reprimandId: string) => {
     try {
-      // Check if bucket exists
-      const bucketExists = await ensureBucketExists('reprimand-attachments');
-      if (!bucketExists) {
-        toast.error("Storage bucket 'reprimand-attachments' not found. Contact your administrator.");
-        throw new Error("Storage bucket not found");
-      }
-      
-      // Upload each attachment
+      // Upload each attachment to the reprimand-attachments bucket
       const uploads = await Promise.all(attachments.map(async (attachment) => {
         const fileExt = attachment.name.split('.').pop();
         const filePath = `${organizationId}/${employeeId}/${reprimandId}/${uuidv4()}.${fileExt}`;
         
-        // Upload file to storage using our new utility function
+        // Upload file to storage using our utility function
         const { url, error } = await uploadFileToBucket(
           'reprimand-attachments',
           filePath,
@@ -179,6 +173,7 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
       
       // Create the reprimand with employee_name included
       await createReprimand({
+        id: reprimandId,
         organization_id: organization.id,
         employee_id: data.employee_id,
         employee_name: employeeName, // Include the employee name
@@ -188,7 +183,9 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
         escalation_level: data.escalation_level,
         status: 'Active',
         evidence_attachments: evidenceAttachments,
-        created_by: (await supabase.auth.getUser()).data.user?.id
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
       
       reset();
@@ -202,6 +199,13 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle Cancel button click
+  const handleCancel = () => {
+    reset();
+    setAttachments([]);
+    onClose();
   };
 
   return (
@@ -374,7 +378,7 @@ const AddReprimandDialog: React.FC<AddReprimandDialogProps> = ({ isOpen, onClose
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
