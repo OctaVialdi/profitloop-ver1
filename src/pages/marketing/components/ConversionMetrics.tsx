@@ -1,106 +1,135 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { Kol, KolMetrics } from "@/hooks/useKols";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  LineChart,
+} from "recharts";
 
 interface ConversionMetricsProps {
   timeFilter: string;
-  kols: Kol[];
-  metrics: KolMetrics[];
 }
 
-export const ConversionMetrics: React.FC<ConversionMetricsProps> = ({ timeFilter, kols, metrics }) => {
-  // Combine KOLs with their metrics data
-  const kolsWithMetrics = kols.map(kol => {
-    const kolMetrics = metrics.find(m => m.kol_id === kol.id);
-    const clicks = kolMetrics ? kolMetrics.clicks : 0;
-    const purchases = kolMetrics ? kolMetrics.purchases : 0;
-    const conversionRate = clicks > 0 ? (purchases / clicks) * 100 : 0;
-    
-    return {
-      name: kol.name,
-      conversionRate: parseFloat(conversionRate.toFixed(1)),
-      clicks,
-      purchases
-    };
-  });
-  
-  // Sort by conversion rate and take top 10
-  const sortedData = [...kolsWithMetrics]
-    .filter(item => item.conversionRate > 0)
-    .sort((a, b) => b.conversionRate - a.conversionRate)
-    .slice(0, 10);
-  
-  // Calculate total clicks and purchases
-  const totalClicks = kolsWithMetrics.reduce((sum, item) => sum + item.clicks, 0);
-  const totalPurchases = kolsWithMetrics.reduce((sum, item) => sum + item.purchases, 0);
-  const overallConversionRate = totalClicks > 0 ? (totalPurchases / totalClicks) * 100 : 0;
-  
+export const ConversionMetrics = ({ timeFilter }: ConversionMetricsProps) => {
+  // Conversion data
+  const conversionByKolData = [
+    { name: "Sarah Johnson", value: 310 },
+    { name: "Alex Chen", value: 265 },
+    { name: "Maria Rodriguez", value: 450 },
+    { name: "Emma Wilson", value: 360 },
+  ];
+
+  const conversionTrendsData = [
+    { name: "Jan", value: 9 },
+    { name: "Feb", value: 8.5 },
+    { name: "Mar", value: 7 },
+    { name: "Apr", value: 3 },
+    { name: "May", value: 6.5 },
+    { name: "Jun", value: 7.5 },
+    { name: "Jul", value: 2.5 },
+    { name: "Aug", value: 9.5 },
+    { name: "Sep", value: 4.5 },
+  ];
+
+  const topPerformersData = [
+    { id: 1, name: "Sarah Johnson", score: 78 },
+    { id: 2, name: "Alex Chen", score: 72 },
+    { id: 3, name: "Maria Rodriguez", score: 86 },
+    { id: 4, name: "David Kim", score: 65 },
+    { id: 5, name: "Emma Wilson", score: 81 },
+  ];
+
   return (
-    <Card className="col-span-4">
-      <CardHeader>
-        <CardTitle>Conversion Metrics</CardTitle>
-        <CardDescription>
-          Conversion metrics for KOL campaigns
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="font-bold text-2xl">{totalClicks.toLocaleString()}</div>
-              <div className="text-sm text-gray-500">Total Clicks</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="font-bold text-2xl">{totalPurchases.toLocaleString()}</div>
-              <div className="text-sm text-gray-500">Total Purchases</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="font-bold text-2xl">{overallConversionRate.toFixed(2)}%</div>
-              <div className="text-sm text-gray-500">Average Conversion Rate</div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={sortedData}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 20,
-                bottom: 60,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
-                angle={-45} 
-                textAnchor="end" 
-                interval={0}
-                height={60}
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis />
-              <Tooltip formatter={(value) => [`${value}%`, 'Conversion Rate']} />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="conversionRate" 
-                name="Conversion Rate (%)" 
-                stroke="#8884d8" 
-                activeDot={{ r: 8 }} 
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="text-lg font-medium mb-4">Conversion Rate by KOL</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={conversionByKolData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" fontSize={10} />
+                  <YAxis domain={[0, 600]} />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white p-2 border rounded shadow-sm">
+                            <p className="font-medium">{`${payload[0].name}: ${payload[0].value}`}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="value" fill="#0EA5E9" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="text-lg font-medium mb-4">Conversion Trends</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={conversionTrendsData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 12]} />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white p-2 border rounded shadow-sm">
+                            <p className="font-medium">{`${payload[0].name}: ${payload[0].value}`}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#0EA5E9"
+                    strokeWidth={2}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="text-lg font-medium mb-4">Top Performers</h3>
+            <div className="space-y-3">
+              {topPerformersData.map((performer) => (
+                <div key={performer.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
+                      {performer.id}
+                    </div>
+                    <span className="font-medium">{performer.name}</span>
+                  </div>
+                  <span className="font-semibold">{performer.score} <span className="text-gray-500 text-sm font-normal">score</span></span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };

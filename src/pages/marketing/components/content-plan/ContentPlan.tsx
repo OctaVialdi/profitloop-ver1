@@ -1,20 +1,123 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useEffect } from "react";
+import ContentPlanTable from "./ContentPlanTable";
+import ContentPlanToolbar from "./ContentPlanToolbar";
+import BriefDialog from "./dialogs/BriefDialog";
+import TitleDialog from "./dialogs/TitleDialog";
+import DeleteConfirmDialog from "./dialogs/DeleteConfirmDialog";
+import ContentPlanError from "./ContentPlanError";
+import { useContentPlanState } from "./hooks/useContentPlanState";
+import { LegacyEmployee } from "@/hooks/useEmployees";
+import { TeamMember } from "@/hooks/content-plan/types";
 
-const ContentPlan: React.FC = () => {
+// Helper function to adapt LegacyEmployee to TeamMember interface
+const adaptToTeamMember = (employee: LegacyEmployee): TeamMember => ({
+  id: employee.id,
+  name: employee.name,
+  job_position: employee.jobPosition || "",
+  department: employee.organization || "",
+  role: employee.role || ""
+});
+
+export default function ContentPlan() {
+  const {
+    contentPlans,
+    contentTypes,
+    services,
+    subServices,
+    contentPillars,
+    contentPlanners: rawContentPlanners,
+    creativeTeamMembers: rawCreativeTeamMembers,
+    loading,
+    error,
+    selectedItems,
+    deleteConfirmOpen,
+    briefDialogOpen,
+    titleDialogOpen,
+    activeItemContent,
+    fetchContentPlans,
+    handleAddRow,
+    handleDeleteSelected,
+    handleSelectItem,
+    handleDateChange,
+    handleFieldChange,
+    getFilteredSubServices,
+    resetRevisionCounter,
+    formatDisplayDate,
+    extractLink,
+    openBriefDialog,
+    openTitleDialog,
+    handleBriefSubmit,
+    handleTitleSubmit,
+    setDeleteConfirmOpen,
+    setBriefDialogOpen,
+    setTitleDialogOpen
+  } = useContentPlanState();
+
+  // Use the raw employees as LegacyEmployee without conversion since we've updated the component interfaces
+  const contentPlanners = rawContentPlanners;
+  const creativeTeamMembers = rawCreativeTeamMembers;
+
+  useEffect(() => {
+    fetchContentPlans();
+  }, [fetchContentPlans]);
+
+  if (error) {
+    return <ContentPlanError error={error} />;
+  }
+
   return (
-    <div className="p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Content Plan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>Content plan implementation will be coming soon.</p>
-        </CardContent>
-      </Card>
+    <div className="space-y-4 p-4">
+      <ContentPlanToolbar
+        selectedCount={selectedItems.length}
+        onAddRow={handleAddRow}
+        onConfirmDelete={() => setDeleteConfirmOpen(true)}
+      />
+
+      <ContentPlanTable
+        contentPlans={contentPlans}
+        contentTypes={contentTypes}
+        services={services}
+        subServices={subServices}
+        contentPillars={contentPillars}
+        contentPlanners={contentPlanners}
+        creativeTeamMembers={creativeTeamMembers}
+        loading={loading}
+        selectedItems={selectedItems}
+        handleSelectItem={handleSelectItem}
+        handleDateChange={handleDateChange}
+        handleFieldChange={handleFieldChange}
+        getFilteredSubServices={getFilteredSubServices}
+        resetRevisionCounter={resetRevisionCounter}
+        formatDisplayDate={formatDisplayDate}
+        extractLink={extractLink}
+        openBriefDialog={openBriefDialog}
+        openTitleDialog={openTitleDialog}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        selectedCount={selectedItems.length}
+        onConfirm={handleDeleteSelected}
+      />
+
+      {/* Brief Dialog */}
+      <BriefDialog
+        open={briefDialogOpen}
+        onOpenChange={setBriefDialogOpen}
+        content={activeItemContent}
+        onSubmit={handleBriefSubmit}
+      />
+
+      {/* Title Dialog */}
+      <TitleDialog
+        open={titleDialogOpen}
+        onOpenChange={setTitleDialogOpen}
+        content={activeItemContent}
+        onSubmit={handleTitleSubmit}
+      />
     </div>
   );
-};
-
-export default ContentPlan;
+}
