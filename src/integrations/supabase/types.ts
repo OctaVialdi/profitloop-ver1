@@ -1033,6 +1033,53 @@ export type Database = {
           },
         ]
       }
+      data_kol: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          engagement_rate: number | null
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          organization_id: string
+          photo_url: string | null
+          total_followers: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          organization_id: string
+          photo_url?: string | null
+          total_followers?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string
+          photo_url?: string | null
+          total_followers?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_kol_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_assets: {
         Row: {
           asset_image: string | null
@@ -1713,6 +1760,246 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_currencies: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_currencies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_metrics: {
+        Row: {
+          clicks: number | null
+          comments: number | null
+          conversion_rate: number | null
+          cost: number | null
+          created_at: string | null
+          id: string
+          kol_id: string | null
+          likes: number | null
+          purchases: number | null
+          revenue: number | null
+          roi: number | null
+          shares: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          clicks?: number | null
+          comments?: number | null
+          conversion_rate?: number | null
+          cost?: number | null
+          created_at?: string | null
+          id?: string
+          kol_id?: string | null
+          likes?: number | null
+          purchases?: number | null
+          revenue?: number | null
+          roi?: number | null
+          shares?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          clicks?: number | null
+          comments?: number | null
+          conversion_rate?: number | null
+          cost?: number | null
+          created_at?: string | null
+          id?: string
+          kol_id?: string | null
+          likes?: number | null
+          purchases?: number | null
+          revenue?: number | null
+          roi?: number | null
+          shares?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_metrics_kol_id_fkey"
+            columns: ["kol_id"]
+            isOneToOne: false
+            referencedRelation: "data_kol"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_platforms: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_platforms_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_rates: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          id: string
+          kol_id: string | null
+          max_rate: number | null
+          min_rate: number | null
+          platform: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          kol_id?: string | null
+          max_rate?: number | null
+          min_rate?: number | null
+          platform?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          kol_id?: string | null
+          max_rate?: number | null
+          min_rate?: number | null
+          platform?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_rates_kol_id_fkey"
+            columns: ["kol_id"]
+            isOneToOne: false
+            referencedRelation: "data_kol"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_social_media: {
+        Row: {
+          created_at: string | null
+          engagement_rate: number | null
+          followers: number | null
+          handle: string | null
+          id: string
+          kol_id: string | null
+          platform: string | null
+          profile_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          engagement_rate?: number | null
+          followers?: number | null
+          handle?: string | null
+          id?: string
+          kol_id?: string | null
+          platform?: string | null
+          profile_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          engagement_rate?: number | null
+          followers?: number | null
+          handle?: string | null
+          id?: string
+          kol_id?: string | null
+          platform?: string | null
+          profile_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_social_media_kol_id_fkey"
+            columns: ["kol_id"]
+            isOneToOne: false
+            referencedRelation: "data_kol"
             referencedColumns: ["id"]
           },
         ]

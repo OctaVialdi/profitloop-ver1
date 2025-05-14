@@ -64,12 +64,12 @@ export const KolList: React.FC<KolListProps> = ({
                     onClick={() => handleKolSelect(kol)}
                   >
                     <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100">
-                      <img src={kol.avatar} alt={kol.name} className="h-full w-full object-cover" />
+                      <img src={kol.photo_url} alt={kol.full_name} className="h-full w-full object-cover" />
                     </div>
                     <div>
-                      <div className="text-blue-600 hover:underline">{kol.name}</div>
+                      <div className="text-blue-600 hover:underline">{kol.full_name}</div>
                       <div className="text-xs text-gray-500">
-                        {kol.platforms.join(", ")}
+                        {kol.kol_social_media?.map(sm => sm.platform).join(", ") || "No platforms"}
                       </div>
                     </div>
                   </div>
@@ -79,16 +79,16 @@ export const KolList: React.FC<KolListProps> = ({
                     {kol.category}
                   </span>
                 </TableCell>
-                <TableCell>{formatNumber(kol.followers)}</TableCell>
-                <TableCell>{kol.engagement}%</TableCell>
+                <TableCell>{formatNumber(kol.total_followers)}</TableCell>
+                <TableCell>{kol.engagement_rate}%</TableCell>
                 <TableCell>
-                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getScoreBadgeColor(kol.score)}`}>
-                    {kol.score}
+                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getScoreBadgeColor(kol.score || 0)}`}>
+                    {kol.score || "-"}
                   </span>
                 </TableCell>
                 <TableCell>
-                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeColor(kol.status)}`}>
-                    {kol.status}
+                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeColor(kol.is_active ? 'Active' : 'Inactive')}`}>
+                    {kol.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </TableCell>
               </TableRow>

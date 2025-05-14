@@ -37,7 +37,7 @@ export const KolDetailView: React.FC<KolDetailViewProps> = ({
             >
               <ArrowLeftCircle size={20} className="mr-2 text-gray-500" />
             </Button>
-            Edit KOL: {selectedKol.name}
+            Edit KOL: {selectedKol.full_name}
           </h3>
           <p className="text-sm text-gray-500 mt-1">Manage KOL details, social media platforms, and rates</p>
         </div>
