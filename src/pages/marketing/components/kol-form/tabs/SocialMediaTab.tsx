@@ -4,37 +4,98 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Link, Plus } from "lucide-react";
+import { useKols } from "@/hooks/useKols";
+import { toast } from "@/components/ui/use-toast";
 
-export const SocialMediaTab: React.FC = () => {
+interface SocialMediaTabProps {
+  formData: Record<string, any>;
+  handleChange: (field: string, value: any) => void;
+}
+
+export const SocialMediaTab: React.FC<SocialMediaTabProps> = ({ formData, handleChange }) => {
   const [platform, setPlatform] = useState<string>("");
   const [handle, setHandle] = useState<string>("");
   const [profileUrl, setProfileUrl] = useState<string>("");
   const [followers, setFollowers] = useState<string>("");
   const [engagement, setEngagement] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  
   const [platforms, setPlatforms] = useState<Array<{
     platform: string;
     handle: string;
-    profileUrl: string;
+    profile_url: string;
     followers: number;
-    engagement: number;
+    engagement_rate: number;
   }>>([]);
+  
+  // This will be used after the KOL is created to add platforms
+  const tempPlatforms = platforms.map(p => ({
+    platform: p.platform,
+    handle: p.handle, 
+    profile_url: p.profile_url,
+    followers: p.followers,
+    engagement: p.engagement_rate
+  }));
+  
+  // Store temporary platforms in formData
+  React.useEffect(() => {
+    handleChange("tempSocialMedia", tempPlatforms);
+  }, [platforms]);
 
   const handleAddPlatform = () => {
-    if (platform) {
+    if (!platform) {
+      toast({
+        title: "Error",
+        description: "Please select a platform",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // We're just storing these temporarily since the KOL hasn't been created yet
       setPlatforms([...platforms, {
         platform,
         handle,
-        profileUrl,
+        profile_url: profileUrl,
         followers: Number(followers) || 0,
-        engagement: Number(engagement) || 0
+        engagement_rate: Number(engagement) || 0
       }]);
+      
       // Reset form
       setPlatform("");
       setHandle("");
       setProfileUrl("");
       setFollowers("");
       setEngagement("");
+      
+      toast({
+        title: "Success",
+        description: "Platform added successfully",
+      });
+    } catch (error) {
+      console.error("Error adding platform:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add platform",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleDeletePlatform = (index: number) => {
+    const updatedPlatforms = [...platforms];
+    updatedPlatforms.splice(index, 1);
+    setPlatforms(updatedPlatforms);
+    
+    toast({
+      title: "Success",
+      description: "Platform removed",
+    });
   };
 
   return (
@@ -85,7 +146,7 @@ export const SocialMediaTab: React.FC = () => {
             <label className="block text-sm font-medium mb-1">Followers</label>
             <Input 
               type="number" 
-              placeholder="Number of followers" 
+              placeholder="Number of followers"
               value={followers}
               onChange={(e) => setFollowers(e.target.value)}
             />
@@ -94,7 +155,7 @@ export const SocialMediaTab: React.FC = () => {
             <label className="block text-sm font-medium mb-1">Engagement Rate (%)</label>
             <Input 
               type="number" 
-              placeholder="Average engagement rate" 
+              placeholder="Average engagement rate"
               value={engagement}
               onChange={(e) => setEngagement(e.target.value)}
             />
@@ -105,25 +166,71 @@ export const SocialMediaTab: React.FC = () => {
           size="sm" 
           className="bg-purple-100 text-purple-700 hover:bg-purple-200"
           onClick={handleAddPlatform}
-          disabled={!platform}
+          disabled={!platform || isLoading}
         >
-          <Link size={16} className="mr-1.5" />
-          Add Platform
+          {isLoading ? (
+            <span className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-purple-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Adding...
+            </span>
+          ) : (
+            <>
+              <Link size={16} className="mr-1.5" />
+              Add Platform
+            </>
+          )}
         </Button>
       </div>
       
       {platforms.length > 0 ? (
         <div className="border rounded-md p-6">
-          <h5 className="font-medium mb-4">Added Platforms</h5>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h5 className="font-medium">Platforms</h5>
+              <p className="text-sm text-gray-500">Connected social media accounts</p>
+            </div>
+          </div>
+          
           {platforms.map((platform, index) => (
-            <div key={index} className="border-b py-3 last:border-0">
-              <div className="font-medium capitalize">{platform.platform}</div>
-              {platform.handle && <div className="text-sm text-gray-500">@{platform.handle}</div>}
-              {platform.followers > 0 && (
-                <div className="text-sm text-gray-500 mt-1">
-                  {platform.followers.toLocaleString()} followers, {platform.engagement}% engagement
+            <div key={index} className="border-b py-4 flex justify-between items-center last:border-b-0">
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-100 p-2 rounded-md">
+                  {platform.platform === "instagram" ? 
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-700">
+                      <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                    </svg> :
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-700">
+                      <path d="M9 12 11 14 15 10"/>
+                      <path d="M21 8v8a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5Z"/>
+                    </svg>
+                  }
                 </div>
-              )}
+                <div>
+                  <div className="font-medium capitalize">{platform.platform}</div>
+                  <div className="text-sm text-gray-500">@{platform.handle || 'username'}</div>
+                </div>
+              </div>
+              <div className="flex gap-2 items-center">
+                <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs">
+                  {platform.followers.toLocaleString()} followers
+                </span>
+                <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-xs">
+                  {platform.engagement_rate}% engagement
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => handleDeletePlatform(index)}
+                >
+                  Remove
+                </Button>
+              </div>
             </div>
           ))}
         </div>

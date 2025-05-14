@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface KolAddFormProps {
   setCurrentView: (view: string) => void;
@@ -23,7 +23,7 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
     "Tech", "Gaming", "Entertainment", "Business", "Education"
   ];
 
-  const { addKol, isLoading, fetchKols, uploadKolPhoto } = useKols();
+  const { addKol, isLoading, fetchKols, uploadKolPhoto, addPlatform } = useKols();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
@@ -32,13 +32,15 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
     total_followers: 0,
     engagement_rate: 0,
     is_active: false,
+    tempSocialMedia: [] as any[]
   });
 
   const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState("general");
 
-  const handleChange = (field: keyof typeof formData, value: any) => {
+  const handleChange = (field: keyof typeof formData | string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -96,6 +98,13 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
         // If we have a photo file, upload it
         if (photoFile && result.id) {
           await uploadKolPhoto(result.id, photoFile);
+        }
+        
+        // Now add any social media platforms
+        if (formData.tempSocialMedia && formData.tempSocialMedia.length > 0) {
+          for (const platform of formData.tempSocialMedia) {
+            await addPlatform(result.id, platform);
+          }
         }
         
         // Make sure to call fetchKols to update the KOL list
@@ -262,11 +271,42 @@ export const KolAddForm: React.FC<KolAddFormProps> = ({ setCurrentView }) => {
         </div>
       </div>
 
-      <KolFormTabs 
-        formData={formData}
-        handleChange={handleChange}
-        categories={categories}
-      />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-3 bg-gray-100/50 rounded-md">
+          <TabsTrigger value="general" className="data-[state=active]:bg-white">General</TabsTrigger>
+          <TabsTrigger value="social" className="data-[state=active]:bg-white">Social Media</TabsTrigger>
+          <TabsTrigger value="rates" className="data-[state=active]:bg-white">Rates</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="general" className="mt-6">
+          {/* General tab content */}
+          <div className="space-y-4 p-4">
+            <h4 className="font-medium">Basic Information</h4>
+            <p className="text-sm text-gray-500 mb-4">
+              Add basic information about the KOL here.
+            </p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="social" className="mt-6">
+          {/* Use the SocialMediaTab here */}
+          <KolFormTabs 
+            formData={formData}
+            handleChange={handleChange}
+            categories={categories}
+          />
+        </TabsContent>
+        
+        <TabsContent value="rates" className="mt-6">
+          {/* Rates tab content */}
+          <div className="space-y-4 p-4">
+            <h4 className="font-medium">Rate Information</h4>
+            <p className="text-sm text-gray-500 mb-4">
+              Add rate card information for the KOL here.
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
