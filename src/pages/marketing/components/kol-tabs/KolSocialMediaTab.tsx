@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Link, Plus } from "lucide-react";
+import { useKols } from "@/hooks/useKols";
 
 interface KolSocialMediaTabProps {
   selectedKol: any;
@@ -16,9 +18,36 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
   const [profileUrl, setProfileUrl] = useState<string>("");
   const [followers, setFollowers] = useState<string>("");
   const [engagement, setEngagement] = useState<string>("");
+  
+  const { addPlatform, isUpdating } = useKols();
 
   // Initialize platforms with an empty array if it doesn't exist
   const platforms = selectedKol?.platforms || [];
+
+  const handleAddPlatform = async () => {
+    if (!platform) {
+      return;
+    }
+    
+    try {
+      await addPlatform(selectedKol.id, {
+        platform,
+        handle,
+        profile_url: profileUrl,
+        followers: Number(followers) || 0,
+        engagement: Number(engagement) || 0
+      });
+      
+      // Reset form
+      setPlatform("");
+      setHandle("");
+      setProfileUrl("");
+      setFollowers("");
+      setEngagement("");
+    } catch (error) {
+      console.error("Error adding platform:", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -84,12 +113,18 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
           </div>
         </div>
         
-        <Button size="sm" className="bg-purple-100 text-purple-700 hover:bg-purple-200">
+        <Button 
+          size="sm" 
+          className="bg-purple-100 text-purple-700 hover:bg-purple-200"
+          onClick={handleAddPlatform}
+          disabled={!platform || isUpdating}
+        >
+          <Link size={16} className="mr-1.5" />
           Add Platform
         </Button>
       </div>
       
-      {platforms.length > 0 ? (
+      {platforms && platforms.length > 0 ? (
         <div className="border rounded-md p-6">
           <div className="flex justify-between items-center mb-4">
             <div>
@@ -98,11 +133,11 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
             </div>
           </div>
           
-          {platforms.map((platform, index) => (
+          {platforms.map((platform: string, index: number) => (
             <div key={index} className="border-b py-4 flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-100 p-2 rounded-md">
-                  {platform === "Instagram" ? 
+                  {platform === "Instagram" || platform === "instagram" ? 
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-700">
                       <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
                       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
@@ -116,12 +151,12 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
                 </div>
                 <div>
                   <div className="font-medium">{platform}</div>
-                  <div className="text-sm text-gray-500">@{selectedKol.name?.toLowerCase().replace(' ', '') || selectedKol.full_name?.toLowerCase().replace(' ', '') || 'username'}</div>
+                  <div className="text-sm text-gray-500">@{selectedKol?.handle || handle || selectedKol?.name?.toLowerCase().replace(' ', '') || selectedKol?.full_name?.toLowerCase().replace(' ', '') || 'username'}</div>
                 </div>
               </div>
               <div className="flex gap-2 items-center">
                 <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-200">
-                  {formatNumber(selectedKol.followers / platforms.length)} followers
+                  {formatNumber(selectedKol.total_followers / (platforms?.length || 1))} followers
                 </Badge>
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
                   {selectedKol.engagement || selectedKol.engagement_rate || 0}% engagement

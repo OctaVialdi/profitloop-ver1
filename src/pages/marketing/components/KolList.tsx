@@ -2,10 +2,11 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Kol } from "@/hooks/useKols";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface KolListProps {
   searchQuery: string;
@@ -55,12 +56,13 @@ export const KolList: React.FC<KolListProps> = ({
               <TableHead>FOLLOWERS</TableHead>
               <TableHead>ENGAGEMENT</TableHead>
               <TableHead>STATUS</TableHead>
+              <TableHead className="w-[80px] text-right pr-4">ACTIONS</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   <div className="flex flex-col items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700 mb-2"></div>
                     <p className="text-sm text-gray-500">Loading KOLs...</p>
@@ -69,7 +71,7 @@ export const KolList: React.FC<KolListProps> = ({
               </TableRow>
             ) : filteredKols.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   <p className="text-gray-500">No KOLs found</p>
                   {searchQuery && (
                     <p className="text-sm text-gray-400 mt-1">Try adjusting your search criteria</p>
@@ -109,6 +111,20 @@ export const KolList: React.FC<KolListProps> = ({
                     <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeColor(kol.is_active ? "Active" : "Inactive")}`}>
                       {kol.is_active ? "Active" : "Inactive"}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleKolSelect(kol)}>
+                          View/Edit
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))

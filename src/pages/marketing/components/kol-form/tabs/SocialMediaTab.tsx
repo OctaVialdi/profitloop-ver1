@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Link, Plus } from "lucide-react";
 
 export const SocialMediaTab: React.FC = () => {
   const [platform, setPlatform] = useState<string>("");
@@ -10,11 +11,23 @@ export const SocialMediaTab: React.FC = () => {
   const [profileUrl, setProfileUrl] = useState<string>("");
   const [followers, setFollowers] = useState<string>("");
   const [engagement, setEngagement] = useState<string>("");
-  const [platforms, setPlatforms] = useState<string[]>([]);
+  const [platforms, setPlatforms] = useState<Array<{
+    platform: string;
+    handle: string;
+    profileUrl: string;
+    followers: number;
+    engagement: number;
+  }>>([]);
 
   const handleAddPlatform = () => {
     if (platform) {
-      setPlatforms([...platforms, platform]);
+      setPlatforms([...platforms, {
+        platform,
+        handle,
+        profileUrl,
+        followers: Number(followers) || 0,
+        engagement: Number(engagement) || 0
+      }]);
       // Reset form
       setPlatform("");
       setHandle("");
@@ -94,6 +107,7 @@ export const SocialMediaTab: React.FC = () => {
           onClick={handleAddPlatform}
           disabled={!platform}
         >
+          <Link size={16} className="mr-1.5" />
           Add Platform
         </Button>
       </div>
@@ -103,8 +117,13 @@ export const SocialMediaTab: React.FC = () => {
           <h5 className="font-medium mb-4">Added Platforms</h5>
           {platforms.map((platform, index) => (
             <div key={index} className="border-b py-3 last:border-0">
-              <div className="font-medium">{platform}</div>
-              {handle && <div className="text-sm text-gray-500">@{handle}</div>}
+              <div className="font-medium capitalize">{platform.platform}</div>
+              {platform.handle && <div className="text-sm text-gray-500">@{platform.handle}</div>}
+              {platform.followers > 0 && (
+                <div className="text-sm text-gray-500 mt-1">
+                  {platform.followers.toLocaleString()} followers, {platform.engagement}% engagement
+                </div>
+              )}
             </div>
           ))}
         </div>
