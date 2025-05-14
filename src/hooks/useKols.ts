@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +21,7 @@ export interface KolSocialMedia {
   id: string;
   kol_id: string;
   platform: string;
-  username: string;
+  username: string; // This is named 'handle' in the database
   profile_url: string;
   followers: number;
   engagement_rate: number;
@@ -107,8 +106,14 @@ export const useKols = () => {
         throw error;
       }
       
-      setSocialMedia(data || []);
-      return data;
+      // Map 'handle' field to 'username' for compatibility
+      const mappedData: KolSocialMedia[] = (data || []).map(item => ({
+        ...item,
+        username: item.handle || '',
+      })) as KolSocialMedia[];
+      
+      setSocialMedia(mappedData);
+      return mappedData;
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
       toast({
@@ -279,9 +284,18 @@ export const useKols = () => {
   // Social Media CRUD
   const addSocialMedia = async (socialMedia: Omit<KolSocialMedia, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Map username to handle for database compatibility
+      const dbSocialMedia = {
+        ...socialMedia,
+        handle: socialMedia.username,
+      };
+      
+      // Remove username as it's not in the database schema
+      delete (dbSocialMedia as any).username;
+      
       const { data, error } = await supabase
         .from('kol_social_media')
-        .insert(socialMedia)
+        .insert(dbSocialMedia)
         .select();
         
       if (error) {
@@ -293,8 +307,16 @@ export const useKols = () => {
         description: "Social media platform has been added successfully",
       });
       
+      // Fetch updated data with correct mapping
       await fetchSocialMedia(socialMedia.kol_id);
-      return data;
+      
+      // Map back for the return type
+      const mappedData: KolSocialMedia[] = (data || []).map(item => ({
+        ...item,
+        username: item.handle || '',
+      })) as KolSocialMedia[];
+      
+      return mappedData;
     } catch (err) {
       toast({
         title: "Error adding social media",
@@ -307,9 +329,18 @@ export const useKols = () => {
   
   const updateSocialMedia = async (id: string, updates: Partial<KolSocialMedia>) => {
     try {
+      // Create a copy for database update
+      const dbUpdates = { ...updates };
+      
+      // Map username to handle if it exists in updates
+      if (updates.username !== undefined) {
+        (dbUpdates as any).handle = updates.username;
+        delete (dbUpdates as any).username;
+      }
+      
       const { data, error } = await supabase
         .from('kol_social_media')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id)
         .select();
         
@@ -325,7 +356,14 @@ export const useKols = () => {
       if (data && data.length > 0) {
         await fetchSocialMedia(data[0].kol_id);
       }
-      return data;
+      
+      // Map back for the return type
+      const mappedData: KolSocialMedia[] = (data || []).map(item => ({
+        ...item,
+        username: item.handle || '',
+      })) as KolSocialMedia[];
+      
+      return mappedData;
     } catch (err) {
       toast({
         title: "Error updating social media",
@@ -507,10 +545,10 @@ export const useKols = () => {
   };
   
   useEffect(() => {
-    if (organization) {
+    if (organization?.id) {
       fetchKols();
     }
-  }, [organization]);
+  }, [organization?.id]);
   
   return {
     kols,

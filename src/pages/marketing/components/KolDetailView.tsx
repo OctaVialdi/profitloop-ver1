@@ -55,7 +55,7 @@ export const KolDetailView: React.FC<KolDetailViewProps> = ({
       fetchRates(selectedKol.id);
       fetchMetrics(selectedKol.id);
     }
-  }, [selectedKol]);
+  }, [selectedKol, fetchSocialMedia, fetchRates, fetchMetrics]);
   
   const handleStatusToggle = async () => {
     if (!selectedKol) return;

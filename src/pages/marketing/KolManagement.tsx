@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -139,7 +138,7 @@ const KolManagement = () => {
     if (organization?.id) {
       fetchKols();
     }
-  }, [organization?.id]);
+  }, [organization?.id, fetchKols]);
 
   return (
     <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 px-0">
@@ -178,7 +177,7 @@ const KolManagement = () => {
           </div>
           
           <KolDashboardCards 
-            activeKols={activeKolsCount} 
+            activeKols={kols.filter(kol => kol.status === "Active").length} 
             totalKols={kols.length}
             metrics={metrics}
           />
