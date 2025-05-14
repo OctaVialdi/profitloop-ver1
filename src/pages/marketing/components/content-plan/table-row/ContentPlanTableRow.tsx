@@ -1,6 +1,6 @@
 
 import React from "react";
-import { TableCell, TableRow } from "@/components/ui/table";
+import { TableRow } from "@/components/ui/table";
 import { ContentPlanItem, ContentType, Service, SubService, ContentPillar } from "@/hooks/content-plan";
 import { LegacyEmployee } from "@/hooks/useEmployees";
 import ActionCell from "./cells/ActionCell";
@@ -236,16 +236,12 @@ export default function ContentPlanTableRow({
       />
 
       {/* 24. Download Link File */}
-      <TableCell className="p-1 w-[220px] border-r">
-        {item.production_approved && item.google_drive_link && (
-          <LinkCell 
-            asButton
-            id={item.id}
-            link={item.google_drive_link}
-            linkText="Download"
-          />
-        )}
-      </TableCell>
+      <LinkCell 
+        asButton
+        id={item.id}
+        link={item.google_drive_link}
+        linkText="Download"
+      />
 
       {/* 25. Link Post */}
       <LinkCell 
@@ -260,6 +256,7 @@ export default function ContentPlanTableRow({
         id={item.id} 
         done={item.done} 
         onChange={handleFieldChange} 
+        fieldName="done"
       />
 
       {/* 27. Actual Post */}
