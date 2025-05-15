@@ -14,20 +14,26 @@ export const useDepartments = () => {
     try {
       setLoading(true);
       
-      // Get unique organization_name values from employee_employment table
+      // Get distinct organization_name values from employee_employment table
       const { data, error } = await supabase
         .from("employee_employment")
         .select("organization_name")
-        .eq("organization_name", "organization_name") // This forces distinct values
-        .not("organization_name", "is", null) // Only non-null values
+        .not("organization_name", "is", null)
         .order("organization_name");
 
       if (error) throw error;
 
-      // Extract unique organization names using Set
+      // Extract unique department names using Set
       const uniqueDepartments = Array.from(
         new Set(data?.map(item => item.organization_name).filter(Boolean) || [])
       );
+      
+      // If no departments found, provide some default ones
+      if (uniqueDepartments.length === 0) {
+        const defaultDepartments = ["Finance", "Marketing", "Operations", "Human Resources", "IT"];
+        setDepartments(defaultDepartments);
+        return defaultDepartments;
+      }
 
       setDepartments(uniqueDepartments);
       return uniqueDepartments;
@@ -38,7 +44,11 @@ export const useDepartments = () => {
         description: error.message || "Failed to fetch departments",
         variant: "destructive",
       });
-      return [];
+      
+      // Return default departments on error
+      const defaultDepartments = ["Finance", "Marketing", "Operations", "Human Resources", "IT"];
+      setDepartments(defaultDepartments);
+      return defaultDepartments;
     } finally {
       setLoading(false);
     }

@@ -37,13 +37,21 @@ export const useExpenses = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
+      
+      if (!organization?.id) {
+        console.error("No organization ID found");
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from("expense_categories")
         .select("*")
-        .eq("organization_id", organization?.id)
+        .eq("organization_id", organization.id)
         .order("name");
 
       if (error) throw error;
+      
+      console.log("Fetched expense categories:", data);
       setCategories(data || []);
       return data;
     } catch (error: any) {
@@ -62,13 +70,19 @@ export const useExpenses = () => {
   const fetchExpenses = async () => {
     try {
       setLoading(true);
+      
+      if (!organization?.id) {
+        console.error("No organization ID found");
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from("expenses")
         .select(`
           *,
           expense_categories (id, name)
         `)
-        .eq("organization_id", organization?.id)
+        .eq("organization_id", organization.id)
         .order("date", { ascending: false });
 
       if (error) throw error;
@@ -80,6 +94,7 @@ export const useExpenses = () => {
         created_at: new Date(expense.created_at),
       }));
       
+      console.log("Fetched expenses:", formattedExpenses);
       setExpenses(formattedExpenses);
       return formattedExpenses;
     } catch (error: any) {
@@ -101,6 +116,24 @@ export const useExpenses = () => {
         throw new Error("No organization ID found");
       }
 
+      const { data: existingCategory, error: checkError } = await supabase
+        .from("expense_categories")
+        .select("*")
+        .eq("name", name)
+        .eq("organization_id", organization.id)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      
+      // Return existing category if it already exists
+      if (existingCategory) {
+        toast({
+          title: "Category Exists",
+          description: "This category already exists",
+        });
+        return existingCategory;
+      }
+
       const { data, error } = await supabase
         .from("expense_categories")
         .insert([
@@ -113,10 +146,12 @@ export const useExpenses = () => {
         .select();
 
       if (error) throw error;
+      
       toast({
         title: "Category Added",
         description: "Expense category has been added successfully",
       });
+      
       await fetchCategories();
       return data?.[0];
     } catch (error: any) {
@@ -136,8 +171,13 @@ export const useExpenses = () => {
         throw new Error("Missing file or organization ID");
       }
 
+      console.log("Starting file upload:", file.name);
+      
+      // Ensure bucket exists - this is being handled in SQL migration now
       const fileExt = file.name.split('.').pop();
       const filePath = `${organization.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      console.log("Uploading to path:", filePath);
       
       const { url, error } = await uploadFileToBucket(
         "expense-receipts",
@@ -145,7 +185,12 @@ export const useExpenses = () => {
         file
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error("Upload error:", error);
+        throw error;
+      }
+      
+      console.log("Upload successful, URL:", url);
       return { url, filePath };
     } catch (error: any) {
       console.error("Error uploading receipt:", error);
@@ -176,50 +221,77 @@ export const useExpenses = () => {
       let receiptPath = null;
 
       if (expenseData.receipt) {
-        const uploadResult = await uploadReceipt(expenseData.receipt);
-        receiptUrl = uploadResult.url;
-        receiptPath = uploadResult.filePath;
+        try {
+          console.log("Starting receipt upload");
+          const uploadResult = await uploadReceipt(expenseData.receipt);
+          receiptUrl = uploadResult.url;
+          receiptPath = uploadResult.filePath;
+          console.log("Receipt uploaded successfully:", receiptUrl);
+        } catch (uploadError: any) {
+          console.error("Receipt upload failed:", uploadError);
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload receipt, but continuing with expense submission",
+            variant: "warning",
+          });
+        }
       }
 
       // Get user ID
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
       
       // Find category ID from name
-      const { data: categoryData } = await supabase
+      console.log("Looking for category:", expenseData.category);
+      const { data: categoryData, error: categoryError } = await supabase
         .from("expense_categories")
         .select("id")
         .eq("name", expenseData.category)
         .eq("organization_id", organization.id)
         .single();
 
-      if (!categoryData) {
+      if (categoryError || !categoryData) {
+        console.error("Category error:", categoryError);
         throw new Error(`Category ${expenseData.category} not found`);
       }
+      
+      console.log("Found category ID:", categoryData.id);
 
       // Format date to string for database
       const formattedDate = format(expenseData.date, 'yyyy-MM-dd');
+      
+      const expenseInsertData = {
+        amount: expenseData.amount,
+        date: formattedDate,
+        category_id: categoryData.id,
+        description: expenseData.description,
+        department: expenseData.department,
+        expense_type: expenseData.expenseType,
+        is_recurring: expenseData.isRecurring,
+        recurring_frequency: expenseData.recurringFrequency,
+        receipt_url: receiptUrl,
+        receipt_path: receiptPath,
+        organization_id: organization.id,
+        created_by: user.id
+      };
+      
+      console.log("Inserting expense data:", expenseInsertData);
 
       // Insert expense
       const { data, error } = await supabase
         .from("expenses")
-        .insert({
-          amount: expenseData.amount,
-          date: formattedDate,
-          category_id: categoryData.id,
-          description: expenseData.description,
-          department: expenseData.department,
-          expense_type: expenseData.expenseType,
-          is_recurring: expenseData.isRecurring,
-          recurring_frequency: expenseData.recurringFrequency,
-          receipt_url: receiptUrl,
-          receipt_path: receiptPath,
-          organization_id: organization.id,
-          created_by: user?.id
-        })
+        .insert(expenseInsertData)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error inserting expense:", error);
+        throw error;
+      }
 
+      console.log("Expense added successfully:", data);
+      
       toast({
         title: "Expense Added",
         description: "Your expense has been added successfully",
