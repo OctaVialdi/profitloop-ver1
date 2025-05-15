@@ -54,6 +54,8 @@ export function useExpensesData() {
     budgetView: budgetData.budgetView,
     budgetCategories: budgetData.budgetCategories,
     handleBudgetViewChange: budgetData.handleBudgetViewChange,
+    updateDepartmentBudget: budgetData.updateDepartmentBudget,
+    isLoadingDepartments: budgetData.isLoading,
     
     // Tab management
     activeTab: tabManagement.activeTab,

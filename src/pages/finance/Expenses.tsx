@@ -39,6 +39,8 @@ export default function Expenses() {
     budgetView,
     handleBudgetViewChange,
     budgetCategories,
+    updateDepartmentBudget,
+    isLoadingDepartments,
     totalExpense,
     currentMonthExpense,
     previousMonthExpense,
@@ -71,6 +73,8 @@ export default function Expenses() {
         budgetCategories={budgetCategories}
         budgetView={budgetView}
         onBudgetViewChange={handleBudgetViewChange}
+        onUpdateBudget={updateDepartmentBudget}
+        isLoading={isLoadingDepartments}
       />
 
       {/* Total Expenses Summary */}
