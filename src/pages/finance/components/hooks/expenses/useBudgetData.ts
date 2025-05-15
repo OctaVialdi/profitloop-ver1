@@ -58,13 +58,11 @@ export function useBudgetData() {
           const usedPercentage = Math.round((current / total) * 100);
           
           // Set status based on used percentage
-          let status: "safe" | "warning" | "over";
+          let status: "safe" | "warning" | "over" = "safe";
           if (usedPercentage > 80) {
             status = "over";
           } else if (usedPercentage > 50) {
             status = "warning";
-          } else {
-            status = "safe";
           }
           
           return {

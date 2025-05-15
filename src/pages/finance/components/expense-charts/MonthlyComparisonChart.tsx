@@ -1,13 +1,17 @@
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-
-interface MonthlyComparisonItem {
-  name: string;
-  expense: number;
-  income: number;
-}
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { MonthlyComparisonItem } from "../types/expense";
 
 interface MonthlyComparisonChartProps {
   monthlyComparisonData: MonthlyComparisonItem[];
@@ -15,83 +19,53 @@ interface MonthlyComparisonChartProps {
 
 export function MonthlyComparisonChart({ monthlyComparisonData }: MonthlyComparisonChartProps) {
   return (
-    <Card className="overflow-hidden shadow-md">
-      <CardHeader className="pb-2 border-b">
-        <div className="flex items-center justify-between">
-          <CardTitle>Monthly Comparison</CardTitle>
-          <Select defaultValue="6months">
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Time Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3months">Last 3 Months</SelectItem>
-              <SelectItem value="6months">Last 6 Months</SelectItem>
-              <SelectItem value="12months">Last 12 Months</SelectItem>
-              <SelectItem value="ytd">Year to Date</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-gray-50 border-b p-4">
+        <CardTitle className="text-lg">Monthly Comparison</CardTitle>
       </CardHeader>
-      
-      <CardContent className="p-6">
-        <div className="h-[300px]">
+      <CardContent className="p-4 h-[340px]">
+        {monthlyComparisonData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={monthlyComparisonData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-              <XAxis dataKey="name" tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
               <YAxis 
-                tickFormatter={(value) => `${value}k`}
-                tickLine={false} 
-                axisLine={false}
+                tickFormatter={(value) => 
+                  new Intl.NumberFormat('id-ID', {
+                    notation: 'compact',
+                    compactDisplay: 'short',
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0,
+                  }).format(value)
+                }
               />
               <Tooltip
-                contentStyle={{ 
-                  backgroundColor: "white",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "8px", 
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  padding: "8px" 
-                }}
-                formatter={(value) => [`${value}k`, ""]}
+                formatter={(value) => 
+                  new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0,
+                  }).format(value as number)
+                }
               />
-              <Legend 
-                verticalAlign="top" 
-                height={36}
-                align="right"
-                iconSize={10}
-                iconType="circle"
-              />
-              <Bar 
-                name="Income" 
-                dataKey="income" 
-                fill="#4C6FFF" 
-                radius={[4, 4, 0, 0]} 
-                barSize={14}
-              />
-              <Bar 
-                name="Expenses" 
-                dataKey="expense" 
-                fill="#FFB547" 
-                radius={[4, 4, 0, 0]} 
-                barSize={14}
-              />
+              <Legend />
+              <Bar dataKey="amount" name="Expenses" fill="#8884d8" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-        
-        <div className="flex items-center justify-center gap-6 mt-2">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#4C6FFF]"></div>
-            <span className="text-sm">Income</span>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500">No comparison data available</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#FFB547]"></div>
-            <span className="text-sm">Expenses</span>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

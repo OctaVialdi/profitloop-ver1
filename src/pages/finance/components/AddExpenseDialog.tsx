@@ -1,295 +1,181 @@
 import React, { useState, useEffect } from "react";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, UploadCloud, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
-import { useExpenses } from "@/hooks/useExpenses";
-import { useDepartments } from "@/hooks/useDepartments";
-import { useOrganization } from "@/hooks/useOrganization";
-
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import {
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/hooks/useOrganization";
 
-// Define expense types
-const expenseTypes = [
-  "Fixed",
-  "Variable",
-  "Operational"
-];
+interface AddExpenseDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onExpenseAdded: () => void;
+  categories: {
+    id: string;
+    name: string;
+  }[];
+  departments: string[];
+}
 
-const recurringFrequencies = [
-  "Monthly",
-  "Quarterly",
-  "Yearly"
-];
-
-const AddExpenseDialog: React.FC = () => {
-  const [date, setDate] = useState<Date>(new Date());
-  const [amount, setAmount] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [department, setDepartment] = useState<string>("");
-  const [expenseType, setExpenseType] = useState<string>("");
-  const [isRecurring, setIsRecurring] = useState<boolean>(false);
-  const [recurringFrequency, setRecurringFrequency] = useState<string>("");
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [receipt, setReceipt] = useState<File | null>(null);
-  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
-  const [newCategoryName, setNewCategoryName] = useState<string>("");
-  const [showAddCategory, setShowAddCategory] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-
-  const { toast } = useToast();
-  const { categories, fetchCategories, addCategory, addExpense } = useExpenses();
-  const { departments, fetchDepartments, loading: departmentsLoading } = useDepartments();
+export function AddExpenseDialog({
+  open,
+  onOpenChange,
+  onExpenseAdded,
+  categories,
+  departments
+}: AddExpenseDialogProps) {
+  // Get organization context
   const { organization } = useOrganization();
+  
+  // Form state
+  const [description, setDescription] = useState<string>("");
+  const [amount, setAmount] = useState<number>(0);
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [department, setDepartment] = useState<string>("");
+  const [isRecurring, setIsRecurring] = useState<boolean>(false);
+  const [recurringFrequency, setRecurringFrequency] = useState<string>("monthly");
+  const [expenseType, setExpenseType] = useState<string>("operational");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [showNewCategory, setShowNewCategory] = useState<boolean>(false);
 
-  // Fetch categories and departments when component mounts
+  // Reset form on dialog close
   useEffect(() => {
-    fetchCategories();
-    fetchDepartments();
-  }, []);
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-    
-    if (!date) errors.date = "Date is required";
-    if (!amount || amount === "0") errors.amount = "Amount is required and must be greater than 0";
-    if (!category) errors.category = "Category is required";
-    if (!department) errors.department = "Department is required";
-    if (!expenseType) errors.expenseType = "Expense type is required";
-    if (isRecurring && !recurringFrequency) errors.recurringFrequency = "Recurring frequency is required";
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Allow only numbers and format as needed
-    const value = e.target.value.replace(/[^\d]/g, "");
-    setAmount(value);
-  };
-
-  const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File Too Large",
-          description: "File size should not exceed 5MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Validate file type
-      const allowedTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf"];
-      if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Invalid File Type",
-          description: "Only image files and PDFs are allowed",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setReceipt(file);
-      
-      // Create preview URL for the uploaded image
-      if (file.type.startsWith("image/")) {
-        const previewUrl = URL.createObjectURL(file);
-        setReceiptPreview(previewUrl);
-      } else {
-        // For PDFs or other file types, show a generic preview
-        setReceiptPreview(null);
-      }
-      
-      toast({
-        title: "Receipt Uploaded",
-        description: `File "${file.name}" successfully uploaded`,
-      });
+    if (!open) {
+      resetForm();
     }
-  };
+  }, [open]);
 
-  const removeReceipt = () => {
-    if (receiptPreview) {
-      URL.revokeObjectURL(receiptPreview);
-    }
-    setReceipt(null);
-    setReceiptPreview(null);
-  };
-
-  const handleAddCategory = async () => {
-    if (!newCategoryName || newCategoryName.trim() === "") {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a category name",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const result = await addCategory(newCategoryName);
-    if (result) {
-      setCategory(newCategoryName); // Now directly using the name instead of ID
-      setNewCategoryName("");
-      setShowAddCategory(false);
-      
-      toast({
-        title: "Success",
-        description: `Category "${newCategoryName}" has been added`,
-      });
-    }
-  };
-
-  const deleteCategory = async (categoryName: string) => {
-    try {
-      const { organization } = useOrganization();
-      
-      if (!organization?.id) {
-        throw new Error("No organization ID found");
-      }
-
-      // Confirm deletion
-      if (!confirm(`Are you sure you want to delete the "${categoryName}" category?`)) {
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("expense_categories")
-        .delete()
-        .eq("name", categoryName)
-        .eq("organization_id", organization.id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Category Deleted",
-        description: `Category "${categoryName}" has been deleted successfully`,
-      });
-      
-      await fetchCategories();
-    } catch (error: any) {
-      console.error("Error deleting expense category:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete expense category",
-        variant: "destructive",
-      });
-    }
-  };
-
+  // Form reset function
   const resetForm = () => {
-    setDate(new Date());
-    setAmount("");
-    setCategory("");
     setDescription("");
+    setAmount(0);
+    setDate(new Date());
+    setCategoryId("");
     setDepartment("");
-    setExpenseType("");
     setIsRecurring(false);
-    setRecurringFrequency("");
-    setValidationErrors({});
-    if (receiptPreview) {
-      URL.revokeObjectURL(receiptPreview);
-    }
-    setReceipt(null);
-    setReceiptPreview(null);
-    setIsSubmitting(false);
+    setRecurringFrequency("monthly");
+    setExpenseType("operational");
+    setNewCategoryName("");
+    setShowNewCategory(false);
   };
 
-  const handleSubmit = async () => {
-    // Validate form
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
       setIsSubmitting(true);
       
-      console.log("Submitting expense with data:", {
-        amount: Number(amount),
-        date,
-        category,
-        description,
-        department,
-        expenseType,
-        isRecurring,
-        recurringFrequency: isRecurring ? recurringFrequency : undefined,
-        receipt: receipt || undefined
-      });
+      let finalCategoryId = categoryId;
       
-      // Submit expense
-      const result = await addExpense({
-        amount: Number(amount),
-        date,
-        category,
-        description,
-        department,
-        expenseType,
-        isRecurring,
-        recurringFrequency: isRecurring ? recurringFrequency : undefined,
-        receipt: receipt || undefined
-      });
-      
-      if (result) {
-        // Reset form and close dialog
-        resetForm();
-        setIsOpen(false);
+      // Create new category if needed
+      if (showNewCategory && newCategoryName) {
+        const { data: newCategory, error: categoryError } = await supabase
+          .from("expense_categories")
+          .insert({
+            name: newCategoryName,
+            organization_id: organization?.id
+          })
+          .select()
+          .single();
+          
+        if (categoryError) {
+          throw new Error(`Failed to create category: ${categoryError.message}`);
+        }
         
-        toast({
-          title: "Success",
-          description: "Expense has been added successfully",
-        });
-      } else {
-        throw new Error("Failed to add expense");
+        finalCategoryId = newCategory.id;
       }
-    } catch (error: any) {
-      console.error("Error submitting expense:", error);
-      setIsSubmitting(false);
       
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add expense",
-        variant: "destructive",
-      });
+      // Validate required fields
+      if (!finalCategoryId || !date || amount <= 0) {
+        throw new Error("Please fill in all required fields");
+      }
+      
+      // Create the expense record
+      const { data, error } = await supabase
+        .from("expenses")
+        .insert({
+          description,
+          amount,
+          date,
+          category_id: finalCategoryId,
+          department,
+          is_recurring: isRecurring,
+          recurring_frequency: isRecurring ? recurringFrequency : null,
+          expense_type: expenseType,
+          organization_id: organization?.id
+        });
+        
+      if (error) {
+        throw new Error(`Failed to add expense: ${error.message}`);
+      }
+      
+      // Show success message and close dialog
+      toast.success("Expense added successfully");
+      onExpenseAdded();
+      onOpenChange(false);
+      
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle deleting a category
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("expense_categories")
+        .delete()
+        .eq("id", id)
+        .eq("organization_id", organization?.id);
+        
+      if (error) {
+        throw new Error(`Failed to delete category: ${error.message}`);
+      }
+      
+      toast.success("Category deleted successfully");
+      // Reset the selected category if it was the deleted one
+      if (id === categoryId) {
+        setCategoryId("");
+      }
+      // Refresh categories by triggering onExpenseAdded which should reload data
+      onExpenseAdded();
+      
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-[#8B5CF6] hover:bg-[#7c4ff1]">Add Expense</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Add New Expense</DialogTitle>
@@ -351,7 +237,10 @@ const AddExpenseDialog: React.FC = () => {
                     validationErrors.amount && "border-red-500"
                   )}
                   value={amount} 
-                  onChange={handleAmountChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^\d]/g, "");
+                    setAmount(Number(value));
+                  }}
                   placeholder="0" 
                 />
               </div>
@@ -422,7 +311,7 @@ const AddExpenseDialog: React.FC = () => {
             <label className="text-base font-medium">
               Category<span className="text-red-500">*</span>
             </label>
-            {showAddCategory ? (
+            {showNewCategory ? (
               <div className="flex gap-2">
                 <Input 
                   value={newCategoryName}
@@ -433,7 +322,7 @@ const AddExpenseDialog: React.FC = () => {
                 <Button onClick={handleAddCategory} className="h-[50px]">
                   <Check className="mr-1 h-4 w-4" /> Save
                 </Button>
-                <Button variant="ghost" onClick={() => setShowAddCategory(false)} className="h-[50px]">
+                <Button variant="ghost" onClick={() => setShowNewCategory(false)} className="h-[50px]">
                   Cancel
                 </Button>
               </div>
@@ -441,9 +330,9 @@ const AddExpenseDialog: React.FC = () => {
               <div className="flex gap-2">
                 <div className="flex-1 relative">
                   <Select 
-                    value={category} 
+                    value={categoryId} 
                     onValueChange={(value) => {
-                      setCategory(value);
+                      setCategoryId(value);
                       setValidationErrors({...validationErrors, category: ''});
                     }}
                   >
@@ -465,7 +354,7 @@ const AddExpenseDialog: React.FC = () => {
                               className="h-6 w-6 p-0 ml-2 text-red-500 hover:text-red-700 hover:bg-red-50"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                deleteCategory(cat.name);
+                                handleDeleteCategory(cat.id);
                               }}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -481,7 +370,7 @@ const AddExpenseDialog: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={() => setShowAddCategory(true)} className="h-[50px] px-3">
+                <Button onClick={() => setShowNewCategory(true)} className="h-[50px] px-3">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -631,17 +520,19 @@ const AddExpenseDialog: React.FC = () => {
           )}
 
           {/* Submit Button */}
-          <Button 
-            className="h-[60px] bg-[#8B5CF6] hover:bg-[#7c4ff1] mt-4" 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Adding..." : "Add Expense"}
-          </Button>
+          <DialogFooter>
+            <Button 
+              className="h-[60px] bg-[#8B5CF6] hover:bg-[#7c4ff1] mt-4" 
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Adding..." : "Add Expense"}
+            </Button>
+          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default AddExpenseDialog;

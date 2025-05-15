@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useExpenses, Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { startOfMonth, endOfMonth, format, subMonths } from "date-fns";
 import { useBudgetData } from "./expenses/useBudgetData";
-import { ExpenseBreakdownItem } from "../expense-charts/ExpenseBreakdownChart";
+import { ExpenseBreakdownItem, MonthlyComparisonItem } from "../types/expense";
 
 // Define color palette for charts
 const CHART_COLORS = [
@@ -64,22 +64,30 @@ export function useExpensesData() {
       switch (dateFilter) {
         case 'today':
           const today = format(now, 'yyyy-MM-dd');
-          filtered = filtered.filter(expense => 
-            format(new Date(expense.date), 'yyyy-MM-dd') === today
-          );
+          filtered = filtered.filter(expense => {
+            const expenseDate = expense.date instanceof Date 
+              ? format(expense.date, 'yyyy-MM-dd')
+              : format(new Date(expense.date), 'yyyy-MM-dd');
+            return expenseDate === today;
+          });
           break;
         case 'this_week':
           const weekStart = new Date(now);
           weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
-          filtered = filtered.filter(expense => 
-            new Date(expense.date) >= weekStart && new Date(expense.date) <= now
-          );
+          filtered = filtered.filter(expense => {
+            const expenseDate = expense.date instanceof Date 
+              ? expense.date
+              : new Date(expense.date);
+            return expenseDate >= weekStart && expenseDate <= now;
+          });
           break;
         case 'this_month':
           const monthStart = startOfMonth(now);
           const monthEnd = endOfMonth(now);
           filtered = filtered.filter(expense => {
-            const expenseDate = new Date(expense.date);
+            const expenseDate = expense.date instanceof Date 
+              ? expense.date
+              : new Date(expense.date);
             return expenseDate >= monthStart && expenseDate <= monthEnd;
           });
           break;
@@ -88,15 +96,20 @@ export function useExpensesData() {
           const lastMonthStart = startOfMonth(lastMonth);
           const lastMonthEnd = endOfMonth(lastMonth);
           filtered = filtered.filter(expense => {
-            const expenseDate = new Date(expense.date);
+            const expenseDate = expense.date instanceof Date 
+              ? expense.date
+              : new Date(expense.date);
             return expenseDate >= lastMonthStart && expenseDate <= lastMonthEnd;
           });
           break;
         case 'this_year':
           const yearStart = new Date(now.getFullYear(), 0, 1);
-          filtered = filtered.filter(expense => 
-            new Date(expense.date) >= yearStart && new Date(expense.date) <= now
-          );
+          filtered = filtered.filter(expense => {
+            const expenseDate = expense.date instanceof Date 
+              ? expense.date
+              : new Date(expense.date);
+            return expenseDate >= yearStart && expenseDate <= now;
+          });
           break;
       }
     }
@@ -126,7 +139,9 @@ export function useExpensesData() {
   const currentMonthStart = startOfMonth(now);
   const currentMonthEnd = endOfMonth(now);
   const currentMonthExpenses = expenses.filter(expense => {
-    const expenseDate = new Date(expense.date);
+    const expenseDate = expense.date instanceof Date 
+      ? expense.date
+      : new Date(expense.date);
     return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd;
   });
   const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -136,7 +151,9 @@ export function useExpensesData() {
   const previousMonthStart = startOfMonth(previousMonth);
   const previousMonthEnd = endOfMonth(previousMonth);
   const previousMonthExpenses = expenses.filter(expense => {
-    const expenseDate = new Date(expense.date);
+    const expenseDate = expense.date instanceof Date 
+      ? expense.date
+      : new Date(expense.date);
     return expenseDate >= previousMonthStart && expenseDate <= previousMonthEnd;
   });
   const previousMonthTotal = previousMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -153,7 +170,11 @@ export function useExpensesData() {
   
   // Find latest expense
   const latestExpense = expenses.length 
-    ? [...expenses].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+    ? [...expenses].sort((a, b) => {
+        const dateA = a.created_at instanceof Date ? a.created_at : new Date(a.created_at);
+        const dateB = b.created_at instanceof Date ? b.created_at : new Date(b.created_at);
+        return dateB.getTime() - dateA.getTime();
+      })[0]
     : null;
 
   // Get unique departments and expense types for filters
@@ -179,7 +200,7 @@ export function useExpensesData() {
       color: CHART_COLORS[index % CHART_COLORS.length]
     }));
 
-  // Create monthly comparison data for bar chart
+  // Create monthly comparison data for bar chart using actual expense data
   const monthlyData: Record<string, number> = {};
   
   // Get current month and previous 5 months
@@ -190,18 +211,23 @@ export function useExpensesData() {
     const monthStart = startOfMonth(month);
     const monthEnd = endOfMonth(month);
     
+    // Get actual expenses for this month
     const monthExpenses = expenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
+      const expenseDate = expense.date instanceof Date 
+        ? expense.date
+        : new Date(expense.date);
       return expenseDate >= monthStart && expenseDate <= monthEnd;
     });
     
     monthlyData[monthKey] = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
   }
   
-  const monthlyComparisonData = Object.entries(monthlyData)
+  const monthlyComparisonData: MonthlyComparisonItem[] = Object.entries(monthlyData)
     .map(([month, amount]) => ({
       name: month,
-      amount
+      amount,
+      expense: amount,
+      income: 0
     }))
     .reverse();
 

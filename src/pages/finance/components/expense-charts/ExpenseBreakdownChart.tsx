@@ -1,16 +1,9 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
+import { ExpenseBreakdownItem } from "../types/expense";
 import { ExpenseCategory } from "@/hooks/useExpenses";
-import { Skeleton } from "@/components/ui/skeleton";
-
-// Define the type for the breakdown data items
-export interface ExpenseBreakdownItem {
-  name: string;
-  value: number;
-  color: string;
-}
 
 interface ExpenseBreakdownChartProps {
   loading: boolean;
@@ -18,22 +11,17 @@ interface ExpenseBreakdownChartProps {
   categories: ExpenseCategory[];
 }
 
-const COLORS = ['#8884d8', '#82ca9d', '#FFBB28', '#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
 export function ExpenseBreakdownChart({ 
-  loading,
+  loading, 
   expenseBreakdownData,
-  categories
+  categories 
 }: ExpenseBreakdownChartProps) {
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Expense Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex justify-center items-center h-[300px]">
-            <Skeleton className="h-[250px] w-[250px] rounded-full" />
+      <Card className="h-[400px] flex items-center justify-center">
+        <CardContent className="p-6">
+          <div className="text-center text-gray-500">
+            Loading expense breakdown...
           </div>
         </CardContent>
       </Card>
@@ -41,41 +29,43 @@ export function ExpenseBreakdownChart({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Expense Breakdown</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-gray-50 border-b p-4">
+        <CardTitle className="text-lg">Expense Breakdown</CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
-        {expenseBreakdownData.length === 0 ? (
-          <div className="flex justify-center items-center h-[300px] text-muted-foreground">
-            No expense data available
-          </div>
+      <CardContent className="p-4 h-[340px]">
+        {expenseBreakdownData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={expenseBreakdownData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {expenseBreakdownData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value) => 
+                  new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0,
+                  }).format(value as number)
+                }
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
         ) : (
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={expenseBreakdownData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  nameKey="name"
-                  label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {expenseBreakdownData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color || COLORS[index % COLORS.length]} 
-                    />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`Rp ${value.toLocaleString()}`, 'Amount']} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500">No expense data available</p>
           </div>
         )}
       </CardContent>

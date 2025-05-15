@@ -12,13 +12,8 @@ import { ExpenseFilters } from "./components/expense-table/ExpenseFilters";
 import { ExpenseTable } from "./components/expense-table/ExpenseTable";
 import { ExpenseBreakdownChart } from "./components/expense-charts/ExpenseBreakdownChart";
 import { MonthlyComparisonChart } from "./components/expense-charts/MonthlyComparisonChart";
-
-// Define the ExpenseBreakdownItem type to match what's expected in the component
-interface ExpenseBreakdownItem {
-  name: string;
-  value: number;
-  color: string;
-}
+import { ExpenseBreakdownItem, MonthlyComparisonItem, RecurringExpense, ExpenseTabType } from "./components/types/expense";
+import { format } from "date-fns";
 
 export default function Expenses() {
   // Navigation hooks
@@ -58,6 +53,44 @@ export default function Expenses() {
     uniqueExpenseTypes
   } = useExpensesData();
 
+  // Ensure highestExpense and latestExpense are properly formatted
+  const formattedHighestExpense = highestExpense ? {
+    amount: highestExpense.amount,
+    description: highestExpense.description || '',
+    date: highestExpense.date instanceof Date ? format(highestExpense.date, 'yyyy-MM-dd') : String(highestExpense.date)
+  } : null;
+  
+  const formattedLatestExpense = latestExpense ? {
+    amount: latestExpense.amount,
+    description: latestExpense.description || '',
+    date: latestExpense.date instanceof Date ? format(latestExpense.date, 'yyyy-MM-dd') : String(latestExpense.date)
+  } : null;
+
+  // Convert recurring expenses to the correct type
+  const typedRecurringExpenses: RecurringExpense[] = formattedRecurringExpenses.map(expense => ({
+    id: expense.id,
+    title: expense.name,
+    amount: expense.amount,
+    category: expense.category,
+    frequency: expense.frequency,
+    department: expense.department,
+    date: '',  // Add default empty string for date
+    isPaid: true  // Assuming all expenses are paid by default
+  }));
+
+  // Convert monthly comparison data to the correct type
+  const typedMonthlyComparisonData: MonthlyComparisonItem[] = monthlyComparisonData.map(item => ({
+    name: item.name,
+    amount: item.amount,
+    expense: item.amount,  // Using amount for both for compatibility
+    income: 0  // Default to 0 for income
+  }));
+
+  // Ensure activeTab is of the correct type
+  const typedActiveTab: ExpenseTabType = activeTab === "overview" || activeTab === "compliance" || activeTab === "approvals" 
+    ? activeTab as ExpenseTabType 
+    : "overview";
+
   // Create the overview content
   const overviewContent = (
     <>
@@ -68,8 +101,8 @@ export default function Expenses() {
         currentMonthTotal={currentMonthTotal}
         previousMonthTotal={previousMonthTotal}
         percentageChange={percentageChange}
-        highestExpense={highestExpense}
-        latestExpense={latestExpense}
+        highestExpense={formattedHighestExpense}
+        latestExpense={formattedLatestExpense}
         expenses={expenses}
       />
 
@@ -90,7 +123,7 @@ export default function Expenses() {
       {/* Recurring Expenses */}
       <RecurringExpensesSection
         loading={loading}
-        recurringExpenses={formattedRecurringExpenses}
+        recurringExpenses={typedRecurringExpenses}
       />
 
       {/* Expenses Table */}
@@ -105,7 +138,7 @@ export default function Expenses() {
             uniqueDepartments={uniqueDepartments}
             uniqueExpenseTypes={uniqueExpenseTypes}
             onSearchChange={setSearchTerm}
-            onDateFilterChange={(date) => setDateFilter(date.toISOString())}
+            onDateFilterChange={setDateFilter}
             onDepartmentFilterChange={setDepartmentFilter}
             onTypeFilterChange={setTypeFilter}
           />
@@ -133,7 +166,7 @@ export default function Expenses() {
 
         {/* Month-over-Month Comparison */}
         <MonthlyComparisonChart
-          monthlyComparisonData={monthlyComparisonData}
+          monthlyComparisonData={typedMonthlyComparisonData}
         />
       </div>
     </>
@@ -146,7 +179,7 @@ export default function Expenses() {
 
       {/* Tabs */}
       <TabsSection
-        activeTab={activeTab}
+        activeTab={typedActiveTab}
         onTabChange={handleTabChange}
         overviewContent={overviewContent}
       />
