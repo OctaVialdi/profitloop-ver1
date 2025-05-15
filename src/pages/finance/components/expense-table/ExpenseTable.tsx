@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Table,
@@ -39,6 +40,7 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
+import { ExpenseDetailDialog } from "../expense-details/ExpenseDetailDialog";
 
 interface ExpenseTableProps {
   loading: boolean;
@@ -51,10 +53,15 @@ export function ExpenseTable({
   loading,
   filteredExpenses,
   categories,
+  expenses,
 }: ExpenseTableProps) {
   // State for viewing receipt
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  
+  // State for expense details
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Helper to get category name
   const getCategoryName = (categoryId: string) => {
@@ -68,6 +75,12 @@ export function ExpenseTable({
       setReceiptUrl(url);
       setIsReceiptOpen(true);
     }
+  };
+  
+  // Function to handle viewing expense details
+  const handleViewDetails = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setIsDetailOpen(true);
   };
 
   if (loading) {
@@ -175,31 +188,43 @@ export function ExpenseTable({
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleViewReceipt(expense.receipt_url)}
-                          disabled={!expense.receipt_url}
-                          className="flex items-center cursor-pointer"
-                        >
-                          <Receipt className="h-4 w-4 mr-2" />
-                          View Receipt
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center cursor-pointer">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center cursor-pointer">
-                          <FileEdit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="flex items-center text-red-600 cursor-pointer"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
+                      <DropdownMenuContent align="end" className="w-56 bg-white border shadow-lg rounded-md overflow-hidden">
+                        <DropdownMenuLabel className="font-semibold text-gray-700 px-4 py-2 border-b">Actions</DropdownMenuLabel>
+                        
+                        <div className="py-1">
+                          <DropdownMenuItem
+                            onClick={() => handleViewReceipt(expense.receipt_url)}
+                            disabled={!expense.receipt_url}
+                            className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer gap-2"
+                          >
+                            <Receipt className="h-4 w-4 text-gray-500" />
+                            <span>View Receipt</span>
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuItem 
+                            onClick={() => handleViewDetails(expense)}
+                            className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer gap-2"
+                          >
+                            <Eye className="h-4 w-4 text-blue-500" />
+                            <span>Details</span>
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuItem className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer gap-2">
+                            <FileEdit className="h-4 w-4 text-amber-500" />
+                            <span>Edit</span>
+                          </DropdownMenuItem>
+                        </div>
+                        
+                        <DropdownMenuSeparator className="my-1 border-t" />
+                        
+                        <div className="py-1">
+                          <DropdownMenuItem
+                            className="flex items-center px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer gap-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Delete</span>
+                          </DropdownMenuItem>
+                        </div>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -242,6 +267,14 @@ export function ExpenseTable({
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Expense Detail Dialog */}
+      <ExpenseDetailDialog 
+        expense={selectedExpense}
+        isOpen={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        categories={categories}
+      />
     </>
   );
 }
