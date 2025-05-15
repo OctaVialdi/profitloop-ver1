@@ -1,64 +1,132 @@
 
-import { useExpensesContext } from "@/contexts/expenses";
-import { useExpenseFilters } from "./expenses/useExpenseFilters";
+import { useState, useCallback, useEffect } from "react";
+import { useExpenses, Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { useExpenseStats } from "./expenses/useExpenseStats";
-import { useRecurringExpenses } from "./expenses/useRecurringExpenses";
+import { useExpenseFilters } from "./expenses/useExpenseFilters";
 import { useBudgetData } from "./expenses/useBudgetData";
+import { useRecurringExpenses } from "./expenses/useRecurringExpenses";
 import { useTabManagement } from "./expenses/useTabManagement";
 
 export function useExpensesData() {
-  // Get data from context
-  const { expenses, categories, loading, error, refreshData } = useExpensesContext();
-  
-  // Use specialized hooks
-  const filters = useExpenseFilters(expenses, categories);
-  const stats = useExpenseStats(expenses, categories);
-  const formattedRecurringExpenses = useRecurringExpenses(expenses, categories);
-  const budgetData = useBudgetData();
-  const tabManagement = useTabManagement();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+
+  // Initialize hooks
+  const {
+    loadInitialData,
+    fetchExpenses,
+    fetchCategories,
+  } = useExpenses();
+
+  // Tabs management hook
+  const { activeTab, handleTabChange } = useTabManagement();
+
+  // Fetch data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        await loadInitialData();
+        const expensesData = await fetchExpenses();
+        const categoriesData = await fetchCategories();
+        
+        setExpenses(expensesData || []);
+        setCategories(categoriesData || []);
+      } catch (error: any) {
+        console.error("Error loading expense data:", error);
+        setError(error.message || "Failed to load expense data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
+
+  // Refresh data function for retrying after errors
+  const refreshData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const expensesData = await fetchExpenses();
+      const categoriesData = await fetchCategories();
+      
+      setExpenses(expensesData || []);
+      setCategories(categoriesData || []);
+      setError(null);
+    } catch (error: any) {
+      console.error("Error refreshing data:", error);
+      setError(error.message || "Failed to refresh data");
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchExpenses, fetchCategories]);
+
+  // Filter and search functionality
+  const {
+    searchTerm,
+    setSearchTerm,
+    dateFilter,
+    setDateFilter,
+    departmentFilter,
+    setDepartmentFilter,
+    typeFilter,
+    setTypeFilter,
+    filteredExpenses,
+    uniqueDepartments,
+    uniqueExpenseTypes
+  } = useExpenseFilters(expenses);
+
+  // Get stats based on expenses
+  const {
+    totalExpense,
+    currentMonthTotal,
+    previousMonthTotal,
+    monthOverMonthChange,
+    formattedHighestExpense,
+    formattedLatestExpense,
+    expenseBreakdownData,
+    monthlyComparisonData
+  } = useExpenseStats(expenses, categories);
+
+  // Get budget data
+  const { budgetView, budgetCategories } = useBudgetData(expenses, categories);
+
+  // Get recurring expenses
+  const { formattedRecurringExpenses } = useRecurringExpenses(expenses, categories);
 
   return {
-    // Context data
     loading,
     error,
     refreshData,
     expenses,
+    filteredExpenses,
     categories,
-    
-    // Filter data
-    filteredExpenses: filters.filteredExpenses,
-    searchTerm: filters.searchTerm,
-    setSearchTerm: filters.setSearchTerm,
-    dateFilter: filters.dateFilter,
-    setDateFilter: filters.setDateFilter,
-    departmentFilter: filters.departmentFilter,
-    setDepartmentFilter: filters.setDepartmentFilter,
-    typeFilter: filters.typeFilter,
-    setTypeFilter: filters.setTypeFilter,
-    uniqueDepartments: filters.uniqueDepartments,
-    uniqueExpenseTypes: filters.uniqueExpenseTypes,
-    
-    // Stats data
-    totalExpense: stats.totalExpense,
-    currentMonthTotal: stats.currentMonthTotal,
-    previousMonthTotal: stats.previousMonthTotal,
-    monthOverMonthChange: stats.monthOverMonthChange,
-    formattedHighestExpense: stats.formattedHighestExpense,
-    formattedLatestExpense: stats.formattedLatestExpense,
-    expenseBreakdownData: stats.expenseBreakdownData,
-    monthlyComparisonData: stats.monthlyComparisonData,
-    
-    // Recurring expenses
+    searchTerm,
+    setSearchTerm,
+    dateFilter,
+    setDateFilter,
+    departmentFilter,
+    setDepartmentFilter,
+    typeFilter, 
+    setTypeFilter,
+    activeTab,
+    handleTabChange,
+    budgetView,
+    budgetCategories,
+    totalExpense,
+    currentMonthTotal,
+    previousMonthTotal,
+    monthOverMonthChange,
+    formattedHighestExpense,
+    formattedLatestExpense,
+    expenseBreakdownData,
+    monthlyComparisonData,
     formattedRecurringExpenses,
-    
-    // Budget data
-    budgetView: budgetData.budgetView,
-    budgetCategories: budgetData.budgetCategories,
-    
-    // Tab management
-    activeTab: tabManagement.activeTab,
-    expenseView: tabManagement.expenseView,
-    setExpenseView: tabManagement.setExpenseView,
-    handleTabChange: tabManagement.handleTabChange,
+    uniqueDepartments,
+    uniqueExpenseTypes
   };
 }

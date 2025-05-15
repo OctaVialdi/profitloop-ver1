@@ -1,98 +1,44 @@
 
 import { useState } from "react";
-import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
+import { Expense } from "@/hooks/useExpenses";
 
-export function useExpenseFilters(expenses: Expense[], categories: ExpenseCategory[]) {
-  // Filter state
+export function useExpenseFilters(expenses: Expense[]) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState("all-time");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  
-  // Apply filters when expenses, search term, or filters change
-  const filterExpenses = () => {
-    // Make sure expenses is not empty
-    if (expenses.length === 0) {
-      console.log("No expenses to filter");
-      return [];
-    }
-    
-    let result = [...expenses];
-    
-    // Apply search filter
-    if (searchTerm) {
-      result = result.filter(expense => 
-        expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        categories.find(cat => cat.id === expense.category_id)?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.expense_type?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
+  const [dateFilter, setDateFilter] = useState<Date | null>(null);
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+
+  // Get unique departments from expenses
+  const uniqueDepartments = [...new Set(expenses.map(expense => expense.department).filter(Boolean))]
+    .sort();
+
+  // Get unique expense types from expenses
+  const uniqueExpenseTypes = [...new Set(expenses.map(expense => expense.expense_type).filter(Boolean))]
+    .sort();
+
+  // Apply filters to expenses
+  const filteredExpenses = expenses.filter(expense => {
+    // Apply search term filter
+    const matchesSearch = searchTerm === "" || 
+      (expense.description && expense.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.amount.toString().includes(searchTerm);
+
     // Apply date filter
-    if (dateFilter !== "all-time") {
-      const now = new Date();
-      let startDate = new Date();
-      
-      if (dateFilter === "this-month") {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      } else if (dateFilter === "last-month") {
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const endDate = new Date(now.getFullYear(), now.getMonth(), 0);
-        result = result.filter(expense => {
-          const expenseDate = new Date(expense.date);
-          return expenseDate >= startDate && expenseDate <= endDate;
-        });
-      } else if (dateFilter === "this-year") {
-        startDate = new Date(now.getFullYear(), 0, 1);
-      }
-      
-      if (dateFilter !== "last-month") {
-        result = result.filter(expense => {
-          const expenseDate = new Date(expense.date);
-          return expenseDate >= startDate;
-        });
-      }
-    }
-    
+    const matchesDate = dateFilter === null || 
+      new Date(expense.date).setHours(0, 0, 0, 0) === new Date(dateFilter).setHours(0, 0, 0, 0);
+
     // Apply department filter
-    if (departmentFilter !== "all") {
-      result = result.filter(expense => 
-        expense.department?.toLowerCase() === departmentFilter.toLowerCase()
-      );
-    }
-    
+    const matchesDepartment = departmentFilter === "" || expense.department === departmentFilter;
+
     // Apply type filter
-    if (typeFilter !== "all") {
-      result = result.filter(expense => 
-        expense.expense_type?.toLowerCase() === typeFilter.toLowerCase()
-      );
-    }
-    
-    return result;
-  };
+    const matchesType = typeFilter === "" || expense.expense_type === typeFilter;
 
-  // Get unique departments and expense types for filters
-  const getUniqueFilters = () => {
-    const uniqueDepartments = Array.from(
-      new Set(expenses.map(e => e.department).filter(Boolean))
-    ) as string[];
-    
-    const uniqueExpenseTypes = Array.from(
-      new Set(expenses.map(e => e.expense_type).filter(Boolean))
-    ) as string[];
-
-    return {
-      uniqueDepartments,
-      uniqueExpenseTypes
-    };
-  };
-
-  const { uniqueDepartments, uniqueExpenseTypes } = getUniqueFilters();
-  const filteredExpenses = filterExpenses();
+    // Return true only if all filters match
+    return matchesSearch && matchesDate && matchesDepartment && matchesType;
+  });
 
   return {
-    filteredExpenses,
     searchTerm,
     setSearchTerm,
     dateFilter,
@@ -101,6 +47,7 @@ export function useExpenseFilters(expenses: Expense[], categories: ExpenseCatego
     setDepartmentFilter,
     typeFilter,
     setTypeFilter,
+    filteredExpenses,
     uniqueDepartments,
     uniqueExpenseTypes
   };
