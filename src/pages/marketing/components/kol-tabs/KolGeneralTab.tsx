@@ -88,19 +88,12 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
     try {
       const updatedKol = await uploadKolPhoto(selectedKol.id, file);
       if (updatedKol && updatedKol.photo_url) {
-        toast({
-          title: "Success",
-          description: "Profile photo uploaded successfully",
-        });
+        toast.success("Profile photo uploaded successfully");
         // Don't need to set localPhotoUrl as we already have the preview
       }
     } catch (error) {
       console.error("Error uploading photo:", error);
-      toast({
-        title: "Error",
-        description: "Failed to upload profile photo",
-        variant: "destructive",
-      });
+      toast.error("Failed to upload profile photo");
     } finally {
       setIsUploading(false);
     }
@@ -120,17 +113,10 @@ export const KolGeneralTab: React.FC<KolGeneralTabProps> = ({
       setPhotoRemoved(true);
       setIsDeletePhotoDialogOpen(false);
       
-      toast({
-        title: "Success",
-        description: "Photo removed successfully",
-      });
+      toast.success("Photo removed successfully");
     } catch (error) {
       console.error("Error removing photo:", error);
-      toast({
-        title: "Error",
-        description: "Failed to remove photo",
-        variant: "destructive",
-      });
+      toast.error("Failed to remove photo");
     } finally {
       setIsRemoving(false);
     }
