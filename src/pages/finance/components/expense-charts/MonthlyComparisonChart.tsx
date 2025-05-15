@@ -61,7 +61,7 @@ export function MonthlyComparisonChart({ loading, monthlyComparisonData }: Month
             />
             <YAxis 
               fontSize={12} 
-              tickFormatter={(value) => formatRupiah(value, false)}
+              tickFormatter={(value) => formatRupiah(value)}
               tickLine={false}
               axisLine={{ stroke: '#E5E7EB' }}
               tick={{ fill: '#6B7280' }}
