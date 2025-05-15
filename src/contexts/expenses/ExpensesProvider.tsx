@@ -53,7 +53,11 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
         
         // Only show toast on first error
         if (retryAttempts === 0) {
-          toast.error("Failed to load expense data. Retrying automatically...");
+          toast({
+            title: "Error",
+            description: "Failed to load expense data. Retrying automatically...",
+            variant: "destructive",
+          });
         }
         
         // Auto-retry with increasing backoff (max 3 attempts)
@@ -68,7 +72,11 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
           
           setRetryTimeout(timeout);
         } else {
-          toast.error("Failed to load expense data after multiple attempts. Please try again manually.");
+          toast({
+            title: "Error",
+            description: "Failed to load expense data after multiple attempts. Please try again manually.",
+            variant: "destructive",
+          });
         }
       }
     }
