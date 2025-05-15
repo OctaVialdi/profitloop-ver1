@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import {
   DateAmountSection,
@@ -230,83 +231,87 @@ const AddExpenseDialog: React.FC = () => {
       <DialogTrigger asChild>
         <Button className="bg-[#8B5CF6] hover:bg-[#7c4ff1]">Add Expense</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[550px] max-h-[85vh] p-0">
+        <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="text-xl">Add New Expense</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          {/* Date and Amount row */}
-          <DateAmountSection
-            date={date}
-            setDate={setDate}
-            amount={amount}
-            handleAmountChange={handleAmountChange}
-            validationErrors={validationErrors}
-          />
+        <ScrollArea className="max-h-[calc(85vh-130px)] px-6 py-4">
+          <div className="grid gap-4">
+            {/* Date and Amount row */}
+            <DateAmountSection
+              date={date}
+              setDate={setDate}
+              amount={amount}
+              handleAmountChange={handleAmountChange}
+              validationErrors={validationErrors}
+            />
 
-          {/* Category with add new option */}
-          <CategorySection
-            category={category}
-            setCategory={(value) => {
-              setCategory(value);
-              setValidationErrors({...validationErrors, category: ''});
-            }}
-            showAddCategory={showAddCategory}
-            setShowAddCategory={setShowAddCategory}
-            newCategoryName={newCategoryName}
-            setNewCategoryName={setNewCategoryName}
-            handleAddCategory={handleAddCategory}
-            categories={categories}
-            validationErrors={validationErrors}
-          />
+            {/* Category with add new option */}
+            <CategorySection
+              category={category}
+              setCategory={(value) => {
+                setCategory(value);
+                setValidationErrors({...validationErrors, category: ''});
+              }}
+              showAddCategory={showAddCategory}
+              setShowAddCategory={setShowAddCategory}
+              newCategoryName={newCategoryName}
+              setNewCategoryName={setNewCategoryName}
+              handleAddCategory={handleAddCategory}
+              categories={categories}
+              validationErrors={validationErrors}
+            />
 
-          {/* Department and Expense Type row */}
-          <DepartmentTypeSection
-            department={department}
-            setDepartment={(value) => {
-              setDepartment(value);
-              setValidationErrors({...validationErrors, department: ''});
-            }}
-            expenseType={expenseType}
-            setExpenseType={(value) => {
-              setExpenseType(value);
-              setValidationErrors({...validationErrors, expenseType: ''});
-            }}
-            departments={departments}
-            departmentsLoading={departmentsLoading}
-            validationErrors={validationErrors}
-          />
+            {/* Department and Expense Type row */}
+            <DepartmentTypeSection
+              department={department}
+              setDepartment={(value) => {
+                setDepartment(value);
+                setValidationErrors({...validationErrors, department: ''});
+              }}
+              expenseType={expenseType}
+              setExpenseType={(value) => {
+                setExpenseType(value);
+                setValidationErrors({...validationErrors, expenseType: ''});
+              }}
+              departments={departments}
+              departmentsLoading={departmentsLoading}
+              validationErrors={validationErrors}
+            />
 
-          {/* Recurring Expense and Frequency */}
-          <RecurringSection
-            isRecurring={isRecurring}
-            setIsRecurring={setIsRecurring}
-            recurringFrequency={recurringFrequency}
-            setRecurringFrequency={(value) => {
-              setRecurringFrequency(value);
-              setValidationErrors({...validationErrors, recurringFrequency: ''});
-            }}
-            validationErrors={validationErrors}
-          />
+            {/* Recurring Expense and Frequency */}
+            <RecurringSection
+              isRecurring={isRecurring}
+              setIsRecurring={setIsRecurring}
+              recurringFrequency={recurringFrequency}
+              setRecurringFrequency={(value) => {
+                setRecurringFrequency(value);
+                setValidationErrors({...validationErrors, recurringFrequency: ''});
+              }}
+              validationErrors={validationErrors}
+            />
 
-          {/* Description - moved to its own row below */}
-          <DescriptionSection 
-            description={description}
-            setDescription={setDescription}
-          />
+            {/* Description - moved to its own row below */}
+            <DescriptionSection 
+              description={description}
+              setDescription={setDescription}
+            />
 
-          {/* Receipt upload section */}
-          <ReceiptUploadSection
-            receipt={receipt}
-            receiptPreview={receiptPreview}
-            handleReceiptUpload={handleReceiptUpload}
-            removeReceipt={removeReceipt}
-          />
-
-          {/* Submit Button */}
+            {/* Receipt upload section */}
+            <ReceiptUploadSection
+              receipt={receipt}
+              receiptPreview={receiptPreview}
+              handleReceiptUpload={handleReceiptUpload}
+              removeReceipt={removeReceipt}
+            />
+          </div>
+        </ScrollArea>
+        
+        {/* Submit Button - Fixed at bottom */}
+        <div className="px-6 py-4 border-t mt-auto">
           <Button 
-            className="h-[50px] bg-[#8B5CF6] hover:bg-[#7c4ff1] mt-2" 
+            className="w-full h-[50px] bg-[#8B5CF6] hover:bg-[#7c4ff1]" 
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
