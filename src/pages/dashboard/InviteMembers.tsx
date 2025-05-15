@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { useOrganization } from '@/hooks/useOrganization';
 
 const InviteMembers = () => {
   const { organization, isAdmin } = useOrganization();
-  const { toast } = useToast();
 
   if (!isAdmin) {
     return (

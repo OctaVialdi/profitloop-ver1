@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useOrganization } from '@/hooks/useOrganization';
 import { ContentPlanItem } from '../types';
 import { 
@@ -18,7 +17,6 @@ export interface MutateContentPlanReturn {
 }
 
 export function useMutateContentPlan(): MutateContentPlanReturn {
-  const { toast } = useToast();
   const { organization } = useOrganization();
   const queryClient = useQueryClient();
 
@@ -31,16 +29,14 @@ export function useMutateContentPlan(): MutateContentPlanReturn {
       return addContentPlanItem(newPlan, organization.id);
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Content plan added successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
     },
     onError: (err: any) => {
       console.error('Error adding content plan:', err);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: `Failed to add content plan: ${err.message}`,
         variant: "destructive",
       });
@@ -56,16 +52,14 @@ export function useMutateContentPlan(): MutateContentPlanReturn {
       return updateContentPlanItem(id, updates, organization.id);
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Content plan updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
     },
     onError: (err: any) => {
       console.error('Error updating content plan:', err);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: `Failed to update content plan: ${err.message}`,
         variant: "destructive",
       });
@@ -81,16 +75,14 @@ export function useMutateContentPlan(): MutateContentPlanReturn {
       return deleteContentPlanItem(id, organization.id);
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Content plan deleted successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
     },
     onError: (err: any) => {
       console.error('Error deleting content plan:', err);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: `Failed to delete content plan: ${err.message}`,
         variant: "destructive",
       });

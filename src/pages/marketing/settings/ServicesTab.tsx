@@ -3,13 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export function ServicesTab() {
   const [services, setServices] = useState<any[]>([]);
   const [newService, setNewService] = useState("");
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -28,8 +27,7 @@ export function ServicesTab() {
       setServices(data || []);
     } catch (error: any) {
       console.error("Error fetching services:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to load services",
         variant: "destructive",
       });

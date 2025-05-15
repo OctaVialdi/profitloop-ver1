@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash2, Edit, Loader2 } from "lucide-react";
 import {
@@ -40,7 +39,6 @@ type TeamMemberFormData = {
 };
 
 export function TeamMembersTab() {
-  const { toast } = useToast();
   const { organization } = useOrganization();
   const { teamMembers, isLoading, addTeamMember, updateTeamMember, deleteTeamMember } = useTeamMembers();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -69,8 +67,7 @@ export function TeamMembersTab() {
 
   const handleAddMember = async (data: TeamMemberFormData) => {
     if (!organization?.id) {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Organization context is missing. Please try again later.",
         variant: "destructive",
       });

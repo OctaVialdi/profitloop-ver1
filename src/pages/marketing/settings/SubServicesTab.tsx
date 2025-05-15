@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
@@ -19,7 +18,6 @@ export function SubServicesTab() {
   const [services, setServices] = useState<any[]>([]);
   const [newSubService, setNewSubService] = useState("");
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -42,8 +40,7 @@ export function SubServicesTab() {
       setSubServices(data || []);
     } catch (error: any) {
       console.error("Error fetching sub services:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to load sub services",
         variant: "destructive",
       });
@@ -63,8 +60,7 @@ export function SubServicesTab() {
       setServices(data || []);
     } catch (error: any) {
       console.error("Error fetching services:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to load services",
         variant: "destructive",
       });
@@ -81,8 +77,7 @@ export function SubServicesTab() {
       
       if (error) throw error;
       
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Sub service added successfully",
       });
       
@@ -91,8 +86,7 @@ export function SubServicesTab() {
       fetchSubServices();
     } catch (error: any) {
       console.error("Error adding sub service:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to add sub service",
         variant: "destructive",
       });
@@ -108,16 +102,14 @@ export function SubServicesTab() {
       
       if (error) throw error;
       
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Sub service deleted successfully",
       });
       
       fetchSubServices();
     } catch (error: any) {
       console.error("Error deleting sub service:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to delete sub service",
         variant: "destructive",
       });
