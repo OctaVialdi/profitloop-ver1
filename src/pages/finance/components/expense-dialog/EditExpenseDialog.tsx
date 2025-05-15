@@ -293,7 +293,8 @@ const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
               departments={departments}
               departmentsLoading={departmentsLoading}
               validationErrors={validationErrors}
-              selectedCategory={category} // Pass the selected category
+              selectedCategory={category}
+              categoryId={categories.find(c => c.name === category)?.id}
             />
             
             {/* Recurring Expense and Frequency */}

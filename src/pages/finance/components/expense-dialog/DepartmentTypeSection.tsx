@@ -1,9 +1,9 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Users, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getAllowedExpenseTypes } from "./categoryExpenseTypeMap";
+import { getInitialExpenseTypes, getAllowedExpenseTypes } from "./categoryExpenseTypeMap";
+import { useOrganization } from "@/hooks/useOrganization";
 
 interface DepartmentTypeSectionProps {
   department: string;
@@ -14,6 +14,7 @@ interface DepartmentTypeSectionProps {
   departmentsLoading: boolean;
   validationErrors: Record<string, string>;
   selectedCategory?: string;
+  categoryId?: string;
 }
 
 export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
@@ -24,19 +25,39 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
   departments,
   departmentsLoading,
   validationErrors,
-  selectedCategory
+  selectedCategory,
+  categoryId
 }) => {
-  // Get filtered expense types based on selected category
-  const filteredExpenseTypes = selectedCategory 
-    ? getAllowedExpenseTypes(selectedCategory)
-    : ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"];
+  const { organization } = useOrganization();
+  const [filteredExpenseTypes, setFilteredExpenseTypes] = useState<string[]>(
+    selectedCategory ? getInitialExpenseTypes(selectedCategory) : ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"]
+  );
   
-  // Reset expense type if current value is not in filtered list when category changes
   useEffect(() => {
-    if (expenseType && selectedCategory && !filteredExpenseTypes.includes(expenseType)) {
-      setExpenseType(filteredExpenseTypes[0] || "");
+    // If we have a category ID and organization ID, fetch expense types from database
+    if (selectedCategory && categoryId && organization?.id) {
+      const fetchExpenseTypes = async () => {
+        const types = await getAllowedExpenseTypes(selectedCategory, categoryId, organization.id);
+        setFilteredExpenseTypes(types);
+        
+        // Reset expense type if current value is not in filtered list
+        if (expenseType && !types.includes(expenseType)) {
+          setExpenseType(types[0] || "");
+        }
+      };
+      
+      fetchExpenseTypes();
+    } else if (selectedCategory) {
+      // Otherwise use default mapping
+      const defaultTypes = getInitialExpenseTypes(selectedCategory);
+      setFilteredExpenseTypes(defaultTypes);
+      
+      // Reset expense type if current value is not in filtered list
+      if (expenseType && !defaultTypes.includes(expenseType)) {
+        setExpenseType(defaultTypes[0] || "");
+      }
     }
-  }, [selectedCategory, filteredExpenseTypes, expenseType, setExpenseType]);
+  }, [selectedCategory, categoryId, organization?.id, expenseType, setExpenseType]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
