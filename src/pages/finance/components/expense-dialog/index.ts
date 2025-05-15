@@ -8,6 +8,8 @@ import { ReceiptUploadSection } from './ReceiptUploadSection';
 import { RecurringSection } from './RecurringSection';
 import EditExpenseDialog from './EditExpenseDialog';
 import { DeleteExpenseDialog } from './DeleteExpenseDialog';
+import { DialogFooter } from './components/DialogFooter';
+import { useExpenseForm } from './hooks/useExpenseForm';
 
 export {
   AddExpenseDialog,
@@ -18,5 +20,7 @@ export {
   ReceiptUploadSection,
   RecurringSection,
   EditExpenseDialog,
-  DeleteExpenseDialog
+  DeleteExpenseDialog,
+  DialogFooter,
+  useExpenseForm
 };
