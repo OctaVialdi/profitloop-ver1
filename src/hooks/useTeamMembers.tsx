@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrganization } from '@/hooks/useOrganization';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export interface TeamMember {
   id: string;
@@ -43,9 +43,9 @@ export const useTeamMembers = () => {
     } catch (err: any) {
       console.error('Error fetching team members:', err);
       setError(err.message || 'Failed to fetch team members');
-      toast("Error", {
-        description: "Failed to fetch team members",
-        variant: "destructive"
+      toast({
+        title: "Error",
+        description: "Failed to fetch team members"
       });
     } finally {
       setLoading(false);
@@ -70,7 +70,8 @@ export const useTeamMembers = () => {
 
       if (insertError) throw insertError;
 
-      toast("Success", {
+      toast({
+        title: "Success",
         description: "Team member has been added successfully"
       });
       
@@ -78,9 +79,9 @@ export const useTeamMembers = () => {
       return data?.[0];
     } catch (err: any) {
       console.error('Error adding team member:', err);
-      toast("Error", {
-        description: err.message || "Failed to add team member",
-        variant: "destructive"
+      toast({
+        title: "Error",
+        description: err.message || "Failed to add team member"
       });
       return null;
     } finally {
@@ -105,7 +106,8 @@ export const useTeamMembers = () => {
 
       if (updateError) throw updateError;
 
-      toast("Success", {
+      toast({
+        title: "Success", 
         description: "Team member has been updated successfully"
       });
       
@@ -113,9 +115,9 @@ export const useTeamMembers = () => {
       return data?.[0];
     } catch (err: any) {
       console.error('Error updating team member:', err);
-      toast("Error", {
-        description: err.message || "Failed to update team member",
-        variant: "destructive"
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update team member"
       });
       return null;
     } finally {
@@ -139,7 +141,8 @@ export const useTeamMembers = () => {
 
       if (deleteError) throw deleteError;
 
-      toast("Success", {
+      toast({
+        title: "Success",
         description: "Team member has been deleted successfully"
       });
       
@@ -147,9 +150,9 @@ export const useTeamMembers = () => {
       return true;
     } catch (err: any) {
       console.error('Error deleting team member:', err);
-      toast("Error", {
-        description: err.message || "Failed to delete team member",
-        variant: "destructive"
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete team member"
       });
       return false;
     } finally {

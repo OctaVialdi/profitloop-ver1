@@ -1,253 +1,205 @@
 
-import { Ticket } from "../types";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/auth";
-import { useOrganization } from "@/hooks/useOrganization";
-import {
-  createTicket,
-  updateTicket,
-  deleteTicket,
-  mapUiTicketToDbTicket
-} from "@/services/ticketService";
+import { useState } from 'react';
+import { useOrganization } from '@/hooks/useOrganization';
+import { 
+  approveTicket as approveTicketService,
+  rejectTicket as rejectTicketService,
+  closeTicket as closeTicketService,
+  resolveTicket as resolveTicketService
+} from '@/services/ticketService';
+import { Ticket, TicketStatus } from '../types';
+import { showToast, showSuccessToast, showErrorToast } from '@/utils/toastUtils';
 
-export function useTicketOperations(
-  tickets: Ticket[], 
-  setTickets: (tickets: Ticket[]) => void,
-  selectedTicket: Ticket | null,
-  setSelectedTicket: (ticket: Ticket | null) => void,
-  setShowDetailDialog: (show: boolean) => void,
-  setShowEditDialog: (show: boolean) => void,
-  setShowNewTicketDialog: (show: boolean) => void,
-  employees: { id: string, name: string }[]
-) {
-  const { toast } = useToast();
-  const { user } = useAuth();
+export function useTicketOperations(refreshTickets: () => Promise<void>) {
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const { organization } = useOrganization();
 
-  // Function to handle viewing a ticket
-  const handleViewTicket = (ticket: Ticket) => {
-    setSelectedTicket(ticket);
-    setShowDetailDialog(true);
-  };
-
-  // Function to handle editing a ticket
-  const handleEditTicket = (ticket: Ticket) => {
-    setSelectedTicket(ticket);
-    setShowEditDialog(true);
-  };
-
-  // Function to handle deleting a ticket
-  const handleDeleteTicket = async (ticket: Ticket) => {
-    // Show confirm dialog
-    if (window.confirm(`Are you sure you want to delete ticket ${ticket.id}?`)) {
-      try {
-        // Remove ticket from database
-        const success = await deleteTicket(ticket.id);
-        
-        if (success) {
-          // Remove ticket from local state
-          setTickets(tickets.filter((t) => t.id !== ticket.id));
-          
-          // Show notification
-          toast({
-            title: "Ticket Deleted",
-            description: `Ticket ${ticket.id} has been deleted.`,
-            variant: "destructive",
-          });
-        } else {
-          throw new Error("Failed to delete ticket");
-        }
-      } catch (error) {
-        console.error("Error deleting ticket:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete ticket. Please try again.",
-          variant: "destructive",
-        });
-      }
+  // Approve a ticket
+  async function handleApproveTicket(ticketId: string): Promise<boolean> {
+    if (!organization?.id) {
+      showErrorToast("Organization not found");
+      return false;
     }
-  };
 
-  // Function to handle approving a ticket
-  const handleApproveTicket = async (ticket?: Ticket) => {
-    const ticketToUpdate = ticket || selectedTicket;
-    if (!ticketToUpdate) return;
-    
+    setIsProcessing(true);
     try {
-      // Update ticket status in database
-      const updated = await updateTicket(ticketToUpdate.id, {
-        status: "In Progress"
-      });
+      // First check if we're allowed to approve this ticket
+      const updates: Partial<Ticket> = {
+        status: TicketStatus.APPROVED,
+        approved_at: new Date().toISOString(),
+      };
       
-      if (updated) {
-        // Update ticket status in state
-        const updatedTicket: Ticket = { 
-          ...ticketToUpdate, 
-          status: "In Progress",
-        };
-        
-        // Update tickets list
-        setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
-        
-        // Close dialog if it was opened
-        if (!ticket) {
-          setShowDetailDialog(false);
-        }
-        
-        // Show notification
-        toast({
-          title: "Ticket Approved",
-          description: `Ticket ${ticketToUpdate.id} has been approved.`,
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Error approving ticket:", error);
-      toast({
-        title: "Error",
-        description: "Failed to approve ticket. Please try again.",
-        variant: "destructive",
+      await approveTicketService(ticketId, updates, organization.id);
+      
+      showSuccessToast("Ticket approved successfully");
+      await refreshTickets();
+      return true;
+    } catch (err: any) {
+      console.error("Error approving ticket:", err);
+      showToast({
+        title: "Error", 
+        description: err.message || "Failed to approve ticket",
+        variant: "destructive"
       });
+      return false;
+    } finally {
+      setIsProcessing(false);
     }
-  };
+  }
 
-  // Function to handle rejecting a ticket
-  const handleRejectTicket = async (ticket?: Ticket) => {
-    const ticketToUpdate = ticket || selectedTicket;
-    if (!ticketToUpdate) return;
-    
-    try {
-      // Update ticket status in database
-      const updated = await updateTicket(ticketToUpdate.id, {
-        status: "Rejected"
-      });
-      
-      if (updated) {
-        // Update ticket status in state
-        const updatedTicket: Ticket = { 
-          ...ticketToUpdate, 
-          status: "Rejected", 
-        };
-        
-        // Update tickets list
-        setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
-        
-        // Close dialog if it was opened
-        if (!ticket) {
-          setShowDetailDialog(false);
-        }
-        
-        // Show notification
-        toast({
-          title: "Ticket Rejected",
-          description: `Ticket ${ticketToUpdate.id} has been rejected.`,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error rejecting ticket:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reject ticket. Please try again.",
-        variant: "destructive",
-      });
+  // Reject a ticket
+  async function handleRejectTicket(ticketId: string, reason?: string): Promise<boolean> {
+    if (!organization?.id) {
+      showErrorToast("Organization not found");
+      return false;
     }
-  };
 
-  // Function to handle closing a ticket
-  const handleCloseTicket = async () => {
-    if (!selectedTicket) return;
-    
+    setIsProcessing(true);
     try {
-      // Update ticket status in database
-      const updated = await updateTicket(selectedTicket.id, {
-        status: "Retired"
-      });
+      const updates: Partial<Ticket> = {
+        status: TicketStatus.REJECTED,
+        rejection_reason: reason || "No reason provided",
+      };
       
-      if (updated) {
-        // Update ticket status in state
-        const updatedTicket: Ticket = { 
-          ...selectedTicket, 
-          status: "Retired",
-        };
-        
-        // Update tickets list
-        setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
-        
-        // Close dialog
-        setShowDetailDialog(false);
-        
-        // Show notification
-        toast({
-          title: "Ticket Closed",
-          description: `Ticket ${selectedTicket.id} has been closed.`,
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Error closing ticket:", error);
-      toast({
+      await rejectTicketService(ticketId, updates, organization.id);
+      
+      showSuccessToast("Ticket rejected");
+      await refreshTickets();
+      return true;
+    } catch (err: any) {
+      console.error("Error rejecting ticket:", err);
+      showToast({
         title: "Error",
-        description: "Failed to close ticket. Please try again.",
-        variant: "destructive",
+        description: err.message || "Failed to reject ticket",
+        variant: "destructive"
       });
+      return false;
+    } finally {
+      setIsProcessing(false);
     }
-  };
+  }
 
-  // Function to handle marking a ticket as resolved
-  const handleMarkAsResolved = async (ticket?: Ticket) => {
-    const ticketToUpdate = ticket || selectedTicket;
-    if (!ticketToUpdate) return;
-    
-    try {
-      // Update ticket status in database
-      const updated = await updateTicket(ticketToUpdate.id, {
-        status: "Resolved"
-      });
-      
-      if (updated) {
-        // Update ticket status and resolution in state
-        const updatedTicket: Ticket = { 
-          ...ticketToUpdate, 
-          status: "Resolved",
-          resolution: { 
-            time: "2h 30m", 
-            type: "completed" 
-          }
-        };
-        
-        // Update tickets list
-        setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
-        
-        // Close dialog if it was opened
-        if (!ticket) {
-          setShowDetailDialog(false);
-        }
-        
-        // Show notification
-        toast({
-          title: "Ticket Resolved",
-          description: `Ticket ${ticketToUpdate.id} has been marked as resolved.`,
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Error resolving ticket:", error);
-      toast({
-        title: "Error",
-        description: "Failed to resolve ticket. Please try again.",
-        variant: "destructive",
-      });
+  // Close a ticket
+  async function handleCloseTicket(ticketId: string, resolution?: string): Promise<boolean> {
+    if (!organization?.id) {
+      showErrorToast("Organization not found");
+      return false;
     }
-  };
+
+    setIsProcessing(true);
+    try {
+      const updates: Partial<Ticket> = {
+        status: TicketStatus.CLOSED,
+        resolution: resolution || "Closed without specific resolution",
+        closed_at: new Date().toISOString(),
+      };
+      
+      await closeTicketService(ticketId, updates, organization.id);
+      
+      showSuccessToast("Ticket closed successfully");
+      await refreshTickets();
+      return true;
+    } catch (err: any) {
+      console.error("Error closing ticket:", err);
+      showToast({
+        title: "Error",
+        description: err.message || "Failed to close ticket",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  // Mark a ticket as resolved
+  async function handleMarkAsResolved(ticketId: string, resolution: string): Promise<boolean> {
+    if (!organization?.id) {
+      showErrorToast("Organization not found");
+      return false;
+    }
+
+    setIsProcessing(true);
+    try {
+      const updates: Partial<Ticket> = {
+        status: TicketStatus.RESOLVED,
+        resolution: resolution || "Marked as resolved",
+        resolved_at: new Date().toISOString(),
+      };
+      
+      await resolveTicketService(ticketId, updates, organization.id);
+      
+      showSuccessToast("Ticket marked as resolved");
+      await refreshTickets();
+      return true;
+    } catch (err: any) {
+      console.error("Error marking ticket as resolved:", err);
+      showToast({
+        title: "Error",
+        description: err.message || "Failed to mark ticket as resolved",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  // Update ticket status
+  async function updateTicketStatus(ticketId: string, status: TicketStatus, message?: string): Promise<boolean> {
+    if (!organization?.id) {
+      showErrorToast("Organization not found");
+      return false;
+    }
+
+    setIsProcessing(true);
+    try {
+      const updates: Partial<Ticket> = {
+        status,
+        status_update_message: message,
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Use the appropriate service method based on the status
+      switch (status) {
+        case TicketStatus.APPROVED:
+          await approveTicketService(ticketId, updates, organization.id);
+          break;
+        case TicketStatus.REJECTED:
+          await rejectTicketService(ticketId, updates, organization.id);
+          break;
+        case TicketStatus.CLOSED:
+          await closeTicketService(ticketId, updates, organization.id);
+          break;
+        case TicketStatus.RESOLVED:
+          await resolveTicketService(ticketId, updates, organization.id);
+          break;
+        default:
+          throw new Error(`Unsupported status transition: ${status}`);
+      }
+      
+      showSuccessToast(`Ticket status updated to ${status}`);
+      await refreshTickets();
+      return true;
+    } catch (err: any) {
+      console.error("Error updating ticket status:", err);
+      showToast({
+        title: "Error", 
+        description: err.message || "Failed to update ticket status",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  }
 
   return {
-    handleViewTicket,
-    handleEditTicket,
-    handleDeleteTicket,
+    isProcessing,
     handleApproveTicket,
     handleRejectTicket,
     handleCloseTicket,
-    handleMarkAsResolved
+    handleMarkAsResolved,
+    updateTicketStatus
   };
 }

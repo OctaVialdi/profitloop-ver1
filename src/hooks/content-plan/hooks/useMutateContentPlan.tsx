@@ -1,62 +1,80 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from '@/components/ui/use-toast';
 
 // Assuming these functions exist with these names in contentPlanApi.ts
 // If they have different names, adjust the imports accordingly
 import { 
-  addContentPlanItem as createContentPlan,
-  updateContentPlanItem as updateContentPlan, 
-  deleteContentPlanItem as deleteContentPlan 
+  addContentPlanItem as createContentPlanItem,
+  updateContentPlanItem, 
+  deleteContentPlanItem 
 } from '../contentPlanApi';
 
 export const useMutateContentPlan = () => {
   const queryClient = useQueryClient();
 
+  // Create mutation
   const createMutation = useMutation({
-    mutationFn: createContentPlan,
+    mutationFn: (data: any) => createContentPlanItem(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
-      toast("Content Plan Created", {
+      toast({
+        title: "Content Plan Created",
         description: "Your content plan has been created successfully!"
       });
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Failed to create content plan");
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to create content plan",
+        variant: "destructive"
+      });
     }
   });
 
+  // Update mutation
   const updateMutation = useMutation({
-    mutationFn: updateContentPlan,
+    mutationFn: (data: any) => updateContentPlanItem(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
-      toast("Content Plan Updated", {
+      toast({
+        title: "Content Plan Updated",
         description: "Your content plan has been updated successfully!"
       });
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Failed to update content plan");
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to update content plan",
+        variant: "destructive"
+      });
     }
   });
 
+  // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: deleteContentPlan,
+    mutationFn: (id: string) => deleteContentPlanItem(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
-      toast("Content Plan Deleted", {
+      toast({
+        title: "Content Plan Deleted",
         description: "Your content plan has been deleted successfully!"
       });
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Failed to delete content plan");
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete content plan",
+        variant: "destructive"
+      });
     }
   });
 
   // These functions wrap the mutations to provide a simpler interface
   const addContentPlan = (data: any) => createMutation.mutateAsync(data);
-  const updateContentPlan = (id: string, updates: any) => updateMutation.mutateAsync({ id, ...updates });
+  const updateContentPlan = (data: any) => updateMutation.mutateAsync(data);
   const deleteContentPlan = (id: string) => deleteMutation.mutateAsync(id);
-  const resetRevisionCounter = (id: string) => updateMutation.mutateAsync({ id, revision_count: 0 });
+  const resetRevisionCounter = (data: any) => updateMutation.mutateAsync({ ...data, revision_count: 0 });
 
   return {
     createMutation,

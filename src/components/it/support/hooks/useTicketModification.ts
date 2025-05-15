@@ -1,129 +1,113 @@
 
-import { Ticket } from "../types";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/auth";
-import { useOrganization } from "@/hooks/useOrganization";
-import {
-  createTicket,
-  updateTicket,
-  mapUiTicketToDbTicket
-} from "@/services/ticketService";
+import { useState } from 'react';
+import { useOrganization } from '@/hooks/useOrganization';
+import { 
+  createNewTicket, 
+  updateTicket, 
+  deleteTicket 
+} from '@/services/ticketService';
+import { Ticket, TicketFormData } from '../types';
+import { showToast, showSuccessToast, showErrorToast } from '@/utils/toastUtils';
 
-export function useTicketModification(
-  tickets: Ticket[], 
-  setTickets: (tickets: Ticket[]) => void,
-  setShowEditDialog: (show: boolean) => void,
-  setShowNewTicketDialog: (show: boolean) => void,
-  employees: { id: string, name: string }[]
-) {
-  const { toast } = useToast();
-  const { user } = useAuth();
+export function useTicketModification(refreshTickets: () => Promise<void>) {
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
   const { organization } = useOrganization();
 
-  // Function to handle updating a ticket
-  const handleUpdateTicket = async (updatedTicket: Ticket) => {
-    if (!organization) return;
-    
+  // Create a new ticket
+  async function handleCreateTicket(formData: TicketFormData): Promise<boolean> {
+    if (!organization?.id) {
+      showErrorToast("Organization not found");
+      return false;
+    }
+
+    setIsCreating(true);
     try {
-      // Map UI ticket to database model
-      const dbTicket = {
-        title: updatedTicket.title,
-        description: updatedTicket.description,
-        department: updatedTicket.department,
-        category: updatedTicket.category.name,
-        category_icon: updatedTicket.category.icon,
-        priority: updatedTicket.priority,
-        status: updatedTicket.status,
-        assignee: updatedTicket.assignee,
-        // Find the employee ID that matches the selected assignee name
-        assignee_id: employees.find(emp => emp.name === updatedTicket.assignee)?.id,
-        related_asset: updatedTicket.relatedAsset
+      // Add organization ID to the ticket data
+      const ticketData = {
+        ...formData,
+        organization_id: organization.id
       };
       
-      // Update ticket in database
-      const updated = await updateTicket(updatedTicket.id, dbTicket);
+      await createNewTicket(ticketData);
       
-      if (updated) {
-        // Update tickets list
-        setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
-        
-        // Close dialog
-        setShowEditDialog(false);
-        
-        // Show notification
-        toast({
-          title: "Ticket Updated",
-          description: `Ticket ${updatedTicket.id} has been updated.`,
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Error updating ticket:", error);
-      toast({
+      showSuccessToast("Ticket created successfully");
+      await refreshTickets();
+      return true;
+    } catch (err: any) {
+      console.error("Error creating ticket:", err);
+      showToast({
         title: "Error",
-        description: "Failed to update ticket. Please try again.",
-        variant: "destructive",
+        description: err.message || "Failed to create ticket",
+        variant: "destructive"
       });
+      return false;
+    } finally {
+      setIsCreating(false);
     }
-  };
+  }
 
-  // Function to handle creating a new ticket
-  const handleCreateTicket = async (newTicket: Partial<Ticket>) => {
-    if (!organization || !user) return;
-    
-    try {
-      // Map UI ticket to database model
-      const dbTicket = mapUiTicketToDbTicket(
-        newTicket, 
-        organization.id,
-        user.id
-      );
-      
-      // Find the employee ID that matches the selected assignee name
-      if (newTicket.assignee && newTicket.assignee !== "Unassigned") {
-        const employee = employees.find(emp => emp.name === newTicket.assignee);
-        if (employee) {
-          dbTicket.assignee_id = employee.id;
-        }
-      }
-      
-      // Create ticket in database
-      const created = await createTicket(dbTicket);
-      
-      if (created) {
-        // Map the created ticket back to UI model
-        const uiTicket = mapDbTicketToUiTicket(created);
-        
-        // Add ticket to list
-        setTickets([uiTicket, ...tickets]);
-        
-        // Close dialog
-        setShowNewTicketDialog(false);
-        
-        // Show notification
-        toast({
-          title: "Ticket Created",
-          description: `Ticket ${uiTicket.id} has been created.`,
-          variant: "default",
-        });
-      } else {
-        throw new Error("Failed to create ticket");
-      }
-    } catch (error) {
-      console.error("Error creating ticket:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create ticket. Please try again.",
-        variant: "destructive",
-      });
+  // Update an existing ticket
+  async function handleUpdateTicket(ticketId: string, updates: Partial<Ticket>): Promise<boolean> {
+    if (!organization?.id) {
+      showErrorToast("Organization not found");
+      return false;
     }
-  };
+
+    setIsUpdating(true);
+    try {
+      await updateTicket(ticketId, updates, organization.id);
+      
+      showSuccessToast("Ticket updated successfully");
+      await refreshTickets();
+      return true;
+    } catch (err: any) {
+      console.error("Error updating ticket:", err);
+      showToast({
+        title: "Error",
+        description: err.message || "Failed to update ticket",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  // Delete a ticket
+  async function handleDeleteTicket(ticketId: string): Promise<boolean> {
+    if (!organization?.id) {
+      showErrorToast("Organization not found");
+      return false;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteTicket(ticketId, organization.id);
+      
+      showSuccessToast("Ticket deleted successfully");
+      await refreshTickets();
+      return true;
+    } catch (err: any) {
+      console.error("Error deleting ticket:", err);
+      showToast({
+        title: "Error",
+        description: err.message || "Failed to delete ticket",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return {
+    isCreating,
+    isUpdating,
+    isDeleting,
+    handleCreateTicket,
     handleUpdateTicket,
-    handleCreateTicket
+    handleDeleteTicket
   };
 }
-
-// Helper function moved from ticket service
-import { mapDbTicketToUiTicket } from "@/services/ticketService";

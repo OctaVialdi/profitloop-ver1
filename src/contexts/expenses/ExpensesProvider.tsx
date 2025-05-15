@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ExpensesContext } from './ExpensesContext';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useOrganization } from '@/hooks/useOrganization';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({ 
   children 
@@ -59,9 +59,9 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
       
       // Only show toast on first error
       if (retryAttempts === 0) {
-        toast("Failed to load expense data", {
-          description: "Retrying automatically...",
-          variant: "destructive"
+        toast({
+          title: "Failed to load expense data",
+          description: "Retrying automatically..."
         });
       }
       
@@ -77,9 +77,9 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
         
         setRetryTimeout(timeout);
       } else {
-        toast("Failed to load expense data", {
-          description: "Please try again manually.",
-          variant: "destructive"
+        toast({
+          title: "Failed to load expense data",
+          description: "Please try again manually."
         });
       }
     } finally {
