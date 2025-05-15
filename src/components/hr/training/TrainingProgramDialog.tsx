@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 
 interface TrainingProgramDialogProps {
   isOpen: boolean;
@@ -19,7 +19,6 @@ export const TrainingProgramDialog: React.FC<TrainingProgramDialogProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { toast } = useToast();
   const [programName, setProgramName] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -36,9 +35,7 @@ export const TrainingProgramDialog: React.FC<TrainingProgramDialogProps> = ({
 
   const handleSubmit = () => {
     if (!programName || !category || !startDate || !endDate || !trainer || !location) {
-      toast({
-        variant: "destructive",
-        title: "Form tidak lengkap",
+      toast.error("Form tidak lengkap", {
         description: "Mohon lengkapi semua field yang diperlukan",
       });
       return;
@@ -49,9 +46,8 @@ export const TrainingProgramDialog: React.FC<TrainingProgramDialogProps> = ({
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
-      toast({
-        title: "Program training berhasil ditambahkan",
-        description: `Program ${programName} telah berhasil ditambahkan`,
+      toast.success(`Program ${programName} telah berhasil ditambahkan`, {
+        description: "Program training berhasil ditambahkan",
       });
       onClose();
       resetForm();

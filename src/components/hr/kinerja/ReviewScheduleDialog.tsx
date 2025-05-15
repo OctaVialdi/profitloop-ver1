@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 
 interface ReviewScheduleDialogProps {
   isOpen: boolean;
@@ -14,7 +14,6 @@ const ReviewScheduleDialog: React.FC<ReviewScheduleDialogProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = () => {
@@ -23,9 +22,8 @@ const ReviewScheduleDialog: React.FC<ReviewScheduleDialogProps> = ({
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      toast({
-        title: "Jadwal review berhasil diperbarui",
-        description: "Jadwal review kinerja Q2 2025 telah diatur",
+      toast.success("Jadwal review kinerja Q2 2025 telah diatur", {
+        description: "Jadwal review berhasil diperbarui",
       });
       onClose();
     }, 1000);

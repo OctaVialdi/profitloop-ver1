@@ -1,7 +1,14 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createContentPlan, updateContentPlan, deleteContentPlan } from '../contentPlanApi';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
+
+// Assuming these functions exist with these names in contentPlanApi.ts
+// If they have different names, adjust the imports accordingly
+import { 
+  addContentPlanItem as createContentPlan,
+  updateContentPlanItem as updateContentPlan, 
+  deleteContentPlanItem as deleteContentPlan 
+} from '../contentPlanApi';
 
 export const useMutateContentPlan = () => {
   const queryClient = useQueryClient();
@@ -15,10 +22,7 @@ export const useMutateContentPlan = () => {
       });
     },
     onError: (error: any) => {
-      toast("Error", {
-        description: error?.message || "Failed to create content plan",
-        variant: "destructive"
-      });
+      toast.error(error?.message || "Failed to create content plan");
     }
   });
 
@@ -31,10 +35,7 @@ export const useMutateContentPlan = () => {
       });
     },
     onError: (error: any) => {
-      toast("Error", {
-        description: error?.message || "Failed to update content plan",
-        variant: "destructive"
-      });
+      toast.error(error?.message || "Failed to update content plan");
     }
   });
 
@@ -47,17 +48,25 @@ export const useMutateContentPlan = () => {
       });
     },
     onError: (error: any) => {
-      toast("Error", {
-        description: error?.message || "Failed to delete content plan",
-        variant: "destructive"
-      });
+      toast.error(error?.message || "Failed to delete content plan");
     }
   });
+
+  // These functions wrap the mutations to provide a simpler interface
+  const addContentPlan = (data: any) => createMutation.mutateAsync(data);
+  const updateContentPlan = (id: string, updates: any) => updateMutation.mutateAsync({ id, ...updates });
+  const deleteContentPlan = (id: string) => deleteMutation.mutateAsync(id);
+  const resetRevisionCounter = (id: string) => updateMutation.mutateAsync({ id, revision_count: 0 });
 
   return {
     createMutation,
     updateMutation,
     deleteMutation,
-    isLoading: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
+    isLoading: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    // Add these to expose them for components to use
+    addContentPlan,
+    updateContentPlan,
+    deleteContentPlan,
+    resetRevisionCounter
   };
 };

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -154,9 +155,8 @@ export const BSCDashboard = () => {
   
   useEffect(() => {
     if (error) {
-      toast("Error loading dashboard data", {
-        description: error,
-        variant: "destructive"
+      toast.error(error, {
+        description: "Failed to load dashboard data"
       });
     }
   }, [error]);

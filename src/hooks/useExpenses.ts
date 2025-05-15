@@ -1,5 +1,6 @@
+
 import { useState, useCallback } from "react";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { uploadFileToBucket } from "@/integrations/supabase/storage";
@@ -28,6 +29,7 @@ export type ExpenseCategory = {
 };
 
 export const useExpenses = () => {
+  const { organization } = useOrganization();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -58,10 +60,7 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error fetching expense categories:", error);
       setError(error.message || "Failed to fetch expense categories");
-      toast("Error", {
-        description: error.message || "Failed to fetch expense categories",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to fetch expense categories");
       return [];
     } finally {
       setLoading(false);
@@ -104,10 +103,7 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error fetching expenses:", error);
       setError(error.message || "Failed to fetch expenses");
-      toast("Error", {
-        description: error.message || "Failed to fetch expenses",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to fetch expenses");
       return [];
     } finally {
       setLoading(false);
@@ -177,7 +173,7 @@ export const useExpenses = () => {
       
       toast.success("Expense category has been added successfully");
       
-      await fetchCategories();
+      await fetchCategories(organization.id);
       return data?.[0];
     } catch (error: any) {
       console.error("Error adding expense category:", error);
@@ -311,7 +307,7 @@ export const useExpenses = () => {
       
       toast.success("Your expense has been added successfully");
 
-      await fetchExpenses();
+      await fetchExpenses(organization.id);
       return data?.[0];
     } catch (error: any) {
       console.error("Error adding expense:", error);
@@ -364,7 +360,7 @@ export const useExpenses = () => {
       toast.success("Expense has been deleted successfully");
 
       // Refresh the expenses list
-      await fetchExpenses();
+      await fetchExpenses(organization.id);
       return true;
     } catch (error: any) {
       console.error("Error deleting expense:", error);

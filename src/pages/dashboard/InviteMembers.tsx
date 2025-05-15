@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useOrganization } from '@/hooks/useOrganization';
 
 const InviteMembers = () => {

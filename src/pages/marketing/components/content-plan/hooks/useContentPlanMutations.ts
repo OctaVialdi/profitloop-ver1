@@ -1,5 +1,5 @@
 
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useCallback } from "react";
 
 export function useContentPlanMutations(
@@ -23,9 +23,7 @@ export function useContentPlanMutations(
       });
     } catch (err) {
       console.error(err);
-      toast("Error adding row", {
-        description: "There was a problem adding a new row."
-      });
+      toast.error("There was a problem adding a new row.");
     }
   }, [addContentPlan]);
 
@@ -33,15 +31,13 @@ export function useContentPlanMutations(
     try {
       const deletePromises = selectedItems.map(id => deleteContentPlan(id));
       await Promise.all(deletePromises);
-      toast("Items deleted", {
-        description: `${selectedItems.length} item(s) have been deleted.`
+      toast(`${selectedItems.length} item(s) have been deleted.`, {
+        description: "Items deleted successfully."
       });
       return true;
     } catch (err) {
       console.error(err);
-      toast("Error deleting items", {
-        description: "There was a problem deleting the selected items."
-      });
+      toast.error("There was a problem deleting the selected items.");
       return false;
     }
   }, [deleteContentPlan]);
@@ -52,9 +48,7 @@ export function useContentPlanMutations(
       await updateContentPlan(id, { post_date: date.toISOString() });
     } catch (err) {
       console.error(err);
-      toast("Error updating date", {
-        description: "There was a problem updating the date."
-      });
+      toast.error("There was a problem updating the date.");
     }
   }, [updateContentPlan]);
 
@@ -82,9 +76,7 @@ export function useContentPlanMutations(
       await updateContentPlan(id, updates);
     } catch (err) {
       console.error(err);
-      toast("Error updating field", {
-        description: "There was a problem updating the field."
-      });
+      toast.error("There was a problem updating the field.");
     }
   }, [updateContentPlan]);
 
@@ -95,9 +87,7 @@ export function useContentPlanMutations(
       return true;
     } catch (err) {
       console.error(err);
-      toast("Error updating brief", {
-        description: "There was a problem updating the brief."
-      });
+      toast.error("There was a problem updating the brief.");
       return false;
     }
   }, [updateContentPlan]);
@@ -109,9 +99,7 @@ export function useContentPlanMutations(
       return true;
     } catch (err) {
       console.error(err);
-      toast("Error updating title", {
-        description: "There was a problem updating the title."
-      });
+      toast.error("There was a problem updating the title.");
       return false;
     }
   }, [updateContentPlan]);
