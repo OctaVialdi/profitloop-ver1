@@ -69,12 +69,13 @@ export const ExpensesProvider = ({ children }: ExpensesProviderProps) => {
 
       if (fetchError) throw fetchError;
       
-      // Convert date strings to Date objects
+      // Convert date strings to Date objects and add category name
       const formattedExpenses = (data || []).map(expense => ({
         ...expense,
         date: new Date(expense.date),
         created_at: new Date(expense.created_at),
-      }));
+        category: expense.expense_categories?.name || ''
+      })) as Expense[];
       
       console.log("Fetched expenses:", formattedExpenses);
       setExpenses(formattedExpenses);
