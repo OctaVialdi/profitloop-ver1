@@ -13,7 +13,7 @@ import PayrollSummary from "@/pages/finance/PayrollSummary";
 import CashManagement from "@/pages/finance/CashManagement";
 import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
 import { Outlet } from "react-router-dom";
-import { ExpensesProvider } from "@/contexts/ExpensesContext";
+import { ExpensesProvider } from "@/contexts/expenses";
 
 export const financeRoutes = (
   <Route
@@ -35,7 +35,11 @@ export const financeRoutes = (
         <Expenses />
       </ExpensesProvider>
     } />
-    <Route path="expenses/budget/forecast" element={<ExpenseBudgetForecast />} />
+    <Route path="expenses/budget/forecast" element={
+      <ExpensesProvider>
+        <ExpenseBudgetForecast />
+      </ExpensesProvider>
+    } />
     <Route path="income-target" element={<IncomeTarget />} />
     <Route path="reminder-bills" element={<ReminderBills />} />
     <Route path="reminder-bills/approvals" element={<BillApprovals />} />
