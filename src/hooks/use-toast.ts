@@ -1,7 +1,7 @@
 
 import { toast as sonnerToast } from "sonner";
-import { useToast as useShadcnToast } from "@/components/ui/use-toast";
-import type { Toast } from "@/components/ui/toast";
+import { useToast as useShadcnToast } from "@/components/ui/toast";
+import type { ToastActionElement } from "@/components/ui/toast";
 
 // For compatibility with both toast systems
 export function useToast() {
@@ -10,5 +10,10 @@ export function useToast() {
 
 export const toast = sonnerToast;
 
-// Re-export the Toast type for components that need it
-export type { Toast };
+export type Toast = {
+  id: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  action?: ToastActionElement;
+  variant?: "default" | "destructive";
+};
