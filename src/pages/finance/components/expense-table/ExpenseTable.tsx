@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Table,
@@ -41,7 +40,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useExpensesContext } from "@/contexts/expenses";
 
 interface ExpenseTableProps {
@@ -80,10 +79,8 @@ export function ExpenseTable({
     if (expense.receipt_url) {
       setReceiptUrl(expense.receipt_url);
     } else {
-      toast({
-        title: "No Receipt",
-        description: "This expense does not have an attached receipt.",
-        variant: "destructive",
+      toast.error("No Receipt", {
+        description: "This expense does not have an attached receipt."
       });
     }
   };
@@ -96,9 +93,8 @@ export function ExpenseTable({
   // Handle Edit
   const handleEdit = (expense: Expense) => {
     // For now we'll just show a toast as edit functionality would require a form
-    toast({
-      title: "Edit Expense",
-      description: `Editing expense: ${expense.description || 'No description'} (${formatRupiah(expense.amount)})`,
+    toast.info("Edit Expense", {
+      description: `Editing expense: ${expense.description || 'No description'} (${formatRupiah(expense.amount)})`
     });
     // In a real implementation, we would open an edit form/dialog here
   };
@@ -111,16 +107,13 @@ export function ExpenseTable({
       setIsDeleting(true);
       await deleteExpenseFunction(deleteExpense.id);
       
-      toast({
-        title: "Expense Deleted",
-        description: "The expense has been successfully deleted.",
+      toast.success("Expense Deleted", {
+        description: "The expense has been successfully deleted."
       });
     } catch (error) {
       console.error("Error deleting expense:", error);
-      toast({
-        title: "Delete Failed",
-        description: "There was an error deleting the expense. Please try again.",
-        variant: "destructive",
+      toast.error("Delete Failed", {
+        description: "There was an error deleting the expense. Please try again."
       });
     } finally {
       setIsDeleting(false);

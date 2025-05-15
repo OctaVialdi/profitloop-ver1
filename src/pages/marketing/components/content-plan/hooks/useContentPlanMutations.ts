@@ -1,5 +1,4 @@
-
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useCallback } from "react";
 
 export function useContentPlanMutations(
@@ -18,15 +17,12 @@ export function useContentPlanMutations(
         production_approved: false,
         done: false
       });
-      toast({
-        title: "Row added successfully",
+      toast.success("Row added successfully", {
         description: "A new row has been added to the content plan."
       });
     } catch (err) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error adding row",
+      toast.error("Error adding row", {
         description: "There was a problem adding a new row."
       });
     }
@@ -36,16 +32,13 @@ export function useContentPlanMutations(
     try {
       const deletePromises = selectedItems.map(id => deleteContentPlan(id));
       await Promise.all(deletePromises);
-      toast({
-        title: "Items deleted",
+      toast.success("Items deleted", {
         description: `${selectedItems.length} item(s) have been deleted.`
       });
       return true;
     } catch (err) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error deleting items",
+      toast.error("Error deleting items", {
         description: "There was a problem deleting the selected items."
       });
       return false;
@@ -58,9 +51,7 @@ export function useContentPlanMutations(
       await updateContentPlan(id, { post_date: date.toISOString() });
     } catch (err) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error updating date",
+      toast.error("Error updating date", {
         description: "There was a problem updating the date."
       });
     }
@@ -90,9 +81,7 @@ export function useContentPlanMutations(
       await updateContentPlan(id, updates);
     } catch (err) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error updating field",
+      toast.error("Error updating field", {
         description: "There was a problem updating the field."
       });
     }
@@ -105,9 +94,7 @@ export function useContentPlanMutations(
       return true;
     } catch (err) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error updating brief",
+      toast.error("Error updating brief", {
         description: "There was a problem updating the brief."
       });
       return false;
@@ -121,9 +108,7 @@ export function useContentPlanMutations(
       return true;
     } catch (err) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error updating title",
+      toast.error("Error updating title", {
         description: "There was a problem updating the title."
       });
       return false;
