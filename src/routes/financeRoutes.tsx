@@ -5,7 +5,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import FinanceLayout from "@/components/layout/FinanceLayout";
 import FinanceDashboard from "@/pages/finance/Dashboard";
 import Expenses from "@/pages/finance/Expenses";
-import ExpenseBudget from "@/pages/finance/ExpenseBudget";
 import ExpenseBudgetForecast from "@/pages/finance/ExpenseBudgetForecast";
 import IncomeTarget from "@/pages/finance/IncomeTarget";
 import ReminderBills from "@/pages/finance/ReminderBills";
@@ -31,7 +30,6 @@ export const financeRoutes = (
   >
     <Route path="dashboard" element={<FinanceDashboard />} />
     <Route path="expenses" element={<Expenses />} />
-    <Route path="expenses/budget" element={<ExpenseBudget />} />
     <Route path="expenses/budget/forecast" element={<ExpenseBudgetForecast />} />
     <Route path="income-target" element={<IncomeTarget />} />
     <Route path="reminder-bills" element={<ReminderBills />} />
