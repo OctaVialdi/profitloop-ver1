@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle, RefreshCw } from "lucide-react";
+import AddExpenseDialog from "../../components/expense-dialog/AddExpenseDialog";
 
 interface ExpenseHeaderProps {
   error: string | null;
@@ -18,10 +19,7 @@ export const ExpenseHeader: React.FC<ExpenseHeaderProps> = ({
     <div className="flex flex-col space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold tracking-tight">Expenses</h1>
-        <Button>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Add Expense
-        </Button>
+        <AddExpenseDialog />
       </div>
       
       {loading && !error && (
