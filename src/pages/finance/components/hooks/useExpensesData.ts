@@ -14,7 +14,7 @@ export function useExpensesData() {
   const filters = useExpenseFilters(expenses, categories);
   const stats = useExpenseStats(expenses, categories);
   const formattedRecurringExpenses = useRecurringExpenses(expenses, categories);
-  const budgetData = useBudgetData();
+  const budgetData = useBudgetData(expenses); // Pass expenses to useBudgetData
   const tabManagement = useTabManagement();
 
   return {

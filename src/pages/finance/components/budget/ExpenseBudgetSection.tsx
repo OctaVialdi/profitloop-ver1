@@ -38,15 +38,13 @@ export function ExpenseBudgetSection({
           {budgetCategories.map((category) => (
             <div key={category.name} className="space-y-2">
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">{category.name}</p>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <span>{formatRupiah(category.current)}</span>
-                    <span className="mx-2">/</span>
-                    <span>{formatRupiah(category.total)}</span>
-                  </div>
-                </div>
+                <p className="text-sm font-medium">{category.name}</p>
                 <span className="text-sm font-medium">{category.usedPercentage}%</span>
+              </div>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <span>{formatRupiah(category.current)}</span>
+                <span className="mx-2">/</span>
+                <span>{formatRupiah(category.total)}</span>
               </div>
               <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-100">
                 <div

@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
 
 export type BudgetCategory = {
   id: string;
@@ -10,48 +11,54 @@ export type BudgetCategory = {
   status: "warning" | "safe" | "over";
 };
 
-export function useBudgetData() {
-  const [budgetView, setBudgetView] = useState<"monthly" | "quarterly" | "yearly">(
-    "monthly"
-  );
+export function useBudgetData(expenses: Expense[] = []) {
+  const [budgetView, setBudgetView] = useState<string>("current");
 
-  // Mock data - this would normally come from the API based on budgetView
-  const budgetCategories: BudgetCategory[] = [
-    {
-      id: "cat-1",
-      name: "Office Equipment",
-      current: 1500000,
-      total: 2000000,
-      usedPercentage: 75,
-      status: "safe"
-    },
-    {
-      id: "cat-2",
-      name: "Marketing",
-      current: 3800000,
-      total: 4000000,
-      usedPercentage: 95,
-      status: "warning"
-    },
-    {
-      id: "cat-3",
-      name: "Office Rent",
-      current: 5200000, 
-      total: 5000000,
-      usedPercentage: 104,
-      status: "over"
-    },
-    {
-      id: "cat-4",
-      name: "Software Subscriptions",
-      current: 800000,
-      total: 1000000,
-      usedPercentage: 80,
-      status: "safe"
-    }
-  ];
+  // Calculate department-based budget data from actual expenses
+  const budgetCategories = useMemo(() => {
+    // Group expenses by department
+    const departmentExpenses: Record<string, number> = {};
+    expenses.forEach(expense => {
+      if (expense.department) {
+        if (!departmentExpenses[expense.department]) {
+          departmentExpenses[expense.department] = 0;
+        }
+        departmentExpenses[expense.department] += expense.amount;
+      }
+    });
 
-  const handleBudgetViewChange = (view: "monthly" | "quarterly" | "yearly") => {
+    // Department budget allocation (in a real app, this would come from a budget table)
+    const departmentBudgets: Record<string, number> = {
+      "Office Equipment": 2000000,
+      "Marketing": 4000000,
+      "Office Rent": 5000000,
+      "Software Subscriptions": 1000000
+    };
+
+    // Create budget categories
+    return Object.entries(departmentBudgets).map(([department, total]) => {
+      const current = departmentExpenses[department] || 0;
+      const usedPercentage = Math.round((current / total) * 100);
+      
+      let status: "safe" | "warning" | "over" = "safe";
+      if (usedPercentage > 100) {
+        status = "over";
+      } else if (usedPercentage > 90) {
+        status = "warning";
+      }
+
+      return {
+        id: department.toLowerCase().replace(/\s+/g, '-'),
+        name: department,
+        current,
+        total,
+        usedPercentage,
+        status
+      };
+    });
+  }, [expenses]);
+
+  const handleBudgetViewChange = (view: string) => {
     setBudgetView(view);
   };
 

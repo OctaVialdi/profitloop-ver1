@@ -20,12 +20,12 @@ export function MonthlyComparisonChart({ monthlyComparisonData, loading = false 
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Comparison</CardTitle>
-          <CardDescription>Expense vs Income (in millions Rp)</CardDescription>
+      <Card className="h-full">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Monthly Comparison</CardTitle>
+          <CardDescription className="text-xs">Expense vs Income (in millions Rp)</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-[230px] flex items-center justify-center">
           <p>Loading chart data...</p>
         </CardContent>
       </Card>
@@ -33,27 +33,31 @@ export function MonthlyComparisonChart({ monthlyComparisonData, loading = false 
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Monthly Comparison</CardTitle>
-        <CardDescription>Expense vs Income (in millions Rp)</CardDescription>
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Monthly Comparison</CardTitle>
+        <CardDescription className="text-xs">Expense vs Income (in millions Rp)</CardDescription>
       </CardHeader>
-      <CardContent className="h-[300px]">
+      <CardContent className="h-[230px] pb-1">
         {monthlyComparisonData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={monthlyComparisonData}>
+            <LineChart 
+              data={monthlyComparisonData}
+              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
               <Tooltip formatter={formatTooltipValue} />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '10px', marginTop: '-15px' }} />
               <Line 
                 type="monotone" 
                 dataKey="expense" 
                 name="Expense" 
                 stroke="#ef4444" 
                 strokeWidth={2} 
-                activeDot={{ r: 6 }} 
+                activeDot={{ r: 5 }} 
+                dot={{ r: 3 }}
               />
               <Line 
                 type="monotone" 
@@ -61,12 +65,13 @@ export function MonthlyComparisonChart({ monthlyComparisonData, loading = false 
                 name="Income" 
                 stroke="#3b82f6" 
                 strokeWidth={2} 
+                dot={{ r: 3 }}
               />
             </LineChart>
           </ResponsiveContainer>
         ) : (
           <div className="h-full flex items-center justify-center">
-            <p className="text-muted-foreground">No data available</p>
+            <p className="text-muted-foreground text-sm">No data available</p>
           </div>
         )}
       </CardContent>

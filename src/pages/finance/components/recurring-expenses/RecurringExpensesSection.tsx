@@ -1,45 +1,61 @@
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatRupiah } from "@/utils/formatUtils";
 
 export interface RecurringExpense {
   title: string;
   amount: string | number;
   category: string;
+  description?: string;
   date: string;
   frequency: string;
   isPaid: boolean;
+  id: string;
 }
 
 interface RecurringExpensesSectionProps {
-  loading: boolean;
   recurringExpenses: RecurringExpense[];
+  loading?: boolean;
 }
 
 export function RecurringExpensesSection({
-  loading,
   recurringExpenses,
+  loading = false,
 }: RecurringExpensesSectionProps) {
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Recurring Expenses</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-5">
+                <div className="h-24 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold">Recurring Expenses</h3>
-        <Button variant="outline" size="sm" className="text-blue-600">
-          View All
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Recurring Expenses</h2>
+        <Button variant="outline" size="sm">
+          Manage
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {loading ? (
-          <Card className="overflow-hidden p-5">
-            <p>Loading recurring expenses...</p>
-          </Card>
-        ) : recurringExpenses.length === 0 ? (
-          <Card className="overflow-hidden p-5 col-span-full">
-            <p className="text-center text-gray-500">No recurring expenses found. Add a recurring expense to see it here.</p>
-          </Card>
-        ) : (
-          recurringExpenses.map((expense, index) => (
-            <Card key={index} className="overflow-hidden hover:shadow-md transition-all duration-200">
+
+      {recurringExpenses.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {recurringExpenses.map((expense) => (
+            <Card key={expense.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-5">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -50,26 +66,28 @@ export function RecurringExpensesSection({
                   </div>
                   <h3 className="text-xl font-bold">
                     {typeof expense.amount === 'number' 
-                      ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(expense.amount)
+                      ? formatRupiah(expense.amount)
                       : expense.amount}
                   </h3>
-                  <p className="text-xs text-muted-foreground">{expense.category}</p>
+                  <p className="text-xs text-muted-foreground">{expense.description || expense.category}</p>
                   <p className="text-xs text-muted-foreground flex items-center">
                     <span className="inline-block w-3 h-3 rounded-full bg-blue-200 mr-1"></span> {expense.date}
                   </p>
-                  <Button 
-                    variant={expense.isPaid ? "secondary" : "outline"} 
-                    className={`w-full ${expense.isPaid ? 'bg-green-50 text-green-600 hover:bg-green-100' : ''}`}
-                    size="sm"
-                  >
-                    {expense.isPaid ? '✓ Mark Paid' : 'Mark Paid'}
-                  </Button>
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p>No recurring expenses found</p>
+            <Button variant="outline" size="sm" className="mt-4">
+              Add Recurring Expense
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
