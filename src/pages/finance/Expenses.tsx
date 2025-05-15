@@ -12,7 +12,12 @@ import { ExpenseFilters } from "./components/expense-table/ExpenseFilters";
 import { ExpenseTable } from "./components/expense-table/ExpenseTable";
 import { ExpenseBreakdownChart } from "./components/expense-charts/ExpenseBreakdownChart";
 import { MonthlyComparisonChart } from "./components/expense-charts/MonthlyComparisonChart";
-import { ExpenseBreakdownItem, MonthlyComparisonItem, RecurringExpense, ExpenseTabType } from "./components/types/expense";
+import { 
+  ExpenseBreakdownItem, 
+  MonthlyComparisonItem, 
+  RecurringExpense as TypedRecurringExpense,  // Import with alias to avoid confusion
+  ExpenseTabType 
+} from "./components/types/expense";
 import { format } from "date-fns";
 
 export default function Expenses() {
@@ -67,10 +72,10 @@ export default function Expenses() {
   } : null;
 
   // Convert recurring expenses to the correct type
-  const typedRecurringExpenses: RecurringExpense[] = formattedRecurringExpenses.map(expense => ({
+  const typedRecurringExpenses: TypedRecurringExpense[] = formattedRecurringExpenses.map(expense => ({
     id: expense.id,
     title: expense.name,
-    amount: expense.amount,
+    amount: Number(expense.amount),  // Ensure this is a number
     category: expense.category,
     frequency: expense.frequency,
     department: expense.department,

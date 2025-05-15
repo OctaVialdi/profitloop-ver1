@@ -15,7 +15,7 @@ export interface MonthlyComparisonItem {
 export interface RecurringExpense {
   id: string;
   title: string;
-  amount: number;
+  amount: number;  // This is defined as a number
   date: string;
   category: string;
   frequency: string;
