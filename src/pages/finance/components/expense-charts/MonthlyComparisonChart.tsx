@@ -1,79 +1,82 @@
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { formatRupiah } from "@/utils/formatUtils";
 
 interface MonthlyComparisonChartProps {
-  monthlyComparisonData: Array<{
-    name: string;
-    expense: number;
-    income: number;
-  }>;
-  loading?: boolean;
+  loading: boolean;
+  monthlyComparisonData: any[];
 }
 
-export function MonthlyComparisonChart({ monthlyComparisonData, loading = false }: MonthlyComparisonChartProps) {
-  const formatTooltipValue = (value: number) => {
-    // Assuming the value is in millions, convert back to full amount for tooltip
-    return formatRupiah(value * 1000000);
-  };
-
+export function MonthlyComparisonChart({ loading, monthlyComparisonData }: MonthlyComparisonChartProps) {
   if (loading) {
     return (
-      <Card className="h-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Monthly Comparison</CardTitle>
-          <CardDescription className="text-xs">Expense vs Income (in millions Rp)</CardDescription>
+      <Card className="col-span-1">
+        <CardHeader>
+          <CardTitle className="text-lg">Monthly Comparison</CardTitle>
         </CardHeader>
-        <CardContent className="h-[230px] flex items-center justify-center">
-          <p>Loading chart data...</p>
+        <CardContent className="h-[280px] flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
         </CardContent>
       </Card>
     );
   }
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded shadow-md">
+          <p className="font-medium">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.fill }}>
+              {entry.name}: {formatRupiah(entry.value)}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <Card className="h-full">
+    <Card className="col-span-1">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Monthly Comparison</CardTitle>
-        <CardDescription className="text-xs">Expense vs Income (in millions Rp)</CardDescription>
+        <CardTitle className="text-lg">Monthly Comparison</CardTitle>
       </CardHeader>
-      <CardContent className="h-[230px] pb-1">
-        {monthlyComparisonData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart 
-              data={monthlyComparisonData}
-              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} />
-              <Tooltip formatter={formatTooltipValue} />
-              <Legend wrapperStyle={{ fontSize: '10px', marginTop: '-15px' }} />
-              <Line 
-                type="monotone" 
-                dataKey="expense" 
-                name="Expense" 
-                stroke="#ef4444" 
-                strokeWidth={2} 
-                activeDot={{ r: 5 }} 
-                dot={{ r: 3 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="income" 
-                name="Income" 
-                stroke="#3b82f6" 
-                strokeWidth={2} 
-                dot={{ r: 3 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="h-full flex items-center justify-center">
-            <p className="text-muted-foreground text-sm">No data available</p>
-          </div>
-        )}
+      <CardContent className="h-[260px] pt-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={monthlyComparisonData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            barSize={20}
+            barGap={8}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis 
+              dataKey="month" 
+              fontSize={12} 
+              tickLine={false} 
+              axisLine={{ stroke: '#E5E7EB' }}
+              tick={{ fill: '#6B7280' }}
+            />
+            <YAxis 
+              fontSize={12} 
+              tickFormatter={(value) => formatRupiah(value, false)}
+              tickLine={false}
+              axisLine={{ stroke: '#E5E7EB' }}
+              tick={{ fill: '#6B7280' }}
+              width={80}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend 
+              wrapperStyle={{ fontSize: '12px', paddingTop: '5px' }}
+              iconSize={8}
+              iconType="circle"
+            />
+            <Bar name="Department" dataKey="department" fill="#8884d8" radius={[2, 2, 0, 0]} />
+            <Bar name="Expenses" dataKey="expense" fill="#82ca9d" radius={[2, 2, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   );

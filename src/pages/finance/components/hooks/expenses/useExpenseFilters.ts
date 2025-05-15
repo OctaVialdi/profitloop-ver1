@@ -1,11 +1,12 @@
 
 import { useState } from "react";
 import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
+import { startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, startOfYear } from "date-fns";
 
 export function useExpenseFilters(expenses: Expense[], categories: ExpenseCategory[]) {
   // Filter state
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState("all-time");
+  const [dateFilter, setDateFilter] = useState("all");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   
@@ -30,28 +31,64 @@ export function useExpenseFilters(expenses: Expense[], categories: ExpenseCatego
     }
     
     // Apply date filter
-    if (dateFilter !== "all-time") {
+    if (dateFilter !== "all") {
       const now = new Date();
-      let startDate = new Date();
       
-      if (dateFilter === "this-month") {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      } else if (dateFilter === "last-month") {
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const endDate = new Date(now.getFullYear(), now.getMonth(), 0);
-        result = result.filter(expense => {
-          const expenseDate = new Date(expense.date);
-          return expenseDate >= startDate && expenseDate <= endDate;
-        });
-      } else if (dateFilter === "this-year") {
-        startDate = new Date(now.getFullYear(), 0, 1);
-      }
-      
-      if (dateFilter !== "last-month") {
-        result = result.filter(expense => {
-          const expenseDate = new Date(expense.date);
-          return expenseDate >= startDate;
-        });
+      switch(dateFilter) {
+        case "today":
+          const todayStart = startOfDay(now);
+          const todayEnd = endOfDay(now);
+          result = result.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= todayStart && expenseDate <= todayEnd;
+          });
+          break;
+          
+        case "this-week":
+          const weekStart = startOfWeek(now);
+          const weekEnd = endOfWeek(now);
+          result = result.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= weekStart && expenseDate <= weekEnd;
+          });
+          break;
+          
+        case "this-month":
+          const monthStart = startOfMonth(now);
+          const monthEnd = endOfMonth(now);
+          result = result.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= monthStart && expenseDate <= monthEnd;
+          });
+          break;
+          
+        case "last-month":
+          const lastMonth = subMonths(now, 1);
+          const lastMonthStart = startOfMonth(lastMonth);
+          const lastMonthEnd = endOfMonth(lastMonth);
+          result = result.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= lastMonthStart && expenseDate <= lastMonthEnd;
+          });
+          break;
+          
+        case "last-3-months":
+          const threeMonthsAgo = subMonths(now, 3);
+          result = result.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= threeMonthsAgo;
+          });
+          break;
+          
+        case "this-year":
+          const yearStart = startOfYear(now);
+          result = result.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= yearStart;
+          });
+          break;
+          
+        // Custom range would be handled separately through a date picker component
       }
     }
     
