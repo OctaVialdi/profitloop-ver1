@@ -111,6 +111,7 @@ export default function Expenses() {
             filteredExpenses={filteredExpenses}
             categories={categories}
             expenses={expenses}
+            onRefreshData={refreshData}
           />
         </CardContent>
       </Card>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -351,6 +350,114 @@ export const useExpenses = () => {
     }
   };
 
+  // New function to update an existing expense
+  const updateExpense = async (expenseId: string, expenseData: {
+    amount: number;
+    date: Date;
+    category: string;
+    description?: string;
+    department?: string;
+    expenseType?: string;
+    isRecurring: boolean;
+    recurringFrequency?: string;
+    receipt?: File;
+  }) => {
+    try {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      setLoading(true);
+
+      // Upload receipt if provided
+      let receiptUrl = null;
+      let receiptPath = null;
+
+      if (expenseData.receipt) {
+        try {
+          console.log("Starting receipt upload");
+          const uploadResult = await uploadReceipt(expenseData.receipt);
+          receiptUrl = uploadResult.url;
+          receiptPath = uploadResult.filePath;
+          console.log("Receipt uploaded successfully:", receiptUrl);
+        } catch (uploadError: any) {
+          console.error("Receipt upload failed:", uploadError);
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload receipt, but continuing with expense update",
+            variant: "destructive",
+          });
+        }
+      }
+
+      // Find category ID from name
+      const { data: categoryData, error: categoryError } = await supabase
+        .from("expense_categories")
+        .select("id")
+        .eq("name", expenseData.category)
+        .eq("organization_id", organization.id)
+        .single();
+
+      if (categoryError || !categoryData) {
+        console.error("Category error:", categoryError);
+        throw new Error(`Category ${expenseData.category} not found`);
+      }
+
+      // Format date to string for database
+      const formattedDate = format(expenseData.date, 'yyyy-MM-dd');
+      
+      const expenseUpdateData: any = {
+        amount: expenseData.amount,
+        date: formattedDate,
+        category_id: categoryData.id,
+        description: expenseData.description,
+        department: expenseData.department,
+        expense_type: expenseData.expenseType,
+        is_recurring: expenseData.isRecurring,
+        recurring_frequency: expenseData.recurringFrequency,
+      };
+
+      // Only update receipt fields if a new receipt was uploaded
+      if (receiptUrl) {
+        expenseUpdateData.receipt_url = receiptUrl;
+        expenseUpdateData.receipt_path = receiptPath;
+      }
+      
+      // Update expense
+      const { data, error } = await supabase
+        .from("expenses")
+        .update(expenseUpdateData)
+        .eq("id", expenseId)
+        .eq("organization_id", organization.id)
+        .select();
+
+      if (error) {
+        console.error("Error updating expense:", error);
+        throw error;
+      }
+
+      console.log("Expense updated successfully:", data);
+      
+      toast({
+        title: "Expense Updated",
+        description: "Your expense has been updated successfully",
+      });
+
+      await fetchExpenses();
+      return data?.[0];
+    } catch (error: any) {
+      console.error("Error updating expense:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update expense",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     error,
@@ -361,5 +468,6 @@ export const useExpenses = () => {
     loadInitialData,
     addCategory,
     addExpense,
+    updateExpense,
   };
 };

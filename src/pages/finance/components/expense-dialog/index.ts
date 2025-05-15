@@ -1,9 +1,20 @@
 
-// Export all components for ease of import
-export * from "./DateAmountSection";
-export * from "./ReceiptUploadSection";
-export * from "./CategorySection";
-export * from "./DescriptionSection";
-export * from "./DepartmentTypeSection";
-export * from "./RecurringSection";
-export * from "./constants";
+import CategorySection from "./CategorySection";
+import DateAmountSection from "./DateAmountSection";
+import DepartmentTypeSection from "./DepartmentTypeSection";
+import DescriptionSection from "./DescriptionSection";
+import ReceiptUploadSection from "./ReceiptUploadSection";
+import RecurringSection from "./RecurringSection";
+import AddExpenseDialog from "./AddExpenseDialog";
+import EditExpenseDialog from "./EditExpenseDialog";
+
+export {
+  CategorySection,
+  DateAmountSection,
+  DepartmentTypeSection,
+  DescriptionSection,
+  ReceiptUploadSection,
+  RecurringSection,
+  AddExpenseDialog,
+  EditExpenseDialog
+};

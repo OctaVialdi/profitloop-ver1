@@ -41,12 +41,14 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ExpenseDetailDialog } from "../expense-details/ExpenseDetailDialog";
+import { EditExpenseDialog } from "../expense-dialog";
 
 interface ExpenseTableProps {
   loading: boolean;
   filteredExpenses: Expense[];
   categories: ExpenseCategory[];
   expenses: Expense[];
+  onRefreshData?: () => void;
 }
 
 export function ExpenseTable({
@@ -54,6 +56,7 @@ export function ExpenseTable({
   filteredExpenses,
   categories,
   expenses,
+  onRefreshData,
 }: ExpenseTableProps) {
   // State for viewing receipt
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
@@ -62,6 +65,9 @@ export function ExpenseTable({
   // State for expense details
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  
+  // State for edit expense
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Helper to get category name
   const getCategoryName = (categoryId: string) => {
@@ -81,6 +87,19 @@ export function ExpenseTable({
   const handleViewDetails = (expense: Expense) => {
     setSelectedExpense(expense);
     setIsDetailOpen(true);
+  };
+  
+  // Function to handle editing expense
+  const handleEditExpense = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setIsEditOpen(true);
+  };
+
+  // Function to handle successful edit
+  const handleEditSuccess = () => {
+    if (onRefreshData) {
+      onRefreshData();
+    }
   };
 
   if (loading) {
@@ -209,7 +228,10 @@ export function ExpenseTable({
                             <span>Details</span>
                           </DropdownMenuItem>
                           
-                          <DropdownMenuItem className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer gap-2">
+                          <DropdownMenuItem 
+                            onClick={() => handleEditExpense(expense)}
+                            className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer gap-2"
+                          >
                             <FileEdit className="h-4 w-4 text-amber-500" />
                             <span>Edit</span>
                           </DropdownMenuItem>
@@ -274,6 +296,14 @@ export function ExpenseTable({
         isOpen={isDetailOpen}
         onOpenChange={setIsDetailOpen}
         categories={categories}
+      />
+      
+      {/* Edit Expense Dialog */}
+      <EditExpenseDialog 
+        expense={selectedExpense}
+        isOpen={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        onSuccess={handleEditSuccess}
       />
     </>
   );
