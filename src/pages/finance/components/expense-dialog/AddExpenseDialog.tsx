@@ -40,13 +40,13 @@ const AddExpenseDialog: React.FC = () => {
         <Button className="bg-[#8B5CF6] hover:bg-[#7c4ff1]">Add Expense</Button>
       </DialogTrigger>
       <DialogContent 
-        className="sm:max-w-[550px] aspect-square max-h-[90vh] p-0 overflow-hidden"
+        className="sm:max-w-[550px] aspect-square max-h-[90vh] p-0 overflow-hidden flex flex-col"
       >
-        <DialogHeader className="px-6 py-4 border-b">
+        <DialogHeader className="px-6 py-4 border-b sticky top-0 bg-background z-10">
           <DialogTitle className="text-xl">Add New Expense</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 h-[calc(90vh-130px)]">
+        <ScrollArea className="flex-1 overflow-y-auto">
           <div className="grid gap-4 px-6 py-4">
             {/* Date and Amount row */}
             <DateAmountSection
