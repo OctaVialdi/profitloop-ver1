@@ -122,6 +122,8 @@ export default function Expenses() {
           loading={loading}
           expenseBreakdownData={expenseBreakdownData}
           categories={categories}
+          chartTitle="Expense Breakdown"
+          chartDescription="By expense type"
         />
 
         {/* Month-over-Month Comparison */}

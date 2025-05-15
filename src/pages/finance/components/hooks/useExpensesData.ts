@@ -12,9 +12,9 @@ export function useExpensesData() {
   
   // Use specialized hooks
   const filters = useExpenseFilters(expenses, categories);
-  const stats = useExpenseStats(expenses, categories);
+  const stats = useExpenseStats(filters.filteredExpenses, categories, filters.dateFilter);
   const formattedRecurringExpenses = useRecurringExpenses(expenses, categories);
-  const budgetData = useBudgetData(expenses); // Pass expenses to useBudgetData
+  const budgetData = useBudgetData(expenses); 
   const tabManagement = useTabManagement();
 
   return {

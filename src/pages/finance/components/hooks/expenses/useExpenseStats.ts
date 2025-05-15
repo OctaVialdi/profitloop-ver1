@@ -4,7 +4,7 @@ import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { formatRupiah } from "@/utils/formatUtils";
 import { startOfMonth, endOfMonth, isWithinInterval, subMonths, format } from "date-fns";
 
-export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory[]) {
+export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory[], dateFilter?: string) {
   return useMemo(() => {
     if (expenses.length === 0) {
       return {
@@ -71,18 +71,19 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
       return currentDate > latestDate ? current : latest;
     }, expenses[0]);
 
-    // Group expenses by category for breakdown chart
-    const expensesByCategory = expenses.reduce((acc, expense) => {
-      const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
-      if (!acc[categoryName]) {
-        acc[categoryName] = 0;
+    // Group expenses by expense type for breakdown chart
+    const expensesByType = expenses.reduce((acc, expense) => {
+      // Use expense_type or default to 'Uncategorized'
+      const expenseType = expense.expense_type || 'Uncategorized';
+      if (!acc[expenseType]) {
+        acc[expenseType] = 0;
       }
-      acc[categoryName] += expense.amount;
+      acc[expenseType] += expense.amount;
       return acc;
     }, {} as Record<string, number>);
 
     // Convert to chart data format
-    const expenseBreakdownData = Object.entries(expensesByCategory).map(([name, value], index) => {
+    const expenseBreakdownData = Object.entries(expensesByType).map(([name, value], index) => {
       // Generate a color based on index
       const colors = ['#4C6FFF', '#50D1B2', '#FFB547', '#FF6B6B', '#6C63FF', '#00C9A7'];
       return {
@@ -166,5 +167,5 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
       expenseBreakdownData,
       monthlyComparisonData
     };
-  }, [expenses, categories]);
+  }, [expenses, categories, dateFilter]);
 }

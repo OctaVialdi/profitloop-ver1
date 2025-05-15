@@ -14,12 +14,16 @@ interface ExpenseBreakdownChartProps {
     name: string;
   }>;
   loading?: boolean;
+  chartTitle?: string;
+  chartDescription?: string;
 }
 
 export function ExpenseBreakdownChart({ 
   expenseBreakdownData, 
   categories,
-  loading = false 
+  loading = false,
+  chartTitle = "Expense Breakdown",
+  chartDescription = "By expense type"
 }: ExpenseBreakdownChartProps) {
   
   // Custom tooltip content
@@ -39,8 +43,8 @@ export function ExpenseBreakdownChart({
     return (
       <Card className="h-full">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Expense Breakdown</CardTitle>
-          <CardDescription className="text-xs">By category</CardDescription>
+          <CardTitle className="text-base">{chartTitle}</CardTitle>
+          <CardDescription className="text-xs">{chartDescription}</CardDescription>
         </CardHeader>
         <CardContent className="h-[230px] flex items-center justify-center">
           <p>Loading chart data...</p>
@@ -52,8 +56,8 @@ export function ExpenseBreakdownChart({
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Expense Breakdown</CardTitle>
-        <CardDescription className="text-xs">By department</CardDescription>
+        <CardTitle className="text-base">{chartTitle}</CardTitle>
+        <CardDescription className="text-xs">{chartDescription}</CardDescription>
       </CardHeader>
       <CardContent className="h-[230px] pb-1">
         {expenseBreakdownData.length > 0 ? (
