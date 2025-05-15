@@ -40,8 +40,11 @@ export function useExpensesData() {
     
     // Stats data
     totalExpense: stats.totalExpense,
-    highestExpense: stats.highestExpense,
-    latestExpense: stats.latestExpense,
+    currentMonthTotal: stats.currentMonthTotal,
+    previousMonthTotal: stats.previousMonthTotal,
+    monthOverMonthChange: stats.monthOverMonthChange,
+    formattedHighestExpense: stats.formattedHighestExpense,
+    formattedLatestExpense: stats.formattedLatestExpense,
     expenseBreakdownData: stats.expenseBreakdownData,
     monthlyComparisonData: stats.monthlyComparisonData,
     
@@ -51,7 +54,6 @@ export function useExpensesData() {
     // Budget data
     budgetView: budgetData.budgetView,
     budgetCategories: budgetData.budgetCategories,
-    handleBudgetViewChange: budgetData.handleBudgetViewChange,
     
     // Tab management
     activeTab: tabManagement.activeTab,

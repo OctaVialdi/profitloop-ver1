@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -204,6 +203,59 @@ export const useExpenses = () => {
     }
   };
 
+  const deleteCategory = async (categoryId: string) => {
+    try {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      // Check if the category is used in any expenses
+      const { data: usedExpenses, error: checkError } = await supabase
+        .from("expenses")
+        .select("id")
+        .eq("category_id", categoryId)
+        .limit(1);
+
+      if (checkError) throw checkError;
+      
+      // If the category is in use, don't delete it
+      if (usedExpenses && usedExpenses.length > 0) {
+        toast({
+          title: "Cannot Delete",
+          description: "This category is being used by one or more expenses. Remove those expenses first.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Delete the category
+      const { error } = await supabase
+        .from("expense_categories")
+        .delete()
+        .eq("id", categoryId)
+        .eq("organization_id", organization.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Category Deleted",
+        description: "Expense category has been deleted successfully",
+      });
+      
+      // Refresh the categories list
+      await fetchCategories();
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting expense category:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete expense category",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   const uploadReceipt = async (file: File) => {
     try {
       if (!file || !organization?.id) {
@@ -360,6 +412,7 @@ export const useExpenses = () => {
     fetchExpenses,
     loadInitialData,
     addCategory,
+    deleteCategory,
     addExpense,
   };
 };

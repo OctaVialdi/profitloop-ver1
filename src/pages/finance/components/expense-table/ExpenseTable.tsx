@@ -1,8 +1,16 @@
 
-import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { formatRupiah } from "@/utils/formatUtils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ExpenseCategory, Expense } from "@/hooks/useExpenses";
+import { formatRupiah } from "@/utils/formatUtils";
+import { Badge } from "@/components/ui/badge";
+import { format, differenceInDays } from "date-fns";
 
 interface ExpenseTableProps {
   loading: boolean;
@@ -15,87 +23,99 @@ export function ExpenseTable({
   loading,
   filteredExpenses,
   categories,
-  expenses,
 }: ExpenseTableProps) {
+  // Function to get payment status based on date
+  const getPaymentStatus = (expense: Expense) => {
+    const expenseDate = new Date(expense.date);
+    const today = new Date();
+    const daysDifference = differenceInDays(today, expenseDate);
+
+    // If recurring, show recurring badge
+    if (expense.is_recurring) {
+      return {
+        label: "Recurring",
+        color: "bg-blue-100 text-blue-800",
+      };
+    }
+    
+    // Recent expense (within last 3 days)
+    else if (daysDifference <= 3) {
+      return {
+        label: "Recent",
+        color: "bg-green-100 text-green-800",
+      };
+    }
+    
+    // Older expense (4-14 days)
+    else if (daysDifference <= 14) {
+      return {
+        label: "Processed",
+        color: "bg-gray-100 text-gray-800",
+      };
+    }
+    
+    // Very old expense
+    else {
+      return {
+        label: "Archived",
+        color: "bg-purple-100 text-purple-800",
+      };
+    }
+  };
+
   return (
-    <>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="text-gray-600 font-medium">Date</TableHead>
-              <TableHead className="text-gray-600 font-medium">Description</TableHead>
-              <TableHead className="text-gray-600 font-medium">Category</TableHead>
-              <TableHead className="text-gray-600 font-medium text-right">Amount</TableHead>
-              <TableHead className="text-gray-600 font-medium">Department</TableHead>
-              <TableHead className="text-gray-600 font-medium">Type</TableHead>
-              <TableHead className="text-gray-600 font-medium">Status</TableHead>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader className="bg-slate-50">
+          <TableRow>
+            <TableHead className="w-[180px]">Date</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Department</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-24 text-center">
+                Loading...
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                    <p>Loading expenses data...</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : filteredExpenses.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  {filteredExpenses.length === 0 && expenses.length > 0 ? 
-                    "No expenses found matching your filters." : 
-                    "No expenses found. Add your first expense!"}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredExpenses.map((expense) => {
-                // Find category name
-                const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
-                // Format date
-                const formattedDate = new Date(expense.date).toLocaleDateString('id-ID', { 
-                  day: '2-digit', month: 'short', year: 'numeric' 
-                });
-                
-                return (
-                  <TableRow key={expense.id} className="border-b hover:bg-gray-50">
-                    <TableCell className="font-medium">{formattedDate}</TableCell>
-                    <TableCell>{expense.description || "N/A"}</TableCell>
-                    <TableCell>{categoryName}</TableCell>
-                    <TableCell className={`text-right font-medium`}>
-                      {formatRupiah(expense.amount)}
-                    </TableCell>
-                    <TableCell>{expense.department || "N/A"}</TableCell>
-                    <TableCell>{expense.expense_type || "N/A"}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        expense.expense_type === "Operational" ? "bg-green-50 text-green-600" :
-                        expense.expense_type === "Fixed" ? "bg-blue-50 text-blue-600" :
-                        "bg-amber-50 text-amber-600"
-                      }`}>
-                        {expense.expense_type || "N/A"}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* Pagination section */}
-      <div className="p-4 border-t flex justify-between items-center">
-        <p className="text-sm text-gray-500">
-          Showing {filteredExpenses.length} of {expenses.length} expenses
-        </p>
-        <div className="flex gap-1">
-          <Button variant="outline" size="sm" disabled>Previous</Button>
-          <Button variant="outline" size="sm" disabled>Next</Button>
-        </div>
-      </div>
-    </>
+          ) : filteredExpenses.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-24 text-center">
+                No expenses found.
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredExpenses.map((expense) => {
+              const status = getPaymentStatus(expense);
+              return (
+                <TableRow key={expense.id}>
+                  <TableCell className="font-medium">
+                    {format(new Date(expense.date), "MMM d, yyyy")}
+                  </TableCell>
+                  <TableCell>{expense.description || "-"}</TableCell>
+                  <TableCell>{expense.category}</TableCell>
+                  <TableCell>{expense.department || "-"}</TableCell>
+                  <TableCell>{expense.expense_type || "-"}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={`${status.color} border-0`}>
+                      {status.label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {formatRupiah(expense.amount)}
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

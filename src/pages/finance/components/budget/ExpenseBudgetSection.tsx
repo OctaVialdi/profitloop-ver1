@@ -1,6 +1,5 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatRupiah } from "@/utils/formatUtils";
 
 export interface BudgetCategory {
@@ -14,24 +13,16 @@ export interface BudgetCategory {
 interface ExpenseBudgetSectionProps {
   budgetCategories: BudgetCategory[];
   budgetView: string;
-  onBudgetViewChange: (value: string) => void;
 }
 
 export function ExpenseBudgetSection({
   budgetCategories,
   budgetView,
-  onBudgetViewChange,
 }: ExpenseBudgetSectionProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-medium">Budget Overview</CardTitle>
-        <Tabs defaultValue={budgetView} value={budgetView} onValueChange={onBudgetViewChange}>
-          <TabsList>
-            <TabsTrigger value="current">Current</TabsTrigger>
-            <TabsTrigger value="forecast">Forecast</TabsTrigger>
-          </TabsList>
-        </Tabs>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

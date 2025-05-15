@@ -1,6 +1,5 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface MonthlyComparisonItem {
@@ -19,17 +18,6 @@ export function MonthlyComparisonChart({ monthlyComparisonData }: MonthlyCompari
       <CardHeader className="pb-2 border-b">
         <div className="flex items-center justify-between">
           <CardTitle>Monthly Comparison</CardTitle>
-          <Select defaultValue="6months">
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Time Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3months">Last 3 Months</SelectItem>
-              <SelectItem value="6months">Last 6 Months</SelectItem>
-              <SelectItem value="12months">Last 12 Months</SelectItem>
-              <SelectItem value="ytd">Year to Date</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </CardHeader>
       
