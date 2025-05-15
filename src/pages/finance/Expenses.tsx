@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useExpensesData } from "./components/hooks/useExpensesData";
 import { ExpenseHeader } from "./components/expense-header/ExpenseHeader";
@@ -48,8 +49,8 @@ export default function Expenses() {
     currentMonthTotal,
     previousMonthTotal,
     percentageChange,
-    highestExpense,
-    latestExpense,
+    formattedHighestExpense,
+    formattedLatestExpense,
     expenseBreakdownData,
     monthlyComparisonData,
     formattedRecurringExpenses,
@@ -57,22 +58,14 @@ export default function Expenses() {
     uniqueExpenseTypes
   } = useExpensesData();
 
-  // Ensure highestExpense and latestExpense are properly formatted and never null
-  const formattedHighestExpense = highestExpense ? {
-    amount: highestExpense.amount,
-    description: highestExpense.description || '',
-    date: highestExpense.date instanceof Date ? format(highestExpense.date, 'yyyy-MM-dd') : String(highestExpense.date)
-  } : {
+  // Ensure formattedHighestExpense and formattedLatestExpense are properly typed and never null
+  const highestExpense = formattedHighestExpense || {
     amount: 0,
     description: 'No expenses',
     date: ''
   };
   
-  const formattedLatestExpense = latestExpense ? {
-    amount: latestExpense.amount,
-    description: latestExpense.description || '',
-    date: latestExpense.date instanceof Date ? format(latestExpense.date, 'yyyy-MM-dd') : String(latestExpense.date)
-  } : {
+  const latestExpense = formattedLatestExpense || {
     amount: 0,
     description: 'No expenses',
     date: ''
@@ -120,8 +113,8 @@ export default function Expenses() {
         currentMonthTotal={currentMonthTotal}
         previousMonthTotal={previousMonthTotal}
         percentageChange={percentageChange}
-        highestExpense={formattedHighestExpense}
-        latestExpense={formattedLatestExpense}
+        highestExpense={highestExpense}
+        latestExpense={latestExpense}
         expenses={expenses}
       />
 
