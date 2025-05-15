@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Table,
@@ -33,6 +32,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 interface ExpenseTableProps {
   loading: boolean;
@@ -48,11 +54,20 @@ export function ExpenseTable({
 }: ExpenseTableProps) {
   // State for viewing receipt
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
   // Helper to get category name
   const getCategoryName = (categoryId: string) => {
     const category = categories.find((cat) => cat.id === categoryId);
     return category ? category.name : "Uncategorized";
+  };
+
+  // Function to handle viewing receipt
+  const handleViewReceipt = (url: string | undefined) => {
+    if (url) {
+      setReceiptUrl(url);
+      setIsReceiptOpen(true);
+    }
   };
 
   if (loading) {
@@ -164,11 +179,7 @@ export function ExpenseTable({
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => {
-                            if (expense.receipt_url) {
-                              setReceiptUrl(expense.receipt_url);
-                            }
-                          }}
+                          onClick={() => handleViewReceipt(expense.receipt_url)}
                           disabled={!expense.receipt_url}
                           className="flex items-center cursor-pointer"
                         >
@@ -199,7 +210,38 @@ export function ExpenseTable({
         </Table>
       </div>
 
-      {/* Receipt modal would go here */}
+      {/* Receipt Dialog */}
+      <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
+        <DialogContent className="sm:max-w-[700px] bg-white">
+          <DialogHeader>
+            <DialogTitle>Expense Receipt</DialogTitle>
+            <DialogClose />
+          </DialogHeader>
+          <div className="mt-4 flex justify-center">
+            {receiptUrl ? (
+              <div className="max-h-[70vh] overflow-auto">
+                {receiptUrl.toLowerCase().endsWith('.pdf') ? (
+                  <iframe
+                    src={receiptUrl}
+                    className="w-full h-[60vh]"
+                    title="Expense receipt"
+                  />
+                ) : (
+                  <img
+                    src={receiptUrl}
+                    alt="Expense receipt"
+                    className="max-w-full object-contain"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <p>No receipt available</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
