@@ -89,6 +89,11 @@ export default function ExpenseSettings() {
     if (result) {
       setNewTypeName("");
       setIsAddDialogOpen(false);
+      
+      toast({
+        title: "Success",
+        description: `Expense type "${newTypeName.trim()}" has been created`,
+      });
     }
   };
   
@@ -109,6 +114,11 @@ export default function ExpenseSettings() {
       setEditTypeName("");
       setIsEditDialogOpen(false);
       clearExpenseTypeCache();
+      
+      toast({
+        title: "Success",
+        description: `Expense type updated successfully`,
+      });
     }
   };
   
@@ -118,6 +128,11 @@ export default function ExpenseSettings() {
       const result = await deleteExpenseType(typeId);
       if (result) {
         clearExpenseTypeCache();
+        
+        toast({
+          title: "Success",
+          description: "Expense type deleted successfully",
+        });
       }
     }
   };
@@ -163,6 +178,11 @@ export default function ExpenseSettings() {
       }
     } catch (error) {
       console.error("Error saving mappings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save category-type mappings",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
