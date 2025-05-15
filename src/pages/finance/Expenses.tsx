@@ -19,11 +19,15 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import AddExpenseDialog from "./components/AddExpenseDialog";
 import { useExpenses } from "@/hooks/useExpenses";
+import { formatRupiah } from "@/utils/formatUtils";
 
 export default function Expenses() {
   // Navigation hooks
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Fetch expenses using the hook
+  const { expenses, categories, fetchExpenses, fetchCategories, loading } = useExpenses();
 
   // State to track the active view for expense breakdown and active tab
   const [expenseView, setExpenseView] = useState<"chart" | "table">("chart");
@@ -32,23 +36,96 @@ export default function Expenses() {
   // Budget view state
   const [budgetView, setBudgetView] = useState<"current" | "forecast">("current");
   
-  // Sample data for the charts and tables
-  const expenseBreakdownData = [
-    { name: "Equipment", value: 66.7, color: "#4C6FFF", amount: "Rp 15.000.000" },
-    { name: "Office Supplies", value: 11.1, color: "#50D1B2", amount: "Rp 2.500.000" },
-    { name: "Advertising", value: 22.2, color: "#FFB547", amount: "Rp 5.000.000" },
-  ];
+  // Fetch expenses and categories when component mounts
+  useEffect(() => {
+    fetchExpenses();
+    fetchCategories();
+  }, []);
 
-  // Updated monthly comparison data with more months
-  const monthlyComparisonData = [
-    { name: "Jan", expense: 10, income: 15 },
-    { name: "Feb", expense: 12, income: 14 },
-    { name: "Mar", expense: 16, income: 18 },
-    { name: "Apr", expense: 18, income: 22 },
-    { name: "May", expense: 14, income: 19 },
-    { name: "Jun", expense: 20, income: 23 },
-  ];
+  // Process expenses data for charts and display
+  const processExpenseData = () => {
+    if (expenses.length === 0) {
+      return {
+        totalExpense: 0,
+        highestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
+        latestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
+        expenseBreakdownData: [],
+        monthlyComparisonData: []
+      };
+    }
 
+    // Calculate total expense
+    const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+    // Find highest expense
+    const highestExpense = expenses.reduce((highest, current) => 
+      current.amount > highest.amount ? current : highest, expenses[0]);
+
+    // Find latest expense by date
+    const latestExpense = expenses.reduce((latest, current) => {
+      const currentDate = new Date(current.date);
+      const latestDate = new Date(latest.date);
+      return currentDate > latestDate ? current : latest;
+    }, expenses[0]);
+
+    // Group expenses by category for breakdown chart
+    const expensesByCategory = expenses.reduce((acc, expense) => {
+      const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
+      if (!acc[categoryName]) {
+        acc[categoryName] = 0;
+      }
+      acc[categoryName] += expense.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Convert to chart data format
+    const expenseBreakdownData = Object.entries(expensesByCategory).map(([name, value], index) => {
+      // Generate a color based on index
+      const colors = ['#4C6FFF', '#50D1B2', '#FFB547', '#FF6B6B', '#6C63FF', '#00C9A7'];
+      return {
+        name,
+        value: parseFloat(((value / totalExpense) * 100).toFixed(1)),
+        color: colors[index % colors.length],
+        amount: formatRupiah(value)
+      };
+    });
+
+    // Generate monthly comparison data (example - in a real app, this would come from the database)
+    const monthlyComparisonData = [
+      { name: "Jan", expense: 10, income: 15 },
+      { name: "Feb", expense: 12, income: 14 },
+      { name: "Mar", expense: 16, income: 18 },
+      { name: "Apr", expense: 18, income: 22 },
+      { name: "May", expense: 14, income: 19 },
+      { name: "Jun", expense: 20, income: 23 },
+    ];
+
+    return {
+      totalExpense,
+      highestExpense: {
+        amount: highestExpense.amount,
+        description: highestExpense.description || 'N/A',
+        date: new Date(highestExpense.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+      },
+      latestExpense: {
+        amount: latestExpense.amount,
+        description: latestExpense.description || 'N/A',
+        date: new Date(latestExpense.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+      },
+      expenseBreakdownData,
+      monthlyComparisonData
+    };
+  };
+
+  const {
+    totalExpense,
+    highestExpense,
+    latestExpense,
+    expenseBreakdownData,
+    monthlyComparisonData
+  } = processExpenseData();
+
+  // Sample data for recurring expenses (would typically come from API)
   const recurringExpenses = [
     {
       title: "Office Rent",
@@ -81,37 +158,6 @@ export default function Expenses() {
       date: "30 May 2025",
       frequency: "Monthly",
       isPaid: true
-    },
-  ];
-
-  // Sample data for expenses table
-  const expenseTransactions = [
-    {
-      date: "15 Apr 2025",
-      description: "Monthly office supplies restock",
-      category: "Office Supplies",
-      amount: "Rp 2.500.000",
-      department: "General",
-      type: "Operational",
-      status: "operational"
-    },
-    {
-      date: "10 Apr 2025",
-      description: "New laptops for IT team",
-      category: "Equipment",
-      amount: "Rp 15.000.000",
-      department: "IT",
-      type: "Fixed",
-      status: "fixed"
-    },
-    {
-      date: "05 Apr 2025",
-      description: "Social media campaign",
-      category: "Advertising",
-      amount: "Rp 5.000.000",
-      department: "Marketing",
-      type: "Variable",
-      status: "variable"
     },
   ];
 
@@ -296,12 +342,12 @@ export default function Expenses() {
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-2xl font-bold">Rp 0</h3>
+                    <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(0)}</h3>
                     <span className="flex items-center text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
                       <ArrowDown className="h-3 w-3 mr-1" /> 100.0%
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">vs. Rp 22.500.000 last month</p>
+                  <p className="text-xs text-muted-foreground">vs. {formatRupiah(totalExpense)} last month</p>
                 </div>
               </CardContent>
             </Card>
@@ -315,8 +361,8 @@ export default function Expenses() {
                 </div>
               </CardHeader>
               <CardContent>
-                <h3 className="text-2xl font-bold">Rp 22.500.000</h3>
-                <p className="text-xs text-muted-foreground mt-1">3 transactions</p>
+                <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(totalExpense)}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{expenses.length} transactions</p>
               </CardContent>
             </Card>
 
@@ -326,10 +372,10 @@ export default function Expenses() {
                 <p className="text-sm text-muted-foreground">Highest Expense</p>
               </CardHeader>
               <CardContent>
-                <h3 className="text-2xl font-bold">Rp 15.000.000</h3>
-                <p className="text-xs mt-1">New laptops for IT team</p>
+                <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(highestExpense.amount)}</h3>
+                <p className="text-xs mt-1">{highestExpense.description}</p>
                 <p className="text-xs text-muted-foreground flex items-center mt-1">
-                  <span className="inline-block w-3 h-3 rounded-full bg-blue-600 mr-1"></span> 10 Apr 2025
+                  <span className="inline-block w-3 h-3 rounded-full bg-blue-600 mr-1"></span> {highestExpense.date}
                 </p>
               </CardContent>
             </Card>
@@ -340,10 +386,10 @@ export default function Expenses() {
                 <p className="text-sm text-muted-foreground">Latest Transaction</p>
               </CardHeader>
               <CardContent>
-                <h3 className="text-lg font-medium">Monthly office supplies restock</h3>
-                <h4 className="text-xl font-bold mt-1">Rp 2.500.000</h4>
+                <h3 className="text-lg font-medium">{latestExpense.description}</h3>
+                <h4 className="text-xl font-bold mt-1">{loading ? 'Loading...' : formatRupiah(latestExpense.amount)}</h4>
                 <p className="text-xs text-muted-foreground flex items-center mt-1">
-                  <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span> 15 Apr 2025
+                  <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span> {latestExpense.date}
                 </p>
               </CardContent>
             </Card>
@@ -358,9 +404,9 @@ export default function Expenses() {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-lg font-medium">Total Expenses</p>
-                  <p className="text-sm opacity-80">3 total transactions</p>
+                  <p className="text-sm opacity-80">{expenses.length} total transactions</p>
                 </div>
-                <h2 className="text-3xl font-bold">Rp 22.500.000</h2>
+                <h2 className="text-3xl font-bold">{loading ? 'Loading...' : formatRupiah(totalExpense)}</h2>
               </div>
             </CardContent>
           </Card>
@@ -476,33 +522,52 @@ export default function Expenses() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {expenseTransactions.map((expense, index) => (
-                    <TableRow key={index} className="border-b hover:bg-gray-50">
-                      <TableCell className="font-medium">{expense.date}</TableCell>
-                      <TableCell>{expense.description}</TableCell>
-                      <TableCell>{expense.category}</TableCell>
-                      <TableCell className={`text-right ${expense.category === "Equipment" ? "text-red-500 font-medium" : ""}`}>
-                        {expense.amount}
-                      </TableCell>
-                      <TableCell>{expense.department}</TableCell>
-                      <TableCell>{expense.type}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          expense.status === "operational" ? "bg-green-50 text-green-600" :
-                          expense.status === "fixed" ? "bg-blue-50 text-blue-600" :
-                          "bg-amber-50 text-amber-600"
-                        }`}>
-                          {expense.type}
-                        </span>
-                      </TableCell>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">Loading expenses...</TableCell>
                     </TableRow>
-                  ))}
+                  ) : expenses.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">No expenses found. Add your first expense!</TableCell>
+                    </TableRow>
+                  ) : (
+                    expenses.map((expense, index) => {
+                      // Find category name
+                      const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
+                      // Format date
+                      const formattedDate = new Date(expense.date).toLocaleDateString('id-ID', { 
+                        day: '2-digit', month: 'short', year: 'numeric' 
+                      });
+                      
+                      return (
+                        <TableRow key={expense.id} className="border-b hover:bg-gray-50">
+                          <TableCell className="font-medium">{formattedDate}</TableCell>
+                          <TableCell>{expense.description || "N/A"}</TableCell>
+                          <TableCell>{categoryName}</TableCell>
+                          <TableCell className={`text-right font-medium`}>
+                            {formatRupiah(expense.amount)}
+                          </TableCell>
+                          <TableCell>{expense.department || "N/A"}</TableCell>
+                          <TableCell>{expense.expense_type || "N/A"}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              expense.expense_type === "Operational" ? "bg-green-50 text-green-600" :
+                              expense.expense_type === "Fixed" ? "bg-blue-50 text-blue-600" :
+                              "bg-amber-50 text-amber-600"
+                            }`}>
+                              {expense.expense_type || "N/A"}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>
             
             <div className="p-4 border-t flex justify-between items-center">
-              <p className="text-sm text-gray-500">Showing 3 of 3 expenses</p>
+              <p className="text-sm text-gray-500">Showing {expenses.length} of {expenses.length} expenses</p>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" disabled>Previous</Button>
                 <Button variant="outline" size="sm" disabled>Next</Button>
@@ -526,9 +591,9 @@ export default function Expenses() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem>All Categories</DropdownMenuItem>
-                      <DropdownMenuItem>Equipment</DropdownMenuItem>
-                      <DropdownMenuItem>Office Supplies</DropdownMenuItem>
-                      <DropdownMenuItem>Advertising</DropdownMenuItem>
+                      {categories.map((category) => (
+                        <DropdownMenuItem key={category.id}>{category.name}</DropdownMenuItem>
+                      ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -552,7 +617,15 @@ export default function Expenses() {
                   </Button>
                 </div>
                 
-                {expenseView === 'chart' ? (
+                {loading ? (
+                  <div className="flex items-center justify-center h-[350px]">
+                    <p>Loading expense breakdown...</p>
+                  </div>
+                ) : expenseBreakdownData.length === 0 ? (
+                  <div className="flex items-center justify-center h-[350px]">
+                    <p>No expense data available to display</p>
+                  </div>
+                ) : expenseView === 'chart' ? (
                   <div className="h-[350px] relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
