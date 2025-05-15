@@ -1,23 +1,19 @@
 
 import { useState } from "react";
 
-export type ExpenseActiveTab = "overview" | "compliance" | "approvals";
-
 export function useTabManagement() {
-  const [activeTab, setActiveTab] = useState<ExpenseActiveTab>("overview");
-  const [expenseView, setExpenseView] = useState("list");
+  const [activeTab, setActiveTab] = useState<"overview" | "compliance" | "approvals">("overview");
+  const [expenseView, setExpenseView] = useState<"chart" | "table">("chart");
   
+  // Handle tab change
   const handleTabChange = (value: string) => {
-    // Ensure we only set valid tab values
-    if (value === "overview" || value === "compliance" || value === "approvals") {
-      setActiveTab(value as ExpenseActiveTab);
-    }
+    setActiveTab(value as "overview" | "compliance" | "approvals");
   };
-  
+
   return {
     activeTab,
     expenseView,
     setExpenseView,
-    handleTabChange,
+    handleTabChange
   };
 }

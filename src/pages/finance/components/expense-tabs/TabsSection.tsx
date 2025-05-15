@@ -1,10 +1,9 @@
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ReactNode } from "react";
-import { ExpenseActiveTab } from "../hooks/expenses/useTabManagement";
 
 interface TabsSectionProps {
-  activeTab: ExpenseActiveTab;
+  activeTab: "overview" | "compliance" | "approvals";
   onTabChange: (value: string) => void;
   overviewContent: ReactNode;
 }

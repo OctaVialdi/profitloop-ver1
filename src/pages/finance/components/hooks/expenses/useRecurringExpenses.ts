@@ -6,19 +6,29 @@ import { formatRupiah } from "@/utils/formatUtils";
 export function useRecurringExpenses(expenses: Expense[], categories: ExpenseCategory[]) {
   return useMemo(() => {
     // Filter recurring expenses
-    const recurringExpenses = expenses.filter(expense => expense.is_recurring);
+    const recurringExpenses = expenses.filter(expense => expense.is_recurring === true);
     
-    // Format them for display
+    if (recurringExpenses.length === 0) {
+      return [];
+    }
+
+    // Convert recurring expenses to the display format
     return recurringExpenses.map(expense => {
-      const category = categories.find(cat => cat.id === expense.category_id);
+      // Find category name
+      const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
+      
+      // Format date
+      const formattedDate = expense.date ? new Date(expense.date).toLocaleDateString('id-ID', { 
+        day: '2-digit', month: 'short', year: 'numeric' 
+      }) : 'N/A';
       
       return {
-        title: expense.description || "Unnamed Expense",
+        title: expense.description || categoryName,
         amount: formatRupiah(expense.amount),
-        category: category?.name || "Uncategorized",
-        date: new Date(expense.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+        category: categoryName,
+        date: formattedDate,
         frequency: expense.recurring_frequency || "Monthly",
-        isPaid: Math.random() > 0.5 // This is just a placeholder since we don't track payment status
+        isPaid: true // Assuming all recorded expenses are paid
       };
     });
   }, [expenses, categories]);

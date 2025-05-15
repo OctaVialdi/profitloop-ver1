@@ -7,7 +7,6 @@ import { Expense } from "@/hooks/useExpenses";
 interface ExpenseStatsCardsProps {
   loading: boolean;
   totalExpense: number;
-  currentMonthExpense: number;
   highestExpense: {
     amount: number;
     description: string;
@@ -24,39 +23,10 @@ interface ExpenseStatsCardsProps {
 export function ExpenseStatsCards({
   loading,
   totalExpense,
-  currentMonthExpense,
   highestExpense,
   latestExpense,
   expenses,
 }: ExpenseStatsCardsProps) {
-  // Calculate previous month data (for comparison)
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-  
-  let previousMonth = currentMonth - 1;
-  let previousMonthYear = currentYear;
-  if (previousMonth < 0) {
-    previousMonth = 11;
-    previousMonthYear = currentYear - 1;
-  }
-  
-  const previousMonthExpenses = expenses.filter(expense => {
-    const expenseDate = new Date(expense.date);
-    return expenseDate.getMonth() === previousMonth && expenseDate.getFullYear() === previousMonthYear;
-  });
-  
-  const previousMonthTotal = previousMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  
-  // Calculate percentage change
-  const percentageChange = previousMonthTotal === 0 
-    ? 0 
-    : ((currentMonthExpense - previousMonthTotal) / previousMonthTotal * 100);
-  
-  const isIncrease = percentageChange >= 0;
-  const absPercentageChange = Math.abs(percentageChange);
-  const formattedPercentage = absPercentageChange.toFixed(1);
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Current Month Total */}
@@ -67,19 +37,12 @@ export function ExpenseStatsCards({
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(currentMonthExpense)}</h3>
-              {!loading && previousMonthTotal > 0 && (
-                <span className={`flex items-center text-xs ${isIncrease ? 'text-red-500 bg-red-50' : 'text-green-500 bg-green-50'} px-2 py-1 rounded-full`}>
-                  {isIncrease ? (
-                    <ArrowUp className="h-3 w-3 mr-1" />
-                  ) : (
-                    <ArrowDown className="h-3 w-3 mr-1" />
-                  )}
-                  {formattedPercentage}%
-                </span>
-              )}
+              <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(0)}</h3>
+              <span className="flex items-center text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
+                <ArrowDown className="h-3 w-3 mr-1" /> 100.0%
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">vs. {formatRupiah(previousMonthTotal)} last month</p>
+            <p className="text-xs text-muted-foreground">vs. {formatRupiah(totalExpense)} last month</p>
           </div>
         </CardContent>
       </Card>

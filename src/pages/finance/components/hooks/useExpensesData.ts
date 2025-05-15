@@ -4,7 +4,7 @@ import { useExpenseFilters } from "./expenses/useExpenseFilters";
 import { useExpenseStats } from "./expenses/useExpenseStats";
 import { useRecurringExpenses } from "./expenses/useRecurringExpenses";
 import { useBudgetData } from "./expenses/useBudgetData";
-import { useTabManagement, ExpenseActiveTab } from "./expenses/useTabManagement";
+import { useTabManagement } from "./expenses/useTabManagement";
 
 export function useExpensesData() {
   // Get data from context
@@ -13,7 +13,7 @@ export function useExpensesData() {
   // Use specialized hooks
   const filters = useExpenseFilters(expenses, categories);
   const stats = useExpenseStats(expenses, categories);
-  const recurring = useRecurringExpenses(expenses, categories);
+  const formattedRecurringExpenses = useRecurringExpenses(expenses, categories);
   const budgetData = useBudgetData();
   const tabManagement = useTabManagement();
 
@@ -40,14 +40,13 @@ export function useExpensesData() {
     
     // Stats data
     totalExpense: stats.totalExpense,
-    currentMonthExpense: stats.currentMonthExpense,
     highestExpense: stats.highestExpense,
     latestExpense: stats.latestExpense,
     expenseBreakdownData: stats.expenseBreakdownData,
     monthlyComparisonData: stats.monthlyComparisonData,
     
     // Recurring expenses
-    formattedRecurringExpenses: recurring,
+    formattedRecurringExpenses,
     
     // Budget data
     budgetView: budgetData.budgetView,
