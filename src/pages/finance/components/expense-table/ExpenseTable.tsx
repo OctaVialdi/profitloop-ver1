@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
+import { useExpenses, Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { formatRupiah } from "@/utils/formatUtils";
 import {
   MoreHorizontal,
@@ -43,6 +43,7 @@ import {
 import { ExpenseDetailDialog } from "../expense-details/ExpenseDetailDialog";
 import { EditExpenseDialog } from "../expense-dialog";
 import { DeleteExpenseDialog } from "../expense-dialog/DeleteExpenseDialog";
+import { toast } from "@/components/ui/use-toast";
 
 interface ExpenseTableProps {
   loading: boolean;
@@ -73,6 +74,9 @@ export function ExpenseTable({
   // State for delete expense
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Import the useExpenses hook
+  const { deleteExpense } = useExpenses();
 
   // Helper to get category name
   const getCategoryName = (categoryId: string) => {
@@ -119,14 +123,24 @@ export function ExpenseTable({
     
     setIsDeleting(true);
     try {
-      // Import the useExpenses hook within the component to use its deleteExpense method
-      const { deleteExpense } = require('@/hooks/useExpenses').useExpenses();
       await deleteExpense(selectedExpense.id);
       setIsDeleteOpen(false);
+      
+      toast({
+        title: "Expense deleted",
+        description: "The expense has been successfully deleted.",
+      });
       
       if (onRefreshData) {
         onRefreshData();
       }
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the expense. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsDeleting(false);
     }

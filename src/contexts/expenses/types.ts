@@ -1,5 +1,5 @@
 
-import { Expense, ExpenseCategory } from '@/hooks/useExpenses';
+import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
 
 export interface ExpensesContextType {
   expenses: Expense[];
@@ -9,7 +9,7 @@ export interface ExpensesContextType {
   fetchExpenses: () => Promise<Expense[]>;
   fetchCategories: () => Promise<ExpenseCategory[]>;
   refreshData: () => Promise<void>;
-  deleteExpense?: (expenseId: string) => Promise<boolean>;
+  deleteExpense: (expenseId: string) => Promise<boolean>;
 }
 
 export interface ExpensesProviderProps {

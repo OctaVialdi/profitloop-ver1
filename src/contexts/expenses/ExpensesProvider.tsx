@@ -92,6 +92,61 @@ export const ExpensesProvider = ({ children }: ExpensesProviderProps) => {
     }
   };
 
+  const deleteExpense = async (expenseId: string) => {
+    try {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      setLoading(true);
+      
+      // First, get the expense to check if it has a receipt
+      const { data: expenseData, error: fetchError } = await supabase
+        .from("expenses")
+        .select("receipt_path")
+        .eq("id", expenseId)
+        .eq("organization_id", organization.id)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      // Delete the expense from the database
+      const { error: deleteError } = await supabase
+        .from("expenses")
+        .delete()
+        .eq("id", expenseId)
+        .eq("organization_id", organization.id);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+      
+      // If the expense had a receipt, delete it from storage
+      if (expenseData?.receipt_path) {
+        const { error: storageError } = await supabase.storage
+          .from("expense-receipts")
+          .remove([expenseData.receipt_path]);
+          
+        if (storageError) {
+          console.error("Error deleting receipt file:", storageError);
+          // Continue with success even if file deletion fails
+        }
+      }
+
+      // Update the local expenses state
+      setExpenses(prev => prev.filter(expense => expense.id !== expenseId));
+      
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting expense:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const refreshData = async () => {
     setLoading(true);
     try {
@@ -130,7 +185,8 @@ export const ExpensesProvider = ({ children }: ExpensesProviderProps) => {
         error, 
         fetchExpenses, 
         fetchCategories, 
-        refreshData 
+        refreshData,
+        deleteExpense
       }}
     >
       {children}
