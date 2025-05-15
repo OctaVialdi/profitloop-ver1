@@ -9,6 +9,7 @@ export type RecurringExpense = {
   amount: number;
   date: string;
   isPaid: boolean;
+  frequency: string; // Added the frequency property to match component requirements
 };
 
 export function useRecurringExpenses(expenses: Expense[], categories: ExpenseCategory[]) {
@@ -29,6 +30,7 @@ export function useRecurringExpenses(expenses: Expense[], categories: ExpenseCat
             month: 'short', 
             year: 'numeric' 
           }),
+          frequency: expense.recurring_frequency || 'Monthly', // Add the frequency from the expense data or default to 'Monthly'
           isPaid: Math.random() > 0.5 // This would normally come from the actual data
         };
       });

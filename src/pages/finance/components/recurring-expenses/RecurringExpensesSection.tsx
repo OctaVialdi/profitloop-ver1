@@ -2,9 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface RecurringExpense {
+export interface RecurringExpense {
   title: string;
-  amount: string;
+  amount: string | number;
   category: string;
   date: string;
   frequency: string;
@@ -43,12 +43,16 @@ export function RecurringExpensesSection({
               <CardContent className="p-5">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="font-medium">{expense.title}</p>
+                    <p className="font-medium truncate">{expense.title}</p>
                     <span className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full">
                       {expense.frequency}
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold">{expense.amount}</h3>
+                  <h3 className="text-xl font-bold">
+                    {typeof expense.amount === 'number' 
+                      ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(expense.amount)
+                      : expense.amount}
+                  </h3>
                   <p className="text-xs text-muted-foreground">{expense.category}</p>
                   <p className="text-xs text-muted-foreground flex items-center">
                     <span className="inline-block w-3 h-3 rounded-full bg-blue-200 mr-1"></span> {expense.date}
