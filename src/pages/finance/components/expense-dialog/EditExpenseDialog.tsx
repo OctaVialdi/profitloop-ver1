@@ -262,63 +262,59 @@ const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
             validationErrors={validationErrors}
           />
 
-          {/* Two column layout for more compact form */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              {/* Category with add new option */}
-              <CategorySection
-                category={category}
-                setCategory={(value) => {
-                  setCategory(value);
-                  setValidationErrors({...validationErrors, category: ''});
-                }}
-                showAddCategory={showAddCategory}
-                setShowAddCategory={setShowAddCategory}
-                newCategoryName={newCategoryName}
-                setNewCategoryName={setNewCategoryName}
-                handleAddCategory={handleAddCategory}
-                categories={categories}
-                validationErrors={validationErrors}
-              />
+          {/* Category and Department/Type row */}
+          <div className="grid gap-4">
+            {/* Category with add new option */}
+            <CategorySection
+              category={category}
+              setCategory={(value) => {
+                setCategory(value);
+                setValidationErrors({...validationErrors, category: ''});
+              }}
+              showAddCategory={showAddCategory}
+              setShowAddCategory={setShowAddCategory}
+              newCategoryName={newCategoryName}
+              setNewCategoryName={setNewCategoryName}
+              handleAddCategory={handleAddCategory}
+              categories={categories}
+              validationErrors={validationErrors}
+            />
 
-              {/* Department and Expense Type */}
-              <DepartmentTypeSection
-                department={department}
-                setDepartment={(value) => {
-                  setDepartment(value);
-                  setValidationErrors({...validationErrors, department: ''});
-                }}
-                expenseType={expenseType}
-                setExpenseType={(value) => {
-                  setExpenseType(value);
-                  setValidationErrors({...validationErrors, expenseType: ''});
-                }}
-                departments={departments}
-                departmentsLoading={departmentsLoading}
-                validationErrors={validationErrors}
-              />
-            </div>
-
-            <div className="space-y-4">
-              {/* Description */}
-              <DescriptionSection 
-                description={description}
-                setDescription={setDescription}
-              />
-
-              {/* Recurring Expense and Frequency */}
-              <RecurringSection
-                isRecurring={isRecurring}
-                setIsRecurring={setIsRecurring}
-                recurringFrequency={recurringFrequency}
-                setRecurringFrequency={(value) => {
-                  setRecurringFrequency(value);
-                  setValidationErrors({...validationErrors, recurringFrequency: ''});
-                }}
-                validationErrors={validationErrors}
-              />
-            </div>
+            {/* Department and Expense Type */}
+            <DepartmentTypeSection
+              department={department}
+              setDepartment={(value) => {
+                setDepartment(value);
+                setValidationErrors({...validationErrors, department: ''});
+              }}
+              expenseType={expenseType}
+              setExpenseType={(value) => {
+                setExpenseType(value);
+                setValidationErrors({...validationErrors, expenseType: ''});
+              }}
+              departments={departments}
+              departmentsLoading={departmentsLoading}
+              validationErrors={validationErrors}
+            />
+            
+            {/* Recurring Expense and Frequency */}
+            <RecurringSection
+              isRecurring={isRecurring}
+              setIsRecurring={setIsRecurring}
+              recurringFrequency={recurringFrequency}
+              setRecurringFrequency={(value) => {
+                setRecurringFrequency(value);
+                setValidationErrors({...validationErrors, recurringFrequency: ''});
+              }}
+              validationErrors={validationErrors}
+            />
           </div>
+
+          {/* Description section - moved to its own row below */}
+          <DescriptionSection 
+            description={description}
+            setDescription={setDescription}
+          />
 
           {/* Receipt upload section */}
           <ReceiptUploadSection

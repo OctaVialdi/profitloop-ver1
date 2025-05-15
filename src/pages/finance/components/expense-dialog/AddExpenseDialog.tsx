@@ -230,12 +230,12 @@ const AddExpenseDialog: React.FC = () => {
       <DialogTrigger asChild>
         <Button className="bg-[#8B5CF6] hover:bg-[#7c4ff1]">Add Expense</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Add New Expense</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-6 py-4">
+        <div className="grid gap-4 py-4">
           {/* Date and Amount row */}
           <DateAmountSection
             date={date}
@@ -243,14 +243,6 @@ const AddExpenseDialog: React.FC = () => {
             amount={amount}
             handleAmountChange={handleAmountChange}
             validationErrors={validationErrors}
-          />
-
-          {/* Receipt upload section */}
-          <ReceiptUploadSection
-            receipt={receipt}
-            receiptPreview={receiptPreview}
-            handleReceiptUpload={handleReceiptUpload}
-            removeReceipt={removeReceipt}
           />
 
           {/* Category with add new option */}
@@ -267,12 +259,6 @@ const AddExpenseDialog: React.FC = () => {
             handleAddCategory={handleAddCategory}
             categories={categories}
             validationErrors={validationErrors}
-          />
-
-          {/* Description */}
-          <DescriptionSection 
-            description={description}
-            setDescription={setDescription}
           />
 
           {/* Department and Expense Type row */}
@@ -304,9 +290,23 @@ const AddExpenseDialog: React.FC = () => {
             validationErrors={validationErrors}
           />
 
+          {/* Description - moved to its own row below */}
+          <DescriptionSection 
+            description={description}
+            setDescription={setDescription}
+          />
+
+          {/* Receipt upload section */}
+          <ReceiptUploadSection
+            receipt={receipt}
+            receiptPreview={receiptPreview}
+            handleReceiptUpload={handleReceiptUpload}
+            removeReceipt={removeReceipt}
+          />
+
           {/* Submit Button */}
           <Button 
-            className="h-[60px] bg-[#8B5CF6] hover:bg-[#7c4ff1] mt-4" 
+            className="h-[50px] bg-[#8B5CF6] hover:bg-[#7c4ff1] mt-2" 
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
