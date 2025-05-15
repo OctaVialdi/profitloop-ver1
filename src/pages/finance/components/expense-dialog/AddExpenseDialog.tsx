@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useExpenses } from "@/hooks/useExpenses";
@@ -230,13 +231,15 @@ const AddExpenseDialog: React.FC = () => {
       <DialogTrigger asChild>
         <Button className="bg-[#8B5CF6] hover:bg-[#7c4ff1]">Add Expense</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px] max-h-[85vh] p-0">
+      <DialogContent 
+        className="sm:max-w-[550px] aspect-square max-h-[90vh] p-0 overflow-hidden"
+      >
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="text-xl">Add New Expense</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[calc(85vh-130px)] px-6 py-4">
-          <div className="grid gap-4">
+        <ScrollArea className="flex-1 h-[calc(90vh-130px)]">
+          <div className="grid gap-4 px-6 py-4">
             {/* Date and Amount row */}
             <DateAmountSection
               date={date}
