@@ -14,6 +14,7 @@ import CashManagement from "@/pages/finance/CashManagement";
 import DaftarTransaksi from "@/pages/finance/DaftarTransaksi";
 import { Outlet } from "react-router-dom";
 import { ExpensesProvider } from "@/contexts/expenses";
+import { AuthCheck } from "@/components/AuthCheck";
 
 export const financeRoutes = (
   <Route
@@ -23,7 +24,9 @@ export const financeRoutes = (
       <ProtectedRoute>
         <DashboardLayout>
           <FinanceLayout>
-            <Outlet />
+            <AuthCheck>
+              <Outlet />
+            </AuthCheck>
           </FinanceLayout>
         </DashboardLayout>
       </ProtectedRoute>
@@ -47,6 +50,6 @@ export const financeRoutes = (
     <Route path="cash-management" element={<CashManagement />} />
     <Route path="cash-management/daftar-transaksi" element={<DaftarTransaksi />} />
     {/* Redirect to dashboard if no path matches */}
-    <Route path="" element={<Navigate to="/finance/dashboard" replace />} />
+    <Route path="" element={<Navigate to="/dashboard" replace />} />
   </Route>
 );

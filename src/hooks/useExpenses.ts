@@ -41,8 +41,8 @@ export const useExpenses = () => {
       setError(null);
       
       if (!organization?.id) {
-        console.error("No organization ID found");
-        setError("No organization ID found");
+        console.error("No organization ID found in fetchCategories");
+        setError("No organization ID found. Please ensure your account is properly set up.");
         return [];
       }
       
@@ -79,8 +79,8 @@ export const useExpenses = () => {
       setError(null);
       
       if (!organization?.id) {
-        console.error("No organization ID found");
-        setError("No organization ID found");
+        console.error("No organization ID found in fetchExpenses");
+        setError("No organization ID found. Please ensure your account is properly set up.");
         return [];
       }
       
@@ -128,7 +128,13 @@ export const useExpenses = () => {
     setError(null);
     
     try {
-      console.log("Starting to load expense data...");
+      if (!organization?.id) {
+        console.error("No organization ID found in loadInitialData");
+        setError("No organization ID found. Please check your account setup.");
+        throw new Error("No organization ID found");
+      }
+      
+      console.log("Starting to load expense data for organization:", organization.id);
       // First fetch categories
       await fetchCategories();
       console.log("Categories loaded, now fetching expenses...");
