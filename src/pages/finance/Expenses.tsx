@@ -27,7 +27,10 @@ export default function Expenses() {
 
   // State to track the active view for expense breakdown and active tab
   const [expenseView, setExpenseView] = useState<"chart" | "table">("chart");
-  const [activeTab, setActiveTab] = useState<"overview" | "budget" | "compliance" | "approvals">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "compliance" | "approvals">("overview");
+  
+  // Budget view state
+  const [budgetView, setBudgetView] = useState<"current" | "forecast">("current");
   
   // Sample data for the charts and tables
   const expenseBreakdownData = [
@@ -146,19 +149,98 @@ export default function Expenses() {
 
   // Handle tab change
   const handleTabChange = (value: string) => {
-    setActiveTab(value as "overview" | "budget" | "compliance" | "approvals");
+    setActiveTab(value as "overview" | "compliance" | "approvals");
   };
 
   // Handle budget view selection
   const handleBudgetViewChange = (value: string) => {
-    switch (value) {
-      case "current":
-        // Already on current budget page
-        break;
-      case "forecast":
-        navigate("/finance/expenses/budget/forecast");
-        break;
+    if (value === "forecast") {
+      navigate("/finance/expenses/budget/forecast");
+    } else {
+      setBudgetView("current");
     }
+  };
+
+  // Render budget section
+  const renderBudgetSection = () => {
+    return (
+      <div className="space-y-6">
+        {/* Budget View Selector Dropdown */}
+        <div className="mb-6">
+          <Select defaultValue="current" onValueChange={handleBudgetViewChange}>
+            <SelectTrigger className="w-[240px] bg-white">
+              <SelectValue placeholder="Select Budget View" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="current">Current Budget</SelectItem>
+              <SelectItem value="forecast">Budget Forecast</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Budget Tracking Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Budget Tracking</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-green-500"></div>
+              <span>Safe</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+              <span>Warning</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-red-500"></div>
+              <span>Over Budget</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Budget Categories */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {budgetCategories.map((category, index) => (
+            <Card key={index} className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-medium">{category.name}</h3>
+                <div className="flex items-center">
+                  <span className="text-sm">
+                    Rp{category.current.toLocaleString()} / Rp{category.total.toLocaleString()}
+                  </span>
+                  <Button variant="ghost" size="sm" className="ml-2 p-0 h-auto">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <Progress
+                value={category.usedPercentage}
+                className={`h-2 ${
+                  category.status === "safe" 
+                    ? "bg-gray-200" 
+                    : category.status === "warning" 
+                    ? "bg-yellow-200" 
+                    : "bg-red-200"
+                }`}
+              >
+                <div
+                  className={`h-full ${
+                    category.status === "safe" 
+                      ? "bg-green-500" 
+                      : category.status === "warning" 
+                      ? "bg-yellow-500" 
+                      : "bg-red-500"
+                  }`}
+                  style={{ width: `${category.usedPercentage}%` }}
+                ></div>
+              </Progress>
+              <div className="flex justify-end mt-2">
+                <span className="text-sm">{category.usedPercentage}% used</span>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -179,7 +261,7 @@ export default function Expenses() {
         </div>
       </div>
 
-      {/* Top Navigation Tabs */}
+      {/* Top Navigation Tabs - Removed the arrows and Budget tab */}
       <Tabs defaultValue="overview" value={activeTab} className="w-full" onValueChange={handleTabChange}>
         <TabsList className="bg-card rounded-xl p-1 border overflow-auto">
           <TabsTrigger 
@@ -187,12 +269,6 @@ export default function Expenses() {
             className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
           >
             Overview
-          </TabsTrigger>
-          <TabsTrigger 
-            value="budget" 
-            className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-          >
-            Budget
           </TabsTrigger>
           <TabsTrigger 
             value="compliance" 
@@ -209,7 +285,7 @@ export default function Expenses() {
         </TabsList>
 
         {/* Overview Tab Content */}
-        <TabsContent value="overview" className="mt-6">
+        <TabsContent value="overview" className="mt-6 space-y-10">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Current Month Total */}
@@ -273,8 +349,11 @@ export default function Expenses() {
             </Card>
           </div>
 
+          {/* Budget Section - Integrated from ExpenseBudget.tsx */}
+          {renderBudgetSection()}
+
           {/* Total Expenses Summary */}
-          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-blue-600 to-blue-800 text-white mt-6">
+          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-blue-600 to-blue-800 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -287,7 +366,7 @@ export default function Expenses() {
           </Card>
 
           {/* Recurring Expenses */}
-          <div className="space-y-4 mt-6">
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-semibold">Recurring Expenses</h3>
               <Button variant="outline" size="sm" className="text-blue-600">
@@ -325,7 +404,7 @@ export default function Expenses() {
           </div>
 
           {/* Expenses Table */}
-          <Card className="overflow-hidden shadow-md border mt-6">
+          <Card className="overflow-hidden shadow-md border">
             <CardHeader className="bg-gray-50 border-b p-4">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="relative w-full max-w-sm">
@@ -387,7 +466,7 @@ export default function Expenses() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
-                    <TableHead className="text-gray-600 font-medium">Date <ArrowDown className="inline h-3 w-3" /></TableHead>
+                    <TableHead className="text-gray-600 font-medium">Date</TableHead>
                     <TableHead className="text-gray-600 font-medium">Description</TableHead>
                     <TableHead className="text-gray-600 font-medium">Category</TableHead>
                     <TableHead className="text-gray-600 font-medium text-right">Amount</TableHead>
@@ -432,7 +511,7 @@ export default function Expenses() {
           </Card>
 
           {/* Bottom Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Expense Breakdown - Updated with Table View option */}
             <Card className="overflow-hidden shadow-md">
               <CardHeader className="pb-2 border-b">
@@ -613,84 +692,6 @@ export default function Expenses() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-        
-        {/* Budget Tab Content */}
-        <TabsContent value="budget" className="mt-6 space-y-6">
-          {/* Budget View Selector Dropdown */}
-          <div className="mb-6">
-            <Select defaultValue="current" onValueChange={handleBudgetViewChange}>
-              <SelectTrigger className="w-[240px] bg-white">
-                <SelectValue placeholder="Select Budget View" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="current">Current Budget</SelectItem>
-                <SelectItem value="forecast">Budget Forecast</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Budget Tracking Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Budget Tracking</h2>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                <span>Safe</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-                <span>Warning</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                <span>Over Budget</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Budget Categories */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {budgetCategories.map((category, index) => (
-              <Card key={index} className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-medium">{category.name}</h3>
-                  <div className="flex items-center">
-                    <span className="text-sm">
-                      Rp{category.current.toLocaleString()} / Rp{category.total.toLocaleString()}
-                    </span>
-                    <Button variant="ghost" size="sm" className="ml-2 p-0 h-auto">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <Progress
-                  value={category.usedPercentage}
-                  className={`h-2 ${
-                    category.status === "safe" 
-                      ? "bg-gray-200" 
-                      : category.status === "warning" 
-                      ? "bg-yellow-200" 
-                      : "bg-red-200"
-                  }`}
-                >
-                  <div
-                    className={`h-full ${
-                      category.status === "safe" 
-                        ? "bg-green-500" 
-                        : category.status === "warning" 
-                        ? "bg-yellow-500" 
-                        : "bg-red-500"
-                    }`}
-                    style={{ width: `${category.usedPercentage}%` }}
-                  ></div>
-                </Progress>
-                <div className="flex justify-end mt-2">
-                  <span className="text-sm">{category.usedPercentage}% used</span>
-                </div>
-              </Card>
-            ))}
           </div>
         </TabsContent>
         
