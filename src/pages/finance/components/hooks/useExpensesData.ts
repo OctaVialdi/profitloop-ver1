@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useExpenses, Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { startOfMonth, endOfMonth, format, subMonths } from "date-fns";
@@ -168,6 +167,19 @@ export function useExpensesData() {
     ? expenses.reduce((max, expense) => expense.amount > max.amount ? expense : max, expenses[0]) 
     : null;
   
+  // Format highestExpense for display or provide default
+  const formattedHighestExpense = highestExpense ? {
+    amount: highestExpense.amount,
+    description: highestExpense.description || 'No description',
+    date: highestExpense.date instanceof Date 
+      ? format(new Date(highestExpense.date), 'MMM dd, yyyy')
+      : String(highestExpense.date)
+  } : {
+    amount: 0,
+    description: 'No expenses',
+    date: ''
+  };
+  
   // Find latest expense
   const latestExpense = expenses.length 
     ? [...expenses].sort((a, b) => {
@@ -176,6 +188,19 @@ export function useExpensesData() {
         return dateB.getTime() - dateA.getTime();
       })[0]
     : null;
+  
+  // Format latestExpense for display or provide default
+  const formattedLatestExpense = latestExpense ? {
+    amount: latestExpense.amount,
+    description: latestExpense.description || 'No description',
+    date: latestExpense.date instanceof Date 
+      ? format(new Date(latestExpense.date), 'MMM dd, yyyy')
+      : String(latestExpense.date)
+  } : {
+    amount: 0,
+    description: 'No expenses',
+    date: ''
+  };
 
   // Get unique departments and expense types for filters
   const uniqueDepartments = Array.from(new Set(expenses
@@ -281,8 +306,8 @@ export function useExpensesData() {
     currentMonthTotal,
     previousMonthTotal,
     percentageChange,
-    highestExpense,
-    latestExpense,
+    formattedHighestExpense,
+    formattedLatestExpense,
     expenseBreakdownData,
     monthlyComparisonData,
     formattedRecurringExpenses,

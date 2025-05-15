@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useExpensesData } from "./components/hooks/useExpensesData";
 import { ExpenseHeader } from "./components/expense-header/ExpenseHeader";
@@ -58,18 +57,26 @@ export default function Expenses() {
     uniqueExpenseTypes
   } = useExpensesData();
 
-  // Ensure highestExpense and latestExpense are properly formatted
+  // Ensure highestExpense and latestExpense are properly formatted and never null
   const formattedHighestExpense = highestExpense ? {
     amount: highestExpense.amount,
     description: highestExpense.description || '',
     date: highestExpense.date instanceof Date ? format(highestExpense.date, 'yyyy-MM-dd') : String(highestExpense.date)
-  } : null;
+  } : {
+    amount: 0,
+    description: 'No expenses',
+    date: ''
+  };
   
   const formattedLatestExpense = latestExpense ? {
     amount: latestExpense.amount,
     description: latestExpense.description || '',
     date: latestExpense.date instanceof Date ? format(latestExpense.date, 'yyyy-MM-dd') : String(latestExpense.date)
-  } : null;
+  } : {
+    amount: 0,
+    description: 'No expenses',
+    date: ''
+  };
 
   // Convert recurring expenses to the correct type
   const typedRecurringExpenses: TypedRecurringExpense[] = formattedRecurringExpenses.map(expense => ({
