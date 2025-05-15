@@ -5,7 +5,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import FinanceLayout from "@/components/layout/FinanceLayout";
 import FinanceDashboard from "@/pages/finance/Dashboard";
 import Expenses from "@/pages/finance/Expenses";
-import ExpenseSettings from "@/pages/finance/ExpenseSettings";
 import ExpenseBudgetForecast from "@/pages/finance/ExpenseBudgetForecast";
 import IncomeTarget from "@/pages/finance/IncomeTarget";
 import ReminderBills from "@/pages/finance/ReminderBills";
@@ -34,11 +33,6 @@ export const financeRoutes = (
     <Route path="expenses" element={
       <ExpensesProvider>
         <Expenses />
-      </ExpensesProvider>
-    } />
-    <Route path="expenses/settings" element={
-      <ExpensesProvider>
-        <ExpenseSettings />
       </ExpensesProvider>
     } />
     <Route path="expenses/budget/forecast" element={

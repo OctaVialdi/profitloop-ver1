@@ -14,3 +14,4 @@ export * from './expense-dialog/DepartmentTypeSection';
 export * from './expense-dialog/hooks/useExpenseForm';
 export * from './expense-dialog/components/DialogFooter';
 export * from './hooks/useExpensesData';
+export * from './hooks/expenses/useTabManagement';

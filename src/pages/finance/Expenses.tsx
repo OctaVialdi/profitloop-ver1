@@ -12,6 +12,7 @@ import { ExpenseFilters } from "./components/expense-table/ExpenseFilters";
 import { ExpenseTable } from "./components/expense-table/ExpenseTable";
 import { ExpenseBreakdownChart } from "./components/expense-charts/ExpenseBreakdownChart";
 import { MonthlyComparisonChart } from "./components/expense-charts/MonthlyComparisonChart";
+import ExpenseSettings from "./ExpenseSettings";
 
 export default function Expenses() {
   // Navigation hooks
@@ -146,6 +147,7 @@ export default function Expenses() {
         activeTab={activeTab}
         onTabChange={handleTabChange}
         overviewContent={overviewContent}
+        settingsContent={<ExpenseSettings />}
       />
     </div>
   );

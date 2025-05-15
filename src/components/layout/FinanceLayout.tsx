@@ -23,7 +23,6 @@ export default function FinanceLayout({ children }: FinanceLayoutProps) {
   const tabs: Tab[] = [
     { name: "Dashboard", href: "/finance/dashboard" },
     { name: "Expenses", href: "/finance/expenses" },
-    { name: "Expense Settings", href: "/finance/expenses/settings", requiredRole: "admin" },
     { name: "Income Target", href: "/finance/income-target" },
     { name: "Reminder Bills", href: "/finance/reminder-bills" },
     { name: "Payroll Summary", href: "/finance/payroll-summary" },
