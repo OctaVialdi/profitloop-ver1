@@ -18,28 +18,28 @@ export default function ExpenseBudget() {
       current: 5000000,
       total: 50000000,
       usedPercentage: 10,
-      status: "safe"
+      status: "safe" as const
     },
     {
       name: "IT",
       current: 15000000,
       total: 30000000,
       usedPercentage: 50,
-      status: "warning"
+      status: "warning" as const
     },
     {
       name: "Operations",
       current: 0,
       total: 25000000,
       usedPercentage: 0,
-      status: "safe"
+      status: "safe" as const
     },
     {
       name: "HR",
       current: 0,
       total: 15000000,
       usedPercentage: 0,
-      status: "safe"
+      status: "safe" as const
     }
   ];
 

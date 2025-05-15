@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useExpensesContext } from "@/contexts/ExpensesContext";
 import { formatRupiah } from "@/utils/formatUtils";
@@ -219,28 +218,28 @@ export function useExpensesData() {
       current: 5000000,
       total: 50000000,
       usedPercentage: 10,
-      status: "safe"
+      status: "safe" as "safe" | "warning" | "over"
     },
     {
       name: "IT",
       current: 15000000,
       total: 30000000,
       usedPercentage: 50,
-      status: "warning"
+      status: "warning" as "safe" | "warning" | "over"
     },
     {
       name: "Operations",
       current: 0,
       total: 25000000,
       usedPercentage: 0,
-      status: "safe"
+      status: "safe" as "safe" | "warning" | "over"
     },
     {
       name: "HR",
       current: 0,
       total: 15000000,
       usedPercentage: 0,
-      status: "safe"
+      status: "safe" as "safe" | "warning" | "over"
     }
   ];
 
