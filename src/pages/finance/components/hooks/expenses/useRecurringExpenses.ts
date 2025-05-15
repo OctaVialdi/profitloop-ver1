@@ -32,11 +32,8 @@ export function useRecurringExpenses(expenses: Expense[], categories: ExpenseCat
         amount: expense.amount,
         date: format(
           new Date(expense.date), 
-          'dd MMM yyyy', 
-          { 
-            month: 'short', 
-            year: 'numeric' 
-          }),
+          'dd MMM yyyy'
+        ),
         frequency: expense.recurring_frequency || 'Monthly',
         isPaid: Math.random() > 0.5 // This would normally come from the actual data
       };
