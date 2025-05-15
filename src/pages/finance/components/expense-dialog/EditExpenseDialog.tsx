@@ -18,7 +18,8 @@ import {
   CategorySection,
   DescriptionSection,
   DepartmentTypeSection,
-  RecurringSection
+  RecurringSection,
+  DialogFooter
 } from "./";
 
 interface EditExpenseDialogProps {
@@ -246,13 +247,13 @@ const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] max-h-[85vh] p-0">
-        <DialogHeader className="px-6 py-4 border-b">
+      <DialogContent className="sm:max-w-[550px] aspect-square max-h-[90vh] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-6 py-4 border-b sticky top-0 bg-background z-10">
           <DialogTitle className="text-lg font-semibold">Edit Expense</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[calc(85vh-130px)] px-6 py-4">
-          <div className="grid gap-4">
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <div className="grid gap-4 px-6 py-4">
             {/* Date and Amount row */}
             <DateAmountSection
               date={date}
@@ -326,22 +327,11 @@ const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
         </ScrollArea>
 
         {/* Submit Button - Fixed at bottom */}
-        <div className="px-6 py-4 border-t mt-auto flex justify-end space-x-2">
-          <Button 
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="h-9"
-          >
-            Cancel
-          </Button>
-          <Button 
-            className="h-9 bg-[#8B5CF6] hover:bg-[#7c4ff1]" 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
+        <DialogFooter 
+          isSubmitting={isSubmitting} 
+          onSubmit={handleSubmit} 
+          label="Save Changes"
+        />
       </DialogContent>
     </Dialog>
   );
