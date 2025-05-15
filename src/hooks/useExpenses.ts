@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -35,14 +35,13 @@ export const useExpenses = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       if (!organization?.id) {
-        console.error("No organization ID found in fetchCategories");
-        setError("No organization ID found. Please ensure your account is properly set up.");
+        console.log("Waiting for organization ID before fetching categories");
         return [];
       }
       
@@ -71,16 +70,15 @@ export const useExpenses = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organization?.id, toast]);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       if (!organization?.id) {
-        console.error("No organization ID found in fetchExpenses");
-        setError("No organization ID found. Please ensure your account is properly set up.");
+        console.log("Waiting for organization ID before fetching expenses");
         return [];
       }
       
@@ -121,15 +119,15 @@ export const useExpenses = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organization?.id, toast]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
       if (!organization?.id) {
-        console.error("No organization ID found in loadInitialData");
+        console.warn("No organization ID available for loading expense data");
         setError("No organization ID found. Please check your account setup.");
         throw new Error("No organization ID found");
       }
@@ -144,15 +142,11 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error loading initial expense data:", error);
       setError(error.message || "Failed to load expense data");
-      toast({
-        title: "Error",
-        description: "Failed to load expense data. Please try again.",
-        variant: "destructive",
-      });
+      throw error; // Propagate error for retry mechanism
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchCategories, fetchExpenses, organization?.id]);
 
   const addCategory = async (name: string, description?: string) => {
     try {
