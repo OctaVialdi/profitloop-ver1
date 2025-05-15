@@ -38,7 +38,7 @@ export function useBudgetData() {
         
         // Extract unique department names
         const uniqueDepartments = new Set<string>();
-        employmentData.forEach((emp) => {
+        employmentData?.forEach((emp) => {
           if (emp.organization_name) {
             uniqueDepartments.add(emp.organization_name);
           }
@@ -50,19 +50,29 @@ export function useBudgetData() {
           : ["Marketing", "IT", "Operations", "HR"];
         
         // Create budget data for each department
-        const budgetData = departments.map((dept, index) => {
+        const budgetData: BudgetCategory[] = departments.map((dept, index) => {
           // Generate some demo data based on department name
           // In a real app, this would come from your budget database
           const total = (index + 1) * 15000000;
           const current = Math.min(total * (Math.random() * 0.8 + 0.1), total);
           const usedPercentage = Math.round((current / total) * 100);
           
+          // Set status based on used percentage
+          let status: "safe" | "warning" | "over";
+          if (usedPercentage > 80) {
+            status = "over";
+          } else if (usedPercentage > 50) {
+            status = "warning";
+          } else {
+            status = "safe";
+          }
+          
           return {
             name: dept,
             current,
             total,
             usedPercentage,
-            status: usedPercentage > 80 ? "over" : usedPercentage > 50 ? "warning" : "safe"
+            status
           };
         });
         

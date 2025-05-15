@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useDepartments } from "@/hooks/useDepartments";
+import { useOrganization } from "@/hooks/useOrganization";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -64,6 +65,7 @@ const AddExpenseDialog: React.FC = () => {
   const { toast } = useToast();
   const { categories, fetchCategories, addCategory, addExpense } = useExpenses();
   const { departments, fetchDepartments, loading: departmentsLoading } = useDepartments();
+  const { organization } = useOrganization();
 
   // Fetch categories and departments when component mounts
   useEffect(() => {
@@ -167,6 +169,8 @@ const AddExpenseDialog: React.FC = () => {
 
   const deleteCategory = async (categoryName: string) => {
     try {
+      const { organization } = useOrganization();
+      
       if (!organization?.id) {
         throw new Error("No organization ID found");
       }

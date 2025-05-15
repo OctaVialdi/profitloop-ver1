@@ -13,6 +13,13 @@ import { ExpenseTable } from "./components/expense-table/ExpenseTable";
 import { ExpenseBreakdownChart } from "./components/expense-charts/ExpenseBreakdownChart";
 import { MonthlyComparisonChart } from "./components/expense-charts/MonthlyComparisonChart";
 
+// Define the ExpenseBreakdownItem type to match what's expected in the component
+interface ExpenseBreakdownItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
 export default function Expenses() {
   // Navigation hooks
   const navigate = useNavigate();
@@ -98,7 +105,7 @@ export default function Expenses() {
             uniqueDepartments={uniqueDepartments}
             uniqueExpenseTypes={uniqueExpenseTypes}
             onSearchChange={setSearchTerm}
-            onDateFilterChange={setDateFilter}
+            onDateFilterChange={(date) => setDateFilter(date.toISOString())}
             onDepartmentFilterChange={setDepartmentFilter}
             onTypeFilterChange={setTypeFilter}
           />
@@ -120,7 +127,7 @@ export default function Expenses() {
         {/* Expense Breakdown */}
         <ExpenseBreakdownChart
           loading={loading}
-          expenseBreakdownData={expenseBreakdownData}
+          expenseBreakdownData={expenseBreakdownData as ExpenseBreakdownItem[]}
           categories={categories}
         />
 

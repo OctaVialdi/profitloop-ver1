@@ -1,65 +1,266 @@
 
-import { useExpensesContext } from "@/contexts/expenses";
-import { useExpenseFilters } from "./expenses/useExpenseFilters";
-import { useExpenseStats } from "./expenses/useExpenseStats";
-import { useRecurringExpenses } from "./expenses/useRecurringExpenses";
+import { useState, useEffect } from "react";
+import { useExpenses, Expense, ExpenseCategory } from "@/hooks/useExpenses";
+import { startOfMonth, endOfMonth, format, subMonths } from "date-fns";
 import { useBudgetData } from "./expenses/useBudgetData";
-import { useTabManagement } from "./expenses/useTabManagement";
+import { ExpenseBreakdownItem } from "../expense-charts/ExpenseBreakdownChart";
+
+// Define color palette for charts
+const CHART_COLORS = [
+  '#8884d8', '#82ca9d', '#FFBB28', '#FF8042', '#0088FE', 
+  '#00C49F', '#3742fa', '#ff9ff3', '#feca57', '#ff6b6b'
+];
 
 export function useExpensesData() {
-  // Get data from context
-  const { expenses, categories, loading, error, refreshData } = useExpensesContext();
+  // States for filtering
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('this_month');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
+
+  // Budget data hook
+  const { budgetCategories, budgetView, handleBudgetViewChange } = useBudgetData();
+
+  // Expenses hook with Supabase data
+  const { 
+    expenses, 
+    categories, 
+    loading, 
+    error, 
+    loadInitialData 
+  } = useExpenses();
+
+  // Load initial data on component mount
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
+
+  // Filter expenses based on search, date, department, and type
+  useEffect(() => {
+    if (!expenses.length) {
+      setFilteredExpenses([]);
+      return;
+    }
+
+    let filtered = [...expenses];
+
+    // Apply search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(expense => 
+        expense.description?.toLowerCase().includes(search) ||
+        expense.category?.toLowerCase().includes(search) ||
+        expense.department?.toLowerCase().includes(search) ||
+        expense.amount.toString().includes(search)
+      );
+    }
+
+    // Apply date filter
+    if (dateFilter && dateFilter !== 'all') {
+      const now = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          const today = format(now, 'yyyy-MM-dd');
+          filtered = filtered.filter(expense => 
+            format(new Date(expense.date), 'yyyy-MM-dd') === today
+          );
+          break;
+        case 'this_week':
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+          filtered = filtered.filter(expense => 
+            new Date(expense.date) >= weekStart && new Date(expense.date) <= now
+          );
+          break;
+        case 'this_month':
+          const monthStart = startOfMonth(now);
+          const monthEnd = endOfMonth(now);
+          filtered = filtered.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= monthStart && expenseDate <= monthEnd;
+          });
+          break;
+        case 'last_month':
+          const lastMonth = subMonths(now, 1);
+          const lastMonthStart = startOfMonth(lastMonth);
+          const lastMonthEnd = endOfMonth(lastMonth);
+          filtered = filtered.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= lastMonthStart && expenseDate <= lastMonthEnd;
+          });
+          break;
+        case 'this_year':
+          const yearStart = new Date(now.getFullYear(), 0, 1);
+          filtered = filtered.filter(expense => 
+            new Date(expense.date) >= yearStart && new Date(expense.date) <= now
+          );
+          break;
+      }
+    }
+
+    // Apply department filter
+    if (departmentFilter && departmentFilter !== 'all') {
+      filtered = filtered.filter(expense => 
+        expense.department === departmentFilter
+      );
+    }
+
+    // Apply type filter
+    if (typeFilter && typeFilter !== 'all') {
+      filtered = filtered.filter(expense => 
+        expense.expense_type === typeFilter
+      );
+    }
+
+    setFilteredExpenses(filtered);
+  }, [expenses, searchTerm, dateFilter, departmentFilter, typeFilter]);
+
+  // Calculate expense statistics
+  const totalExpense = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
   
-  // Use specialized hooks
-  const filters = useExpenseFilters(expenses, categories);
-  const stats = useExpenseStats(expenses, categories);
-  const formattedRecurringExpenses = useRecurringExpenses(expenses, categories);
-  const budgetData = useBudgetData();
-  const tabManagement = useTabManagement();
+  // Calculate current month data
+  const now = new Date();
+  const currentMonthStart = startOfMonth(now);
+  const currentMonthEnd = endOfMonth(now);
+  const currentMonthExpenses = expenses.filter(expense => {
+    const expenseDate = new Date(expense.date);
+    return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd;
+  });
+  const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  
+  // Calculate previous month data for comparison
+  const previousMonth = subMonths(now, 1);
+  const previousMonthStart = startOfMonth(previousMonth);
+  const previousMonthEnd = endOfMonth(previousMonth);
+  const previousMonthExpenses = expenses.filter(expense => {
+    const expenseDate = new Date(expense.date);
+    return expenseDate >= previousMonthStart && expenseDate <= previousMonthEnd;
+  });
+  const previousMonthTotal = previousMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  
+  // Calculate percentage change
+  const percentageChange = previousMonthTotal === 0 
+    ? 100 
+    : ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100;
+  
+  // Find highest expense
+  const highestExpense = expenses.length 
+    ? expenses.reduce((max, expense) => expense.amount > max.amount ? expense : max, expenses[0]) 
+    : null;
+  
+  // Find latest expense
+  const latestExpense = expenses.length 
+    ? [...expenses].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+    : null;
+
+  // Get unique departments and expense types for filters
+  const uniqueDepartments = Array.from(new Set(expenses
+    .map(expense => expense.department)
+    .filter(Boolean))) as string[];
+  
+  const uniqueExpenseTypes = Array.from(new Set(expenses
+    .map(expense => expense.expense_type)
+    .filter(Boolean))) as string[];
+
+  // Create expense breakdown data for pie chart
+  const categoryGroups: Record<string, number> = {};
+  filteredExpenses.forEach(expense => {
+    const category = expense.category || 'Uncategorized';
+    categoryGroups[category] = (categoryGroups[category] || 0) + expense.amount;
+  });
+
+  const expenseBreakdownData: ExpenseBreakdownItem[] = Object.entries(categoryGroups)
+    .map(([name, value], index) => ({
+      name,
+      value,
+      color: CHART_COLORS[index % CHART_COLORS.length]
+    }));
+
+  // Create monthly comparison data for bar chart
+  const monthlyData: Record<string, number> = {};
+  
+  // Get current month and previous 5 months
+  for (let i = 0; i < 6; i++) {
+    const month = subMonths(now, i);
+    const monthKey = format(month, 'MMM');
+    
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    
+    const monthExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate >= monthStart && expenseDate <= monthEnd;
+    });
+    
+    monthlyData[monthKey] = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  }
+  
+  const monthlyComparisonData = Object.entries(monthlyData)
+    .map(([month, amount]) => ({
+      name: month,
+      amount
+    }))
+    .reverse();
+
+  // Format recurring expenses
+  const recurringExpenses = expenses.filter(expense => expense.is_recurring);
+  
+  const formattedRecurringExpenses = recurringExpenses.map(expense => {
+    const categoryName = expense.category || 'Uncategorized';
+    
+    return {
+      id: expense.id,
+      name: expense.description || categoryName,
+      amount: expense.amount,
+      frequency: expense.recurring_frequency || 'Monthly',
+      category: categoryName,
+      department: expense.department || 'General'
+    };
+  });
+
+  // Tab handling
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
+
+  // Refresh data
+  const refreshData = async () => {
+    await loadInitialData();
+  };
 
   return {
-    // Context data
     loading,
     error,
     refreshData,
     expenses,
+    filteredExpenses,
     categories,
-    
-    // Filter data
-    filteredExpenses: filters.filteredExpenses,
-    searchTerm: filters.searchTerm,
-    setSearchTerm: filters.setSearchTerm,
-    dateFilter: filters.dateFilter,
-    setDateFilter: filters.setDateFilter,
-    departmentFilter: filters.departmentFilter,
-    setDepartmentFilter: filters.setDepartmentFilter,
-    typeFilter: filters.typeFilter,
-    setTypeFilter: filters.setTypeFilter,
-    uniqueDepartments: filters.uniqueDepartments,
-    uniqueExpenseTypes: filters.uniqueExpenseTypes,
-    
-    // Stats data
-    totalExpense: stats.totalExpense,
-    currentMonthTotal: stats.currentMonthTotal,
-    previousMonthTotal: stats.previousMonthTotal,
-    percentageChange: stats.percentageChange,
-    highestExpense: stats.highestExpense,
-    latestExpense: stats.latestExpense,
-    expenseBreakdownData: stats.expenseBreakdownData,
-    monthlyComparisonData: stats.monthlyComparisonData,
-    
-    // Recurring expenses
+    searchTerm,
+    setSearchTerm,
+    dateFilter,
+    setDateFilter,
+    departmentFilter,
+    setDepartmentFilter,
+    typeFilter,
+    setTypeFilter,
+    activeTab,
+    handleTabChange,
+    budgetView,
+    handleBudgetViewChange,
+    budgetCategories,
+    totalExpense,
+    currentMonthTotal,
+    previousMonthTotal,
+    percentageChange,
+    highestExpense,
+    latestExpense,
+    expenseBreakdownData,
+    monthlyComparisonData,
     formattedRecurringExpenses,
-    
-    // Budget data
-    budgetView: budgetData.budgetView,
-    budgetCategories: budgetData.budgetCategories,
-    handleBudgetViewChange: budgetData.handleBudgetViewChange,
-    
-    // Tab management
-    activeTab: tabManagement.activeTab,
-    expenseView: tabManagement.expenseView,
-    setExpenseView: tabManagement.setExpenseView,
-    handleTabChange: tabManagement.handleTabChange,
+    uniqueDepartments,
+    uniqueExpenseTypes
   };
 }
