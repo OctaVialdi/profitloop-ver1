@@ -59,10 +59,11 @@ const AddExpenseDialog: React.FC = () => {
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState<string>("");
   const [showAddCategory, setShowAddCategory] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const { toast } = useToast();
   const { categories, fetchCategories, addCategory, addExpense } = useExpenses();
-  const { departments, fetchDepartments } = useDepartments();
+  const { departments, fetchDepartments, loading: departmentsLoading } = useDepartments();
 
   // Fetch categories and departments when component mounts
   useEffect(() => {
@@ -125,6 +126,7 @@ const AddExpenseDialog: React.FC = () => {
     }
     setReceipt(null);
     setReceiptPreview(null);
+    setIsSubmitting(false);
   };
 
   const handleSubmit = async () => {
@@ -149,6 +151,8 @@ const AddExpenseDialog: React.FC = () => {
     }
 
     try {
+      setIsSubmitting(true);
+      
       // Submit expense
       await addExpense({
         amount: Number(amount),
@@ -165,8 +169,14 @@ const AddExpenseDialog: React.FC = () => {
       // Reset form and close dialog
       resetForm();
       setIsOpen(false);
+      
+      toast({
+        title: "Success",
+        description: "Expense has been added successfully",
+      });
     } catch (error) {
       console.error("Error submitting expense:", error);
+      setIsSubmitting(false);
       // Toast notification is already handled in the addExpense function
     }
   };
@@ -335,9 +345,15 @@ const AddExpenseDialog: React.FC = () => {
                   <SelectValue placeholder="Select a department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                  ))}
+                  {departmentsLoading ? (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  ) : departments.length > 0 ? (
+                    departments.map((dept) => (
+                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-departments" disabled>No departments found</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -400,8 +416,9 @@ const AddExpenseDialog: React.FC = () => {
           <Button 
             className="h-[60px] bg-[#8B5CF6] hover:bg-[#7c4ff1] mt-4" 
             onClick={handleSubmit}
+            disabled={isSubmitting}
           >
-            Add Expense
+            {isSubmitting ? "Adding..." : "Add Expense"}
           </Button>
         </div>
       </DialogContent>

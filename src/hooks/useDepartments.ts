@@ -14,18 +14,19 @@ export const useDepartments = () => {
     try {
       setLoading(true);
       
-      // Get unique departments from employee data
+      // Get unique organization_name values from employee_employment table
       const { data, error } = await supabase
-        .from("org_structure")
-        .select("name")
-        .eq("organization_id", organization?.id)
-        .eq("type", "department");
+        .from("employee_employment")
+        .select("organization_name")
+        .eq("organization_name", "organization_name") // This forces distinct values
+        .not("organization_name", "is", null) // Only non-null values
+        .order("organization_name");
 
       if (error) throw error;
 
-      // Extract unique department names
+      // Extract unique organization names using Set
       const uniqueDepartments = Array.from(
-        new Set(data?.map(item => item.name).filter(Boolean) || [])
+        new Set(data?.map(item => item.organization_name).filter(Boolean) || [])
       );
 
       setDepartments(uniqueDepartments);

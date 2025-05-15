@@ -202,22 +202,20 @@ export const useExpenses = () => {
       // Insert expense
       const { data, error } = await supabase
         .from("expenses")
-        .insert([
-          {
-            amount: expenseData.amount,
-            date: formattedDate,
-            category_id: categoryData.id,
-            description: expenseData.description,
-            department: expenseData.department,
-            expense_type: expenseData.expenseType,
-            is_recurring: expenseData.isRecurring,
-            recurring_frequency: expenseData.recurringFrequency,
-            receipt_url: receiptUrl,
-            receipt_path: receiptPath,
-            organization_id: organization.id,
-            created_by: user?.id
-          },
-        ])
+        .insert({
+          amount: expenseData.amount,
+          date: formattedDate,
+          category_id: categoryData.id,
+          description: expenseData.description,
+          department: expenseData.department,
+          expense_type: expenseData.expenseType,
+          is_recurring: expenseData.isRecurring,
+          recurring_frequency: expenseData.recurringFrequency,
+          receipt_url: receiptUrl,
+          receipt_path: receiptPath,
+          organization_id: organization.id,
+          created_by: user?.id
+        })
         .select();
 
       if (error) throw error;
