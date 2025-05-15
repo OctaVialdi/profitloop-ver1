@@ -1,128 +1,63 @@
-import { useState } from 'react';
-import { toast } from "@/components/ui/use-toast";
-import { useOrganization } from '@/hooks/useOrganization';
-import { ContentPlanItem } from '../types';
-import { 
-  addContentPlanItem,
-  updateContentPlanItem,
-  deleteContentPlanItem
-} from '../contentPlanApi';
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createContentPlan, updateContentPlan, deleteContentPlan } from '../contentPlanApi';
+import { toast } from "@/hooks/use-toast";
 
-export interface MutateContentPlanReturn {
-  addContentPlan: (newPlan: Partial<ContentPlanItem>) => Promise<any>;
-  updateContentPlan: (id: string, updates: Partial<ContentPlanItem>) => Promise<boolean>;
-  deleteContentPlan: (id: string) => Promise<boolean>;
-  resetRevisionCounter: (id: string, field: 'revision_count' | 'production_revision_count') => Promise<boolean>;
-}
-
-export function useMutateContentPlan(): MutateContentPlanReturn {
-  const { organization } = useOrganization();
+export const useMutateContentPlan = () => {
   const queryClient = useQueryClient();
 
-  // Add content plan mutation
-  const addMutation = useMutation({
-    mutationFn: async (newPlan: Partial<ContentPlanItem>) => {
-      if (!organization?.id) {
-        throw new Error('No organization ID available');
-      }
-      return addContentPlanItem(newPlan, organization.id);
-    },
+  const createMutation = useMutation({
+    mutationFn: createContentPlan,
     onSuccess: () => {
-      toast("Success", {
-        description: "Content plan added successfully",
+      queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
+      toast("Content Plan Created", {
+        description: "Your content plan has been created successfully!"
       });
-      queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
     },
-    onError: (err: any) => {
-      console.error('Error adding content plan:', err);
+    onError: (error: any) => {
       toast("Error", {
-        description: `Failed to add content plan: ${err.message}`,
-        variant: "destructive",
+        description: error?.message || "Failed to create content plan",
+        variant: "destructive"
       });
     }
   });
 
-  // Update content plan mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string, updates: Partial<ContentPlanItem> }) => {
-      if (!organization?.id) {
-        throw new Error('No organization ID available');
-      }
-      return updateContentPlanItem(id, updates, organization.id);
-    },
+    mutationFn: updateContentPlan,
     onSuccess: () => {
-      toast("Success", {
-        description: "Content plan updated successfully",
+      queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
+      toast("Content Plan Updated", {
+        description: "Your content plan has been updated successfully!"
       });
-      queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
     },
-    onError: (err: any) => {
-      console.error('Error updating content plan:', err);
+    onError: (error: any) => {
       toast("Error", {
-        description: `Failed to update content plan: ${err.message}`,
-        variant: "destructive",
+        description: error?.message || "Failed to update content plan",
+        variant: "destructive"
       });
     }
   });
 
-  // Delete content plan mutation
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (!organization?.id) {
-        throw new Error('No organization ID available');
-      }
-      return deleteContentPlanItem(id, organization.id);
-    },
+    mutationFn: deleteContentPlan,
     onSuccess: () => {
-      toast("Success", {
-        description: "Content plan deleted successfully",
+      queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
+      toast("Content Plan Deleted", {
+        description: "Your content plan has been deleted successfully!"
       });
-      queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
     },
-    onError: (err: any) => {
-      console.error('Error deleting content plan:', err);
+    onError: (error: any) => {
       toast("Error", {
-        description: `Failed to delete content plan: ${err.message}`,
-        variant: "destructive",
+        description: error?.message || "Failed to delete content plan",
+        variant: "destructive"
       });
     }
   });
-
-  const addContentPlan = async (newPlan: Partial<ContentPlanItem>) => {
-    try {
-      return await addMutation.mutateAsync(newPlan);
-    } catch (err) {
-      return null;
-    }
-  };
-
-  const updateContentPlan = async (id: string, updates: Partial<ContentPlanItem>) => {
-    try {
-      await updateMutation.mutateAsync({ id, updates });
-      return true;
-    } catch (err) {
-      return false;
-    }
-  };
-
-  const deleteContentPlan = async (id: string) => {
-    try {
-      await deleteMutation.mutateAsync(id);
-      return true;
-    } catch (err) {
-      return false;
-    }
-  };
-
-  const resetRevisionCounter = async (id: string, field: 'revision_count' | 'production_revision_count') => {
-    return updateContentPlan(id, { [field]: 0 });
-  };
 
   return {
-    addContentPlan,
-    updateContentPlan,
-    deleteContentPlan,
-    resetRevisionCounter
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    isLoading: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
   };
-}
+};

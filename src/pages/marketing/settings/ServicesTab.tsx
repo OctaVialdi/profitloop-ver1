@@ -1,129 +1,289 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/hooks/useOrganization";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
-export function ServicesTab() {
-  const [services, setServices] = useState<any[]>([]);
-  const [newService, setNewService] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  organization_id: string;
+}
 
-  useEffect(() => {
-    fetchServices();
-  }, []);
+const ServicesTab = () => {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const { organization } = useOrganization();
+  const queryClient = useQueryClient();
+
+  const { mutate: createService, isLoading: isCreating } = useMutation(
+    async () => {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      const { data, error } = await supabase
+        .from('services_digital_marketing')
+        .insert([{ 
+          name, 
+          description, 
+          organization_id: organization.id 
+        }])
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['services'] });
+        toast("Success", {
+          description: "Service created successfully",
+        });
+        setOpen(false);
+        setName('');
+        setDescription('');
+      },
+      onError: (error: any) => {
+        toast("Error", {
+          description: error.message || "Failed to create service",
+          variant: "destructive"
+        });
+      },
+    }
+  );
+
+  const { mutate: updateService, isLoading: isUpdating } = useMutation(
+    async (updatedService: Service) => {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      const { data, error } = await supabase
+        .from('services_digital_marketing')
+        .update({ 
+          name: updatedService.name, 
+          description: updatedService.description 
+        })
+        .eq('id', updatedService.id)
+        .eq('organization_id', organization.id)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['services'] });
+        toast("Success", {
+          description: "Service updated successfully",
+        });
+      },
+      onError: (error: any) => {
+        toast("Error", {
+          description: error.message || "Failed to update service",
+          variant: "destructive"
+        });
+      },
+    }
+  );
+
+  const { mutate: deleteService, isLoading: isDeleting } = useMutation(
+    async (id: string) => {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      const { error } = await supabase
+        .from('services_digital_marketing')
+        .delete()
+        .eq('id', id)
+        .eq('organization_id', organization.id);
+
+      if (error) {
+        throw error;
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['services'] });
+        toast("Success", {
+          description: "Service deleted successfully",
+        });
+      },
+      onError: (error: any) => {
+        toast("Error", {
+          description: error.message || "Failed to delete service",
+          variant: "destructive"
+        });
+      },
+    }
+  );
+
+  const { data: services, isLoading, error } = useQueryClient().getQueryData(['services']) as { data: Service[] | undefined, isLoading: boolean, error: any } || { data: undefined, isLoading: false, error: undefined };
 
   const fetchServices = async () => {
-    setIsLoading(true);
+    if (!organization?.id) {
+      console.log('Organization ID not found');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('services_digital_marketing')
+      .select('*')
+      .eq('organization_id', organization.id);
+
+    if (error) {
+      console.error('Error fetching services:', error);
+      return;
+    }
+
+    queryClient.setQueryData(['services'], data);
+  };
+
+  React.useEffect(() => {
+    fetchServices();
+  }, [organization?.id]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  const handleCreateService = async () => {
     try {
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .order("name");
-      
-      if (error) throw error;
-      setServices(data || []);
-    } catch (error: any) {
-      console.error("Error fetching services:", error);
+      await createService();
+    } catch (error) {
       toast("Error", {
-        description: "Failed to load services",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const addService = async () => {
-    if (!newService.trim()) return;
-    
-    try {
-      const { error } = await supabase
-        .from("services")
-        .insert({ name: newService.trim() });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Service added successfully",
-      });
-      
-      setNewService("");
-      fetchServices();
-    } catch (error: any) {
-      console.error("Error adding service:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add service",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const deleteService = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("services")
-        .delete()
-        .eq("id", id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Service deleted successfully",
-      });
-      
-      fetchServices();
-    } catch (error: any) {
-      console.error("Error deleting service:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete service",
-        variant: "destructive",
+        description: "Failed to create service",
+        variant: "destructive"
       });
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <Input
-          placeholder="Enter new service"
-          value={newService}
-          onChange={(e) => setNewService(e.target.value)}
-          className="max-w-sm"
-        />
-        <Button onClick={addService} disabled={!newService.trim() || isLoading}>
-          <Plus className="h-4 w-4 mr-1" /> Add
-        </Button>
-      </div>
-
-      <Card>
-        <CardContent className="p-4">
-          {services.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No services defined yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {services.map((service) => (
-                <li key={service.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <span>{service.name}</span>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => deleteService(service.id)}
+    <div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline">Add Service</Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Service</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
+              <Input
+                type="text"
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleCreateService} disabled={isCreating}>
+              {isCreating ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="mt-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {services && services.map((service) => (
+              <TableRow key={service.id}>
+                <TableCell>{service.name}</TableCell>
+                <TableCell>{service.description}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      const newName = prompt("Enter new name", service.name);
+                      const newDescription = prompt("Enter new description", service.description);
+                      if (newName && newDescription) {
+                        updateService({ ...service, name: newName, description: newDescription });
+                      }
+                    }}
+                    disabled={isUpdating}
                   >
-                    <Trash className="h-4 w-4 text-red-500" />
+                    {isUpdating ? "Updating..." : "Update"}
                   </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to delete this service?")) {
+                        deleteService(service.id);
+                      }
+                    }}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
-}
+};
+
+export default ServicesTab;

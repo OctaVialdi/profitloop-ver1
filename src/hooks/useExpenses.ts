@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,26 +28,24 @@ export type ExpenseCategory = {
 };
 
 export const useExpenses = () => {
-  const { organization } = useOrganization();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = useCallback(async (organizationId?: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      if (!organization?.id) {
-        console.log("Waiting for organization ID before fetching categories");
-        return [];
+      if (!organizationId) {
+        throw new Error("No organization ID found");
       }
       
       const { data, error: fetchError } = await supabase
         .from("expense_categories")
         .select("*")
-        .eq("organization_id", organization.id)
+        .eq("organization_id", organizationId)
         .order("name");
 
       if (fetchError) {
@@ -61,44 +58,45 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error fetching expense categories:", error);
       setError(error.message || "Failed to fetch expense categories");
-      toast.error(error.message || "Failed to fetch expense categories");
+      toast("Error", {
+        description: error.message || "Failed to fetch expense categories",
+        variant: "destructive",
+      });
       return [];
     } finally {
       setLoading(false);
     }
-  }, [organization?.id]);
+  }, []);
 
-  const fetchExpenses = useCallback(async () => {
+  const fetchExpenses = useCallback(async (organizationId?: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      if (!organization?.id) {
-        console.log("Waiting for organization ID before fetching expenses");
-        return [];
+      if (!organizationId) {
+        throw new Error("No organization ID found");
       }
       
-      // Join with expense_categories to get the category name
       const { data, error: fetchError } = await supabase
         .from("expenses")
         .select(`
           *,
           expense_categories (id, name)
         `)
-        .eq("organization_id", organization.id)
+        .eq("organization_id", organizationId)
         .order("date", { ascending: false });
 
       if (fetchError) {
         throw fetchError;
       }
       
-      // Convert date strings to Date objects and add category name directly to expense object
+      // Convert date strings to Date objects and add category name
       const formattedExpenses = (data || []).map(expense => ({
         ...expense,
         date: new Date(expense.date),
         created_at: new Date(expense.created_at),
         category: expense.expense_categories?.name || ''
-      }));
+      })) as Expense[];
       
       console.log("Fetched expenses:", formattedExpenses);
       setExpenses(formattedExpenses);
@@ -106,30 +104,33 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error fetching expenses:", error);
       setError(error.message || "Failed to fetch expenses");
-      toast.error(error.message || "Failed to fetch expenses");
+      toast("Error", {
+        description: error.message || "Failed to fetch expenses",
+        variant: "destructive",
+      });
       return [];
     } finally {
       setLoading(false);
     }
-  }, [organization?.id]);
+  }, []);
 
-  const loadInitialData = useCallback(async () => {
+  const loadInitialData = useCallback(async (organizationId?: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      if (!organization?.id) {
+      if (!organizationId) {
         console.warn("No organization ID available for loading expense data");
         setError("No organization ID found. Please check your account setup.");
         throw new Error("No organization ID found");
       }
       
-      console.log("Starting to load expense data for organization:", organization.id);
+      console.log("Starting to load expense data for organization:", organizationId);
       // First fetch categories
-      await fetchCategories();
+      await fetchCategories(organizationId);
       console.log("Categories loaded, now fetching expenses...");
       // Then fetch expenses (which may need categories)
-      await fetchExpenses();
+      await fetchExpenses(organizationId);
       console.log("All data successfully loaded!");
     } catch (error: any) {
       console.error("Error loading initial expense data:", error);
@@ -138,7 +139,7 @@ export const useExpenses = () => {
     } finally {
       setLoading(false);
     }
-  }, [fetchCategories, fetchExpenses, organization?.id]);
+  }, [fetchCategories, fetchExpenses]);
 
   const addCategory = async (name: string, description?: string) => {
     try {

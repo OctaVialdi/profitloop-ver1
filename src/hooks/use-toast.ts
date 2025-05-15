@@ -7,17 +7,17 @@ import React from "react";
 export function useToast() {
   // This returns an object with a toast function that has the same signature as the Sonner toast
   return {
-    toast: (props: Toast) => {
-      if (props.variant === "destructive") {
-        return sonnerToast.error(props.description as string, {
-          id: props.id,
-          action: props.action as any,
+    toast: (message: string, options?: any) => {
+      if (options?.variant === "destructive") {
+        return sonnerToast.error(options.description || message, {
+          id: options?.id,
+          action: options?.action,
         });
       }
-      return sonnerToast(props.title as string, {
-        description: props.description,
-        id: props.id,
-        action: props.action as any,
+      return sonnerToast(message, {
+        description: options?.description,
+        id: options?.id,
+        action: options?.action,
       });
     },
     dismiss: (toastId?: string) => sonnerToast.dismiss(toastId),

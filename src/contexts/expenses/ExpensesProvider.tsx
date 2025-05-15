@@ -12,6 +12,7 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [retryAttempts, setRetryAttempts] = useState(0);
   const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isSynchronizing, setIsSynchronizing] = useState(false);
   
   const {
     loading,
@@ -37,46 +38,61 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Load data when organization is available with automatic retry
   const initializeData = useCallback(async () => {
-    if (!organization?.id && !orgLoading) {
+    if (orgLoading) {
+      // Still loading organization data, wait for it
+      return;
+    }
+
+    if (!organization?.id) {
       console.warn("No organization ID found. User might need to set up an organization first.");
       return;
     }
 
-    if (organization?.id && !isInitialized) {
+    setIsSynchronizing(true);
+    try {
       console.log("Organization ID found, loading expense data:", organization.id);
-      try {
-        await loadInitialData();
-        setIsInitialized(true);
-        setRetryAttempts(0); // Reset retry attempts on success
-      } catch (err) {
-        console.error("Failed to load initial expense data:", err);
-        
-        // Only show toast on first error
-        if (retryAttempts === 0) {
-          toast.error("Failed to load expense data. Retrying automatically...");
-        }
-        
-        // Auto-retry with increasing backoff (max 3 attempts)
-        if (retryAttempts < 3) {
-          const nextRetryDelay = Math.min(1000 * Math.pow(2, retryAttempts), 5000);
-          console.log(`Scheduling retry attempt ${retryAttempts + 1} in ${nextRetryDelay}ms`);
-          
-          const timeout = setTimeout(() => {
-            setRetryAttempts(prev => prev + 1);
-            initializeData();
-          }, nextRetryDelay);
-          
-          setRetryTimeout(timeout);
-        } else {
-          toast.error("Failed to load expense data after multiple attempts. Please try again manually.");
-        }
+      await loadInitialData(organization.id); // Pass organization ID explicitly
+      setIsInitialized(true);
+      setRetryAttempts(0); // Reset retry attempts on success
+    } catch (err) {
+      console.error("Failed to load initial expense data:", err);
+      
+      // Only show toast on first error
+      if (retryAttempts === 0) {
+        toast("Failed to load expense data", {
+          description: "Retrying automatically...",
+          variant: "destructive"
+        });
       }
+      
+      // Auto-retry with increasing backoff (max 3 attempts)
+      if (retryAttempts < 3) {
+        const nextRetryDelay = Math.min(1000 * Math.pow(2, retryAttempts), 5000);
+        console.log(`Scheduling retry attempt ${retryAttempts + 1} in ${nextRetryDelay}ms`);
+        
+        const timeout = setTimeout(() => {
+          setRetryAttempts(prev => prev + 1);
+          initializeData();
+        }, nextRetryDelay);
+        
+        setRetryTimeout(timeout);
+      } else {
+        toast("Failed to load expense data", {
+          description: "Please try again manually.",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsSynchronizing(false);
     }
-  }, [organization?.id, orgLoading, isInitialized, loadInitialData, retryAttempts]);
+  }, [organization?.id, orgLoading, loadInitialData, retryAttempts]);
 
+  // Wait for organization to be loaded before initializing expenses
   useEffect(() => {
-    initializeData();
-  }, [initializeData, organization?.id, orgLoading]);
+    if (!orgLoading && organization?.id && !isInitialized && !isSynchronizing) {
+      initializeData();
+    }
+  }, [initializeData, organization?.id, orgLoading, isInitialized, isSynchronizing]);
 
   // Manual refresh function that resets the retry state
   const refreshData = useCallback(async () => {
@@ -91,7 +107,7 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
     return initializeData();
   }, [initializeData, retryTimeout]);
 
-  const isLoadingData = loading || orgLoading || (retryAttempts > 0 && !isInitialized);
+  const isLoadingData = loading || orgLoading || (retryAttempts > 0 && !isInitialized) || isSynchronizing;
 
   const contextValue = {
     loading: isLoadingData,

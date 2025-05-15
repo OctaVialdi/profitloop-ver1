@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Expense, ExpenseCategory } from '@/hooks/useExpenses';
@@ -18,7 +18,6 @@ interface ExpensesContextType {
 const ExpensesContext = createContext<ExpensesContextType | undefined>(undefined);
 
 export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
-  const { toast } = useToast();
   const { organization } = useOrganization();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,10 +48,9 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error("Error fetching expense categories:", error);
       setError(error.message || "Failed to fetch expense categories");
-      toast({
-        title: "Error",
+      toast("Error", {
         description: error.message || "Failed to fetch expense categories",
-        variant: "destructive",
+        variant: "destructive"
       });
       return [];
     }
@@ -93,10 +91,9 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error("Error fetching expenses:", error);
       setError(error.message || "Failed to fetch expenses");
-      toast({
-        title: "Error",
+      toast("Error", {
         description: error.message || "Failed to fetch expenses",
-        variant: "destructive",
+        variant: "destructive"
       });
       return [];
     }
@@ -128,7 +125,9 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     
-    loadData();
+    if (organization?.id) {
+      loadData();
+    }
   }, [organization?.id]);
 
   return (

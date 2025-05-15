@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,7 +54,7 @@ export const BSCDashboard = () => {
     setRefreshing(false);
     
     toast("Dashboard Refreshed", {
-      description: "The latest data has been loaded.",
+      description: "The latest data has been loaded."
     });
   };
   
@@ -156,7 +156,7 @@ export const BSCDashboard = () => {
     if (error) {
       toast("Error loading dashboard data", {
         description: error,
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   }, [error]);
