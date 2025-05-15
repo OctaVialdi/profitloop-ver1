@@ -94,14 +94,13 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
     });
 
     // Generate monthly comparison data from actual expenses
-    // Group expenses by month for the last 6 months
-    const monthsToShow = 6; // Show last 6 months
+    // We'll collect the last 6 months of data
+    const monthsToShow = 6;
     const monthlyData: Record<string, {department: number, expense: number}> = {};
     
-    // Initialize with the last 6 months
+    // Initialize with empty data for the last 6 months
     for (let i = 0; i < monthsToShow; i++) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
+      const date = subMonths(new Date(), i);
       const monthKey = format(date, 'MMM');
       monthlyData[monthKey] = { department: 0, expense: 0 };
     }
@@ -109,35 +108,44 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
     // Group expenses by month and department
     expenses.forEach(expense => {
       const expenseDate = new Date(expense.date);
-      // Only consider expenses from the last 6 months
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - (monthsToShow - 1));
+      // Only include expenses from the last 6 months
+      const sixMonthsAgo = subMonths(new Date(), monthsToShow - 1);
       
       if (expenseDate >= sixMonthsAgo) {
         const monthKey = format(expenseDate, 'MMM');
         
         if (monthlyData[monthKey]) {
-          // Use actual expense data
+          // If department is specified, add to department total
           if (expense.department) {
-            // If department is specified, add to department total
-            monthlyData[monthKey].department += expense.amount / 1000000; // Convert to millions
+            monthlyData[monthKey].department += expense.amount;
           }
           // Add to overall expense total
-          monthlyData[monthKey].expense += expense.amount / 1000000; // Convert to millions
+          monthlyData[monthKey].expense += expense.amount;
         }
       }
     });
     
-    // Convert to array format for the chart, sorting by month chronologically
-    const monthOrder = Object.keys(monthlyData).sort((a, b) => {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return months.indexOf(a.substring(0, 3)) - months.indexOf(b.substring(0, 3));
-    });
+    // Convert to array and format for chart display
+    // Sort chronologically by month
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonthIndex = new Date().getMonth();
     
-    const monthlyComparisonData = monthOrder.map(month => ({
+    const sortedMonths = Object.keys(monthlyData)
+      .sort((a, b) => {
+        const aIndex = monthNames.indexOf(a);
+        const bIndex = monthNames.indexOf(b);
+        
+        // Handle wrapping around the year
+        const adjustedAIndex = aIndex <= currentMonthIndex ? aIndex : aIndex - 12;
+        const adjustedBIndex = bIndex <= currentMonthIndex ? bIndex : bIndex - 12;
+        
+        return adjustedAIndex - adjustedBIndex;
+      });
+    
+    const monthlyComparisonData = sortedMonths.map(month => ({
       month,
-      department: parseFloat(monthlyData[month].department.toFixed(2)),
-      expense: parseFloat(monthlyData[month].expense.toFixed(2))
+      department: Math.round(monthlyData[month].department / 1000000 * 10) / 10, // Round to 1 decimal place
+      expense: Math.round(monthlyData[month].expense / 1000000 * 10) / 10 // Round to 1 decimal place
     }));
 
     return {

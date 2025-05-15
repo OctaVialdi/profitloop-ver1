@@ -89,8 +89,8 @@ export function ExpenseTable({
               <TableHead className="text-gray-600 font-medium">Category</TableHead>
               <TableHead className="text-gray-600 font-medium">Department</TableHead>
               <TableHead className="text-gray-600 font-medium">Type</TableHead>
-              <TableHead className="text-gray-600 font-medium min-w-[250px] w-1/3">Description</TableHead>
               <TableHead className="text-gray-600 font-medium text-right">Amount</TableHead>
+              <TableHead className="text-gray-600 font-medium min-w-[300px] w-1/3">Description</TableHead>
               <TableHead className="text-gray-600 font-medium text-center">Status</TableHead>
               <TableHead className="text-gray-600 font-medium text-right">Actions</TableHead>
             </TableRow>
@@ -116,10 +116,10 @@ export function ExpenseTable({
                   <TableCell>{categoryName}</TableCell>
                   <TableCell>{expense.department || "N/A"}</TableCell>
                   <TableCell>{expense.expense_type || "Regular"}</TableCell>
-                  <TableCell className="min-w-[250px] w-1/3">{expense.description || "N/A"}</TableCell>
                   <TableCell className={`text-right font-medium`}>
                     {formatRupiah(expense.amount)}
                   </TableCell>
+                  <TableCell className="min-w-[300px] w-1/3">{expense.description || "N/A"}</TableCell>
                   <TableCell className="text-center">
                     <Popover>
                       <PopoverTrigger asChild>

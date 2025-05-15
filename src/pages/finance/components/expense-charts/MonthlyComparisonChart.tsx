@@ -29,7 +29,7 @@ export function MonthlyComparisonChart({ loading, monthlyComparisonData }: Month
           <p className="font-medium">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.fill }}>
-              {entry.name}: {formatRupiah(entry.value)}
+              {entry.name}: {formatRupiah(entry.value * 1000000)}
             </p>
           ))}
         </div>
@@ -61,11 +61,11 @@ export function MonthlyComparisonChart({ loading, monthlyComparisonData }: Month
             />
             <YAxis 
               fontSize={12} 
-              tickFormatter={(value) => formatRupiah(value)}
+              tickFormatter={(value) => `${value}M`}
               tickLine={false}
               axisLine={{ stroke: '#E5E7EB' }}
               tick={{ fill: '#6B7280' }}
-              width={80}
+              width={40}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend 
