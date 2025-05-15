@@ -232,7 +232,7 @@ export const useExpenses = () => {
           toast({
             title: "Upload Error",
             description: "Failed to upload receipt, but continuing with expense submission",
-            variant: "destructive", // Changed from "warning" to "destructive" since "warning" isn't a valid variant
+            variant: "destructive",
           });
         }
       }

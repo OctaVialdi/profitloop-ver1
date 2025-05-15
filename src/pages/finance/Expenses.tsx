@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -20,11 +21,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import AddExpenseDialog from "./components/AddExpenseDialog";
 import { useExpenses } from "@/hooks/useExpenses";
 import { formatRupiah } from "@/utils/formatUtils";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Expenses() {
   // Navigation hooks
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
 
   // Fetch expenses using the hook
   const { expenses, categories, fetchExpenses, fetchCategories, loading } = useExpenses();
@@ -50,14 +53,45 @@ export default function Expenses() {
   // State for recurring expenses
   const [recurringExpenses, setRecurringExpenses] = useState<any[]>([]);
   
+  // Debug console logs
+  useEffect(() => {
+    console.log("Current expenses data:", expenses);
+    console.log("Current categories data:", categories);
+  }, [expenses, categories]);
+  
   // Fetch expenses and categories when component mounts
   useEffect(() => {
-    fetchExpenses();
-    fetchCategories();
+    const loadData = async () => {
+      console.log("Loading expenses data...");
+      try {
+        await fetchCategories();
+        await fetchExpenses();
+        console.log("Data loaded successfully");
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load expenses data. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    loadData();
   }, []);
   
   // Apply filters when expenses, search term, or filters change
   useEffect(() => {
+    console.log("Applying filters to expenses:", expenses.length);
+    
+    // Make sure expenses is not empty
+    if (expenses.length === 0) {
+      console.log("No expenses to filter");
+      setFilteredExpenses([]);
+      setRecurringExpenses([]);
+      return;
+    }
+    
     let result = [...expenses];
     
     // Apply search filter
@@ -110,11 +144,12 @@ export default function Expenses() {
       );
     }
     
-    // Update filtered expenses
+    console.log("Filtered expenses:", result.length);
     setFilteredExpenses(result);
 
     // Set recurring expenses (filter for is_recurring === true)
     const recurring = expenses.filter(expense => expense.is_recurring === true);
+    console.log("Recurring expenses:", recurring.length);
     setRecurringExpenses(recurring);
   }, [expenses, searchTerm, dateFilter, departmentFilter, typeFilter, categories]);
 
@@ -207,6 +242,8 @@ export default function Expenses() {
     if (recurringExpenses.length === 0) {
       return [];
     }
+
+    console.log("Formatting recurring expenses:", recurringExpenses);
 
     // Convert recurring expenses to the display format
     return recurringExpenses.map(expense => {
