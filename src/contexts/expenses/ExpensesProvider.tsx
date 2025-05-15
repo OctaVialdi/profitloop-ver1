@@ -29,6 +29,8 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
     error,
     categories,
     expenses,
+    fetchCategories,
+    fetchExpenses,
     refreshData: loadInitialData,
     addCategory,
     addExpense,
