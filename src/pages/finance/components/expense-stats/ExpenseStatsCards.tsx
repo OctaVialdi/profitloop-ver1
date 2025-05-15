@@ -7,6 +7,9 @@ import { Expense } from "@/hooks/useExpenses";
 interface ExpenseStatsCardsProps {
   loading: boolean;
   totalExpense: number;
+  currentMonthExpense: number;
+  previousMonthExpense: number;
+  monthlyChangePercentage: number;
   highestExpense: {
     amount: number;
     description: string;
@@ -23,10 +26,17 @@ interface ExpenseStatsCardsProps {
 export function ExpenseStatsCards({
   loading,
   totalExpense,
+  currentMonthExpense,
+  previousMonthExpense,
+  monthlyChangePercentage,
   highestExpense,
   latestExpense,
   expenses,
 }: ExpenseStatsCardsProps) {
+  // Determine if monthly change is positive or negative
+  const isIncreased = monthlyChangePercentage > 0;
+  const changeAbsValue = Math.abs(monthlyChangePercentage).toFixed(1);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Current Month Total */}
@@ -37,12 +47,12 @@ export function ExpenseStatsCards({
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(0)}</h3>
-              <span className="flex items-center text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
-                <ArrowDown className="h-3 w-3 mr-1" /> 100.0%
+              <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(currentMonthExpense)}</h3>
+              <span className={`flex items-center text-xs ${isIncreased ? 'text-red-500 bg-red-50' : 'text-green-500 bg-green-50'} px-2 py-1 rounded-full`}>
+                {isIncreased ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />} {changeAbsValue}%
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">vs. {formatRupiah(totalExpense)} last month</p>
+            <p className="text-xs text-muted-foreground">vs. {formatRupiah(previousMonthExpense)} last month</p>
           </div>
         </CardContent>
       </Card>

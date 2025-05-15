@@ -40,6 +40,9 @@ export function useExpensesData() {
     
     // Stats data
     totalExpense: stats.totalExpense,
+    currentMonthExpense: stats.currentMonthExpense,
+    previousMonthExpense: stats.previousMonthExpense,
+    monthlyChangePercentage: stats.monthlyChangePercentage,
     highestExpense: stats.highestExpense,
     latestExpense: stats.latestExpense,
     expenseBreakdownData: stats.expenseBreakdownData,

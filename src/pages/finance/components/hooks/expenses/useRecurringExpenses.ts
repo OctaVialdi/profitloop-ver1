@@ -3,32 +3,61 @@ import { useMemo } from "react";
 import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { formatRupiah } from "@/utils/formatUtils";
 
-export function useRecurringExpenses(expenses: Expense[], categories: ExpenseCategory[]) {
+interface RecurringExpense {
+  id: string;
+  description: string;
+  amount: number;
+  formattedAmount: string;
+  category: string;
+  frequency: string;
+  nextDate: string;
+}
+
+export function useRecurringExpenses(expenses: Expense[], categories: ExpenseCategory[]): RecurringExpense[] {
   return useMemo(() => {
-    // Filter recurring expenses
-    const recurringExpenses = expenses.filter(expense => expense.is_recurring === true);
+    // Filter for recurring expenses
+    const recurringExpenses = expenses.filter(expense => expense.is_recurring);
     
     if (recurringExpenses.length === 0) {
       return [];
     }
-
-    // Convert recurring expenses to the display format
+    
     return recurringExpenses.map(expense => {
-      // Find category name
-      const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
+      const category = categories.find(cat => cat.id === expense.category_id);
       
-      // Format date
-      const formattedDate = expense.date ? new Date(expense.date).toLocaleDateString('id-ID', { 
-        day: '2-digit', month: 'short', year: 'numeric' 
-      }) : 'N/A';
+      // Calculate next date based on frequency
+      const baseDate = new Date(expense.date);
+      let nextDate = new Date(baseDate);
+      
+      // Simple calculation for next date based on frequency
+      switch (expense.recurring_frequency?.toLowerCase()) {
+        case 'daily':
+          nextDate.setDate(nextDate.getDate() + 1);
+          break;
+        case 'weekly':
+          nextDate.setDate(nextDate.getDate() + 7);
+          break;
+        case 'monthly':
+          nextDate.setMonth(nextDate.getMonth() + 1);
+          break;
+        case 'quarterly':
+          nextDate.setMonth(nextDate.getMonth() + 3);
+          break;
+        case 'yearly':
+          nextDate.setFullYear(nextDate.getFullYear() + 1);
+          break;
+        default:
+          nextDate.setMonth(nextDate.getMonth() + 1); // Default to monthly
+      }
       
       return {
-        title: expense.description || categoryName,
-        amount: formatRupiah(expense.amount),
-        category: categoryName,
-        date: formattedDate,
-        frequency: expense.recurring_frequency || "Monthly",
-        isPaid: true // Assuming all recorded expenses are paid
+        id: expense.id,
+        description: expense.description || 'Unnamed Expense',
+        amount: expense.amount,
+        formattedAmount: formatRupiah(expense.amount),
+        category: category?.name || 'Uncategorized',
+        frequency: expense.recurring_frequency || 'Monthly',
+        nextDate: nextDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
       };
     });
   }, [expenses, categories]);

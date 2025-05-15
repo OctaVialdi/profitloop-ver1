@@ -39,6 +39,9 @@ export default function Expenses() {
     handleBudgetViewChange,
     budgetCategories,
     totalExpense,
+    currentMonthExpense,
+    previousMonthExpense,
+    monthlyChangePercentage,
     highestExpense,
     latestExpense,
     expenseBreakdownData,
@@ -55,6 +58,9 @@ export default function Expenses() {
       <ExpenseStatsCards
         loading={loading}
         totalExpense={totalExpense}
+        currentMonthExpense={currentMonthExpense}
+        previousMonthExpense={previousMonthExpense}
+        monthlyChangePercentage={monthlyChangePercentage}
         highestExpense={highestExpense}
         latestExpense={latestExpense}
         expenses={expenses}
@@ -120,6 +126,7 @@ export default function Expenses() {
 
         {/* Month-over-Month Comparison */}
         <MonthlyComparisonChart
+          loading={loading}
           monthlyComparisonData={monthlyComparisonData}
         />
       </div>
