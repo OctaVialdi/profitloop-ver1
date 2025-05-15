@@ -1,9 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, UploadCloud } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, UploadCloud, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useExpenses, type ExpenseCategory } from "@/hooks/useExpenses";
+import { useDepartments } from "@/hooks/useDepartments";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,32 +31,18 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
-// Define data for dropdown options
-const expenseCategories = [
-  "Office Supplies",
-  "Equipment",
-  "Utilities",
-  "Rent",
-  "Salaries",
-  "Advertising",
-  "Travel",
-  "Software",
-  "Maintenance",
-  "Insurance",
-  "Other"
-];
-
-const departments = [
-  "General",
-  "IT",
-  "Marketing",
-  "Sales",
-  "Operations",
-  "Finance",
-  "HR"
-];
-
+// Define expense types
 const expenseTypes = [
   "Fixed",
   "Variable",
@@ -79,8 +67,18 @@ const AddExpenseDialog: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [receipt, setReceipt] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [showAddCategory, setShowAddCategory] = useState<boolean>(false);
 
   const { toast } = useToast();
+  const { categories, fetchCategories, addCategory, addExpense } = useExpenses();
+  const { departments, fetchDepartments } = useDepartments();
+
+  // Fetch categories and departments when component mounts
+  useEffect(() => {
+    fetchCategories();
+    fetchDepartments();
+  }, []);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Allow only numbers and format as needed
@@ -112,7 +110,34 @@ const AddExpenseDialog: React.FC = () => {
     setReceiptPreview(null);
   };
 
-  const handleSubmit = () => {
+  const handleAddCategory = async () => {
+    if (newCategoryName) {
+      const result = await addCategory(newCategoryName);
+      if (result) {
+        setCategory(result.name);
+        setNewCategoryName("");
+        setShowAddCategory(false);
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setDate(new Date());
+    setAmount("");
+    setCategory("");
+    setDescription("");
+    setDepartment("");
+    setExpenseType("");
+    setIsRecurring(false);
+    setRecurringFrequency("");
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview);
+    }
+    setReceipt(null);
+    setReceiptPreview(null);
+  };
+
+  const handleSubmit = async () => {
     // Validate form
     if (!date || !amount || !category || !department || !expenseType) {
       toast({
@@ -133,47 +158,27 @@ const AddExpenseDialog: React.FC = () => {
       return;
     }
 
-    // Form data to be submitted
-    const formData = {
-      date,
-      amount: Number(amount),
-      category,
-      description,
-      department,
-      expenseType,
-      isRecurring,
-      recurringFrequency: isRecurring ? recurringFrequency : null,
-      receipt: receipt // Include the receipt file
-    };
-
-    // Submit expense (in a real app, this would be an API call)
-    console.log("Expense submitted:", formData);
-    
-    // Show success message
-    toast({
-      title: "Expense Added",
-      description: "Your expense has been added successfully",
-    });
-    
-    // Reset form and close dialog
-    resetForm();
-    setIsOpen(false);
-  };
-
-  const resetForm = () => {
-    setDate(new Date());
-    setAmount("");
-    setCategory("");
-    setDescription("");
-    setDepartment("");
-    setExpenseType("");
-    setIsRecurring(false);
-    setRecurringFrequency("");
-    if (receiptPreview) {
-      URL.revokeObjectURL(receiptPreview);
+    try {
+      // Submit expense
+      await addExpense({
+        amount: Number(amount),
+        date,
+        category,
+        description,
+        department,
+        expenseType,
+        isRecurring,
+        recurringFrequency: isRecurring ? recurringFrequency : undefined,
+        receipt: receipt || undefined
+      });
+      
+      // Reset form and close dialog
+      resetForm();
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error submitting expense:", error);
+      // Toast notification is already handled in the addExpense function
     }
-    setReceipt(null);
-    setReceiptPreview(null);
   };
 
   return (
@@ -221,7 +226,7 @@ const AddExpenseDialog: React.FC = () => {
             <div className="space-y-2">
               <label className="text-base font-medium">Amount (Rp)</label>
               <div className="relative">
-                <span className="absolute left-3 top-[14px] text-gray-500">$</span>
+                <span className="absolute left-3 top-[14px] text-gray-500">Rp</span>
                 <Input 
                   type="text"
                   className="pl-8 h-[50px]" 
@@ -273,19 +278,41 @@ const AddExpenseDialog: React.FC = () => {
             </div>
           </div>
 
-          {/* Category */}
+          {/* Category with add new option */}
           <div className="space-y-2">
             <label className="text-base font-medium">Category</label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="h-[50px]">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {expenseCategories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {showAddCategory ? (
+              <div className="flex gap-2">
+                <Input 
+                  value={newCategoryName}
+                  onChange={e => setNewCategoryName(e.target.value)}
+                  placeholder="Enter new category name"
+                  className="h-[50px]"
+                />
+                <Button onClick={handleAddCategory} className="h-[50px]">
+                  <Check className="mr-1 h-4 w-4" /> Save
+                </Button>
+                <Button variant="ghost" onClick={() => setShowAddCategory(false)} className="h-[50px]">
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="h-[50px] flex-1">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={() => setShowAddCategory(true)} className="h-[50px] px-3">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Description */}
