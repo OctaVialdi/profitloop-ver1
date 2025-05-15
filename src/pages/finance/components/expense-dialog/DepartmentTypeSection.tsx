@@ -1,9 +1,9 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Users, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { expenseTypes } from "./constants";
+import { getAllowedExpenseTypes } from "./categoryExpenseTypeMap";
 
 interface DepartmentTypeSectionProps {
   department: string;
@@ -13,6 +13,7 @@ interface DepartmentTypeSectionProps {
   departments: string[];
   departmentsLoading: boolean;
   validationErrors: Record<string, string>;
+  selectedCategory?: string;
 }
 
 export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
@@ -22,8 +23,21 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
   setExpenseType,
   departments,
   departmentsLoading,
-  validationErrors
+  validationErrors,
+  selectedCategory
 }) => {
+  // Get filtered expense types based on selected category
+  const filteredExpenseTypes = selectedCategory 
+    ? getAllowedExpenseTypes(selectedCategory)
+    : ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"];
+  
+  // Reset expense type if current value is not in filtered list when category changes
+  useEffect(() => {
+    if (expenseType && selectedCategory && !filteredExpenseTypes.includes(expenseType)) {
+      setExpenseType(filteredExpenseTypes[0] || "");
+    }
+  }, [selectedCategory, filteredExpenseTypes, expenseType, setExpenseType]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Department */}
@@ -76,7 +90,7 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            {expenseTypes.map((type) => (
+            {filteredExpenseTypes.map((type) => (
               <SelectItem key={type} value={type}>{type}</SelectItem>
             ))}
           </SelectContent>

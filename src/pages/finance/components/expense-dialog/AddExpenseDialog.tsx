@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useExpenses } from "@/hooks/useExpenses";
@@ -278,6 +277,7 @@ const AddExpenseDialog: React.FC = () => {
               departments={departments}
               departmentsLoading={departmentsLoading}
               validationErrors={validationErrors}
+              selectedCategory={category} // Pass the selected category
             />
 
             {/* Recurring Expense and Frequency */}
