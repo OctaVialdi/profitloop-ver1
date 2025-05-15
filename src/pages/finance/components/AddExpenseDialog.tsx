@@ -155,7 +155,7 @@ const AddExpenseDialog: React.FC = () => {
     
     const result = await addCategory(newCategoryName);
     if (result) {
-      setCategory(result.name);
+      setCategory(newCategoryName); // Now directly using the name instead of ID
       setNewCategoryName("");
       setShowAddCategory(false);
       

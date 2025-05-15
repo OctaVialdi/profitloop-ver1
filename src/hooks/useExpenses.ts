@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ export type Expense = {
   date: Date;
   description: string;
   category_id: string;
+  category: string; // Added direct category name field
   department: string;
   expense_type: string;
   is_recurring: boolean;
@@ -83,6 +85,7 @@ export const useExpenses = () => {
         return [];
       }
       
+      // Join with expense_categories to get the category name
       const { data, error: fetchError } = await supabase
         .from("expenses")
         .select(`
@@ -96,11 +99,12 @@ export const useExpenses = () => {
         throw fetchError;
       }
       
-      // Convert date strings to Date objects
+      // Convert date strings to Date objects and add category name directly to expense object
       const formattedExpenses = (data || []).map(expense => ({
         ...expense,
         date: new Date(expense.date),
         created_at: new Date(expense.created_at),
+        category: expense.expense_categories?.name || ''
       }));
       
       console.log("Fetched expenses:", formattedExpenses);
@@ -236,7 +240,7 @@ export const useExpenses = () => {
   const addExpense = async (expenseData: {
     amount: number;
     date: Date;
-    category: string;
+    category: string; // Now using category name directly
     description?: string;
     department?: string;
     expenseType?: string;
