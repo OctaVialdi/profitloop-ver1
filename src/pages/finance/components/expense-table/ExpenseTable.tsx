@@ -1,17 +1,8 @@
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { formatRupiah } from "@/utils/formatUtils";
-import { format } from "date-fns";
-import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
+import { ExpenseCategory, Expense } from "@/hooks/useExpenses";
 
 interface ExpenseTableProps {
   loading: boolean;
@@ -20,85 +11,91 @@ interface ExpenseTableProps {
   expenses: Expense[];
 }
 
-export function ExpenseTable({ loading, filteredExpenses }: ExpenseTableProps) {
-  // Get expense priority based on amount
-  const getExpensePriority = (amount: number): "low" | "medium" | "high" => {
-    if (amount > 5000000) return "high";
-    if (amount > 1000000) return "medium";
-    return "low";
-  };
-
-  // Get badge variant based on priority
-  const getPriorityBadge = (priority: "low" | "medium" | "high") => {
-    switch (priority) {
-      case "high":
-        return <Badge variant="destructive">High</Badge>;
-      case "medium":
-        return <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600">Medium</Badge>;
-      case "low":
-        return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200 border-green-300">Low</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="p-4">
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
+export function ExpenseTable({
+  loading,
+  filteredExpenses,
+  categories,
+  expenses,
+}: ExpenseTableProps) {
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="text-gray-600 font-medium">Date</TableHead>
+              <TableHead className="text-gray-600 font-medium">Description</TableHead>
+              <TableHead className="text-gray-600 font-medium">Category</TableHead>
+              <TableHead className="text-gray-600 font-medium text-right">Amount</TableHead>
+              <TableHead className="text-gray-600 font-medium">Department</TableHead>
+              <TableHead className="text-gray-600 font-medium">Type</TableHead>
+              <TableHead className="text-gray-600 font-medium">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                    <p>Loading expenses data...</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filteredExpenses.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  {filteredExpenses.length === 0 && expenses.length > 0 ? 
+                    "No expenses found matching your filters." : 
+                    "No expenses found. Add your first expense!"}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredExpenses.map((expense) => {
+                // Find category name
+                const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
+                // Format date
+                const formattedDate = new Date(expense.date).toLocaleDateString('id-ID', { 
+                  day: '2-digit', month: 'short', year: 'numeric' 
+                });
+                
+                return (
+                  <TableRow key={expense.id} className="border-b hover:bg-gray-50">
+                    <TableCell className="font-medium">{formattedDate}</TableCell>
+                    <TableCell>{expense.description || "N/A"}</TableCell>
+                    <TableCell>{categoryName}</TableCell>
+                    <TableCell className={`text-right font-medium`}>
+                      {formatRupiah(expense.amount)}
+                    </TableCell>
+                    <TableCell>{expense.department || "N/A"}</TableCell>
+                    <TableCell>{expense.expense_type || "N/A"}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        expense.expense_type === "Operational" ? "bg-green-50 text-green-600" :
+                        expense.expense_type === "Fixed" ? "bg-blue-50 text-blue-600" :
+                        "bg-amber-50 text-amber-600"
+                      }`}>
+                        {expense.expense_type || "N/A"}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {/* Pagination section */}
+      <div className="p-4 border-t flex justify-between items-center">
+        <p className="text-sm text-gray-500">
+          Showing {filteredExpenses.length} of {expenses.length} expenses
+        </p>
+        <div className="flex gap-1">
+          <Button variant="outline" size="sm" disabled>Previous</Button>
+          <Button variant="outline" size="sm" disabled>Next</Button>
         </div>
       </div>
-    );
-  }
-
-  if (filteredExpenses.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <p className="text-muted-foreground">No expenses found</p>
-      </div>
-    );
-  }
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[100px]">Date</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead>Department</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
-          <TableHead>Priority</TableHead> {/* Changed from Status to Priority */}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {filteredExpenses.map((expense) => {
-          // Calculate priority based on amount
-          const priority = getExpensePriority(Number(expense.amount));
-          
-          return (
-            <TableRow key={expense.id}>
-              <TableCell className="font-medium">
-                {format(new Date(expense.date), "MMM dd")}
-              </TableCell>
-              <TableCell className="max-w-[200px] truncate">
-                {expense.description || "-"}
-              </TableCell>
-              <TableCell>{expense.category || "-"}</TableCell>
-              <TableCell>{expense.department || "-"}</TableCell>
-              <TableCell className="text-right font-medium">
-                {formatRupiah(expense.amount)}
-              </TableCell>
-              <TableCell>
-                {getPriorityBadge(priority)}
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+    </>
   );
 }

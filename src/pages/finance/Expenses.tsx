@@ -12,13 +12,6 @@ import { ExpenseFilters } from "./components/expense-table/ExpenseFilters";
 import { ExpenseTable } from "./components/expense-table/ExpenseTable";
 import { ExpenseBreakdownChart } from "./components/expense-charts/ExpenseBreakdownChart";
 import { MonthlyComparisonChart } from "./components/expense-charts/MonthlyComparisonChart";
-import { 
-  ExpenseBreakdownItem, 
-  MonthlyComparisonItem, 
-  RecurringExpense as TypedRecurringExpense,  // Import with alias to avoid confusion
-  ExpenseTabType 
-} from "./components/types/expense";
-import { format } from "date-fns";
 
 export default function Expenses() {
   // Navigation hooks
@@ -46,62 +39,14 @@ export default function Expenses() {
     handleBudgetViewChange,
     budgetCategories,
     totalExpense,
-    currentMonthTotal,
-    previousMonthTotal,
-    percentageChange,
-    formattedHighestExpense,
-    formattedLatestExpense,
+    highestExpense,
+    latestExpense,
     expenseBreakdownData,
     monthlyComparisonData,
     formattedRecurringExpenses,
     uniqueDepartments,
     uniqueExpenseTypes
   } = useExpensesData();
-
-  // Ensure formattedHighestExpense and formattedLatestExpense are properly typed and never null
-  const highestExpense = formattedHighestExpense || {
-    amount: 0,
-    description: 'No expenses',
-    date: ''
-  };
-  
-  const latestExpense = formattedLatestExpense || {
-    amount: 0,
-    description: 'No expenses',
-    date: ''
-  };
-
-  // Convert recurring expenses to the correct type
-  const typedRecurringExpenses: TypedRecurringExpense[] = formattedRecurringExpenses.map(expense => ({
-    id: expense.id,
-    title: expense.name,
-    amount: Number(expense.amount),  // Ensure this is a number
-    category: expense.category,
-    frequency: expense.frequency,
-    department: expense.department,
-    date: '',  // Add default empty string for date
-    isPaid: true  // Assuming all expenses are paid by default
-  }));
-
-  // Convert expense breakdown data to the correct type
-  const typedExpenseBreakdownData: ExpenseBreakdownItem[] = expenseBreakdownData.map((item, index) => ({
-    name: item.name,
-    value: item.value,
-    color: item.color || `#${Math.floor(Math.random()*16777215).toString(16)}` // Generate random color if none provided
-  }));
-
-  // Convert monthly comparison data to the correct type
-  const typedMonthlyComparisonData: MonthlyComparisonItem[] = monthlyComparisonData.map(item => ({
-    name: item.name,
-    amount: item.amount,
-    expense: item.amount,  // Using amount for both for compatibility
-    income: 0  // Default to 0 for income
-  }));
-
-  // Ensure activeTab is of the correct type
-  const typedActiveTab: ExpenseTabType = activeTab === "overview" || activeTab === "compliance" || activeTab === "approvals" 
-    ? activeTab as ExpenseTabType 
-    : "overview";
 
   // Create the overview content
   const overviewContent = (
@@ -110,9 +55,6 @@ export default function Expenses() {
       <ExpenseStatsCards
         loading={loading}
         totalExpense={totalExpense}
-        currentMonthTotal={currentMonthTotal}
-        previousMonthTotal={previousMonthTotal}
-        percentageChange={percentageChange}
         highestExpense={highestExpense}
         latestExpense={latestExpense}
         expenses={expenses}
@@ -135,7 +77,7 @@ export default function Expenses() {
       {/* Recurring Expenses */}
       <RecurringExpensesSection
         loading={loading}
-        recurringExpenses={typedRecurringExpenses}
+        recurringExpenses={formattedRecurringExpenses}
       />
 
       {/* Expenses Table */}
@@ -172,13 +114,13 @@ export default function Expenses() {
         {/* Expense Breakdown */}
         <ExpenseBreakdownChart
           loading={loading}
-          expenseBreakdownData={typedExpenseBreakdownData}
+          expenseBreakdownData={expenseBreakdownData}
           categories={categories}
         />
 
         {/* Month-over-Month Comparison */}
         <MonthlyComparisonChart
-          monthlyComparisonData={typedMonthlyComparisonData}
+          monthlyComparisonData={monthlyComparisonData}
         />
       </div>
     </>
@@ -191,7 +133,7 @@ export default function Expenses() {
 
       {/* Tabs */}
       <TabsSection
-        activeTab={typedActiveTab}
+        activeTab={activeTab}
         onTabChange={handleTabChange}
         overviewContent={overviewContent}
       />

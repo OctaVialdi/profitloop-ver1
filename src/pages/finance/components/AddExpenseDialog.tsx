@@ -1,282 +1,257 @@
 
 import React, { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, UploadCloud, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { useExpenses } from "@/hooks/useExpenses";
+import { useDepartments } from "@/hooks/useDepartments";
+
 import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { 
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon, X, Check, Plus, Upload, Users, SlidersHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useOrganization } from "@/hooks/useOrganization";
-import { cn } from "@/lib/utils";
 
-interface AddExpenseDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onExpenseAdded: () => void;
-  categories: {
-    id: string;
-    name: string;
-  }[];
-  departments: string[];
-}
+// Define expense types
+const expenseTypes = [
+  "Fixed",
+  "Variable",
+  "Operational"
+];
 
-export function AddExpenseDialog({
-  open,
-  onOpenChange,
-  onExpenseAdded,
-  categories,
-  departments = []
-}: AddExpenseDialogProps) {
-  // Get organization context
-  const { organization } = useOrganization();
-  
-  // Form state
+const recurringFrequencies = [
+  "Monthly",
+  "Quarterly",
+  "Yearly"
+];
+
+const AddExpenseDialog: React.FC = () => {
+  const [date, setDate] = useState<Date>(new Date());
+  const [amount, setAmount] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [amount, setAmount] = useState<number>(0);
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [categoryId, setCategoryId] = useState<string>("");
   const [department, setDepartment] = useState<string>("");
+  const [expenseType, setExpenseType] = useState<string>("");
   const [isRecurring, setIsRecurring] = useState<boolean>(false);
-  const [recurringFrequency, setRecurringFrequency] = useState<string>("monthly");
-  const [expenseType, setExpenseType] = useState<string>("operational");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [newCategoryName, setNewCategoryName] = useState<string>("");
-  const [showNewCategory, setShowNewCategory] = useState<boolean>(false);
+  const [recurringFrequency, setRecurringFrequency] = useState<string>("");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const [receipt, setReceipt] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
-  const [departmentsLoading, setDepartmentsLoading] = useState<boolean>(false);
-  
-  // Constants
-  const expenseTypes = ["operational", "capital", "marketing", "administrative"];
-  const recurringFrequencies = ["daily", "weekly", "bi-weekly", "monthly", "quarterly", "yearly"];
+  const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [showAddCategory, setShowAddCategory] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  // Reset form on dialog close
+  const { toast } = useToast();
+  const { categories, fetchCategories, addCategory, addExpense } = useExpenses();
+  const { departments, fetchDepartments, loading: departmentsLoading } = useDepartments();
+
+  // Fetch categories and departments when component mounts
   useEffect(() => {
-    if (!open) {
-      resetForm();
-    }
-  }, [open]);
+    fetchCategories();
+    fetchDepartments();
+  }, []);
 
-  // Form reset function
-  const resetForm = () => {
-    setDescription("");
-    setAmount(0);
-    setDate(new Date());
-    setCategoryId("");
-    setDepartment("");
-    setIsRecurring(false);
-    setRecurringFrequency("monthly");
-    setExpenseType("operational");
-    setNewCategoryName("");
-    setShowNewCategory(false);
-    setReceipt(null);
-    setReceiptPreview(null);
-    setValidationErrors({});
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!date) errors.date = "Date is required";
+    if (!amount || amount === "0") errors.amount = "Amount is required and must be greater than 0";
+    if (!category) errors.category = "Category is required";
+    if (!department) errors.department = "Department is required";
+    if (!expenseType) errors.expenseType = "Expense type is required";
+    if (isRecurring && !recurringFrequency) errors.recurringFrequency = "Recurring frequency is required";
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  // Handle receipt upload
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow only numbers and format as needed
+    const value = e.target.value.replace(/[^\d]/g, "");
+    setAmount(value);
+  };
+
   const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "File size should not exceed 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file type
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf"];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid File Type",
+          description: "Only image files and PDFs are allowed",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setReceipt(file);
       
-      // Create preview URL
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          setReceiptPreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+      // Create preview URL for the uploaded image
+      if (file.type.startsWith("image/")) {
+        const previewUrl = URL.createObjectURL(file);
+        setReceiptPreview(previewUrl);
       } else {
-        // Non-image file (like PDF)
+        // For PDFs or other file types, show a generic preview
         setReceiptPreview(null);
       }
+      
+      toast({
+        title: "Receipt Uploaded",
+        description: `File "${file.name}" successfully uploaded`,
+      });
     }
   };
 
-  // Remove receipt
   const removeReceipt = () => {
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview);
+    }
     setReceipt(null);
     setReceiptPreview(null);
   };
 
-  // Handle adding new category
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) {
-      setValidationErrors({
-        ...validationErrors,
-        category: 'Category name cannot be empty'
+    if (!newCategoryName || newCategoryName.trim() === "") {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a category name",
+        variant: "destructive",
       });
       return;
     }
-
-    try {
-      if (!organization?.id) {
-        throw new Error("No organization ID found");
-      }
-
-      const { data: existingCategory, error: checkError } = await supabase
-        .from("expense_categories")
-        .select("*")
-        .eq("name", newCategoryName)
-        .eq("organization_id", organization.id)
-        .maybeSingle();
-
-      if (checkError) throw checkError;
+    
+    const result = await addCategory(newCategoryName);
+    if (result) {
+      setCategory(newCategoryName); // Now directly using the name instead of ID
+      setNewCategoryName("");
+      setShowAddCategory(false);
       
-      // Return existing category if it already exists
-      if (existingCategory) {
-        setCategoryId(existingCategory.id);
-        setShowNewCategory(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("expense_categories")
-        .insert([
-          {
-            name: newCategoryName,
-            organization_id: organization.id,
-          },
-        ])
-        .select();
-
-      if (error) throw error;
-      
-      if (data && data[0]) {
-        setCategoryId(data[0].id);
-        onExpenseAdded(); // Refresh categories
-        setShowNewCategory(false);
-      }
-    } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to add category",
-        variant: "destructive",
+        title: "Success",
+        description: `Category "${newCategoryName}" has been added`,
       });
     }
   };
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate required fields
-    const errors: {[key: string]: string} = {};
-    
-    if (!date) errors.date = "Date is required";
-    if (amount <= 0) errors.amount = "Amount must be greater than 0";
-    if (!categoryId) errors.category = "Category is required";
-    if (!department) errors.department = "Department is required";
-    if (!expenseType) errors.expenseType = "Expense type is required";
-    if (isRecurring && !recurringFrequency) errors.recurringFrequency = "Frequency is required";
-    
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
+  const resetForm = () => {
+    setDate(new Date());
+    setAmount("");
+    setCategory("");
+    setDescription("");
+    setDepartment("");
+    setExpenseType("");
+    setIsRecurring(false);
+    setRecurringFrequency("");
+    setValidationErrors({});
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview);
+    }
+    setReceipt(null);
+    setReceiptPreview(null);
+    setIsSubmitting(false);
+  };
+
+  const handleSubmit = async () => {
+    // Validate form
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
       
-      if (!organization?.id) {
-        throw new Error("No organization ID found");
-      }
-      
-      // Upload receipt if provided
-      let receiptUrl = null;
-      let receiptPath = null;
-
-      if (receipt) {
-        try {
-          // This would need actual implementation for file upload
-          // For now we'll just simulate a successful upload
-          receiptUrl = "https://example.com/receipt.jpg";
-          receiptPath = "receipts/receipt.jpg";
-        } catch (uploadError: any) {
-          toast({
-            title: "Upload Error",
-            description: "Failed to upload receipt, but continuing with expense submission",
-            variant: "destructive",
-          });
-        }
-      }
-
-      // Get user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) {
-        throw new Error("User not authenticated");
-      }
-      
-      // Format date to string for database
-      const formattedDate = date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
-      
-      // Insert expense record
-      const { data, error } = await supabase
-        .from("expenses")
-        .insert({
-          amount,
-          date: formattedDate,
-          category_id: categoryId,
-          description,
-          department,
-          expense_type: expenseType,
-          is_recurring: isRecurring,
-          recurring_frequency: isRecurring ? recurringFrequency : null,
-          receipt_url: receiptUrl,
-          receipt_path: receiptPath,
-          organization_id: organization.id,
-          created_by: user.id
-        });
-
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Expense Added",
-        description: "Your expense has been added successfully",
+      console.log("Submitting expense with data:", {
+        amount: Number(amount),
+        date,
+        category,
+        description,
+        department,
+        expenseType,
+        isRecurring,
+        recurringFrequency: isRecurring ? recurringFrequency : undefined,
+        receipt: receipt || undefined
       });
-
-      onExpenseAdded();
-      onOpenChange(false);
+      
+      // Submit expense
+      const result = await addExpense({
+        amount: Number(amount),
+        date,
+        category,
+        description,
+        department,
+        expenseType,
+        isRecurring,
+        recurringFrequency: isRecurring ? recurringFrequency : undefined,
+        receipt: receipt || undefined
+      });
+      
+      if (result) {
+        // Reset form and close dialog
+        resetForm();
+        setIsOpen(false);
+        
+        toast({
+          title: "Success",
+          description: "Expense has been added successfully",
+        });
+      } else {
+        throw new Error("Failed to add expense");
+      }
     } catch (error: any) {
+      console.error("Error submitting expense:", error);
+      setIsSubmitting(false);
+      
       toast({
         title: "Error",
         description: error.message || "Failed to add expense",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className="bg-[#8B5CF6] hover:bg-[#7c4ff1]">Add Expense</Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Add New Expense</DialogTitle>
@@ -338,10 +313,7 @@ export function AddExpenseDialog({
                     validationErrors.amount && "border-red-500"
                   )}
                   value={amount} 
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^\d]/g, "");
-                    setAmount(Number(value));
-                  }}
+                  onChange={handleAmountChange}
                   placeholder="0" 
                 />
               </div>
@@ -388,7 +360,7 @@ export function AddExpenseDialog({
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-4">
-                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                  <UploadCloud className="h-8 w-8 text-gray-400 mb-2" />
                   <p className="text-sm text-gray-500 mb-2">Upload receipt image</p>
                   <label className="cursor-pointer">
                     <span className="bg-[#8B5CF6] text-white px-4 py-2 rounded-md text-sm hover:bg-[#7c4ff1]">
@@ -412,7 +384,7 @@ export function AddExpenseDialog({
             <label className="text-base font-medium">
               Category<span className="text-red-500">*</span>
             </label>
-            {showNewCategory ? (
+            {showAddCategory ? (
               <div className="flex gap-2">
                 <Input 
                   value={newCategoryName}
@@ -423,38 +395,36 @@ export function AddExpenseDialog({
                 <Button onClick={handleAddCategory} className="h-[50px]">
                   <Check className="mr-1 h-4 w-4" /> Save
                 </Button>
-                <Button variant="ghost" onClick={() => setShowNewCategory(false)} className="h-[50px]">
+                <Button variant="ghost" onClick={() => setShowAddCategory(false)} className="h-[50px]">
                   Cancel
                 </Button>
               </div>
             ) : (
               <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <Select 
-                    value={categoryId} 
-                    onValueChange={(value) => {
-                      setCategoryId(value);
-                      setValidationErrors({...validationErrors, category: ''});
-                    }}
-                  >
-                    <SelectTrigger className={cn(
-                      "h-[50px] flex-1",
-                      validationErrors.category && "border-red-500"
-                    )}>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.length === 0 ? (
-                        <SelectItem value="no-categories" disabled>No categories found</SelectItem>
-                      ) : (
-                        categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={() => setShowNewCategory(true)} className="h-[50px] px-3">
+                <Select 
+                  value={category} 
+                  onValueChange={(value) => {
+                    setCategory(value);
+                    setValidationErrors({...validationErrors, category: ''});
+                  }}
+                >
+                  <SelectTrigger className={cn(
+                    "h-[50px] flex-1",
+                    validationErrors.category && "border-red-500"
+                  )}>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.length === 0 ? (
+                      <SelectItem value="no-categories" disabled>No categories found</SelectItem>
+                    ) : (
+                      categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <Button onClick={() => setShowAddCategory(true)} className="h-[50px] px-3">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -604,19 +574,17 @@ export function AddExpenseDialog({
           )}
 
           {/* Submit Button */}
-          <DialogFooter>
-            <Button 
-              className="h-[60px] bg-[#8B5CF6] hover:bg-[#7c4ff1] mt-4" 
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Adding..." : "Add Expense"}
-            </Button>
-          </DialogFooter>
+          <Button 
+            className="h-[60px] bg-[#8B5CF6] hover:bg-[#7c4ff1] mt-4" 
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Adding..." : "Add Expense"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default AddExpenseDialog;
