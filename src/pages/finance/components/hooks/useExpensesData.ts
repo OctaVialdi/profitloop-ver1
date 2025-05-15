@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useExpensesContext } from "@/contexts/ExpensesContext";
 import { formatRupiah } from "@/utils/formatUtils";
 import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
+import { BudgetCategory } from "../budget/ExpenseBudgetSection";
 
 export function useExpensesData() {
   const { expenses, categories, loading, error, refreshData } = useExpensesContext();
@@ -183,7 +184,6 @@ export function useExpensesData() {
 
   // Format recurring expense data for display
   const formatRecurringExpenseData = () => {
-    // If no recurring expenses are found, return an empty array
     if (recurringExpenses.length === 0) {
       return [];
     }
@@ -212,7 +212,7 @@ export function useExpensesData() {
   };
 
   // Budget data from ExpenseBudget.tsx
-  const budgetCategories = [
+  const budgetCategories: BudgetCategory[] = [
     {
       name: "Marketing",
       current: 5000000,

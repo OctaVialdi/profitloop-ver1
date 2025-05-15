@@ -1,11 +1,9 @@
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatRupiah } from "@/utils/formatUtils";
 
-interface BudgetCategory {
+export interface BudgetCategory {
   name: string;
   current: number;
   total: number;
@@ -15,7 +13,7 @@ interface BudgetCategory {
 
 interface ExpenseBudgetSectionProps {
   budgetCategories: BudgetCategory[];
-  budgetView: "current" | "forecast";
+  budgetView: string;
   onBudgetViewChange: (value: string) => void;
 }
 
@@ -25,81 +23,47 @@ export function ExpenseBudgetSection({
   onBudgetViewChange,
 }: ExpenseBudgetSectionProps) {
   return (
-    <div className="space-y-6">
-      {/* Budget View Selector Dropdown */}
-      <div className="mb-6">
-        <Select defaultValue={budgetView} onValueChange={onBudgetViewChange}>
-          <SelectTrigger className="w-[240px] bg-white">
-            <SelectValue placeholder="Select Budget View" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="current">Current Budget</SelectItem>
-            <SelectItem value="forecast">Budget Forecast</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Budget Tracking Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Budget Tracking</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-green-500"></div>
-            <span>Safe</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-            <span>Warning</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-red-500"></div>
-            <span>Over Budget</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Budget Categories */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {budgetCategories.map((category, index) => (
-          <Card key={index} className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-medium">{category.name}</h3>
-              <div className="flex items-center">
-                <span className="text-sm">
-                  Rp{category.current.toLocaleString()} / Rp{category.total.toLocaleString()}
-                </span>
-                <Button variant="ghost" size="sm" className="ml-2 p-0 h-auto">
-                  <Edit className="h-4 w-4" />
-                </Button>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-medium">Budget Overview</CardTitle>
+        <Tabs defaultValue={budgetView} value={budgetView} onValueChange={onBudgetViewChange}>
+          <TabsList>
+            <TabsTrigger value="current">Current</TabsTrigger>
+            <TabsTrigger value="forecast">Forecast</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {budgetCategories.map((category) => (
+            <div key={category.name} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{category.name}</p>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <span>{formatRupiah(category.current)}</span>
+                    <span className="mx-2">/</span>
+                    <span>{formatRupiah(category.total)}</span>
+                  </div>
+                </div>
+                <span className="text-sm font-medium">{category.usedPercentage}%</span>
+              </div>
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className={`absolute h-full ${
+                    category.status === "over"
+                      ? "bg-red-500"
+                      : category.status === "warning"
+                      ? "bg-yellow-500"
+                      : "bg-green-500"
+                  }`}
+                  style={{ width: `${Math.min(category.usedPercentage, 100)}%` }}
+                />
               </div>
             </div>
-            <Progress
-              value={category.usedPercentage}
-              className={`h-2 ${
-                category.status === "safe" 
-                  ? "bg-gray-200" 
-                  : category.status === "warning" 
-                  ? "bg-yellow-200" 
-                  : "bg-red-200"
-              }`}
-            >
-              <div
-                className={`h-full ${
-                  category.status === "safe" 
-                    ? "bg-green-500" 
-                    : category.status === "warning" 
-                    ? "bg-yellow-500" 
-                    : "bg-red-500"
-                }`}
-                style={{ width: `${category.usedPercentage}%` }}
-              ></div>
-            </Progress>
-            <div className="flex justify-end mt-2">
-              <span className="text-sm">{category.usedPercentage}% used</span>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
