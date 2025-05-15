@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, UploadCloud, Plus } from "lucide-react";
@@ -162,6 +161,41 @@ const AddExpenseDialog: React.FC = () => {
       toast({
         title: "Success",
         description: `Category "${newCategoryName}" has been added`,
+      });
+    }
+  };
+
+  const deleteCategory = async (categoryName: string) => {
+    try {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      // Confirm deletion
+      if (!confirm(`Are you sure you want to delete the "${categoryName}" category?`)) {
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("expense_categories")
+        .delete()
+        .eq("name", categoryName)
+        .eq("organization_id", organization.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Category Deleted",
+        description: `Category "${categoryName}" has been deleted successfully`,
+      });
+      
+      await fetchCategories();
+    } catch (error: any) {
+      console.error("Error deleting expense category:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete expense category",
+        variant: "destructive",
       });
     }
   };
@@ -401,29 +435,48 @@ const AddExpenseDialog: React.FC = () => {
               </div>
             ) : (
               <div className="flex gap-2">
-                <Select 
-                  value={category} 
-                  onValueChange={(value) => {
-                    setCategory(value);
-                    setValidationErrors({...validationErrors, category: ''});
-                  }}
-                >
-                  <SelectTrigger className={cn(
-                    "h-[50px] flex-1",
-                    validationErrors.category && "border-red-500"
-                  )}>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.length === 0 ? (
-                      <SelectItem value="no-categories" disabled>No categories found</SelectItem>
-                    ) : (
-                      categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <div className="flex-1 relative">
+                  <Select 
+                    value={category} 
+                    onValueChange={(value) => {
+                      setCategory(value);
+                      setValidationErrors({...validationErrors, category: ''});
+                    }}
+                  >
+                    <SelectTrigger className={cn(
+                      "h-[50px] flex-1",
+                      validationErrors.category && "border-red-500"
+                    )}>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.length === 0 ? (
+                        <SelectItem value="no-categories" disabled>No categories found</SelectItem>
+                      ) : (
+                        categories.map((cat) => (
+                          <div key={cat.id} className="flex justify-between items-center px-2 py-1.5">
+                            <SelectItem value={cat.name}>{cat.name}</SelectItem>
+                            <Button 
+                              variant="ghost" 
+                              className="h-6 w-6 p-0 ml-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteCategory(cat.name);
+                              }}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                              </svg>
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button onClick={() => setShowAddCategory(true)} className="h-[50px] px-3">
                   <Plus className="h-4 w-4" />
                 </Button>

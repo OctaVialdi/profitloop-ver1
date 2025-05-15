@@ -1,49 +1,79 @@
 
-import { useState } from "react";
-import { BudgetCategory } from "../../../components/budget/ExpenseBudgetSection";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/hooks/useOrganization";
+
+export interface BudgetCategory {
+  name: string;
+  current: number;
+  total: number;
+  usedPercentage: number;
+  status: "safe" | "warning" | "over";
+}
 
 export function useBudgetData() {
-  const [budgetView, setBudgetView] = useState<"current" | "forecast">("current");
+  const [budgetView, setBudgetView] = useState("current");
+  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
+  const { organization } = useOrganization();
 
-  // Static budget data
-  const budgetCategories: BudgetCategory[] = [
-    {
-      name: "Marketing",
-      current: 5000000,
-      total: 50000000,
-      usedPercentage: 10,
-      status: "safe" as "safe" | "warning" | "over"
-    },
-    {
-      name: "IT",
-      current: 15000000,
-      total: 30000000,
-      usedPercentage: 50,
-      status: "warning" as "safe" | "warning" | "over"
-    },
-    {
-      name: "Operations",
-      current: 0,
-      total: 25000000,
-      usedPercentage: 0,
-      status: "safe" as "safe" | "warning" | "over"
-    },
-    {
-      name: "HR",
-      current: 0,
-      total: 15000000,
-      usedPercentage: 0,
-      status: "safe" as "safe" | "warning" | "over"
-    }
-  ];
-
+  // Handle budget view change
   const handleBudgetViewChange = (value: string) => {
-    if (value === "forecast") {
-      window.location.href = "/finance/expenses/budget/forecast";
-    } else {
-      setBudgetView("current");
-    }
+    setBudgetView(value);
   };
+
+  // Fetch department names from employee data
+  useEffect(() => {
+    const fetchDepartmentNames = async () => {
+      try {
+        if (!organization?.id) return;
+        
+        // Get unique department names from employee_employment table
+        const { data: employmentData, error: employmentError } = await supabase
+          .from("employee_employment")
+          .select("organization_name")
+          .eq("organization_id", organization.id)
+          .not("organization_name", "is", null);
+        
+        if (employmentError) throw employmentError;
+        
+        // Extract unique department names
+        const uniqueDepartments = new Set<string>();
+        employmentData.forEach((emp) => {
+          if (emp.organization_name) {
+            uniqueDepartments.add(emp.organization_name);
+          }
+        });
+        
+        // If no departments found, use default ones
+        const departments = uniqueDepartments.size > 0 
+          ? Array.from(uniqueDepartments) 
+          : ["Marketing", "IT", "Operations", "HR"];
+        
+        // Create budget data for each department
+        const budgetData = departments.map((dept, index) => {
+          // Generate some demo data based on department name
+          // In a real app, this would come from your budget database
+          const total = (index + 1) * 15000000;
+          const current = Math.min(total * (Math.random() * 0.8 + 0.1), total);
+          const usedPercentage = Math.round((current / total) * 100);
+          
+          return {
+            name: dept,
+            current,
+            total,
+            usedPercentage,
+            status: usedPercentage > 80 ? "over" : usedPercentage > 50 ? "warning" : "safe"
+          };
+        });
+        
+        setBudgetCategories(budgetData);
+      } catch (error) {
+        console.error("Error fetching department data:", error);
+      }
+    };
+    
+    fetchDepartmentNames();
+  }, [organization?.id]);
 
   return {
     budgetView,

@@ -7,6 +7,9 @@ import { Expense } from "@/hooks/useExpenses";
 interface ExpenseStatsCardsProps {
   loading: boolean;
   totalExpense: number;
+  currentMonthTotal: number; // New prop
+  previousMonthTotal: number; // New prop
+  percentageChange: number; // New prop
   highestExpense: {
     amount: number;
     description: string;
@@ -23,6 +26,9 @@ interface ExpenseStatsCardsProps {
 export function ExpenseStatsCards({
   loading,
   totalExpense,
+  currentMonthTotal,
+  previousMonthTotal,
+  percentageChange,
   highestExpense,
   latestExpense,
   expenses,
@@ -37,12 +43,17 @@ export function ExpenseStatsCards({
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(0)}</h3>
-              <span className="flex items-center text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
-                <ArrowDown className="h-3 w-3 mr-1" /> 100.0%
+              <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(currentMonthTotal)}</h3>
+              <span className={`flex items-center text-xs ${percentageChange >= 0 ? 'text-red-500 bg-red-50' : 'text-green-500 bg-green-50'} px-2 py-1 rounded-full`}>
+                {percentageChange >= 0 ? (
+                  <ArrowUp className="h-3 w-3 mr-1" />
+                ) : (
+                  <ArrowDown className="h-3 w-3 mr-1" />
+                )}
+                {Math.abs(percentageChange).toFixed(1)}%
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">vs. {formatRupiah(totalExpense)} last month</p>
+            <p className="text-xs text-muted-foreground">vs. {formatRupiah(previousMonthTotal)} last month</p>
           </div>
         </CardContent>
       </Card>

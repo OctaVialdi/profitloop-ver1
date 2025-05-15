@@ -39,6 +39,9 @@ export default function Expenses() {
     handleBudgetViewChange,
     budgetCategories,
     totalExpense,
+    currentMonthTotal,
+    previousMonthTotal,
+    percentageChange,
     highestExpense,
     latestExpense,
     expenseBreakdownData,
@@ -55,6 +58,9 @@ export default function Expenses() {
       <ExpenseStatsCards
         loading={loading}
         totalExpense={totalExpense}
+        currentMonthTotal={currentMonthTotal}
+        previousMonthTotal={previousMonthTotal}
+        percentageChange={percentageChange}
         highestExpense={highestExpense}
         latestExpense={latestExpense}
         expenses={expenses}
