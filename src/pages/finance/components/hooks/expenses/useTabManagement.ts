@@ -2,14 +2,17 @@
 import { useState } from "react";
 
 export function useTabManagement() {
-  const [activeTab, setActiveTab] = useState<"overview" | "compliance" | "approvals">("overview");
-  const [expenseView, setExpenseView] = useState<"chart" | "table">("chart");
+  // State for active tab
+  const [activeTab, setActiveTab] = useState("overview");
+  
+  // State for expense view mode
+  const [expenseView, setExpenseView] = useState("table");
   
   // Handle tab change
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as "overview" | "compliance" | "approvals");
+  const handleTabChange = (tabValue: string) => {
+    setActiveTab(tabValue);
   };
-
+  
   return {
     activeTab,
     expenseView,

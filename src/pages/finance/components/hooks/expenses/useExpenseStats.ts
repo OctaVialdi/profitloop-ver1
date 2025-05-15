@@ -8,6 +8,7 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
     if (expenses.length === 0) {
       return {
         totalExpense: 0,
+        currentMonthExpense: 0,
         highestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
         latestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
         expenseBreakdownData: [],
@@ -17,6 +18,18 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
 
     // Calculate total expense
     const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+    // Calculate current month expense
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    const currentMonthExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
+    });
+    
+    const currentMonthExpense = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
     // Find highest expense
     const highestExpense = expenses.reduce((highest, current) => 
@@ -51,18 +64,42 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
       };
     });
 
-    // Generate monthly comparison data
-    const monthlyComparisonData = [
-      { name: "Jan", expense: 10, income: 15 },
-      { name: "Feb", expense: 12, income: 14 },
-      { name: "Mar", expense: 16, income: 18 },
-      { name: "Apr", expense: 18, income: 22 },
-      { name: "May", expense: 14, income: 19 },
-      { name: "Jun", expense: 20, income: 23 },
-    ];
+    // Generate monthly comparison data based on actual expenses
+    const monthlyData: Record<string, {expense: number, income: number}> = {};
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    // Initialize last 6 months data
+    const today = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthKey = monthNames[month.getMonth()];
+      monthlyData[monthKey] = { expense: 0, income: 0 };
+    }
+    
+    // Fill with actual expense data
+    expenses.forEach(expense => {
+      const expenseDate = new Date(expense.date);
+      const monthName = monthNames[expenseDate.getMonth()];
+      
+      // Only consider expenses from the last 6 months
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+      
+      if (expenseDate >= sixMonthsAgo && monthlyData[monthName]) {
+        monthlyData[monthName].expense += expense.amount;
+      }
+    });
+    
+    // Convert to array format for the chart
+    const monthlyComparisonData = Object.entries(monthlyData).map(([name, data]) => ({
+      name,
+      expense: Math.round(data.expense / 1000), // Convert to thousands for display
+      income: Math.round((data.expense * 1.2) / 1000) // Placeholder for income (just for demo)
+    }));
 
     return {
       totalExpense,
+      currentMonthExpense,
       highestExpense: {
         amount: highestExpense.amount,
         description: highestExpense.description || 'N/A',

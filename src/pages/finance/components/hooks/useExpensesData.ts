@@ -13,7 +13,7 @@ export function useExpensesData() {
   // Use specialized hooks
   const filters = useExpenseFilters(expenses, categories);
   const stats = useExpenseStats(expenses, categories);
-  const formattedRecurringExpenses = useRecurringExpenses(expenses, categories);
+  const recurring = useRecurringExpenses(expenses, categories);
   const budgetData = useBudgetData();
   const tabManagement = useTabManagement();
 
@@ -40,13 +40,14 @@ export function useExpensesData() {
     
     // Stats data
     totalExpense: stats.totalExpense,
+    currentMonthExpense: stats.currentMonthExpense,
     highestExpense: stats.highestExpense,
     latestExpense: stats.latestExpense,
     expenseBreakdownData: stats.expenseBreakdownData,
     monthlyComparisonData: stats.monthlyComparisonData,
     
     // Recurring expenses
-    formattedRecurringExpenses,
+    formattedRecurringExpenses: recurring,
     
     // Budget data
     budgetView: budgetData.budgetView,

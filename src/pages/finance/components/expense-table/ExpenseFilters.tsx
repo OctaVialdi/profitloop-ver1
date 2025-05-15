@@ -60,7 +60,7 @@ export function ExpenseFilters({
           <SelectTrigger className="w-[160px] bg-white">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-gray-500" />
-              <SelectValue placeholder="All Departments" />
+              <SelectValue>All Departments</SelectValue>
             </div>
           </SelectTrigger>
           <SelectContent>

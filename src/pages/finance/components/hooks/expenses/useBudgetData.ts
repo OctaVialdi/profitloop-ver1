@@ -1,50 +1,56 @@
 
 import { useState } from "react";
-import { BudgetCategory } from "../../../components/budget/ExpenseBudgetSection";
+
+// Define the budget category type
+export interface BudgetCategory {
+  name: string;
+  current: number;
+  total: number;
+  usedPercentage: number;
+  status: "normal" | "warning" | "danger";
+}
 
 export function useBudgetData() {
-  const [budgetView, setBudgetView] = useState<"current" | "forecast">("current");
-
-  // Static budget data
+  // State for budget view (can be month/quarter/year)
+  const [budgetView, setBudgetView] = useState("month");
+  
+  // Handle budget view change
+  const handleBudgetViewChange = (view: string) => {
+    setBudgetView(view);
+  };
+  
+  // Mock budget data
   const budgetCategories: BudgetCategory[] = [
     {
-      name: "Marketing",
-      current: 5000000,
-      total: 50000000,
-      usedPercentage: 10,
-      status: "safe" as "safe" | "warning" | "over"
+      name: "Office Supplies",
+      current: 1200000,
+      total: 2000000,
+      usedPercentage: 60,
+      status: "normal"
     },
     {
-      name: "IT",
-      current: 15000000,
-      total: 30000000,
-      usedPercentage: 50,
-      status: "warning" as "safe" | "warning" | "over"
+      name: "Marketing & Advertising",
+      current: 4500000,
+      total: 5000000,
+      usedPercentage: 90,
+      status: "warning"
     },
     {
-      name: "Operations",
-      current: 0,
-      total: 25000000,
-      usedPercentage: 0,
-      status: "safe" as "safe" | "warning" | "over"
+      name: "Travel & Transportation",
+      current: 3200000,
+      total: 3000000,
+      usedPercentage: 107,
+      status: "danger"
     },
     {
-      name: "HR",
-      current: 0,
+      name: "Employee Benefits",
+      current: 8000000,
       total: 15000000,
-      usedPercentage: 0,
-      status: "safe" as "safe" | "warning" | "over"
+      usedPercentage: 53,
+      status: "normal"
     }
   ];
-
-  const handleBudgetViewChange = (value: string) => {
-    if (value === "forecast") {
-      window.location.href = "/finance/expenses/budget/forecast";
-    } else {
-      setBudgetView("current");
-    }
-  };
-
+  
   return {
     budgetView,
     budgetCategories,
