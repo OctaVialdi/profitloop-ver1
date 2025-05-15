@@ -63,7 +63,7 @@ export function ExpenseTable({
             <TableRow className="bg-gray-50">
               <TableHead className="text-gray-600 font-medium">Date</TableHead>
               <TableHead className="text-gray-600 font-medium">Category</TableHead>
-              <TableHead className="text-gray-600 font-medium">Description</TableHead>
+              <TableHead className="text-gray-600 font-medium min-w-[250px] w-1/3">Description</TableHead>
               <TableHead className="text-gray-600 font-medium text-right">Amount</TableHead>
               <TableHead className="text-gray-600 font-medium">Department</TableHead>
               <TableHead className="text-gray-600 font-medium">Type</TableHead>
@@ -101,7 +101,7 @@ export function ExpenseTable({
                   <TableRow key={expense.id} className="border-b hover:bg-gray-50">
                     <TableCell className="font-medium">{formattedDate}</TableCell>
                     <TableCell>{categoryName}</TableCell>
-                    <TableCell>{expense.description || "N/A"}</TableCell>
+                    <TableCell className="min-w-[250px] w-1/3">{expense.description || "N/A"}</TableCell>
                     <TableCell className={`text-right font-medium`}>
                       {formatRupiah(expense.amount)}
                     </TableCell>
