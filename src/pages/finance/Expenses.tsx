@@ -36,13 +36,11 @@ export default function Expenses() {
     activeTab,
     handleTabChange,
     budgetView,
+    handleBudgetViewChange,
     budgetCategories,
     totalExpense,
-    currentMonthTotal,
-    previousMonthTotal,
-    monthOverMonthChange,
-    formattedHighestExpense,
-    formattedLatestExpense,
+    highestExpense,
+    latestExpense,
     expenseBreakdownData,
     monthlyComparisonData,
     formattedRecurringExpenses,
@@ -57,11 +55,8 @@ export default function Expenses() {
       <ExpenseStatsCards
         loading={loading}
         totalExpense={totalExpense}
-        currentMonthTotal={currentMonthTotal}
-        previousMonthTotal={previousMonthTotal}
-        monthOverMonthChange={monthOverMonthChange}
-        formattedHighestExpense={formattedHighestExpense}
-        formattedLatestExpense={formattedLatestExpense}
+        highestExpense={highestExpense}
+        latestExpense={latestExpense}
         expenses={expenses}
       />
 
@@ -69,6 +64,7 @@ export default function Expenses() {
       <ExpenseBudgetSection
         budgetCategories={budgetCategories}
         budgetView={budgetView}
+        onBudgetViewChange={handleBudgetViewChange}
       />
 
       {/* Total Expenses Summary */}

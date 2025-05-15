@@ -1,56 +1,53 @@
 
 import { useState } from "react";
-
-// Budget category with monthly allocation and spending data
-export interface BudgetCategory {
-  name: string;
-  allocated: number;
-  spent: number;
-  percentUsed: number;
-}
+import { BudgetCategory } from "../../../components/budget/ExpenseBudgetSection";
 
 export function useBudgetData() {
-  // View toggle state (monthly, quarterly, annual)
-  const [budgetView, setBudgetView] = useState<"monthly" | "quarterly" | "annual">("monthly");
-  
-  // Sample budget categories with spending data
-  // In a real application, this would be fetched from an API
+  const [budgetView, setBudgetView] = useState<"current" | "forecast">("current");
+
+  // Static budget data
   const budgetCategories: BudgetCategory[] = [
     {
-      name: "Office Supplies",
-      allocated: 2000000,
-      spent: 1500000,
-      percentUsed: 75,
-    },
-    {
       name: "Marketing",
-      allocated: 5000000,
-      spent: 4200000,
-      percentUsed: 84,
+      current: 5000000,
+      total: 50000000,
+      usedPercentage: 10,
+      status: "safe" as "safe" | "warning" | "over"
     },
     {
-      name: "IT Equipment",
-      allocated: 10000000,
-      spent: 3500000,
-      percentUsed: 35,
+      name: "IT",
+      current: 15000000,
+      total: 30000000,
+      usedPercentage: 50,
+      status: "warning" as "safe" | "warning" | "over"
     },
     {
-      name: "Travel",
-      allocated: 3500000,
-      spent: 1200000,
-      percentUsed: 34,
+      name: "Operations",
+      current: 0,
+      total: 25000000,
+      usedPercentage: 0,
+      status: "safe" as "safe" | "warning" | "over"
     },
     {
-      name: "Training",
-      allocated: 2500000,
-      spent: 500000,
-      percentUsed: 20,
-    },
+      name: "HR",
+      current: 0,
+      total: 15000000,
+      usedPercentage: 0,
+      status: "safe" as "safe" | "warning" | "over"
+    }
   ];
-  
+
+  const handleBudgetViewChange = (value: string) => {
+    if (value === "forecast") {
+      window.location.href = "/finance/expenses/budget/forecast";
+    } else {
+      setBudgetView("current");
+    }
+  };
+
   return {
     budgetView,
-    setBudgetView,
-    budgetCategories
+    budgetCategories,
+    handleBudgetViewChange
   };
 }

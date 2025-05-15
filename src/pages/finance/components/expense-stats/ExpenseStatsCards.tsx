@@ -7,15 +7,12 @@ import { Expense } from "@/hooks/useExpenses";
 interface ExpenseStatsCardsProps {
   loading: boolean;
   totalExpense: number;
-  currentMonthTotal: number;
-  previousMonthTotal: number;
-  monthOverMonthChange: number;
-  formattedHighestExpense: {
+  highestExpense: {
     amount: number;
     description: string;
     date: string;
   };
-  formattedLatestExpense: {
+  latestExpense: {
     amount: number;
     description: string;
     date: string;
@@ -26,11 +23,8 @@ interface ExpenseStatsCardsProps {
 export function ExpenseStatsCards({
   loading,
   totalExpense,
-  currentMonthTotal,
-  previousMonthTotal,
-  monthOverMonthChange,
-  formattedHighestExpense,
-  formattedLatestExpense,
+  highestExpense,
+  latestExpense,
   expenses,
 }: ExpenseStatsCardsProps) {
   return (
@@ -43,17 +37,12 @@ export function ExpenseStatsCards({
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(currentMonthTotal)}</h3>
-              <span className={`flex items-center text-xs ${monthOverMonthChange >= 0 
-                ? 'text-green-500 bg-green-50' 
-                : 'text-red-500 bg-red-50'} px-2 py-1 rounded-full`}>
-                {monthOverMonthChange >= 0 
-                  ? <ArrowUp className="h-3 w-3 mr-1" /> 
-                  : <ArrowDown className="h-3 w-3 mr-1" />} 
-                {Math.abs(monthOverMonthChange).toFixed(1)}%
+              <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(0)}</h3>
+              <span className="flex items-center text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
+                <ArrowDown className="h-3 w-3 mr-1" /> 100.0%
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">vs. {formatRupiah(previousMonthTotal)} last month</p>
+            <p className="text-xs text-muted-foreground">vs. {formatRupiah(totalExpense)} last month</p>
           </div>
         </CardContent>
       </Card>
@@ -78,10 +67,10 @@ export function ExpenseStatsCards({
           <p className="text-sm text-muted-foreground">Highest Expense</p>
         </CardHeader>
         <CardContent>
-          <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(formattedHighestExpense.amount)}</h3>
-          <p className="text-xs mt-1">{formattedHighestExpense.description}</p>
+          <h3 className="text-2xl font-bold">{loading ? 'Loading...' : formatRupiah(highestExpense.amount)}</h3>
+          <p className="text-xs mt-1">{highestExpense.description}</p>
           <p className="text-xs text-muted-foreground flex items-center mt-1">
-            <span className="inline-block w-3 h-3 rounded-full bg-blue-600 mr-1"></span> {formattedHighestExpense.date}
+            <span className="inline-block w-3 h-3 rounded-full bg-blue-600 mr-1"></span> {highestExpense.date}
           </p>
         </CardContent>
       </Card>
@@ -92,10 +81,10 @@ export function ExpenseStatsCards({
           <p className="text-sm text-muted-foreground">Latest Transaction</p>
         </CardHeader>
         <CardContent>
-          <h3 className="text-lg font-medium">{formattedLatestExpense.description}</h3>
-          <h4 className="text-xl font-bold mt-1">{loading ? 'Loading...' : formatRupiah(formattedLatestExpense.amount)}</h4>
+          <h3 className="text-lg font-medium">{latestExpense.description}</h3>
+          <h4 className="text-xl font-bold mt-1">{loading ? 'Loading...' : formatRupiah(latestExpense.amount)}</h4>
           <p className="text-xs text-muted-foreground flex items-center mt-1">
-            <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span> {formattedLatestExpense.date}
+            <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span> {latestExpense.date}
           </p>
         </CardContent>
       </Card>

@@ -2,62 +2,20 @@
 import { useMemo } from "react";
 import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { formatRupiah } from "@/utils/formatUtils";
-import { startOfMonth, endOfMonth, isWithinInterval, subMonths, format as dateFormat } from "date-fns";
 
 export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory[]) {
   return useMemo(() => {
-    // Default state when no expenses
     if (expenses.length === 0) {
       return {
         totalExpense: 0,
-        currentMonthTotal: 0,
-        previousMonthTotal: 0,
-        monthOverMonthChange: 0,
-        formattedHighestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
-        formattedLatestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
+        highestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
+        latestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
         expenseBreakdownData: [],
         monthlyComparisonData: []
       };
     }
 
-    // Get current date for calculations
-    const now = new Date();
-    const currentMonthStart = startOfMonth(now);
-    const currentMonthEnd = endOfMonth(now);
-    
-    // Get previous month for calculations
-    const previousMonthStart = startOfMonth(subMonths(now, 1));
-    const previousMonthEnd = endOfMonth(subMonths(now, 1));
-
-    // Filter expenses for current month
-    const currentMonthExpenses = expenses.filter(expense => 
-      isWithinInterval(new Date(expense.date), {
-        start: currentMonthStart,
-        end: currentMonthEnd
-      })
-    );
-
-    // Filter expenses for previous month
-    const previousMonthExpenses = expenses.filter(expense => 
-      isWithinInterval(new Date(expense.date), {
-        start: previousMonthStart,
-        end: previousMonthEnd
-      })
-    );
-
-    // Calculate totals
-    const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-    const previousMonthTotal = previousMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-
-    // Calculate month over month change percentage
-    let monthOverMonthChange = 0;
-    if (previousMonthTotal > 0) {
-      monthOverMonthChange = ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100;
-    } else if (currentMonthTotal > 0) {
-      monthOverMonthChange = 100; // If previous month was 0, it's a 100% increase
-    }
-
-    // Calculate total expense (all time)
+    // Calculate total expense
     const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
     // Find highest expense
@@ -70,19 +28,6 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
       const latestDate = new Date(latest.date);
       return currentDate > latestDate ? current : latest;
     }, expenses[0]);
-
-    // Format expense objects for display
-    const formattedHighestExpense = {
-      amount: highestExpense.amount,
-      description: highestExpense.description || 'N/A',
-      date: new Date(highestExpense.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-    };
-
-    const formattedLatestExpense = {
-      amount: latestExpense.amount,
-      description: latestExpense.description || 'N/A',
-      date: new Date(latestExpense.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-    };
 
     // Group expenses by category for breakdown chart
     const expensesByCategory = expenses.reduce((acc, expense) => {
@@ -106,48 +51,28 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
       };
     });
 
-    // Generate real monthly comparison data
-    // First, group expenses by month
-    const monthlyData: Record<string, { expense: number, income: number }> = {};
-    
-    // Look back 6 months
-    for (let i = 0; i < 6; i++) {
-      const monthDate = subMonths(now, i);
-      const monthKey = dateFormat(monthDate, "MMM");
-      monthlyData[monthKey] = { expense: 0, income: 0 };
-    }
-    
-    // Aggregate expenses by month
-    expenses.forEach(expense => {
-      const expenseDate = new Date(expense.date);
-      const monthDiff = (now.getFullYear() - expenseDate.getFullYear()) * 12 + (now.getMonth() - expenseDate.getMonth());
-      
-      // Only include the last 6 months
-      if (monthDiff >= 0 && monthDiff < 6) {
-        const monthKey = dateFormat(expenseDate, "MMM");
-        if (monthlyData[monthKey]) {
-          monthlyData[monthKey].expense += expense.amount / 1000; // Converting to thousands for display
-        }
-      }
-    });
-    
-    // Convert to array format for the chart
-    // Note: We're not implementing income data yet as it would require additional data source
-    const monthlyComparisonData = Object.entries(monthlyData)
-      .map(([name, data]) => ({
-        name,
-        expense: Math.round(data.expense), // Round to whole numbers for cleaner display
-        income: Math.round(data.income || (data.expense * 1.2)) // Placeholder: Using 1.2x expense for income
-      }))
-      .reverse(); // To show oldest to newest
+    // Generate monthly comparison data
+    const monthlyComparisonData = [
+      { name: "Jan", expense: 10, income: 15 },
+      { name: "Feb", expense: 12, income: 14 },
+      { name: "Mar", expense: 16, income: 18 },
+      { name: "Apr", expense: 18, income: 22 },
+      { name: "May", expense: 14, income: 19 },
+      { name: "Jun", expense: 20, income: 23 },
+    ];
 
     return {
       totalExpense,
-      currentMonthTotal,
-      previousMonthTotal,
-      monthOverMonthChange,
-      formattedHighestExpense,
-      formattedLatestExpense,
+      highestExpense: {
+        amount: highestExpense.amount,
+        description: highestExpense.description || 'N/A',
+        date: new Date(highestExpense.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+      },
+      latestExpense: {
+        amount: latestExpense.amount,
+        description: latestExpense.description || 'N/A',
+        date: new Date(latestExpense.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+      },
       expenseBreakdownData,
       monthlyComparisonData
     };
