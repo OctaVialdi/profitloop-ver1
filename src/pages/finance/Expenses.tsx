@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -30,7 +29,13 @@ export default function Expenses() {
   const { toast } = useToast();
 
   // Fetch expenses using the hook
-  const { expenses, categories, fetchExpenses, fetchCategories, loading } = useExpenses();
+  const { 
+    expenses, 
+    categories, 
+    loading, 
+    error, 
+    loadInitialData 
+  } = useExpenses();
   
   // State for search filter
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,26 +64,11 @@ export default function Expenses() {
     console.log("Current categories data:", categories);
   }, [expenses, categories]);
   
-  // Fetch expenses and categories when component mounts
+  // Load data when component mounts
   useEffect(() => {
-    const loadData = async () => {
-      console.log("Loading expenses data...");
-      try {
-        await fetchCategories();
-        await fetchExpenses();
-        console.log("Data loaded successfully");
-      } catch (error) {
-        console.error("Error loading data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load expenses data. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-    
-    loadData();
-  }, []);
+    console.log("Component mounted, loading initial data...");
+    loadInitialData();
+  }, [loadInitialData]);
   
   // Apply filters when expenses, search term, or filters change
   useEffect(() => {
@@ -402,6 +392,7 @@ export default function Expenses() {
 
   return (
     <div className="space-y-6">
+      {/* Header section */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Expenses</h2>
@@ -418,7 +409,34 @@ export default function Expenses() {
         </div>
       </div>
 
-      {/* Top Navigation Tabs - Removed the arrows and Budget tab */}
+      {/* Error message display */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-red-100 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-red-800">Error loading expenses</h4>
+                <p className="text-sm text-red-600">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2 border-red-300 text-red-700 hover:bg-red-50"
+                  onClick={() => loadInitialData()}
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Top Navigation Tabs */}
       <Tabs defaultValue="overview" value={activeTab} className="w-full" onValueChange={handleTabChange}>
         <TabsList className="bg-card rounded-xl p-1 border overflow-auto">
           <TabsTrigger 
@@ -506,7 +524,7 @@ export default function Expenses() {
             </Card>
           </div>
 
-          {/* Budget Section - Integrated from ExpenseBudget.tsx */}
+          {/* Budget Section */}
           {renderBudgetSection()}
 
           {/* Total Expenses Summary */}
@@ -572,6 +590,7 @@ export default function Expenses() {
 
           {/* Expenses Table */}
           <Card className="overflow-hidden shadow-md border">
+            {/* Search and filter section */}
             <CardHeader className="bg-gray-50 border-b p-4">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="relative w-full max-w-sm">
@@ -650,7 +669,12 @@ export default function Expenses() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">Loading expenses...</TableCell>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="flex flex-col items-center justify-center py-8">
+                          <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                          <p>Loading expenses data...</p>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ) : filteredExpenses.length === 0 ? (
                     <TableRow>
@@ -696,6 +720,7 @@ export default function Expenses() {
               </Table>
             </div>
             
+            {/* Pagination section */}
             <div className="p-4 border-t flex justify-between items-center">
               <p className="text-sm text-gray-500">
                 Showing {filteredExpenses.length} of {expenses.length} expenses

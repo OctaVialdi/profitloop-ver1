@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,31 +30,37 @@ export const useExpenses = () => {
   const { toast } = useToast();
   const { organization } = useOrganization();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       if (!organization?.id) {
         console.error("No organization ID found");
+        setError("No organization ID found");
         return [];
       }
       
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("expense_categories")
         .select("*")
         .eq("organization_id", organization.id)
         .order("name");
 
-      if (error) throw error;
+      if (fetchError) {
+        throw fetchError;
+      }
       
       console.log("Fetched expense categories:", data);
       setCategories(data || []);
       return data;
     } catch (error: any) {
       console.error("Error fetching expense categories:", error);
+      setError(error.message || "Failed to fetch expense categories");
       toast({
         title: "Error",
         description: error.message || "Failed to fetch expense categories",
@@ -70,13 +75,15 @@ export const useExpenses = () => {
   const fetchExpenses = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       if (!organization?.id) {
         console.error("No organization ID found");
+        setError("No organization ID found");
         return [];
       }
       
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("expenses")
         .select(`
           *,
@@ -85,7 +92,9 @@ export const useExpenses = () => {
         .eq("organization_id", organization.id)
         .order("date", { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) {
+        throw fetchError;
+      }
       
       // Convert date strings to Date objects
       const formattedExpenses = (data || []).map(expense => ({
@@ -99,12 +108,38 @@ export const useExpenses = () => {
       return formattedExpenses;
     } catch (error: any) {
       console.error("Error fetching expenses:", error);
+      setError(error.message || "Failed to fetch expenses");
       toast({
         title: "Error",
         description: error.message || "Failed to fetch expenses",
         variant: "destructive",
       });
       return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log("Starting to load expense data...");
+      // First fetch categories
+      await fetchCategories();
+      console.log("Categories loaded, now fetching expenses...");
+      // Then fetch expenses (which may need categories)
+      await fetchExpenses();
+      console.log("All data successfully loaded!");
+    } catch (error: any) {
+      console.error("Error loading initial expense data:", error);
+      setError(error.message || "Failed to load expense data");
+      toast({
+        title: "Error",
+        description: "Failed to load expense data. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -314,10 +349,12 @@ export const useExpenses = () => {
 
   return {
     loading,
+    error,
     categories,
     expenses,
     fetchCategories,
     fetchExpenses,
+    loadInitialData,
     addCategory,
     addExpense,
   };
