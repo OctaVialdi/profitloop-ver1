@@ -1,64 +1,58 @@
 
 import { useState } from "react";
 
-export type BudgetViewType = "monthly" | "quarterly" | "yearly";
-export type BudgetStatusType = "safe" | "warning" | "over";
-
-export interface BudgetCategory {
+export type BudgetCategory = {
   id: string;
   name: string;
-  budgeted: number;
-  spent: number;
-  remaining: number;
-  status: BudgetStatusType;
-  percent: number;
-}
-
-const mockBudgetData: BudgetCategory[] = [
-  {
-    id: '1',
-    name: 'Marketing',
-    budgeted: 10000000,
-    spent: 7500000,
-    remaining: 2500000,
-    status: 'safe',
-    percent: 75
-  },
-  {
-    id: '2',
-    name: 'Operations',
-    budgeted: 15000000,
-    spent: 13000000,
-    remaining: 2000000,
-    status: 'warning',
-    percent: 86.7
-  },
-  {
-    id: '3',
-    name: 'IT Infrastructure',
-    budgeted: 5000000,
-    spent: 5200000,
-    remaining: -200000,
-    status: 'over',
-    percent: 104
-  },
-  {
-    id: '4',
-    name: 'Office Supplies',
-    budgeted: 2000000,
-    spent: 1200000,
-    remaining: 800000,
-    status: 'safe',
-    percent: 60
-  }
-];
+  current: number;
+  total: number;
+  usedPercentage: number;
+  status: "warning" | "safe" | "over";
+};
 
 export function useBudgetData() {
-  const [budgetView, setBudgetView] = useState<BudgetViewType>("monthly");
-  const [budgetCategories] = useState<BudgetCategory[]>(mockBudgetData);
+  const [budgetView, setBudgetView] = useState<"monthly" | "quarterly" | "yearly">(
+    "monthly"
+  );
 
-  const handleBudgetViewChange = (value: BudgetViewType) => {
-    setBudgetView(value);
+  // Mock data - this would normally come from the API based on budgetView
+  const budgetCategories: BudgetCategory[] = [
+    {
+      id: "cat-1",
+      name: "Office Equipment",
+      current: 1500000,
+      total: 2000000,
+      usedPercentage: 75,
+      status: "safe"
+    },
+    {
+      id: "cat-2",
+      name: "Marketing",
+      current: 3800000,
+      total: 4000000,
+      usedPercentage: 95,
+      status: "warning"
+    },
+    {
+      id: "cat-3",
+      name: "Office Rent",
+      current: 5200000, 
+      total: 5000000,
+      usedPercentage: 104,
+      status: "over"
+    },
+    {
+      id: "cat-4",
+      name: "Software Subscriptions",
+      current: 800000,
+      total: 1000000,
+      usedPercentage: 80,
+      status: "safe"
+    }
+  ];
+
+  const handleBudgetViewChange = (view: "monthly" | "quarterly" | "yearly") => {
+    setBudgetView(view);
   };
 
   return {

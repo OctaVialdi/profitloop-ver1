@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { formatRupiah } from "@/utils/formatUtils";
-import { startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { startOfMonth, endOfMonth, isWithinInterval, subMonths, format } from "date-fns";
 
 export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory[]) {
   return useMemo(() => {
@@ -36,8 +36,9 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
     );
 
     // Previous month boundaries
-    const previousMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    const previousMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+    const previousMonthDate = subMonths(currentDate, 1);
+    const previousMonthStart = startOfMonth(previousMonthDate);
+    const previousMonthEnd = endOfMonth(previousMonthDate);
     
     // Calculate previous month expenses
     const previousMonthExpenses = expenses.filter(expense =>
@@ -93,36 +94,46 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
     });
 
     // Generate monthly comparison data from actual expenses
-    const last6Months = Array.from({ length: 6 }, (_, i) => {
+    // Group by month for the last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    
+    const monthlyData: Record<string, {expense: number, income: number}> = {};
+    
+    // Initialize the last 6 months with zero values
+    for (let i = 0; i < 6; i++) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
-      return {
-        month: date.getMonth(),
-        year: date.getFullYear(),
-        name: date.toLocaleString('default', { month: 'short' })
-      };
-    }).reverse();
-
-    const monthlyComparisonData = last6Months.map(monthData => {
-      const monthStart = new Date(monthData.year, monthData.month, 1);
-      const monthEnd = new Date(monthData.year, monthData.month + 1, 0);
-      
-      const monthExpenses = expenses.filter(expense => 
-        isWithinInterval(new Date(expense.date), { start: monthStart, end: monthEnd })
-      );
-      
-      const totalMonthExpense = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-      
-      // For income, we could replace with actual income data if available
-      // For now, using a simple estimation based on expenses
-      const estimatedIncome = totalMonthExpense * (1 + (Math.random() * 0.5));
-      
-      return {
-        name: monthData.name,
-        expense: Math.round(totalMonthExpense / 1000000), // Convert to millions for display
-        income: Math.round(estimatedIncome / 1000000)     // Convert to millions for display
-      };
+      const monthKey = format(date, 'MMM');
+      monthlyData[monthKey] = { expense: 0, income: 0 };
+    }
+    
+    // Fill with actual expense data
+    expenses.forEach(expense => {
+      const expenseDate = new Date(expense.date);
+      if (expenseDate >= sixMonthsAgo) {
+        const monthKey = format(expenseDate, 'MMM');
+        if (monthlyData[monthKey]) {
+          monthlyData[monthKey].expense += expense.amount / 1000000; // Convert to millions
+        }
+      }
     });
+    
+    // Generate estimated income data (in practice, this would come from income records)
+    Object.keys(monthlyData).forEach(month => {
+      // Estimated income is 1.2-1.5x the expenses for demonstration
+      const multiplier = 1.2 + (Math.random() * 0.3);
+      monthlyData[month].income = monthlyData[month].expense * multiplier;
+    });
+    
+    // Convert to array format for the chart
+    const monthlyComparisonData = Object.entries(monthlyData)
+      .map(([name, values]) => ({
+        name,
+        expense: parseFloat(values.expense.toFixed(2)),
+        income: parseFloat(values.income.toFixed(2))
+      }))
+      .reverse(); // Most recent month last
 
     return {
       totalExpense,

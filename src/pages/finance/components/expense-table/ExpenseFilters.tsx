@@ -1,14 +1,14 @@
 
-import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+import { Button } from "@/components/ui/button";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from "@/components/ui/select";
+import { Calendar } from "lucide-react";
 
 interface ExpenseFiltersProps {
   searchTerm: string;
@@ -33,73 +33,71 @@ export function ExpenseFilters({
   onSearchChange,
   onDateFilterChange,
   onDepartmentFilterChange,
-  onTypeFilterChange,
+  onTypeFilterChange
 }: ExpenseFiltersProps) {
   return (
-    <div className="space-y-4">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="space-y-3">
+      <div>
         <Input
           placeholder="Search expenses..."
-          className="pl-10"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
+          className="max-w-md"
         />
       </div>
-
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        {/* Date Filter */}
         <Select value={dateFilter} onValueChange={onDateFilterChange}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Date" />
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Date Range" />
           </SelectTrigger>
           <SelectContent>
-            <SelectGroup>
-              <SelectItem value="all">All dates</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="this_week">This Week</SelectItem>
-              <SelectItem value="this_month">This Month</SelectItem>
-              <SelectItem value="last_month">Last Month</SelectItem>
-              <SelectItem value="this_year">This Year</SelectItem>
-            </SelectGroup>
+            <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="this-week">This Week</SelectItem>
+            <SelectItem value="this-month">This Month</SelectItem>
+            <SelectItem value="last-month">Last Month</SelectItem>
+            <SelectItem value="last-3-months">Last 3 Months</SelectItem>
+            <SelectItem value="this-year">This Year</SelectItem>
+            <SelectItem value="custom">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Custom Range
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
 
-        {/* Department Filter */}
         <Select value={departmentFilter} onValueChange={onDepartmentFilterChange}>
-          <SelectTrigger className="w-[160px] whitespace-normal text-ellipsis">
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Department" />
           </SelectTrigger>
           <SelectContent>
-            <SelectGroup>
-              <SelectItem value="all">All departments</SelectItem>
-              {uniqueDepartments.map((department) => (
-                <SelectItem key={department} value={department}>
-                  {department}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+            <SelectItem value="all">All Departments</SelectItem>
+            {uniqueDepartments.map((department) => (
+              <SelectItem key={department} value={department}>
+                {department}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
-        {/* Expense Type Filter */}
         <Select value={typeFilter} onValueChange={onTypeFilterChange}>
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectGroup>
-              <SelectItem value="all">All types</SelectItem>
-              {uniqueExpenseTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+            <SelectItem value="all">All Types</SelectItem>
+            {uniqueExpenseTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
+
+        <Button variant="outline" className="ml-auto">
+          Export
+        </Button>
       </div>
     </div>
   );
