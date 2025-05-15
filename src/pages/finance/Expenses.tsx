@@ -47,6 +47,9 @@ export default function Expenses() {
   // Filtered expenses
   const [filteredExpenses, setFilteredExpenses] = useState(expenses);
   
+  // State for recurring expenses
+  const [recurringExpenses, setRecurringExpenses] = useState<any[]>([]);
+  
   // Fetch expenses and categories when component mounts
   useEffect(() => {
     fetchExpenses();
@@ -109,6 +112,10 @@ export default function Expenses() {
     
     // Update filtered expenses
     setFilteredExpenses(result);
+
+    // Set recurring expenses (filter for is_recurring === true)
+    const recurring = expenses.filter(expense => expense.is_recurring === true);
+    setRecurringExpenses(recurring);
   }, [expenses, searchTerm, dateFilter, departmentFilter, typeFilter, categories]);
 
   // Process expenses data for charts and display
@@ -194,41 +201,35 @@ export default function Expenses() {
     monthlyComparisonData
   } = processExpenseData();
 
-  // Sample data for recurring expenses (would typically come from API)
-  const recurringExpenses = [
-    {
-      title: "Office Rent",
-      amount: "Rp 15.000.000",
-      category: "Rent",
-      date: "15 May 2025",
-      frequency: "Monthly",
-      isPaid: true
-    },
-    {
-      title: "Software Licenses",
-      amount: "Rp 5.000.000",
-      category: "Software",
-      date: "01 Jun 2025",
-      frequency: "Quarterly",
-      isPaid: true
-    },
-    {
-      title: "Insurance",
-      amount: "Rp 35.000.000",
-      category: "Insurance",
-      date: "10 Jul 2025",
-      frequency: "Yearly",
-      isPaid: true
-    },
-    {
-      title: "Internet Service",
-      amount: "Rp 2.500.000",
-      category: "Utilities",
-      date: "30 May 2025",
-      frequency: "Monthly",
-      isPaid: true
-    },
-  ];
+  // Format recurring expense data for display
+  const formatRecurringExpenseData = () => {
+    // If no recurring expenses are found, return an empty array
+    if (recurringExpenses.length === 0) {
+      return [];
+    }
+
+    // Convert recurring expenses to the display format
+    return recurringExpenses.map(expense => {
+      // Find category name
+      const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
+      
+      // Format date
+      const formattedDate = expense.date ? new Date(expense.date).toLocaleDateString('id-ID', { 
+        day: '2-digit', month: 'short', year: 'numeric' 
+      }) : 'N/A';
+      
+      return {
+        title: expense.description || categoryName,
+        amount: formatRupiah(expense.amount),
+        category: categoryName,
+        date: formattedDate,
+        frequency: expense.recurring_frequency || "Monthly",
+        isPaid: true // Assuming all recorded expenses are paid
+      };
+    });
+  };
+  
+  const formattedRecurringExpenses = formatRecurringExpenseData();
 
   // Budget data from ExpenseBudget.tsx
   const budgetCategories = [
@@ -484,7 +485,7 @@ export default function Expenses() {
             </CardContent>
           </Card>
 
-          {/* Recurring Expenses */}
+          {/* Recurring Expenses - Now using real data from database */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-semibold">Recurring Expenses</h3>
@@ -493,32 +494,42 @@ export default function Expenses() {
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {recurringExpenses.map((expense, index) => (
-                <Card key={index} className="overflow-hidden hover:shadow-md transition-all duration-200">
-                  <CardContent className="p-5">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium">{expense.title}</p>
-                        <span className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full">
-                          {expense.frequency}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-bold">{expense.amount}</h3>
-                      <p className="text-xs text-muted-foreground">{expense.category}</p>
-                      <p className="text-xs text-muted-foreground flex items-center">
-                        <span className="inline-block w-3 h-3 rounded-full bg-blue-200 mr-1"></span> {expense.date}
-                      </p>
-                      <Button 
-                        variant={expense.isPaid ? "secondary" : "outline"} 
-                        className={`w-full ${expense.isPaid ? 'bg-green-50 text-green-600 hover:bg-green-100' : ''}`}
-                        size="sm"
-                      >
-                        {expense.isPaid ? '✓ Mark Paid' : 'Mark Paid'}
-                      </Button>
-                    </div>
-                  </CardContent>
+              {loading ? (
+                <Card className="overflow-hidden p-5">
+                  <p>Loading recurring expenses...</p>
                 </Card>
-              ))}
+              ) : formattedRecurringExpenses.length === 0 ? (
+                <Card className="overflow-hidden p-5 col-span-full">
+                  <p className="text-center text-gray-500">No recurring expenses found. Add a recurring expense to see it here.</p>
+                </Card>
+              ) : (
+                formattedRecurringExpenses.map((expense, index) => (
+                  <Card key={index} className="overflow-hidden hover:shadow-md transition-all duration-200">
+                    <CardContent className="p-5">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">{expense.title}</p>
+                          <span className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full">
+                            {expense.frequency}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold">{expense.amount}</h3>
+                        <p className="text-xs text-muted-foreground">{expense.category}</p>
+                        <p className="text-xs text-muted-foreground flex items-center">
+                          <span className="inline-block w-3 h-3 rounded-full bg-blue-200 mr-1"></span> {expense.date}
+                        </p>
+                        <Button 
+                          variant={expense.isPaid ? "secondary" : "outline"} 
+                          className={`w-full ${expense.isPaid ? 'bg-green-50 text-green-600 hover:bg-green-100' : ''}`}
+                          size="sm"
+                        >
+                          {expense.isPaid ? '✓ Mark Paid' : 'Mark Paid'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
