@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, UploadCloud, Plus } from "lucide-react";
@@ -36,7 +35,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 const expenseTypes = [
   "Fixed",
   "Variable",
-  "Operational"
+  "Operational",
+  "Capital",
+  "Non-Operational"
 ];
 
 const recurringFrequencies = [

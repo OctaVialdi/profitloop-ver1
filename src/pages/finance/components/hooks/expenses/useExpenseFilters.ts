@@ -119,6 +119,15 @@ export function useExpenseFilters(expenses: Expense[], categories: ExpenseCatego
       new Set(expenses.map(e => e.expense_type).filter(Boolean))
     ) as string[];
 
+    // If we have new expense types that aren't in any existing entries yet,
+    // make sure they're included in the filter options
+    const allExpenseTypes = ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"];
+    allExpenseTypes.forEach(type => {
+      if (!uniqueExpenseTypes.includes(type)) {
+        uniqueExpenseTypes.push(type);
+      }
+    });
+
     return {
       uniqueDepartments,
       uniqueExpenseTypes
