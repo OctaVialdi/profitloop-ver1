@@ -1,6 +1,7 @@
 
-import { toast as sonnerToast, type Toast } from "sonner";
-import { useToast as useShadcnToast } from "@/components/ui/use-toast"
+import { toast as sonnerToast } from "sonner";
+import { useToast as useShadcnToast } from "@/components/ui/use-toast";
+import type { Toast } from "@/components/ui/toast";
 
 // For compatibility with both toast systems
 export function useToast() {
@@ -8,3 +9,6 @@ export function useToast() {
 }
 
 export const toast = sonnerToast;
+
+// Re-export the Toast type for components that need it
+export type { Toast };

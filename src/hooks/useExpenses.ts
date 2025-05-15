@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { uploadFileToBucket } from "@/integrations/supabase/storage";
@@ -29,7 +29,6 @@ export type ExpenseCategory = {
 };
 
 export const useExpenses = () => {
-  const { toast } = useToast();
   const { organization } = useOrganization();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,16 +61,12 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error fetching expense categories:", error);
       setError(error.message || "Failed to fetch expense categories");
-      toast({
-        title: "Error",
-        description: error.message || "Failed to fetch expense categories",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to fetch expense categories");
       return [];
     } finally {
       setLoading(false);
     }
-  }, [organization?.id, toast]);
+  }, [organization?.id]);
 
   const fetchExpenses = useCallback(async () => {
     try {
@@ -111,16 +106,12 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error fetching expenses:", error);
       setError(error.message || "Failed to fetch expenses");
-      toast({
-        title: "Error",
-        description: error.message || "Failed to fetch expenses",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to fetch expenses");
       return [];
     } finally {
       setLoading(false);
     }
-  }, [organization?.id, toast]);
+  }, [organization?.id]);
 
   const loadInitialData = useCallback(async () => {
     setLoading(true);
@@ -166,10 +157,7 @@ export const useExpenses = () => {
       
       // Return existing category if it already exists
       if (existingCategory) {
-        toast({
-          title: "Category Exists",
-          description: "This category already exists",
-        });
+        toast.info("This category already exists");
         return existingCategory;
       }
 
@@ -186,20 +174,13 @@ export const useExpenses = () => {
 
       if (error) throw error;
       
-      toast({
-        title: "Category Added",
-        description: "Expense category has been added successfully",
-      });
+      toast.success("Expense category has been added successfully");
       
       await fetchCategories();
       return data?.[0];
     } catch (error: any) {
       console.error("Error adding expense category:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add expense category",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to add expense category");
       return null;
     }
   };
@@ -268,11 +249,7 @@ export const useExpenses = () => {
           console.log("Receipt uploaded successfully:", receiptUrl);
         } catch (uploadError: any) {
           console.error("Receipt upload failed:", uploadError);
-          toast({
-            title: "Upload Error",
-            description: "Failed to upload receipt, but continuing with expense submission",
-            variant: "destructive",
-          });
+          toast.error("Failed to upload receipt, but continuing with expense submission");
         }
       }
 
@@ -331,20 +308,13 @@ export const useExpenses = () => {
 
       console.log("Expense added successfully:", data);
       
-      toast({
-        title: "Expense Added",
-        description: "Your expense has been added successfully",
-      });
+      toast.success("Your expense has been added successfully");
 
       await fetchExpenses();
       return data?.[0];
     } catch (error: any) {
       console.error("Error adding expense:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add expense",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to add expense");
       return null;
     } finally {
       setLoading(false);
@@ -390,21 +360,14 @@ export const useExpenses = () => {
         throw deleteError;
       }
 
-      toast({
-        title: "Success",
-        description: "Expense has been deleted successfully",
-      });
+      toast.success("Expense has been deleted successfully");
 
       // Refresh the expenses list
       await fetchExpenses();
       return true;
     } catch (error: any) {
       console.error("Error deleting expense:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete expense",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to delete expense");
       return false;
     } finally {
       setLoading(false);

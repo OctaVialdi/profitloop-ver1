@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ExpensesContext } from './ExpensesContext';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useOrganization } from '@/hooks/useOrganization';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({ 
   children 
@@ -53,11 +53,7 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
         
         // Only show toast on first error
         if (retryAttempts === 0) {
-          toast({
-            title: "Error",
-            description: "Failed to load expense data. Retrying automatically...",
-            variant: "destructive",
-          });
+          toast.error("Failed to load expense data. Retrying automatically...");
         }
         
         // Auto-retry with increasing backoff (max 3 attempts)
@@ -72,11 +68,7 @@ export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({
           
           setRetryTimeout(timeout);
         } else {
-          toast({
-            title: "Error",
-            description: "Failed to load expense data after multiple attempts. Please try again manually.",
-            variant: "destructive",
-          });
+          toast.error("Failed to load expense data after multiple attempts. Please try again manually.");
         }
       }
     }

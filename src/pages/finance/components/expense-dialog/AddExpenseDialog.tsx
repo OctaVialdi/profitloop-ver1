@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useDepartments } from "@/hooks/useDepartments";
 
@@ -40,7 +40,6 @@ const AddExpenseDialog: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const { toast } = useToast();
   const { categories, fetchCategories, addCategory, addExpense } = useExpenses();
   const { departments, fetchDepartments, loading: departmentsLoading } = useDepartments();
 
@@ -76,22 +75,14 @@ const AddExpenseDialog: React.FC = () => {
       
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File Too Large",
-          description: "File size should not exceed 5MB",
-          variant: "destructive",
-        });
+        toast.error("File size should not exceed 5MB");
         return;
       }
       
       // Validate file type
       const allowedTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf"];
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Invalid File Type",
-          description: "Only image files and PDFs are allowed",
-          variant: "destructive",
-        });
+        toast.error("Only image files and PDFs are allowed");
         return;
       }
       
@@ -106,10 +97,7 @@ const AddExpenseDialog: React.FC = () => {
         setReceiptPreview(null);
       }
       
-      toast({
-        title: "Receipt Uploaded",
-        description: `File "${file.name}" successfully uploaded`,
-      });
+      toast.success(`File "${file.name}" successfully uploaded`);
     }
   };
 
@@ -123,11 +111,7 @@ const AddExpenseDialog: React.FC = () => {
 
   const handleAddCategory = async () => {
     if (!newCategoryName || newCategoryName.trim() === "") {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a category name",
-        variant: "destructive",
-      });
+      toast.error("Please enter a category name");
       return;
     }
     
@@ -137,10 +121,7 @@ const AddExpenseDialog: React.FC = () => {
       setNewCategoryName("");
       setShowAddCategory(false);
       
-      toast({
-        title: "Success",
-        description: `Category "${newCategoryName}" has been added`,
-      });
+      toast.success(`Category "${newCategoryName}" has been added`);
     }
   };
 
@@ -165,11 +146,7 @@ const AddExpenseDialog: React.FC = () => {
   const handleSubmit = async () => {
     // Validate form
     if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -206,10 +183,7 @@ const AddExpenseDialog: React.FC = () => {
         resetForm();
         setIsOpen(false);
         
-        toast({
-          title: "Success",
-          description: "Expense has been added successfully",
-        });
+        toast.success("Expense has been added successfully");
       } else {
         throw new Error("Failed to add expense");
       }
@@ -217,11 +191,7 @@ const AddExpenseDialog: React.FC = () => {
       console.error("Error submitting expense:", error);
       setIsSubmitting(false);
       
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add expense",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to add expense");
     }
   };
 
