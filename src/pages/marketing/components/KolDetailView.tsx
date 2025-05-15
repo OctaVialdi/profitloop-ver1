@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,7 +37,9 @@ export const KolDetailView: React.FC<KolDetailViewProps> = ({
   
   const handleUpdate = async () => {
     if (Object.keys(updatedData).length === 0) {
-      toast("No changes detected");
+      toast({
+        description: "No changes detected",
+      });
       return;
     }
     

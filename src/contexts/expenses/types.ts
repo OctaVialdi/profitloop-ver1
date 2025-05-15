@@ -9,19 +9,6 @@ export interface ExpensesContextType {
   fetchExpenses: () => Promise<Expense[]>;
   fetchCategories: () => Promise<ExpenseCategory[]>;
   refreshData: () => Promise<void>;
-  addCategory: (name: string, description?: string) => Promise<any>;
-  addExpense: (expenseData: {
-    amount: number;
-    date: Date;
-    category: string;
-    description?: string;
-    department?: string;
-    expenseType?: string;
-    isRecurring: boolean;
-    recurringFrequency?: string;
-    receipt?: File;
-  }) => Promise<any>;
-  deleteExpense: (expenseId: string) => Promise<boolean>;
 }
 
 export interface ExpensesProviderProps {

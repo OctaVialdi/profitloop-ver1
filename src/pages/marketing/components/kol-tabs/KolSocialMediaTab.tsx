@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,11 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
 
   const handleAddPlatform = async () => {
     if (!platform) {
-      toast.error("Please select a platform");
+      toast({
+        title: "Error",
+        description: "Please select a platform",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -52,10 +57,17 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
       setFollowers("");
       setEngagement("");
       
-      toast.success("Platform added successfully");
+      toast({
+        title: "Success",
+        description: "Platform added successfully",
+      });
     } catch (error) {
       console.error("Error adding platform:", error);
-      toast.error("Failed to add platform");
+      toast({
+        title: "Error",
+        description: "Failed to add platform",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -69,10 +81,17 @@ export const KolSocialMediaTab: React.FC<KolSocialMediaTabProps> = ({ selectedKo
       await deletePlatform(selectedKol.id, deletingPlatformId);
       setDeletingPlatformId(null);
       
-      toast.success("Platform deleted successfully");
+      toast({
+        title: "Success",
+        description: "Platform deleted successfully",
+      });
     } catch (error) {
       console.error("Error deleting platform:", error);
-      toast.error("Failed to delete platform");
+      toast({
+        title: "Error",
+        description: "Failed to delete platform",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

@@ -1,225 +1,132 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/hooks/useOrganization';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Trash } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-interface ContentPillar {
-  id: string;
-  name: string;
-  description?: string;
-  organization_id: string;
-}
-
-const ContentPillarsTab = () => {
-  const { organization } = useOrganization();
-  const [pillars, setPillars] = useState<ContentPillar[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const fetchPillars = async () => {
-    try {
-      if (!organization?.id) return;
-
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('content_pillars_digital_marketing')
-        .select('*')
-        .eq('organization_id', organization.id)
-        .order('name');
-
-      if (error) throw error;
-      setPillars(data || []);
-    } catch (error: any) {
-      console.error('Error fetching content pillars:', error);
-      toast.error('Failed to fetch content pillars');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddPillar = async () => {
-    try {
-      if (!name.trim()) {
-        toast.error('Name is required');
-        return;
-      }
-
-      if (!organization?.id) {
-        toast.error('Organization ID is missing');
-        return;
-      }
-
-      setIsSubmitting(true);
-      
-      const { data, error } = await supabase
-        .from('content_pillars_digital_marketing')
-        .insert({
-          name,
-          description: description || null,
-          organization_id: organization.id,
-        })
-        .select();
-
-      if (error) throw error;
-
-      toast.success('Content pillar created successfully');
-      setName('');
-      setDescription('');
-      setDialogOpen(false);
-      fetchPillars();
-    } catch (error: any) {
-      console.error('Error adding content pillar:', error);
-      toast.error(error.message || 'Failed to create content pillar');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeletePillar = async (id: string) => {
-    try {
-      if (!organization?.id) return;
-      
-      setLoading(true);
-      const { error } = await supabase
-        .from('content_pillars_digital_marketing')
-        .delete()
-        .eq('id', id)
-        .eq('organization_id', organization.id);
-
-      if (error) throw error;
-      
-      toast.success('Content pillar deleted successfully');
-      fetchPillars();
-    } catch (error: any) {
-      console.error('Error deleting content pillar:', error);
-      toast.error(error.message || 'Failed to delete content pillar');
-    } finally {
-      setLoading(false);
-    }
-  };
+export function ContentPillarsTab() {
+  const [contentPillars, setContentPillars] = useState<any[]>([]);
+  const [newContentPillar, setNewContentPillar] = useState("");
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (organization?.id) {
-      fetchPillars();
+    fetchContentPillars();
+  }, []);
+
+  const fetchContentPillars = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("content_pillars")
+        .select("*")
+        .order("name");
+      
+      if (error) throw error;
+      setContentPillars(data || []);
+    } catch (error: any) {
+      console.error("Error fetching content pillars:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load content pillars",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [organization?.id]);
+  };
+
+  const addContentPillar = async () => {
+    if (!newContentPillar.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from("content_pillars")
+        .insert({ name: newContentPillar.trim() });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Content pillar added successfully",
+      });
+      
+      setNewContentPillar("");
+      fetchContentPillars();
+    } catch (error: any) {
+      console.error("Error adding content pillar:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add content pillar",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteContentPillar = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("content_pillars")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Content pillar deleted successfully",
+      });
+      
+      fetchContentPillars();
+    } catch (error: any) {
+      console.error("Error deleting content pillar:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete content pillar",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-medium">Content Pillars</h2>
-        <Button onClick={() => setDialogOpen(true)}>Add Content Pillar</Button>
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Input
+          placeholder="Enter new content pillar"
+          value={newContentPillar}
+          onChange={(e) => setNewContentPillar(e.target.value)}
+          className="max-w-sm"
+        />
+        <Button onClick={addContentPillar} disabled={!newContentPillar.trim() || isLoading}>
+          <Plus className="h-4 w-4 mr-1" /> Add
+        </Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : pillars.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          No content pillars found. Add your first one!
-        </div>
-      ) : (
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pillars.map((pillar) => (
-                <TableRow key={pillar.id}>
-                  <TableCell className="font-medium">{pillar.name}</TableCell>
-                  <TableCell>{pillar.description}</TableCell>
-                  <TableCell>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleDeletePillar(pillar.id)}
-                      className="text-destructive hover:text-destructive/80"
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
+      <Card>
+        <CardContent className="p-4">
+          {contentPillars.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No content pillars defined yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {contentPillars.map((pillar) => (
+                <li key={pillar.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <span>{pillar.name}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => deleteContentPillar(pillar.id)}
+                  >
+                    <Trash className="h-4 w-4 text-red-500" />
+                  </Button>
+                </li>
               ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Content Pillar</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Name
-              </label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter pillar name"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Description (optional)
-              </label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter description"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setDialogOpen(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAddPillar}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Saving...' : 'Save'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default ContentPillarsTab;
+}

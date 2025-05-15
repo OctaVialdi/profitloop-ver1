@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrganization } from './useOrganization';
 import { uploadProfilePhoto, deleteProfilePhoto } from '@/utils/uploadHelper';
@@ -189,8 +189,10 @@ export const useKols = () => {
       console.log("Fetched KOLs:", data);
     } catch (error) {
       console.error('Error fetching KOLs:', error);
-      toast.error("Error", {
-        description: 'Failed to fetch KOLs data'
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch KOLs data',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -218,8 +220,9 @@ export const useKols = () => {
         throw error;
       }
       
-      toast.success("Success", {
-        description: 'KOL has been added successfully'
+      toast({
+        title: 'Success',
+        description: 'KOL has been added successfully',
       });
       
       console.log("Added KOL successfully:", data);
@@ -229,8 +232,10 @@ export const useKols = () => {
       return data;
     } catch (error: any) {
       console.error('Error adding KOL:', error);
-      toast.error("Error", {
-        description: `Failed to add KOL: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to add KOL: ${error.message}`,
+        variant: 'destructive',
       });
       return null;
     } finally {
@@ -252,8 +257,9 @@ export const useKols = () => {
         throw error;
       }
       
-      toast.success("Success", {
-        description: 'KOL has been updated successfully'
+      toast({
+        title: 'Success',
+        description: 'KOL has been updated successfully',
       });
       
       setKols(prevKols => prevKols.map(kol => kol.id === id ? data : kol));
@@ -261,8 +267,10 @@ export const useKols = () => {
       return data;
     } catch (error: any) {
       console.error('Error updating KOL:', error);
-      toast.error("Error", {
-        description: `Failed to update KOL: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to update KOL: ${error.message}`,
+        variant: 'destructive',
       });
       return null;
     } finally {
@@ -288,8 +296,9 @@ export const useKols = () => {
         throw error;
       }
       
-      toast.success("Success", {
-        description: 'KOL has been deleted successfully'
+      toast({
+        title: 'Success',
+        description: 'KOL has been deleted successfully',
       });
       
       setKols(prevKols => prevKols.filter(kol => kol.id !== id));
@@ -297,8 +306,10 @@ export const useKols = () => {
       return true;
     } catch (error: any) {
       console.error('Error deleting KOL:', error);
-      toast.error("Error", {
-        description: `Failed to delete KOL: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to delete KOL: ${error.message}`,
+        variant: 'destructive',
       });
       return false;
     } finally {
@@ -339,8 +350,9 @@ export const useKols = () => {
         throw updateError;
       }
 
-      toast.success("Success", {
-        description: 'Profile photo uploaded successfully'
+      toast({
+        title: 'Success',
+        description: 'Profile photo uploaded successfully',
       });
 
       setKols(prevKols => prevKols.map(kol => 
@@ -350,8 +362,10 @@ export const useKols = () => {
       return data;
     } catch (error: any) {
       console.error('Error uploading KOL photo:', error);
-      toast.error("Error", {
-        description: `Failed to upload photo: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to upload photo: ${error.message}`,
+        variant: 'destructive',
       });
       return null;
     } finally {
@@ -413,8 +427,10 @@ export const useKols = () => {
       return data;
     } catch (error: any) {
       console.error('Error removing KOL photo:', error);
-      toast.error("Error", {
-        description: `Failed to remove photo: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to remove photo: ${error.message}`,
+        variant: 'destructive',
       });
       return null;
     } finally {
@@ -495,8 +511,9 @@ export const useKols = () => {
         }
       }
       
-      toast.success("Success", {
-        description: 'Platform added successfully'
+      toast({
+        title: 'Success',
+        description: 'Platform added successfully',
       });
 
       const updatedKol = await fetchKolWithDetails(kolId);
@@ -508,8 +525,10 @@ export const useKols = () => {
       return data;
     } catch (error: any) {
       console.error('Error adding platform:', error);
-      toast.error("Error", {
-        description: `Failed to add platform: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to add platform: ${error.message}`,
+        variant: 'destructive',
       });
       return null;
     } finally {
@@ -563,8 +582,9 @@ export const useKols = () => {
         throw updateError;
       }
       
-      toast.success("Success", {
-        description: 'Platform deleted successfully'
+      toast({
+        title: 'Success',
+        description: 'Platform deleted successfully',
       });
       
       const updatedKol = await fetchKolWithDetails(kolId);
@@ -576,8 +596,10 @@ export const useKols = () => {
       return true;
     } catch (error: any) {
       console.error('Error deleting platform:', error);
-      toast.error("Error", {
-        description: `Failed to delete platform: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to delete platform: ${error.message}`,
+        variant: 'destructive',
       });
       return false;
     } finally {
@@ -612,8 +634,9 @@ export const useKols = () => {
         throw rateInsertError;
       }
       
-      toast.success("Success", {
-        description: 'Rate card added successfully'
+      toast({
+        title: 'Success',
+        description: 'Rate card added successfully',
       });
       
       const updatedKol = await fetchKolWithDetails(kolId);
@@ -625,8 +648,10 @@ export const useKols = () => {
       return updatedKol;
     } catch (error: any) {
       console.error('Error adding rate card:', error);
-      toast.error("Error", {
-        description: `Failed to add rate card: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to add rate card: ${error.message}`,
+        variant: 'destructive',
       });
       return null;
     } finally {
@@ -646,8 +671,9 @@ export const useKols = () => {
         throw deleteError;
       }
       
-      toast.success("Success", {
-        description: 'Rate card deleted successfully'
+      toast({
+        title: 'Success',
+        description: 'Rate card deleted successfully',
       });
       
       const updatedKol = await fetchKolWithDetails(kolId);
@@ -659,8 +685,10 @@ export const useKols = () => {
       return true;
     } catch (error: any) {
       console.error('Error deleting rate card:', error);
-      toast.error("Error", {
-        description: `Failed to delete rate card: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to delete rate card: ${error.message}`,
+        variant: 'destructive',
       });
       return false;
     } finally {
@@ -773,8 +801,10 @@ export const useKols = () => {
       }
     } catch (error: any) {
       console.error('Error updating metrics:', error);
-      toast.error("Error", {
-        description: `Failed to update metrics: ${error.message}`
+      toast({
+        title: 'Error',
+        description: `Failed to update metrics: ${error.message}`,
+        variant: 'destructive',
       });
       return null;
     } finally {

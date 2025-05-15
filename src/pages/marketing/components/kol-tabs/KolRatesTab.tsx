@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,11 @@ export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
   
   const handleAddRateCard = async () => {
     if (!platform || !minRate) {
-      toast.error("Platform and minimum rate are required");
+      toast({
+        title: "Error",
+        description: "Platform and minimum rate are required",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -48,10 +53,17 @@ export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
       setMinRate("");
       setMaxRate("");
       
-      toast.success("Rate card added successfully");
+      toast({
+        title: "Success",
+        description: "Rate card added successfully",
+      });
     } catch (error) {
       console.error("Error adding rate card:", error);
-      toast.error("Failed to add rate card");
+      toast({
+        title: "Error",
+        description: "Failed to add rate card",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -65,10 +77,17 @@ export const KolRatesTab: React.FC<KolRatesTabProps> = ({ selectedKol }) => {
       await deleteRateCard(selectedKol.id, deletingRateId);
       setDeletingRateId(null);
       
-      toast.success("Rate card deleted successfully");
+      toast({
+        title: "Success",
+        description: "Rate card deleted successfully",
+      });
     } catch (error) {
       console.error("Error deleting rate card:", error);
-      toast.error("Failed to delete rate card");
+      toast({
+        title: "Error",
+        description: "Failed to delete rate card",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

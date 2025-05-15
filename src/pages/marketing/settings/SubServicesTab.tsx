@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
@@ -12,21 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
 
 export function SubServicesTab() {
   const [subServices, setSubServices] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [newSubService, setNewSubService] = useState("");
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -49,7 +42,8 @@ export function SubServicesTab() {
       setSubServices(data || []);
     } catch (error: any) {
       console.error("Error fetching sub services:", error);
-      toast("Error", {
+      toast({
+        title: "Error",
         description: "Failed to load sub services",
         variant: "destructive",
       });
@@ -69,7 +63,8 @@ export function SubServicesTab() {
       setServices(data || []);
     } catch (error: any) {
       console.error("Error fetching services:", error);
-      toast("Error", {
+      toast({
+        title: "Error",
         description: "Failed to load services",
         variant: "destructive",
       });
@@ -86,7 +81,8 @@ export function SubServicesTab() {
       
       if (error) throw error;
       
-      toast("Success", {
+      toast({
+        title: "Success",
         description: "Sub service added successfully",
       });
       
@@ -95,7 +91,8 @@ export function SubServicesTab() {
       fetchSubServices();
     } catch (error: any) {
       console.error("Error adding sub service:", error);
-      toast("Error", {
+      toast({
+        title: "Error",
         description: "Failed to add sub service",
         variant: "destructive",
       });
@@ -111,14 +108,16 @@ export function SubServicesTab() {
       
       if (error) throw error;
       
-      toast("Success", {
+      toast({
+        title: "Success",
         description: "Sub service deleted successfully",
       });
       
       fetchSubServices();
     } catch (error: any) {
       console.error("Error deleting sub service:", error);
-      toast("Error", {
+      toast({
+        title: "Error",
         description: "Failed to delete sub service",
         variant: "destructive",
       });

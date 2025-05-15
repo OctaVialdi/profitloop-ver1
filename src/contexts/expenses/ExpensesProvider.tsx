@@ -1,129 +1,138 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/hooks/useOrganization";
+import { Expense, ExpenseCategory } from '@/hooks/useExpenses';
 import { ExpensesContext } from './ExpensesContext';
-import { useExpenses } from '@/hooks/useExpenses';
-import { useOrganization } from '@/hooks/useOrganization';
-import { toast } from "sonner";
+import { ExpensesProviderProps } from './types';
 
-export const ExpensesProvider: React.FC<{ children: React.ReactNode }> = ({ 
-  children 
-}) => {
-  const { organization, isLoading: orgLoading } = useOrganization();
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [retryAttempts, setRetryAttempts] = useState(0);
-  const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [isSynchronizing, setIsSynchronizing] = useState(false);
-  
-  const {
-    loading,
-    error,
-    categories,
-    expenses,
-    fetchCategories,
-    fetchExpenses,
-    loadInitialData,
-    addCategory,
-    addExpense,
-    deleteExpense,
-  } = useExpenses();
+export const ExpensesProvider = ({ children }: ExpensesProviderProps) => {
+  const { toast } = useToast();
+  const { organization } = useOrganization();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
-  // Clear any existing retry timeout when component unmounts
-  useEffect(() => {
-    return () => {
-      if (retryTimeout) {
-        clearTimeout(retryTimeout);
-      }
-    };
-  }, [retryTimeout]);
-
-  // Load data when organization is available with automatic retry
-  const initializeData = useCallback(async () => {
-    if (orgLoading) {
-      // Still loading organization data, wait for it
-      return;
-    }
-
-    if (!organization?.id) {
-      console.warn("No organization ID found. User might need to set up an organization first.");
-      return;
-    }
-
-    setIsSynchronizing(true);
+  const fetchCategories = async () => {
     try {
-      console.log("Organization ID found, loading expense data:", organization.id);
-      await loadInitialData(organization.id); // Pass organization ID explicitly
-      setIsInitialized(true);
-      setRetryAttempts(0); // Reset retry attempts on success
-    } catch (err) {
-      console.error("Failed to load initial expense data:", err);
+      setError(null);
       
-      // Only show toast on first error
-      if (retryAttempts === 0) {
-        toast({
-          title: "Failed to load expense data",
-          description: "Retrying automatically..."
-        });
+      if (!organization?.id) {
+        console.error("No organization ID found");
+        setError("No organization ID found");
+        return [];
       }
       
-      // Auto-retry with increasing backoff (max 3 attempts)
-      if (retryAttempts < 3) {
-        const nextRetryDelay = Math.min(1000 * Math.pow(2, retryAttempts), 5000);
-        console.log(`Scheduling retry attempt ${retryAttempts + 1} in ${nextRetryDelay}ms`);
-        
-        const timeout = setTimeout(() => {
-          setRetryAttempts(prev => prev + 1);
-          initializeData();
-        }, nextRetryDelay);
-        
-        setRetryTimeout(timeout);
-      } else {
-        toast({
-          title: "Failed to load expense data",
-          description: "Please try again manually."
-        });
-      }
-    } finally {
-      setIsSynchronizing(false);
+      const { data, error: fetchError } = await supabase
+        .from("expense_categories")
+        .select("*")
+        .eq("organization_id", organization.id)
+        .order("name");
+
+      if (fetchError) throw fetchError;
+      
+      console.log("Fetched expense categories:", data);
+      setCategories(data || []);
+      return data;
+    } catch (error: any) {
+      console.error("Error fetching expense categories:", error);
+      setError(error.message || "Failed to fetch expense categories");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch expense categories",
+        variant: "destructive",
+      });
+      return [];
     }
-  }, [organization?.id, orgLoading, loadInitialData, retryAttempts]);
-
-  // Wait for organization to be loaded before initializing expenses
-  useEffect(() => {
-    if (!orgLoading && organization?.id && !isInitialized && !isSynchronizing) {
-      initializeData();
-    }
-  }, [initializeData, organization?.id, orgLoading, isInitialized, isSynchronizing]);
-
-  // Manual refresh function that resets the retry state
-  const refreshData = useCallback(async () => {
-    setRetryAttempts(0);
-    setIsInitialized(false);
-    
-    if (retryTimeout) {
-      clearTimeout(retryTimeout);
-      setRetryTimeout(null);
-    }
-    
-    return initializeData();
-  }, [initializeData, retryTimeout]);
-
-  const isLoadingData = loading || orgLoading || (retryAttempts > 0 && !isInitialized) || isSynchronizing;
-
-  const contextValue = {
-    loading: isLoadingData,
-    error: error && retryAttempts >= 3 ? error : null, // Only show error after retry attempts exhausted
-    categories,
-    expenses,
-    fetchCategories,
-    fetchExpenses,
-    refreshData,
-    addCategory,
-    addExpense,
-    deleteExpense,
   };
 
+  const fetchExpenses = async () => {
+    try {
+      setError(null);
+      
+      if (!organization?.id) {
+        console.error("No organization ID found");
+        setError("No organization ID found");
+        return [];
+      }
+      
+      const { data, error: fetchError } = await supabase
+        .from("expenses")
+        .select(`
+          *,
+          expense_categories (id, name)
+        `)
+        .eq("organization_id", organization.id)
+        .order("date", { ascending: false });
+
+      if (fetchError) throw fetchError;
+      
+      // Convert date strings to Date objects and add category name
+      const formattedExpenses = (data || []).map(expense => ({
+        ...expense,
+        date: new Date(expense.date),
+        created_at: new Date(expense.created_at),
+        category: expense.expense_categories?.name || ''
+      })) as Expense[];
+      
+      console.log("Fetched expenses:", formattedExpenses);
+      setExpenses(formattedExpenses);
+      return formattedExpenses;
+    } catch (error: any) {
+      console.error("Error fetching expenses:", error);
+      setError(error.message || "Failed to fetch expenses");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch expenses",
+        variant: "destructive",
+      });
+      return [];
+    }
+  };
+
+  const refreshData = async () => {
+    setLoading(true);
+    try {
+      await fetchCategories();
+      await fetchExpenses();
+    } catch (error) {
+      console.error("Error refreshing expense data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data when context is initialized
+  useEffect(() => {
+    setLoading(true);
+    const loadData = async () => {
+      try {
+        await fetchCategories();
+        await fetchExpenses();
+      } catch (error) {
+        console.error("Error loading initial expense data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [organization?.id]);
+
   return (
-    <ExpensesContext.Provider value={contextValue}>
+    <ExpensesContext.Provider 
+      value={{ 
+        expenses, 
+        categories, 
+        loading, 
+        error, 
+        fetchExpenses, 
+        fetchCategories, 
+        refreshData 
+      }}
+    >
       {children}
     </ExpensesContext.Provider>
   );

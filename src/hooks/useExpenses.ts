@@ -1,6 +1,6 @@
 
-import { useState, useCallback } from "react";
-import { toast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { uploadFileToBucket } from "@/integrations/supabase/storage";
@@ -29,25 +29,28 @@ export type ExpenseCategory = {
 };
 
 export const useExpenses = () => {
+  const { toast } = useToast();
   const { organization } = useOrganization();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
-  const fetchCategories = useCallback(async (organizationId?: string) => {
+  const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      if (!organizationId) {
-        throw new Error("No organization ID found");
+      if (!organization?.id) {
+        console.error("No organization ID found");
+        setError("No organization ID found");
+        return [];
       }
       
       const { data, error: fetchError } = await supabase
         .from("expense_categories")
         .select("*")
-        .eq("organization_id", organizationId)
+        .eq("organization_id", organization.id)
         .order("name");
 
       if (fetchError) {
@@ -60,42 +63,49 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error fetching expense categories:", error);
       setError(error.message || "Failed to fetch expense categories");
-      toast.error(error.message || "Failed to fetch expense categories");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch expense categories",
+        variant: "destructive",
+      });
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const fetchExpenses = useCallback(async (organizationId?: string) => {
+  const fetchExpenses = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      if (!organizationId) {
-        throw new Error("No organization ID found");
+      if (!organization?.id) {
+        console.error("No organization ID found");
+        setError("No organization ID found");
+        return [];
       }
       
+      // Join with expense_categories to get the category name
       const { data, error: fetchError } = await supabase
         .from("expenses")
         .select(`
           *,
           expense_categories (id, name)
         `)
-        .eq("organization_id", organizationId)
+        .eq("organization_id", organization.id)
         .order("date", { ascending: false });
 
       if (fetchError) {
         throw fetchError;
       }
       
-      // Convert date strings to Date objects and add category name
+      // Convert date strings to Date objects and add category name directly to expense object
       const formattedExpenses = (data || []).map(expense => ({
         ...expense,
         date: new Date(expense.date),
         created_at: new Date(expense.created_at),
         category: expense.expense_categories?.name || ''
-      })) as Expense[];
+      }));
       
       console.log("Fetched expenses:", formattedExpenses);
       setExpenses(formattedExpenses);
@@ -103,39 +113,41 @@ export const useExpenses = () => {
     } catch (error: any) {
       console.error("Error fetching expenses:", error);
       setError(error.message || "Failed to fetch expenses");
-      toast.error(error.message || "Failed to fetch expenses");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch expenses",
+        variant: "destructive",
+      });
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const loadInitialData = useCallback(async (organizationId?: string) => {
+  const loadInitialData = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      if (!organizationId) {
-        console.warn("No organization ID available for loading expense data");
-        setError("No organization ID found. Please check your account setup.");
-        throw new Error("No organization ID found");
-      }
-      
-      console.log("Starting to load expense data for organization:", organizationId);
+      console.log("Starting to load expense data...");
       // First fetch categories
-      await fetchCategories(organizationId);
+      await fetchCategories();
       console.log("Categories loaded, now fetching expenses...");
       // Then fetch expenses (which may need categories)
-      await fetchExpenses(organizationId);
+      await fetchExpenses();
       console.log("All data successfully loaded!");
     } catch (error: any) {
       console.error("Error loading initial expense data:", error);
       setError(error.message || "Failed to load expense data");
-      throw error; // Propagate error for retry mechanism
+      toast({
+        title: "Error",
+        description: "Failed to load expense data. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }, [fetchCategories, fetchExpenses]);
+  };
 
   const addCategory = async (name: string, description?: string) => {
     try {
@@ -154,7 +166,10 @@ export const useExpenses = () => {
       
       // Return existing category if it already exists
       if (existingCategory) {
-        toast.info("This category already exists");
+        toast({
+          title: "Category Exists",
+          description: "This category already exists",
+        });
         return existingCategory;
       }
 
@@ -171,13 +186,20 @@ export const useExpenses = () => {
 
       if (error) throw error;
       
-      toast.success("Expense category has been added successfully");
+      toast({
+        title: "Category Added",
+        description: "Expense category has been added successfully",
+      });
       
-      await fetchCategories(organization.id);
+      await fetchCategories();
       return data?.[0];
     } catch (error: any) {
       console.error("Error adding expense category:", error);
-      toast.error(error.message || "Failed to add expense category");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add expense category",
+        variant: "destructive",
+      });
       return null;
     }
   };
@@ -218,7 +240,7 @@ export const useExpenses = () => {
   const addExpense = async (expenseData: {
     amount: number;
     date: Date;
-    category: string; 
+    category: string; // Now using category name directly
     description?: string;
     department?: string;
     expenseType?: string;
@@ -246,7 +268,11 @@ export const useExpenses = () => {
           console.log("Receipt uploaded successfully:", receiptUrl);
         } catch (uploadError: any) {
           console.error("Receipt upload failed:", uploadError);
-          toast.error("Failed to upload receipt, but continuing with expense submission");
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload receipt, but continuing with expense submission",
+            variant: "destructive",
+          });
         }
       }
 
@@ -305,67 +331,21 @@ export const useExpenses = () => {
 
       console.log("Expense added successfully:", data);
       
-      toast.success("Your expense has been added successfully");
+      toast({
+        title: "Expense Added",
+        description: "Your expense has been added successfully",
+      });
 
-      await fetchExpenses(organization.id);
+      await fetchExpenses();
       return data?.[0];
     } catch (error: any) {
       console.error("Error adding expense:", error);
-      toast.error(error.message || "Failed to add expense");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add expense",
+        variant: "destructive",
+      });
       return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteExpense = async (expenseId: string) => {
-    try {
-      if (!organization?.id) {
-        throw new Error("No organization ID found");
-      }
-
-      setLoading(true);
-
-      // First, get the expense to check if there's a receipt to delete
-      const { data: expenseData, error: fetchError } = await supabase
-        .from("expenses")
-        .select("receipt_path")
-        .eq("id", expenseId)
-        .eq("organization_id", organization.id)
-        .single();
-
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      // If there's a receipt file, delete it from storage
-      if (expenseData?.receipt_path) {
-        await supabase
-          .storage
-          .from("expense-receipts")
-          .remove([expenseData.receipt_path]);
-      }
-
-      // Delete the expense record from the database
-      const { error: deleteError } = await supabase
-        .from("expenses")
-        .delete()
-        .eq("id", expenseId)
-        .eq("organization_id", organization.id);
-
-      if (deleteError) {
-        throw deleteError;
-      }
-
-      toast.success("Expense has been deleted successfully");
-
-      // Refresh the expenses list
-      await fetchExpenses(organization.id);
-      return true;
-    } catch (error: any) {
-      console.error("Error deleting expense:", error);
-      toast.error(error.message || "Failed to delete expense");
-      return false;
     } finally {
       setLoading(false);
     }
@@ -381,6 +361,5 @@ export const useExpenses = () => {
     loadInitialData,
     addCategory,
     addExpense,
-    deleteExpense,
   };
 };

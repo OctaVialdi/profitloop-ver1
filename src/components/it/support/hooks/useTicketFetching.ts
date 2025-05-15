@@ -1,62 +1,55 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { fetchTickets, fetchTicketById } from '@/services/ticketService';
-import { useOrganization } from '@/hooks/useOrganization';
-import { Ticket } from '../types';
-import { showToast } from '@/utils/toastUtils';
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useOrganization } from "@/hooks/useOrganization";
+import { fetchTickets, fetchEmployees } from "@/services/ticketService";
 
-export function useTicketFetching() {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+export function useTicketFetching(setTickets: Function, setLoading: Function, setEmployees: Function) {
+  const { toast } = useToast();
   const { organization } = useOrganization();
 
-  const loadTickets = useCallback(async () => {
-    if (!organization?.id) {
-      console.error("No organization ID available");
-      return;
+  // Load tickets and employees on component mount
+  useEffect(() => {
+    if (organization) {
+      loadTickets();
+      loadEmployees();
     }
+  }, [organization]);
 
+  // Function to load tickets from Supabase
+  const loadTickets = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const fetchedTickets = await fetchTickets(organization.id);
-      setTickets(fetchedTickets);
-    } catch (err: any) {
-      console.error("Error fetching tickets:", err);
-      setError(err.message || "Failed to load tickets");
-      showToast({
+      const dbTickets = await fetchTickets();
+      const mappedTickets = dbTickets.map(mapDbTicketToUiTicket);
+      setTickets(mappedTickets);
+    } catch (error) {
+      console.error("Error loading tickets:", error);
+      toast({
         title: "Error",
-        description: "Failed to load support tickets",
-        variant: "destructive"
+        description: "Failed to load tickets. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  }, [organization?.id]);
+  };
 
-  useEffect(() => {
-    if (organization?.id) {
-      loadTickets();
-    }
-  }, [organization?.id, loadTickets]);
-
-  const getTicketById = useCallback(async (ticketId: string): Promise<Ticket | null> => {
-    if (!organization?.id) return null;
-    
+  // Function to load employees for assignee dropdown
+  const loadEmployees = async () => {
     try {
-      return await fetchTicketById(ticketId, organization.id);
+      const employeeList = await fetchEmployees();
+      setEmployees(employeeList);
     } catch (error) {
-      console.error("Error fetching ticket details:", error);
-      return null;
+      console.error("Error loading employees:", error);
     }
-  }, [organization?.id]);
+  };
 
   return {
-    tickets,
-    loading,
-    error,
-    refreshTickets: loadTickets,
-    getTicketById
+    loadTickets,
+    loadEmployees
   };
 }
+
+// Helper function moved from ticket service
+import { mapDbTicketToUiTicket } from "@/services/ticketService";

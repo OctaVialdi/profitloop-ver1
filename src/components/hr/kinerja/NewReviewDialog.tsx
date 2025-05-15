@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 interface NewReviewDialogProps {
   isOpen: boolean;
@@ -14,6 +14,7 @@ const NewReviewDialog: React.FC<NewReviewDialogProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -21,7 +22,9 @@ const NewReviewDialog: React.FC<NewReviewDialogProps> = ({
 
   const handleCreate = () => {
     if (!selectedPeriod || !selectedTemplate || !selectedDepartment) {
-      toast.error("Validation Error", {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
         description: "Semua field harus diisi",
       });
       return;
@@ -32,8 +35,9 @@ const NewReviewDialog: React.FC<NewReviewDialogProps> = ({
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      toast.success(`Review kinerja untuk ${selectedPeriod} telah dibuat`, {
-        description: "Review baru berhasil dibuat",
+      toast({
+        title: "Review baru berhasil dibuat",
+        description: `Review kinerja untuk ${selectedPeriod} telah dibuat`,
       });
       onClose();
     }, 1000);

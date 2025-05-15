@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +14,7 @@ import { FinancialSummaryRecord } from '@/types/dashboard';
 import PremiumFeature from '@/components/PremiumFeature';
 
 export const BSCDashboard = () => {
+  const { toast } = useToast();
   const { organization } = useOrganization();
   const { 
     loading, 
@@ -54,8 +54,9 @@ export const BSCDashboard = () => {
     await refreshData();
     setRefreshing(false);
     
-    toast("Dashboard Refreshed", {
-      description: "The latest data has been loaded."
+    toast({
+      title: "Dashboard Refreshed",
+      description: "The latest data has been loaded.",
     });
   };
   
@@ -155,11 +156,13 @@ export const BSCDashboard = () => {
   
   useEffect(() => {
     if (error) {
-      toast.error(error, {
-        description: "Failed to load dashboard data"
+      toast({
+        variant: "destructive",
+        title: "Error loading dashboard data",
+        description: error,
       });
     }
-  }, [error]);
+  }, [error, toast]);
 
   return (
     <div className="space-y-6">

@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ContentTypesTab from "./settings/ContentTypesTab";
-import ServicesTab from "./settings/ServicesTab";
-import SubServicesTab from "./settings/SubServicesTab";
-import ContentPillarsTab from "./settings/ContentPillarsTab";
+import { ContentTypesTab } from "./settings/ContentTypesTab";
+import { ServicesTab } from "./settings/ServicesTab";
+import { SubServicesTab } from "./settings/SubServicesTab";
+import { ContentPillarsTab } from "./settings/ContentPillarsTab";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("content-types");

@@ -138,11 +138,7 @@ export default function Expenses() {
   return (
     <div className="space-y-6">
       {/* Header and Error section */}
-      <ExpenseHeader 
-        error={error}
-        loading={loading}
-        onRetry={refreshData} 
-      />
+      <ExpenseHeader error={error} onRetry={refreshData} />
 
       {/* Tabs */}
       <TabsSection

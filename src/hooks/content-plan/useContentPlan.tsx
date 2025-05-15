@@ -24,10 +24,6 @@ export function useContentPlan(): ContentPlanHookReturn {
 
   // Content plan mutation hooks
   const {
-    createMutation,
-    updateMutation,
-    deleteMutation,
-    isLoading: mutationLoading,
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
@@ -66,7 +62,7 @@ export function useContentPlan(): ContentPlanHookReturn {
     services,
     subServices,
     contentPillars,
-    loading: loading || mutationLoading,
+    loading,
     error,
     fetchContentPlans,
     addContentPlan,

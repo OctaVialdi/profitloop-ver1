@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -117,7 +118,11 @@ export const KolAddForm = ({ setCurrentView }: { setCurrentView: (view: string) 
     try {
       // Basic validation
       if (!formData.full_name || !formData.category) {
-        toast.error("Please fill in all required fields");
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
         return;
       }
       
@@ -172,7 +177,10 @@ export const KolAddForm = ({ setCurrentView }: { setCurrentView: (view: string) 
         
         await updateMetrics(result.id, metricsData);
         
-        toast.success("KOL has been added successfully");
+        toast({
+          title: "Success",
+          description: "KOL has been added successfully",
+        });
         
         // Reset form and go back to list view
         await fetchKols();
@@ -180,7 +188,11 @@ export const KolAddForm = ({ setCurrentView }: { setCurrentView: (view: string) 
       }
     } catch (error) {
       console.error("Error adding KOL:", error);
-      toast.error("Failed to add KOL");
+      toast({
+        title: "Error",
+        description: "Failed to add KOL",
+        variant: "destructive",
+      });
     }
   };
   

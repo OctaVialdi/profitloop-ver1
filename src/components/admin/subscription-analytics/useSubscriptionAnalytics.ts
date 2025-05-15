@@ -1,6 +1,5 @@
 
-import { useToast } from "@/hooks/use-toast";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { subscriptionAnalyticsService } from "@/services/subscription";
 import { useQuery } from "@tanstack/react-query";
 
@@ -12,6 +11,8 @@ export interface AnalyticsData {
 }
 
 export function useSubscriptionAnalytics(): AnalyticsData {
+  const { toast } = useToast();
+
   // Event counts query
   const eventCountsQuery = useQuery({
     queryKey: ['analytics', 'eventCounts'],
@@ -21,7 +22,11 @@ export function useSubscriptionAnalytics(): AnalyticsData {
     meta: {
       onError: (error: Error) => {
         console.error("Error fetching event counts:", error);
-        toast.error("Failed to load analytics event data.");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load analytics event data."
+        });
       }
     }
   });
@@ -35,7 +40,11 @@ export function useSubscriptionAnalytics(): AnalyticsData {
     meta: {
       onError: (error: Error) => {
         console.error("Error fetching feature conversions:", error);
-        toast.error("Failed to load feature conversion data.");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load feature conversion data."
+        });
       }
     }
   });
@@ -49,7 +58,11 @@ export function useSubscriptionAnalytics(): AnalyticsData {
     meta: {
       onError: (error: Error) => {
         console.error("Error fetching trial metrics:", error);
-        toast.error("Failed to load trial conversion metrics.");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load trial conversion metrics."
+        });
       }
     }
   });

@@ -65,12 +65,15 @@ const AddAssetDialog: React.FC<AddAssetDialogProps> = ({ onAdd, onCancel }) => {
       const qrCode = `QR-${formData.serialNumber}`;
       setFormData({ ...formData, qrCode });
       
-      toast.success("QR Code Generated", {
+      toast({
+        title: "QR Code Generated",
         description: `Generated QR code: ${qrCode}`,
       });
     } else {
-      toast.error("Error", {
+      toast({
+        title: "Error",
         description: "Please enter a serial number first",
+        variant: "destructive",
       });
     }
   };
@@ -78,8 +81,10 @@ const AddAssetDialog: React.FC<AddAssetDialogProps> = ({ onAdd, onCancel }) => {
   const handleAddAsset = () => {
     // In a real app, we'd validate the form data
     if (!formData.category || !formData.serialNumber || !formData.description) {
-      toast.error("Missing Information", {
+      toast({
+        title: "Missing Information",
         description: "Please fill in all required fields",
+        variant: "destructive",
       });
       return;
     }

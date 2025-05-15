@@ -1,79 +1,68 @@
 
-import { useCallback, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
-import { toast } from "@/hooks/use-toast";
-
-type Department = string;
 
 export const useDepartments = () => {
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   const { organization } = useOrganization();
+  const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState<string[]>([]);
 
-  const fetchDepartments = useCallback(async () => {
-    if (!organization?.id) {
-      console.log("No organization ID available to fetch departments");
-      return;
-    }
-
+  const fetchDepartments = async () => {
     try {
       setLoading(true);
       
-      // Get unique department values from expenses
-      const { data: expenseDepts, error: expenseError } = await supabase
-        .from('expenses')
-        .select('department')
-        .eq('organization_id', organization.id)
-        .not('department', 'is', null);
+      // Get distinct organization_name values from employee_employment table
+      const { data, error } = await supabase
+        .from("employee_employment")
+        .select("organization_name")
+        .not("organization_name", "is", null)
+        .order("organization_name");
+
+      if (error) throw error;
+
+      // Extract unique department names using Set
+      const uniqueDepartments = Array.from(
+        new Set(data?.map(item => item.organization_name).filter(Boolean) || [])
+      );
       
-      if (expenseError) throw expenseError;
-      
-      // Get unique department values from org_structure
-      const { data: orgDepts, error: orgError } = await supabase
-        .from('org_structure')
-        .select('name')
-        .eq('organization_id', organization.id)
-        .eq('type', 'department')
-        .not('name', 'is', null);
-      
-      if (orgError) throw orgError;
-      
-      // Combine and deduplicate departments
-      const deptSet = new Set<string>();
-      
-      expenseDepts?.forEach(item => {
-        if (item.department) deptSet.add(item.department);
-      });
-      
-      orgDepts?.forEach(item => {
-        if (item.name) deptSet.add(item.name);
-      });
-      
-      // Default departments if none found
-      if (deptSet.size === 0) {
-        deptSet.add('IT');
-        deptSet.add('Marketing');
-        deptSet.add('Sales');
-        deptSet.add('Finance');
-        deptSet.add('HR');
+      // If no departments found, provide some default ones
+      if (uniqueDepartments.length === 0) {
+        const defaultDepartments = ["Finance", "Marketing", "Operations", "Human Resources", "IT"];
+        setDepartments(defaultDepartments);
+        return defaultDepartments;
       }
+
+      setDepartments(uniqueDepartments);
+      return uniqueDepartments;
+    } catch (error: any) {
+      console.error("Error fetching departments:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch departments",
+        variant: "destructive",
+      });
       
-      setDepartments(Array.from(deptSet).sort());
-    } catch (err: any) {
-      console.error('Error fetching departments:', err);
-      setError(err.message);
-      toast.error("Failed to load departments: " + err.message);
+      // Return default departments on error
+      const defaultDepartments = ["Finance", "Marketing", "Operations", "Human Resources", "IT"];
+      setDepartments(defaultDepartments);
+      return defaultDepartments;
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (organization?.id) {
+      fetchDepartments();
+    }
   }, [organization?.id]);
 
-  // Fetch departments on initial load
-  useEffect(() => {
-    fetchDepartments();
-  }, [fetchDepartments]);
-
-  return { departments, loading, error, fetchDepartments };
+  return {
+    loading,
+    departments,
+    fetchDepartments
+  };
 };

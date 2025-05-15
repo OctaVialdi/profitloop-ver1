@@ -1,52 +1,60 @@
 
-import React from 'react';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw } from "lucide-react";
-import AddExpenseDialog from "../../components/expense-dialog/AddExpenseDialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Download } from "lucide-react";
+import AddExpenseDialog from "../AddExpenseDialog";
 
 interface ExpenseHeaderProps {
   error: string | null;
-  loading?: boolean;
   onRetry: () => Promise<void>;
 }
 
-export const ExpenseHeader: React.FC<ExpenseHeaderProps> = ({ 
-  error, 
-  loading = false, 
-  onRetry 
-}) => {
+export function ExpenseHeader({ error, onRetry }: ExpenseHeaderProps) {
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">Expenses</h1>
-        <AddExpenseDialog />
+    <>
+      {/* Header section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Expenses</h2>
+          <p className="text-muted-foreground">
+            Manage and track your organization's expenses
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <AddExpenseDialog />
+        </div>
       </div>
-      
-      {loading && !error && (
-        <div className="bg-blue-50 p-4 rounded-md border border-blue-200 text-sm">
-          <div className="flex items-center gap-2 text-blue-700">
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            <p>Loading expense data...</p>
-          </div>
-        </div>
-      )}
-      
+
+      {/* Error message display */}
       {error && (
-        <div className="bg-destructive/15 p-4 rounded-md border border-destructive text-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <p className="text-destructive font-medium">{error}</p>
-            <Button 
-              variant="outline" 
-              onClick={onRetry}
-              className="text-sm"
-              disabled={loading}
-            >
-              {loading && <RefreshCw className="h-3 w-3 mr-2 animate-spin" />}
-              Retry Loading
-            </Button>
-          </div>
-        </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-red-100 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-red-800">Error loading expenses</h4>
+                <p className="text-sm text-red-600">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2 border-red-300 text-red-700 hover:bg-red-50"
+                  onClick={() => onRetry()}
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
-    </div>
+    </>
   );
-};
+}

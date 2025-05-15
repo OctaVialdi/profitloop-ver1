@@ -1,90 +1,136 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/components/ui/use-toast';
-
-// Assuming these functions exist with these names in contentPlanApi.ts
-// If they have different names, adjust the imports accordingly
+import { useState } from 'react';
+import { useToast } from "@/components/ui/use-toast";
+import { useOrganization } from '@/hooks/useOrganization';
+import { ContentPlanItem } from '../types';
 import { 
-  addContentPlanItem as createContentPlanItem,
-  updateContentPlanItem, 
-  deleteContentPlanItem 
+  addContentPlanItem,
+  updateContentPlanItem,
+  deleteContentPlanItem
 } from '../contentPlanApi';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-export const useMutateContentPlan = () => {
+export interface MutateContentPlanReturn {
+  addContentPlan: (newPlan: Partial<ContentPlanItem>) => Promise<any>;
+  updateContentPlan: (id: string, updates: Partial<ContentPlanItem>) => Promise<boolean>;
+  deleteContentPlan: (id: string) => Promise<boolean>;
+  resetRevisionCounter: (id: string, field: 'revision_count' | 'production_revision_count') => Promise<boolean>;
+}
+
+export function useMutateContentPlan(): MutateContentPlanReturn {
+  const { toast } = useToast();
+  const { organization } = useOrganization();
   const queryClient = useQueryClient();
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: (data: any) => createContentPlanItem(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
-      toast({
-        title: "Content Plan Created",
-        description: "Your content plan has been created successfully!"
-      });
+  // Add content plan mutation
+  const addMutation = useMutation({
+    mutationFn: async (newPlan: Partial<ContentPlanItem>) => {
+      if (!organization?.id) {
+        throw new Error('No organization ID available');
+      }
+      return addContentPlanItem(newPlan, organization.id);
     },
-    onError: (error: any) => {
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Content plan added successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
+    },
+    onError: (err: any) => {
+      console.error('Error adding content plan:', err);
       toast({
         title: "Error",
-        description: error?.message || "Failed to create content plan",
-        variant: "destructive"
+        description: `Failed to add content plan: ${err.message}`,
+        variant: "destructive",
       });
     }
   });
 
-  // Update mutation
+  // Update content plan mutation
   const updateMutation = useMutation({
-    mutationFn: (data: any) => updateContentPlanItem(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
-      toast({
-        title: "Content Plan Updated",
-        description: "Your content plan has been updated successfully!"
-      });
+    mutationFn: async ({ id, updates }: { id: string, updates: Partial<ContentPlanItem> }) => {
+      if (!organization?.id) {
+        throw new Error('No organization ID available');
+      }
+      return updateContentPlanItem(id, updates, organization.id);
     },
-    onError: (error: any) => {
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Content plan updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
+    },
+    onError: (err: any) => {
+      console.error('Error updating content plan:', err);
       toast({
         title: "Error",
-        description: error?.message || "Failed to update content plan",
-        variant: "destructive"
+        description: `Failed to update content plan: ${err.message}`,
+        variant: "destructive",
       });
     }
   });
 
-  // Delete mutation
+  // Delete content plan mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteContentPlanItem(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contentPlans'] });
-      toast({
-        title: "Content Plan Deleted",
-        description: "Your content plan has been deleted successfully!"
-      });
+    mutationFn: async (id: string) => {
+      if (!organization?.id) {
+        throw new Error('No organization ID available');
+      }
+      return deleteContentPlanItem(id, organization.id);
     },
-    onError: (error: any) => {
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Content plan deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['contentPlans', organization?.id] });
+    },
+    onError: (err: any) => {
+      console.error('Error deleting content plan:', err);
       toast({
         title: "Error",
-        description: error?.message || "Failed to delete content plan",
-        variant: "destructive"
+        description: `Failed to delete content plan: ${err.message}`,
+        variant: "destructive",
       });
     }
   });
 
-  // These functions wrap the mutations to provide a simpler interface
-  const addContentPlan = (data: any) => createMutation.mutateAsync(data);
-  const updateContentPlan = (data: any) => updateMutation.mutateAsync(data);
-  const deleteContentPlan = (id: string) => deleteMutation.mutateAsync(id);
-  const resetRevisionCounter = (data: any) => updateMutation.mutateAsync({ ...data, revision_count: 0 });
+  const addContentPlan = async (newPlan: Partial<ContentPlanItem>) => {
+    try {
+      return await addMutation.mutateAsync(newPlan);
+    } catch (err) {
+      return null;
+    }
+  };
+
+  const updateContentPlan = async (id: string, updates: Partial<ContentPlanItem>) => {
+    try {
+      await updateMutation.mutateAsync({ id, updates });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const deleteContentPlan = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const resetRevisionCounter = async (id: string, field: 'revision_count' | 'production_revision_count') => {
+    return updateContentPlan(id, { [field]: 0 });
+  };
 
   return {
-    createMutation,
-    updateMutation,
-    deleteMutation,
-    isLoading: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
-    // Add these to expose them for components to use
     addContentPlan,
     updateContentPlan,
     deleteContentPlan,
     resetRevisionCounter
   };
-};
+}

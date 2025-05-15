@@ -1,162 +1,163 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/components/ui/use-toast";
 import { useOrganization } from '@/hooks/useOrganization';
-import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-export interface TeamMember {
+export type TeamMember = {
   id: string;
   name: string;
   department: string;
   role: string;
   job_position: string;
-  created_at: string;
-  updated_at: string;
-  organization_id: string;
-}
+  organization_id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
 
-export const useTeamMembers = () => {
+export function useTeamMembers() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const { toast } = useToast();
   const { organization } = useOrganization();
 
   const fetchTeamMembers = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       setError(null);
-
+      
       if (!organization?.id) {
-        setError('No organization ID found');
-        return;
+        throw new Error('Organization ID is required to fetch team members');
       }
-
-      const { data, error: fetchError } = await supabase
+      
+      console.log('Fetching team members for organization:', organization.id);
+      
+      const { data, error } = await supabase
         .from('team_members_digital_marketing')
         .select('*')
-        .eq('organization_id', organization.id)
-        .order('name');
-
-      if (fetchError) throw fetchError;
-
+        .eq('organization_id', organization.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log('Team members fetched:', data);
       setTeamMembers(data || []);
     } catch (err: any) {
       console.error('Error fetching team members:', err);
-      setError(err.message || 'Failed to fetch team members');
+      setError(err);
       toast({
         title: "Error",
-        description: "Failed to fetch team members"
+        description: `Failed to load team members: ${err.message}`,
+        variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const addTeamMember = async (memberData: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>) => {
+  const addTeamMember = async (newMember: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      setLoading(true);
-      
       if (!organization?.id) {
-        throw new Error('No organization ID found');
+        throw new Error('Organization ID is required to add team member');
       }
-
-      const { data, error: insertError } = await supabase
+      
+      // Ensure organization_id is set
+      const memberWithOrg = {
+        ...newMember,
+        organization_id: organization.id
+      };
+      
+      console.log('Adding team member with data:', memberWithOrg);
+      
+      const { data, error } = await supabase
         .from('team_members_digital_marketing')
-        .insert({
-          ...memberData,
-          organization_id: organization.id,
-        })
+        .insert(memberWithOrg)
         .select();
-
-      if (insertError) throw insertError;
-
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: "Success",
-        description: "Team member has been added successfully"
+        description: "Team member added successfully",
       });
       
-      fetchTeamMembers();
-      return data?.[0];
+      await fetchTeamMembers();
+      return data;
     } catch (err: any) {
       console.error('Error adding team member:', err);
       toast({
         title: "Error",
-        description: err.message || "Failed to add team member"
+        description: `Failed to add team member: ${err.message}`,
+        variant: "destructive",
       });
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
-  const updateTeamMember = async (id: string, memberData: Partial<TeamMember>) => {
+  const updateTeamMember = async (id: string, updates: Partial<TeamMember>) => {
     try {
-      setLoading(true);
+      console.log(`Updating team member ${id} with:`, updates);
       
-      if (!organization?.id) {
-        throw new Error('No organization ID found');
-      }
-
-      const { data, error: updateError } = await supabase
+      const { data, error } = await supabase
         .from('team_members_digital_marketing')
-        .update(memberData)
+        .update(updates)
         .eq('id', id)
-        .eq('organization_id', organization.id)
         .select();
-
-      if (updateError) throw updateError;
-
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({
-        title: "Success", 
-        description: "Team member has been updated successfully"
+        title: "Success",
+        description: "Team member updated successfully",
       });
       
-      fetchTeamMembers();
-      return data?.[0];
+      await fetchTeamMembers();
+      return data;
     } catch (err: any) {
       console.error('Error updating team member:', err);
       toast({
         title: "Error",
-        description: err.message || "Failed to update team member"
+        description: `Failed to update team member: ${err.message}`,
+        variant: "destructive",
       });
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   const deleteTeamMember = async (id: string) => {
     try {
-      setLoading(true);
+      console.log(`Deleting team member ${id}`);
       
-      if (!organization?.id) {
-        throw new Error('No organization ID found');
-      }
-
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('team_members_digital_marketing')
         .delete()
-        .eq('id', id)
-        .eq('organization_id', organization.id);
-
-      if (deleteError) throw deleteError;
-
+        .eq('id', id);
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: "Success",
-        description: "Team member has been deleted successfully"
+        description: "Team member deleted successfully",
       });
       
-      fetchTeamMembers();
+      await fetchTeamMembers();
       return true;
     } catch (err: any) {
       console.error('Error deleting team member:', err);
       toast({
         title: "Error",
-        description: err.message || "Failed to delete team member"
+        description: `Failed to delete team member: ${err.message}`,
+        variant: "destructive",
       });
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -168,11 +169,11 @@ export const useTeamMembers = () => {
 
   return {
     teamMembers,
-    loading,
+    isLoading,
     error,
     fetchTeamMembers,
     addTeamMember,
     updateTeamMember,
-    deleteTeamMember,
+    deleteTeamMember
   };
-};
+}

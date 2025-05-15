@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -139,13 +140,20 @@ export const KolMetricsTab: React.FC<KolMetricsTabProps> = ({ selectedKol }) => 
       });
       
       if (updatedMetrics) {
-        toast.success("Metrics saved successfully");
+        toast({
+          title: "Success",
+          description: "Metrics saved successfully",
+        });
       } else {
         throw new Error("Failed to save metrics");
       }
     } catch (error) {
       console.error("Error saving metrics:", error);
-      toast.error("Failed to save metrics");
+      toast({
+        title: "Error",
+        description: "Failed to save metrics",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

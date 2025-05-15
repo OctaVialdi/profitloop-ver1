@@ -1,183 +1,131 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Trash } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useOrganization } from "@/hooks/useOrganization";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
 
-interface ContentType {
-  id: string;
-  name: string;
-  description: string;
-}
+export function ContentTypesTab() {
+  const [contentTypes, setContentTypes] = useState<any[]>([]);
+  const [newContentType, setNewContentType] = useState("");
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-export const ContentTypesTab = () => {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const { organization } = useOrganization();
-  const queryClient = useQueryClient();
+  useEffect(() => {
+    fetchContentTypes();
+  }, []);
 
-  const { mutate: createContentType, isLoading: isCreating } = useMutation(
-    async () => {
-      if (!organization?.id) {
-        throw new Error("Organization ID not found");
-      }
-
-      const { data, error } = await supabase
-        .from('content_types_digital_marketing')
-        .insert([{ 
-          name, 
-          description,
-          organization_id: organization.id
-        }])
-        .select();
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['contentTypes'] });
-        setName('');
-        setDescription('');
-        setOpen(false);
-        toast("Success", {
-          description: "Content type created successfully",
-        });
-      },
-      onError: (error: any) => {
-        toast("Error", {
-          description: error.message || "Failed to create content type",
-          variant: "destructive"
-        });
-      },
-    }
-  );
-
-  const { data: contentTypes, isLoading, error } = useQuery(
-    ['contentTypes'],
-    async () => {
-      if (!organization?.id) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('content_types_digital_marketing')
-        .select('*')
-        .eq('organization_id', organization.id)
-        .order('name');
-
-      if (error) {
-        throw error;
-      }
-
-      return data as ContentType[];
-    }
-  );
-
-  const handleCreateContentType = async () => {
+  const fetchContentTypes = async () => {
+    setIsLoading(true);
     try {
-      createContentType();
-    } catch (error) {
-      toast("Error", {
-        description: "Failed to create content type",
-        variant: "destructive"
+      const { data, error } = await supabase
+        .from("content_types")
+        .select("*")
+        .order("name");
+      
+      if (error) throw error;
+      setContentTypes(data || []);
+    } catch (error: any) {
+      console.error("Error fetching content types:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load content types",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addContentType = async () => {
+    if (!newContentType.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from("content_types")
+        .insert({ name: newContentType.trim() });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Content type added successfully",
+      });
+      
+      setNewContentType("");
+      fetchContentTypes();
+    } catch (error: any) {
+      console.error("Error adding content type:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add content type",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteContentType = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("content_types")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Content type deleted successfully",
+      });
+      
+      fetchContentTypes();
+    } catch (error: any) {
+      console.error("Error deleting content type:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete content type",
+        variant: "destructive",
       });
     }
   };
 
   return (
-    <div>
-      <div className="mb-4 flex justify-end">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button variant="primary">Add Content Type</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add Content Type</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input 
-                  id="name" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="col-span-3" 
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  Description
-                </Label>
-                <Input
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" onClick={handleCreateContentType} disabled={isCreating}>
-                {isCreating ? "Creating..." : "Create"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Input
+          placeholder="Enter new content type"
+          value={newContentType}
+          onChange={(e) => setNewContentType(e.target.value)}
+          className="max-w-sm"
+        />
+        <Button onClick={addContentType} disabled={!newContentType.trim() || isLoading}>
+          <Plus className="h-4 w-4 mr-1" /> Add
+        </Button>
       </div>
 
-      {error && (
-        <div className="text-red-500">Error: {error.message}</div>
-      )}
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading && (
-            <TableRow>
-              <TableCell colSpan={2} className="text-center">Loading...</TableCell>
-            </TableRow>
+      <Card>
+        <CardContent className="p-4">
+          {contentTypes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No content types defined yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {contentTypes.map((type) => (
+                <li key={type.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <span>{type.name}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => deleteContentType(type.id)}
+                  >
+                    <Trash className="h-4 w-4 text-red-500" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
           )}
-          {!isLoading && contentTypes && contentTypes.map((contentType) => (
-            <TableRow key={contentType.id}>
-              <TableCell>{contentType.name}</TableCell>
-              <TableCell>{contentType.description}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-import { useQuery } from "@tanstack/react-query";
+}
