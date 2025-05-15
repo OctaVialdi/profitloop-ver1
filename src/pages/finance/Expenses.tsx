@@ -28,19 +28,88 @@ export default function Expenses() {
 
   // Fetch expenses using the hook
   const { expenses, categories, fetchExpenses, fetchCategories, loading } = useExpenses();
-
+  
+  // State for search filter
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // State for filters
+  const [dateFilter, setDateFilter] = useState("all-time");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  
   // State to track the active view for expense breakdown and active tab
   const [expenseView, setExpenseView] = useState<"chart" | "table">("chart");
   const [activeTab, setActiveTab] = useState<"overview" | "compliance" | "approvals">("overview");
   
   // Budget view state
   const [budgetView, setBudgetView] = useState<"current" | "forecast">("current");
+
+  // Filtered expenses
+  const [filteredExpenses, setFilteredExpenses] = useState(expenses);
   
   // Fetch expenses and categories when component mounts
   useEffect(() => {
     fetchExpenses();
     fetchCategories();
   }, []);
+  
+  // Apply filters when expenses, search term, or filters change
+  useEffect(() => {
+    let result = [...expenses];
+    
+    // Apply search filter
+    if (searchTerm) {
+      result = result.filter(expense => 
+        expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        categories.find(cat => cat.id === expense.category_id)?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        expense.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        expense.expense_type?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply date filter
+    if (dateFilter !== "all-time") {
+      const now = new Date();
+      let startDate = new Date();
+      
+      if (dateFilter === "this-month") {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (dateFilter === "last-month") {
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+        result = result.filter(expense => {
+          const expenseDate = new Date(expense.date);
+          return expenseDate >= startDate && expenseDate <= endDate;
+        });
+      } else if (dateFilter === "this-year") {
+        startDate = new Date(now.getFullYear(), 0, 1);
+      }
+      
+      if (dateFilter !== "last-month") {
+        result = result.filter(expense => {
+          const expenseDate = new Date(expense.date);
+          return expenseDate >= startDate;
+        });
+      }
+    }
+    
+    // Apply department filter
+    if (departmentFilter !== "all") {
+      result = result.filter(expense => 
+        expense.department?.toLowerCase() === departmentFilter.toLowerCase()
+      );
+    }
+    
+    // Apply type filter
+    if (typeFilter !== "all") {
+      result = result.filter(expense => 
+        expense.expense_type?.toLowerCase() === typeFilter.toLowerCase()
+      );
+    }
+    
+    // Update filtered expenses
+    setFilteredExpenses(result);
+  }, [expenses, searchTerm, dateFilter, departmentFilter, typeFilter, categories]);
 
   // Process expenses data for charts and display
   const processExpenseData = () => {
@@ -192,6 +261,10 @@ export default function Expenses() {
       status: "safe"
     }
   ];
+
+  // Get unique departments and expense types for filters
+  const uniqueDepartments = Array.from(new Set(expenses.map(e => e.department).filter(Boolean)));
+  const uniqueExpenseTypes = Array.from(new Set(expenses.map(e => e.expense_type).filter(Boolean)));
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -455,11 +528,16 @@ export default function Expenses() {
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="relative w-full max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input className="pl-10" placeholder="Search expenses..." />
+                  <Input 
+                    className="pl-10" 
+                    placeholder="Search expenses..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
                 
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                  <Select>
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
                     <SelectTrigger className="w-[140px] bg-white">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-500" />
@@ -474,7 +552,7 @@ export default function Expenses() {
                     </SelectContent>
                   </Select>
                   
-                  <Select>
+                  <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                     <SelectTrigger className="w-[160px] bg-white">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-gray-500" />
@@ -483,13 +561,13 @@ export default function Expenses() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="it">IT</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
+                      {uniqueDepartments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   
-                  <Select>
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
                     <SelectTrigger className="w-[140px] bg-white">
                       <div className="flex items-center gap-2">
                         <Filter className="h-4 w-4 text-gray-500" />
@@ -498,9 +576,9 @@ export default function Expenses() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="operational">Operational</SelectItem>
-                      <SelectItem value="fixed">Fixed</SelectItem>
-                      <SelectItem value="variable">Variable</SelectItem>
+                      {uniqueExpenseTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -526,12 +604,16 @@ export default function Expenses() {
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8">Loading expenses...</TableCell>
                     </TableRow>
-                  ) : expenses.length === 0 ? (
+                  ) : filteredExpenses.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">No expenses found. Add your first expense!</TableCell>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        {searchTerm || dateFilter !== "all-time" || departmentFilter !== "all" || typeFilter !== "all" ? 
+                          "No expenses found matching your filters." : 
+                          "No expenses found. Add your first expense!"}
+                      </TableCell>
                     </TableRow>
                   ) : (
-                    expenses.map((expense, index) => {
+                    filteredExpenses.map((expense) => {
                       // Find category name
                       const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
                       // Format date
@@ -567,7 +649,9 @@ export default function Expenses() {
             </div>
             
             <div className="p-4 border-t flex justify-between items-center">
-              <p className="text-sm text-gray-500">Showing {expenses.length} of {expenses.length} expenses</p>
+              <p className="text-sm text-gray-500">
+                Showing {filteredExpenses.length} of {expenses.length} expenses
+              </p>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" disabled>Previous</Button>
                 <Button variant="outline" size="sm" disabled>Next</Button>
