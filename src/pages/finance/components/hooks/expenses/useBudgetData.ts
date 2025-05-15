@@ -7,12 +7,12 @@ export interface BudgetCategory {
   current: number;
   total: number;
   usedPercentage: number;
-  status: "normal" | "warning" | "danger";
+  status: "safe" | "warning" | "over";
 }
 
 export function useBudgetData() {
   // State for budget view (can be month/quarter/year)
-  const [budgetView, setBudgetView] = useState("month");
+  const [budgetView, setBudgetView] = useState("current");
   
   // Handle budget view change
   const handleBudgetViewChange = (view: string) => {
@@ -26,7 +26,7 @@ export function useBudgetData() {
       current: 1200000,
       total: 2000000,
       usedPercentage: 60,
-      status: "normal"
+      status: "safe"
     },
     {
       name: "Marketing & Advertising",
@@ -40,14 +40,14 @@ export function useBudgetData() {
       current: 3200000,
       total: 3000000,
       usedPercentage: 107,
-      status: "danger"
+      status: "over"
     },
     {
       name: "Employee Benefits",
       current: 8000000,
       total: 15000000,
       usedPercentage: 53,
-      status: "normal"
+      status: "safe"
     }
   ];
   

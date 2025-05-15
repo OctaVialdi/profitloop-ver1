@@ -4,7 +4,7 @@ import { useExpenseFilters } from "./expenses/useExpenseFilters";
 import { useExpenseStats } from "./expenses/useExpenseStats";
 import { useRecurringExpenses } from "./expenses/useRecurringExpenses";
 import { useBudgetData } from "./expenses/useBudgetData";
-import { useTabManagement } from "./expenses/useTabManagement";
+import { useTabManagement, ExpenseActiveTab } from "./expenses/useTabManagement";
 
 export function useExpensesData() {
   // Get data from context
