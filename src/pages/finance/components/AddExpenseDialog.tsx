@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -24,11 +25,12 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { CalendarIcon, X, Check, Plus, Upload, Users, SlidersHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
+import { cn } from "@/lib/utils";
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -46,7 +48,7 @@ export function AddExpenseDialog({
   onOpenChange,
   onExpenseAdded,
   categories,
-  departments
+  departments = []
 }: AddExpenseDialogProps) {
   // Get organization context
   const { organization } = useOrganization();
@@ -63,6 +65,14 @@ export function AddExpenseDialog({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [newCategoryName, setNewCategoryName] = useState<string>("");
   const [showNewCategory, setShowNewCategory] = useState<boolean>(false);
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const [departmentsLoading, setDepartmentsLoading] = useState<boolean>(false);
+  
+  // Constants
+  const expenseTypes = ["operational", "capital", "marketing", "administrative"];
+  const recurringFrequencies = ["daily", "weekly", "bi-weekly", "monthly", "quarterly", "yearly"];
 
   // Reset form on dialog close
   useEffect(() => {
@@ -83,94 +93,185 @@ export function AddExpenseDialog({
     setExpenseType("operational");
     setNewCategoryName("");
     setShowNewCategory(false);
+    setReceipt(null);
+    setReceiptPreview(null);
+    setValidationErrors({});
+  };
+
+  // Handle receipt upload
+  const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setReceipt(file);
+      
+      // Create preview URL
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setReceiptPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // Non-image file (like PDF)
+        setReceiptPreview(null);
+      }
+    }
+  };
+
+  // Remove receipt
+  const removeReceipt = () => {
+    setReceipt(null);
+    setReceiptPreview(null);
+  };
+
+  // Handle adding new category
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) {
+      setValidationErrors({
+        ...validationErrors,
+        category: 'Category name cannot be empty'
+      });
+      return;
+    }
+
+    try {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      const { data: existingCategory, error: checkError } = await supabase
+        .from("expense_categories")
+        .select("*")
+        .eq("name", newCategoryName)
+        .eq("organization_id", organization.id)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      
+      // Return existing category if it already exists
+      if (existingCategory) {
+        setCategoryId(existingCategory.id);
+        setShowNewCategory(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("expense_categories")
+        .insert([
+          {
+            name: newCategoryName,
+            organization_id: organization.id,
+          },
+        ])
+        .select();
+
+      if (error) throw error;
+      
+      if (data && data[0]) {
+        setCategoryId(data[0].id);
+        onExpenseAdded(); // Refresh categories
+        setShowNewCategory(false);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add category",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    const errors: {[key: string]: string} = {};
+    
+    if (!date) errors.date = "Date is required";
+    if (amount <= 0) errors.amount = "Amount must be greater than 0";
+    if (!categoryId) errors.category = "Category is required";
+    if (!department) errors.department = "Department is required";
+    if (!expenseType) errors.expenseType = "Expense type is required";
+    if (isRecurring && !recurringFrequency) errors.recurringFrequency = "Frequency is required";
+    
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
       
-      let finalCategoryId = categoryId;
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
       
-      // Create new category if needed
-      if (showNewCategory && newCategoryName) {
-        const { data: newCategory, error: categoryError } = await supabase
-          .from("expense_categories")
-          .insert({
-            name: newCategoryName,
-            organization_id: organization?.id
-          })
-          .select()
-          .single();
-          
-        if (categoryError) {
-          throw new Error(`Failed to create category: ${categoryError.message}`);
+      // Upload receipt if provided
+      let receiptUrl = null;
+      let receiptPath = null;
+
+      if (receipt) {
+        try {
+          // This would need actual implementation for file upload
+          // For now we'll just simulate a successful upload
+          receiptUrl = "https://example.com/receipt.jpg";
+          receiptPath = "receipts/receipt.jpg";
+        } catch (uploadError: any) {
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload receipt, but continuing with expense submission",
+            variant: "destructive",
+          });
         }
-        
-        finalCategoryId = newCategory.id;
+      }
+
+      // Get user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        throw new Error("User not authenticated");
       }
       
-      // Validate required fields
-      if (!finalCategoryId || !date || amount <= 0) {
-        throw new Error("Please fill in all required fields");
-      }
+      // Format date to string for database
+      const formattedDate = date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
       
-      // Create the expense record
+      // Insert expense record
       const { data, error } = await supabase
         .from("expenses")
         .insert({
-          description,
           amount,
-          date,
-          category_id: finalCategoryId,
+          date: formattedDate,
+          category_id: categoryId,
+          description,
           department,
+          expense_type: expenseType,
           is_recurring: isRecurring,
           recurring_frequency: isRecurring ? recurringFrequency : null,
-          expense_type: expenseType,
-          organization_id: organization?.id
+          receipt_url: receiptUrl,
+          receipt_path: receiptPath,
+          organization_id: organization.id,
+          created_by: user.id
         });
-        
+
       if (error) {
-        throw new Error(`Failed to add expense: ${error.message}`);
+        throw error;
       }
       
-      // Show success message and close dialog
-      toast.success("Expense added successfully");
+      toast({
+        title: "Expense Added",
+        description: "Your expense has been added successfully",
+      });
+
       onExpenseAdded();
       onOpenChange(false);
-      
     } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add expense",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Handle deleting a category
-  const handleDeleteCategory = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("expense_categories")
-        .delete()
-        .eq("id", id)
-        .eq("organization_id", organization?.id);
-        
-      if (error) {
-        throw new Error(`Failed to delete category: ${error.message}`);
-      }
-      
-      toast.success("Category deleted successfully");
-      // Reset the selected category if it was the deleted one
-      if (id === categoryId) {
-        setCategoryId("");
-      }
-      // Refresh categories by triggering onExpenseAdded which should reload data
-      onExpenseAdded();
-      
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred");
     }
   };
 
@@ -287,7 +388,7 @@ export function AddExpenseDialog({
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-4">
-                  <UploadCloud className="h-8 w-8 text-gray-400 mb-2" />
+                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
                   <p className="text-sm text-gray-500 mb-2">Upload receipt image</p>
                   <label className="cursor-pointer">
                     <span className="bg-[#8B5CF6] text-white px-4 py-2 rounded-md text-sm hover:bg-[#7c4ff1]">
@@ -347,24 +448,7 @@ export function AddExpenseDialog({
                         <SelectItem value="no-categories" disabled>No categories found</SelectItem>
                       ) : (
                         categories.map((cat) => (
-                          <div key={cat.id} className="flex justify-between items-center px-2 py-1.5">
-                            <SelectItem value={cat.name}>{cat.name}</SelectItem>
-                            <Button 
-                              variant="ghost" 
-                              className="h-6 w-6 p-0 ml-2 text-red-500 hover:text-red-700 hover:bg-red-50"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteCategory(cat.id);
-                              }}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 6h18"></path>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                <path d="M10 11v6"></path>
-                                <path d="M14 11v6"></path>
-                              </svg>
-                            </Button>
-                          </div>
+                          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                         ))
                       )}
                     </SelectContent>

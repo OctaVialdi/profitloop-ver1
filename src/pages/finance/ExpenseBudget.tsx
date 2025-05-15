@@ -7,9 +7,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AddExpenseDialog from "./components/AddExpenseDialog";
+import { useState } from "react";
+import { useExpenses } from "@/hooks/useExpenses";
 
 export default function ExpenseBudget() {
   const navigate = useNavigate();
+  const { categories, loadInitialData } = useExpenses();
+  const [dialogOpen, setDialogOpen] = useState(false);
   
   // Budget data
   const budgetCategories = [
@@ -73,6 +77,14 @@ export default function ExpenseBudget() {
     }
   };
 
+  // Mock departments for demo
+  const departments = ["Marketing", "IT", "Operations", "HR", "Finance", "Sales"];
+
+  // Handle expense added
+  const handleExpenseAdded = () => {
+    loadInitialData();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -82,7 +94,20 @@ export default function ExpenseBudget() {
             Manage and track your organization's expenses
           </p>
         </div>
-        <AddExpenseDialog />
+        <Button 
+          variant="default" 
+          onClick={() => setDialogOpen(true)}
+        >
+          Add Expense
+        </Button>
+        
+        <AddExpenseDialog 
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onExpenseAdded={handleExpenseAdded}
+          categories={categories}
+          departments={departments}
+        />
       </div>
 
       {/* Top Navigation Tabs */}

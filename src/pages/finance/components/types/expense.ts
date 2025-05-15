@@ -24,3 +24,11 @@ export interface RecurringExpense {
 }
 
 export type ExpenseTabType = "overview" | "compliance" | "approvals";
+
+export interface BudgetCategory {
+  name: string;
+  current: number;
+  total: number;
+  usedPercentage: number;
+  status: "safe" | "warning" | "over";
+}

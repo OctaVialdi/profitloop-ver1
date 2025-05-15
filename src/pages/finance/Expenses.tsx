@@ -78,6 +78,13 @@ export default function Expenses() {
     isPaid: true  // Assuming all expenses are paid by default
   }));
 
+  // Convert expense breakdown data to the correct type
+  const typedExpenseBreakdownData: ExpenseBreakdownItem[] = expenseBreakdownData.map((item, index) => ({
+    name: item.name,
+    value: item.value,
+    color: item.color || `#${Math.floor(Math.random()*16777215).toString(16)}` // Generate random color if none provided
+  }));
+
   // Convert monthly comparison data to the correct type
   const typedMonthlyComparisonData: MonthlyComparisonItem[] = monthlyComparisonData.map(item => ({
     name: item.name,
@@ -160,7 +167,7 @@ export default function Expenses() {
         {/* Expense Breakdown */}
         <ExpenseBreakdownChart
           loading={loading}
-          expenseBreakdownData={expenseBreakdownData as ExpenseBreakdownItem[]}
+          expenseBreakdownData={typedExpenseBreakdownData}
           categories={categories}
         />
 
