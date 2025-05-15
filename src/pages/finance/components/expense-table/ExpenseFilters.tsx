@@ -89,7 +89,7 @@ export function ExpenseFilters({
           <SelectValue placeholder="All Departments" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Departments</SelectItem>
+          <SelectItem value="all">All Departments</SelectItem>
           {uniqueDepartments.map((dept) => (
             <SelectItem key={dept} value={dept}>
               {dept}
@@ -104,7 +104,7 @@ export function ExpenseFilters({
           <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Types</SelectItem>
+          <SelectItem value="all">All Types</SelectItem>
           {uniqueExpenseTypes.map((type) => (
             <SelectItem key={type} value={type}>
               {type}

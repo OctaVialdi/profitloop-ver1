@@ -5,8 +5,8 @@ import { Expense } from "@/hooks/useExpenses";
 export function useExpenseFilters(expenses: Expense[]) {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
-  const [departmentFilter, setDepartmentFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   // Get unique departments from expenses
   const uniqueDepartments = [...new Set(expenses.map(expense => expense.department).filter(Boolean))]
@@ -29,10 +29,10 @@ export function useExpenseFilters(expenses: Expense[]) {
       new Date(expense.date).setHours(0, 0, 0, 0) === new Date(dateFilter).setHours(0, 0, 0, 0);
 
     // Apply department filter
-    const matchesDepartment = departmentFilter === "" || expense.department === departmentFilter;
+    const matchesDepartment = departmentFilter === "all" || expense.department === departmentFilter;
 
     // Apply type filter
-    const matchesType = typeFilter === "" || expense.expense_type === typeFilter;
+    const matchesType = typeFilter === "all" || expense.expense_type === typeFilter;
 
     // Return true only if all filters match
     return matchesSearch && matchesDate && matchesDepartment && matchesType;

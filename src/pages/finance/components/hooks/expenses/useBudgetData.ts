@@ -1,66 +1,56 @@
 
-import { useState, useEffect } from "react";
-import { useDepartments } from "@/hooks/useDepartments";
-import { useExpenses } from "@/hooks/useExpenses";
-import { BudgetCategory } from "../../../components/budget/ExpenseBudgetSection";
+import { useState } from "react";
+
+// Budget category with monthly allocation and spending data
+export interface BudgetCategory {
+  name: string;
+  allocated: number;
+  spent: number;
+  percentUsed: number;
+}
 
 export function useBudgetData() {
-  const [budgetView, setBudgetView] = useState<"current">("current");
-  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
-  const { departments, loading: departmentsLoading } = useDepartments();
-  const { expenses } = useExpenses();
-
-  useEffect(() => {
-    // Generate dynamic budget categories based on department data
-    if (!departmentsLoading && departments.length > 0) {
-      const departmentBudgets = departments.map((department): BudgetCategory => {
-        // Calculate current expenses for this department
-        const departmentExpenses = expenses
-          .filter(expense => expense.department === department)
-          .reduce((sum, expense) => sum + expense.amount, 0);
-
-        // Set budget limits based on department name (in a real app, this would come from a database)
-        let totalBudget = 25000000; // Default budget
-        
-        // Assign different budgets based on department name
-        if (department.toLowerCase().includes('marketing')) {
-          totalBudget = 50000000;
-        } else if (department.toLowerCase().includes('it')) {
-          totalBudget = 30000000;
-        } else if (department.toLowerCase().includes('operation')) {
-          totalBudget = 25000000;
-        } else if (department.toLowerCase().includes('hr') || department.toLowerCase().includes('human')) {
-          totalBudget = 15000000;
-        } else if (department.toLowerCase().includes('finance')) {
-          totalBudget = 20000000;
-        }
-
-        // Calculate percentage used
-        const usedPercentage = totalBudget > 0 ? Math.round((departmentExpenses / totalBudget) * 100) : 0;
-
-        // Determine status based on percentage
-        let status: "safe" | "warning" | "over" = "safe";
-        if (usedPercentage > 100) {
-          status = "over";
-        } else if (usedPercentage > 75) {
-          status = "warning";
-        }
-
-        return {
-          name: department,
-          current: departmentExpenses,
-          total: totalBudget,
-          usedPercentage: usedPercentage,
-          status: status
-        };
-      });
-
-      setBudgetCategories(departmentBudgets);
-    }
-  }, [departments, departmentsLoading, expenses]);
-
+  // View toggle state (monthly, quarterly, annual)
+  const [budgetView, setBudgetView] = useState<"monthly" | "quarterly" | "annual">("monthly");
+  
+  // Sample budget categories with spending data
+  // In a real application, this would be fetched from an API
+  const budgetCategories: BudgetCategory[] = [
+    {
+      name: "Office Supplies",
+      allocated: 2000000,
+      spent: 1500000,
+      percentUsed: 75,
+    },
+    {
+      name: "Marketing",
+      allocated: 5000000,
+      spent: 4200000,
+      percentUsed: 84,
+    },
+    {
+      name: "IT Equipment",
+      allocated: 10000000,
+      spent: 3500000,
+      percentUsed: 35,
+    },
+    {
+      name: "Travel",
+      allocated: 3500000,
+      spent: 1200000,
+      percentUsed: 34,
+    },
+    {
+      name: "Training",
+      allocated: 2500000,
+      spent: 500000,
+      percentUsed: 20,
+    },
+  ];
+  
   return {
     budgetView,
+    setBudgetView,
     budgetCategories
   };
 }

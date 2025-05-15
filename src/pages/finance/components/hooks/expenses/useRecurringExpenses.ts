@@ -2,34 +2,35 @@
 import { useMemo } from "react";
 import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { formatRupiah } from "@/utils/formatUtils";
+import { format } from "date-fns";
+
+export interface FormattedRecurringExpense {
+  title: string;
+  amount: string;
+  category: string;
+  date: string;
+  frequency: string;
+  isPaid: boolean;
+}
 
 export function useRecurringExpenses(expenses: Expense[], categories: ExpenseCategory[]) {
-  return useMemo(() => {
-    // Filter recurring expenses
-    const recurringExpenses = expenses.filter(expense => expense.is_recurring === true);
+  // Filter recurring expenses and format them
+  const formattedRecurringExpenses = useMemo(() => {
+    const recurringExpenses = expenses.filter(expense => expense.is_recurring);
     
-    if (recurringExpenses.length === 0) {
-      return [];
-    }
-
-    // Convert recurring expenses to the display format
     return recurringExpenses.map(expense => {
-      // Find category name
-      const categoryName = categories.find(cat => cat.id === expense.category_id)?.name || 'Uncategorized';
-      
-      // Format date
-      const formattedDate = expense.date ? new Date(expense.date).toLocaleDateString('id-ID', { 
-        day: '2-digit', month: 'short', year: 'numeric' 
-      }) : 'N/A';
+      const category = categories.find(cat => cat.id === expense.category_id)?.name || expense.category;
       
       return {
-        title: expense.description || categoryName,
+        title: expense.description || "Recurring Expense",
         amount: formatRupiah(expense.amount),
-        category: categoryName,
-        date: formattedDate,
+        category: category,
+        date: format(new Date(expense.date), "MMM d, yyyy"),
         frequency: expense.recurring_frequency || "Monthly",
-        isPaid: true // Assuming all recorded expenses are paid
+        isPaid: true // Assuming paid by default, adjust if you have payment status data
       };
     });
   }, [expenses, categories]);
+
+  return formattedRecurringExpenses;
 }

@@ -93,10 +93,11 @@ export function useExpensesData() {
   } = useExpenseStats(expenses, categories);
 
   // Get budget data
-  const { budgetView, budgetCategories } = useBudgetData(expenses, categories);
+  const { budgetView, budgetCategories } = useBudgetData();
 
   // Get recurring expenses
-  const { formattedRecurringExpenses } = useRecurringExpenses(expenses, categories);
+  const recurringExpensesData = useRecurringExpenses(expenses, categories);
+  const formattedRecurringExpenses = recurringExpensesData || [];
 
   return {
     loading,
