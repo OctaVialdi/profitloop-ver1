@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { ExpenseDetailDialog } from "../expense-details/ExpenseDetailDialog";
 import { EditExpenseDialog } from "../expense-dialog";
+import { DeleteExpenseDialog } from "../expense-dialog/DeleteExpenseDialog";
 
 interface ExpenseTableProps {
   loading: boolean;
@@ -68,6 +69,10 @@ export function ExpenseTable({
   
   // State for edit expense
   const [isEditOpen, setIsEditOpen] = useState(false);
+  
+  // State for delete expense
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Helper to get category name
   const getCategoryName = (categoryId: string) => {
@@ -94,11 +99,36 @@ export function ExpenseTable({
     setSelectedExpense(expense);
     setIsEditOpen(true);
   };
+  
+  // Function to handle deleting expense
+  const handleDeleteExpense = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setIsDeleteOpen(true);
+  };
 
   // Function to handle successful edit
   const handleEditSuccess = () => {
     if (onRefreshData) {
       onRefreshData();
+    }
+  };
+  
+  // Function to handle confirming delete
+  const handleConfirmDelete = async () => {
+    if (!selectedExpense) return;
+    
+    setIsDeleting(true);
+    try {
+      // Import the useExpenses hook within the component to use its deleteExpense method
+      const { deleteExpense } = require('@/hooks/useExpenses').useExpenses();
+      await deleteExpense(selectedExpense.id);
+      setIsDeleteOpen(false);
+      
+      if (onRefreshData) {
+        onRefreshData();
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -241,6 +271,7 @@ export function ExpenseTable({
                         
                         <div className="py-1">
                           <DropdownMenuItem
+                            onClick={() => handleDeleteExpense(expense)}
                             className="flex items-center px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer gap-2"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -304,6 +335,15 @@ export function ExpenseTable({
         isOpen={isEditOpen}
         onOpenChange={setIsEditOpen}
         onSuccess={handleEditSuccess}
+      />
+      
+      {/* Delete Expense Dialog */}
+      <DeleteExpenseDialog
+        expense={selectedExpense}
+        isOpen={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        onConfirmDelete={handleConfirmDelete}
+        isDeleting={isDeleting}
       />
     </>
   );

@@ -9,6 +9,7 @@ export interface ExpensesContextType {
   fetchExpenses: () => Promise<Expense[]>;
   fetchCategories: () => Promise<ExpenseCategory[]>;
   refreshData: () => Promise<void>;
+  deleteExpense?: (expenseId: string) => Promise<boolean>;
 }
 
 export interface ExpensesProviderProps {
