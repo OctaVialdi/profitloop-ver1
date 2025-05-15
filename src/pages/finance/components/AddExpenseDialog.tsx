@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, SlidersHorizontal, Check, UploadCloud, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { useExpenses, type ExpenseCategory } from "@/hooks/useExpenses";
+import { useToast } from "@/components/ui/use-toast";
+import { useExpenses } from "@/hooks/useExpenses";
 import { useDepartments } from "@/hooks/useDepartments";
 
 import { Button } from "@/components/ui/button";
@@ -31,16 +31,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 
 // Define expense types
 const expenseTypes = [

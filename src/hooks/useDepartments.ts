@@ -6,7 +6,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 
 export const useDepartments = () => {
   const { toast } = useToast();
-  const { organizationId } = useOrganization();
+  const { organization } = useOrganization();
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<string[]>([]);
 
@@ -18,7 +18,7 @@ export const useDepartments = () => {
       const { data, error } = await supabase
         .from("org_structure")
         .select("name")
-        .eq("organization_id", organizationId)
+        .eq("organization_id", organization?.id)
         .eq("type", "department");
 
       if (error) throw error;
@@ -44,10 +44,10 @@ export const useDepartments = () => {
   };
 
   useEffect(() => {
-    if (organizationId) {
+    if (organization?.id) {
       fetchDepartments();
     }
-  }, [organizationId]);
+  }, [organization?.id]);
 
   return {
     loading,

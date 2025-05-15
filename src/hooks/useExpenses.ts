@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { uploadFileToBucket } from "@/integrations/supabase/storage";
+import { format } from "date-fns";
 
 export type Expense = {
   id: string;
@@ -28,7 +29,7 @@ export type ExpenseCategory = {
 
 export const useExpenses = () => {
   const { toast } = useToast();
-  const { organizationId } = useOrganization();
+  const { organization } = useOrganization();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -39,7 +40,7 @@ export const useExpenses = () => {
       const { data, error } = await supabase
         .from("expense_categories")
         .select("*")
-        .eq("organization_id", organizationId)
+        .eq("organization_id", organization?.id)
         .order("name");
 
       if (error) throw error;
@@ -67,12 +68,20 @@ export const useExpenses = () => {
           *,
           expense_categories (id, name)
         `)
-        .eq("organization_id", organizationId)
+        .eq("organization_id", organization?.id)
         .order("date", { ascending: false });
 
       if (error) throw error;
-      setExpenses(data || []);
-      return data;
+      
+      // Convert date strings to Date objects
+      const formattedExpenses = (data || []).map(expense => ({
+        ...expense,
+        date: new Date(expense.date),
+        created_at: new Date(expense.created_at),
+      }));
+      
+      setExpenses(formattedExpenses);
+      return formattedExpenses;
     } catch (error: any) {
       console.error("Error fetching expenses:", error);
       toast({
@@ -88,7 +97,7 @@ export const useExpenses = () => {
 
   const addCategory = async (name: string, description?: string) => {
     try {
-      if (!organizationId) {
+      if (!organization?.id) {
         throw new Error("No organization ID found");
       }
 
@@ -98,7 +107,7 @@ export const useExpenses = () => {
           {
             name,
             description,
-            organization_id: organizationId,
+            organization_id: organization.id,
           },
         ])
         .select();
@@ -123,12 +132,12 @@ export const useExpenses = () => {
 
   const uploadReceipt = async (file: File) => {
     try {
-      if (!file || !organizationId) {
+      if (!file || !organization?.id) {
         throw new Error("Missing file or organization ID");
       }
 
       const fileExt = file.name.split('.').pop();
-      const filePath = `${organizationId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${organization.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       
       const { url, error } = await uploadFileToBucket(
         "expense-receipts",
@@ -156,7 +165,7 @@ export const useExpenses = () => {
     receipt?: File;
   }) => {
     try {
-      if (!organizationId) {
+      if (!organization?.id) {
         throw new Error("No organization ID found");
       }
 
@@ -180,12 +189,15 @@ export const useExpenses = () => {
         .from("expense_categories")
         .select("id")
         .eq("name", expenseData.category)
-        .eq("organization_id", organizationId)
+        .eq("organization_id", organization.id)
         .single();
 
       if (!categoryData) {
         throw new Error(`Category ${expenseData.category} not found`);
       }
+
+      // Format date to string for database
+      const formattedDate = format(expenseData.date, 'yyyy-MM-dd');
 
       // Insert expense
       const { data, error } = await supabase
@@ -193,7 +205,7 @@ export const useExpenses = () => {
         .insert([
           {
             amount: expenseData.amount,
-            date: expenseData.date,
+            date: formattedDate,
             category_id: categoryData.id,
             description: expenseData.description,
             department: expenseData.department,
@@ -202,7 +214,7 @@ export const useExpenses = () => {
             recurring_frequency: expenseData.recurringFrequency,
             receipt_url: receiptUrl,
             receipt_path: receiptPath,
-            organization_id: organizationId,
+            organization_id: organization.id,
             created_by: user?.id
           },
         ])
