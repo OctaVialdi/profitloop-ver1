@@ -2,13 +2,79 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { formatRupiah } from "@/utils/formatUtils";
+import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
+import { useMemo } from "react";
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 
 interface MonthlyComparisonChartProps {
   loading: boolean;
-  monthlyComparisonData: any[];
+  filteredExpenses: Expense[];
+  categories: ExpenseCategory[];
 }
 
-export function MonthlyComparisonChart({ loading, monthlyComparisonData }: MonthlyComparisonChartProps) {
+export function MonthlyComparisonChart({ loading, filteredExpenses, categories }: MonthlyComparisonChartProps) {
+  // Generate monthly comparison data based on filtered expenses
+  const monthlyComparisonData = useMemo(() => {
+    if (filteredExpenses.length === 0) {
+      return [];
+    }
+
+    // Get current date and calculate the last 6 months
+    const currentDate = new Date();
+    const monthsToShow = 6;
+    const monthlyData: Record<string, {department: number, expense: number}> = {};
+    
+    // Initialize with empty data for the last 6 months
+    for (let i = 0; i < monthsToShow; i++) {
+      const date = subMonths(currentDate, i);
+      const monthKey = format(date, 'MMM');
+      monthlyData[monthKey] = { department: 0, expense: 0 };
+    }
+    
+    // Group filtered expenses by month and department
+    filteredExpenses.forEach(expense => {
+      const expenseDate = new Date(expense.date);
+      // Only include expenses from the last 6 months
+      const sixMonthsAgo = subMonths(new Date(), monthsToShow - 1);
+      
+      if (expenseDate >= sixMonthsAgo) {
+        const monthKey = format(expenseDate, 'MMM');
+        
+        if (monthlyData[monthKey]) {
+          // If department is specified, add to department total
+          if (expense.department) {
+            monthlyData[monthKey].department += expense.amount;
+          }
+          // Add to overall expense total
+          monthlyData[monthKey].expense += expense.amount;
+        }
+      }
+    });
+    
+    // Convert to array and format for chart display
+    // Sort chronologically by month
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonthIndex = new Date().getMonth();
+    
+    const sortedMonths = Object.keys(monthlyData)
+      .sort((a, b) => {
+        const aIndex = monthNames.indexOf(a);
+        const bIndex = monthNames.indexOf(b);
+        
+        // Handle wrapping around the year
+        const adjustedAIndex = aIndex <= currentMonthIndex ? aIndex : aIndex - 12;
+        const adjustedBIndex = bIndex <= currentMonthIndex ? bIndex : bIndex - 12;
+        
+        return adjustedAIndex - adjustedBIndex;
+      });
+    
+    return sortedMonths.map(month => ({
+      month,
+      department: Math.round(monthlyData[month].department / 1000000 * 10) / 10, // Round to 1 decimal place (in millions)
+      expense: Math.round(monthlyData[month].expense / 1000000 * 10) / 10 // Round to 1 decimal place (in millions)
+    }));
+  }, [filteredExpenses]);
+  
   if (loading) {
     return (
       <Card className="col-span-1">

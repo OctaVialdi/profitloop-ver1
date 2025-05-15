@@ -46,7 +46,6 @@ export function useExpensesData() {
     highestExpense: stats.highestExpense,
     latestExpense: stats.latestExpense,
     expenseBreakdownData: stats.expenseBreakdownData,
-    monthlyComparisonData: stats.monthlyComparisonData,
     
     // Recurring expenses
     formattedRecurringExpenses,

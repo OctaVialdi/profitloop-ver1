@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { Expense, ExpenseCategory } from "@/hooks/useExpenses";
 import { formatRupiah } from "@/utils/formatUtils";
-import { startOfMonth, endOfMonth, isWithinInterval, subMonths, format } from "date-fns";
+import { startOfMonth, endOfMonth, isWithinInterval, subMonths } from "date-fns";
 
 export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory[], dateFilter?: string) {
   return useMemo(() => {
@@ -13,8 +13,7 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
         previousMonthExpense: 0,
         highestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
         latestExpense: { amount: 0, description: 'N/A', date: 'N/A' },
-        expenseBreakdownData: [],
-        monthlyComparisonData: []
+        expenseBreakdownData: []
       };
     }
 
@@ -94,61 +93,6 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
       };
     });
 
-    // Generate monthly comparison data from actual expenses
-    // We'll collect the last 6 months of data
-    const monthsToShow = 6;
-    const monthlyData: Record<string, {department: number, expense: number}> = {};
-    
-    // Initialize with empty data for the last 6 months
-    for (let i = 0; i < monthsToShow; i++) {
-      const date = subMonths(new Date(), i);
-      const monthKey = format(date, 'MMM');
-      monthlyData[monthKey] = { department: 0, expense: 0 };
-    }
-    
-    // Group expenses by month and department
-    expenses.forEach(expense => {
-      const expenseDate = new Date(expense.date);
-      // Only include expenses from the last 6 months
-      const sixMonthsAgo = subMonths(new Date(), monthsToShow - 1);
-      
-      if (expenseDate >= sixMonthsAgo) {
-        const monthKey = format(expenseDate, 'MMM');
-        
-        if (monthlyData[monthKey]) {
-          // If department is specified, add to department total
-          if (expense.department) {
-            monthlyData[monthKey].department += expense.amount;
-          }
-          // Add to overall expense total
-          monthlyData[monthKey].expense += expense.amount;
-        }
-      }
-    });
-    
-    // Convert to array and format for chart display
-    // Sort chronologically by month
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentMonthIndex = new Date().getMonth();
-    
-    const sortedMonths = Object.keys(monthlyData)
-      .sort((a, b) => {
-        const aIndex = monthNames.indexOf(a);
-        const bIndex = monthNames.indexOf(b);
-        
-        // Handle wrapping around the year
-        const adjustedAIndex = aIndex <= currentMonthIndex ? aIndex : aIndex - 12;
-        const adjustedBIndex = bIndex <= currentMonthIndex ? bIndex : bIndex - 12;
-        
-        return adjustedAIndex - adjustedBIndex;
-      });
-    
-    const monthlyComparisonData = sortedMonths.map(month => ({
-      month,
-      department: Math.round(monthlyData[month].department / 1000000 * 10) / 10, // Round to 1 decimal place
-      expense: Math.round(monthlyData[month].expense / 1000000 * 10) / 10 // Round to 1 decimal place
-    }));
-
     return {
       totalExpense,
       currentMonthExpense,
@@ -164,8 +108,7 @@ export function useExpenseStats(expenses: Expense[], categories: ExpenseCategory
         description: latestExpense.description || 'N/A',
         date: new Date(latestExpense.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
       },
-      expenseBreakdownData,
-      monthlyComparisonData
+      expenseBreakdownData
     };
   }, [expenses, categories, dateFilter]);
 }

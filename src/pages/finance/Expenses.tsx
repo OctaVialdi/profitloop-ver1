@@ -45,7 +45,6 @@ export default function Expenses() {
     highestExpense,
     latestExpense,
     expenseBreakdownData,
-    monthlyComparisonData,
     formattedRecurringExpenses,
     uniqueDepartments,
     uniqueExpenseTypes
@@ -127,10 +126,11 @@ export default function Expenses() {
           chartDescription="By expense type"
         />
 
-        {/* Month-over-Month Comparison */}
+        {/* Month-over-Month Comparison - Now using filteredExpenses instead of pre-calculated data */}
         <MonthlyComparisonChart
           loading={loading}
-          monthlyComparisonData={monthlyComparisonData}
+          filteredExpenses={filteredExpenses}
+          categories={categories}
         />
       </div>
     </>
