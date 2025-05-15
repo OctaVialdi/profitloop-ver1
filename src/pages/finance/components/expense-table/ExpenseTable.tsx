@@ -33,6 +33,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
+import { useExpensesContext } from "@/contexts/expenses";
 
 interface ExpenseTableProps {
   loading: boolean;
@@ -48,12 +58,79 @@ export function ExpenseTable({
 }: ExpenseTableProps) {
   // State for viewing receipt
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  
+  // State for details dialog
+  const [detailsExpense, setDetailsExpense] = useState<Expense | null>(null);
+
+  // State for delete confirmation
+  const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Get expense operations from context
+  const { deleteExpense: deleteExpenseFunction } = useExpensesContext();
 
   // Helper to get category name
   const getCategoryName = (categoryId: string) => {
     const category = categories.find((cat) => cat.id === categoryId);
     return category ? category.name : "Uncategorized";
   };
+
+  // Handle View Receipt
+  const handleViewReceipt = (expense: Expense) => {
+    if (expense.receipt_url) {
+      setReceiptUrl(expense.receipt_url);
+    } else {
+      toast({
+        title: "No Receipt",
+        description: "This expense does not have an attached receipt.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle View Details
+  const handleViewDetails = (expense: Expense) => {
+    setDetailsExpense(expense);
+  };
+
+  // Handle Edit
+  const handleEdit = (expense: Expense) => {
+    // For now we'll just show a toast as edit functionality would require a form
+    toast({
+      title: "Edit Expense",
+      description: `Editing expense: ${expense.description || 'No description'} (${formatRupiah(expense.amount)})`,
+    });
+    // In a real implementation, we would open an edit form/dialog here
+  };
+
+  // Handle Delete
+  const handleDelete = async () => {
+    if (!deleteExpense) return;
+    
+    try {
+      setIsDeleting(true);
+      await deleteExpenseFunction(deleteExpense.id);
+      
+      toast({
+        title: "Expense Deleted",
+        description: "The expense has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast({
+        title: "Delete Failed",
+        description: "There was an error deleting the expense. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteExpense(null);
+    }
+  };
+
+  const closeReceiptDialog = () => setReceiptUrl(null);
+  const closeDetailsDialog = () => setDetailsExpense(null);
+  const closeDeleteDialog = () => setDeleteExpense(null);
 
   if (loading) {
     return (
@@ -160,30 +237,33 @@ export function ExpenseTable({
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="bg-white">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => {
-                            if (expense.receipt_url) {
-                              setReceiptUrl(expense.receipt_url);
-                            }
-                          }}
+                          onClick={() => handleViewReceipt(expense)}
                           disabled={!expense.receipt_url}
                           className="flex items-center cursor-pointer"
                         >
                           <Receipt className="h-4 w-4 mr-2" />
                           View Receipt
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center cursor-pointer">
+                        <DropdownMenuItem 
+                          onClick={() => handleViewDetails(expense)}
+                          className="flex items-center cursor-pointer"
+                        >
                           <Eye className="h-4 w-4 mr-2" />
                           Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center cursor-pointer">
+                        <DropdownMenuItem 
+                          onClick={() => handleEdit(expense)}
+                          className="flex items-center cursor-pointer"
+                        >
                           <FileEdit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          onClick={() => setDeleteExpense(expense)}
                           className="flex items-center text-red-600 cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -199,7 +279,128 @@ export function ExpenseTable({
         </Table>
       </div>
 
-      {/* Receipt modal would go here */}
+      {/* Receipt Dialog */}
+      <Dialog open={!!receiptUrl} onOpenChange={closeReceiptDialog}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Receipt</DialogTitle>
+            <DialogDescription>
+              Expense receipt image
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center p-2">
+            {receiptUrl && (
+              <img 
+                src={receiptUrl} 
+                alt="Receipt" 
+                className="max-w-full h-auto max-h-[70vh] object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = "https://placehold.co/400x600?text=Receipt+Not+Available";
+                }} 
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeReceiptDialog}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Dialog */}
+      <Dialog open={!!detailsExpense} onOpenChange={closeDetailsDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Expense Details</DialogTitle>
+            <DialogDescription>
+              Complete information about this expense
+            </DialogDescription>
+          </DialogHeader>
+          
+          {detailsExpense && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Amount</h4>
+                  <p className="text-lg font-semibold">{formatRupiah(detailsExpense.amount)}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Date</h4>
+                  <p>{new Date(detailsExpense.date).toLocaleDateString("id-ID", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}</p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Category</h4>
+                <p>{getCategoryName(detailsExpense.category_id)}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Department</h4>
+                <p>{detailsExpense.department || "Not specified"}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Expense Type</h4>
+                <p>{detailsExpense.expense_type || "Regular"}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Description</h4>
+                <p className="whitespace-pre-wrap">{detailsExpense.description || "No description provided"}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Recurring</h4>
+                <p>{detailsExpense.is_recurring ? `Yes (${detailsExpense.recurring_frequency || "unspecified frequency"})` : "No"}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Created</h4>
+                <p>{new Date(detailsExpense.created_at).toLocaleString()}</p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDetailsDialog}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteExpense} onOpenChange={closeDeleteDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this expense? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {deleteExpense && (
+            <div className="py-4">
+              <p><strong>Amount:</strong> {formatRupiah(deleteExpense.amount)}</p>
+              <p><strong>Date:</strong> {new Date(deleteExpense.date).toLocaleDateString()}</p>
+              <p><strong>Description:</strong> {deleteExpense.description || "No description"}</p>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDeleteDialog} disabled={isDeleting}>Cancel</Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
