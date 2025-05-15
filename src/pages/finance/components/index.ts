@@ -10,4 +10,5 @@ export * from './expense-table/ExpenseTable';
 export * from './expense-charts/ExpenseBreakdownChart';
 export * from './expense-charts/MonthlyComparisonChart';
 export * from './expense-tabs/TabsSection';
+export * from './expense-dialog/DepartmentTypeSection';
 export * from './hooks/useExpensesData';

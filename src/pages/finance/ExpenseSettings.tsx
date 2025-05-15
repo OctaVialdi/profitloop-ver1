@@ -337,6 +337,13 @@ export default function ExpenseSettings() {
               value={newTypeName}
               onChange={(e) => setNewTypeName(e.target.value)}
               className="mt-2"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddType();
+                }
+              }}
             />
           </div>
           <DialogFooter>
@@ -363,6 +370,13 @@ export default function ExpenseSettings() {
               value={editTypeName}
               onChange={(e) => setEditTypeName(e.target.value)}
               className="mt-2"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleEditType();
+                }
+              }}
             />
           </div>
           <DialogFooter>
