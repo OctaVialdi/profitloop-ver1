@@ -17,7 +17,12 @@ import { clearExpenseTypeCache } from "./components/expense-dialog/categoryExpen
 
 export default function ExpenseSettings() {
   const { toast } = useToast();
-  const { categories, fetchCategories } = useExpenses();
+  const { 
+    categories, 
+    fetchCategories, 
+    addCategory,
+    deleteExpenseCategory: deleteCategory
+  } = useExpenses();
   const { 
     loading, 
     expenseTypes, 
@@ -33,11 +38,19 @@ export default function ExpenseSettings() {
   // Local state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
+  const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryDescription, setNewCategoryDescription] = useState("");
   const [currentType, setCurrentType] = useState<ExpenseType | null>(null);
+  const [currentCategory, setCurrentCategory] = useState<any | null>(null);
   const [editTypeName, setEditTypeName] = useState("");
+  const [editCategoryName, setEditCategoryName] = useState("");
+  const [editCategoryDescription, setEditCategoryDescription] = useState("");
   const [mappings, setMappings] = useState<Record<string, Record<string, boolean>>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Load data on component mount
   useEffect(() => {
@@ -96,6 +109,34 @@ export default function ExpenseSettings() {
       });
     }
   };
+
+  // Handle add new expense category
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const result = await addCategory(newCategoryName.trim(), newCategoryDescription.trim() || undefined);
+    if (result) {
+      setNewCategoryName("");
+      setNewCategoryDescription("");
+      setIsAddCategoryDialogOpen(false);
+      
+      toast({
+        title: "Success",
+        description: `Expense category "${newCategoryName.trim()}" has been created`,
+      });
+      
+      // Refresh mappings data
+      await fetchCategories();
+      await fetchCategoryMappings();
+    }
+  };
   
   // Handle edit expense type
   const handleEditType = async () => {
@@ -121,6 +162,30 @@ export default function ExpenseSettings() {
       });
     }
   };
+
+  // Handle edit expense category 
+  const handleEditCategory = async () => {
+    if (!currentCategory || !editCategoryName.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // This function doesn't exist yet, but we'll mock it for now
+    // We'll need to add this function to useExpenses hook
+    toast({
+      title: "Info",
+      description: "Category update functionality will be available soon.",
+    });
+    
+    setCurrentCategory(null);
+    setEditCategoryName("");
+    setEditCategoryDescription("");
+    setIsEditCategoryDialogOpen(false);
+  };
   
   // Handle delete expense type
   const handleDeleteType = async (typeId: string) => {
@@ -133,6 +198,37 @@ export default function ExpenseSettings() {
           title: "Success",
           description: "Expense type deleted successfully",
         });
+      }
+    }
+  };
+
+  // Handle delete expense category
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (confirm("Are you sure you want to delete this expense category?")) {
+      setIsDeleting(true);
+      
+      try {
+        const result = await deleteCategory(categoryId);
+        
+        if (result) {
+          toast({
+            title: "Success",
+            description: "Expense category deleted successfully",
+          });
+          
+          // Refresh mappings data
+          await fetchCategories();
+          await fetchCategoryMappings();
+        }
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete category. It may be in use with existing expenses.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -197,6 +293,7 @@ export default function ExpenseSettings() {
       <Tabs defaultValue="mappings" className="space-y-4">
         <TabsList>
           <TabsTrigger value="mappings">Category-Type Mappings</TabsTrigger>
+          <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="types">Expense Types</TabsTrigger>
         </TabsList>
         
@@ -272,6 +369,70 @@ export default function ExpenseSettings() {
                     </Button>
                   </div>
                 </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Categories Tab */}
+        <TabsContent value="categories" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Expense Categories</CardTitle>
+                <CardDescription>
+                  Manage expense categories for your organization
+                </CardDescription>
+              </div>
+              <Button onClick={() => setIsAddCategoryDialogOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Category
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : categories.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6">
+                  <p className="text-gray-500">No expense categories found</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {categories.map(category => (
+                    <div key={category.id} className="flex items-center justify-between rounded-md border p-3">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{category.name}</span>
+                        {category.description && (
+                          <span className="text-sm text-gray-500">{category.description}</span>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setCurrentCategory(category);
+                            setEditCategoryName(category.name);
+                            setEditCategoryDescription(category.description || "");
+                            setIsEditCategoryDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteCategory(category.id)}
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -376,6 +537,44 @@ export default function ExpenseSettings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add Category Dialog */}
+      <Dialog open={isAddCategoryDialogOpen} onOpenChange={setIsAddCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New Expense Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="categoryName">Category Name</Label>
+              <Input
+                id="categoryName"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                className="mt-2"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label htmlFor="categoryDescription">Description (Optional)</Label>
+              <Input
+                id="categoryDescription"
+                value={newCategoryDescription}
+                onChange={(e) => setNewCategoryDescription(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddCategoryDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCategory}>
+              Add Category
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Edit Type Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -404,6 +603,44 @@ export default function ExpenseSettings() {
               Cancel
             </Button>
             <Button onClick={handleEditType}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Category Dialog */}
+      <Dialog open={isEditCategoryDialogOpen} onOpenChange={setIsEditCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Expense Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="editCategoryName">Category Name</Label>
+              <Input
+                id="editCategoryName"
+                value={editCategoryName}
+                onChange={(e) => setEditCategoryName(e.target.value)}
+                className="mt-2"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label htmlFor="editCategoryDescription">Description (Optional)</Label>
+              <Input
+                id="editCategoryDescription"
+                value={editCategoryDescription}
+                onChange={(e) => setEditCategoryDescription(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditCategoryDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditCategory}>
               Save Changes
             </Button>
           </DialogFooter>

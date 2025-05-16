@@ -203,6 +203,51 @@ export const useExpenses = () => {
     }
   };
 
+  const deleteExpenseCategory = async (categoryId: string) => {
+    try {
+      if (!organization?.id) {
+        throw new Error("No organization ID found");
+      }
+
+      setLoading(true);
+      
+      // First check if there are expenses using this category
+      const { count, error: countError } = await supabase
+        .from("expenses")
+        .select("id", { count: 'exact', head: true })
+        .eq("category_id", categoryId);
+        
+      if (countError) throw countError;
+      
+      if (count && count > 0) {
+        throw new Error(`Cannot delete category because it's used by ${count} expenses`);
+      }
+      
+      // Delete any category-type mappings for this category
+      await supabase
+        .from("expense_category_types")
+        .delete()
+        .eq("category_id", categoryId);
+      
+      // Delete the category
+      const { error } = await supabase
+        .from("expense_categories")
+        .delete()
+        .eq("id", categoryId)
+        .eq("organization_id", organization.id);
+        
+      if (error) throw error;
+      
+      await fetchCategories();
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting category:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const uploadReceipt = async (file: File) => {
     try {
       if (!file || !organization?.id) {
@@ -532,6 +577,7 @@ export const useExpenses = () => {
     fetchExpenses,
     loadInitialData,
     addCategory,
+    deleteExpenseCategory,
     addExpense,
     updateExpense,
     deleteExpense,

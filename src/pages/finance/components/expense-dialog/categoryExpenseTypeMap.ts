@@ -45,7 +45,9 @@ export const getAllowedExpenseTypes = async (category: string, categoryId: strin
       
     if (error || !data || data.length === 0) {
       // If no mappings or error, use default
-      return defaultCategoryExpenseTypeMap[category] || ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"];
+      const defaultTypes = defaultCategoryExpenseTypeMap[category] || ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"];
+      console.log(`No custom mappings found for category "${category}", using defaults:`, defaultTypes);
+      return defaultTypes;
     }
     
     // Update cache
@@ -53,9 +55,10 @@ export const getAllowedExpenseTypes = async (category: string, categoryId: strin
     const expenseTypes = data.map(item => item.expense_type);
     cachedMappings[categoryId] = expenseTypes;
     
+    console.log(`Found custom mappings for category "${category}":`, expenseTypes);
     return expenseTypes;
   } catch (error) {
-    console.error("Error getting expense types:", error);
+    console.error(`Error getting expense types for category "${category}":`, error);
     return defaultCategoryExpenseTypeMap[category] || ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"];
   }
 };
@@ -67,6 +70,7 @@ export const getInitialExpenseTypes = (category: string): string[] => {
 
 // Clear the cache when needed (after updates)
 export const clearExpenseTypeCache = () => {
+  console.log("Clearing expense type cache");
   cachedMappings = {};
   cachedOrganizationId = null;
 };
