@@ -1,9 +1,11 @@
+
 import React, { useEffect, useState } from "react";
-import { Users, SlidersHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getInitialExpenseTypes, getAllowedExpenseTypes } from "./categoryExpenseTypeMap";
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { useExpenseTypeMappings } from "@/hooks/useExpenseTypeMappings";
 import { useOrganization } from "@/hooks/useOrganization";
+import { getExpenseTypesForCategory, setExpenseTypesForCategory } from "./categoryExpenseTypeMap";
 
 interface DepartmentTypeSectionProps {
   department: string;
@@ -13,7 +15,7 @@ interface DepartmentTypeSectionProps {
   departments: string[];
   departmentsLoading: boolean;
   validationErrors: Record<string, string>;
-  selectedCategory?: string;
+  selectedCategory: string;
   categoryId?: string;
 }
 
@@ -28,64 +30,72 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
   selectedCategory,
   categoryId
 }) => {
+  const { getExpenseTypesForCategory: fetchExpenseTypes } = useExpenseTypeMappings();
   const { organization } = useOrganization();
-  const [filteredExpenseTypes, setFilteredExpenseTypes] = useState<string[]>(
-    selectedCategory ? getInitialExpenseTypes(selectedCategory) : ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"]
-  );
-  
+  const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    // If we have a category ID and organization ID, fetch expense types from database
-    if (selectedCategory && categoryId && organization?.id) {
-      const fetchExpenseTypes = async () => {
-        const types = await getAllowedExpenseTypes(selectedCategory, categoryId, organization.id);
-        setFilteredExpenseTypes(types);
+    const loadExpenseTypes = async () => {
+      if (!categoryId || !organization?.id) return;
         
-        // Reset expense type if current value is not in filtered list
-        if (expenseType && !types.includes(expenseType)) {
-          setExpenseType(types[0] || "");
-        }
-      };
-      
-      fetchExpenseTypes();
-    } else if (selectedCategory) {
-      // Otherwise use default mapping
-      const defaultTypes = getInitialExpenseTypes(selectedCategory);
-      setFilteredExpenseTypes(defaultTypes);
-      
-      // Reset expense type if current value is not in filtered list
-      if (expenseType && !defaultTypes.includes(expenseType)) {
-        setExpenseType(defaultTypes[0] || "");
+      // First check if we have cached data
+      const cachedTypes = getExpenseTypesForCategory(categoryId);
+      if (cachedTypes && cachedTypes.length > 0) {
+        setExpenseTypes(cachedTypes);
+        return;
       }
+      
+      // If no cached data, fetch from API
+      setLoading(true);
+      try {
+        const types = await fetchExpenseTypes(categoryId);
+        setExpenseTypes(types);
+        
+        // Cache the result
+        setExpenseTypesForCategory(categoryId, types);
+      } catch (error) {
+        console.error("Error loading expense types:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExpenseTypes();
+  }, [categoryId, organization?.id, fetchExpenseTypes]);
+
+  // Reset expense type when category changes
+  useEffect(() => {
+    if (categoryId) {
+      setExpenseType('');
     }
-  }, [selectedCategory, categoryId, organization?.id, expenseType, setExpenseType]);
+  }, [categoryId, setExpenseType]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Department */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <label className="text-base font-medium">
           Department<span className="text-red-500">*</span>
         </label>
-        <Select 
-          value={department} 
-          onValueChange={(value) => setDepartment(value)}
-        >
+        <Select value={department} onValueChange={setDepartment}>
           <SelectTrigger className={cn(
             "h-[50px]",
             validationErrors.department && "border-red-500"
           )}>
-            <Users className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Select a department" />
+            <SelectValue placeholder="Select department" />
           </SelectTrigger>
           <SelectContent>
             {departmentsLoading ? (
-              <SelectItem value="loading" disabled>Loading...</SelectItem>
-            ) : departments.length > 0 ? (
+              <div className="flex items-center justify-center p-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="ml-2">Loading...</span>
+              </div>
+            ) : departments.length === 0 ? (
+              <SelectItem value="no-departments" disabled>No departments found</SelectItem>
+            ) : (
               departments.map((dept) => (
                 <SelectItem key={dept} value={dept}>{dept}</SelectItem>
               ))
-            ) : (
-              <SelectItem value="no-departments" disabled>No departments found</SelectItem>
             )}
           </SelectContent>
         </Select>
@@ -94,26 +104,32 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
         )}
       </div>
 
-      {/* Expense Type */}
       <div className="space-y-2">
         <label className="text-base font-medium">
           Expense Type<span className="text-red-500">*</span>
         </label>
-        <Select 
-          value={expenseType} 
-          onValueChange={(value) => setExpenseType(value)}
-        >
+        <Select value={expenseType} onValueChange={setExpenseType} disabled={!selectedCategory}>
           <SelectTrigger className={cn(
             "h-[50px]",
             validationErrors.expenseType && "border-red-500"
           )}>
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Select type" />
+            <SelectValue placeholder={selectedCategory ? "Select expense type" : "Select a category first"} />
           </SelectTrigger>
           <SelectContent>
-            {filteredExpenseTypes.map((type) => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
+            {!selectedCategory ? (
+              <SelectItem value="no-category" disabled>Select a category first</SelectItem>
+            ) : loading ? (
+              <div className="flex items-center justify-center p-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="ml-2">Loading expense types...</span>
+              </div>
+            ) : expenseTypes.length === 0 ? (
+              <SelectItem value="no-types" disabled>No expense types found</SelectItem>
+            ) : (
+              expenseTypes.map((type) => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
         {validationErrors.expenseType && (

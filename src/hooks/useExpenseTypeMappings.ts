@@ -9,6 +9,7 @@ export interface ExpenseType {
   name: string;
   is_default: boolean;
   organization_id: string;
+  category_id?: string; // Added category_id field
 }
 
 export interface CategoryTypeMapping {
@@ -81,7 +82,7 @@ export const useExpenseTypeMappings = () => {
     }
   };
 
-  const createExpenseType = async (name: string) => {
+  const createExpenseType = async (name: string, categoryId?: string) => {
     try {
       if (!organization?.id) {
         throw new Error("No organization ID found");
@@ -105,15 +106,16 @@ export const useExpenseTypeMappings = () => {
         return null;
       }
 
+      const newType = {
+        name,
+        organization_id: organization.id,
+        is_default: false,
+        category_id: categoryId || null
+      };
+
       const { data, error } = await supabase
         .from("expense_types")
-        .insert([
-          {
-            name,
-            organization_id: organization.id,
-            is_default: false
-          }
-        ])
+        .insert([newType])
         .select();
 
       if (error) throw error;
@@ -138,7 +140,7 @@ export const useExpenseTypeMappings = () => {
     }
   };
 
-  const updateExpenseType = async (id: string, name: string) => {
+  const updateExpenseType = async (id: string, name: string, categoryId?: string) => {
     try {
       if (!organization?.id) {
         throw new Error("No organization ID found");
@@ -146,9 +148,18 @@ export const useExpenseTypeMappings = () => {
 
       setLoading(true);
 
+      const updateData: { name: string; category_id?: string | null } = {
+        name
+      };
+      
+      // Only add category_id if it's provided
+      if (categoryId !== undefined) {
+        updateData.category_id = categoryId || null;
+      }
+
       const { data, error } = await supabase
         .from("expense_types")
-        .update({ name })
+        .update(updateData)
         .eq("id", id)
         .eq("organization_id", organization.id)
         .select();
@@ -287,7 +298,20 @@ export const useExpenseTypeMappings = () => {
     try {
       if (!organization?.id) return [];
       
-      // Get mappings for this category
+      // Get expense types directly related to this category
+      const { data: directTypes, error: directError } = await supabase
+        .from("expense_types")
+        .select("name")
+        .eq("category_id", categoryId)
+        .eq("organization_id", organization.id);
+      
+      if (directError) throw directError;
+      
+      if (directTypes && directTypes.length > 0) {
+        return directTypes.map(type => type.name);
+      }
+      
+      // Get mappings for this category as fallback
       const { data, error } = await supabase
         .from("expense_category_types")
         .select("expense_type")
@@ -300,7 +324,7 @@ export const useExpenseTypeMappings = () => {
         return data.map(item => item.expense_type);
       }
       
-      // If no mappings found, return all expense types
+      // If no direct types or mappings found, return all expense types
       const { data: typeData, error: typeError } = await supabase
         .from("expense_types")
         .select("name")

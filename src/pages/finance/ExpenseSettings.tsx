@@ -8,11 +8,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { useExpenseTypeMappings, ExpenseType } from "@/hooks/useExpenseTypeMappings";
 import { useExpenses } from "@/hooks/useExpenses";
-import { PlusCircle, Pencil, Trash2, Save, Loader2 } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Save, Loader2, ArrowDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clearExpenseTypeCache } from "./components/expense-dialog/categoryExpenseTypeMap";
 
 export default function ExpenseSettings() {
@@ -41,6 +42,7 @@ export default function ExpenseSettings() {
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
   const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryDescription, setNewCategoryDescription] = useState("");
   const [currentType, setCurrentType] = useState<ExpenseType | null>(null);
@@ -97,10 +99,20 @@ export default function ExpenseSettings() {
       });
       return;
     }
+
+    if (!selectedCategoryId) {
+      toast({
+        title: "Error",
+        description: "Please select a parent category",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    const result = await createExpenseType(newTypeName.trim());
+    const result = await createExpenseType(newTypeName.trim(), selectedCategoryId);
     if (result) {
       setNewTypeName("");
+      setSelectedCategoryId(null);
       setIsAddDialogOpen(false);
       
       toast({
@@ -149,10 +161,11 @@ export default function ExpenseSettings() {
       return;
     }
     
-    const result = await updateExpenseType(currentType.id, editTypeName.trim());
+    const result = await updateExpenseType(currentType.id, editTypeName.trim(), selectedCategoryId || undefined);
     if (result) {
       setCurrentType(null);
       setEditTypeName("");
+      setSelectedCategoryId(null);
       setIsEditDialogOpen(false);
       clearExpenseTypeCache();
       
@@ -283,6 +296,11 @@ export default function ExpenseSettings() {
       setIsSaving(false);
     }
   };
+
+  // Get types for a specific category
+  const getTypesForCategory = (categoryId: string) => {
+    return expenseTypes.filter(type => type.category_id === categoryId);
+  };
   
   return (
     <div className="space-y-6">
@@ -290,12 +308,165 @@ export default function ExpenseSettings() {
         <h1 className="text-2xl font-bold">Expense Settings</h1>
       </div>
       
-      <Tabs defaultValue="mappings" className="space-y-4">
+      <Tabs defaultValue="categories" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="mappings">Category-Type Mappings</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="types">Expense Types</TabsTrigger>
+          <TabsTrigger value="mappings">Category-Type Mappings</TabsTrigger>
         </TabsList>
+        
+        {/* Categories Tab */}
+        <TabsContent value="categories" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Expense Categories</CardTitle>
+                <CardDescription>
+                  Manage expense categories for your organization
+                </CardDescription>
+              </div>
+              <Button onClick={() => setIsAddCategoryDialogOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Category
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : categories.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6">
+                  <p className="text-gray-500">No expense categories found</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {categories.map(category => (
+                    <div key={category.id} className="flex items-center justify-between rounded-md border p-3">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{category.name}</span>
+                        {category.description && (
+                          <span className="text-sm text-gray-500">{category.description}</span>
+                        )}
+                        <div className="mt-1">
+                          {getTypesForCategory(category.id).length > 0 && (
+                            <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100" variant="outline">
+                              {getTypesForCategory(category.id).length} types
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setCurrentCategory(category);
+                            setEditCategoryName(category.name);
+                            setEditCategoryDescription(category.description || "");
+                            setIsEditCategoryDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteCategory(category.id)}
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Types Tab */}
+        <TabsContent value="types" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Expense Types</CardTitle>
+                <CardDescription>
+                  Manage expense types for your organization
+                </CardDescription>
+              </div>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Type
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : categories.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6">
+                  <p className="text-gray-500">Please create categories first</p>
+                </div>
+              ) : expenseTypes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6">
+                  <p className="text-gray-500">No expense types found</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {categories.map(category => (
+                    <div key={category.id} className="border rounded-md p-4">
+                      <h3 className="font-medium mb-2">{category.name}</h3>
+                      {getTypesForCategory(category.id).length === 0 ? (
+                        <p className="text-sm text-gray-500 py-2">No types for this category</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {getTypesForCategory(category.id).map(type => (
+                            <div key={type.id} className="flex items-center justify-between rounded-md border p-3">
+                              <div className="flex items-center">
+                                <span>{type.name}</span>
+                                {type.is_default && (
+                                  <Badge className="ml-2 bg-blue-100 text-blue-800 hover:bg-blue-100" variant="outline">
+                                    Default
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setCurrentType(type);
+                                    setEditTypeName(type.name);
+                                    setSelectedCategoryId(type.category_id || null);
+                                    setIsEditDialogOpen(true);
+                                  }}
+                                  disabled={type.is_default}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteType(type.id)}
+                                  disabled={type.is_default}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
         
         {/* Mappings Tab */}
         <TabsContent value="mappings" className="space-y-4">
@@ -373,136 +544,6 @@ export default function ExpenseSettings() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Categories Tab */}
-        <TabsContent value="categories" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <CardTitle>Expense Categories</CardTitle>
-                <CardDescription>
-                  Manage expense categories for your organization
-                </CardDescription>
-              </div>
-              <Button onClick={() => setIsAddCategoryDialogOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Category
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                </div>
-              ) : categories.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6">
-                  <p className="text-gray-500">No expense categories found</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {categories.map(category => (
-                    <div key={category.id} className="flex items-center justify-between rounded-md border p-3">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{category.name}</span>
-                        {category.description && (
-                          <span className="text-sm text-gray-500">{category.description}</span>
-                        )}
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setCurrentCategory(category);
-                            setEditCategoryName(category.name);
-                            setEditCategoryDescription(category.description || "");
-                            setIsEditCategoryDialogOpen(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteCategory(category.id)}
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Types Tab */}
-        <TabsContent value="types" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <CardTitle>Expense Types</CardTitle>
-                <CardDescription>
-                  Manage custom expense types for your organization
-                </CardDescription>
-              </div>
-              <Button onClick={() => setIsAddDialogOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Type
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                </div>
-              ) : expenseTypes.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6">
-                  <p className="text-gray-500">No expense types found</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {expenseTypes.map(type => (
-                    <div key={type.id} className="flex items-center justify-between rounded-md border p-3">
-                      <div className="flex items-center">
-                        <span>{type.name}</span>
-                        {type.is_default && (
-                          <Badge className="ml-2 bg-blue-100 text-blue-800 hover:bg-blue-100" variant="outline">
-                            Default
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setCurrentType(type);
-                            setEditTypeName(type.name);
-                            setIsEditDialogOpen(true);
-                          }}
-                          disabled={type.is_default}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteType(type.id)}
-                          disabled={type.is_default}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
       
       {/* Add Type Dialog */}
@@ -511,21 +552,41 @@ export default function ExpenseSettings() {
           <DialogHeader>
             <DialogTitle>Add New Expense Type</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="name">Type Name</Label>
-            <Input
-              id="name"
-              value={newTypeName}
-              onChange={(e) => setNewTypeName(e.target.value)}
-              className="mt-2"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddType();
-                }
-              }}
-            />
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="parentCategory">Parent Category</Label>
+              <Select 
+                value={selectedCategoryId || ""} 
+                onValueChange={setSelectedCategoryId}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="name">Type Name</Label>
+              <Input
+                id="name"
+                value={newTypeName}
+                onChange={(e) => setNewTypeName(e.target.value)}
+                className="mt-2"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddType();
+                  }
+                }}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -582,21 +643,41 @@ export default function ExpenseSettings() {
           <DialogHeader>
             <DialogTitle>Edit Expense Type</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="editName">Type Name</Label>
-            <Input
-              id="editName"
-              value={editTypeName}
-              onChange={(e) => setEditTypeName(e.target.value)}
-              className="mt-2"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleEditType();
-                }
-              }}
-            />
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="editParentCategory">Parent Category</Label>
+              <Select 
+                value={selectedCategoryId || ""} 
+                onValueChange={setSelectedCategoryId}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="editName">Type Name</Label>
+              <Input
+                id="editName"
+                value={editTypeName}
+                onChange={(e) => setEditTypeName(e.target.value)}
+                className="mt-2"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleEditType();
+                  }
+                }}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
