@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { uploadFileToBucket } from "@/integrations/supabase/storage";
 import { format } from "date-fns";
+import { clearExpenseTypeCache } from "@/pages/finance/components/expense-dialog/categoryExpenseTypeMap";
 
 export type Expense = {
   id: string;

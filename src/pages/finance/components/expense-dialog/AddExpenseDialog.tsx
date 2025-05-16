@@ -16,10 +16,10 @@ import {
   CategorySection,
   DescriptionSection,
   DepartmentTypeSection,
-  RecurringSection
+  RecurringSection,
+  DialogFooter
 } from "./";
 import { useExpenseForm } from "./hooks/useExpenseForm";
-import { DialogFooter } from "./components/DialogFooter";
 
 const AddExpenseDialog: React.FC = () => {
   const {

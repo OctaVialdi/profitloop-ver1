@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { useExpenseTypeMappings, ExpenseType } from "@/hooks/useExpenseTypeMappings";
 import { useExpenses } from "@/hooks/useExpenses";
-import { PlusCircle, Pencil, Trash2, Save, Loader2, Type, Category } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Save, Loader2, Type, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
