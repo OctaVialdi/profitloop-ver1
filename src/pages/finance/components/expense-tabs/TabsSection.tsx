@@ -1,72 +1,75 @@
 
-import React, { useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TabType } from "../hooks/expenses/useTabManagement";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ReactNode } from "react";
 
 interface TabsSectionProps {
-  activeTab: TabType;
+  activeTab: "overview" | "compliance" | "approvals" | "settings";
   onTabChange: (value: string) => void;
-  overviewContent: React.ReactNode;
-  complianceContent?: React.ReactNode;
-  approvalsContent?: React.ReactNode;
-  settingsContent?: React.ReactNode;
+  overviewContent: ReactNode;
+  settingsContent?: ReactNode;
 }
 
-export function TabsSection({
-  activeTab,
-  onTabChange,
-  overviewContent,
-  complianceContent,
-  approvalsContent,
-  settingsContent,
+export function TabsSection({ 
+  activeTab, 
+  onTabChange, 
+  overviewContent, 
+  settingsContent 
 }: TabsSectionProps) {
-  
-  // Event listener for switching to settings tab
-  useEffect(() => {
-    const handleSwitchToSettings = (event: Event) => {
-      if ((event as CustomEvent).detail?.activeTab === 'settings') {
-        onTabChange('settings');
-      }
-    };
-    
-    document.addEventListener('switch-to-settings-tab', handleSwitchToSettings);
-    
-    return () => {
-      document.removeEventListener('switch-to-settings-tab', handleSwitchToSettings);
-    };
-  }, [onTabChange]);
-  
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
-      <TabsList className="overflow-x-auto">
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        {complianceContent && (
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-        )}
-        {approvalsContent && (
-          <TabsTrigger value="approvals">Approvals</TabsTrigger>
-        )}
-        <TabsTrigger value="settings">Settings</TabsTrigger>
+    <Tabs defaultValue="overview" value={activeTab} className="w-full" onValueChange={onTabChange}>
+      <TabsList className="bg-card rounded-xl p-1 border overflow-auto">
+        <TabsTrigger 
+          value="overview" 
+          className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+        >
+          Overview
+        </TabsTrigger>
+        <TabsTrigger 
+          value="compliance" 
+          className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+        >
+          Compliance
+        </TabsTrigger>
+        <TabsTrigger 
+          value="approvals" 
+          className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+        >
+          Approvals
+        </TabsTrigger>
+        <TabsTrigger 
+          value="settings" 
+          className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+        >
+          Settings
+        </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="overview" className="space-y-6">
+      {/* Overview Tab Content */}
+      <TabsContent value="overview" className="mt-6 space-y-10">
         {overviewContent}
       </TabsContent>
-
-      {complianceContent && (
-        <TabsContent value="compliance" className="space-y-6">
-          {complianceContent}
-        </TabsContent>
-      )}
-
-      {approvalsContent && (
-        <TabsContent value="approvals" className="space-y-6">
-          {approvalsContent}
-        </TabsContent>
-      )}
-
-      <TabsContent value="settings" className="space-y-6">
-        {settingsContent}
+      
+      {/* Compliance Tab Content */}
+      <TabsContent value="compliance" className="mt-6">
+        <div className="flex items-center justify-center h-40">
+          <p className="text-muted-foreground">Compliance functionality will be available soon.</p>
+        </div>
+      </TabsContent>
+      
+      {/* Approvals Tab Content */}
+      <TabsContent value="approvals" className="mt-6">
+        <div className="flex items-center justify-center h-40">
+          <p className="text-muted-foreground">Approvals functionality will be available soon.</p>
+        </div>
+      </TabsContent>
+      
+      {/* Settings Tab Content */}
+      <TabsContent value="settings" className="mt-6">
+        {settingsContent || (
+          <div className="flex items-center justify-center h-40">
+            <p className="text-muted-foreground">Loading settings...</p>
+          </div>
+        )}
       </TabsContent>
     </Tabs>
   );

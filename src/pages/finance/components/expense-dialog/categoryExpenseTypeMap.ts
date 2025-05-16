@@ -23,14 +23,10 @@ export const defaultCategoryExpenseTypeMap: Record<string, string[]> = {
 let cachedMappings: Record<string, string[]> = {};
 let cachedOrganizationId: string | null = null;
 
-/**
- * Get allowed expense types for a category
- * This function checks for custom mappings in the database and falls back to defaults
- */
+// A function to get allowed expense types for a category
 export const getAllowedExpenseTypes = async (category: string, categoryId: string, organizationId: string): Promise<string[]> => {
-  // If we have a cached mapping for this organization and category, use it
+  // If we have a cached mapping for this organization, use it
   if (cachedOrganizationId === organizationId && cachedMappings[categoryId]) {
-    console.log(`Using cached expense types for category "${category}":`, cachedMappings[categoryId]);
     return cachedMappings[categoryId];
   }
   

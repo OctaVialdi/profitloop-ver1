@@ -1,11 +1,9 @@
-
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { uploadFileToBucket } from "@/integrations/supabase/storage";
 import { format } from "date-fns";
-import { clearExpenseTypeCache } from "@/pages/finance/components/expense-dialog/categoryExpenseTypeMap";
 
 export type Expense = {
   id: string;
@@ -193,13 +191,6 @@ export const useExpenses = () => {
       });
       
       await fetchCategories();
-      
-      // Clear the expense type cache to ensure fresh data
-      if (typeof window !== 'undefined' && 
-          typeof window.clearExpenseTypeCache === 'function') {
-        window.clearExpenseTypeCache();
-      }
-      
       return data?.[0];
     } catch (error: any) {
       console.error("Error adding expense category:", error);
@@ -248,13 +239,6 @@ export const useExpenses = () => {
       if (error) throw error;
       
       await fetchCategories();
-      
-      // Clear the expense type cache to ensure fresh data
-      if (typeof window !== 'undefined' && 
-          typeof window.clearExpenseTypeCache === 'function') {
-        window.clearExpenseTypeCache();
-      }
-      
       return true;
     } catch (error: any) {
       console.error("Error deleting category:", error);
@@ -599,8 +583,3 @@ export const useExpenses = () => {
     deleteExpense,
   };
 };
-
-// Make clearExpenseTypeCache globally available
-if (typeof window !== 'undefined') {
-  window.clearExpenseTypeCache = clearExpenseTypeCache;
-}

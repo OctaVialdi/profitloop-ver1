@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useDepartments } from "@/hooks/useDepartments";
-import { getAllowedExpenseTypes, clearExpenseTypeCache } from "../categoryExpenseTypeMap";
-import { useOrganization } from "@/hooks/useOrganization";
 
 export interface ExpenseFormState {
   date: Date;
@@ -39,10 +37,8 @@ export const useExpenseForm = () => {
   const [showAddCategory, setShowAddCategory] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [allowedExpenseTypes, setAllowedExpenseTypes] = useState<string[]>([]);
 
   const { toast } = useToast();
-  const { organization } = useOrganization();
   const { categories, fetchCategories, addCategory, addExpense } = useExpenses();
   const { departments, fetchDepartments, loading: departmentsLoading } = useDepartments();
 
@@ -51,32 +47,6 @@ export const useExpenseForm = () => {
     fetchCategories();
     fetchDepartments();
   }, []);
-
-  // Update allowed expense types when category changes
-  useEffect(() => {
-    const updateExpenseTypes = async () => {
-      if (category && organization?.id) {
-        const categoryObj = categories.find(c => c.name === category);
-        if (categoryObj) {
-          const types = await getAllowedExpenseTypes(
-            category, 
-            categoryObj.id,
-            organization.id
-          );
-          setAllowedExpenseTypes(types);
-          
-          // Reset expense type if current one is not allowed
-          if (expenseType && !types.includes(expenseType)) {
-            setExpenseType('');
-          }
-        }
-      } else {
-        setAllowedExpenseTypes(["Fixed", "Variable", "Operational", "Capital", "Non-Operational"]);
-      }
-    };
-    
-    updateExpenseTypes();
-  }, [category, categories, organization?.id]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -159,14 +129,11 @@ export const useExpenseForm = () => {
       return;
     }
     
-    const result = await addCategory(newCategoryName.trim(), "");
+    const result = await addCategory(newCategoryName);
     if (result) {
       setCategory(newCategoryName);
       setNewCategoryName("");
       setShowAddCategory(false);
-      
-      // Clear cache to ensure we get fresh data after adding a new category
-      clearExpenseTypeCache();
       
       toast({
         title: "Success",
@@ -302,7 +269,6 @@ export const useExpenseForm = () => {
     categories,
     departments,
     departmentsLoading,
-    allowedExpenseTypes,
     validateForm,
     resetForm,
   };

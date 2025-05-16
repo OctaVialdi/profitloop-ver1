@@ -1,4 +1,0 @@
-
-interface Window {
-  clearExpenseTypeCache?: () => void;
-}
