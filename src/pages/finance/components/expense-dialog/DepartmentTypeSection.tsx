@@ -1,23 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { Users, SlidersHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+import React, { useState, useEffect } from "react";
+import { FormItem } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getInitialExpenseTypes, getAllowedExpenseTypes } from "./categoryExpenseTypeMap";
 import { useOrganization } from "@/hooks/useOrganization";
+import { getAllowedExpenseTypes } from "./categoryExpenseTypeMap";
 
 interface DepartmentTypeSectionProps {
   department: string;
   setDepartment: (value: string) => void;
   expenseType: string;
   setExpenseType: (value: string) => void;
-  departments: string[];
+  departments: { id: string, name: string }[];
   departmentsLoading: boolean;
   validationErrors: Record<string, string>;
-  selectedCategory?: string;
+  selectedCategory: string;
   categoryId?: string;
 }
 
-export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
+const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
   department,
   setDepartment,
   expenseType,
@@ -28,98 +29,79 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
   selectedCategory,
   categoryId
 }) => {
+  const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
   const { organization } = useOrganization();
-  const [filteredExpenseTypes, setFilteredExpenseTypes] = useState<string[]>(
-    selectedCategory ? getInitialExpenseTypes(selectedCategory) : ["Fixed", "Variable", "Operational", "Capital", "Non-Operational"]
-  );
   
+  // Fetch allowed expense types when category changes
   useEffect(() => {
-    // If we have a category ID and organization ID, fetch expense types from database
-    if (selectedCategory && categoryId && organization?.id) {
-      const fetchExpenseTypes = async () => {
-        const types = await getAllowedExpenseTypes(selectedCategory, categoryId, organization.id);
-        setFilteredExpenseTypes(types);
+    const loadExpenseTypes = async () => {
+      if (selectedCategory && organization?.id) {
+        const types = await getAllowedExpenseTypes(
+          selectedCategory,
+          categoryId || '',
+          organization.id
+        );
+        setExpenseTypes(types);
         
-        // Reset expense type if current value is not in filtered list
+        // If current type is not in the allowed types, reset it
         if (expenseType && !types.includes(expenseType)) {
-          setExpenseType(types[0] || "");
+          setExpenseType('');
         }
-      };
-      
-      fetchExpenseTypes();
-    } else if (selectedCategory) {
-      // Otherwise use default mapping
-      const defaultTypes = getInitialExpenseTypes(selectedCategory);
-      setFilteredExpenseTypes(defaultTypes);
-      
-      // Reset expense type if current value is not in filtered list
-      if (expenseType && !defaultTypes.includes(expenseType)) {
-        setExpenseType(defaultTypes[0] || "");
+      } else {
+        setExpenseTypes(["Fixed", "Variable", "Operational", "Capital", "Non-Operational"]);
       }
-    }
-  }, [selectedCategory, categoryId, organization?.id, expenseType, setExpenseType]);
+    };
+    
+    loadExpenseTypes();
+  }, [selectedCategory, categoryId, organization?.id]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Department */}
-      <div className="space-y-2">
-        <label className="text-base font-medium">
+    <div className="grid grid-cols-2 gap-4">
+      {/* Department dropdown */}
+      <FormItem>
+        <Label htmlFor="department" className="flex items-center">
           Department<span className="text-red-500">*</span>
-        </label>
-        <Select 
-          value={department} 
-          onValueChange={(value) => setDepartment(value)}
-        >
-          <SelectTrigger className={cn(
-            "h-[50px]",
-            validationErrors.department && "border-red-500"
-          )}>
-            <Users className="mr-2 h-4 w-4" />
+        </Label>
+        <Select value={department} onValueChange={setDepartment}>
+          <SelectTrigger id="department" className="w-full" disabled={departmentsLoading}>
             <SelectValue placeholder="Select a department" />
           </SelectTrigger>
           <SelectContent>
-            {departmentsLoading ? (
-              <SelectItem value="loading" disabled>Loading...</SelectItem>
-            ) : departments.length > 0 ? (
-              departments.map((dept) => (
-                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-              ))
-            ) : (
-              <SelectItem value="no-departments" disabled>No departments found</SelectItem>
-            )}
+            {departments.map((dept) => (
+              <SelectItem key={dept.id} value={dept.name}>
+                {dept.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {validationErrors.department && (
-          <p className="text-xs text-red-500 mt-1">{validationErrors.department}</p>
+          <p className="text-sm text-red-500">{validationErrors.department}</p>
         )}
-      </div>
+      </FormItem>
 
-      {/* Expense Type */}
-      <div className="space-y-2">
-        <label className="text-base font-medium">
+      {/* Expense Type dropdown */}
+      <FormItem>
+        <Label htmlFor="expenseType" className="flex items-center">
           Expense Type<span className="text-red-500">*</span>
-        </label>
-        <Select 
-          value={expenseType} 
-          onValueChange={(value) => setExpenseType(value)}
-        >
-          <SelectTrigger className={cn(
-            "h-[50px]",
-            validationErrors.expenseType && "border-red-500"
-          )}>
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
+        </Label>
+        <Select value={expenseType} onValueChange={setExpenseType}>
+          <SelectTrigger id="expenseType" className="w-full">
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            {filteredExpenseTypes.map((type) => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
+            {expenseTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
         {validationErrors.expenseType && (
-          <p className="text-xs text-red-500 mt-1">{validationErrors.expenseType}</p>
+          <p className="text-sm text-red-500">{validationErrors.expenseType}</p>
         )}
-      </div>
+      </FormItem>
     </div>
   );
 };
+
+export default DepartmentTypeSection;

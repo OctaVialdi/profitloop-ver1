@@ -8,12 +8,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { useExpenseTypeMappings, ExpenseType } from "@/hooks/useExpenseTypeMappings";
 import { useExpenses } from "@/hooks/useExpenses";
-import { PlusCircle, Pencil, Trash2, Save, Loader2 } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Save, Loader2, Type, Category } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { clearExpenseTypeCache } from "./components/expense-dialog/categoryExpenseTypeMap";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function ExpenseSettings() {
   const { toast } = useToast();
@@ -23,6 +24,7 @@ export default function ExpenseSettings() {
     addCategory,
     deleteExpenseCategory: deleteCategory
   } = useExpenses();
+  
   const { 
     loading, 
     expenseTypes, 
@@ -51,6 +53,11 @@ export default function ExpenseSettings() {
   const [mappings, setMappings] = useState<Record<string, Record<string, boolean>>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [activeSubTab, setActiveSubTab] = useState<string>("categories");
+  const [categoryFormError, setCategoryFormError] = useState("");
+  const [typeFormError, setTypeFormError] = useState("");
   
   // Load data on component mount
   useEffect(() => {
@@ -89,88 +96,99 @@ export default function ExpenseSettings() {
   
   // Handle add new expense type
   const handleAddType = async () => {
+    setTypeFormError("");
     if (!newTypeName.trim()) {
-      toast({
-        title: "Error",
-        description: "Type name cannot be empty",
-        variant: "destructive",
-      });
+      setTypeFormError("Type name cannot be empty");
       return;
     }
     
-    const result = await createExpenseType(newTypeName.trim());
-    if (result) {
-      setNewTypeName("");
-      setIsAddDialogOpen(false);
-      
-      toast({
-        title: "Success",
-        description: `Expense type "${newTypeName.trim()}" has been created`,
-      });
+    try {
+      const result = await createExpenseType(newTypeName.trim());
+      if (result) {
+        setNewTypeName("");
+        setIsAddDialogOpen(false);
+        
+        toast({
+          title: "Success",
+          description: `Expense type "${newTypeName.trim()}" has been created`,
+        });
+        
+        // Clear cache to make sure we get fresh data
+        clearExpenseTypeCache();
+      }
+    } catch (error) {
+      console.error("Error creating type:", error);
+      setTypeFormError("Error creating expense type");
     }
   };
 
   // Handle add new expense category
   const handleAddCategory = async () => {
+    setCategoryFormError("");
     if (!newCategoryName.trim()) {
-      toast({
-        title: "Error",
-        description: "Category name cannot be empty",
-        variant: "destructive",
-      });
+      setCategoryFormError("Category name cannot be empty");
       return;
     }
     
-    const result = await addCategory(newCategoryName.trim(), newCategoryDescription.trim() || undefined);
-    if (result) {
-      setNewCategoryName("");
-      setNewCategoryDescription("");
-      setIsAddCategoryDialogOpen(false);
-      
-      toast({
-        title: "Success",
-        description: `Expense category "${newCategoryName.trim()}" has been created`,
-      });
-      
-      // Refresh mappings data
-      await fetchCategories();
-      await fetchCategoryMappings();
+    try {
+      const result = await addCategory(newCategoryName.trim(), newCategoryDescription.trim() || undefined);
+      if (result) {
+        setNewCategoryName("");
+        setNewCategoryDescription("");
+        setIsAddCategoryDialogOpen(false);
+        
+        toast({
+          title: "Success",
+          description: `Expense category "${newCategoryName.trim()}" has been created`,
+        });
+        
+        // Refresh mappings data
+        await fetchCategories();
+        await fetchCategoryMappings();
+        
+        // Clear cache to make sure we get fresh data
+        clearExpenseTypeCache();
+      }
+    } catch (error) {
+      console.error("Error adding category:", error);
+      setCategoryFormError("Error creating category");
     }
   };
   
   // Handle edit expense type
   const handleEditType = async () => {
+    setTypeFormError("");
     if (!currentType || !editTypeName.trim()) {
-      toast({
-        title: "Error",
-        description: "Type name cannot be empty",
-        variant: "destructive",
-      });
+      setTypeFormError("Type name cannot be empty");
       return;
     }
     
-    const result = await updateExpenseType(currentType.id, editTypeName.trim());
-    if (result) {
-      setCurrentType(null);
-      setEditTypeName("");
-      setIsEditDialogOpen(false);
-      clearExpenseTypeCache();
-      
-      toast({
-        title: "Success",
-        description: `Expense type updated successfully`,
-      });
+    try {
+      const result = await updateExpenseType(currentType.id, editTypeName.trim());
+      if (result) {
+        setCurrentType(null);
+        setEditTypeName("");
+        setIsEditDialogOpen(false);
+        
+        // Clear cache to make sure we get fresh data
+        clearExpenseTypeCache();
+        
+        toast({
+          title: "Success",
+          description: `Expense type updated successfully`,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating type:", error);
+      setTypeFormError("Error updating expense type");
     }
   };
 
   // Handle edit expense category 
   const handleEditCategory = async () => {
+    setCategoryFormError("");
     if (!currentCategory || !editCategoryName.trim()) {
-      toast({
-        title: "Error",
-        description: "Category name cannot be empty",
-        variant: "destructive",
-      });
+      setCategoryFormError("Category name cannot be empty");
       return;
     }
     
@@ -190,46 +208,66 @@ export default function ExpenseSettings() {
   // Handle delete expense type
   const handleDeleteType = async (typeId: string) => {
     if (confirm("Are you sure you want to delete this expense type?")) {
-      const result = await deleteExpenseType(typeId);
-      if (result) {
-        clearExpenseTypeCache();
-        
+      try {
+        const result = await deleteExpenseType(typeId);
+        if (result) {
+          clearExpenseTypeCache();
+          
+          toast({
+            title: "Success",
+            description: "Expense type deleted successfully",
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting type:", error);
         toast({
-          title: "Success",
-          description: "Expense type deleted successfully",
+          title: "Error",
+          description: "Failed to delete expense type. It may be in use with existing expenses.",
+          variant: "destructive",
         });
       }
     }
   };
 
+  // Handle confirmation for deleting category
+  const confirmDeleteCategory = (categoryId: string) => {
+    setCategoryToDelete(categoryId);
+    setDeleteCategoryDialogOpen(true);
+  };
+  
   // Handle delete expense category
-  const handleDeleteCategory = async (categoryId: string) => {
-    if (confirm("Are you sure you want to delete this expense category?")) {
-      setIsDeleting(true);
+  const handleDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+    
+    setIsDeleting(true);
+    
+    try {
+      const result = await deleteCategory(categoryToDelete);
       
-      try {
-        const result = await deleteCategory(categoryId);
-        
-        if (result) {
-          toast({
-            title: "Success",
-            description: "Expense category deleted successfully",
-          });
-          
-          // Refresh mappings data
-          await fetchCategories();
-          await fetchCategoryMappings();
-        }
-      } catch (error) {
-        console.error("Error deleting category:", error);
+      if (result) {
         toast({
-          title: "Error",
-          description: "Failed to delete category. It may be in use with existing expenses.",
-          variant: "destructive",
+          title: "Success",
+          description: "Expense category deleted successfully",
         });
-      } finally {
-        setIsDeleting(false);
+        
+        // Refresh mappings data
+        await fetchCategories();
+        await fetchCategoryMappings();
+        
+        // Clear cache to make sure we get fresh data
+        clearExpenseTypeCache();
       }
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete category. It may be in use with existing expenses.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteCategoryDialogOpen(false);
+      setCategoryToDelete(null);
     }
   };
   
@@ -290,90 +328,19 @@ export default function ExpenseSettings() {
         <h1 className="text-2xl font-bold">Expense Settings</h1>
       </div>
       
-      <Tabs defaultValue="mappings" className="space-y-4">
+      <Tabs defaultValue="categories" value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="mappings">Category-Type Mappings</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="types">Expense Types</TabsTrigger>
+          <TabsTrigger value="categories">
+            <Category className="mr-2 h-4 w-4" />
+            Categories
+          </TabsTrigger>
+          <TabsTrigger value="types">
+            <Type className="mr-2 h-4 w-4" />
+            Expense Types
+          </TabsTrigger>
+          <TabsTrigger value="mappings">Mappings</TabsTrigger>
         </TabsList>
         
-        {/* Mappings Tab */}
-        <TabsContent value="mappings" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Category to Expense Type Mappings</CardTitle>
-              <CardDescription>
-                Configure which expense types are available for each category
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                </div>
-              ) : (
-                <>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="px-4 py-2 text-left font-medium text-gray-600">Category</th>
-                          {expenseTypes.map(type => (
-                            <th key={type.id} className="px-4 py-2 text-center font-medium text-gray-600">
-                              {type.name}
-                              {type.is_default && (
-                                <Badge className="ml-1 bg-blue-100 text-blue-800 hover:bg-blue-100" variant="outline">
-                                  Default
-                                </Badge>
-                              )}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {categories.map(category => (
-                          <tr key={category.id} className="border-t">
-                            <td className="px-4 py-2">{category.name}</td>
-                            {expenseTypes.map(type => (
-                              <td key={`${category.id}-${type.id}`} className="px-4 py-2 text-center">
-                                <Checkbox
-                                  checked={mappings[category.id]?.[type.name] || false}
-                                  onCheckedChange={(checked) => 
-                                    handleMappingChange(category.id, type.name, checked === true)
-                                  }
-                                />
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  <div className="mt-6 flex justify-end">
-                    <Button 
-                      onClick={handleSaveMappings}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" />
-                          Save Mappings
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         {/* Categories Tab */}
         <TabsContent value="categories" className="space-y-4">
           <Card>
@@ -424,7 +391,7 @@ export default function ExpenseSettings() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleDeleteCategory(category.id)}
+                          onClick={() => confirmDeleteCategory(category.id)}
                           disabled={isDeleting}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -503,6 +470,83 @@ export default function ExpenseSettings() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Mappings Tab */}
+        <TabsContent value="mappings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Category to Expense Type Mappings</CardTitle>
+              <CardDescription>
+                Configure which expense types are available for each category
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-2 text-left font-medium text-gray-600">Category</th>
+                          {expenseTypes.map(type => (
+                            <th key={type.id} className="px-4 py-2 text-center font-medium text-gray-600">
+                              {type.name}
+                              {type.is_default && (
+                                <Badge className="ml-1 bg-blue-100 text-blue-800 hover:bg-blue-100" variant="outline">
+                                  Default
+                                </Badge>
+                              )}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {categories.map(category => (
+                          <tr key={category.id} className="border-t">
+                            <td className="px-4 py-2">{category.name}</td>
+                            {expenseTypes.map(type => (
+                              <td key={`${category.id}-${type.id}`} className="px-4 py-2 text-center">
+                                <Checkbox
+                                  checked={mappings[category.id]?.[type.name] || false}
+                                  onCheckedChange={(checked) => 
+                                    handleMappingChange(category.id, type.name, checked === true)
+                                  }
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div className="mt-6 flex justify-end">
+                    <Button 
+                      onClick={handleSaveMappings}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Save Mappings
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
       
       {/* Add Type Dialog */}
@@ -526,9 +570,13 @@ export default function ExpenseSettings() {
                 }
               }}
             />
+            {typeFormError && <p className="text-sm text-red-500 mt-1">{typeFormError}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsAddDialogOpen(false);
+              setTypeFormError("");
+            }}>
               Cancel
             </Button>
             <Button onClick={handleAddType}>
@@ -539,7 +587,10 @@ export default function ExpenseSettings() {
       </Dialog>
 
       {/* Add Category Dialog */}
-      <Dialog open={isAddCategoryDialogOpen} onOpenChange={setIsAddCategoryDialogOpen}>
+      <Dialog open={isAddCategoryDialogOpen} onOpenChange={(open) => {
+        setIsAddCategoryDialogOpen(open);
+        if (!open) setCategoryFormError("");
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add New Expense Category</DialogTitle>
@@ -564,9 +615,13 @@ export default function ExpenseSettings() {
                 className="mt-2"
               />
             </div>
+            {categoryFormError && <p className="text-sm text-red-500">{categoryFormError}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddCategoryDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsAddCategoryDialogOpen(false);
+              setCategoryFormError("");
+            }}>
               Cancel
             </Button>
             <Button onClick={handleAddCategory}>
@@ -577,7 +632,10 @@ export default function ExpenseSettings() {
       </Dialog>
       
       {/* Edit Type Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (!open) setTypeFormError("");
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Expense Type</DialogTitle>
@@ -597,9 +655,13 @@ export default function ExpenseSettings() {
                 }
               }}
             />
+            {typeFormError && <p className="text-sm text-red-500 mt-1">{typeFormError}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsEditDialogOpen(false);
+              setTypeFormError("");
+            }}>
               Cancel
             </Button>
             <Button onClick={handleEditType}>
@@ -610,7 +672,10 @@ export default function ExpenseSettings() {
       </Dialog>
 
       {/* Edit Category Dialog */}
-      <Dialog open={isEditCategoryDialogOpen} onOpenChange={setIsEditCategoryDialogOpen}>
+      <Dialog open={isEditCategoryDialogOpen} onOpenChange={(open) => {
+        setIsEditCategoryDialogOpen(open);
+        if (!open) setCategoryFormError("");
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Expense Category</DialogTitle>
@@ -635,9 +700,13 @@ export default function ExpenseSettings() {
                 className="mt-2"
               />
             </div>
+            {categoryFormError && <p className="text-sm text-red-500">{categoryFormError}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditCategoryDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsEditCategoryDialogOpen(false);
+              setCategoryFormError("");
+            }}>
               Cancel
             </Button>
             <Button onClick={handleEditCategory}>
@@ -646,6 +715,40 @@ export default function ExpenseSettings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Delete Category Confirmation Dialog */}
+      <AlertDialog open={deleteCategoryDialogOpen} onOpenChange={setDeleteCategoryDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the expense category. This action cannot be undone if the category is already in use.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeleteCategoryDialogOpen(false);
+              setCategoryToDelete(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteCategory}
+              className="bg-red-600 text-white hover:bg-red-700"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -31,7 +31,7 @@ const AddExpenseDialog: React.FC = () => {
     isSubmitting,
     categories,
     departments,
-    departmentsLoading
+    departmentsLoading,
   } = useExpenseForm();
 
   return (

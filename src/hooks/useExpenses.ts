@@ -191,6 +191,13 @@ export const useExpenses = () => {
       });
       
       await fetchCategories();
+      
+      // Clear the expense type cache to ensure fresh data
+      if (typeof window !== 'undefined' && 
+          typeof window.clearExpenseTypeCache === 'function') {
+        window.clearExpenseTypeCache();
+      }
+      
       return data?.[0];
     } catch (error: any) {
       console.error("Error adding expense category:", error);
@@ -239,6 +246,13 @@ export const useExpenses = () => {
       if (error) throw error;
       
       await fetchCategories();
+      
+      // Clear the expense type cache to ensure fresh data
+      if (typeof window !== 'undefined' && 
+          typeof window.clearExpenseTypeCache === 'function') {
+        window.clearExpenseTypeCache();
+      }
+      
       return true;
     } catch (error: any) {
       console.error("Error deleting category:", error);
@@ -583,3 +597,8 @@ export const useExpenses = () => {
     deleteExpense,
   };
 };
+
+// Make clearExpenseTypeCache globally available
+if (typeof window !== 'undefined') {
+  window.clearExpenseTypeCache = clearExpenseTypeCache;
+}
