@@ -24,8 +24,8 @@ export function useBudgetData(expenses: Expense[] = []) {
     const departments = new Set<string>();
     
     employees.forEach(employee => {
-      if (employee.organization) {
-        departments.add(employee.organization);
+      if (employee.organization_name) {
+        departments.add(employee.organization_name);
       }
     });
     
