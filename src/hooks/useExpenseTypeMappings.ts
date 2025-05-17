@@ -294,6 +294,7 @@ export const useExpenseTypeMappings = () => {
     }
   };
 
+  // Fix for excessive type depth error - simplified return type
   const getExpenseTypesForCategory = async (categoryId: string): Promise<string[]> => {
     try {
       if (!organization?.id) return [];
@@ -321,6 +322,7 @@ export const useExpenseTypeMappings = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
+        // Return just the names in a string array, not objects
         return data.map(item => item.expense_type);
       }
       
