@@ -9,7 +9,7 @@ export interface ExpenseType {
   name: string;
   is_default: boolean;
   organization_id: string;
-  category_id?: string; // Added category_id field
+  category_id?: string;
 }
 
 export interface CategoryTypeMapping {
@@ -294,7 +294,7 @@ export const useExpenseTypeMappings = () => {
     }
   };
 
-  // Renamed function to avoid naming conflict with the cache utility
+  // Renamed function with explicit Promise<string[]> return type
   const fetchExpenseTypesForCategory = async (categoryId: string): Promise<string[]> => {
     try {
       if (!organization?.id) return [];
@@ -322,7 +322,7 @@ export const useExpenseTypeMappings = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        // Return just the names in a string array, not objects
+        // Return just the names in a string array
         return data.map(item => item.expense_type);
       }
       
