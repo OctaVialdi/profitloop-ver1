@@ -30,7 +30,7 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
   selectedCategory,
   categoryId
 }) => {
-  const { getExpenseTypesForCategory: fetchExpenseTypes } = useExpenseTypeMappings();
+  const { fetchExpenseTypesForCategory } = useExpenseTypeMappings();
   const { organization } = useOrganization();
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
       // If no cached data, fetch from API
       setLoading(true);
       try {
-        const types = await fetchExpenseTypes(categoryId);
+        const types = await fetchExpenseTypesForCategory(categoryId);
         setExpenseTypes(types);
         
         // Cache the result
@@ -62,7 +62,7 @@ export const DepartmentTypeSection: React.FC<DepartmentTypeSectionProps> = ({
     };
 
     loadExpenseTypes();
-  }, [categoryId, organization?.id, fetchExpenseTypes]);
+  }, [categoryId, organization?.id, fetchExpenseTypesForCategory]);
 
   // Reset expense type when category changes
   useEffect(() => {

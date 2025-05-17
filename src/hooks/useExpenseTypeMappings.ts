@@ -294,8 +294,8 @@ export const useExpenseTypeMappings = () => {
     }
   };
 
-  // Fix for excessive type depth error - simplified return type
-  const getExpenseTypesForCategory = async (categoryId: string): Promise<string[]> => {
+  // Renamed function to avoid naming conflict with the cache utility
+  const fetchExpenseTypesForCategory = async (categoryId: string): Promise<string[]> => {
     try {
       if (!organization?.id) return [];
       
@@ -352,6 +352,6 @@ export const useExpenseTypeMappings = () => {
     updateExpenseType,
     deleteExpenseType,
     saveCategoryTypeMappings,
-    getExpenseTypesForCategory
+    fetchExpenseTypesForCategory // Return the renamed function
   };
 };
